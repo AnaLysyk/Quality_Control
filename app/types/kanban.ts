@@ -4,6 +4,7 @@ export interface KanbanItem {
   id: number;
   title: string;
   bug: string | null;
+  dbId?: number; // ID da linha no Supabase (para deletar)
 }
 
 export interface KanbanData {

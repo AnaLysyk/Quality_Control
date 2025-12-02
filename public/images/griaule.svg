@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 190" role="img" aria-label="Griaule logo">
+  <defs>
+    <linearGradient id="g-green" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7CD343"/>
+      <stop offset="100%" stop-color="#6ab534"/>
+    </linearGradient>
+  </defs>
+  <rect width="520" height="190" fill="none"/>
+  <!-- stylized g icon -->
+  <g transform="translate(8 18)">
+    <rect x="0" y="0" width="70" height="70" rx="16" fill="url(#g-green)" opacity="0.15"/>
+    <path d="M20 16c-6 0-11 5-11 11v26c0 6 5 11 11 11h30c2.8 0 5-2.2 5-5s-2.2-5-5-5H22c-1.7 0-3-1.3-3-3V27c0-1.7 1.3-3 3-3h28c2.8 0 5-2.2 5-5s-2.2-5-5-5H20z" fill="url(#g-green)"/>
+    <circle cx="56" cy="39" r="9" fill="url(#g-green)"/>
+  </g>
+  <!-- wordmark -->
+  <g transform="translate(90 30)" fill="url(#g-green)" font-family="Segoe UI, 'Helvetica Neue', Arial, sans-serif">
+    <text x="0" y="74" font-size="82" font-weight="600" letter-spacing="1">griaule</text>
+    <text x="4" y="118" font-size="26" font-weight="400" fill="#7CD343" letter-spacing="1.2">
+      big data biometrics
+    </text>
+  </g>
+</svg>

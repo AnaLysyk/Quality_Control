@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Griaule icon">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7cd343"/>
+      <stop offset="100%" stop-color="#5ba925"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="256" height="256" rx="56" fill="url(#bg)"/>
+  <path
+    d="M104 72c-19.882 0-36 16.118-36 36v40c0 19.882 16.118 36 36 36h48c6.627 0 12-5.373 12-12s-5.373-12-12-12h-48c-6.627 0-12-5.373-12-12v-40c0-6.627 5.373-12 12-12h48c6.627 0 12-5.373 12-12s-5.373-12-12-12h-48z"
+    fill="#0b4a8f"
+  />
+  <circle cx="178" cy="128" r="20" fill="#0b4a8f"/>
+</svg>

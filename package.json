@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.4",
+    "lucide-react": "^0.555.0",
     "next": "16.0.5",
     "react": "19.2.0",
     "react-dom": "19.2.0",

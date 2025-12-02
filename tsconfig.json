@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "es5",
     "lib": [
       "dom",
       "dom.iterable",
@@ -8,7 +8,8 @@
     ],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -16,15 +17,13 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "incremental": true,
-    "forceConsistentCasingInFileNames": true,
-    // 🔥 ALIAS AJUSTADO PARA APONTAR PARA app/*
     "baseUrl": ".",
     "paths": {
       "@/*": [
-        "app/*"
+        "./app/*"
       ]
     },
+    "incremental": true,
     "plugins": [
       {
         "name": "next"
@@ -33,7 +32,6 @@
   },
   "include": [
     "next-env.d.ts",
-    "app/**/*",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",

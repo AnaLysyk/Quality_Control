@@ -10,7 +10,6 @@ const headers = {
   Token: process.env.NEXT_PUBLIC_QASE_TOKEN!,
 };
 
-// 1) DETALHES DA RUN (título, descrição, stats)
 export async function getQaseRunStats(project: string, runId: number) {
   const res = await fetch(`${API_BASE}/run/${project}/${runId}`, {
     headers,
@@ -25,7 +24,6 @@ export async function getQaseRunStats(project: string, runId: number) {
   return json.result;
 }
 
-// 2) RESULTADOS DA RUN (lista de casos)
 export async function getQaseRunResults(project: string, runId: number) {
   const res = await fetch(`${API_BASE}/result/${project}?run_id=${runId}`, {
     headers,
@@ -37,16 +35,50 @@ export async function getQaseRunResults(project: string, runId: number) {
   }
 
   const json = await res.json();
-
-  // Qase: result.entities
   return json.result?.entities ?? [];
 }
 
-// 3) RESULTADOS → KANBAN
+export async function getQaseRunCases(project: string, runId: number) {
+  const pageSize = 200;
+  let page = 1;
+  const allCases: any[] = [];
+  let hasMore = true;
+
+  while (hasMore) {
+    const res = await fetch(
+      `${API_BASE}/run/${project}/${runId}/cases?page=${page}&limit=${pageSize}`,
+      {
+        headers,
+        cache: "no-store",
+      }
+    );
+
+    if (res.status === 404) {
+      return getQaseRunResults(project, runId);
+    }
+
+    if (!res.ok) {
+      throw new Error(`Erro ao consultar casos da run ${runId}: ${res.status}`);
+    }
+
+    const json = await res.json();
+    const entities = json.result?.entities ?? [];
+    allCases.push(...entities);
+
+    if (entities.length < pageSize) {
+      hasMore = false;
+    } else {
+      page += 1;
+    }
+  }
+
+  return allCases;
+}
+
 export async function getQaseRunKanban(
   project: string,
   runId: number
 ): Promise<KanbanData> {
-  const raw = await getQaseRunResults(project, runId);
+  const raw = await getQaseRunCases(project, runId);
   return mapQaseToKanban(raw);
 }

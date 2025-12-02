@@ -48,7 +48,6 @@ export default function ExportPDFButton({ fileName }: ExportPDFButtonProps) {
         scrollX: 0,
         scrollY: 0,
         removeContainer: true,
-        preferCSSPageSize: false,
         windowWidth: document.documentElement.scrollWidth,
         onclone: (clonedDoc) => sanitizeClonedDocument(clonedDoc),
       });

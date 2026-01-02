@@ -3,7 +3,7 @@ import { getSessionUser } from "@/lib/session";
 import { listUserRequests } from "@/data/requestsStore";
 
 export async function GET(request: Request) {
-  const user = getSessionUser();
+  const user = await getSessionUser();
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status") as any;
   const type = searchParams.get("type") as any;

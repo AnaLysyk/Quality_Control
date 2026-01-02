@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { getAllReleases, upsertRelease } from "@/release/data";
+import { getAllReleases, upsertRelease, type ReleaseEntry } from "@/release/data";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 
 export const runtime = "nodejs";
 
-export async function GET(_: Request, { params }: { params: { slug: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const all = await getAllReleases();
-  const target = all.find((r) => r.slug === slugifyRelease(params.slug));
+  const target = all.find((r) => r.slug === slugifyRelease(slug));
   if (!target) {
     return NextResponse.json({ error: "Release não encontrada." }, { status: 404 });
   }
@@ -29,8 +30,9 @@ export async function GET(_: Request, { params }: { params: { slug: string } }) 
   });
 }
 
-export async function PATCH(request: Request, { params }: { params: { slug: string } }) {
-  const slug = slugifyRelease(params.slug);
+export async function PATCH(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug: rawSlug } = await params;
+  const slug = slugifyRelease(rawSlug);
   const body = await request.json().catch(() => ({}));
 
   const all = await getAllReleases();
@@ -39,6 +41,7 @@ export async function PATCH(request: Request, { params }: { params: { slug: stri
     return NextResponse.json({ error: "Release não encontrada." }, { status: 404 });
   }
 
+  const status = (body.status ?? existing.status ?? "ACTIVE") as ReleaseEntry["status"];
   const merged = {
     ...existing,
     title: (body.title ?? body.name ?? existing.title)?.toString(),
@@ -49,7 +52,7 @@ export async function PATCH(request: Request, { params }: { params: { slug: stri
       body.runId !== undefined || body.run_id !== undefined
         ? Number(body.runId ?? body.run_id)
         : existing.runId,
-    status: (body.status ?? existing.status ?? "ACTIVE") as string,
+    status,
     qaseProject: (body.qaseProject ?? body.project ?? existing.qaseProject)?.toString(),
     radis: (body.radis ?? existing.radis)?.toString(),
     source: existing.source ?? "API",

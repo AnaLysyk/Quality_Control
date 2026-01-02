@@ -1,24 +1,12 @@
-import DashboardReleaseClient from "../DashboardReleaseClient";
+import { ReleasePageContent } from "@/release/ReleaseTemplate";
 
-interface PageProps {
+type PageProps = {
   params: { slug: string };
-}
+};
 
-async function fetchRelease(slug: string) {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/api/releases/${slug}`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    return res.json();
-  } catch (e) {
-    console.error("Erro ao buscar release", e);
-    return null;
-  }
-}
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export default async function DashboardReleasePage({ params }: PageProps) {
-  const initialData = await fetchRelease(params.slug);
-  return <DashboardReleaseClient slug={params.slug} initialData={initialData} />;
+  return ReleasePageContent({ slug: params.slug });
 }
-

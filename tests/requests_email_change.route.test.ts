@@ -18,13 +18,13 @@ describe("/api/requests/email-change POST", () => {
   });
 
   it("retorna 400 se newEmail faltando", async () => {
-    getSessionUser.mockReturnValue({ id: "u1" });
+    getSessionUser.mockResolvedValue({ id: "u1" });
     const res = await POST(new Request("http://localhost/api/requests/email-change", { method: "POST", body: JSON.stringify({}) }));
     expect(res.status).toBe(400);
   });
 
   it("retorna 201 se criado", async () => {
-    getSessionUser.mockReturnValue({ id: "u1" });
+    getSessionUser.mockResolvedValue({ id: "u1" });
     addRequest.mockReturnValue({ id: "req1" });
     const res = await POST(
       new Request("http://localhost/api/requests/email-change", {
@@ -36,7 +36,7 @@ describe("/api/requests/email-change POST", () => {
   });
 
   it("retorna 409 se duplicata", async () => {
-    getSessionUser.mockReturnValue({ id: "u1" });
+    getSessionUser.mockResolvedValue({ id: "u1" });
     const err = new Error("dup") as any;
     err.code = "DUPLICATE";
     addRequest.mockImplementation(() => {

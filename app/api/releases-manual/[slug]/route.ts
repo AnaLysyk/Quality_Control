@@ -30,9 +30,10 @@ async function writeStore(releases: Release[]) {
   await fs.writeFile(STORE_PATH, JSON.stringify(releases, null, 2), "utf8");
 }
 
-export async function GET(_: Request, { params }: { params: { slug: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const releases = await readStore();
-  const found = releases.find((r) => r.slug === params.slug);
+  const found = releases.find((r) => r.slug === slug);
   if (!found) return NextResponse.json({ message: "not found" }, { status: 404 });
   const total = found.stats.pass + found.stats.fail + found.stats.blocked + found.stats.notRun;
   return NextResponse.json({
@@ -49,11 +50,12 @@ export async function GET(_: Request, { params }: { params: { slug: string } }) 
   });
 }
 
-export async function PATCH(req: Request, { params }: { params: { slug: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
+    const { slug } = await params;
     const patch = await req.json();
     const releases = await readStore();
-    const idx = releases.findIndex((r) => r.slug === params.slug);
+    const idx = releases.findIndex((r) => r.slug === slug);
     if (idx < 0) return NextResponse.json({ message: "not found" }, { status: 404 });
 
     const current = releases[idx];

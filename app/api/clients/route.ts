@@ -34,13 +34,13 @@ const sanitize = (value: unknown, max = MAX_SHORT) => {
   return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
 };
 
-function extractToken(req: NextRequest): string | null {
+async function extractToken(req: NextRequest): Promise<string | null> {
   const auth = req.headers.get("authorization");
   if (auth?.toLowerCase().startsWith("bearer ")) {
     const token = auth.slice("bearer ".length).trim();
     if (token) return token;
   }
-  const store = cookies();
+  const store = await cookies();
   return (
     store.get("sb-access-token")?.value ||
     store.get("auth_token")?.value ||
@@ -75,7 +75,7 @@ async function requireAdmin(req: NextRequest) {
     };
   }
 
-  const token = extractToken(req);
+  const token = await extractToken(req);
   if (!token) return null;
 
   const supabase = createSupabase(token);
@@ -108,7 +108,7 @@ async function requireUser(req: NextRequest) {
     };
   }
 
-  const token = extractToken(req);
+  const token = await extractToken(req);
   if (!token) return null;
 
   const supabase = createSupabase(token);

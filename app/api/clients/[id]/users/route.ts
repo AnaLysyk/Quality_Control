@@ -5,12 +5,13 @@ import { addUserToClient, getUserRoleInClient } from "@/data/userClientsReposito
 import { getUserByEmail } from "@/data/usersRepository";
 import { sql } from "@vercel/postgres";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const auth = await authenticateRequest(request);
   const user = await requireUserRecord(auth);
   if (!user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-  const clientId = params.id || getClientIdFromHeader(request);
+  const clientId = id || getClientIdFromHeader(request);
   const client = await getClientById(clientId || "");
   if (!client) return NextResponse.json({ message: "Client not found" }, { status: 404 });
 
@@ -30,12 +31,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
   return NextResponse.json({ items: rows });
 }
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const auth = await authenticateRequest(request);
   const user = await requireUserRecord(auth);
   if (!user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-  const clientId = params.id || getClientIdFromHeader(request);
+  const clientId = id || getClientIdFromHeader(request);
   const client = await getClientById(clientId || "");
   if (!client) return NextResponse.json({ message: "Client not found" }, { status: 404 });
 

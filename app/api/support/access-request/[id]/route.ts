@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { authenticateRequest } from "@/lib/jwtAuth";
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const authUser = await authenticateRequest(req);
   if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
@@ -32,7 +33,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       handled_by: authUser.id,
       handled_at: new Date().toISOString(),
     })
-    .eq("id", params.id);
+    .eq("id", id);
 
   if (error) {
     console.error("Erro ao atualizar support_request:", error);

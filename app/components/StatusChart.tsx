@@ -39,6 +39,14 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
 
   const renderLabel = (props: PieLabelRenderProps) => {
     const { cx, cy, midAngle, outerRadius, value, fill } = props;
+    if (
+      typeof cx !== "number" ||
+      typeof cy !== "number" ||
+      typeof midAngle !== "number" ||
+      typeof outerRadius !== "number"
+    ) {
+      return null;
+    }
     const RADIAN = Math.PI / 180;
     const radius = outerRadius * 0.78;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);

@@ -3,8 +3,9 @@ import { getUserById, type UserRecord } from "@/data/usersStore";
 
 export type SessionUser = UserRecord;
 
-export function getSessionUser(): SessionUser {
-  const auth = cookies().get("auth")?.value;
+export async function getSessionUser(): Promise<SessionUser> {
+  const store = await cookies();
+  const auth = store.get("auth")?.value;
   const adminUser = process.env.ADMIN_USER || "admin";
 
   if (auth && auth === adminUser) {

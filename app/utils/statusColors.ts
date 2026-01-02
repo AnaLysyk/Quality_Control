@@ -13,4 +13,5 @@ export const STATUS_LABELS: Record<StatusKey, string> = {
   fail: "Fail",
   blocked: "Blocked",
   notRun: "Not Run",
+  total: "Total",
 };

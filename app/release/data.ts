@@ -1,6 +1,8 @@
+import "server-only";
 import fs from "fs";
 import path from "path";
 import { slugifyRelease } from "@/lib/slugifyRelease";
+import type { ReleaseStatus } from "@/types/release";
 
 export type ReleaseEntry = {
   slug: string;
@@ -14,7 +16,7 @@ export type ReleaseEntry = {
   order?: string[];
   createdAt?: string;
   source?: "MANUAL" | "API";
-  status?: "EM_ANDAMENTO" | "FINALIZADA";
+  status?: ReleaseStatus | "EM_ANDAMENTO" | "FINALIZADA";
   environments?: string[];
   manualSummary?: { pass: number; fail: number; blocked: number; notRun: number };
   clientId?: string | null;

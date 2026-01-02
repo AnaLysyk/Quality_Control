@@ -18,7 +18,7 @@ describe("/api/requests/me GET", () => {
   });
 
   it("retorna lista de requests do usuário", async () => {
-    getSessionUser.mockReturnValue({ id: "u1" });
+    getSessionUser.mockResolvedValue({ id: "u1" });
     listUserRequests.mockReturnValue([{ id: "r1", userId: "u1" }]);
     const res = await GET(new Request("http://localhost/api/requests/me?status=PENDING&type=EMAIL_CHANGE"));
     expect(res.status).toBe(200);

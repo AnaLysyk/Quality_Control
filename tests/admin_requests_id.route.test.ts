@@ -27,32 +27,32 @@ describe("/api/admin/requests/[id] PATCH", () => {
   });
 
   it("retorna 403 se não admin", async () => {
-    getSessionUser.mockReturnValue({ role: "user" });
-    const res = await PATCH(new Request("http://localhost/api/admin/requests/1", { method: "PATCH" }), { params: { id: "1" } });
+    getSessionUser.mockResolvedValue({ role: "user" });
+    const res = await PATCH(new Request("http://localhost/api/admin/requests/1", { method: "PATCH" }), { params: Promise.resolve({ id: "1" }) });
     expect(res.status).toBe(403);
   });
 
   it("retorna 400 se status inválido", async () => {
-    getSessionUser.mockReturnValue({ role: "admin" });
+    getSessionUser.mockResolvedValue({ role: "admin" });
     const res = await PATCH(
       new Request("http://localhost/api/admin/requests/1", { method: "PATCH", body: JSON.stringify({ status: "X" }) }),
-      { params: { id: "1" } }
+      { params: Promise.resolve({ id: "1" }) }
     );
     expect(res.status).toBe(400);
   });
 
   it("retorna 404 se request não encontrada", async () => {
-    getSessionUser.mockReturnValue({ role: "admin" });
+    getSessionUser.mockResolvedValue({ role: "admin" });
     updateRequestStatus.mockReturnValue(null);
     const res = await PATCH(
       new Request("http://localhost/api/admin/requests/1", { method: "PATCH", body: JSON.stringify({ status: "APPROVED" }) }),
-      { params: { id: "1" } }
+      { params: Promise.resolve({ id: "1" }) }
     );
     expect(res.status).toBe(404);
   });
 
   it("chama efeitos colaterais ao aprovar EMAIL_CHANGE", async () => {
-    getSessionUser.mockReturnValue({ role: "admin", id: "admin1" });
+    getSessionUser.mockResolvedValue({ role: "admin", id: "admin1" });
     updateRequestStatus.mockReturnValue({
       id: "req1",
       type: "EMAIL_CHANGE",
@@ -62,14 +62,14 @@ describe("/api/admin/requests/[id] PATCH", () => {
     });
     const res = await PATCH(
       new Request("http://localhost/api/admin/requests/1", { method: "PATCH", body: JSON.stringify({ status: "APPROVED" }) }),
-      { params: { id: "1" } }
+      { params: Promise.resolve({ id: "1" }) }
     );
     expect(res.status).toBe(200);
     expect(updateUserEmail).toHaveBeenCalledWith("user1", "novo@x");
   });
 
   it("chama efeitos colaterais ao aprovar COMPANY_CHANGE", async () => {
-    getSessionUser.mockReturnValue({ role: "admin", id: "admin1" });
+    getSessionUser.mockResolvedValue({ role: "admin", id: "admin1" });
     updateRequestStatus.mockReturnValue({
       id: "req2",
       type: "COMPANY_CHANGE",
@@ -79,7 +79,7 @@ describe("/api/admin/requests/[id] PATCH", () => {
     });
     const res = await PATCH(
       new Request("http://localhost/api/admin/requests/2", { method: "PATCH", body: JSON.stringify({ status: "APPROVED" }) }),
-      { params: { id: "2" } }
+      { params: Promise.resolve({ id: "2" }) }
     );
     expect(res.status).toBe(200);
     expect(updateUserCompany).toHaveBeenCalledWith("user1", "Nova");

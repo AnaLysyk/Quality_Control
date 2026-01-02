@@ -121,8 +121,8 @@ function normalize(defects: QaseDefect[]): DefectResponse {
   };
 }
 
-export async function GET(_: Request, context: { params: { slug: string } }) {
-  const slug = context.params?.slug;
+export async function GET(_: Request, context: { params: Promise<{ slug: string }> }) {
+  const { slug } = await context.params;
   const projectCode = PROJECT_MAP[slug];
 
   if (!slug || !projectCode) {

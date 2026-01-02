@@ -18,7 +18,7 @@ describe("/api/requests/company-change POST", () => {
   });
 
   it("retorna 400 se newCompanyName faltando", async () => {
-    getSessionUser.mockReturnValue({ id: "u1" });
+    getSessionUser.mockResolvedValue({ id: "u1" });
     const res = await POST(
       new Request("http://localhost/api/requests/company-change", { method: "POST", body: JSON.stringify({}) })
     );
@@ -26,7 +26,7 @@ describe("/api/requests/company-change POST", () => {
   });
 
   it("retorna 201 se criado", async () => {
-    getSessionUser.mockReturnValue({ id: "u1" });
+    getSessionUser.mockResolvedValue({ id: "u1" });
     addRequest.mockReturnValue({ id: "req1" });
     const res = await POST(
       new Request("http://localhost/api/requests/company-change", {
@@ -38,7 +38,7 @@ describe("/api/requests/company-change POST", () => {
   });
 
   it("retorna 409 se duplicata", async () => {
-    getSessionUser.mockReturnValue({ id: "u1" });
+    getSessionUser.mockResolvedValue({ id: "u1" });
     const err = new Error("dup") as any;
     err.code = "DUPLICATE";
     addRequest.mockImplementation(() => {

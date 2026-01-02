@@ -38,37 +38,40 @@ function toArray(body: unknown): TestCaseCard[] {
   return body ? [body as TestCaseCard] : [];
 }
 
-export async function GET(_: Request, { params }: { params: { slug: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const store = await readStore();
-  return NextResponse.json(store[params.slug] ?? []);
+  return NextResponse.json(store[slug] ?? []);
 }
 
-export async function POST(req: Request, { params }: { params: { slug: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
+    const { slug } = await params;
     const body = await req.json();
     const incoming = toArray(body).map((card) => ({
       ...card,
       fromApi: Boolean(card.fromApi),
     }));
     const store = await readStore();
-    store[params.slug] = [...(store[params.slug] ?? []), ...incoming];
+    store[slug] = [...(store[slug] ?? []), ...incoming];
     await writeStore(store);
-    return NextResponse.json(store[params.slug], { status: 201 });
+    return NextResponse.json(store[slug], { status: 201 });
   } catch (error) {
     console.error("POST /releases-manual/[slug]/cases error", error);
     return NextResponse.json({ message: "Erro ao salvar casos" }, { status: 500 });
   }
 }
 
-export async function PATCH(req: Request, { params }: { params: { slug: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
+    const { slug } = await params;
     const body = await req.json();
     const incoming = toArray(body).map((card) => ({
       ...card,
       fromApi: Boolean(card.fromApi),
     }));
     const store = await readStore();
-    const current = store[params.slug] ?? [];
+    const current = store[slug] ?? [];
 
     incoming.forEach((card) => {
       const idx = current.findIndex((c) => c.id === card.id);
@@ -77,27 +80,28 @@ export async function PATCH(req: Request, { params }: { params: { slug: string }
       }
     });
 
-    store[params.slug] = current;
+    store[slug] = current;
     await writeStore(store);
-    return NextResponse.json(store[params.slug]);
+    return NextResponse.json(store[slug]);
   } catch (error) {
     console.error("PATCH /releases-manual/[slug]/cases error", error);
     return NextResponse.json({ message: "Erro ao atualizar casos" }, { status: 500 });
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { slug: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
+    const { slug } = await params;
     const body = await req.json().catch(() => ({} as { id?: string }));
     const targetId = body.id as string | undefined;
     if (!targetId) {
       return NextResponse.json({ message: "id obrigatório" }, { status: 400 });
     }
     const store = await readStore();
-    const current = store[params.slug] ?? [];
-    store[params.slug] = current.filter((c) => c.id !== targetId);
+    const current = store[slug] ?? [];
+    store[slug] = current.filter((c) => c.id !== targetId);
     await writeStore(store);
-    return NextResponse.json(store[params.slug]);
+    return NextResponse.json(store[slug]);
   } catch (error) {
     console.error("DELETE /releases-manual/[slug]/cases error", error);
     return NextResponse.json({ message: "Erro ao remover caso" }, { status: 500 });

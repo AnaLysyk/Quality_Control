@@ -1,6 +1,6 @@
 ﻿// app/services/qase.ts
 
-import { mapQaseToKanban } from "@/utils/qaseMapper";
+import { mapQaseToKanban, type RawQaseEntity } from "@/utils/qaseMapper";
 import { KanbanData } from "@/types/kanban";
 
 const API_BASE = "https://api.qase.io/v1";
@@ -121,7 +121,7 @@ export async function getQaseRunStats(project: string, runId: number, slug?: str
 }
 
 // Busca todos os resultados de uma run com paginação ilimitada (limite 250).
-async function fetchAllQaseResults(project: string, runId: number, slug?: string) {
+async function fetchAllQaseResults(project: string, runId: number, slug?: string): Promise<RawQaseEntity[]> {
   const logBase = "[KANBAN][CASES]";
   const slugKey = slug || "unknown";
 
@@ -137,7 +137,7 @@ async function fetchAllQaseResults(project: string, runId: number, slug?: string
 
   const pageSize = 250;
   let offset = 0;
-  const all: unknown[] = [];
+  const all: RawQaseEntity[] = [];
 
   while (true) {
     const url = `${API_BASE}/result/${project}?run_id=${runId}&limit=${pageSize}&offset=${offset}`;
@@ -163,7 +163,7 @@ async function fetchAllQaseResults(project: string, runId: number, slug?: string
     }
 
     const json = (await res.json()) as { result?: { entities?: unknown[] } };
-    const entities = json.result?.entities ?? [];
+    const entities = (json.result?.entities ?? []) as RawQaseEntity[];
     if (!entities.length) break;
 
     all.push(...entities);
@@ -186,7 +186,7 @@ export async function getQaseRunResults(project: string, runId: number, slug?: s
   }
 }
 
-export async function getQaseRunCases(project: string, runId: number, slug?: string) {
+export async function getQaseRunCases(project: string, runId: number, slug?: string): Promise<RawQaseEntity[]> {
   const logBase = "[KANBAN][CASES]";
   const slugKey = slug || "unknown";
 
@@ -202,7 +202,7 @@ export async function getQaseRunCases(project: string, runId: number, slug?: str
 
   const pageSize = 200;
   let page = 1;
-  const allCases: unknown[] = [];
+  const allCases: RawQaseEntity[] = [];
   let hasMore = true;
 
   while (hasMore) {
@@ -230,7 +230,7 @@ export async function getQaseRunCases(project: string, runId: number, slug?: str
     }
 
     const json = (await res.json()) as { result?: { entities?: unknown[] } };
-    const entities = json.result?.entities ?? [];
+    const entities = (json.result?.entities ?? []) as RawQaseEntity[];
     allCases.push(...entities);
 
     if (entities.length < pageSize) {

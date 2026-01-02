@@ -1,3 +1,4 @@
+import "server-only";
 import StatusChart from "@/components/StatusChart";
 import Kanban from "@/components/Kanban";
 import ExportPDFButton from "@/components/ExportPDFButton";
@@ -6,6 +7,7 @@ import { EditReleaseButton } from "@/components/EditReleaseButton";
 import { ManualStatsForm } from "@/components/ManualStatsForm";
 import { getReleaseBySlug, type ReleaseEntry } from "./data";
 import { getRunDetails, getQaseRunKanban } from "@/services/qase";
+import type { KanbanData } from "@/types/kanban";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import type { Release } from "@/types/release";
 import { getAppMeta } from "@/lib/appMeta";
@@ -66,7 +68,7 @@ export async function ReleasePageContent({ slug }: ReleasePageContentProps) {
       ? manualRelease?.stats ?? { pass: 0, fail: 0, blocked: 0, notRun: 0 }
       : { pass: 0, fail: 0, blocked: 0, notRun: 0 };
   let hasData = stats.pass + stats.fail + stats.blocked + stats.notRun > 0;
-  let kanbanData = { pass: [], fail: [], blocked: [], notRun: [] };
+  let kanbanData: KanbanData = { pass: [], fail: [], blocked: [], notRun: [] };
 
   if (source === "API") {
     const runId = Number((releaseData as ReleaseEntry).runId);
@@ -88,7 +90,8 @@ export async function ReleasePageContent({ slug }: ReleasePageContentProps) {
     }
   }
 
-  const editable = source === "MANUAL" && releaseData.status !== "FINALIZADA";
+  const editable =
+    source === "MANUAL" && releaseData.status !== "FINALIZADA" && releaseData.status !== "FINALIZED";
   const total = stats.pass + stats.fail + stats.blocked + stats.notRun;
 
   return (

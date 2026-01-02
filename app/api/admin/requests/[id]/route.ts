@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/session";
 import { updateRequestStatus } from "@/data/requestsStore";
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
-  const user = getSessionUser();
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const user = await getSessionUser();
   if (user.role !== "admin") {
     return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
   }
@@ -16,7 +17,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     return NextResponse.json({ message: "Status inválido" }, { status: 400 });
   }
 
-  const updated = updateRequestStatus(params.id, status, user, reviewNote);
+  const updated = updateRequestStatus(id, status, user, reviewNote);
   if (!updated) {
     return NextResponse.json({ message: "Solicitação não encontrada" }, { status: 404 });
   }

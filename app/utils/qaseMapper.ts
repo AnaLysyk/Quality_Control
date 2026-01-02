@@ -1,6 +1,6 @@
 import { KanbanData } from "@/types/kanban";
 
-type RawQaseEntity = {
+export type RawQaseEntity = {
   case_id?: number;
   status?: string;
   title?: string;

@@ -28,16 +28,19 @@ export function verifyToken(token: string | undefined): AuthUser | null {
   }
 }
 
-function safeSetCookie(name: string, value: string, options: Parameters<ReturnType<typeof cookies>["set"]>[2]) {
+type CookieStore = Awaited<ReturnType<typeof cookies>>;
+
+async function safeSetCookie(name: string, value: string, options: Parameters<CookieStore["set"]>[2]) {
   try {
-    cookies().set(name, value, options);
+    const store = await cookies();
+    store.set(name, value, options);
   } catch {
     // Em ambiente de teste sem request store, apenas ignore.
   }
 }
 
-export function setAuthCookie(token: string) {
-  safeSetCookie(COOKIE_NAME, token, {
+export async function setAuthCookie(token: string) {
+  await safeSetCookie(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -45,8 +48,8 @@ export function setAuthCookie(token: string) {
   });
 }
 
-export function clearAuthCookie() {
-  safeSetCookie(COOKIE_NAME, "", { path: "/", maxAge: 0 });
+export async function clearAuthCookie() {
+  await safeSetCookie(COOKIE_NAME, "", { path: "/", maxAge: 0 });
 }
 
 export function signToken(payload: { sub: string; email: string; isGlobalAdmin: boolean }) {
@@ -62,9 +65,6 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   const cookieToken = cookieStore.get(COOKIE_NAME)?.value;
   return verifyToken(headerToken || cookieToken);
 }
-
-// re-export explícito para evitar tree-shake em ambientes edge/turbopack
-export { verifyToken };
 
 export function getClientIdFromHeader(req: Request): string | null {
   return req.headers.get("x-client-id");

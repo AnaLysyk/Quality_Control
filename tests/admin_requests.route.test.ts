@@ -18,13 +18,13 @@ describe("/api/admin/requests GET", () => {
   });
 
   it("retorna 403 se não for admin", async () => {
-    getSessionUser.mockReturnValue({ role: "user" });
+    getSessionUser.mockResolvedValue({ role: "user" });
     const res = await GET(new Request("http://localhost/api/admin/requests"));
     expect(res.status).toBe(403);
   });
 
   it("retorna lista se admin", async () => {
-    getSessionUser.mockReturnValue({ role: "admin" });
+    getSessionUser.mockResolvedValue({ role: "admin" });
     listAllRequests.mockReturnValue([{ id: "req1" }, { id: "req2" }]);
     const res = await GET(new Request("http://localhost/api/admin/requests?status=PENDING"));
     expect(res.status).toBe(200);

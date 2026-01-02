@@ -3,7 +3,7 @@ import { listAllRequests } from "@/data/requestsStore";
 import { getSessionUser } from "@/lib/session";
 
 export async function GET(request: Request) {
-  const user = getSessionUser();
+  const user = await getSessionUser();
   if (user.role !== "admin") {
     return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
   }

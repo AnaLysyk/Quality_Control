@@ -12,7 +12,9 @@ function getBearerToken(req: Request): string | null {
   return token;
 }
 
-async function getAuthUser(req: Request) {
+type AuthUser = { id: string; email: string | null; is_global_admin?: boolean };
+
+async function getAuthUser(req: Request): Promise<AuthUser | null> {
   if (SUPABASE_MOCK) {
     return {
       id: "mock-uid",
@@ -25,7 +27,7 @@ async function getAuthUser(req: Request) {
   if (!token) return null;
   const { data, error } = await supabaseServer.auth.getUser(token);
   if (error || !data?.user) return null;
-  return data.user;
+  return { id: data.user.id, email: data.user.email ?? null };
 }
 
 async function isGlobalAdmin(userId: string, isMockUser: boolean) {
@@ -39,13 +41,13 @@ async function isGlobalAdmin(userId: string, isMockUser: boolean) {
   return !!data?.is_global_admin;
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const admin = await isGlobalAdmin(user.id, !!user.is_global_admin);
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const id = params?.id;
   if (!id) return NextResponse.json({ error: "ID obrigatorio" }, { status: 400 });
 
   // Mock: retorna um unico cliente se o ID for conhecido
@@ -95,13 +97,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   return NextResponse.json(client, { status: 200 });
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const admin = await isGlobalAdmin(user.id, !!user.is_global_admin);
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const id = params?.id;
   if (!id) return NextResponse.json({ error: "ID obrigatorio" }, { status: 400 });
 
   // Mock PATCH

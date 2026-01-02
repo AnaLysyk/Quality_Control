@@ -19,12 +19,26 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/data/*": ["./app/data/*", "./data/*"],
-      "@/hooks/*": ["./app/hooks/*", "./hooks/*"],
-      "@/lib/*": ["./lib/*"],
-      "@/components/*": ["./app/components/*"],
-      "@/types/*": ["./src/types/*"],
-      "@/*": ["./app/*"]
+      "@/data/*": [
+        "./app/data/*",
+        "./data/*"
+      ],
+      "@/hooks/*": [
+        "./app/hooks/*",
+        "./hooks/*"
+      ],
+      "@/lib/*": [
+        "./lib/*"
+      ],
+      "@/components/*": [
+        "./app/components/*"
+      ],
+      "@/types/*": [
+        "./src/types/*"
+      ],
+      "@/*": [
+        "./app/*"
+      ]
     },
     "incremental": true,
     "plugins": [
@@ -41,6 +55,7 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "backend"
   ]
 }

@@ -1,12 +1,13 @@
-"use client";
-
-import { useParams } from "next/navigation";
 import { ReleasePageContent } from "@/release/ReleaseTemplate";
 
-export default function EmpresaReleaseDetailPage() {
-  const params = useParams();
-  const slug = (params?.releaseSlug as string) || "";
-  const company = (params?.slug as string) || "";
+type PageParams = {
+  params: { slug: string; releaseSlug: string };
+};
+
+export default async function EmpresaReleaseDetailPage({ params }: PageParams) {
+  const slug = params.releaseSlug || "";
+  const company = params.slug || "";
+  const content = await ReleasePageContent({ slug });
 
   return (
     <div className="min-h-screen bg-[var(--page-bg,#ffffff)] text-[var(--page-text,#0b1a3c)] p-6 md:p-10 space-y-4">
@@ -20,7 +21,7 @@ export default function EmpresaReleaseDetailPage() {
         <span className="mx-1">/</span>
         <span>{slug}</span>
       </nav>
-      {ReleasePageContent({ slug })}
+      {content}
     </div>
   );
 }

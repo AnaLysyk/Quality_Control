@@ -3,7 +3,7 @@ import { addRequest } from "@/data/requestsStore";
 import { getSessionUser } from "@/lib/session";
 
 export async function POST(request: Request) {
-  const user = getSessionUser();
+  const user = await getSessionUser();
   const body = await request.json().catch(() => ({}));
   const newCompanyName = body?.newCompanyName as string | undefined;
 

@@ -19,7 +19,14 @@ export default async function DashboardPage() {
 
       try {
         const run = await getRunDetails(projectCode, rel.runId);
-        stats = run?.statsNormalized ?? stats;
+        if (run) {
+          stats = {
+            pass: run.pass,
+            fail: run.fail,
+            blocked: run.blocked,
+            notRun: run.notRun,
+          };
+        }
       } catch (error) {
         console.error(`Erro ao buscar stats da run ${rel.runId}:`, error);
       }

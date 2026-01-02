@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { getAppMeta } from "@/lib/appMeta";
+import { slugifyRelease } from "@/lib/slugifyRelease";
 
 const applications = [
   { name: "SMART", slug: "smart" },
@@ -40,23 +41,28 @@ export default function HomePage() {
         const json = await res.json();
         type RawRelease = { slug?: string; title?: string; summary?: string; app?: string; project?: string };
         const rawList: RawRelease[] = Array.isArray(json.releases) ? json.releases : [];
-        const mapped: ReleaseCard[] = rawList.map((rel) => {
-          const lower = (rel.title || "").toLowerCase();
+        const mapped = rawList
+          .map((rel) => {
+            const title = rel.title ?? rel.slug ?? "";
+            const id = rel.slug ?? slugifyRelease(title);
+            if (!id || !title) return null;
+            const lower = title.toLowerCase();
           const type: ReleaseCard["type"] =
             lower.includes("aceitacao") || rel.slug?.includes("_ace")
               ? "aceitacao"
               : lower.includes("regressao") || rel.slug?.includes("_reg")
                 ? "regressao"
                 : "outro";
-          return {
-            id: rel.slug,
-            title: rel.title,
-            summary: rel.summary,
-            app: rel.app ?? rel.project,
-            project: rel.project,
-            type,
-          };
-        });
+            return {
+              id,
+              title,
+              summary: rel.summary ?? "",
+              app: rel.app ?? rel.project,
+              project: rel.project,
+              type,
+            };
+          })
+          .filter(Boolean) as ReleaseCard[];
         setReleases(mapped);
       } catch {
         setReleases([]);

@@ -1,0 +1,28 @@
+[
+  {
+    "slug": "release_1_teste_painel_qa_ace",
+    "title": "Release 1 Teste Painel QA - Aceitacao",
+    "summary": "Execucao do painel QA - Griaule Mobile (run: https://app.qase.io/run/GMT/dashboard/1) - Aceitacao",
+    "runId": 1,
+    "project": "mobile-griaule",
+    "app": "mobile-griaule",
+    "qaseProject": "GMT",
+    "radis": "RADIS_1",
+    "order": [
+      "mobile-griaule"
+    ]
+  },
+  {
+    "slug": "release_1_9_0_aceitacao",
+    "title": "RELEASE 1.9.0 - Aceitação",
+    "summary": "Release cadastrada pelo painel.",
+    "runId": 1,
+    "app": "booking",
+    "project": "booking",
+    "qaseProject": "BOOKING",
+    "createdAt": "2025-12-04T17:28:46.563Z",
+    "order": [
+      "booking"
+    ]
+  }
+]

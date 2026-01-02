@@ -1,0 +1,34 @@
+import { GET } from "@/api/admin/requests/route";
+
+jest.mock("@/lib/session", () => ({
+  getSessionUser: jest.fn(),
+}));
+
+jest.mock("@/data/requestsStore", () => ({
+  listAllRequests: jest.fn(),
+}));
+
+const getSessionUser = jest.requireMock("@/lib/session").getSessionUser as jest.Mock;
+const listAllRequests = jest.requireMock("@/data/requestsStore").listAllRequests as jest.Mock;
+
+describe("/api/admin/requests GET", () => {
+  beforeEach(() => {
+    getSessionUser.mockReset();
+    listAllRequests.mockReset();
+  });
+
+  it("retorna 403 se não for admin", async () => {
+    getSessionUser.mockReturnValue({ role: "user" });
+    const res = await GET(new Request("http://localhost/api/admin/requests"));
+    expect(res.status).toBe(403);
+  });
+
+  it("retorna lista se admin", async () => {
+    getSessionUser.mockReturnValue({ role: "admin" });
+    listAllRequests.mockReturnValue([{ id: "req1" }, { id: "req2" }]);
+    const res = await GET(new Request("http://localhost/api/admin/requests?status=PENDING"));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.total).toBe(2);
+  });
+});

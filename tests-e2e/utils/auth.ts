@@ -7,7 +7,7 @@ const adminUser = process.env.ADMIN_USER || "admin";
 type MockRole = "admin" | "client" | "user";
 
 export async function setMockUser(page: Page, role: MockRole, clientSlug?: string | null) {
-  const cookies = [
+  const cookies: Array<{ name: string; value: string; url: string }> = [
     { name: "mock_role", value: role, url: baseURL },
   ];
 

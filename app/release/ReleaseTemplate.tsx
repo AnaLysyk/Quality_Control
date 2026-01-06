@@ -55,7 +55,7 @@ export async function ReleasePageContent({ slug }: ReleasePageContentProps) {
   const source = manualRelease ? "MANUAL" : "API";
   const releaseData: AnyRelease | null = (manualRelease as AnyRelease) || (apiRelease as AnyRelease);
   if (!releaseData) {
-    return <div className="p-6 text-sm text-red-400">Release nao encontrada.</div>;
+    return <div className="p-6 text-sm text-red-400">Run nao encontrada.</div>;
   }
 
   const projectKey = (releaseData.app || (releaseData as ReleaseEntry).project || "smart").toLowerCase();
@@ -99,9 +99,9 @@ export async function ReleasePageContent({ slug }: ReleasePageContentProps) {
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="space-y-1">
-            <p className="text-xs uppercase tracking-[0.28em] text-[--tc-accent]">Release</p>
+            <p className="text-xs uppercase tracking-[0.28em] text-[--tc-accent]">Run</p>
             <h1 className="text-3xl md:text-4xl font-extrabold text-[#0b1a3c]">
-              {(releaseData as ReleaseEntry).title ?? releaseData.slug ?? "Release"}
+              {(releaseData as ReleaseEntry).title ?? releaseData.slug ?? "Run"}
             </h1>
             {(releaseData as ReleaseEntry).summary && (
               <p className="text-[--tc-text-secondary]">{(releaseData as ReleaseEntry).summary}</p>
@@ -116,7 +116,7 @@ export async function ReleasePageContent({ slug }: ReleasePageContentProps) {
               <span className="h-3 w-3 rounded-full bg-white/90 ring-2 ring-white/40" />
               <span className="leading-none">{appMeta.label}</span>
             </div>
-            <ExportPDFButton fileName={releaseData.slug || "release"} targetId="pdf-summary" />
+            <ExportPDFButton fileName={releaseData.slug || "run"} targetId="pdf-summary" />
             {source === "API" && (
               <EditReleaseButton
                 slug={releaseData.slug}
@@ -172,9 +172,9 @@ export async function ReleasePageContent({ slug }: ReleasePageContentProps) {
                 <div className="flex items-center gap-3 flex-1">
                   <Image src="/images/tc.png" alt="Testing Company" width={44} height={44} className="h-11 w-auto" />
                   <div className="space-y-1 leading-tight">
-                    <p className="text-xs uppercase tracking-[0.28em] text-[#6b7280]">Release</p>
+                    <p className="text-xs uppercase tracking-[0.28em] text-[#6b7280]">Run</p>
                     <h1 className="text-2xl font-extrabold leading-tight text-[#0b1a3c]">
-                      {releaseData.name ?? (releaseData as ReleaseEntry).title ?? "Release"}
+                      {releaseData.name ?? (releaseData as ReleaseEntry).title ?? "Run"}
                     </h1>
                   </div>
                 </div>
@@ -267,7 +267,7 @@ export default function ReleaseTemplate({ appName, finalTitle, stats, total }: R
           <div className="flex items-center gap-3">
             <Image src="/images/tc.png" alt="Testing Company" width={48} height={48} className="h-12 w-auto" />
             <div className="space-y-1 leading-tight">
-              <p className="text-xs uppercase tracking-[0.28em] text-[#6b7280]">Release</p>
+              <p className="text-xs uppercase tracking-[0.28em] text-[#6b7280]">Run</p>
               <h1 className="text-3xl font-extrabold leading-tight text-[#0b1a3c]">{appName}</h1>
               <h2 className="text-2xl font-semibold text-[#0b1a3c]">{finalTitle}</h2>
             </div>

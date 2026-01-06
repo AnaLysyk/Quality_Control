@@ -2,14 +2,17 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 export default function LoginPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") || "/clientes";
+  const nextParam = params.get("next");
+  const { refreshUser } = useAuthUser();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [supportMessage, setSupportMessage] = useState("");
   const [showSupport, setShowSupport] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -29,14 +32,34 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        if (res.status === 400) setError(body.message || "Campos obrigatorios");
-        else if (res.status === 401) setError(body.message || "Email ou senha invalidos");
-        else if (res.status === 403) setError(body.message || "Usuario bloqueado");
-        else setError(body.message || "Erro ao autenticar");
+        const body = (await res.json().catch(() => ({}))) as { message?: string; error?: string };
+        const message = body.message || body.error;
+        if (res.status === 400) setError(message || "Campos obrigatorios");
+        else if (res.status === 401) setError(message || "Email ou senha invalidos");
+        else if (res.status === 403) setError(message || "Usuario bloqueado");
+        else setError(message || "Erro ao autenticar");
         return;
       }
-      router.replace(next);
+      let target = nextParam && nextParam !== "/login" ? nextParam : "/clientes";
+      if (!nextParam) {
+        try {
+          const meRes = await fetch("/api/me", { credentials: "include", cache: "no-store" });
+          const payload = await meRes.json().catch(() => null);
+          const me = payload?.user;
+          const clientSlug = me?.clientSlug ?? me?.client?.slug ?? null;
+          const isAdmin =
+            me?.isGlobalAdmin === true || me?.is_global_admin === true || me?.role === "admin";
+          if (clientSlug) {
+            target = `/empresas/${clientSlug}/dashboard`;
+          } else if (isAdmin) {
+            target = "/admin/clients";
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+      await refreshUser();
+      router.replace(target);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao autenticar");
     } finally {
@@ -55,8 +78,8 @@ export default function LoginPage() {
         body: JSON.stringify({ email, message: supportMessage }),
       });
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setError(body.message || "Nao foi possivel enviar a solicitacao");
+        const body = (await res.json().catch(() => ({}))) as { message?: string; error?: string };
+        setError(body.message || body.error || "Nao foi possivel enviar a solicitacao");
         return;
       }
       setSupportResult("Solicitacao enviada. O administrador sera notificado.");
@@ -182,14 +205,55 @@ export default function LoginPage() {
             </div>
             <div>
               <label className="block text-sm text-gray-700">Senha</label>
-              <input
-                type="password"
-                className="mt-1 w-full rounded-full border px-4 py-2 bg-[#f5f8ff] focus:outline-none focus:ring-2 focus:ring-red-500/70"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="********"
-              />
+              <div className="relative mt-1">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="w-full rounded-full border px-4 py-2 pr-11 bg-[#f5f8ff] focus:outline-none focus:ring-2 focus:ring-red-500/70"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="********"
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword((value) => !value)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-500 transition hover:text-gray-700"
+                >
+                  {showPassword ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-10-8-10-8a21.77 21.77 0 0 1 5.06-6.88" />
+                      <path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 10 8 10 8a21.77 21.77 0 0 1-2.82 4.44" />
+                      <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
             {error && <div className="text-sm text-red-600">{error}</div>}
             <button

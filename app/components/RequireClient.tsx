@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 
 type RequireClientProps = {
-  slug?: string; // slug da rota /empresa/[slug]
+  slug?: string; // slug da rota /empresas/[slug]
   children: ReactNode;
   fallback?: ReactNode;
 };
@@ -26,7 +26,7 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
     }
 
     if (slug && user.clientSlug !== slug) {
-      router.replace(`/empresa/${user.clientSlug}/dashboard`);
+      router.replace(`/empresas/${user.clientSlug}/dashboard`);
     }
   }, [loading, user, slug, router]);
 

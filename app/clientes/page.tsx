@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { CreateClientModal, type ClientFormValues } from "@/clients/components/CreateClientModal";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -8,6 +9,7 @@ import { RequireAuth } from "@/components/RequireAuth";
 type Client = {
   id: string;
   name: string;
+  slug?: string | null;
   taxId?: string | null;
   zip?: string | null;
   address?: string | null;
@@ -21,6 +23,7 @@ function mapClient(row: any): Client {
   return {
     id: row.id,
     name: row.name ?? row.company_name ?? "",
+    slug: row.slug ?? null,
     taxId: row.tax_id ?? null,
     address: row.address ?? null,
     linkedin: row.docs_link ?? null,
@@ -151,25 +154,36 @@ function ClientesPage() {
       {loading && <p className="text-sm text-gray-600">Carregando...</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {filtered.map((client) => (
-          <div key={client.id} className="w-full rounded-lg border border-[#e5e7eb] p-4 bg-white shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded bg-gray-100 overflow-hidden flex items-center justify-center">
-                {client.logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={client.logoUrl} alt={client.name} className="h-full w-full object-contain" />
-                ) : (
-                  <span className="text-xs text-gray-500">Sem logo</span>
-                )}
+        {filtered.map((client) => {
+          const profileHref = `/empresas/${client.slug ?? client.id}/dashboard`;
+          return (
+            <div key={client.id} className="w-full rounded-lg border border-[#e5e7eb] p-4 bg-white shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded bg-gray-100 overflow-hidden flex items-center justify-center">
+                  {client.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={client.logoUrl} alt={client.name} className="h-full w-full object-contain" />
+                  ) : (
+                    <span className="text-xs text-gray-500">Sem logo</span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="font-semibold">{client.name}</div>
+                  {client.taxId && <div className="text-xs text-gray-500">{client.taxId}</div>}
+                  {client.address && <div className="text-xs text-gray-500">{client.address}</div>}
+                </div>
               </div>
-              <div className="flex-1">
-                <div className="font-semibold">{client.name}</div>
-                {client.taxId && <div className="text-xs text-gray-500">{client.taxId}</div>}
-                {client.address && <div className="text-xs text-gray-500">{client.address}</div>}
+              <div className="mt-3">
+                <Link
+                  href={profileHref}
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-[#0b1a3c] hover:text-[#e53935]"
+                >
+                  Acessar perfil
+                </Link>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {!filtered.length && !loading && (
           <div className="text-sm text-gray-600">

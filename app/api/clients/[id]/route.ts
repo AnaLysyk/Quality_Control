@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabaseServer";
+import { getSupabaseServer } from "@/lib/supabaseServer";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
@@ -25,6 +25,7 @@ async function getAuthUser(req: Request): Promise<AuthUser | null> {
 
   const token = getBearerToken(req);
   if (!token) return null;
+  const supabaseServer = getSupabaseServer();
   const { data, error } = await supabaseServer.auth.getUser(token);
   if (error || !data?.user) return null;
   return { id: data.user.id, email: data.user.email ?? null };
@@ -32,6 +33,7 @@ async function getAuthUser(req: Request): Promise<AuthUser | null> {
 
 async function isGlobalAdmin(userId: string, isMockUser: boolean) {
   if (SUPABASE_MOCK && isMockUser) return true;
+  const supabaseServer = getSupabaseServer();
   const { data } = await supabaseServer
     .from("profiles")
     .select("is_global_admin")
@@ -70,6 +72,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json(mock, { status: 200 });
   }
 
+  const supabaseServer = getSupabaseServer();
   const { data, error } = await supabaseServer.from("cliente").select("*").eq("id", id).maybeSingle();
   if (error) {
     console.error("Erro ao buscar cliente:", error);
@@ -147,6 +150,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
   if (typeof payload.active === "boolean") updates.active = payload.active;
 
+  const supabaseServer = getSupabaseServer();
   const { data, error } = await supabaseServer
     .from("cliente")
     .update(updates)

@@ -151,7 +151,7 @@ export default function TestMetricPage() {
               {clients.map((c) => (
                 <Link
                   key={c.slug || c.id}
-                  href={`/empresa/${c.slug || c.id}/dashboard`}
+                  href={`/empresas/${c.slug || c.id}/dashboard`}
                   className="group rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-5 shadow-sm transition hover:shadow-md hover:border-[var(--tc-accent,#ef0001)]/60"
                 >
                   <div className="flex items-center justify-between">
@@ -167,7 +167,7 @@ export default function TestMetricPage() {
                     </span>
                   </div>
                   <div className="mt-2 text-sm text-[var(--tc-text-secondary,#4B5563)] space-y-1">
-                    <p>Releases: {c.releases ?? "—"}</p>
+                    <p>Runs: {c.releases ?? "—"}</p>
                     <p>Média de aprovação: {c.approval != null ? `${c.approval}%` : "—"}</p>
                   </div>
                   <p className="mt-3 text-xs text-[var(--tc-text-muted,#6B7280)] underline">

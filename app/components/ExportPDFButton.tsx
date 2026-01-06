@@ -162,7 +162,7 @@ export default function ExportPDFButton({ fileName, targetId = "pdf-summary" }: 
       onClick={handleExport}
       className="inline-flex items-center justify-center rounded-full bg-white text-[#0b1a3c] border border-white/60 px-3 py-2 hover:shadow-md hover:scale-[1.02] transition focus:outline-none"
       aria-label="Exportar PDF"
-      title="Baixar PDF desta release"
+      title="Baixar PDF desta run"
     >
       <span className="text-lg font-bold leading-none">{String.fromCharCode(0x2193)}</span>
     </button>

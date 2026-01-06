@@ -1,5 +1,5 @@
 import "server-only";
-import { supabaseServer } from "@/lib/supabaseServer";
+import { getSupabaseServer } from "@/lib/supabaseServer";
 
 export type Usuario = {
   id: string;
@@ -14,6 +14,7 @@ export type Usuario = {
 };
 
 export async function getUserById(id: string): Promise<Usuario | null> {
+  const supabaseServer = getSupabaseServer();
   const { data, error } = await supabaseServer
     .from("users")
     .select("*")
@@ -27,6 +28,7 @@ export async function getUserById(id: string): Promise<Usuario | null> {
 }
 
 export async function getUserByEmail(email: string): Promise<Usuario | null> {
+  const supabaseServer = getSupabaseServer();
   const { data, error } = await supabaseServer
     .from("users")
     .select("*")
@@ -40,6 +42,7 @@ export async function getUserByEmail(email: string): Promise<Usuario | null> {
 }
 
 export async function listUsers(): Promise<Usuario[]> {
+  const supabaseServer = getSupabaseServer();
   const { data, error } = await supabaseServer.from("users").select("*").order("created_at", { ascending: false });
   if (error) {
     throw error;
@@ -48,6 +51,7 @@ export async function listUsers(): Promise<Usuario[]> {
 }
 
 export async function updateUserAvatar(id: string, avatarUrl: string): Promise<Usuario | null> {
+  const supabaseServer = getSupabaseServer();
   const { data, error } = await supabaseServer
     .from("users")
     .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })

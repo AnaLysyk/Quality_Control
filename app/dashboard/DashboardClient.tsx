@@ -28,6 +28,12 @@ type Section = {
   releases: ReleaseSlide[];
 };
 
+type DashboardHeader = {
+  kicker?: string;
+  title?: string;
+  description?: string;
+};
+
 function formatDate(value?: string) {
   if (!value) return "Data N/D";
   const date = new Date(value);
@@ -59,7 +65,7 @@ function ReleaseCarousel({ section }: { section: Section }) {
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <span
             style={appColorStyle}
@@ -67,7 +73,7 @@ function ReleaseCarousel({ section }: { section: Section }) {
           >
             {section.appLabel}
           </span>
-          <h2 className="text-xl font-bold text-[var(--tc-text-inverse)]">Releases desta aplicacao</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-[var(--tc-text-inverse)]">Runs desta aplicacao</h2>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -99,7 +105,7 @@ function ReleaseCarousel({ section }: { section: Section }) {
           return (
             <MotionFade
               key={rel.slug}
-              className="snap-center shrink-0 w-full max-w-[560px] min-w-[360px]"
+              className="snap-center shrink-0 w-[88%] sm:w-full max-w-[560px] min-w-[260px] sm:min-w-[320px] lg:min-w-[380px]"
               delay={0.05}
             >
               <div className="card-tc bg-[var(--tc-surface-muted)]/90 text-[var(--tc-text-inverse)] border-[var(--tc-border)]/20 p-5 shadow-[0_18px_38px_rgba(0,0,0,0.25)]">
@@ -156,7 +162,15 @@ function ReleaseCarousel({ section }: { section: Section }) {
   );
 }
 
-export default function DashboardClient({ sections }: { sections: Section[] }) {
+export default function DashboardClient({
+  sections,
+  header,
+  showHeader = true,
+}: {
+  sections: Section[];
+  header?: DashboardHeader;
+  showHeader?: boolean;
+}) {
   const appOrder = useMemo(
     () => ["sfq", "print", "booking", "cds", "gmt", "smart", "trust", "cidadao-smart", "mobile-griaule"],
     []
@@ -172,16 +186,30 @@ export default function DashboardClient({ sections }: { sections: Section[] }) {
     });
   }, [sections, appOrder]);
 
+  const headerContent = {
+    kicker: header?.kicker ?? "Testing Metric",
+    title: header?.title ?? "Runs por aplicacao",
+    description:
+      header?.description ??
+      "Navegue pelas runs de cada aplicacao em um carrossel horizontal com graficos e estatisticas resumidas.",
+  };
+
   return (
-    <div className="min-h-screen text-[var(--tc-text-inverse)] bg-[var(--tc-bg)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10 py-8 space-y-10">
-        <header className="space-y-3">
-          <p className="text-xs uppercase tracking-[0.45em] text-[var(--tc-accent)]">Testing Metric</p>
-          <h1 className="text-4xl font-extrabold text-[var(--tc-text-inverse)]">Releases por aplicacao</h1>
-          <p className="text-[var(--tc-text-secondary)] max-w-4xl">
-            Navegue pelas releases de cada aplicacao em um carrossel horizontal com graficos e estatisticas resumidas.
-          </p>
-        </header>
+    <div className="min-h-screen tc-dark text-[var(--tc-text-inverse)] bg-[var(--tc-bg)]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10 py-8 space-y-8 sm:space-y-10">
+        {showHeader && (
+          <header className="space-y-3">
+            <p className="text-[11px] sm:text-xs uppercase tracking-[0.32em] sm:tracking-[0.45em] text-[var(--tc-accent)]">
+              {headerContent.kicker}
+            </p>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--tc-text-inverse)]">
+              {headerContent.title}
+            </h1>
+            <p className="text-sm sm:text-base text-[var(--tc-text-secondary)] max-w-4xl">
+              {headerContent.description}
+            </p>
+          </header>
+        )}
 
         <div className="space-y-12">
           {ordered.map((section, idx) => (

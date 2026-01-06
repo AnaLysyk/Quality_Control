@@ -65,14 +65,14 @@ export default function ReleaseManager() {
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData?.message || "Falha ao criar release");
+        throw new Error(errData?.message || "Falha ao criar run");
       }
-      setStatus("Release criada com sucesso.");
+      setStatus("Run criada com sucesso.");
       setTitle("");
       setDescription("");
       setType("aceitacao");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao criar release";
+      const message = err instanceof Error ? err.message : "Erro ao criar run";
       setStatus(message);
     } finally {
       setLoading(false);
@@ -83,7 +83,7 @@ export default function ReleaseManager() {
     <div className="rounded-2xl border border-white/10 bg-[#0f1320] p-6 text-white space-y-4 w-full max-w-2xl">
       <div>
         <p className="text-xs uppercase tracking-[0.35em] text-[#7CD343]">Gerenciar</p>
-        <h2 className="text-2xl font-bold">Nova Release/Run</h2>
+        <h2 className="text-2xl font-bold">Nova Run</h2>
       </div>
 
       <div className="grid gap-3">
@@ -111,7 +111,7 @@ export default function ReleaseManager() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full rounded-lg bg-[#0b1020] border border-white/10 px-3 py-2 text-white focus:border-[#7CD343] focus:outline-none"
-            placeholder="Ex.: Release 1.0 PRINT"
+            placeholder="Ex.: Run 1.0 PRINT"
           />
         </label>
 
@@ -121,7 +121,7 @@ export default function ReleaseManager() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full min-h-[96px] rounded-lg bg-[#0b1020] border border-white/10 px-3 py-2 text-white focus:border-[#7CD343] focus:outline-none"
-            placeholder="Detalhes da release"
+            placeholder="Detalhes da run"
           />
         </label>
 
@@ -142,7 +142,7 @@ export default function ReleaseManager() {
           disabled={!canSubmit}
           className="inline-flex justify-center rounded-lg bg-[#7CD343] px-4 py-2 font-semibold text-[#0b1305] shadow-lg shadow-[#7CD343]/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading ? "Criando..." : "Criar Release"}
+          {loading ? "Criando..." : "Criar Run"}
         </button>
 
         {status && <p className="text-sm text-gray-200">{status}</p>}

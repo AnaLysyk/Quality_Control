@@ -373,7 +373,7 @@ function AdminClientsPage() {
                   </div>
                   <div className="flex flex-wrap gap-3">
                     <ActionChip
-                      href={`/empresas/${form.slug || selected.slug || selected.id}/home`}
+                      href={`/empresas/${form.slug || selected.slug || selected.id}/dashboard`}
                       icon={<FiExternalLink size={14} />}
                       label="Entrar na empresa"
                       disabled={isInactive}
@@ -403,7 +403,7 @@ function AdminClientsPage() {
                     title="Acessar perfil"
                     onClick={() => {
                       const slug = form.slug || selected.slug || selected.id;
-                      window.open(`/empresas/${slug}/home`, "_blank");
+                      window.open(`/empresas/${slug}/dashboard`, "_blank");
                     }}
                     disabled={isInactive}
                   >
@@ -427,7 +427,7 @@ function AdminClientsPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex items-center gap-3 border-b border-[#e5e7eb] pb-2">
+            <div className="flex items-center gap-3 border-b border-[var(--tc-border)] pb-2">
               <TabButton active={activeTab === "visao"} onClick={() => setActiveTab("visao")}>
                 Visao Geral
               </TabButton>
@@ -440,7 +440,7 @@ function AdminClientsPage() {
             {activeTab === "visao" && (
               <div className="space-y-4">
                 <div className="grid gap-3 md:grid-cols-2">
-                  <InfoCard label="Tax ID" value={form.taxId ?? selected.taxId} />
+                  <InfoCard label="CNPJ" value={form.taxId ?? selected.taxId} />
                   <InfoCard label="CEP / Endereco" value={form.address ?? selected.address} />
                   <InfoCard label="Telefone" value={form.phone ?? selected.phone} />
                   <InfoCard label="Website" value={form.website ?? selected.website} isLink />
@@ -450,9 +450,9 @@ function AdminClientsPage() {
                 </div>
 
                 {isEditing && (
-                  <div className="rounded-xl border border-[#e5e7eb] bg-[#f7f9fb] p-4 space-y-3">
+                  <div className="rounded-xl border border-[var(--tc-border)] bg-[var(--tc-surface-2)] p-4 space-y-3">
                     <EditField label="Nome" value={form.name ?? ""} onChange={(v) => setForm((f) => ({ ...f, name: v }))} />
-                    <EditField label="Tax ID" value={form.taxId ?? ""} onChange={(v) => setForm((f) => ({ ...f, taxId: v }))} />
+                    <EditField label="CNPJ" value={form.taxId ?? ""} onChange={(v) => setForm((f) => ({ ...f, taxId: v }))} />
                     <EditField label="CEP / Endereco" value={form.address ?? ""} onChange={(v) => setForm((f) => ({ ...f, address: v }))} />
                     <EditField label="Telefone" value={form.phone ?? ""} onChange={(v) => setForm((f) => ({ ...f, phone: v }))} />
                     <EditField label="Website" value={form.website ?? ""} onChange={(v) => setForm((f) => ({ ...f, website: v }))} />
@@ -467,9 +467,9 @@ function AdminClientsPage() {
             {activeTab === "pessoas" && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-[#0b1a3c]">Pessoas desta empresa</h3>
+                  <h3 className="text-lg font-semibold text-[var(--tc-text-primary)]">Pessoas desta empresa</h3>
                   <button
-                    className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:border-indigo-300"
+                    className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:border-indigo-300 dark:border-indigo-400/40 dark:bg-indigo-500/15 dark:text-indigo-200"
                     onClick={() => {
                       setUserClientId(selected.id);
                       setOpenUserModal(true);
@@ -624,7 +624,9 @@ function TabButton({ active, children, onClick }: { active: boolean; children: R
     <button
       onClick={onClick}
       className={`px-3 py-2 text-sm font-semibold border-b-2 transition ${
-        active ? "text-[#0b1e3c] border-[#e53935]" : "text-[#6b7280] border-transparent hover:text-[#0b1e3c]"
+        active
+          ? "text-[var(--tc-text-primary)] border-[var(--tc-accent)]"
+          : "text-[var(--tc-text-muted)] border-transparent hover:text-[var(--tc-text-primary)]"
       }`}
     >
       {children}
@@ -635,15 +637,20 @@ function TabButton({ active, children, onClick }: { active: boolean; children: R
 function InfoCard({ label, value, isLink, full }: { label: string; value?: string | null; isLink?: boolean; full?: boolean }) {
   if (!value) return null;
   const content = isLink ? (
-    <a href={value} target="_blank" rel="noreferrer" className="text-[#e53935] font-semibold hover:underline break-all">
+    <a
+      href={value}
+      target="_blank"
+      rel="noreferrer"
+      className="text-[var(--tc-accent)] font-semibold hover:underline break-all"
+    >
       {value}
     </a>
   ) : (
-    <p className="text-[#111827]">{value}</p>
+    <p className="text-[var(--tc-text-primary)]">{value}</p>
   );
   return (
-    <div className={`rounded-xl border border-[#e5e7eb] bg-white p-3 ${full ? "md:col-span-2" : ""}`}>
-      <p className="text-[11px] uppercase tracking-[0.2em] text-[#374151]">{label}</p>
+    <div className={`rounded-xl border border-[var(--tc-border)] bg-[var(--tc-surface)] p-3 ${full ? "md:col-span-2" : ""}`}>
+      <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--tc-text-muted)]">{label}</p>
       {content}
     </div>
   );
@@ -651,10 +658,10 @@ function InfoCard({ label, value, isLink, full }: { label: string; value?: strin
 
 function EditField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
-    <label className="block text-sm text-[#0b1a3c]">
+    <label className="block text-sm text-[var(--tc-text-primary)]">
       {label}
       <input
-        className="mt-1 w-full px-3 py-2 border rounded-lg border-[#e5e7eb] focus:ring-2 focus:ring-[#e53935]/50"
+        className="mt-1 w-full px-3 py-2 border rounded-lg border-[var(--tc-border)] bg-[var(--tc-surface)] text-[var(--tc-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--tc-accent)]/30 focus:border-[var(--tc-accent)]"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
@@ -664,10 +671,10 @@ function EditField({ label, value, onChange }: { label: string; value: string; o
 
 function EditTextArea({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
-    <label className="block text-sm text-[#0b1a3c]">
+    <label className="block text-sm text-[var(--tc-text-primary)]">
       {label}
       <textarea
-        className="mt-1 w-full px-3 py-2 border rounded-lg border-[#e5e7eb] focus:ring-2 focus:ring-[#e53935]/50"
+        className="mt-1 w-full px-3 py-2 border rounded-lg border-[var(--tc-border)] bg-[var(--tc-surface)] text-[var(--tc-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--tc-accent)]/30 focus:border-[var(--tc-accent)]"
         rows={3}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -714,16 +721,16 @@ function CompanyUsers({ clientId, onAddUser, disabled = false }: CompanyUsersPro
       {loading && <p className="text-sm text-gray-500">Carregando pessoas...</p>}
       {!loading && users.length === 0 && <p className="text-sm text-gray-500">Nenhum responsavel vinculado.</p>}
       <div className="flex items-center gap-2 text-xs">
-        <span className="text-gray-500">Modo</span>
+        <span className="text-[var(--tc-text-muted)]">Modo</span>
         <button
-          className={`rounded px-2 py-1 border text-xs ${mode === "view" ? "border-indigo-300 text-indigo-700" : "border-gray-200 text-gray-600"} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
+          className={`rounded px-2 py-1 border text-xs ${mode === "view" ? "border-indigo-300 text-indigo-700" : "border-[var(--tc-border)] text-[var(--tc-text-muted)]"} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
           disabled={disabled}
           onClick={() => !disabled && setMode("view")}
         >
           Visualizar
         </button>
         <button
-          className={`rounded px-2 py-1 border text-xs ${mode === "edit" ? "border-indigo-300 text-indigo-700" : "border-gray-200 text-gray-600"} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
+          className={`rounded px-2 py-1 border text-xs ${mode === "edit" ? "border-indigo-300 text-indigo-700" : "border-[var(--tc-border)] text-[var(--tc-text-muted)]"} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
           disabled={disabled}
           onClick={() => {
             if (disabled) return;
@@ -736,18 +743,18 @@ function CompanyUsers({ clientId, onAddUser, disabled = false }: CompanyUsersPro
       </div>
       <div className="space-y-2">
         {users.map((u) => (
-          <div key={u.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+          <div key={u.id} className="flex items-center justify-between rounded-lg border border-[var(--tc-border)] px-3 py-2">
             <div className="flex items-center gap-2">
               {u.avatar_url ? (
                 <Image src={u.avatar_url} alt={u.name} width={32} height={32} className="rounded-full object-cover" />
               ) : (
-                <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-xs text-gray-600">
+                <div className="h-8 w-8 rounded-full bg-[var(--tc-surface-2)] flex items-center justify-center text-xs text-[var(--tc-text-muted)]">
                   {u.name?.slice(0, 1)?.toUpperCase() ?? "U"}
                 </div>
               )}
               <div>
                 <div className="text-sm font-medium">{u.name}</div>
-                <div className="text-xs text-gray-500">{u.job_title ?? u.role ?? "Membro"}</div>
+                <div className="text-xs text-[var(--tc-text-muted)]">{u.job_title ?? u.role ?? "Membro"}</div>
               </div>
             </div>
             {mode === "edit" && (
@@ -767,7 +774,7 @@ function CompanyUsers({ clientId, onAddUser, disabled = false }: CompanyUsersPro
       </div>
       {mode === "edit" && (
         <button
-          className={`mt-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:border-indigo-300 ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
+          className={`mt-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:border-indigo-300 dark:border-indigo-400/40 dark:bg-indigo-500/15 dark:text-indigo-200 ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
           disabled={disabled}
           onClick={() => {
             if (disabled) return;

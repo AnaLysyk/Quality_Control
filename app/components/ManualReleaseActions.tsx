@@ -24,14 +24,14 @@ export default function ManualReleaseActions({ slug, editable }: ManualReleaseAc
       });
       router.refresh();
     } catch (e) {
-      console.error("Erro ao finalizar release manual", e);
+      console.error("Erro ao finalizar run manual", e);
     } finally {
       setLoading(false);
     }
   };
 
   const editTitle = async () => {
-    const next = prompt("Novo título da release:");
+    const next = prompt("Novo titulo da run:");
     if (!next) return;
     setLoading(true);
     try {
@@ -42,7 +42,7 @@ export default function ManualReleaseActions({ slug, editable }: ManualReleaseAc
       });
       if (res.ok) router.refresh();
     } catch (e) {
-      console.error("Erro ao editar release manual", e);
+      console.error("Erro ao editar run manual", e);
     } finally {
       setLoading(false);
     }
@@ -64,7 +64,7 @@ export default function ManualReleaseActions({ slug, editable }: ManualReleaseAc
         disabled={loading}
         className="rounded-xl bg-[var(--tc-accent,#ef0001)] px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-60"
       >
-        {loading ? "..." : "Finalizar release"}
+        {loading ? "..." : "Finalizar run"}
       </button>
     </div>
   );

@@ -1,22 +1,19 @@
 import { test, expect } from "@playwright/test";
+import { login, setMockUser } from "./utils/auth";
 
-test("admin global vê lista de clientes", async ({ page }) => {
-  await page.goto("/login");
-  await page.fill('input[name="email"]', "admin@example.com");
-  await page.fill('input[name="password"]', "senha");
-  await page.click('button[type="submit"]');
+test("admin global sees clients list", async ({ page }) => {
+  await setMockUser(page, "admin");
+  await login(page, "admin@example.com", "senha");
 
   await page.goto("/admin/clients");
   await expect(page).toHaveURL(/\/admin\/clients/);
-  await expect(page.getByRole("heading", { name: /Clientes/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Empresas/i })).toBeVisible();
 });
 
-test("user comum não acessa /admin/clients", async ({ page }) => {
-  await page.goto("/login");
-  await page.fill('input[name="email"]', "user@example.com");
-  await page.fill('input[name="password"]', "senha");
-  await page.click('button[type="submit"]');
+test("user cannot access /admin/clients", async ({ page }) => {
+  await setMockUser(page, "user", "griaule");
+  await login(page, "user@example.com", "senha");
 
   await page.goto("/admin/clients");
-  await expect(page.getByText(/sem permissão/i)).toBeVisible();
+  await expect(page.getByText(/Acesso restrito a admin global/i)).toBeVisible();
 });

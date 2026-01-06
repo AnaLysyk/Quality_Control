@@ -2,16 +2,22 @@ import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { ClientCreateRequestSchema, ClientListResponseSchema, ClientSchema } from "@/contracts/client";
+import { ErrorResponseSchema } from "@/contracts/errors";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
+const jsonError = (message: string, status: number) =>
+  NextResponse.json(ErrorResponseSchema.parse({ error: message }), { status });
+
 type ClienteRow = {
   id: string;
   company_name?: string | null;
   name?: string | null;
+  slug?: string | null;
   tax_id?: string | null;
   address?: string | null;
   phone?: string | null;
@@ -124,6 +130,7 @@ function mapRow(row: ClienteRow) {
     id: row.id,
     name: companyName,
     company_name: companyName,
+    slug: row.slug ?? null,
     tax_id: row.tax_id ?? null,
     address: row.address ?? null,
     phone: row.phone ?? null,
@@ -141,33 +148,31 @@ export async function GET(req: NextRequest) {
   try {
     const admin = await requireAdmin(req);
     const user = admin ?? (await requireUser(req));
-    if (!user) return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    if (!user) return jsonError("Nao autorizado", 401);
 
     if (SUPABASE_MOCK) {
       const now = new Date().toISOString();
-      return NextResponse.json(
-        {
-          items: [
-            {
-              id: "griaule",
-              slug: "griaule",
-              name: "Griaule",
-              company_name: "Griaule",
-              tax_id: "00.000.000/0000-00",
-              address: "Rua Exemplo, 123",
-              phone: "+55 11 99999-0000",
-              website: "https://www.griaule.com",
-              logo_url: "/images/griaule.png",
-              docs_link: "https://docs.exemplo.com",
-              notes: "Cliente mock para desenvolvimento",
-              active: true,
-              created_at: now,
-              created_by: user.id,
-            },
-          ],
-        },
-        { status: 200 },
-      );
+      const payload = ClientListResponseSchema.parse({
+        items: [
+          {
+            id: "griaule",
+            slug: "griaule",
+            name: "Griaule",
+            company_name: "Griaule",
+            tax_id: "00.000.000/0000-00",
+            address: "Rua Exemplo, 123",
+            phone: "+55 11 99999-0000",
+            website: "https://www.griaule.com",
+            logo_url: "/images/griaule.png",
+            docs_link: "https://docs.exemplo.com",
+            notes: "Cliente mock para desenvolvimento",
+            active: true,
+            created_at: now,
+            created_by: user.id,
+          },
+        ],
+      });
+      return NextResponse.json(payload, { status: 200 });
     }
 
     const supabase = admin ? createSupabaseService() : createSupabase(user.token);
@@ -194,53 +199,54 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       console.error("Erro ao buscar clientes:", error);
-      return NextResponse.json({ error: "Erro ao buscar clientes" }, { status: 500 });
+      return jsonError("Erro ao buscar clientes", 500);
     }
 
-    return NextResponse.json({ items: (data ?? []).map(mapRow) }, { status: 200 });
+    const payload = ClientListResponseSchema.parse({ items: (data ?? []).map(mapRow) });
+    return NextResponse.json(payload, { status: 200 });
   } catch (err) {
     console.error("Erro inesperado no GET /api/clients:", err);
-    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+    return jsonError("Erro interno", 500);
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
     const auth = await requireAdmin(req);
-    if (!auth) return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
+    if (!auth) return jsonError("Nao autorizado", 403);
+
+    const body = await req.json().catch(() => null);
+    const parsed = ClientCreateRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      return jsonError("Payload invalido", 400);
+    }
+
+    const input = parsed.data;
 
     if (SUPABASE_MOCK) {
-      return NextResponse.json(
-        {
-          id: randomUUID(),
-          name: "Cliente Mock",
-          company_name: "Cliente Mock",
-          active: true,
-          created_by: auth.id,
-        },
-        { status: 201 },
-      );
+      const payload = ClientSchema.parse({
+        id: randomUUID(),
+        name: "Cliente Mock",
+        company_name: "Cliente Mock",
+        active: true,
+        created_by: auth.id,
+      });
+      return NextResponse.json(payload, { status: 201 });
     }
 
-    const payload = await req.json().catch(() => null);
-    if (!payload || typeof payload !== "object") {
-      return NextResponse.json({ error: "Payload invalido" }, { status: 400 });
-    }
-
-    const companyName = sanitize((payload as any).company_name || (payload as any).name);
-    const taxId = sanitize((payload as any).tax_id);
-    const address = sanitize((payload as any).address);
-    const phone = sanitize((payload as any).phone);
-    const website = sanitize((payload as any).website);
-    const logoUrl = sanitize((payload as any).logo_url);
-    const docsLink = sanitize((payload as any).docs_link || (payload as any).docs_url);
-    const notes = sanitize((payload as any).notes, MAX_NOTES);
-    const description = sanitize((payload as any).description);
-    const active =
-      typeof (payload as any).active === "boolean" ? (payload as any).active : true;
+    const companyName = sanitize(input.company_name || input.name);
+    const taxId = sanitize(input.tax_id);
+    const address = sanitize(input.address);
+    const phone = sanitize(input.phone);
+    const website = sanitize(input.website);
+    const logoUrl = sanitize(input.logo_url);
+    const docsLink = sanitize(input.docs_link || input.docs_url);
+    const notes = sanitize(input.notes, MAX_NOTES);
+    const description = sanitize(input.description);
+    const active = typeof input.active === "boolean" ? input.active : true;
 
     if (!companyName) {
-      return NextResponse.json({ error: "Campo 'name' ou 'company_name' e obrigatorio" }, { status: 400 });
+      return jsonError("Campo 'name' ou 'company_name' e obrigatorio", 400);
     }
 
     const newRow: Record<string, unknown> = {
@@ -261,12 +267,13 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error("Erro ao criar cliente:", error);
-      return NextResponse.json({ error: "Erro ao criar cliente" }, { status: 500 });
+      return jsonError("Erro ao criar cliente", 500);
     }
 
-    return NextResponse.json(mapRow(data as ClienteRow), { status: 201 });
+    const payload = ClientSchema.parse(mapRow(data as ClienteRow));
+    return NextResponse.json(payload, { status: 201 });
   } catch (err) {
     console.error("Erro inesperado no POST /api/clients:", err);
-    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+    return jsonError("Erro interno", 500);
   }
 }

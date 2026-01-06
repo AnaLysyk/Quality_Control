@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest, requireUserRecord } from "@/lib/jwtAuth";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   const auth = await authenticateRequest(request);
   const user = await requireUserRecord(auth);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const supabaseAdmin = getSupabaseAdmin();
   const form = await request.formData();
   const file = form.get("file") as File | null;
   if (!file) return NextResponse.json({ error: "Arquivo não enviado" }, { status: 400 });

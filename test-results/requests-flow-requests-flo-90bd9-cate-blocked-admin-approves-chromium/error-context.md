@@ -1,0 +1,67 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - link "Logo Painel QA Testing Metric" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]:
+          - img "Logo"
+        - generic [ref=e7]:
+          - generic [ref=e8]: Painel QA
+          - generic [ref=e9]: Testing Metric
+      - navigation [ref=e10]:
+        - generic [ref=e11]:
+          - link "Logo TC" [ref=e13] [cursor=pointer]:
+            - /url: /
+            - img "Logo TC"
+          - generic [ref=e14]:
+            - paragraph [ref=e16]: Navegacao
+            - generic [ref=e17]:
+              - link "Painel Admin" [ref=e18] [cursor=pointer]:
+                - /url: /admin/home
+                - img [ref=e21]
+                - generic: Painel Admin
+              - link "Empresas" [ref=e26] [cursor=pointer]:
+                - /url: /admin/clients
+                - img [ref=e29]
+                - generic: Empresas
+              - link "Gestao de Runs" [ref=e34] [cursor=pointer]:
+                - /url: /admin/runs
+                - img [ref=e37]
+                - generic: Gestao de Runs
+    - button "Menu do usuario" [ref=e42]:
+      - img [ref=e43]
+    - main [ref=e48]:
+      - generic [ref=e49]:
+        - heading "Painel Admin" [level=1] [ref=e50]
+        - generic [ref=e51]:
+          - button "Perfil" [ref=e52]:
+            - img [ref=e53]
+            - text: Perfil
+          - button "Sair" [ref=e56]:
+            - img [ref=e57]
+            - text: Sair
+      - generic [ref=e60]:
+        - generic [ref=e61]:
+          - generic [ref=e62]:
+            - heading "Solicitações (Admin)" [level=1] [ref=e63]
+            - paragraph [ref=e64]: Aprovar ou rejeitar pedidos de alteração
+          - button "Atualizar" [ref=e65]
+        - generic [ref=e66]:
+          - combobox [ref=e67]:
+            - option "Status (todos)" [selected]
+            - option "Pendente"
+            - option "Aprovado"
+            - option "Rejeitado"
+          - combobox [ref=e68]:
+            - option "Tipo (todos)" [selected]
+            - option "Email"
+            - option "Empresa"
+        - paragraph [ref=e69]: Sem permissão (faça login como admin)
+        - paragraph [ref=e71]: Nenhuma solicitação.
+  - button "Open Next.js Dev Tools" [ref=e77] [cursor=pointer]:
+    - img [ref=e78]
+  - alert [ref=e81]
+```

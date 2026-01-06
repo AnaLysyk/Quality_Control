@@ -12,7 +12,7 @@ export function EditReleaseButton({ slug, currentTitle, currentRunId }: EditRele
   const [loading, setLoading] = useState(false);
 
   const handleEdit = async () => {
-    const nextTitle = prompt("Novo título da release:", currentTitle ?? "");
+    const nextTitle = prompt("Novo titulo da run:", currentTitle ?? "");
     const nextRun = prompt("Novo runId (Qase):", currentRunId ? String(currentRunId) : "");
     if (!nextTitle && !nextRun) return;
     setLoading(true);
@@ -38,7 +38,7 @@ export function EditReleaseButton({ slug, currentTitle, currentRunId }: EditRele
       disabled={loading}
       className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold hover:bg-white/15 disabled:opacity-60"
     >
-      {loading ? "Salvando..." : "Editar release"}
+      {loading ? "Salvando..." : "Editar run"}
     </button>
   );
 }

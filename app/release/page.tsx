@@ -72,19 +72,19 @@ export default function ReleasesPage() {
     <div className="min-h-screen bg-[var(--page-bg,#ffffff)] text-[var(--page-text,#0b1a3c)] p-10 space-y-8">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-(--tc-text-inverse)">Releases monitoradas</h1>
-          <p className="text-(--tc-text-secondary)">Selecione a aplicacao para acessar o release desejado.</p>
+          <h1 className="text-3xl font-bold text-(--tc-text-inverse)">Runs monitoradas</h1>
+          <p className="text-(--tc-text-secondary)">Selecione a aplicacao para acessar a run desejada.</p>
         </div>
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Buscar releases"
+          placeholder="Buscar runs"
           className="w-full max-w-md rounded-xl border border-(--tc-border) bg-(--tc-surface-dark) px-4 py-3 text-sm text-(--tc-text-inverse) placeholder:text-(--tc-text-muted) focus:border-[--tc-accent] focus:outline-none focus:ring-2 focus:ring-[--tc-accent]/40"
         />
       </div>
 
-      {loading && <p className="text-sm text-(--tc-text-muted)">Carregando releases...</p>}
+      {loading && <p className="text-sm text-(--tc-text-muted)">Carregando runs...</p>}
       {!loading && !filtered.length && (
         <p className="text-sm text-(--tc-text-muted)">Nenhum resultado encontrado. Ajuste a busca ou clique em uma aplicacao.</p>
       )}
@@ -107,7 +107,7 @@ export default function ReleasesPage() {
                 href={`/applications/${appKey}`}
                 className="cursor-pointer text-sm font-semibold text-(--tc-accent) hover:brightness-110 transition"
               >
-                Ver todas as releases desta aplicacao →
+                Ver todas as runs desta aplicacao →
               </Link>
             </div>
 
@@ -116,7 +116,7 @@ export default function ReleasesPage() {
                 <Link
                   key={rel.slug}
                   href={`/release/${rel.slug}`}
-                  aria-label={`Abrir release ${rel.title}`}
+                  aria-label={`Abrir run ${rel.title}`}
                   className={`cursor-pointer group card-tc bg-white text-[#0b1a3c] border border-(--tc-border)/40 p-4 min-h-40 rounded-xl transition hover:bg-(--tc-surface-hover) hover:border-[--tc-accent]/60 hover:shadow-[0_10px_30px_var(--tc-accent-soft)] ${appColorClass}`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -143,7 +143,7 @@ export default function ReleasesPage() {
                     </span>
 
                     <span className="inline-flex items-center gap-2 text-sm font-semibold text-(--tc-accent)">
-                      Abrir release →
+                      Abrir run →
                     </span>
                   </div>
                 </Link>

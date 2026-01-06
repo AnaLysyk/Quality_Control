@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
@@ -20,6 +20,7 @@ async function requireAdmin(req: NextRequest) {
   const token = extractToken(req);
   if (!token) return null;
 
+  const supabaseAdmin = getSupabaseAdmin();
   const { data: authData, error } = await supabaseAdmin.auth.getUser(token);
   if (error || !authData?.user) return null;
 
@@ -56,6 +57,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Em produção: tenta puxar empresas e calcular agregados simples (placeholders).
+  const supabaseAdmin = getSupabaseAdmin();
   const { data: clients, error } = await supabaseAdmin
     .from("cliente")
     .select("id, company_name, slug, active")

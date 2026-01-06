@@ -30,7 +30,7 @@ export function ClientDetails({ client, isGlobalAdmin, onOpenCreateUser, onEditC
   }
 
   const infoFields = [
-    { label: "Tax ID", value: client.taxId },
+    { label: "CNPJ", value: client.taxId },
     { label: "Endereco", value: client.address },
     { label: "Website", value: client.website, isLink: true },
     { label: "Telefone", value: client.phone },

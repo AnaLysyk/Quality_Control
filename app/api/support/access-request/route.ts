@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabaseServer";
+import { getSupabaseServer } from "@/lib/supabaseServer";
 import { authenticateRequest } from "@/lib/jwtAuth";
 
 type Payload = {
@@ -11,6 +11,7 @@ type Payload = {
 };
 
 export async function POST(req: Request) {
+  const supabaseServer = getSupabaseServer();
   const body = (await req.json().catch(() => ({}))) as Payload;
   const email = body.email?.toLowerCase().trim();
   const company = (body.company || "").trim();
@@ -57,6 +58,7 @@ export async function GET(req: Request) {
   const authUser = await authenticateRequest(req);
   if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
+  const supabaseServer = getSupabaseServer();
   const { data: userRow, error: userError } = await supabaseServer
     .from("users")
     .select("id, is_global_admin")

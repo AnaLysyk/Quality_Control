@@ -211,7 +211,7 @@ export default function AdminHomePage() {
 
                 {c.slug && (
                   <a
-                    href={`/empresas/${c.slug}/home`}
+                    href={`/empresas/${c.slug}/dashboard`}
                     className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-red-600 hover:underline"
                   >
                     Entrar na empresa

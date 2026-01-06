@@ -1,29 +1,49 @@
 import { test, expect } from "@playwright/test";
+import { login, setMockUser } from "./utils/auth";
 
-test("fluxo de request: criar, duplicar bloqueado, admin aprova", async ({ page }) => {
-  // Usuário cria solicitação
-  await page.goto("/login");
-  await page.fill('input[name="email"]', "user@example.com");
-  await page.fill('input[name="password"]', "senha");
-  await page.click('button[type="submit"]');
+const companyChangeEndpoint = "/api/requests/company-change";
+
+test("requests flow: create, duplicate blocked, admin approves", async ({ page }) => {
+  await setMockUser(page, "user");
+  await login(page, "user@example.com", "senha");
 
   await page.goto("/requests");
-  await page.fill('input[placeholder*="email"]', "novo@example.com");
-  await page.click('button:has-text("Enviar")');
-  await expect(page.getByText(/Solicitação de email enviada/i)).toBeVisible();
 
-  // Tentativa duplicada deve falhar (mensagem)
-  await page.fill('input[placeholder*="email"]', "outro@example.com");
-  await page.click('button:has-text("Enviar")');
-  await expect(page.getByText(/pendente/i)).toBeVisible(); // ajuste conforme mensagem de 409
+  const companyInput = page.getByPlaceholder("Novo nome da empresa");
+  const companyCard = page.getByRole("heading", { name: /empresa/i }).locator("..");
+  const sendButton = companyCard.getByRole("button", { name: /Enviar/i });
+  const message = page.locator("main > div > p").first();
 
-  // Admin aprova
-  await page.goto("/login");
-  await page.fill('input[name="email"]', "admin@example.com");
-  await page.fill('input[name="password"]', "senha");
-  await page.click('button[type="submit"]');
+  const firstResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes(companyChangeEndpoint) &&
+      response.request().method() === "POST"
+  );
+  await companyInput.fill("Empresa Nova");
+  await sendButton.click();
+  const firstResponse = await firstResponsePromise;
+  expect([201, 409]).toContain(firstResponse.status());
+  if (firstResponse.status() === 201) {
+    await expect(message).toContainText(/empresa enviada/i);
+  } else {
+    await expect(message).toContainText(/pendente/i);
+  }
+
+  const duplicateResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes(companyChangeEndpoint) &&
+      response.request().method() === "POST"
+  );
+  await companyInput.fill("Empresa Duplicada");
+  await sendButton.click();
+  const duplicateResponse = await duplicateResponsePromise;
+  expect(duplicateResponse.status()).toBe(409);
+  await expect(message).toContainText(/pendente/i);
+
+  await setMockUser(page, "admin");
+  await login(page, "admin@example.com", "senha");
 
   await page.goto("/admin/requests");
-  await page.click('button:has-text("Aprovar")');
+  await page.getByRole("button", { name: /Aprovar/i }).first().click();
   await expect(page.getByText(/Aprovado/i)).toBeVisible();
 });

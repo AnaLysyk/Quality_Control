@@ -7,7 +7,16 @@ type Stats = { pass: number; fail: number; blocked: number; notRun: number };
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+type DashboardPageProps = {
+  header?: {
+    kicker?: string;
+    title?: string;
+    description?: string;
+  };
+  showHeader?: boolean;
+};
+
+export default async function DashboardPage({ header, showHeader = true }: DashboardPageProps) {
   const releases = await getAllReleases();
 
   const enriched = await Promise.all(
@@ -67,5 +76,5 @@ export default async function DashboardPage() {
     };
   });
 
-  return <DashboardClient sections={sections} />;
+  return <DashboardClient sections={sections} header={header} showHeader={showHeader} />;
 }

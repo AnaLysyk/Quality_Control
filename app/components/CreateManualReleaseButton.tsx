@@ -67,7 +67,7 @@ export function CreateManualReleaseButton() {
           observations: form.observations,
         }),
       });
-      if (!res.ok) throw new Error("Erro ao criar release");
+      if (!res.ok) throw new Error("Erro ao criar run");
       const created = await res.json();
       setOpen(false);
       setForm(initialState);
@@ -85,14 +85,14 @@ export function CreateManualReleaseButton() {
         onClick={() => setOpen(true)}
         className="rounded-xl bg-[var(--tc-accent)] px-4 py-2 text-sm font-semibold text-white shadow hover:brightness-110"
       >
-        Criar release manual
+        Criar run manual
       </button>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" role="dialog" aria-modal="true">
           <div className="w-full max-w-lg rounded-2xl bg-[var(--tc-surface-dark,#0f1828)] text-[var(--tc-text-inverse)] border border-[var(--tc-border)]/40 shadow-xl space-y-4 p-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">Nova release manual</h2>
+              <h2 className="text-lg font-bold">Nova run manual</h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
@@ -109,7 +109,7 @@ export function CreateManualReleaseButton() {
                   className="w-full rounded-lg bg-[--tc-surface] border border-[var(--tc-border)] px-3 py-2 text-sm text-[--tc-text-inverse] focus:outline-none focus:ring-2 focus:ring-[var(--tc-accent)]/40"
                   value={form.name}
                   onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder="Ex: Release 1.9.0 - Aceitacao"
+                  placeholder="Ex: Run 1.9.0 - Aceitacao"
                 />
               </div>
 
@@ -160,7 +160,7 @@ export function CreateManualReleaseButton() {
                   rows={3}
                   value={form.observations}
                   onChange={(e) => setForm((prev) => ({ ...prev, observations: e.target.value }))}
-                  placeholder="Notas sobre a release..."
+                  placeholder="Notas sobre a run..."
                 />
               </div>
             </div>

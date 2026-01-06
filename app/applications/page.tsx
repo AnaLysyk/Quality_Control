@@ -74,8 +74,8 @@ export default function ApplicationsPage() {
     <div className="min-h-screen bg-[var(--page-bg,#ffffff)] text-[var(--page-text,#0b1a3c)] px-6 py-10 md:px-10">
       <div className="max-w-6xl mx-auto space-y-10">
         <div className="space-y-1">
-          <p className="text-xs uppercase tracking-[0.5em] text-[var(--tc-accent)]">Aplicacoes</p>
-          <h1 className="text-3xl font-bold">Todas as Aplicacoes</h1>
+          <p className="text-xs uppercase tracking-[0.5em] text-[var(--tc-accent)]">Aplicações</p>
+          <h1 className="text-3xl font-bold">Todas as Aplicações</h1>
         </div>
 
         <div className="relative max-w-md">
@@ -113,7 +113,7 @@ export default function ApplicationsPage() {
                     </span>
                     <p className="text-lg font-semibold">{app.name}</p>
                     <p className="text-sm font-semibold text-[var(--tc-accent)] flex items-center gap-2">
-                      Ver releases <span aria-hidden="true">→</span>
+                      Ver runs <span aria-hidden="true">→</span>
                     </p>
                   </div>
                 </Link>

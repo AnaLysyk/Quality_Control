@@ -28,7 +28,7 @@ export default async function EmpresaDashboardPage({ params }: { params: { slug:
         </p>
       </div>
       <div className="mt-4">
-        <DashboardPage />
+        <DashboardPage showHeader={false} />
       </div>
     </div>
   );

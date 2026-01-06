@@ -94,7 +94,7 @@ export default function ApplicationPage() {
     const appTag = appKey.toUpperCase();
     const displayName = rel.title?.split(" - ")[0] || rel.title;
     const subtitle =
-      rel.type === "aceitacao" ? "Aceitacao" : rel.type === "regressao" ? "Regressao" : "Release";
+      rel.type === "aceitacao" ? "Aceitacao" : rel.type === "regressao" ? "Regressao" : "Run";
     return (
       <Link
         key={rel.id}
@@ -135,14 +135,14 @@ export default function ApplicationPage() {
 
         {!hasReleases && (
           <div className="rounded-2xl border border-white/10 bg-[#101528] p-10 text-center text-gray-200 space-y-4">
-            <p className="text-lg font-semibold">Esta aplicacao ainda nao possui releases disponiveis.</p>
+            <p className="text-lg font-semibold">Esta aplicacao ainda nao possui runs disponiveis.</p>
             <div className="flex justify-center">
               <button
                 type="button"
                 onClick={() => router.push("/applications")}
                 className="inline-flex items-center gap-2 rounded-xl bg-[var(--tc-accent)] px-4 py-2 text-sm font-semibold text-black hover:brightness-110 transition"
               >
-                Voltar para aplicacoes
+                Voltar para aplicações
               </button>
             </div>
           </div>
@@ -151,7 +151,7 @@ export default function ApplicationPage() {
         {hasReleases && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs uppercase tracking-[0.4em] text-[var(--tc-accent)]">Releases</p>
+              <p className="text-xs uppercase tracking-[0.4em] text-[var(--tc-accent)]">Runs</p>
               <span className="text-sm text-gray-300">{filtered.length} resultado(s)</span>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

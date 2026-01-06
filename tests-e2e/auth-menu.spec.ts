@@ -1,24 +1,46 @@
 import { test, expect } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { login, setMockUser } from "./utils/auth";
 
-test("menu condicional - user vs admin", async ({ page }) => {
-  // Pré: login usuário comum (ajuste a rota/login fake conforme seu backend real)
-  await page.goto("/login");
-  await page.fill('input[name="email"]', "user@example.com");
-  await page.fill('input[name="password"]', "senha");
-  await page.click('button[type="submit"]');
+const nav = (page: Page) => page.locator("aside nav").first();
 
-  await expect(page).toHaveURL(/\/dashboard/);
-  await page.click('button:has-text("Usuário")'); // avatar/menu
-  await expect(page.getByText("Configurações")).toBeVisible();
-  await expect(page.getByText("Administração")).toHaveCount(0);
+test("admin global only sees admin menu", async ({ page }) => {
+  await setMockUser(page, "admin");
+  await login(page, "admin@example.com", "senha");
 
-  // Pré: login admin global (pode ser outro fluxo/rota)
-  await page.goto("/login");
-  await page.fill('input[name="email"]', "admin@example.com");
-  await page.fill('input[name="password"]', "senha");
-  await page.click('button[type="submit"]');
+  await expect(page).toHaveURL(/\/admin\/clients/);
 
-  await page.click('button:has-text("Admin")');
-  await expect(page.getByText("Administração")).toBeVisible();
-  await expect(page.getByText("Equipe")).toBeVisible();
+  const sidebar = nav(page);
+  await expect(sidebar.getByRole("link", { name: /Painel Admin/i })).toHaveCount(1);
+  await expect(sidebar.getByRole("link", { name: /^Runs$/ })).toHaveCount(0);
+  await expect(sidebar.getByRole("link", { name: /^Aplic/ })).toHaveCount(0);
+});
+
+test("admin sees company menu inside company context", async ({ page }) => {
+  await setMockUser(page, "admin", "griaule");
+  await login(page, "admin@example.com", "senha");
+
+  await page.goto("/empresas/griaule/dashboard");
+  await expect(page).toHaveURL(/\/empresas\/griaule\/dashboard/);
+
+  const sidebar = nav(page);
+  await expect(sidebar.getByRole("link", { name: /Dashboard/i })).toHaveCount(1);
+  await expect(sidebar.getByRole("link", { name: /^Runs$/ })).toHaveCount(1);
+  await expect(sidebar.getByRole("link", { name: /^Aplic/ })).toHaveCount(1);
+  await expect(sidebar.getByRole("link", { name: /Painel Admin/i })).toHaveCount(0);
+});
+
+test("client user lands in company and cannot access admin", async ({ page }) => {
+  await setMockUser(page, "user", "griaule");
+  await login(page, "user@example.com", "senha");
+
+  await expect(page).toHaveURL(/\/empresas\/griaule\/dashboard/);
+
+  const sidebar = nav(page);
+  await expect(sidebar.getByRole("link", { name: /^Runs$/ })).toHaveCount(1);
+  await expect(sidebar.getByRole("link", { name: /^Aplic/ })).toHaveCount(1);
+  await expect(sidebar.getByRole("link", { name: /Painel Admin/i })).toHaveCount(0);
+
+  await page.goto("/admin/clients");
+  await expect(page.getByText(/Acesso restrito a admin global/i)).toBeVisible();
 });

@@ -1,16 +1,9 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+export type { AuthUser } from "@/contracts/auth";
 
-export type AuthUser = {
-  id: string;
-  name: string;
-  email: string;
-  avatarUrl?: string | null;
-  isGlobalAdmin: boolean;
-};
-
-// Mantém a API existente, mas agora delega ao AuthContext
+// Keeps the existing API but delegates to AuthContext.
 export function useAuthUser() {
   return useAuth();
 }

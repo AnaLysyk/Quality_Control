@@ -33,6 +33,9 @@
       "@/components/*": [
         "./app/components/*"
       ],
+      "@/contracts/*": [
+        "./packages/contracts/src/*"
+      ],
       "@/types/*": [
         "./src/types/*"
       ],

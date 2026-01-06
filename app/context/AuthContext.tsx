@@ -1,15 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { AuthMeResponseSchema, type AuthUser } from "@/contracts/auth";
 import { getAccessToken } from "@/lib/api";
-
-type AuthUser = {
-  id: string;
-  name: string;
-  email: string;
-  avatarUrl?: string | null;
-  isGlobalAdmin: boolean;
-};
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -35,7 +28,9 @@ async function fetchMe(): Promise<AuthUser | null> {
   if (!res.ok) return null;
 
   const payload = await res.json().catch(() => null);
-  return payload?.user ?? payload ?? null;
+  const parsed = AuthMeResponseSchema.safeParse(payload);
+  if (!parsed.success) return null;
+  return parsed.data.user ?? null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

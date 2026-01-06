@@ -53,7 +53,7 @@ export default function DefeitosEmpresaPage() {
           Empresas
         </Link>
         <span>/</span>
-        <Link href={`/empresas/${slug}/home`} className="font-semibold text-[var(--tc-text-primary,#0b1a3c)] uppercase hover:underline">
+        <Link href={`/empresas/${slug}/dashboard`} className="font-semibold text-[var(--tc-text-primary,#0b1a3c)] uppercase hover:underline">
           {companyName}
         </Link>
         <span>/</span>

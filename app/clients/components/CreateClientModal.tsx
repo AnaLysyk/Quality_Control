@@ -111,7 +111,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
             />
           </label>
           <label className="block text-sm">
-            CNPJ / Tax ID
+            CNPJ
             <input
               className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
               value={taxId}

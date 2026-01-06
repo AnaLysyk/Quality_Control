@@ -57,7 +57,7 @@ export default async function RunDetailPage({ params }: { params: { id: string }
 
   if (!run) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-[var(--tc-text-inverse)] bg-[var(--tc-bg)] px-6">
+      <div className="min-h-screen tc-dark flex items-center justify-center text-[var(--tc-text-inverse)] bg-[var(--tc-bg)] px-6">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold">Run nao encontrada</h1>
           <p className="text-sm text-[var(--tc-text-secondary)]">ID: {params.id}</p>
@@ -73,7 +73,7 @@ export default async function RunDetailPage({ params }: { params: { id: string }
   const formattedCreated = created ? new Date(created).toLocaleString("pt-BR") : "Data N/D";
 
   return (
-    <div className="min-h-screen text-[var(--tc-text-inverse)] bg-[var(--tc-bg)] px-6 md:px-10 py-10">
+    <div className="min-h-screen tc-dark text-[var(--tc-text-inverse)] bg-[var(--tc-bg)] px-6 md:px-10 py-10">
       <div className="max-w-5xl mx-auto space-y-8">
         <header className="space-y-2">
           <p className="text-xs uppercase tracking-[0.4em] text-[var(--tc-accent)]">Run</p>

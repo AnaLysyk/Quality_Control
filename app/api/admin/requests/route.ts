@@ -1,11 +1,56 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { listAllRequests } from "@/data/requestsStore";
-import { getSessionUser } from "@/lib/session";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 
-export async function GET(request: Request) {
-  const user = await getSessionUser();
-  if (user.role !== "admin") {
-    return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
+const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+
+function extractToken(req: NextRequest): string | null {
+  const auth = req.headers.get("authorization");
+  if (auth?.toLowerCase().startsWith("bearer ")) {
+    return auth.slice("bearer ".length).trim();
+  }
+  const cookieHeader = req.headers.get("cookie") ?? "";
+  const match = cookieHeader.match(/auth_token=([^;]+)/);
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
+}
+
+async function requireAdmin(req: NextRequest) {
+  if (SUPABASE_MOCK) {
+    return { id: "mock-admin", email: "admin@example.com", name: "Admin" };
+  }
+
+  const token = extractToken(req);
+  if (!token) return null;
+
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data: authData, error } = await supabaseAdmin.auth.getUser(token);
+  if (error || !authData?.user) return null;
+
+  const { data: userRow } = await supabaseAdmin
+    .from("users")
+    .select("id, name, email, role, is_global_admin")
+    .or(`auth_user_id.eq.${authData.user.id},email.eq.${authData.user.email}`)
+    .limit(1)
+    .maybeSingle();
+
+  const isAdmin =
+    userRow?.is_global_admin === true ||
+    userRow?.role === "global_admin" ||
+    userRow?.role === "admin";
+
+  if (!isAdmin) return null;
+
+  return {
+    id: userRow?.id ?? authData.user.id,
+    email: userRow?.email ?? authData.user.email ?? "",
+    name: userRow?.name ?? authData.user.user_metadata?.full_name ?? "Admin",
+  };
+}
+
+export async function GET(request: NextRequest) {
+  const admin = await requireAdmin(request);
+  if (!admin) {
+    return NextResponse.json({ message: "Sem permissao" }, { status: 403 });
   }
 
   const { searchParams } = new URL(request.url);

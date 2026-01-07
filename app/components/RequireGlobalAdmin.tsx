@@ -1,8 +1,9 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { RequireAuth } from "./RequireAuth";
+import { AuthSkeleton } from "./AuthSkeleton";
 
 type RequireGlobalAdminProps = {
   children: ReactNode;
@@ -10,19 +11,32 @@ type RequireGlobalAdminProps = {
 };
 
 export function RequireGlobalAdmin({ children, fallback }: RequireGlobalAdminProps) {
-  const { user } = useAuthUser();
+  const { user, loading } = useAuthUser();
+  const router = useRouter();
+  const pathname = usePathname();
   const isAdmin =
     user?.role === "admin" ||
+    user?.role === "global_admin" ||
     user?.isGlobalAdmin === true ||
     (user as any)?.is_global_admin === true;
 
-  if (!isAdmin) {
-    return (
-      (fallback as ReactNode) ?? (
-        <div className="p-4 text-sm text-red-600">Acesso restrito a admin global.</div>
-      )
-    );
+  useEffect(() => {
+    if (loading) return;
+    if (!user) {
+      router.replace(`/login?next=${encodeURIComponent(pathname || "/")}`);
+      return;
+    }
+    if (!isAdmin) {
+      router.replace("/login");
+    }
+  }, [loading, user, isAdmin, router, pathname]);
+
+  if (loading) {
+    return (fallback as ReactNode) ?? <AuthSkeleton message="Validando sessao..." />;
+  }
+  if (!user || !isAdmin) {
+    return (fallback as ReactNode) ?? null;
   }
 
-  return <RequireAuth fallback={fallback}>{children}</RequireAuth>;
+  return <>{children}</>;
 }

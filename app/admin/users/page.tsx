@@ -97,7 +97,7 @@ function AdminUsersPage() {
               <div>
                 <div className="font-semibold text-sm text-gray-900">{u.name}</div>
                 <div className="text-xs text-gray-500">{u.email}</div>
-                <div className="text-xs text-gray-500">{u.role ?? "client_member"}</div>
+                <div className="text-xs text-gray-500">{u.role ?? "client_user"}</div>
               </div>
               <button
                 className="text-xs text-indigo-700 hover:underline"

@@ -27,7 +27,8 @@ async function requireAdmin(req: NextRequest) {
   const { data: userRow } = await supabaseAdmin
     .from("users")
     .select("role,is_global_admin")
-    .or(`auth_user_id.eq.${authData.user.id},email.eq.${authData.user.email}`)
+    .eq("auth_user_id", authData.user.id)
+    .eq("active", true)
     .limit(1)
     .maybeSingle();
 

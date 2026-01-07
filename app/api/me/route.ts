@@ -78,40 +78,22 @@ export async function GET(req: Request) {
   }
 
   const authUser = authData.user;
-  const normalizedEmail = (authUser.email ?? "").trim().toLowerCase();
   const userSelect = "id, name, email, role, client_id, is_global_admin, auth_user_id";
 
-  let userRow: any = null;
-  const { data: userByAuth } = await supabaseAdmin
+  const { data: userRow, error: userError } = await supabaseAdmin
     .from("users")
     .select(userSelect)
     .eq("auth_user_id", authUser.id)
+    .eq("active", true)
     .limit(1)
     .maybeSingle();
-  userRow = userByAuth ?? null;
 
-  if (!userRow && normalizedEmail) {
-    const { data: userByEmail } = await supabaseAdmin
-      .from("users")
-      .select(userSelect)
-      .ilike("email", normalizedEmail)
-      .limit(1)
-      .maybeSingle();
-    userRow = userByEmail ?? null;
-  }
-
-  if (userRow && normalizedEmail) {
-    const rowEmail = (userRow.email ?? "").trim().toLowerCase();
-    if (rowEmail && rowEmail === normalizedEmail && userRow.auth_user_id !== authUser.id) {
-      const { data: updated } = await supabaseAdmin
-        .from("users")
-        .update({ auth_user_id: authUser.id })
-        .eq("id", userRow.id)
-        .select(userSelect)
-        .limit(1)
-        .maybeSingle();
-      if (updated) userRow = updated;
-    }
+  if (userError || !userRow) {
+    const payload = AuthMeResponseSchema.parse({ user: null });
+    return new Response(JSON.stringify(payload), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   let clientSlug: string | null = null;
@@ -129,28 +111,16 @@ export async function GET(req: Request) {
     }
   }
 
-  const user = userRow
-    ? {
-        id: userRow.id,
-        email: userRow.email ?? authUser.email,
-        name: userRow.name ?? authUser.user_metadata?.full_name ?? "",
-        role: userRow.role ?? (userRow.is_global_admin ? "global_admin" : "client_user"),
-        client: clientSlug ? { slug: clientSlug } : null,
-
-
-        clientId: userRow.client_id ?? null,
-        clientSlug,
-        isGlobalAdmin: !!userRow.is_global_admin,
-      }
-    : {
-        id: authUser.id,
-        email: authUser.email,
-        name: authUser.user_metadata?.full_name ?? "",
-        role: "client_user",
-        clientId: null,
-        clientSlug: null,
-        isGlobalAdmin: false,
-      };
+  const user = {
+    id: userRow.id,
+    email: userRow.email ?? authUser.email,
+    name: userRow.name ?? authUser.user_metadata?.full_name ?? "",
+    role: userRow.role ?? (userRow.is_global_admin ? "global_admin" : "client_user"),
+    client: clientSlug ? { slug: clientSlug } : null,
+    clientId: userRow.client_id ?? null,
+    clientSlug,
+    isGlobalAdmin: !!userRow.is_global_admin,
+  };
 
   const payload = AuthMeResponseSchema.parse({ user });
   return new Response(JSON.stringify(payload), {

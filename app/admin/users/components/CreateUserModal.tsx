@@ -14,19 +14,23 @@ type Props = {
 };
 
 const ROLE_OPTIONS = [
-  { value: "client_owner", label: "Client owner" },
-  { value: "client_manager", label: "Client manager" },
-  { value: "client_member", label: "Client member" },
+  { value: "client_admin", label: "Admin do cliente" },
+  { value: "client_user", label: "Usuario do cliente" },
+  { value: "global_admin", label: "Admin global" },
 ];
+
+const normalizeRole = (value?: string | null) => {
+  if (value === "global_admin") return "global_admin";
+  if (value === "client_admin" || value === "client_owner" || value === "client_manager") return "client_admin";
+  return "client_user";
+};
 
 export function CreateUserModal({ open, clientId, clients, onClose, onCreated, users }: Props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("client_member");
+  const [role, setRole] = useState("client_user");
   const [jobTitle, setJobTitle] = useState("");
   const [linkedin, setLinkedin] = useState("");
-  const [password, setPassword] = useState("");
-  const [tempPassword, setTempPassword] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,9 +38,10 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated, u
   const [active, setActive] = useState(true);
   const [localClientId, setLocalClientId] = useState<string | null>(clientId);
 
+  const requiresClient = role !== "global_admin";
   const canSubmit = useMemo(
-    () => !!open && !!localClientId && !!name.trim() && !!email.trim(),
-    [open, localClientId, name, email],
+    () => !!open && (!requiresClient || !!localClientId) && !!name.trim() && !!email.trim(),
+    [open, requiresClient, localClientId, name, email],
   );
 
   useEffect(() => {
@@ -57,10 +62,9 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated, u
         name: name.trim(),
         email: email.trim(),
         role,
-        client_id: localClientId,
+        client_id: requiresClient ? localClientId : null,
         job_title: jobTitle.trim() || undefined,
         linkedin_url: linkedin.trim() || undefined,
-        password: password.trim() || undefined,
         active,
       };
       const res = await fetch("/api/admin/users", {
@@ -74,8 +78,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated, u
         setError(json?.error || "Erro ao salvar usuario");
         return;
       }
-      setMessage(editingId ? "Usuario atualizado." : "Usuario criado. Envie as credenciais para ele.");
-      setTempPassword(json?.tempPassword ?? null);
+      setMessage(editingId ? "Usuario atualizado." : "Usuario criado. Convite enviado.");
       onCreated?.();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao salvar usuario";
@@ -89,12 +92,10 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated, u
     setEditingId(null);
     setName("");
     setEmail("");
-    setPassword("");
     setJobTitle("");
     setLinkedin("");
-    setRole("client_member");
+    setRole("client_user");
     setActive(true);
-    setTempPassword(null);
     setMessage(null);
     setError(null);
   }
@@ -104,12 +105,10 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated, u
     setName(u.name || "");
     setEmail((u as any).email || "");
     setJobTitle(u.job_title || "");
-    setRole(u.role || "client_member");
+    setRole(normalizeRole(u.role));
     setLinkedin(u.linkedin_url || "");
     setActive(u.active ?? true);
     setLocalClientId(u.client_id ?? clientId ?? null);
-    setPassword("");
-    setTempPassword(null);
     setMessage(null);
     setError(null);
   }
@@ -128,7 +127,9 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated, u
           </button>
         </div>
 
-        {!localClientId && <p className="text-sm text-red-600 mb-3">Selecione uma empresa para criar usuario.</p>}
+        {requiresClient && !localClientId && (
+          <p className="text-sm text-red-600 mb-3">Selecione uma empresa para criar usuario.</p>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1.4fr] gap-4">
           <div className="rounded-lg border border-gray-200 p-3 space-y-2 max-h-[420px] overflow-y-auto">
@@ -224,16 +225,6 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated, u
                   placeholder="https://www.linkedin.com/in/usuario"
                 />
               </label>
-              <label className="block text-sm">
-                Senha (opcional)
-                <input
-                  type="password"
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Deixe vazio para gerar temporaria"
-                />
-              </label>
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
                 Ativo
@@ -244,11 +235,6 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated, u
             {message && (
               <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
                 {message}
-                {tempPassword && (
-                  <div className="mt-1 text-xs text-gray-700">
-                    Senha temporaria: <span className="font-semibold">{tempPassword}</span>
-                  </div>
-                )}
               </div>
             )}
 

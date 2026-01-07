@@ -8,7 +8,14 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
-type RoleOption = "client_owner" | "client_manager" | "client_member" | "global_admin";
+type RoleOption =
+  | "global_admin"
+  | "client_admin"
+  | "client_user"
+  | "client_owner"
+  | "client_manager"
+  | "client_member";
+type NormalizedRole = "global_admin" | "client_admin" | "client_user";
 
 const sanitize = (value: unknown, max = 255) => {
   if (typeof value !== "string") return null;
@@ -16,6 +23,16 @@ const sanitize = (value: unknown, max = 255) => {
   if (!trimmed) return null;
   return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
 };
+
+const normalizeRole = (value?: string | null): NormalizedRole => {
+  if (value === "global_admin") return "global_admin";
+  if (value === "client_admin" || value === "client_owner" || value === "client_manager") {
+    return "client_admin";
+  }
+  return "client_user";
+};
+
+const requiresClient = (role: NormalizedRole) => role !== "global_admin";
 
 async function extractToken(req: NextRequest): Promise<string | null> {
   const auth = req.headers.get("authorization");
@@ -92,35 +109,58 @@ async function handleCreate(req: NextRequest) {
     const linkedin = sanitize((body as any).linkedin_url, 500);
     const password = sanitize((body as any).password, 128);
 
-    if (!name || !email || !clientId) {
-      return NextResponse.json({ error: "Nome, email e empresa sao obrigatorios" }, { status: 400 });
+    if (!name || !email) {
+      return NextResponse.json({ error: "Nome e email sao obrigatorios" }, { status: 400 });
     }
 
-    const normalizedRole: RoleOption =
-      roleInput && ["client_owner", "client_manager", "client_member", "global_admin"].includes(roleInput)
-        ? roleInput
-        : "client_member";
+    const normalizedRole = normalizeRole(roleInput);
+    if (requiresClient(normalizedRole) && !clientId) {
+      return NextResponse.json({ error: "Empresa e obrigatoria para este perfil" }, { status: 400 });
+    }
     const tempPassword = password || randomPassword();
     const passwordHash = createHash("sha256").update(tempPassword).digest("hex");
+
+    const supabaseService = createSupabaseService();
+    const { data: inviteData, error: inviteError } = await supabaseService.auth.admin.inviteUserByEmail(email, {
+      data: { full_name: name },
+    });
+
+    if (inviteError) {
+      const message = inviteError.message?.toLowerCase() || "";
+      const duplicate = inviteError.status === 422 || message.includes("already") || message.includes("exists");
+      return NextResponse.json(
+        { error: duplicate ? "Usuario ja existe no Supabase" : "Falha ao criar usuario no Supabase" },
+        { status: duplicate ? 409 : 500 },
+      );
+    }
+
+    const authUserId = inviteData?.user?.id;
+    if (!authUserId) {
+      return NextResponse.json({ error: "Falha ao criar usuario no Supabase" }, { status: 500 });
+    }
 
     const record = {
       id: randomUUID(),
       name,
       email,
       role: normalizedRole,
-      client_id: clientId,
+      client_id: requiresClient(normalizedRole) ? clientId : null,
       active: true,
       password_hash: passwordHash,
       job_title: jobTitle,
       linkedin_url: linkedin,
-      auth_user_id: null,
+      auth_user_id: authUserId,
       is_global_admin: normalizedRole === "global_admin",
     };
 
-    const supabaseService = createSupabaseService();
     const { error: insertError } = await supabaseService.from("users").insert(record);
 
     if (insertError) {
+      try {
+        await supabaseService.auth.admin.deleteUser(authUserId);
+      } catch {
+        /* ignore cleanup errors */
+      }
       const duplicate = insertError.message?.toLowerCase().includes("duplicate") || insertError.code === "23505";
       return NextResponse.json(
         { error: duplicate ? "Usuario ja existe" : "Falha ao criar usuario" },
@@ -135,7 +175,7 @@ async function handleCreate(req: NextRequest) {
         email: record.email,
         role: record.role,
         client_id: record.client_id,
-        tempPassword: password ? undefined : tempPassword,
+        invited: true,
       },
       { status: 201 },
     );
@@ -181,16 +221,19 @@ async function handleUpdate(req: NextRequest) {
     const password = sanitize((body as any).password, 128);
     const active = typeof (body as any).active === "boolean" ? (body as any).active : undefined;
 
-    const normalizedRole: RoleOption | undefined =
-      roleInput && ["client_owner", "client_manager", "client_member", "global_admin"].includes(roleInput)
-        ? roleInput
-        : undefined;
+    const normalizedRole: NormalizedRole | undefined = roleInput ? normalizeRole(roleInput) : undefined;
 
     const updates: Record<string, unknown> = {};
     if (name) updates.name = name;
     if (email) updates.email = email;
     if (clientId) updates.client_id = clientId;
-    if (normalizedRole) updates.role = normalizedRole;
+    if (normalizedRole) {
+      updates.role = normalizedRole;
+      updates.is_global_admin = normalizedRole === "global_admin";
+      if (normalizedRole === "global_admin") {
+        updates.client_id = null;
+      }
+    }
     if (typeof active === "boolean") updates.active = active;
     if (jobTitle !== null) updates.job_title = jobTitle;
     if (linkedin !== null) updates.linkedin_url = linkedin;
@@ -229,7 +272,7 @@ export async function GET(req: NextRequest) {
           id: "mock-user-1",
           name: "Ana Mock",
           email: "ana.mock@example.com",
-          role: "client_member",
+          role: "client_user",
           client_id: clientId ?? "mock-client",
           job_title: "QA",
           linkedin_url: "https://www.linkedin.com/in/mock",
@@ -273,21 +316,24 @@ export async function POST(req: NextRequest) {
   if (SUPABASE_MOCK) {
     try {
       const body = await req.json().catch(() => ({} as Record<string, any>));
-      const { name, email, role = "client_member", client_id, job_title, linkedin_url, password } = body ?? {};
-      if (!name || !email || !client_id) {
-        return NextResponse.json({ error: "Nome, email e empresa sao obrigatorios" }, { status: 400 });
+      const { name, email, role = "client_user", client_id, job_title, linkedin_url } = body ?? {};
+      const normalizedRole = normalizeRole(role);
+      if (!name || !email) {
+        return NextResponse.json({ error: "Nome e email sao obrigatorios" }, { status: 400 });
       }
-      const tempPassword = password || randomPassword();
+      if (requiresClient(normalizedRole) && !client_id) {
+        return NextResponse.json({ error: "Empresa e obrigatoria para este perfil" }, { status: 400 });
+      }
       return NextResponse.json(
         {
           id: "mock-local-user-id",
           name,
           email,
-          role,
-          client_id,
+          role: normalizedRole,
+          client_id: requiresClient(normalizedRole) ? client_id : null,
           job_title: job_title ?? null,
           linkedin_url: linkedin_url ?? null,
-          tempPassword,
+          invited: true,
           message: "Usuario criado (mock).",
         },
         { status: 201 },

@@ -5,7 +5,9 @@ export type TranslateFn = (key: string, params?: TranslateParams) => string;
 export const DEFAULT_LOCALE: Locale = "pt-BR";
 export const LOCALES: Locale[] = ["pt-BR", "en-US"];
 
-type Dictionary = Record<string, string | Dictionary>;
+interface Dictionary {
+  [key: string]: string | Dictionary;
+}
 
 const DICTIONARY: Record<Locale, Dictionary> = {
   "pt-BR": {

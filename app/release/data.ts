@@ -19,6 +19,8 @@ export type ReleaseEntry = {
   status?: ReleaseStatus | "EM_ANDAMENTO" | "FINALIZADA";
   environments?: string[];
   manualSummary?: { pass: number; fail: number; blocked: number; notRun: number };
+  metrics?: { pass?: number; fail?: number; blocked?: number; not_run?: number; notRun?: number };
+  created_at?: string;
   clientId?: string | null;
   clientName?: string | null;
   assignees?: string[];

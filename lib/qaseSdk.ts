@@ -371,7 +371,7 @@ export class QaseClient {
     }
     if (typeof body === "string") return { payload: body, isFormData: false };
     if (body instanceof ArrayBuffer) return { payload: body, isFormData: false };
-    if (body instanceof Uint8Array) return { payload: body, isFormData: false };
+    if (body instanceof Uint8Array) return { payload: (body as unknown) as BodyInit, isFormData: false };
     if (typeof Blob !== "undefined" && body instanceof Blob) return { payload: body, isFormData: false };
     return { payload: JSON.stringify(body), isFormData: false };
   }

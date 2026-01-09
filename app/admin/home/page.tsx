@@ -287,10 +287,10 @@ export default function AdminHomePage() {
       try {
         const res = await fetch(`/api/admin/quality/overview?period=${period}`, { cache: "no-store" });
         const payload = (await res.json()) as QualityOverviewResponse;
-      if (!res.ok) {
-         throw new Error(t("adminHome.errorUnexpected"));
+      if ("error" in payload) {
+        throw new Error(t("adminHome.errorUnexpected"));
         }
-        if (!canceled) {
+        if (!("error" in payload)) {
           setOverview(payload);
         }
       } catch (err) {

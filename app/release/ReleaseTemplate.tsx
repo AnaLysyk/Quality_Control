@@ -260,7 +260,7 @@ export default function ReleaseTemplate({ appName, finalTitle, stats, total }: R
   return (
     <div
       id="pdf-template"
-      className="pdf-container text-[#0b1a3c] bg-white w-[210mm] min-h-[297mm] p-[18mm] mx-auto flex flex-col font-sans"
+      className="pdf-container text-[#0b1a3c] bg-white w-full max-w-[210mm] min-h-[297mm] p-[18mm] mx-auto flex flex-col font-sans"
     >
       <div className="space-y-8 flex-1 flex flex-col max-w-[180mm] mx-auto">
         <div className="flex items-start justify-between gap-6">

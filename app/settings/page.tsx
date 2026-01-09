@@ -2,20 +2,20 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
-
-type Theme = "light" | "dark" | "system";
-type Language = "pt-BR" | "en-US";
+import { useAppSettings, type Theme, type Language } from "@/context/AppSettingsContext";
+import { useI18n } from "@/hooks/useI18n";
 
 export default function SettingsPage() {
   const { user } = useAuthUser();
+  const { theme, language, setTheme, setLanguage, saveSettings, loading: settingsLoading } = useAppSettings();
+  const { t } = useI18n();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
   const [phone, setPhone] = useState("");
-  const [theme, setTheme] = useState<Theme>("system");
-  const [language, setLanguage] = useState<Language>("pt-BR");
   const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const initials = useMemo(() => {
     const parts = (name || "Usuario").trim().split(" ");
@@ -29,37 +29,18 @@ export default function SettingsPage() {
     setEmail(user?.email || "email@noreply.com");
     setRole((user as any)?.title || "");
     setPhone((user as any)?.phone || "");
-    const savedTheme = (localStorage.getItem("tc-theme") as Theme | null) || "system";
-    const savedLang = (localStorage.getItem("tc-lang") as Language | null) || "pt-BR";
-    setTheme(savedTheme);
-    setLanguage(savedLang);
   }, [user]);
 
-  useEffect(() => {
-    const root = document.documentElement;
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const applySystemTheme = () => {
-      root.classList.toggle("dark", media.matches);
-    };
-
-    if (theme === "system") {
-      applySystemTheme();
-      if (media.addEventListener) {
-        media.addEventListener("change", applySystemTheme);
-        return () => media.removeEventListener("change", applySystemTheme);
-      }
-      media.addListener(applySystemTheme);
-      return () => media.removeListener(applySystemTheme);
-    }
-
-    root.classList.toggle("dark", theme === "dark");
-  }, [theme]);
-
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setMessage("Alteracoes salvas localmente.");
-    localStorage.setItem("tc-theme", theme);
-    localStorage.setItem("tc-lang", language);
+    setMessage(null);
+    setError(null);
+    const result = await saveSettings();
+    if (result.ok) {
+      setMessage(t("settings.saved"));
+    } else {
+      setError(t("settings.saveError"));
+    }
     // TODO: chamar /api/me para persistir nome/role/phone.
   }
 
@@ -71,8 +52,9 @@ export default function SettingsPage() {
             {initials}
           </div>
           <div>
-            <h1 className="text-2xl font-bold leading-tight">Configuracoes</h1>
-            <p className="text-sm text-gray-600 dark:text-slate-300">Ajuste seu perfil, tema e idioma da plataforma.</p>
+            <h1 className="text-2xl font-bold leading-tight">{t("settings.title")}</h1>
+            <p className="text-sm text-gray-600 dark:text-slate-300">{t("settings.subtitle")}</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400">{t("settings.note")}</p>
           </div>
         </div>
 
@@ -81,19 +63,19 @@ export default function SettingsPage() {
           className="bg-white dark:bg-[#0f1828] rounded-2xl shadow-[0_10px_26px_rgba(0,0,0,0.06)] border border-gray-200 dark:border-white/10 p-6 space-y-6"
         >
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-[#0b1a3c] dark:text-white">Perfil</h2>
+            <h2 className="text-lg font-semibold text-[#0b1a3c] dark:text-white">{t("settings.profile")}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="text-sm font-medium text-gray-700 dark:text-slate-200 flex flex-col gap-1">
-                Nome completo
+                {t("settings.fullName")}
                 <input
                   className="w-full rounded-lg border border-gray-200 dark:border-white/10 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none bg-white dark:bg-[#0b1425] dark:text-slate-100"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Seu nome"
+                  placeholder={t("settings.fullName")}
                 />
               </label>
               <label className="text-sm font-medium text-gray-700 dark:text-slate-200 flex flex-col gap-1">
-                Email
+                {t("settings.email")}
                 <input
                   disabled
                   className="w-full rounded-lg border border-gray-200 dark:border-white/10 px-3 py-2 text-sm bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-slate-400 cursor-not-allowed"
@@ -102,16 +84,16 @@ export default function SettingsPage() {
                 />
               </label>
               <label className="text-sm font-medium text-gray-700 dark:text-slate-200 flex flex-col gap-1">
-                Cargo / funcao
+                {t("settings.role")}
                 <input
                   className="w-full rounded-lg border border-gray-200 dark:border-white/10 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none bg-white dark:bg-[#0b1425] dark:text-slate-100"
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  placeholder="Ex.: QA, PO, Engenheiro"
+                  placeholder={t("settings.role")}
                 />
               </label>
               <label className="text-sm font-medium text-gray-700 dark:text-slate-200 flex flex-col gap-1">
-                Telefone
+                {t("settings.phone")}
                 <input
                   className="w-full rounded-lg border border-gray-200 dark:border-white/10 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none bg-white dark:bg-[#0b1425] dark:text-slate-100"
                   value={phone}
@@ -123,42 +105,45 @@ export default function SettingsPage() {
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-[#0b1a3c] dark:text-white">Preferencias</h2>
+            <h2 className="text-lg font-semibold text-[#0b1a3c] dark:text-white">{t("settings.preferences")}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="text-sm font-medium text-gray-700 dark:text-slate-200 flex flex-col gap-1">
-                Tema
+                {t("settings.theme")}
                 <select
                   className="w-full rounded-lg border border-gray-200 dark:border-white/10 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none bg-white dark:bg-[#0b1425] dark:text-slate-100"
                   value={theme}
                   onChange={(e) => setTheme(e.target.value as Theme)}
+                  disabled={settingsLoading}
                 >
-                  <option value="system">Automatico (sistema)</option>
-                  <option value="light">Claro</option>
-                  <option value="dark">Escuro</option>
+                  <option value="system">{t("settings.themeSystem")}</option>
+                  <option value="light">{t("settings.themeLight")}</option>
+                  <option value="dark">{t("settings.themeDark")}</option>
                 </select>
               </label>
               <label className="text-sm font-medium text-gray-700 dark:text-slate-200 flex flex-col gap-1">
-                Idioma
+                {t("settings.language")}
                 <select
                   className="w-full rounded-lg border border-gray-200 dark:border-white/10 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none bg-white dark:bg-[#0b1425] dark:text-slate-100"
                   value={language}
                   onChange={(e) => setLanguage(e.target.value as Language)}
+                  disabled={settingsLoading}
                 >
-                  <option value="pt-BR">Portugues (Brasil)</option>
-                  <option value="en-US">English (US)</option>
+                  <option value="pt-BR">{t("settings.languagePt")}</option>
+                  <option value="en-US">{t("settings.languageEn")}</option>
                 </select>
               </label>
             </div>
           </div>
 
           {message && <p className="text-sm text-green-600 dark:text-green-400">{message}</p>}
+          {error && <p className="text-sm text-red-500">{error}</p>}
 
           <div className="flex justify-end">
             <button
               type="submit"
               className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400"
             >
-              Salvar alteracoes
+              {t("settings.save")}
             </button>
           </div>
         </form>

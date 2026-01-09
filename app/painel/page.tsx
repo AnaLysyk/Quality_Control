@@ -151,7 +151,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[var(--page-bg,#ffffff)] text-[var(--page-text,#0b1a3c)]">
-      <div className="max-w-6xl mx-auto px-6 py-10 space-y-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-10 py-8 md:py-10 space-y-8">
         <div className="space-y-4 text-center">
           <p className="text-xs uppercase tracking-[0.5em] text-[var(--tc-accent)]">Griaule</p>
           <h1 className="text-4xl md:text-5xl font-extrabold text-[var(--page-text,#0b1a3c)]">Painel QA Griaule</h1>

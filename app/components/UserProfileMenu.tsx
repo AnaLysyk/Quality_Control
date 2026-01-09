@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useI18n } from "@/hooks/useI18n";
 
 type Props = {
   activeClientName?: string | null;
@@ -13,6 +14,7 @@ type Props = {
 
 export default function UserProfileMenu({ activeClientName, onEditCompany, onOpenTeam, onOpenSettings }: Props) {
   const { user, loading, refreshUser } = useAuthUser();
+  const { t } = useI18n();
   const isAdmin = !!user?.isGlobalAdmin || (user as any)?.is_global_admin === true;
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -63,7 +65,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
     }
   }
 
-  const displayName = loading ? "Carregando..." : user?.name || "Usuario";
+  const displayName = loading ? t("profileMenu.loading") : user?.name || t("profileMenu.userFallback");
 
   // Se nao ha usuario e nao esta carregando, mostre um botao de login simples
   if (!loading && !user) {
@@ -73,7 +75,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
         className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-dark,#0f1828)] px-3 py-2 text-sm text-white hover:bg-[var(--tc-surface-hover,#111a2a)]"
         onClick={() => router.push("/login")}
       >
-        Entrar
+        {t("profileMenu.signIn")}
       </button>
     );
   }
@@ -114,14 +116,14 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-72 rounded-xl border border-[var(--tc-border,#e5e7eb)]/40 bg-[var(--tc-surface-dark,#0f1828)] text-[var(--tc-text-inverse,#fff)] shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
+          className="absolute right-0 mt-2 w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-[var(--tc-border,#e5e7eb)]/40 bg-[var(--tc-surface-dark,#0f1828)] text-[var(--tc-text-inverse,#fff)] shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
         >
           <div className="px-4 py-3 space-y-1">
-            <div className="font-semibold leading-tight">{user?.name ?? "Usuario"}</div>
+            <div className="font-semibold leading-tight">{user?.name ?? t("profileMenu.userFallback")}</div>
             {user?.email ? (
               <div className="text-xs text-[var(--tc-text-muted,#cbd5e1)] truncate">{user.email}</div>
             ) : (
-              <div className="text-xs text-[var(--tc-text-muted,#cbd5e1)]">Nao autenticado</div>
+              <div className="text-xs text-[var(--tc-text-muted,#cbd5e1)]">{t("profileMenu.notAuthenticated")}</div>
             )}
             {activeClientName && (
               <div className="text-sm">
@@ -140,7 +142,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
               className="mt-2 text-xs text-[var(--tc-primary,#4f46e5)] hover:underline"
               disabled={uploading || !user}
             >
-              {uploading ? "Atualizando foto..." : "Editar foto"}
+              {uploading ? t("profileMenu.uploadingPhoto") : t("profileMenu.editPhoto")}
             </button>
             <input
               ref={fileRef}
@@ -163,7 +165,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
                 }}
                 className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-[var(--tc-surface-hover,#111a2a)]"
               >
-                Equipe
+                {t("profileMenu.team")}
               </button>
             )}
             <button
@@ -174,7 +176,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
               }}
               className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-[var(--tc-surface-hover,#111a2a)]"
             >
-              Configuracoes
+              {t("profileMenu.settings")}
             </button>
           </div>
 
@@ -185,7 +187,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
             onClick={handleLogout}
             className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10"
           >
-            Sair
+            {t("profileMenu.logout")}
           </button>
         </div>
       )}

@@ -32,7 +32,7 @@ const actions: HomeAction[] = [
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-[var(--page-bg,#ffffff)] text-[var(--page-text,#0b1a3c)]">
-      <div className="max-w-6xl mx-auto px-6 py-10 space-y-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-10 py-8 md:py-10 space-y-10">
         <header className="space-y-3 text-center">
           <p className="text-xs uppercase tracking-[0.5em] text-[var(--tc-accent)]">Testing Company</p>
           <h1 className="text-4xl md:text-5xl font-extrabold text-[var(--page-text,#0b1a3c)]">Testing Metric</h1>

@@ -71,7 +71,7 @@ export default function ApplicationsPage() {
   }, [apps, query]);
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg,#ffffff)] text-[var(--page-text,#0b1a3c)] px-6 py-10 md:px-10">
+    <div className="min-h-screen bg-[var(--page-bg,#ffffff)] text-[var(--page-text,#0b1a3c)] px-4 sm:px-6 md:px-10 py-8 md:py-10">
       <div className="max-w-6xl mx-auto space-y-10">
         <div className="space-y-1">
           <p className="text-xs uppercase tracking-[0.5em] text-[var(--tc-accent)]">Aplicações</p>
@@ -90,7 +90,7 @@ export default function ApplicationsPage() {
         </div>
 
         {filteredApps.length === 0 && (
-          <div className="rounded-2xl border border-[var(--surface-border,#e5e7eb)] bg-white p-10 text-center text-[var(--page-text,#0b1a3c)] space-y-4 shadow-sm">
+          <div className="rounded-2xl border border-[var(--surface-border,#e5e7eb)] bg-white p-6 md:p-10 text-center text-[var(--page-text,#0b1a3c)] space-y-4 shadow-sm">
             <p className="text-lg font-semibold">Nenhuma aplicacao encontrada.</p>
           </div>
         )}

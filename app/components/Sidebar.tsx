@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { FiGrid, FiHome, FiLayers, FiSettings, FiUsers } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useI18n } from "@/hooks/useI18n";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
 
@@ -27,6 +28,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const logoSrc = useMemo(() => (menuLogoEnv ? menuLogoEnv : "/images/tc.png"), []);
   const pathname = usePathname() || "";
   const { user } = useAuthUser();
+  const { t } = useI18n();
 
   const isGlobalAdmin =
     user?.isGlobalAdmin === true ||
@@ -48,24 +50,36 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     return match?.[1] ?? user?.clientSlug ?? null;
   }, [pathname, user?.clientSlug]);
 
-  const publicNav: NavItem[] = [
-    { label: "Home", icon: FiHome, href: "/" },
-    { label: "Testing Metric", icon: FiGrid, href: "/dashboard" },
-  ];
+  const publicNav: NavItem[] = useMemo(
+    () => [
+      { label: t("nav.home"), icon: FiHome, href: "/" },
+      { label: t("nav.testingMetric"), icon: FiGrid, href: "/dashboard" },
+      { label: t("nav.newRun"), icon: FiSettings, href: "/admin/runs", roles: ["admin", "client", "user"] },
+    ],
+    [t]
+  );
 
-  const adminNav: NavItem[] = [
-    { label: "Painel Admin", icon: FiGrid, href: "/admin/home" },
-    { label: "Empresas", icon: FiUsers, href: "/admin/clients" },
-    { label: "Gestao de Runs", icon: FiSettings, href: "/admin/runs" },
-  ];
+  const adminNav: NavItem[] = useMemo(
+    () => [
+      { label: t("nav.adminPanel"), icon: FiGrid, href: "/admin/home" },
+      { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
+      { label: t("nav.runsManagement"), icon: FiSettings, href: "/admin/runs" },
+    ],
+    [t]
+  );
 
-  const companyNav: NavItem[] = companySlug
-    ? [
-        { label: "Dashboard", icon: FiGrid, href: `/empresas/${companySlug}/dashboard` },
-        { label: "Aplica\u00e7\u00f5es", icon: FiLayers, href: `/empresas/${companySlug}/aplicacoes` },
-        { label: "Runs", icon: FiLayers, href: `/empresas/${companySlug}/runs` },
-      ]
-    : [];
+  const companyNav: NavItem[] = useMemo(
+    () =>
+      companySlug
+        ? [
+            { label: t("nav.dashboard"), icon: FiGrid, href: `/empresas/${companySlug}/dashboard` },
+            { label: t("nav.apps"), icon: FiLayers, href: `/empresas/${companySlug}/aplicacoes` },
+            { label: t("nav.runs"), icon: FiLayers, href: `/empresas/${companySlug}/runs` },
+            { label: t("nav.newRun"), icon: FiSettings, href: "/admin/runs", roles: ["admin", "client", "user"] },
+          ]
+        : [],
+    [companySlug, t]
+  );
 
   const navigation = useMemo(() => {
     if (!user) return publicNav;

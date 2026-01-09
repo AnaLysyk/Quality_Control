@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures/test";
 import { login, setMockUser } from "./utils/auth";
 
 test("admin global sees clients list", async ({ page }) => {

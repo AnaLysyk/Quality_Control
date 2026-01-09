@@ -117,7 +117,7 @@ export default function ApplicationPage() {
   };
 
   return (
-    <div className="min-h-screen text-white px-6 py-10 md:px-10">
+    <div className="min-h-screen text-white px-4 sm:px-6 md:px-10 py-8 md:py-10">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
@@ -134,7 +134,7 @@ export default function ApplicationPage() {
         </div>
 
         {!hasReleases && (
-          <div className="rounded-2xl border border-white/10 bg-[#101528] p-10 text-center text-gray-200 space-y-4">
+          <div className="rounded-2xl border border-white/10 bg-[#101528] p-6 md:p-10 text-center text-gray-200 space-y-4">
             <p className="text-lg font-semibold">Esta aplicacao ainda nao possui runs disponiveis.</p>
             <div className="flex justify-center">
               <button

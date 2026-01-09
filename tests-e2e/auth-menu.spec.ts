@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
+import { test, expect } from "./fixtures/test";
 import { login, setMockUser } from "./utils/auth";
 
 const nav = (page: Page) => page.locator("aside nav").first();

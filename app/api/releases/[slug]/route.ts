@@ -26,6 +26,10 @@ export async function GET(_: Request, { params }: { params: Promise<{ slug: stri
       radis: target.radis,
       source: target.source ?? "API",
       createdAt: target.createdAt,
+      clientId: target.clientId ?? null,
+      clientName: target.clientName ?? null,
+      assigneeNames: target.assigneeNames ?? null,
+      manualSummary: target.manualSummary ?? null,
     },
   });
 }
@@ -74,6 +78,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sl
     radis: saved.radis,
     source: saved.source ?? "API",
     createdAt: saved.createdAt,
+    clientId: saved.clientId ?? null,
+    clientName: saved.clientName ?? null,
+    assigneeNames: saved.assigneeNames ?? null,
+    manualSummary: saved.manualSummary ?? null,
   };
 
   return NextResponse.json({ release: payload });

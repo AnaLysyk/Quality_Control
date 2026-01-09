@@ -1,21 +1,29 @@
 ﻿// app/services/qase.ts
 
+import "server-only";
+
 import { mapQaseToKanban, type RawQaseEntity } from "@/utils/qaseMapper";
 import { KanbanData } from "@/types/kanban";
+import { createQaseClient, QaseError } from "@/lib/qaseSdk";
 
-const API_BASE = "https://api.qase.io/v1";
-const QASE_TOKEN =
-  process.env.QASE_TOKEN ||
-  process.env.NEXT_PUBLIC_QASE_TOKEN ||
-  process.env.NEXT_PUBLIC_QASE_API_TOKEN;
-
-const headers = {
-  Accept: "application/json",
-  Token: QASE_TOKEN ?? "",
-};
+const qaseClient = createQaseClient({
+  defaultFetchOptions: { cache: "no-store" },
+});
 
 // throttle de payload por slug para não poluir logs
 const loggedPayload: Set<string> = new Set();
+
+function buildLogUrl(path: string, params?: Record<string, string | number | undefined>) {
+  const url = new URL(qaseClient.getUrl(path));
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        url.searchParams.set(key, String(value));
+      }
+    });
+  }
+  return url.toString();
+}
 
 type RunStatsRaw = {
   statuses?: Record<string, unknown>;
@@ -70,10 +78,10 @@ export async function getQaseRunStats(project: string, runId: number, slug?: str
   const slugKey = slug || "unknown";
 
   const logBase = `[QASE][RUN]`;
-  const url = `${API_BASE}/run/${project}/${runId}`;
+  const url = buildLogUrl(`/run/${project}/${runId}`);
   console.log(`${logBase}[FETCH]`, { slug: slugKey, project, runId, url });
 
-  if (!QASE_TOKEN) {
+  if (!qaseClient.hasToken) {
     console.warn(`${logBase}[ERROR]`, {
       slug: slugKey,
       status: "no_token",
@@ -82,42 +90,40 @@ export async function getQaseRunStats(project: string, runId: number, slug?: str
     return { ...normalizedEmpty, missing: true, status: 0 };
   }
 
-  const res = await fetch(url, {
-    headers,
-    cache: "no-store",
-  });
+  try {
+    const { data, status } = await qaseClient.getWithStatus<{ result?: RunEntity }>(
+      `/run/${project}/${runId}`
+    );
+    console.log(`${logBase}[RESPONSE]`, { slug: slugKey, status });
 
-  if (!res.ok) {
+    const run = data.result;
+
+    if (!loggedPayload.has(slugKey)) {
+      console.log(`${logBase}[PAYLOAD]`, { slug: slugKey, payload: data });
+      console.log(`${logBase}[PAYLOAD][STATS]`, { slug: slugKey, stats: run?.stats });
+      loggedPayload.add(slugKey);
+    }
+
+    const normalized = normalizeRunStats((run?.stats as RunStatsRaw) ?? {});
+    return { ...normalized, status };
+  } catch (err) {
+    const status = err instanceof QaseError ? err.status : 0;
     const reason =
-      res.status === 401 || res.status === 403
+      status === 401 || status === 403
         ? "unauthorized"
-        : res.status === 404
+        : status === 404
           ? "not_found"
-          : res.status >= 500
+          : status >= 500
             ? "server_error"
             : "unknown";
     console.warn(`${logBase}[ERROR]`, {
       slug: slugKey,
-      status: res.status,
+      status,
       reason,
       fallback: "EMPTY_STATS",
     });
-    return { ...normalizedEmpty, missing: true, status: res.status };
+    return { ...normalizedEmpty, missing: true, status };
   }
-
-  console.log(`${logBase}[RESPONSE]`, { slug: slugKey, status: res.status });
-
-  const json = (await res.json()) as { result?: RunEntity };
-  const run = json.result;
-
-  if (!loggedPayload.has(slugKey)) {
-    console.log(`${logBase}[PAYLOAD]`, { slug: slugKey, payload: json });
-    console.log(`${logBase}[PAYLOAD][STATS]`, { slug: slugKey, stats: run?.stats });
-    loggedPayload.add(slugKey);
-  }
-
-  const normalized = normalizeRunStats((run?.stats as RunStatsRaw) ?? {});
-  return { ...normalized, status: res.status };
 }
 
 // Busca todos os resultados de uma run com paginação ilimitada (limite 250).
@@ -125,7 +131,7 @@ async function fetchAllQaseResults(project: string, runId: number, slug?: string
   const logBase = "[KANBAN][CASES]";
   const slugKey = slug || "unknown";
 
-  if (!QASE_TOKEN) {
+  if (!qaseClient.hasToken) {
     console.warn(logBase, {
       slug: slugKey,
       status: "no_token",
@@ -140,34 +146,30 @@ async function fetchAllQaseResults(project: string, runId: number, slug?: string
   const all: RawQaseEntity[] = [];
 
   while (true) {
-    const url = `${API_BASE}/result/${project}?run_id=${runId}&limit=${pageSize}&offset=${offset}`;
+    const params = { run_id: runId, limit: pageSize, offset };
+    const url = buildLogUrl(`/result/${project}`, params);
     console.log(`${logBase}[FALLBACK][FETCH]`, { slug: slugKey, project, runId, url });
-    const res = await fetch(url, {
-      headers,
-      cache: "no-store",
-    });
-    console.log(`${logBase}[FALLBACK][RESPONSE]`, { slug: slugKey, status: res.status });
 
-    if (res.status === 404) {
-      break;
-    }
+    try {
+      const { data, status } = await qaseClient.getWithStatus<{ result?: { entities?: unknown[] } }>(
+        `/result/${project}`,
+        { params }
+      );
+      console.log(`${logBase}[FALLBACK][RESPONSE]`, { slug: slugKey, status });
 
-    if (res.status >= 400 && res.status < 500) {
-      console.warn(`${logBase}[FALLBACK][ERROR]`, { slug: slugKey, status: res.status });
+      const entities = (data.result?.entities ?? []) as RawQaseEntity[];
+      if (!entities.length) break;
+
+      all.push(...entities);
+      offset += pageSize;
+    } catch (err) {
+      if (err instanceof QaseError && err.status === 404) {
+        break;
+      }
+      const status = err instanceof QaseError ? err.status : 0;
+      console.warn(`${logBase}[FALLBACK][ERROR]`, { slug: slugKey, status });
       return [];
     }
-
-    if (!res.ok) {
-      console.warn(`${logBase}[FALLBACK][ERROR]`, { slug: slugKey, status: res.status });
-      return [];
-    }
-
-    const json = (await res.json()) as { result?: { entities?: unknown[] } };
-    const entities = (json.result?.entities ?? []) as RawQaseEntity[];
-    if (!entities.length) break;
-
-    all.push(...entities);
-    offset += pageSize;
   }
 
   if (!all.length) {
@@ -190,7 +192,7 @@ export async function getQaseRunCases(project: string, runId: number, slug?: str
   const logBase = "[KANBAN][CASES]";
   const slugKey = slug || "unknown";
 
-  if (!QASE_TOKEN) {
+  if (!qaseClient.hasToken) {
     console.warn(logBase, {
       slug: slugKey,
       status: "no_token",
@@ -206,37 +208,38 @@ export async function getQaseRunCases(project: string, runId: number, slug?: str
   let hasMore = true;
 
   while (hasMore) {
-    const url = `${API_BASE}/run/${project}/${runId}/cases?page=${page}&limit=${pageSize}`;
+    const params = { page, limit: pageSize };
+    const url = buildLogUrl(`/run/${project}/${runId}/cases`, params);
     console.log(`${logBase}[FETCH]`, { slug: slugKey, project, runId, url });
-    const res = await fetch(url, {
-      headers,
-      cache: "no-store",
-    });
 
-    console.log(`${logBase}[RESPONSE]`, { slug: slugKey, status: res.status });
+    try {
+      const { data, status } = await qaseClient.getWithStatus<{ result?: { entities?: unknown[] } }>(
+        `/run/${project}/${runId}/cases`,
+        { params }
+      );
+      console.log(`${logBase}[RESPONSE]`, { slug: slugKey, status });
 
-    if (res.status === 404) {
-      console.warn(`${logBase} 404 for runId=${runId} — trying /result`);
-      const fallback = await fetchAllQaseResults(project, runId, slug);
-      if (!fallback.length) {
-        console.warn(`${logBase} No data available for runId=${runId}`);
+      const entities = (data.result?.entities ?? []) as RawQaseEntity[];
+      allCases.push(...entities);
+
+      if (entities.length < pageSize) {
+        hasMore = false;
+      } else {
+        page += 1;
       }
-      return fallback;
-    }
+    } catch (err) {
+      if (err instanceof QaseError && err.status === 404) {
+        console.warn(`${logBase} 404 for runId=${runId} - trying /result`);
+        const fallback = await fetchAllQaseResults(project, runId, slug);
+        if (!fallback.length) {
+          console.warn(`${logBase} No data available for runId=${runId}`);
+        }
+        return fallback;
+      }
 
-    if (!res.ok) {
-      console.warn(`${logBase}[ERROR]`, { slug: slugKey, status: res.status });
+      const status = err instanceof QaseError ? err.status : 0;
+      console.warn(`${logBase}[ERROR]`, { slug: slugKey, status });
       return [];
-    }
-
-    const json = (await res.json()) as { result?: { entities?: unknown[] } };
-    const entities = (json.result?.entities ?? []) as RawQaseEntity[];
-    allCases.push(...entities);
-
-    if (entities.length < pageSize) {
-      hasMore = false;
-    } else {
-      page += 1;
     }
   }
 

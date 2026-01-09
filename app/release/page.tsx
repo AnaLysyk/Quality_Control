@@ -69,7 +69,7 @@ export default function ReleasesPage() {
   }, [filtered]);
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg,#ffffff)] text-[var(--page-text,#0b1a3c)] p-10 space-y-8">
+    <div className="min-h-screen bg-[var(--page-bg,#ffffff)] text-[var(--page-text,#0b1a3c)] p-6 md:p-10 space-y-8">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-(--tc-text-inverse)">Runs monitoradas</h1>

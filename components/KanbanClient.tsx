@@ -307,7 +307,7 @@ export default function KanbanClient({ project, runId, editable = true, authToke
               required
             />
           </div>
-          <div className="w-32">
+          <div className="min-w-[140px] flex-1 sm:flex-none sm:w-32">
             <label className="block text-sm text-gray-700" htmlFor="new-status">Status</label>
             <select
               id="new-status"
@@ -322,7 +322,7 @@ export default function KanbanClient({ project, runId, editable = true, authToke
               ))}
             </select>
           </div>
-          <div className="w-28">
+          <div className="min-w-[120px] flex-1 sm:flex-none sm:w-28">
             <label className="block text-sm text-gray-700" htmlFor="new-case-id">Case ID</label>
             <input
               id="new-case-id"
@@ -333,7 +333,7 @@ export default function KanbanClient({ project, runId, editable = true, authToke
               placeholder="opcional"
             />
           </div>
-          <div className="w-40">
+          <div className="min-w-[160px] flex-1 sm:flex-none sm:w-40">
             <label className="block text-sm text-gray-700" htmlFor="new-bug">Bug</label>
             <input
               id="new-bug"
@@ -343,7 +343,7 @@ export default function KanbanClient({ project, runId, editable = true, authToke
               placeholder="opcional"
             />
           </div>
-          <div className="w-40">
+          <div className="min-w-[160px] flex-1 sm:flex-none sm:w-40">
             <label className="block text-sm text-gray-700" htmlFor="new-link">Link</label>
             <input
               id="new-link"
@@ -353,7 +353,7 @@ export default function KanbanClient({ project, runId, editable = true, authToke
               placeholder="opcional"
             />
           </div>
-          <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50" disabled={loading}>
+          <button type="submit" className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50" disabled={loading}>
             Criar
           </button>
         </form>
@@ -428,8 +428,8 @@ export default function KanbanClient({ project, runId, editable = true, authToke
       {loading && <div className="mt-4 text-sm text-gray-500">Carregando...</div>}
 
       {editingId !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-[600px] bg-white p-4 rounded shadow space-y-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
+          <div className="w-full max-w-lg max-h-[calc(100vh-3rem)] overflow-y-auto bg-white p-4 rounded shadow space-y-3">
             <h4 className="text-lg font-medium">Editar card</h4>
             <div className="space-y-2">
               <div>

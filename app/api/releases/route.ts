@@ -22,6 +22,10 @@ export async function GET() {
     radis: r.radis,
     source: r.source ?? "API",
     createdAt: r.createdAt,
+    clientId: r.clientId ?? null,
+    clientName: r.clientName ?? null,
+    assigneeNames: r.assigneeNames ?? null,
+    manualSummary: r.manualSummary ?? null,
     metrics: null, // métrica é carregada na tela pelo Qase; placeholder para contrato
   }));
   return NextResponse.json({ releases: normalized });
@@ -73,6 +77,10 @@ export async function POST(request: Request) {
       radis: release.radis,
       source: release.source ?? "API",
       createdAt: release.createdAt,
+      clientId: release.clientId ?? null,
+      clientName: release.clientName ?? null,
+      assigneeNames: release.assigneeNames ?? null,
+      manualSummary: release.manualSummary ?? null,
       metrics: null,
     };
 

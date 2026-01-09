@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures/test";
 import { ClientListResponseSchema } from "../packages/contracts/src/client";
 import { login, setMockUser } from "./utils/auth";
 

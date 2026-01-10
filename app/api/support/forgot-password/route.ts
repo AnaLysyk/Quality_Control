@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseServer } from "@/lib/supabaseServer";
+import { supabaseServer as _supabaseServer, getSupabaseServer } from "@/lib/supabaseServer";
 import { authenticateRequest } from "@/lib/jwtAuth";
 
 type Payload = { email?: string; message?: string };
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   const user_agent = req.headers.get("user-agent") || null;
 
   try {
-    const supabaseServer = getSupabaseServer();
+    const supabaseServer = (typeof getSupabaseServer === "function" ? getSupabaseServer() : _supabaseServer) as any;
     await supabaseServer.from("support_requests").insert({
       email,
       message,

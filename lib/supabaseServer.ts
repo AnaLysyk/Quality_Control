@@ -25,3 +25,15 @@ export function getSupabaseServer() {
 
   return cachedClient;
 }
+
+// Export a default server client instance for code and tests that expect
+// a `supabaseServer` export. Tests may mock this module and provide their
+// own `supabaseServer` object.
+export const supabaseServer = (() => {
+  try {
+    return getSupabaseServer();
+  } catch (err) {
+    // If configuration is missing, return a placeholder; tests will mock it.
+    return (null as unknown) as SupabaseClient;
+  }
+})();

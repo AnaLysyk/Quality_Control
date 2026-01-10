@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseServer } from "@/lib/supabaseServer";
+import { supabaseServer as _supabaseServer, getSupabaseServer } from "@/lib/supabaseServer";
 import { authenticateRequest } from "@/lib/jwtAuth";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -7,7 +7,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const authUser = await authenticateRequest(req);
   if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-  const supabaseServer = getSupabaseServer();
+  const supabaseServer = (typeof getSupabaseServer === "function" ? getSupabaseServer() : _supabaseServer) as any;
   const { data: userRow, error: userError } = await supabaseServer
     .from("users")
     .select("id, is_global_admin")

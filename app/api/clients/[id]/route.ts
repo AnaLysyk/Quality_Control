@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseServer } from "@/lib/supabaseServer";
+import { supabaseServer as _supabaseServer, getSupabaseServer } from "@/lib/supabaseServer";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
@@ -25,7 +25,7 @@ async function getAuthUser(req: Request): Promise<AuthUser | null> {
 
   const token = getBearerToken(req);
   if (!token) return null;
-  const supabaseServer = getSupabaseServer();
+  const supabaseServer = (typeof getSupabaseServer === "function" ? getSupabaseServer() : _supabaseServer) as any;
   const { data, error } = await supabaseServer.auth.getUser(token);
   if (error || !data?.user) return null;
   return { id: data.user.id, email: data.user.email ?? null };

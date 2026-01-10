@@ -7,8 +7,11 @@
     "start": "node dist/main.js",
     "build": "tsc -p tsconfig.build.json",
     "start:dev": "ts-node-dev --respawn --transpile-only src/main.ts",
+    "start:mock": "ts-node-dev --respawn --transpile-only src/mock-server.ts",
     "test": "jest --config jest.config.js",
-    "test:watch": "jest --watch --config jest.config.js"
+    "test:watch": "jest --watch --config jest.config.js",
+    "seed": "node src/scripts/seed-scenarios.js",
+    "start:mock:docker": "node src/mock-server.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.5",

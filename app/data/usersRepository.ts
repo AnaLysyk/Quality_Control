@@ -1,5 +1,5 @@
 import "server-only";
-import { getSupabaseServer } from "@/lib/supabaseServer";
+import { supabaseServer as _supabaseServer, getSupabaseServer } from "@/lib/supabaseServer";
 
 export type Usuario = {
   id: string;
@@ -14,7 +14,7 @@ export type Usuario = {
 };
 
 export async function getUserById(id: string): Promise<Usuario | null> {
-  const supabaseServer = getSupabaseServer();
+  const supabaseServer = (typeof getSupabaseServer === "function" ? getSupabaseServer() : _supabaseServer) as any;
   const { data, error } = await supabaseServer
     .from("users")
     .select("*")

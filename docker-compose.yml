@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  governance-mock:
+    build: ./backend
+    ports:
+      - '3334:3334'
+    environment:
+      - PORT=3334
+    volumes:
+      - ./backend/data:/app/data

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseServer } from "@/lib/supabaseServer";
+import { supabaseServer as _supabaseServer, getSupabaseServer } from "@/lib/supabaseServer";
 import { authenticateRequest } from "@/lib/jwtAuth";
 
 type Payload = {
@@ -11,7 +11,7 @@ type Payload = {
 };
 
 export async function POST(req: Request) {
-  const supabaseServer = getSupabaseServer();
+  const supabaseServer = (typeof getSupabaseServer === "function" ? getSupabaseServer() : _supabaseServer) as any;
   const body = (await req.json().catch(() => ({}))) as Payload;
   const email = body.email?.toLowerCase().trim();
   const company = (body.company || "").trim();

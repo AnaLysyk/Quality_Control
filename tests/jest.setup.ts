@@ -1,2 +1,2 @@
-// For os testes de mock, garantimos que o modo mock esteja ativo
-process.env.SUPABASE_MOCK = process.env.SUPABASE_MOCK ?? "true";
+// Default to non-mock supabase during tests; individual tests can enable it
+process.env.SUPABASE_MOCK = process.env.SUPABASE_MOCK ?? "false";

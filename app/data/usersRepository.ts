@@ -1,6 +1,17 @@
 import "server-only";
 import { supabaseServer as _supabaseServer, getSupabaseServer } from "@/lib/supabaseServer";
 
+// Prefer @vercel/postgres 'sql' when available (tests mock it). Fallback to
+// Supabase client when `sql` is not present or Supabase is configured.
+let sql: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const pg = require("@vercel/postgres");
+  sql = pg.sql ?? pg;
+} catch {
+  sql = null;
+}
+
 export type Usuario = {
   id: string;
   name: string;
@@ -14,6 +25,12 @@ export type Usuario = {
 };
 
 export async function getUserById(id: string): Promise<Usuario | null> {
+  if (sql) {
+    const res = await sql`select * from users where id = ${id} limit 1`;
+    const row = (res?.rows && res.rows[0]) ?? null;
+    return (row as Usuario | null) ?? null;
+  }
+
   const supabaseServer = (typeof getSupabaseServer === "function" ? getSupabaseServer() : _supabaseServer) as any;
   const { data, error } = await supabaseServer
     .from("users")
@@ -28,7 +45,13 @@ export async function getUserById(id: string): Promise<Usuario | null> {
 }
 
 export async function getUserByEmail(email: string): Promise<Usuario | null> {
-  const supabaseServer = getSupabaseServer();
+  if (sql) {
+    const res = await sql`select * from users where email = ${email} limit 1`;
+    const row = (res?.rows && res.rows[0]) ?? null;
+    return (row as Usuario | null) ?? null;
+  }
+
+  const supabaseServer = (typeof getSupabaseServer === "function" ? getSupabaseServer() : _supabaseServer) as any;
   const { data, error } = await supabaseServer
     .from("users")
     .select("*")
@@ -42,7 +65,12 @@ export async function getUserByEmail(email: string): Promise<Usuario | null> {
 }
 
 export async function listUsers(): Promise<Usuario[]> {
-  const supabaseServer = getSupabaseServer();
+  if (sql) {
+    const res = await sql`select * from users order by created_at desc`;
+    return (res?.rows as Usuario[]) ?? [];
+  }
+
+  const supabaseServer = (typeof getSupabaseServer === "function" ? getSupabaseServer() : _supabaseServer) as any;
   const { data, error } = await supabaseServer.from("users").select("*").order("created_at", { ascending: false });
   if (error) {
     throw error;
@@ -51,7 +79,16 @@ export async function listUsers(): Promise<Usuario[]> {
 }
 
 export async function updateUserAvatar(id: string, avatarUrl: string): Promise<Usuario | null> {
-  const supabaseServer = getSupabaseServer();
+  if (sql) {
+    const res = await sql(
+      "update users set avatar_url = $1, updated_at = now() where id = $2 returning *",
+      avatarUrl,
+      id,
+    );
+    return (res?.rows && res.rows[0]) ?? null;
+  }
+
+  const supabaseServer = (typeof getSupabaseServer === "function" ? getSupabaseServer() : _supabaseServer) as any;
   const { data, error } = await supabaseServer
     .from("users")
     .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })

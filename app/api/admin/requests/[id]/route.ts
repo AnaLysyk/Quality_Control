@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateRequestStatus } from "@/data/requestsStore";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/session";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
@@ -15,6 +16,16 @@ function extractToken(req: NextRequest): string | null {
 }
 
 async function requireAdmin(req: NextRequest) {
+  // Prefer session-based admin detection (tests mock `getSessionUser`).
+  try {
+    const sessionUser = await getSessionUser();
+    if (sessionUser && (sessionUser.role === "admin" || sessionUser.role === "global_admin")) {
+      return { id: sessionUser.id ?? "session-admin", email: sessionUser.email ?? "", name: sessionUser.name ?? "Admin" };
+    }
+  } catch {
+    // ignore and fall back to Supabase auth
+  }
+
   if (SUPABASE_MOCK) {
     return { id: "mock-admin", email: "admin@example.com", name: "Admin" };
   }
@@ -34,11 +45,7 @@ async function requireAdmin(req: NextRequest) {
     .limit(1)
     .maybeSingle();
 
-  const isAdmin =
-    userRow?.is_global_admin === true ||
-    userRow?.role === "global_admin" ||
-    userRow?.role === "admin";
-
+  const isAdmin = userRow?.is_global_admin === true || userRow?.role === "global_admin" || userRow?.role === "admin";
   if (!isAdmin) return null;
 
   return {

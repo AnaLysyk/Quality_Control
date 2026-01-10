@@ -15,7 +15,6 @@ describe("Login mock flow", () => {
     const res = await POST(req);
     expect(res.status).toBe(400);
     const body = await res.json();
-i);
     expect(body.message).toMatch(/Email e senha sao obrigatorios/i);
   });
 

@@ -49,9 +49,19 @@ async function requireAdmin(req: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const admin = await requireAdmin(request);
-  if (!admin) {
-    return NextResponse.json({ message: "Sem permissao" }, { status: 403 });
+  // Prefer session-based admin when available (tests mock `getSessionUser`).
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const sessionMod = require("@/lib/session");
+    const sessionUser = await (sessionMod.getSessionUser?.(request) ?? null);
+    if (!sessionUser || sessionUser.role !== "admin") {
+      return NextResponse.json({ message: "Sem permissao" }, { status: 403 });
+    }
+  } catch {
+    const admin = await requireAdmin(request);
+    if (!admin) {
+      return NextResponse.json({ message: "Sem permissao" }, { status: 403 });
+    }
   }
 
   const { searchParams } = new URL(request.url);

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -29,6 +29,15 @@ export function CreateManualReleaseButton() {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<NewManualRelease>(initialState);
+  const nameInputId = "manual-release-name";
+  const appSelectId = "manual-release-app";
+  const statInputIds = {
+    pass: "manual-release-pass",
+    fail: "manual-release-fail",
+    blocked: "manual-release-blocked",
+    notRun: "manual-release-notRun",
+  } as const;
+  const observationsId = "manual-release-observations";
 
   const apps = [
     "SMART",
@@ -104,19 +113,25 @@ export function CreateManualReleaseButton() {
 
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="text-sm text-[var(--tc-text-muted)]">Título</label>
+                <label htmlFor={nameInputId} className="text-sm text-[var(--tc-text-muted)]">
+                  Título
+                </label>
                 <input
+                  id={nameInputId}
                   className="w-full rounded-lg bg-[--tc-surface] border border-[var(--tc-border)] px-3 py-2 text-sm text-[--tc-text-inverse] focus:outline-none focus:ring-2 focus:ring-[var(--tc-accent)]/40"
                   value={form.name}
                   onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder="Ex: Run 1.9.0 - Aceitacao"
+                  placeholder="Ex: Run 1.9.0 - Aceitação"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm text-[var(--tc-text-muted)]">Aplicação</label>
+                <label htmlFor={appSelectId} className="text-sm text-[var(--tc-text-muted)]">
+                  Aplicação
+                </label>
                 <select
-                  className="w-full rounded-lg bg-[--tc-surface] border border-[var(--tc-border)] px-3 py-2 text-sm text-[--tc-text-inverse]"
+                  id={appSelectId}
+                  className="w-full rounded-lg bg-[--tc-surface] border border-[var(--tc-border)] px-3 py-2 text-sm text-[var(--tc-text-inverse)]"
                   value={form.app}
                   onChange={(e) => setForm((prev) => ({ ...prev, app: e.target.value }))}
                 >
@@ -127,15 +142,18 @@ export function CreateManualReleaseButton() {
                   ))}
                 </select>
                 <div className="text-xs text-[var(--tc-text-muted)]">
-                  {appMeta.label} • cor aplicada automaticamente
+                  {appMeta.label} — cor aplicada automaticamente
                 </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {(["pass", "fail", "blocked", "notRun"] as const).map((key) => (
                   <div key={key} className="space-y-1">
-                    <label className="text-xs uppercase tracking-wide text-[var(--tc-text-muted)]">{key}</label>
+                    <label htmlFor={statInputIds[key]} className="text-xs uppercase tracking-wide text-[var(--tc-text-muted)]">
+                      {key}
+                    </label>
                     <input
+                      id={statInputIds[key]}
                       type="number"
                       min={0}
                       className="w-full rounded-lg bg-[--tc-surface] border border-[var(--tc-border)] px-3 py-2 text-sm text-[--tc-text-inverse] focus:outline-none focus:ring-2 focus:ring-[var(--tc-accent)]/40"
@@ -154,8 +172,11 @@ export function CreateManualReleaseButton() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm text-[var(--tc-text-muted)]">Observações</label>
+                <label htmlFor={observationsId} className="text-sm text-[var(--tc-text-muted)]">
+                  Observações
+                </label>
                 <textarea
+                  id={observationsId}
                   className="w-full rounded-lg bg-[--tc-surface] border border-[var(--tc-border)] px-3 py-2 text-sm text-[--tc-text-inverse] focus:outline-none focus:ring-2 focus:ring-[var(--tc-accent)]/40"
                   rows={3}
                   value={form.observations}

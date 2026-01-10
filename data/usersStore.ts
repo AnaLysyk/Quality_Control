@@ -2,7 +2,7 @@ export type UserRecord = {
   id: string;
   name: string;
   email: string;
-  role: "user" | "admin";
+  role: "user" | "admin" | "global_admin";
   companyId: string;
   companyName: string;
   preferences: { theme: "light" | "dark"; language: "pt" | "en" };

@@ -1,4 +1,5 @@
-export function cookies() {
+/* eslint-disable @typescript-eslint/no-unused-vars, import/no-anonymous-default-export */
+function cookies() {
   return {
     get: (_name: string) => undefined,
     // minimal API for next/headers cookies store
@@ -6,4 +7,5 @@ export function cookies() {
   };
 }
 
+export { cookies };
 export default { cookies };

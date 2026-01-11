@@ -7,8 +7,8 @@ import crypto from "crypto";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
+// Note: this route uses local `usersRepository` for auth; do not create
+// a Supabase client here to avoid accidental network calls in tests.
 
 const jsonError = (message: string, status: number) =>
   NextResponse.json(ErrorResponseSchema.parse({ error: message }), { status });

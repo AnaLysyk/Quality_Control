@@ -52,7 +52,7 @@ async function extractToken(req: NextRequest): Promise<string | null> {
   );
 }
 
-function createSupabase(_accessToken?: string | null): SupabaseClient {
+function createSupabase(): SupabaseClient {
   // Tests mock `@/lib/supabaseServer` and expect its `supabaseServer` object.
   // Use the server client for both service and user flows in tests by returning
   // the server client; real token scoping is handled in production code via
@@ -102,25 +102,9 @@ async function requireAdmin(req: NextRequest) {
   return { id: data.user.id, email: data.user.email ?? "", token };
 }
 
-async function requireUser(req: NextRequest) {
-  const supMod2 = await import("@/lib/supabaseServer");
-  if (SUPABASE_MOCK && !("supabaseServer" in supMod2)) {
-    return {
-      id: "mock-uid",
-      email: "ana.testing.company@gmail.com",
-      token: "mock-token",
-    };
-  }
-
-  const token = await extractToken(req);
-  if (!token) return null;
-
-  const supabase = createSupabase(token);
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data?.user) return null;
-
-  return { id: data.user.id, email: data.user.email ?? "", token };
-}
+// `requireUser` logic is no longer used in this route; authentication
+// checks rely on `requireAdmin`. If future handlers need a generic user
+// extractor, prefer `requireUserRecord` from `@/lib/jwtAuth`.
 
 function mapRow(row: ClienteRow) {
   const companyName = row.company_name ?? row.name ?? "";

@@ -29,9 +29,30 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const themeInitScript = `
+    (() => {
+      try {
+        const root = document.documentElement;
+        const isValid = (v) => v === "light" || v === "dark" || v === "system";
+        const raw = localStorage.getItem("tc-settings:guest");
+        const parsed = raw ? JSON.parse(raw) : null;
+        const storedTheme = parsed && isValid(parsed.theme) ? parsed.theme : "system";
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const useDark = storedTheme === "system" ? prefersDark : storedTheme === "dark";
+        root.classList.toggle("dark", useDark);
+      } catch (err) {
+        /* ignore */
+      }
+    })();
+  `;
+
   return (
-    <html lang="pt-BR">
-      <body className={`min-h-screen w-full overflow-y-auto ${poppins.variable} ${geistMono.variable} antialiased`}>
+    <html lang="pt-BR" suppressHydrationWarning>
+      <body
+        suppressHydrationWarning
+        className={`min-h-screen w-full overflow-y-auto ${poppins.variable} ${geistMono.variable} antialiased`}
+      >
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <AuthProvider>
           <AppSettingsProvider>
             <ClientProvider>

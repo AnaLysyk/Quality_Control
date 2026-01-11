@@ -1,14 +1,23 @@
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
 import { Request } from "express";
-import { AuthService } from "./auth.service";
+import { AuthContext, AuthService } from "./auth.service";
+
+type RequestWithUser = Request & { user?: AuthContext };
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(private readonly authService: AuthService) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const req = context.switchToHttp().getRequest<Request>();
-    const cookieValue = req.cookies?.auth;
-    return this.authService.isAuthenticated(cookieValue);
+    const req = context.switchToHttp().getRequest<RequestWithUser>();
+    const token = this.authService.extractToken(req);
+
+    if (!token) {
+      throw new UnauthorizedException("Missing auth token");
+    }
+
+    const auth = this.authService.validateToken(token);
+    req.user = auth;
+    return true;
   }
 }

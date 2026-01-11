@@ -10,7 +10,7 @@ export function Card({ children, className, ...rest }: CardProps) {
   return (
     <div
       className={clsx(
-        "card-tc bg-[var(--tc-surface-dark)] text-[var(--tc-text-inverse)] border-[var(--tc-border)]/20",
+        "card-tc bg-(--tc-surface-dark) text-(--tc-text-inverse) border-(--tc-border)/20",
         className
       )}
       {...rest}

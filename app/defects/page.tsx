@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { FiAlertTriangle, FiRefreshCcw } from "react-icons/fi";
-import { apiUrl } from "@/lib/api";
+import { fetchApi } from "@/lib/api";
 
 type Defect = {
   id: number;
@@ -41,7 +41,7 @@ export default function DefectsPage() {
     setError(null);
     try {
       const query = project ? `?project=${encodeURIComponent(project)}` : "?project=ALL";
-      const res = await fetch(apiUrl(`/api/v1/defects${query}`), { cache: "no-store" });
+      const res = await fetchApi(`/api/v1/defects${query}`);
       const json = await res.json();
       if (!res.ok || json?.success === false) {
         throw new Error(json?.error?.message || "Falha ao carregar defeitos");

@@ -104,7 +104,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, user]);
 
   const saveSettings = useCallback(
     async (next?: Partial<AppSettings>): Promise<SaveResult> => {

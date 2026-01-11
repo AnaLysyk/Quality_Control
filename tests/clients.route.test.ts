@@ -3,7 +3,8 @@ import { GET as GET_CLIENTS, POST as POST_CLIENTS } from "@/api/clients/route";
 jest.mock("@/lib/supabaseServer", () => {
   const auth = { getUser: jest.fn() };
   const from = jest.fn();
-  return { supabaseServer: { auth, from } };
+  const supabaseServer = { auth, from };
+  return { supabaseServer, getSupabaseServer: () => supabaseServer };
 });
 
 const supabaseServer = jest.requireMock("@/lib/supabaseServer").supabaseServer as {

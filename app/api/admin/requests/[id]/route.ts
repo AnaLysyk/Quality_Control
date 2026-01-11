@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateRequestStatus } from "@/data/requestsStore";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/session";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
@@ -50,8 +50,8 @@ async function requireAdmin(req: NextRequest) {
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const admin = await requireAdmin(request);
-  if (!admin) {
+  const sessionUser = await getSessionUser();
+  if (!sessionUser || (sessionUser as any).role !== "admin") {
     return NextResponse.json({ message: "Sem permissao" }, { status: 403 });
   }
 
@@ -64,9 +64,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   const reviewer = {
-    id: admin.id,
-    name: admin.name || "Admin",
-    email: admin.email || "",
+    id: (sessionUser as any).id ?? "admin",
+    name: (sessionUser as any).name || "Admin",
+    email: (sessionUser as any).email || "",
     role: "admin" as const,
     companyId: "cmp_admin",
     companyName: "Admin",

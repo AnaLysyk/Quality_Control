@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FiSearch } from "react-icons/fi";
 
 import { getAppMeta } from "@/lib/appMeta";
@@ -71,10 +71,10 @@ export default function ApplicationsPage() {
   }, [apps, query]);
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg,#ffffff)] text-[var(--page-text,#0b1a3c)] px-4 sm:px-6 md:px-10 py-8 md:py-10">
+    <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c) px-4 sm:px-6 md:px-10 py-8 md:py-10">
       <div className="max-w-6xl mx-auto space-y-10">
         <div className="space-y-1">
-          <p className="text-xs uppercase tracking-[0.5em] text-[var(--tc-accent)]">Aplicações</p>
+          <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent)">Aplicações</p>
           <h1 className="text-3xl font-bold">Todas as Aplicações</h1>
         </div>
 
@@ -85,12 +85,12 @@ export default function ApplicationsPage() {
             placeholder="Buscar aplicacao..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full rounded-xl bg-white border border-[var(--surface-border,#e5e7eb)] py-2 pl-10 pr-4 text-sm text-[var(--page-text,#0b1a3c)] placeholder-gray-500 shadow-sm focus:outline-none focus:border-[var(--tc-accent)] focus:ring-2 focus:ring-[var(--tc-accent)]/20"
+            className="w-full rounded-xl bg-white border border-(--surface-border,#e5e7eb) py-2 pl-10 pr-4 text-sm text-(--page-text,#0b1a3c) placeholder-gray-500 shadow-sm focus:outline-none focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/20"
           />
         </div>
 
         {filteredApps.length === 0 && (
-          <div className="rounded-2xl border border-[var(--surface-border,#e5e7eb)] bg-white p-6 md:p-10 text-center text-[var(--page-text,#0b1a3c)] space-y-4 shadow-sm">
+          <div className="rounded-2xl border border-(--surface-border,#e5e7eb) bg-white p-6 md:p-10 text-center text-(--page-text,#0b1a3c) space-y-4 shadow-sm">
             <p className="text-lg font-semibold">Nenhuma aplicacao encontrada.</p>
           </div>
         )}
@@ -100,19 +100,18 @@ export default function ApplicationsPage() {
             {filteredApps.map((app) => {
               const meta = getAppMeta(app.slug, app.tag);
               const appColorClass = APP_COLOR_CLASS[app.slug] ?? "app-color-default";
-              const tagStyle = { "--app-tag-color": meta.color } as CSSProperties;
               return (
                 <Link
                   key={app.slug}
                   href={`/applications/${app.slug}`}
-                  className="rounded-2xl border border-[var(--surface-border,#e5e7eb)] bg-white p-6 shadow-lg shadow-black/10 transition hover:border-[var(--tc-accent)]/60 text-[var(--page-text,#0b1a3c)]"
+                  className="rounded-2xl border border-(--surface-border,#e5e7eb) bg-white p-6 shadow-lg shadow-black/10 transition hover:border-(--tc-accent)/60 text-(--page-text,#0b1a3c)"
                 >
                   <div className="space-y-3">
-                    <span style={tagStyle} className={`app-tag text-[12px] ${appColorClass}`}>
+                    <span className={`app-tag text-[12px] ${appColorClass}`}>
                       {meta.label.toUpperCase()}
                     </span>
                     <p className="text-lg font-semibold">{app.name}</p>
-                    <p className="text-sm font-semibold text-[var(--tc-accent)] flex items-center gap-2">
+                    <p className="text-sm font-semibold text-(--tc-accent) flex items-center gap-2">
                       Ver runs <span aria-hidden="true">→</span>
                     </p>
                   </div>

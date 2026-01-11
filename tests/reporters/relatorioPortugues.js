@@ -1,3 +1,4 @@
+ 
 const fs = require("fs");
 const path = require("path");
 
@@ -82,7 +83,7 @@ class RelatorioPortuguesReporter {
     const arquivo = path.join(pasta, "relatorio-testes.md");
     fs.mkdirSync(pasta, { recursive: true });
     fs.writeFileSync(arquivo, linhas.join("\n"), "utf8");
-    // eslint-disable-next-line no-console
+     
     console.log(`Relatório de testes gerado em: ${path.relative(process.cwd(), arquivo)}`);
   }
 }

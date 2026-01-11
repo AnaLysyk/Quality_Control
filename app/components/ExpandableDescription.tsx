@@ -30,7 +30,7 @@ export default function ExpandableDescription({ html, limit = 150 }: ExpandableD
       {expanded ? (
         <div dangerouslySetInnerHTML={{ __html: html }} />
       ) : (
-        <div className="whitespace-pre-wrap break-words">{truncated}</div>
+        <div className="whitespace-pre-wrap wrap-break-word">{truncated}</div>
       )}
 
       {shouldTruncate && (

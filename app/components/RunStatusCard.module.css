@@ -1,0 +1,45 @@
+.card {
+  --run-status-color: var(--tc-accent, #ef0001);
+  background-color: var(--run-status-color);
+  border-color: var(--run-status-color);
+}
+
+.icon {
+  background-color: var(--run-status-color);
+  color: var(--run-status-color);
+}
+
+.label {
+  color: var(--run-status-color);
+}
+
+@supports (background-color: color-mix(in srgb, red 50%, transparent)) {
+  .card {
+    background-color: color-mix(in srgb, var(--run-status-color) 12%, transparent);
+    border-color: color-mix(in srgb, var(--run-status-color) 32%, transparent);
+  }
+
+  .icon {
+    background-color: color-mix(in srgb, var(--run-status-color) 20%, transparent);
+  }
+}
+
+.accent {
+  --run-status-color: var(--tc-accent, #ef0001);
+}
+
+.info {
+  --run-status-color: #2563eb;
+}
+
+.success {
+  --run-status-color: #16a34a;
+}
+
+.warning {
+  --run-status-color: #f59e0b;
+}
+
+.danger {
+  --run-status-color: #ef4444;
+}

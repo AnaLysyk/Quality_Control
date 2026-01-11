@@ -47,7 +47,7 @@ export default function DefeitosEmpresaPage() {
   }, [slug]);
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg,#f7f9fb)] text-[var(--page-text,#0b1a3c)] p-6 md:p-10 space-y-6">
+    <div className="min-h-screen bg-(--page-bg,#f7f9fb) text-(--page-text,#0b1a3c) p-6 md:p-10 space-y-6">
       <nav className="text-xs text-[var(--tc-text-muted,#6B7280)] flex items-center gap-1">
         <Link href="/empresas" className="hover:underline">
           Empresas

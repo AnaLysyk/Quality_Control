@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { getAppMeta } from "@/lib/appMeta";
 
@@ -154,12 +154,12 @@ export default function AdminRunsPage() {
   }, [sortedItems, currentPage, pageSize]);
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg,#ffffff)] text-[var(--page-text,#0b1a3c)] p-6 md:p-10">
+    <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c) p-6 md:p-10">
       <div className="max-w-5xl mx-auto space-y-8">
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.45em] text-[var(--tc-accent,#ef0001)]">Gestão de Runs</p>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-[var(--tc-text-primary,#0b1a3c)]">Gerenciar Runs</h1>
-          <p className="text-[var(--tc-text-secondary,#4B5563)] max-w-3xl">
+          <p className="text-xs uppercase tracking-[0.45em] text-(--tc-accent,#ef0001)">Gestão de Runs</p>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Gerenciar Runs</h1>
+          <p className="text-(--tc-text-secondary,#4B5563) max-w-3xl">
             Cadastre runs salvando em arquivo JSON do painel. Informe o nome, o ID da run no Qase e o projeto (ex.: sfq)
             para gerar a URL e permitir buscar estatisticas automaticamente.
           </p>
@@ -167,10 +167,10 @@ export default function AdminRunsPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="grid gap-4 rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-6 shadow-sm md:grid-cols-[1fr_1fr_0.6fr_auto]"
+          className="grid gap-4 rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm md:grid-cols-[1fr_1fr_0.6fr_auto]"
         >
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-[var(--tc-text-secondary,#4B5563)]">Nome da run</label>
+            <label className="text-sm text-(--tc-text-secondary,#4B5563)">Nome da run</label>
             <input
               value={title}
               onChange={(e) => {
@@ -178,13 +178,13 @@ export default function AdminRunsPage() {
                 setFeedback(null);
               }}
               placeholder="Ex.: SFQ v1.9.0 ACE"
-              className="w-full rounded-lg border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#eef4ff)] px-4 py-3 text-[var(--tc-text-primary,#011848)] placeholder:text-[var(--tc-text-muted,#6B7280)] focus:outline-none focus:ring-2 focus:ring-[var(--tc-accent,#ef0001)]/40"
+              className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-(--tc-text-primary,#011848) placeholder:text-(--tc-text-muted,#6B7280) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
             />
-            <p className="text-xs text-[var(--tc-text-muted,#6B7280)]">Slug: {slugPreview}</p>
+            <p className="text-xs text-(--tc-text-muted,#6B7280)">Slug: {slugPreview}</p>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-[var(--tc-text-secondary,#4B5563)]">ID da run no Qase</label>
+            <label className="text-sm text-(--tc-text-secondary,#4B5563)">ID da run no Qase</label>
             <input
               value={runId}
               onChange={(e) => {
@@ -192,16 +192,17 @@ export default function AdminRunsPage() {
                 setFeedback(null);
               }}
               placeholder="Ex.: 21"
-              className="w-full rounded-lg border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#eef4ff)] px-4 py-3 text-[var(--tc-text-primary,#011848)] placeholder:text-[var(--tc-text-muted,#6B7280)] focus:outline-none focus:ring-2 focus:ring-[var(--tc-accent,#ef0001)]/40"
+              className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-(--tc-text-primary,#011848) placeholder:text-(--tc-text-muted,#6B7280) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-[var(--tc-text-secondary,#4B5563)]">Projeto (Qase)</label>
+            <label className="text-sm text-(--tc-text-secondary,#4B5563)">Projeto (Qase)</label>
             <select
+              aria-label="Selecionar projeto do Qase"
               value={app}
               onChange={(e) => setApp(e.target.value)}
-              className="w-full rounded-lg border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#eef4ff)] px-4 py-3 text-[var(--tc-text-primary,#011848)] focus:outline-none focus:ring-2 focus:ring-[var(--tc-accent,#ef0001)]/40"
+              className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-(--tc-text-primary,#011848) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
             >
               <option value="">Selecione o projeto</option>
               <option value="sfq">SFQ</option>
@@ -213,12 +214,12 @@ export default function AdminRunsPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-[var(--tc-text-secondary,#4B5563)]">RADIS</label>
+            <label className="text-sm text-(--tc-text-secondary,#4B5563)">RADIS</label>
             <input
               value={radis}
               onChange={(e) => setRadis(e.target.value)}
               placeholder="RADIS_3"
-              className="w-full rounded-lg border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#eef4ff)] px-4 py-3 text-[var(--tc-text-primary,#011848)] placeholder:text-[var(--tc-text-muted,#6B7280)] focus:outline-none focus:ring-2 focus:ring-[var(--tc-accent,#ef0001)]/40"
+              className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-(--tc-text-primary,#011848) placeholder:text-(--tc-text-muted,#6B7280) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
             />
           </div>
 
@@ -226,27 +227,27 @@ export default function AdminRunsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-lg bg-[var(--tc-accent,#ef0001)] px-4 py-3 font-semibold text-white shadow-lg shadow-[var(--tc-accent-soft,rgba(239,0,1,0.12))] transition hover:brightness-110 disabled:opacity-60"
+              className="w-full rounded-lg bg-(--tc-accent,#ef0001) px-4 py-3 font-semibold text-white shadow-(--tc-accent-soft,rgba(239,0,1,0.12)) transition hover:brightness-110 disabled:opacity-60"
             >
               {saving ? "Salvando..." : "Salvar"}
             </button>
           </div>
 
           <div className="md:col-span-4">
-            <label className="text-sm text-[var(--tc-text-secondary,#4B5563)]">Resumo</label>
+            <label className="text-sm text-(--tc-text-secondary,#4B5563)">Resumo</label>
             <textarea
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               rows={3}
               placeholder="Resumo curto (opcional)"
-              className="mt-2 w-full rounded-lg border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#eef4ff)] px-4 py-3 text-[var(--tc-text-primary,#011848)] placeholder:text-[var(--tc-text-muted,#6B7280)] focus:outline-none focus:ring-2 focus:ring-[var(--tc-accent,#ef0001)]/40"
+              className="mt-2 w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-(--tc-text-primary,#011848) placeholder:text-(--tc-text-muted,#6B7280) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
             />
           </div>
 
           {feedback && (
             <p
               className={`md:col-span-4 text-sm ${
-                feedbackType === "error" ? "text-red-400" : "text-[var(--tc-accent,#ef0001)]"
+                feedbackType === "error" ? "text-red-400" : "text-(--tc-accent,#ef0001)"
               }`}
             >
               {feedback}
@@ -254,10 +255,10 @@ export default function AdminRunsPage() {
           )}
         </form>
 
-        <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-6 space-y-5 shadow-sm">
+        <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 space-y-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-[var(--tc-text-primary,#0b1a3c)]">Runs cadastradas</h2>
-            <div className="flex items-center gap-2 text-sm text-[var(--tc-text-secondary,#4B5563)]">
+            <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Runs cadastradas</h2>
+            <div className="flex items-center gap-2 text-sm text-(--tc-text-secondary,#4B5563)">
               <label className="flex items-center gap-1">
                 <span className="text-xs">por pagina</span>
                 <select
@@ -266,7 +267,7 @@ export default function AdminRunsPage() {
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="rounded border border-[var(--tc-border,#e5e7eb)] bg-white px-2 py-1 text-xs text-[var(--page-text,#0b1a3c)] focus:outline-none focus:ring-1 focus:ring-[var(--tc-accent,#ef0001)]/50"
+                  className="rounded border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-xs text-(--page-text,#0b1a3c) focus:outline-none focus:ring-1 focus:ring-(--tc-accent,#ef0001)/50"
                 >
                   {[2, 5, 10].map((size) => (
                     <option key={size} value={size}>
@@ -279,18 +280,18 @@ export default function AdminRunsPage() {
                 type="button"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="rounded-lg border border-[var(--tc-border,#e5e7eb)] px-3 py-1 text-xs text-[var(--page-text,#0b1a3c)] hover:bg-[var(--tc-accent,#ef0001)]/8 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-1 text-xs text-(--page-text,#0b1a3c) hover:bg-(--tc-accent,#ef0001)/8 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Anterior
               </button>
-              <span className="text-[var(--page-text,#0b1a3c)]">
+              <span className="text-(--page-text,#0b1a3c)">
                 {currentPage} / {Math.max(1, Math.ceil(sortedItems.length / pageSize))}
               </span>
               <button
                 type="button"
                 onClick={() => setCurrentPage((p) => Math.min(Math.ceil(sortedItems.length / pageSize) || 1, p + 1))}
                 disabled={currentPage >= Math.ceil(sortedItems.length / pageSize)}
-                className="rounded-lg border border-[var(--tc-border,#e5e7eb)] px-3 py-1 text-xs text-[var(--page-text,#0b1a3c)] hover:bg-[var(--tc-accent,#ef0001)]/8 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-1 text-xs text-(--page-text,#0b1a3c) hover:bg-(--tc-accent,#ef0001)/8 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Proxima
               </button>
@@ -298,9 +299,9 @@ export default function AdminRunsPage() {
           </div>
 
           {loading ? (
-            <p className="text-[var(--tc-text-muted,#6B7280)]">Carregando...</p>
+            <p className="text-(--tc-text-muted,#6B7280)">Carregando...</p>
           ) : sortedItems.length === 0 ? (
-            <p className="text-[var(--tc-text-muted,#6B7280)]">Nenhuma run salva ainda.</p>
+            <p className="text-(--tc-text-muted,#6B7280)">Nenhuma run salva ainda.</p>
           ) : (
             <div className="space-y-4">
               {pagedItems.map((item) => {
@@ -308,34 +309,33 @@ export default function AdminRunsPage() {
                 const meta = getAppMeta(chipKey, chipKey.toUpperCase());
                 const chipText = meta.label ?? (item.app ?? item.project ?? "APP").toUpperCase();
                 const appTagClass = APP_COLOR_CLASS[chipKey] ?? "app-color-default";
-                const chipStyle = { "--app-tag-color": meta.color } as CSSProperties;
                 const titleClean = (item.title ?? "").replace(/^run\s*/i, "");
                 return (
                   <div
                     key={item.slug}
-                    className="rounded-xl border border-[var(--tc-border,#e5e7eb)] bg-white p-5 space-y-3 shadow-sm"
+                    className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-5 space-y-3 shadow-sm"
                   >
                     <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                       <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
-                        <span style={chipStyle} className={`app-tag text-[12px] ${appTagClass}`}>
+                        <span className={`app-tag text-[12px] ${appTagClass}`}>
                           {chipText}
                         </span>
                         {item.radis && (
-                          <span className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-1 uppercase text-[var(--page-text,#0b1a3c)]">
+                          <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-3 py-1 uppercase text-(--page-text,#0b1a3c)">
                             RADIS: {item.radis}
                           </span>
                         )}
-                        <span className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-1 text-[var(--page-text,#0b1a3c)]">
+                        <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-3 py-1 text-(--page-text,#0b1a3c)">
                           Run {item.runId}
                         </span>
-                        <span className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-1 truncate max-w-[240px] text-[var(--page-text,#0b1a3c)]">
+                        <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-3 py-1 truncate max-w-60 text-(--page-text,#0b1a3c)">
                           Slug: /run/{item.slug}
                         </span>
                       </div>
                       <div className="flex gap-2">
                         <a
                           href={`/run/${item.slug}`}
-                          className="rounded-lg border border-[var(--tc-accent,#ef0001)]/70 px-4 py-2 text-sm font-semibold text-[var(--tc-accent,#ef0001)] transition hover:bg-[var(--tc-accent-soft,rgba(239,0,1,0.12))]"
+                          className="rounded-lg border border-(--tc-accent,#ef0001)/70 px-4 py-2 text-sm font-semibold text-(--tc-accent,#ef0001) transition hover:bg-(--tc-accent-soft,rgba(239,0,1,0.12))"
                         >
                           Abrir
                         </a>
@@ -349,10 +349,10 @@ export default function AdminRunsPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <h3 className="text-lg font-semibold text-[var(--page-text,#0b1a3c)]">{titleClean}</h3>
-                      {item.summary && <p className="text-sm text-[var(--tc-text-secondary,#4B5563)]">{item.summary}</p>}
+                      <h3 className="text-lg font-semibold text-(--page-text,#0b1a3c)">{titleClean}</h3>
+                      {item.summary && <p className="text-sm text-(--tc-text-secondary,#4B5563)">{item.summary}</p>}
                       {!item.summary && (
-                        <p className="text-sm text-[var(--tc-text-secondary,#4B5563)] opacity-70">Sem resumo informado.</p>
+                        <p className="text-sm text-(--tc-text-secondary,#4B5563) opacity-70">Sem resumo informado.</p>
                       )}
                     </div>
                   </div>
@@ -361,7 +361,7 @@ export default function AdminRunsPage() {
             </div>
           )}
 
-          <div className="flex items-center justify-between text-sm text-[var(--tc-text-secondary,#4B5563)] pt-2">
+          <div className="flex items-center justify-between text-sm text-(--tc-text-secondary,#4B5563) pt-2">
             <span>{sortedItems.length} itens</span>
             <div />
           </div>
@@ -372,7 +372,7 @@ export default function AdminRunsPage() {
             className={`fixed bottom-6 right-6 z-50 rounded-lg border px-4 py-3 text-sm shadow-lg ${
               toast.type === "error"
                 ? "border-red-400/60 bg-white text-red-600"
-                : "border-[var(--tc-accent,#ef0001)]/60 bg-white text-[var(--tc-accent,#ef0001)]"
+                : "border-(--tc-accent,#ef0001)/60 bg-white text-(--tc-accent,#ef0001)"
             }`}
           >
             {toast.message}

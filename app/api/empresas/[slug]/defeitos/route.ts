@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { getClientQaseSettings } from "@/lib/qaseConfig";
+
 type QaseDefect = {
   id: string;
   title: string;
@@ -33,9 +35,8 @@ type DefectResponse = {
 };
 
 const QASE_BASE_URL = process.env.QASE_BASE_URL || "https://api.qase.io";
-const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
+const FALLBACK_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
 
-// Mapeie slug -> projectCode do Qase
 const PROJECT_MAP: Record<string, string> = {
   griaule: process.env.QASE_PROJECT_CODE || process.env.QASE_PROJECT || "",
 };
@@ -49,8 +50,8 @@ function mapKanbanStatus(raw: string): NormalizedDefect["kanbanStatus"] {
   return "aberto";
 }
 
-async function fetchAllDefects(projectCode: string): Promise<QaseDefect[]> {
-  if (!QASE_TOKEN || !projectCode) return [];
+async function fetchAllDefects(projectCode: string, token: string): Promise<QaseDefect[]> {
+  if (!token || !projectCode) return [];
 
   const limit = 100;
   let offset = 0;
@@ -59,7 +60,7 @@ async function fetchAllDefects(projectCode: string): Promise<QaseDefect[]> {
   while (true) {
     const res = await fetch(`${QASE_BASE_URL}/v2/defect/${projectCode}?limit=${limit}&offset=${offset}`, {
       headers: {
-        Token: QASE_TOKEN,
+        Token: token,
         Accept: "application/json",
       },
       cache: "no-store",
@@ -97,7 +98,7 @@ function normalize(defects: QaseDefect[]): DefectResponse {
 
   const items: NormalizedDefect[] = defects.map((d, idx) => {
     const kanban = mapKanbanStatus(d.status ?? "open");
-    const app = d.tags?.[0] ?? "Sem aplicação";
+    const app = d.tags?.[0] ?? "Sem aplicacao";
     byStatus.set(kanban, (byStatus.get(kanban) ?? 0) + 1);
     byApp.set(app, (byApp.get(app) ?? 0) + 1);
     return {
@@ -123,25 +124,26 @@ function normalize(defects: QaseDefect[]): DefectResponse {
 
 export async function GET(_: Request, context: { params: Promise<{ slug: string }> }) {
   const { slug } = await context.params;
-  const projectCode = PROJECT_MAP[slug];
+  const clientSettings = await getClientQaseSettings(slug);
+  const projectCode = clientSettings?.projectCode ?? PROJECT_MAP[slug];
+  const token = clientSettings?.token ?? FALLBACK_TOKEN;
 
   if (!slug || !projectCode) {
     return NextResponse.json(
-      { defects: [], total: 0, byStatus: {}, byApplication: [], error: "Projeto Qase não configurado para esta empresa." },
-      { status: 200 },
+      { defects: [], total: 0, byStatus: {}, byApplication: [], error: "Projeto Qase nao configurado para esta empresa." },
+      { status: 200 }
     );
   }
 
-  if (!QASE_TOKEN) {
+  if (!token) {
     return NextResponse.json(
       { defects: [], total: 0, byStatus: {}, byApplication: [], error: "QASE_TOKEN ausente." },
-      { status: 200 },
+      { status: 200 }
     );
   }
 
-  const defects = await fetchAllDefects(projectCode);
+  const defects = await fetchAllDefects(projectCode, token);
   const normalized = normalize(defects);
 
-  // Mantém compatibilidade com a UI atual: envia defects em items e em defects.
   return NextResponse.json({ defects: normalized.items, ...normalized }, { status: 200 });
 }

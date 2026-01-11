@@ -1,0 +1,24 @@
+.value {
+  color: var(--stat-card-color, var(--tc-text-inverse, #ffffff));
+}
+
+.pass {
+  --stat-card-color: #22c55e;
+}
+
+.fail {
+  --stat-card-color: #ef4444;
+}
+
+.blocked {
+  --stat-card-color: #facc15;
+}
+
+.notRun {
+  --stat-card-color: #64748b;
+}
+
+.total,
+.inverse {
+  --stat-card-color: var(--tc-text-inverse, #ffffff);
+}

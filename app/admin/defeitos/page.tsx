@@ -7,6 +7,11 @@ import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 type RunItem = { slug: string; title: string; app?: string; project?: string; summary?: string; status?: string; clientName?: string | null };
 type ClientItem = { id: string; name: string; slug?: string | null };
 
+function pctWidthClass(pct: number) {
+  const clamped = Math.max(0, Math.min(100, Math.round(pct)));
+  return `w-pct-${clamped}`;
+}
+
 export default function AdminDefeitosPage() {
   const [runs, setRuns] = useState<RunItem[]>([]);
   const [clients, setClients] = useState<ClientItem[]>([]);
@@ -90,19 +95,19 @@ export default function AdminDefeitosPage() {
           animation: pulseUp 0.6s ease-out both;
         }
       `}</style>
-      <div className="min-h-screen bg-[var(--page-bg,#f7f9fb)] text-[var(--page-text,#0b1a3c)] p-6 md:p-10 space-y-6">
+      <div className="min-h-screen bg-(--page-bg,#f7f9fb) text-(--page-text,#0b1a3c) p-6 md:p-10 space-y-6">
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)]">Defeitos</p>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-[var(--tc-text-primary,#0b1a3c)]">
+          <p className="text-xs uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Defeitos</p>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">
             Painel de defeitos (global)
           </h1>
-          <p className="text-sm text-[var(--tc-text-secondary,#4B5563)]">
+          <p className="text-sm text-(--tc-text-secondary,#4B5563)">
             Visao consolidada de falhas por empresa e por run. Clique para entrar no contexto da empresa.
           </p>
         </div>
 
         {error && <p className="text-sm text-red-500">{error}</p>}
-        {loading && <p className="text-sm text-[var(--tc-text-muted,#6B7280)]">Carregando defeitos...</p>}
+        {loading && <p className="text-sm text-(--tc-text-muted,#6B7280)">Carregando defeitos...</p>}
 
         {!loading && (
           <>
@@ -113,15 +118,15 @@ export default function AdminDefeitosPage() {
               <MetricCard label="Runs inspecionadas" value={runs.length} icon={<FiZap />} />
             </section>
 
-            <section className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-6 shadow-sm space-y-3">
+            <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold text-[var(--tc-text-primary,#0b1a3c)]">Por empresa</h2>
-                  <p className="text-sm text-[var(--tc-text-secondary,#4B5563)]">Ranking de falhas</p>
+                  <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Por empresa</h2>
+                  <p className="text-sm text-(--tc-text-secondary,#4B5563)">Ranking de falhas</p>
                 </div>
               </div>
               {defectsByCompany.length === 0 ? (
-                <p className="text-sm text-[var(--tc-text-muted,#6B7280)]">Nenhuma falha registrada.</p>
+                <p className="text-sm text-(--tc-text-muted,#6B7280)">Nenhuma falha registrada.</p>
               ) : (
                 <div className="space-y-3">
                   {defectsByCompany.map((c, idx) => {
@@ -129,21 +134,22 @@ export default function AdminDefeitosPage() {
                     const barWidth = Math.min(100, c.count * 10);
                     const tone =
                       c.count > 10 ? "bg-red-500" : c.count > 5 ? "bg-amber-500" : "bg-emerald-500";
+                    const widthClass = pctWidthClass(barWidth);
                     return (
                       <div key={idx} className="space-y-1">
                         <div className="flex items-center justify-between text-sm">
-                          <p className="font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{c.name}</p>
+                          <p className="font-semibold text-(--tc-text-primary,#0b1a3c)">{c.name}</p>
                           <a
                             href={`/empresas/${slug}/defeitos`}
-                            className="text-xs font-semibold text-[var(--tc-accent,#ef0001)] hover:underline"
+                            className="text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
                           >
                             Entrar
                           </a>
                         </div>
-                        <div className="h-2 rounded-full bg-[var(--tc-input-bg,#eef4ff)]">
-                          <div className={`h-full rounded-full ${tone}`} style={{ width: `${barWidth}%` }} />
+                        <div className="h-2 rounded-full bg-(--tc-input-bg,#eef4ff)">
+                          <div className={`h-full rounded-full ${tone} ${widthClass}`} />
                         </div>
-                        <p className="text-xs text-[var(--tc-text-secondary,#4B5563)]">{c.count} defeitos</p>
+                        <p className="text-xs text-(--tc-text-secondary,#4B5563)">{c.count} defeitos</p>
                       </div>
                     );
                   })}
@@ -151,31 +157,31 @@ export default function AdminDefeitosPage() {
               )}
             </section>
 
-            <section className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-6 shadow-sm space-y-3">
+            <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-[var(--tc-text-primary,#0b1a3c)]">Runs com falha</h2>
-                <a href="/admin/runs" className="text-sm font-semibold text-[var(--tc-accent,#ef0001)] hover:underline">
+                <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Runs com falha</h2>
+                <a href="/admin/runs" className="text-sm font-semibold text-(--tc-accent,#ef0001) hover:underline">
                   Ver todas
                 </a>
               </div>
               {defects.length === 0 ? (
-                <p className="text-sm text-[var(--tc-text-muted,#6B7280)]">Nenhuma run com falha.</p>
+                <p className="text-sm text-(--tc-text-muted,#6B7280)">Nenhuma run com falha.</p>
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
                   {defects.slice(0, 6).map((r, idx) => (
                     <div
                       key={r.slug ?? idx}
-                      className="rounded-xl border border-[var(--tc-border,#e5e7eb)] bg-white p-4 shadow-sm space-y-2 hover:shadow-md transition"
+                      className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm space-y-2 hover:shadow-md transition"
                     >
                       <div className="flex items-center justify-between">
-                        <p className="font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{r.title}</p>
+                        <p className="font-semibold text-(--tc-text-primary,#0b1a3c)">{r.title}</p>
                         <span className="text-xs text-red-600">falha</span>
                       </div>
-                      <p className="text-xs text-[var(--tc-text-secondary,#4B5563)]">App: {r.app ?? r.project ?? "APP"}</p>
-                      <p className="text-xs text-[var(--tc-text-muted,#6B7280)]">Empresa: {r.clientName ?? "Empresa"}</p>
+                      <p className="text-xs text-(--tc-text-secondary,#4B5563)">App: {r.app ?? r.project ?? "APP"}</p>
+                      <p className="text-xs text-(--tc-text-muted,#6B7280)">Empresa: {r.clientName ?? "Empresa"}</p>
                       <a
                         href={`/runs/${r.slug}`}
-                        className="text-xs font-semibold text-[var(--tc-accent,#ef0001)] hover:underline"
+                        className="text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
                       >
                         Abrir run
                       </a>
@@ -186,29 +192,30 @@ export default function AdminDefeitosPage() {
             </section>
 
             {/* Defeitos por run (grafico simples) */}
-            <section className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-6 shadow-sm space-y-3">
-              <h2 className="text-xl font-semibold text-[var(--tc-text-primary,#0b1a3c)]">Defeitos por run</h2>
+            <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-3">
+              <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Defeitos por run</h2>
               {defectsByRun.length === 0 ? (
-                <p className="text-sm text-[var(--tc-text-muted,#6B7280)]">Nenhuma run com defeitos.</p>
+                <p className="text-sm text-(--tc-text-muted,#6B7280)">Nenhuma run com defeitos.</p>
               ) : (
                 <div className="space-y-2">
                   {defectsByRun.map((r, idx) => {
                     const barWidth = Math.min(100, r.count * 12);
+                    const widthClass = pctWidthClass(barWidth);
                     return (
                       <div key={r.slug ?? idx} className="space-y-1">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{r.slug}</span>
+                          <span className="font-semibold text-(--tc-text-primary,#0b1a3c)">{r.slug}</span>
                           <a
                             href={`/runs/${r.slug}`}
-                            className="text-xs font-semibold text-[var(--tc-accent,#ef0001)] hover:underline"
+                            className="text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
                           >
                             Abrir run
                           </a>
                         </div>
-                        <div className="h-2 rounded-full bg-[var(--tc-input-bg,#eef4ff)]">
-                          <div className="h-full rounded-full bg-red-500" style={{ width: `${barWidth}%` }} />
+                        <div className="h-2 rounded-full bg-(--tc-input-bg,#eef4ff)">
+                          <div className={`h-full rounded-full bg-red-500 ${widthClass}`} />
                         </div>
-                        <p className="text-xs text-[var(--tc-text-secondary,#4B5563)]">
+                        <p className="text-xs text-(--tc-text-secondary,#4B5563)">
                           {r.count} defeitos • {r.app} • {r.client ?? "Empresa"}
                         </p>
                       </div>
@@ -219,23 +226,24 @@ export default function AdminDefeitosPage() {
             </section>
 
             {/* Defeitos por aplicação */}
-            <section className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-6 shadow-sm space-y-3">
-              <h2 className="text-xl font-semibold text-[var(--tc-text-primary,#0b1a3c)]">Defeitos por aplicação</h2>
+            <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-3">
+              <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Defeitos por aplicação</h2>
               {defectsByApp.length === 0 ? (
-                <p className="text-sm text-[var(--tc-text-muted,#6B7280)]">Nenhuma aplicação com defeitos.</p>
+                <p className="text-sm text-(--tc-text-muted,#6B7280)">Nenhuma aplicação com defeitos.</p>
               ) : (
                 <div className="space-y-2">
                   {defectsByApp.map((a, idx) => {
                     const barWidth = Math.min(100, a.count * 10);
+                    const widthClass = pctWidthClass(barWidth);
                     return (
                       <div key={idx} className="space-y-1">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{a.app}</span>
+                          <span className="font-semibold text-(--tc-text-primary,#0b1a3c)">{a.app}</span>
                         </div>
-                        <div className="h-2 rounded-full bg-[var(--tc-input-bg,#eef4ff)]">
-                          <div className="h-full rounded-full bg-amber-500" style={{ width: `${barWidth}%` }} />
+                        <div className="h-2 rounded-full bg-(--tc-input-bg,#eef4ff)">
+                          <div className={`h-full rounded-full bg-amber-500 ${widthClass}`} />
                         </div>
-                        <p className="text-xs text-[var(--tc-text-secondary,#4B5563)]">{a.count} defeitos</p>
+                        <p className="text-xs text-(--tc-text-secondary,#4B5563)">{a.count} defeitos</p>
                       </div>
                     );
                   })}
@@ -251,13 +259,13 @@ export default function AdminDefeitosPage() {
 
 function MetricCard({ label, value, color, icon }: { label: string; value: number; color?: string; icon?: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-5 shadow-sm flex items-center gap-3">
-      <div className="h-12 w-12 rounded-xl bg-[var(--tc-input-bg,#eef4ff)] border border-[var(--tc-border,#e5e7eb)] flex items-center justify-center text-[var(--tc-accent,#ef0001)]">
+    <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-5 shadow-sm flex items-center gap-3">
+      <div className="h-12 w-12 rounded-xl bg-(--tc-input-bg,#eef4ff) border border-(--tc-border,#e5e7eb) flex items-center justify-center text-(--tc-accent,#ef0001)">
         {icon}
       </div>
       <div>
-        <p className="text-sm text-[var(--tc-text-muted,#6B7280)]">{label}</p>
-        <p className={`text-3xl font-bold ${color ?? "text-[var(--tc-text-primary,#0b1a3c)]"}`}>{value}</p>
+        <p className="text-sm text-(--tc-text-muted,#6B7280)">{label}</p>
+        <p className={`text-3xl font-bold ${color ?? "text-(--tc-text-primary,#0b1a3c)"}`}>{value}</p>
       </div>
     </div>
   );

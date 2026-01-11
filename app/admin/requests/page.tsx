@@ -86,6 +86,7 @@ export default function AdminRequestsPage() {
 
       <div className="flex gap-3 flex-wrap">
         <select
+          aria-label="Filtrar solicitações por status"
           value={status}
           onChange={(e) => setStatus(e.target.value)}
           className="border border-[#e5e7eb] rounded-lg px-3 py-2"
@@ -97,6 +98,7 @@ export default function AdminRequestsPage() {
         </select>
 
         <select
+          aria-label="Filtrar solicitações por tipo"
           value={type}
           onChange={(e) => setType(e.target.value)}
           className="border border-[#e5e7eb] rounded-lg px-3 py-2"

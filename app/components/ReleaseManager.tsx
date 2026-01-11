@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { apiUrl } from "@/lib/api";
+import { fetchApi } from "@/lib/api";
 
 type Project = { code: string; title?: string };
 
@@ -23,7 +23,7 @@ export default function ReleaseManager() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(apiUrl("/api/v1/projects"), { cache: "no-store" });
+        const res = await fetchApi("/api/v1/projects");
         const json = await res.json();
         type RawProject = { code?: string; project?: string; title?: string; name?: string };
         const rawList: RawProject[] = Array.isArray(json.data ?? json.projects) ? (json.data ?? json.projects) : [];
@@ -53,7 +53,7 @@ export default function ReleaseManager() {
     setLoading(true);
     setStatus(null);
     try {
-      const res = await fetch(apiUrl("/api/v1/runs"), {
+      const res = await fetchApi("/api/v1/runs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -120,7 +120,7 @@ export default function ReleaseManager() {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full min-h-[96px] rounded-lg bg-[#0b1020] border border-white/10 px-3 py-2 text-white focus:border-[#7CD343] focus:outline-none"
+            className="w-full min-h-24 rounded-lg bg-[#0b1020] border border-white/10 px-3 py-2 text-white focus:border-[#7CD343] focus:outline-none"
             placeholder="Detalhes da run"
           />
         </label>

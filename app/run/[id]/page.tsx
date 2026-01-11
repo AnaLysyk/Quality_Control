@@ -1,7 +1,6 @@
 import StatusChart from "@/components/StatusChart";
 import StatCard from "@/components/StatCard";
-import { STATUS_COLORS } from "@/utils/statusColors";
-import { apiUrl } from "@/lib/api";
+import { fetchApi } from "@/lib/api";
 
 type Stats = { pass: number; fail: number; blocked: number; notRun: number };
 
@@ -12,9 +11,7 @@ const PROJECT =
 
 async function fetchRun(id: string) {
   try {
-    const res = await fetch(apiUrl(`/api/v1/run/${id}?project=${PROJECT}`), {
-      cache: "no-store",
-    });
+    const res = await fetchApi(`/api/v1/run/${id}?project=${PROJECT}`);
     if (!res.ok) return null;
     const json = await res.json();
     return json?.data ?? null;
@@ -90,11 +87,11 @@ export default async function RunDetailPage({ params }: { params: { id: string }
           <div className="card-tc bg-[var(--tc-surface-dark)] border-[var(--tc-border)]/20 p-6 space-y-3">
             <h2 className="text-xl font-bold">Resumo</h2>
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <StatCard label="Pass" value={stats.pass} percent={pct(stats.pass)} color={STATUS_COLORS.pass} />
-              <StatCard label="Fail" value={stats.fail} percent={pct(stats.fail)} color={STATUS_COLORS.fail} />
-              <StatCard label="Blocked" value={stats.blocked} percent={pct(stats.blocked)} color={STATUS_COLORS.blocked} />
-              <StatCard label="Not Run" value={stats.notRun} percent={pct(stats.notRun)} color={STATUS_COLORS.notRun} />
-              <StatCard label="Total" value={total} color="var(--tc-text-inverse)" className="col-span-2" />
+              <StatCard label="Pass" value={stats.pass} percent={pct(stats.pass)} tone="pass" />
+              <StatCard label="Fail" value={stats.fail} percent={pct(stats.fail)} tone="fail" />
+              <StatCard label="Blocked" value={stats.blocked} percent={pct(stats.blocked)} tone="blocked" />
+              <StatCard label="Not Run" value={stats.notRun} percent={pct(stats.notRun)} tone="notRun" />
+              <StatCard label="Total" value={total} tone="inverse" className="col-span-2" />
             </div>
             {run.description && (
               <div className="rounded-lg bg-white/5 border border-[var(--tc-border)]/20 px-3 py-2 text-sm text-[var(--tc-text-inverse)]">

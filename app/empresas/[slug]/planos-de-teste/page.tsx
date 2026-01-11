@@ -50,7 +50,7 @@ export default function PlanosDeTesteEmpresaPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg,#f7f9fb)] text-[var(--page-text,#0b1a3c)] p-6 md:p-10 space-y-6">
+    <div className="min-h-screen bg-(--page-bg,#f7f9fb) text-(--page-text,#0b1a3c) p-6 md:p-10 space-y-6">
       <div className="flex items-center justify_between gap-2">
         <nav className="text-xs text-[var(--tc-text-muted,#6B7280)]">
           <span>Empresas</span>

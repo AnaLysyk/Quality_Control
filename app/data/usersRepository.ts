@@ -1,66 +1,38 @@
 import "server-only";
-import { getSupabaseServer } from "@/lib/supabaseServer";
+import { sql } from "@vercel/postgres";
 
 export type Usuario = {
   id: string;
-  name: string;
+  name?: string;
   email: string;
-  password_hash: string;
-  avatar_url: string | null;
-  is_global_admin: boolean;
-  active: boolean;
-  created_at: string;
-  updated_at: string;
+  password_hash?: string;
+  avatar_url?: string | null;
+  is_global_admin?: boolean;
+  active?: boolean;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export async function getUserById(id: string): Promise<Usuario | null> {
-  const supabaseServer = getSupabaseServer();
-  const { data, error } = await supabaseServer
-    .from("users")
-    .select("*")
-    .eq("id", id)
-    .limit(1)
-    .maybeSingle();
-  if (error) {
-    throw error;
-  }
-  return (data as Usuario | null) ?? null;
+  const { rows } = await sql<Usuario>`select * from users where id = ${id} limit 1`;
+  return rows[0] ?? null;
 }
 
 export async function getUserByEmail(email: string): Promise<Usuario | null> {
-  const supabaseServer = getSupabaseServer();
-  const { data, error } = await supabaseServer
-    .from("users")
-    .select("*")
-    .eq("email", email)
-    .limit(1)
-    .maybeSingle();
-  if (error) {
-    throw error;
-  }
-  return (data as Usuario | null) ?? null;
+  const { rows } = await sql<Usuario>`select * from users where email = ${email} limit 1`;
+  return rows[0] ?? null;
 }
 
 export async function listUsers(): Promise<Usuario[]> {
-  const supabaseServer = getSupabaseServer();
-  const { data, error } = await supabaseServer.from("users").select("*").order("created_at", { ascending: false });
-  if (error) {
-    throw error;
-  }
-  return (data as Usuario[]) ?? [];
+  const { rows } = await sql<Usuario>`select * from users order by created_at desc`;
+  return rows ?? [];
 }
 
 export async function updateUserAvatar(id: string, avatarUrl: string): Promise<Usuario | null> {
-  const supabaseServer = getSupabaseServer();
-  const { data, error } = await supabaseServer
-    .from("users")
-    .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .select("*")
-    .limit(1)
-    .maybeSingle();
-  if (error) {
-    throw error;
-  }
-  return (data as Usuario | null) ?? null;
+  const { rows } = await sql<Usuario>`
+    update users set avatar_url = ${avatarUrl}, updated_at = now()
+    where id = ${id}
+    returning *
+  `;
+  return rows[0] ?? null;
 }

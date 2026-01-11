@@ -73,7 +73,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const supabaseServer = getSupabaseServer();
-  const { data, error } = await supabaseServer.from("cliente").select("*").eq("id", id).maybeSingle();
+  const { data, error } = await supabaseServer.from("clients").select("*").eq("id", id).maybeSingle();
   if (error) {
     console.error("Erro ao buscar cliente:", error);
     return NextResponse.json({ error: "Erro ao buscar cliente" }, { status: 500 });
@@ -152,7 +152,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const supabaseServer = getSupabaseServer();
   const { data, error } = await supabaseServer
-    .from("cliente")
+    .from("clients")
     .update(updates)
     .eq("id", id)
     .select()
@@ -183,4 +183,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     },
     { status: 200 },
   );
+}
+
+export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  return PATCH(req, ctx as any);
 }

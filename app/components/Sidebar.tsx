@@ -127,7 +127,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             >
               <item.icon size={20} />
             </div>
-            <span className="hidden lg:inline-flex whitespace-normal text-left leading-snug flex-1 overflow-hidden max-w-0 opacity-0 transition-all duration-200 pl-0 lg:group-hover/sidebar:pl-3 lg:group-hover/sidebar:max-w-[160px] lg:group-hover/sidebar:opacity-100">
+            <span className="hidden lg:inline-flex whitespace-normal text-left leading-snug flex-1 overflow-hidden max-w-0 opacity-0 transition-all duration-200 pl-0 lg:group-hover/sidebar:pl-3 lg:group-hover/sidebar:max-w-40 lg:group-hover/sidebar:opacity-100">
               {item.label}
             </span>
           </Link>
@@ -199,7 +199,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     onClose && (
       <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden dark:bg-black/60" onClick={onClose}>
         <aside
-          className="flex h-full w-72 bg-white text-slate-900 flex-col border-r border-slate-200 shadow-[0_12px_28px_rgba(15,23,42,0.16)] dark:bg-gradient-to-b dark:from-[#0b1021]/95 dark:via-[#0f1830]/92 dark:to-[#0b1021]/95 dark:text-white dark:border-white/10 dark:shadow-2xl"
+          className="flex h-full w-72 bg-white text-slate-900 flex-col border-r border-slate-200 shadow-[0_12px_28px_rgba(15,23,42,0.16)] dark:bg-linear-to-b dark:from-[#0b1021]/95 dark:via-[#0f1830]/92 dark:to-[#0b1021]/95 dark:text-white dark:border-white/10 dark:shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center gap-3 p-4 border-b border-slate-200 dark:border-white/10 relative">

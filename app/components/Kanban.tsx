@@ -9,13 +9,13 @@ type DragInfo = { item: KanbanItem; from: keyof KanbanData };
 const columns: {
   key: keyof KanbanData;
   label: string;
-  bg: string;
-  border: string;
+  bgClass: string;
+  borderClass: string;
 }[] = [
-  { key: "pass", label: "Pass", bg: "var(--success, rgba(124,211,67,0.12))", border: "var(--success, #7cd343)" },
-  { key: "fail", label: "Fail", bg: "var(--tc-accent-soft, rgba(239,0,1,0.12))", border: "var(--tc-accent, #ef0001)" },
-  { key: "blocked", label: "Blocked", bg: "rgba(255, 167, 58, 0.12)", border: "var(--color-cds, #ffa73a)" },
-  { key: "notRun", label: "Not Run", bg: "rgba(15,22,38,0.08)", border: "var(--tc-surface-muted, #0f1626)" },
+  { key: "pass", label: "Pass", bgClass: "bg-(--success,rgba(124,211,67,0.12))", borderClass: "border-(--success,#7cd343)" },
+  { key: "fail", label: "Fail", bgClass: "bg-(--tc-accent-soft,rgba(239,0,1,0.12))", borderClass: "border-(--tc-accent,#ef0001)" },
+  { key: "blocked", label: "Blocked", bgClass: "bg-[rgba(255,167,58,0.12)]", borderClass: "border-(--color-cds,#ffa73a)" },
+  { key: "notRun", label: "Not Run", bgClass: "bg-[rgba(15,22,38,0.08)]", borderClass: "border-(--tc-surface-muted,#0f1626)" },
 ];
 
 type KanbanProps = {
@@ -291,7 +291,7 @@ export default function Kanban({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 w-full" data-hide-on-export="true">
       {!hasItems && (
-        <div className="col-span-full text-sm text-[var(--page-text,#0b1a3c)] bg-[#f8fafc] border border-[var(--surface-border,#e5e7eb)] rounded-xl px-3 py-2">
+        <div className="col-span-full text-sm text-(--page-text,#0b1a3c) bg-[#f8fafc] border border-(--surface-border,#e5e7eb) rounded-xl px-3 py-2">
           Cases nao disponiveis para este run.
         </div>
       )}
@@ -301,7 +301,7 @@ export default function Kanban({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="text-xs text-white bg-[var(--tc-primary-dark,#000f2e)] px-3 py-2 rounded hover:bg-[var(--tc-primary,#011848)] transition"
+              className="text-xs text-white bg-(--tc-primary-dark,#000f2e) px-3 py-2 rounded hover:bg-(--tc-primary,#011848) transition"
             >
               Importar CSV
             </button>
@@ -321,7 +321,7 @@ export default function Kanban({
             <button
               type="button"
               onClick={() => handleAdd("notRun")}
-              className="text-xs text-white bg-[var(--tc-accent,#ef0001)] px-3 py-2 rounded hover:bg-[var(--tc-accent-hover,#c80001)] transition"
+              className="text-xs text-white bg-(--tc-accent,#ef0001) px-3 py-2 rounded hover:bg-(--tc-accent-hover,#c80001) transition"
             >
               + Adicionar Caso
             </button>
@@ -330,7 +330,7 @@ export default function Kanban({
         <button
           type="button"
           onClick={handleExportCSV}
-          className="text-xs text-white bg-[var(--tc-primary-dark,#000f2e)] px-3 py-2 rounded hover:bg-[var(--tc-primary,#011848)] transition"
+          className="text-xs text-white bg-(--tc-primary-dark,#000f2e) px-3 py-2 rounded hover:bg-(--tc-primary,#011848) transition"
         >
           Exportar CSV
         </button>
@@ -341,24 +341,23 @@ export default function Kanban({
         return (
           <div
             key={column.key}
-            className="rounded-xl p-5 shadow-lg backdrop-blur-sm border"
-            style={{ backgroundColor: column.bg, borderColor: column.border }}
+            className={`rounded-xl p-5 shadow-lg backdrop-blur-sm border ${column.bgClass} ${column.borderClass}`}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => handleDrop(column.key)}
           >
-            <h2 className="font-extrabold text-xl mb-4 text-[var(--page-text,#0b1a3c)] tracking-wide">
-              {column.label} <span className="opacity-70 text-[var(--tc-text-secondary,#4b5563)]">({list.length})</span>
+            <h2 className="font-extrabold text-xl mb-4 text-(--page-text,#0b1a3c) tracking-wide">
+              {column.label} <span className="opacity-70 text-(--tc-text-secondary,#4b5563)">({list.length})</span>
             </h2>
 
             <div className="space-y-4 max-h-[360px] overflow-y-auto pr-2 custom-scroll">
               {list.length === 0 && (
-                <p className="text-[var(--tc-text-muted,#6b7280)] text-sm italic">Nenhum caso</p>
+                <p className="text-(--tc-text-muted,#6b7280) text-sm italic">Nenhum caso</p>
               )}
 
               {list.map((item, index) => (
                 <div
                   key={getItemKey(item, `${column.key}-${index}`)}
-                  className="bg-[var(--tc-surface-dark,#0f1828)] border border-[var(--surface-border,rgba(255,255,255,0.08))] p-4 rounded-lg shadow hover:shadow-md transition-all relative"
+                  className="bg-(--tc-surface-dark,#0f1828) border border-(--surface-border,rgba(255,255,255,0.08)) p-4 rounded-lg shadow hover:shadow-md transition-all relative"
                   draggable={editable && allowStatusChange}
                   onDragStart={() => editable && allowStatusChange && setDragInfo({ item, from: column.key })}
                   onDragEnd={() => setDragInfo(null)}
@@ -367,20 +366,20 @@ export default function Kanban({
                     <button
                       onClick={() => handleDelete(column.key, item)}
                       data-hide-on-export="true"
-                      className="absolute top-2 right-2 text-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent-hover,#c80001)] text-sm font-bold"
+                      className="absolute top-2 right-2 text-(--tc-accent,#ef0001) hover:text-(--tc-accent-hover,#c80001) text-sm font-bold"
                     >
                       ×
                     </button>
                   )}
 
-                  <p className="text-xs text-[var(--tc-text-muted,#6b7280)] font-bold mb-1">
+                  <p className="text-xs text-(--tc-text-muted,#6b7280) font-bold mb-1">
                     ID:{" "}
                     {buildCaseLink(item.id) ? (
                       <a
                         href={buildCaseLink(item.id) as string}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="underline text-[var(--tc-primary,#011848)]"
+                        className="underline text-(--tc-primary,#011848)"
                       >
                         {item.id}
                       </a>
@@ -391,7 +390,8 @@ export default function Kanban({
 
                   {editingId === getItemKey(item, `${column.key}-${index}`) ? (
                     <input
-                      className="w-full bg-[var(--tc-surface-muted,#0f1626)] text-[var(--tc-text-inverse,#ffffff)] text-sm rounded px-2 py-1 border border-[var(--surface-border,rgba(255,255,255,0.08))]"
+                      aria-label="Editar título do caso"
+                      className="w-full bg-(--tc-surface-muted,#0f1626) text-(--tc-text-inverse,#ffffff) text-sm rounded px-2 py-1 border border-(--surface-border,rgba(255,255,255,0.08))"
                       value={editingValue}
                       autoFocus
                       disabled={!editable}
@@ -406,7 +406,7 @@ export default function Kanban({
                     />
                   ) : (
                     <p
-                      className={`font-semibold text-[var(--tc-text-inverse,#ffffff)] text-sm ${editable ? "cursor-text" : ""}`}
+                      className={`font-semibold text-(--tc-text-inverse,#ffffff) text-sm ${editable ? "cursor-text" : ""}`}
                       onClick={() => {
                         if (!editable) return;
                         setEditingId(getItemKey(item, `${column.key}-${index}`));
@@ -418,13 +418,14 @@ export default function Kanban({
                   )}
 
                   {item.bug && (
-                    <p className="text-xs text-[var(--tc-accent,#ef0001)] mt-1">
+                    <p className="text-xs text-(--tc-accent,#ef0001) mt-1">
                       Bug: {item.bug}
                     </p>
                   )}
                   {editable && (
                     <input
-                      className="w-full mt-2 bg-[var(--tc-surface-muted,#0f1626)] text-[var(--tc-text-inverse,#ffffff)] text-sm rounded px-2 py-1 border border-[var(--surface-border,rgba(255,255,255,0.08))]"
+                      aria-label="Link de evidência"
+                      className="w-full mt-2 bg-(--tc-surface-muted,#0f1626) text-(--tc-text-inverse,#ffffff) text-sm rounded px-2 py-1 border border-(--surface-border,rgba(255,255,255,0.08))"
                       value={item.link ?? ""}
                       onChange={(e) =>
                         setLocalData((prev) => ({

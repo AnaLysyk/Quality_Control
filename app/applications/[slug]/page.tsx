@@ -26,16 +26,16 @@ const SLUG_ALIASES: Record<string, string[]> = {
   gmt: ["gmt", "mobile-griaule"],
 };
 
-const colorMap: Record<string, string> = {
-  sfq: "var(--stat-pass)",
-  smart: "var(--stat-pass)",
-  print: "var(--color-print,var(--tc-accent))",
-  booking: "var(--color-booking,var(--tc-accent))",
-  cds: "var(--color-cds,var(--tc-accent))",
-  trust: "var(--color-trust,var(--tc-accent))",
-  "cidadao-smart": "var(--color-cidadao,var(--tc-accent))",
-  "mobile-griaule": "var(--color-gmt,var(--tc-accent))",
-  gmt: "var(--color-gmt,var(--tc-accent))",
+const colorClassMap: Record<string, string> = {
+  sfq: "bg-(--stat-pass)",
+  smart: "bg-(--stat-pass)",
+  print: "bg-(--color-print,var(--tc-accent))",
+  booking: "bg-(--color-booking,var(--tc-accent))",
+  cds: "bg-(--color-cds,var(--tc-accent))",
+  trust: "bg-(--color-trust,var(--tc-accent))",
+  "cidadao-smart": "bg-(--color-cidadao,var(--tc-accent))",
+  "mobile-griaule": "bg-(--color-gmt,var(--tc-accent))",
+  gmt: "bg-(--color-gmt,var(--tc-accent))",
 };
 
 export default function ApplicationPage() {
@@ -90,7 +90,7 @@ export default function ApplicationPage() {
 
   const renderReleaseCard = (rel: ReleaseCard) => {
     const appKey = (rel.app || rel.project || slug || "app").toLowerCase();
-    const color = colorMap[appKey] ?? "var(--tc-accent)";
+    const colorClass = colorClassMap[appKey] ?? "bg-(--tc-accent)";
     const appTag = appKey.toUpperCase();
     const displayName = rel.title?.split(" - ")[0] || rel.title;
     const subtitle =
@@ -99,18 +99,15 @@ export default function ApplicationPage() {
       <Link
         key={rel.id}
         href={`/release/${rel.id}`}
-        className="block h-full rounded-2xl border border-white/10 bg-gradient-to-br from-[#11131e] to-[#0c101a] p-5 shadow-lg shadow-black/60 transition hover:border-[var(--tc-accent)]/60"
+        className="block h-full rounded-2xl border border-white/10 bg-linear-to-br from-[#11131e] to-[#0c101a] p-5 shadow-lg shadow-black/60 transition hover:border-(--tc-accent)/60"
       >
         <div className="flex items-start justify-between gap-2 mb-3">
-          <span
-            className="rounded-full px-2.5 py-1 text-[11px] leading-[1.1] font-semibold text-black text-center min-w-[88px]"
-            style={{ backgroundColor: color }}
-          >
+          <span className={`rounded-full px-2.5 py-1 text-[11px] leading-[1.1] font-semibold text-black text-center min-w-[88px] ${colorClass}`}>
             {appTag}
           </span>
           <span className="text-xs text-gray-300">{subtitle}</span>
         </div>
-        <p className="text-sm uppercase tracking-[0.35em] text-[var(--tc-accent)]">{displayName}</p>
+        <p className="text-sm uppercase tracking-[0.35em] text-(--tc-accent)">{displayName}</p>
         <p className="text-xs text-gray-400 mt-2 line-clamp-2">{rel.summary}</p>
       </Link>
     );
@@ -121,13 +118,13 @@ export default function ApplicationPage() {
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <p className="text-xs uppercase tracking-[0.5em] text-[var(--tc-accent)]">Aplicacao</p>
+            <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent)">Aplicacao</p>
             <h1 className="text-3xl font-bold">{slug.toUpperCase()}</h1>
           </div>
           <button
             type="button"
             onClick={() => router.push("/applications")}
-            className="rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold hover:border-[var(--tc-accent)]/70 transition"
+            className="rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold hover:border-(--tc-accent)/70 transition"
           >
             Voltar
           </button>
@@ -140,7 +137,7 @@ export default function ApplicationPage() {
               <button
                 type="button"
                 onClick={() => router.push("/applications")}
-                className="inline-flex items-center gap-2 rounded-xl bg-[var(--tc-accent)] px-4 py-2 text-sm font-semibold text-black hover:brightness-110 transition"
+                className="inline-flex items-center gap-2 rounded-xl bg-(--tc-accent) px-4 py-2 text-sm font-semibold text-black hover:brightness-110 transition"
               >
                 Voltar para aplicações
               </button>
@@ -151,7 +148,7 @@ export default function ApplicationPage() {
         {hasReleases && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs uppercase tracking-[0.4em] text-[var(--tc-accent)]">Runs</p>
+              <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent)">Runs</p>
               <span className="text-sm text-gray-300">{filtered.length} resultado(s)</span>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

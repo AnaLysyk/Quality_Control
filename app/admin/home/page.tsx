@@ -43,6 +43,12 @@ type QualityOverviewResponse = {
   policy: typeof QUALITY_THRESHOLDS;
 };
 
+function pctWidthClass(value: number, total: number) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+  const clamped = Math.max(0, Math.min(100, pct));
+  return `w-pct-${clamped}`;
+}
+
 function KpiCard({
   icon: Icon,
   label,
@@ -162,7 +168,8 @@ function StatusBreakdown({
       <div className="flex h-3 overflow-hidden rounded-full bg-slate-100">
         {segments.map((segment) => {
           const width = total > 0 ? (segment.value / total) * 100 : 0;
-          return <span key={segment.label} className={segment.className} style={{ width: `${width}%` }} />;
+          const widthClass = pctWidthClass(segment.value, total);
+          return <span key={segment.label} className={`${segment.className} ${widthClass}`} />;
         })}
       </div>
       <div className="grid grid-cols-2 gap-3 text-xs text-slate-600">
@@ -193,8 +200,8 @@ function GateStack({ counts }: { counts: Record<QualityGateStatus, number> }) {
     <div className="mt-4 flex h-3 overflow-hidden rounded-full bg-slate-100">
       {segments.map((segment) => {
         const value = counts[segment.key];
-        const width = total > 0 ? (value / total) * 100 : 0;
-        return <span key={segment.key} className={segment.className} style={{ width: `${width}%` }} />;
+        const widthClass = pctWidthClass(value, total);
+        return <span key={segment.key} className={`${segment.className} ${widthClass}`} />;
       })}
     </div>
   );

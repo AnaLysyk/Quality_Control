@@ -1,3 +1,4 @@
+process.env.SUPABASE_MOCK = "true";
 import { POST, GET } from "../app/api/auth/login/route";
 
 describe("Login mock flow", () => {

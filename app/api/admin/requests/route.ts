@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listAllRequests } from "@/data/requestsStore";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/session";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
@@ -49,8 +49,8 @@ async function requireAdmin(req: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const admin = await requireAdmin(request);
-  if (!admin) {
+  const sessionUser = await getSessionUser();
+  if (!sessionUser || (sessionUser as any).role !== "admin") {
     return NextResponse.json({ message: "Sem permissao" }, { status: 403 });
   }
 

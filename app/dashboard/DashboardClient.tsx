@@ -4,7 +4,6 @@ import { useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import StatusChart from "@/components/StatusChart";
 import StatusPill from "@/components/StatusPill";
-import { STATUS_COLORS } from "@/utils/statusColors";
 import { FiArrowLeft, FiArrowRight } from "react-icons/fi";
 import { MotionFade, MotionScale } from "@/components/motion";
 
@@ -332,10 +331,10 @@ function ReleaseCarousel({ section }: { section: Section }) {
                   </MotionScale>
                   <div className="flex-1 space-y-3 text-sm text-[var(--tc-text-inverse)]">
                     <div className="flex flex-wrap gap-3">
-                      <StatusPill label="Pass" value={rel.stats.pass} percent={pct(rel.stats.pass)} color={STATUS_COLORS.pass} />
-                      <StatusPill label="Fail" value={rel.stats.fail} percent={pct(rel.stats.fail)} color={STATUS_COLORS.fail} />
-                      <StatusPill label="Blocked" value={rel.stats.blocked} percent={pct(rel.stats.blocked)} color={STATUS_COLORS.blocked} />
-                      <StatusPill label="Not Run" value={rel.stats.notRun} percent={pct(rel.stats.notRun)} color={STATUS_COLORS.notRun} />
+                      <StatusPill label="Pass" value={rel.stats.pass} percent={pct(rel.stats.pass)} colorKey="pass" />
+                      <StatusPill label="Fail" value={rel.stats.fail} percent={pct(rel.stats.fail)} colorKey="fail" />
+                      <StatusPill label="Blocked" value={rel.stats.blocked} percent={pct(rel.stats.blocked)} colorKey="blocked" />
+                      <StatusPill label="Not Run" value={rel.stats.notRun} percent={pct(rel.stats.notRun)} colorKey="notRun" />
                     </div>
                     <p className="text-xs text-[var(--tc-text-muted)]">
                       Total {total} | Pass {pct(rel.stats.pass)}%

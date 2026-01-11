@@ -62,7 +62,7 @@ export default function ManualReleaseActions({ slug, editable }: ManualReleaseAc
         type="button"
         onClick={finalize}
         disabled={loading}
-        className="rounded-xl bg-[var(--tc-accent,#ef0001)] px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-60"
+        className="rounded-xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-60"
       >
         {loading ? "..." : "Finalizar run"}
       </button>

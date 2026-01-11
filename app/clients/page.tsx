@@ -102,7 +102,7 @@ export default function ClientsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a1533] via-[#0f1f4b] to-[#0a1533] px-6 py-8 text-[#0b1a3c]">
+    <div className="min-h-screen bg-linear-to-b from-[#0a1533] via-[#0f1f4b] to-[#0a1533] px-6 py-8 text-[#0b1a3c]">
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="flex items-center justify-between text-white">
           <div>

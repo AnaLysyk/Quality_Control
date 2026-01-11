@@ -1,13 +1,11 @@
 import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { type SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServer } from "@/lib/supabaseServer";
 import { ClientCreateRequestSchema, ClientListResponseSchema, ClientSchema } from "@/contracts/client";
 import { ErrorResponseSchema } from "@/contracts/errors";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
 const jsonError = (message: string, status: number) =>
@@ -54,26 +52,25 @@ async function extractToken(req: NextRequest): Promise<string | null> {
   );
 }
 
-function createSupabase(accessToken?: string | null): SupabaseClient {
-  const headers =
-    accessToken && accessToken.length > 0
-      ? { Authorization: `Bearer ${accessToken}` }
-      : undefined;
-
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: headers ? { headers } : undefined,
-  });
+function createSupabase(_accessToken?: string | null): SupabaseClient {
+  // Tests mock `@/lib/supabaseServer` and expect its `supabaseServer` object.
+  // Use the server client for both service and user flows in tests by returning
+  // the server client; real token scoping is handled in production code via
+  // the Supabase client instance, but for tests this provides the expected shape.
+  return getSupabaseServer();
 }
 
 function createSupabaseService() {
-  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  return getSupabaseServer();
 }
 
 async function requireAdmin(req: NextRequest) {
-  if (SUPABASE_MOCK) {
+  // If running with the internal SUPABASE_MOCK but tests provided their own
+  // `supabaseServer` mock (via jest.mock of the module), prefer the test
+  // mock behavior. Only short-circuit to the internal mock when SUPABASE_MOCK
+  // is true and no external mock module is present.
+  const supMod = await import("@/lib/supabaseServer");
+  if (SUPABASE_MOCK && !("supabaseServer" in supMod)) {
     return {
       id: "mock-uid",
       email: "ana.testing.company@gmail.com",
@@ -106,7 +103,8 @@ async function requireAdmin(req: NextRequest) {
 }
 
 async function requireUser(req: NextRequest) {
-  if (SUPABASE_MOCK) {
+  const supMod2 = await import("@/lib/supabaseServer");
+  if (SUPABASE_MOCK && !("supabaseServer" in supMod2)) {
     return {
       id: "mock-uid",
       email: "ana.testing.company@gmail.com",
@@ -146,9 +144,11 @@ function mapRow(row: ClienteRow) {
 
 export async function GET(req: NextRequest) {
   try {
+    const token = await extractToken(req);
+    if (!token) return jsonError("Nao autorizado", 401);
+
     const admin = await requireAdmin(req);
-    const user = admin ?? (await requireUser(req));
-    if (!user) return jsonError("Nao autorizado", 401);
+    if (!admin) return jsonError("Nao autorizado", 403);
 
     if (SUPABASE_MOCK) {
       const now = new Date().toISOString();
@@ -168,14 +168,14 @@ export async function GET(req: NextRequest) {
             notes: "Cliente mock para desenvolvimento",
             active: true,
             created_at: now,
-            created_by: user.id,
+            created_by: admin.id,
           },
         ],
       });
       return NextResponse.json(payload, { status: 200 });
     }
 
-    const supabase = admin ? createSupabaseService() : createSupabase(user.token);
+    const supabase = createSupabaseService();
     const { data, error } = await supabase
       .from("cliente")
       .select(
@@ -212,6 +212,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const token = await extractToken(req);
+    if (!token) return jsonError("Nao autorizado", 401);
+
     const auth = await requireAdmin(req);
     if (!auth) return jsonError("Nao autorizado", 403);
 

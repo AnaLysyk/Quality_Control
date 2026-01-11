@@ -4,12 +4,14 @@ const config: JestConfigWithTsJest = {
   preset: "ts-jest",
   testEnvironment: "node",
   moduleNameMapper: {
+    "^@/contracts/(.*)$": "<rootDir>/packages/contracts/src/$1",
     "^@/lib/(.*)$": "<rootDir>/lib/$1",
     "^@/data/(.*)$": "<rootDir>/app/data/$1",
     "^@/(.*)$": "<rootDir>/app/$1",
     "^server-only$": "<rootDir>/tests/mocks/server-only.js",
   },
   reporters: ["default", "<rootDir>/tests/reporters/relatorioPortugues.js"],
+  setupFiles: ["<rootDir>/tests/jest.setup.ts"],
   transform: {
     "^.+\\.(ts|tsx)$": [
       "ts-jest",

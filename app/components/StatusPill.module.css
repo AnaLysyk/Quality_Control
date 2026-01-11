@@ -1,0 +1,31 @@
+.pill {
+  --pill-color: var(--tc-accent, #ef0001);
+}
+
+.pass {
+  --pill-color: #22c55e;
+}
+
+.fail {
+  --pill-color: #ef4444;
+}
+
+.blocked {
+  --pill-color: #facc15;
+}
+
+.notRun {
+  --pill-color: #64748b;
+}
+
+.total {
+  --pill-color: #0f172a;
+}
+
+.dot {
+  background-color: var(--pill-color);
+}
+
+.label {
+  color: var(--pill-color);
+}

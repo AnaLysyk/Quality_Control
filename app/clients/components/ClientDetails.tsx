@@ -102,7 +102,7 @@ function Field({ label, value, isLink, full }: { label: string; value: string; i
         {value}
       </a>
     ) : (
-      <span className="font-medium break-words">{value}</span>
+      <span className="font-medium wrap-break-word">{value}</span>
     );
 
   return (

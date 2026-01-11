@@ -196,6 +196,7 @@ left join run_metrics rm
 create or replace function normalize_qase_status(raw text)
 returns text
 language sql
+set search_path = public
 as $$
   select case lower(coalesce(raw, ''))
     when 'passed' then 'pass'
@@ -214,6 +215,7 @@ $$;
 create or replace function refresh_kanban_cases(p_project text default null, p_run bigint default null)
 returns void
 language sql
+set search_path = public
 as $$
   with latest_results as (
     select distinct on (project_code, run_id, case_id)
@@ -331,6 +333,7 @@ $$;
 create or replace function refresh_run_metrics(p_project text default null, p_run bigint default null)
 returns void
 language sql
+set search_path = public
 as $$
   insert into run_metrics (
     project_code,
@@ -379,4 +382,3 @@ $$;
 -- Or batch refresh for all runs
 -- refresh_kanban_cases();
 -- refresh_run_metrics();
-

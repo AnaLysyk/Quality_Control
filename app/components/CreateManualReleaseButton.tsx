@@ -83,20 +83,20 @@ export function CreateManualReleaseButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-xl bg-[var(--tc-accent)] px-4 py-2 text-sm font-semibold text-white shadow hover:brightness-110"
+        className="rounded-xl bg-(--tc-accent) px-4 py-2 text-sm font-semibold text-white shadow hover:brightness-110"
       >
         Criar run manual
       </button>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg rounded-2xl bg-[var(--tc-surface-dark,#0f1828)] text-[var(--tc-text-inverse)] border border-[var(--tc-border)]/40 shadow-xl space-y-4 p-6">
+          <div className="w-full max-w-lg rounded-2xl bg-(--tc-surface-dark,#0f1828) text-(--tc-text-inverse) border border-(--tc-border)/40 shadow-xl space-y-4 p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold">Nova run manual</h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="text-sm text-[var(--tc-text-muted)] hover:text-white"
+                className="text-sm text-(--tc-text-muted) hover:text-white"
               >
                 fechar
               </button>
@@ -104,9 +104,9 @@ export function CreateManualReleaseButton() {
 
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="text-sm text-[var(--tc-text-muted)]">Título</label>
+                <label className="text-sm text-(--tc-text-muted)">Título</label>
                 <input
-                  className="w-full rounded-lg bg-[--tc-surface] border border-[var(--tc-border)] px-3 py-2 text-sm text-[--tc-text-inverse] focus:outline-none focus:ring-2 focus:ring-[var(--tc-accent)]/40"
+                  className="w-full rounded-lg bg-[--tc-surface] border border-(--tc-border) px-3 py-2 text-sm text-[--tc-text-inverse] focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/40"
                   value={form.name}
                   onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="Ex: Run 1.9.0 - Aceitacao"
@@ -114,9 +114,10 @@ export function CreateManualReleaseButton() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm text-[var(--tc-text-muted)]">Aplicação</label>
+                <label className="text-sm text-(--tc-text-muted)">Aplicação</label>
                 <select
-                  className="w-full rounded-lg bg-[--tc-surface] border border-[var(--tc-border)] px-3 py-2 text-sm text-[--tc-text-inverse]"
+                  aria-label="Selecionar aplicação"
+                  className="w-full rounded-lg bg-[--tc-surface] border border-(--tc-border) px-3 py-2 text-sm text-[--tc-text-inverse]"
                   value={form.app}
                   onChange={(e) => setForm((prev) => ({ ...prev, app: e.target.value }))}
                 >
@@ -126,7 +127,7 @@ export function CreateManualReleaseButton() {
                     </option>
                   ))}
                 </select>
-                <div className="text-xs text-[var(--tc-text-muted)]">
+                <div className="text-xs text-(--tc-text-muted)">
                   {appMeta.label} • cor aplicada automaticamente
                 </div>
               </div>
@@ -134,11 +135,12 @@ export function CreateManualReleaseButton() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {(["pass", "fail", "blocked", "notRun"] as const).map((key) => (
                   <div key={key} className="space-y-1">
-                    <label className="text-xs uppercase tracking-wide text-[var(--tc-text-muted)]">{key}</label>
+                    <label className="text-xs uppercase tracking-wide text-(--tc-text-muted)">{key}</label>
                     <input
                       type="number"
                       min={0}
-                      className="w-full rounded-lg bg-[--tc-surface] border border-[var(--tc-border)] px-3 py-2 text-sm text-[--tc-text-inverse] focus:outline-none focus:ring-2 focus:ring-[var(--tc-accent)]/40"
+                      aria-label={`Total ${key}`}
+                      className="w-full rounded-lg bg-[--tc-surface] border border-(--tc-border) px-3 py-2 text-sm text-[--tc-text-inverse] focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/40"
                       value={form[key]}
                       onChange={(e) => handleNumber(key, e.target.value)}
                     />
@@ -146,7 +148,7 @@ export function CreateManualReleaseButton() {
                 ))}
               </div>
 
-              <div className="flex items-center justify-between text-xs text-[var(--tc-text-muted)]">
+              <div className="flex items-center justify-between text-xs text-(--tc-text-muted)">
                 <span>Total: {total}</span>
                 <span>
                   Pass%: {total > 0 ? Math.round((form.pass / total) * 100) : 0}%
@@ -154,9 +156,9 @@ export function CreateManualReleaseButton() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm text-[var(--tc-text-muted)]">Observações</label>
+                <label className="text-sm text-(--tc-text-muted)">Observações</label>
                 <textarea
-                  className="w-full rounded-lg bg-[--tc-surface] border border-[var(--tc-border)] px-3 py-2 text-sm text-[--tc-text-inverse] focus:outline-none focus:ring-2 focus:ring-[var(--tc-accent)]/40"
+                  className="w-full rounded-lg bg-[--tc-surface] border border-(--tc-border) px-3 py-2 text-sm text-[--tc-text-inverse] focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/40"
                   rows={3}
                   value={form.observations}
                   onChange={(e) => setForm((prev) => ({ ...prev, observations: e.target.value }))}
@@ -169,7 +171,7 @@ export function CreateManualReleaseButton() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-lg border border-[var(--tc-border)] px-4 py-2 text-sm text-[var(--tc-text-inverse)]"
+                className="rounded-lg border border-(--tc-border) px-4 py-2 text-sm text-[--tc-text-inverse]"
               >
                 Cancelar
               </button>
@@ -177,7 +179,7 @@ export function CreateManualReleaseButton() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={saving || !form.name.trim()}
-                className="rounded-lg bg-[var(--tc-accent)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                className="rounded-lg bg-(--tc-accent) px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
               >
                 {saving ? "Salvando..." : "Salvar e abrir"}
               </button>

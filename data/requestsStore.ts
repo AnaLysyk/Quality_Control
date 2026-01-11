@@ -20,7 +20,7 @@ export type RequestRecord = {
   reviewedAt?: string;
 };
 
-let REQUESTS: RequestRecord[] = [
+const REQUESTS: RequestRecord[] = [
   {
     id: "req_sample_email",
     userId: "usr_001",
@@ -65,8 +65,8 @@ export function listAllRequests(filters?: {
 export function addRequest(user: SessionUser, type: RequestType, payload: Record<string, unknown>) {
   const duplicate = REQUESTS.find((r) => r.userId === user.id && r.type === type && r.status === "PENDING");
   if (duplicate) {
-    const err = new Error("Duplicated pending request");
-    (err as any).code = "DUPLICATE";
+    const err = new Error("Duplicated pending request") as Error & { code?: string };
+    err.code = "DUPLICATE";
     throw err;
   }
 

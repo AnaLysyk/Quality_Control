@@ -16,12 +16,13 @@ function extractToken(req: NextRequest): string | null {
 
 export async function GET(req: NextRequest) {
   const token = extractToken(req);
-  let supabaseAdmin: ReturnType<typeof getSupabaseAdmin> | null = null;
-  try {
-    supabaseAdmin = getSupabaseAdmin();
-  } catch {
-    supabaseAdmin = null;
-  }
+  const supabaseAdmin: ReturnType<typeof getSupabaseAdmin> | null = (() => {
+    try {
+      return getSupabaseAdmin();
+    } catch {
+      return null;
+    }
+  })();
   const admin = await requireGlobalAdmin(req, {
     token,
     supabaseAdmin: supabaseAdmin ?? undefined,

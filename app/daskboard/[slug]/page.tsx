@@ -7,6 +7,6 @@ type DaskboardSlugPageProps = {
 };
 
 export default function DaskboardSlugRedirect({ params }: DaskboardSlugPageProps) {
-	const target = `/dashboard/${encodeURIComponent(params.slug)}`;
-	redirect(target);
+	void params;
+	redirect("/empresas");
 }

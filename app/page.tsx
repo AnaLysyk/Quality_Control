@@ -21,8 +21,8 @@ const cards = [
   },
   {
     title: "Meus defeitos",
-    description: "Resumo dos defeitos criados ou atribuídos a mim. Status sempre visível.",
-    href: "/empresas/griaule/defeitos?me=true",
+    description: "Selecione uma empresa para ver e criar defeitos no contexto certo.",
+    href: "/empresas",
     badge: "Trabalho",
   },
 ];

@@ -40,6 +40,20 @@ npm run dev:stop
 
 Abrir: http://localhost:3000
 
+## Supabase Auth (reset de senha)
+
+Para o link de recuperação de senha não cair em `DEPLOYMENT_NOT_FOUND` (Vercel preview expira), use sempre o domínio de produção.
+
+No Supabase Dashboard → **Authentication** → **URL Configuration**:
+
+- **Site URL**: `https://painel-qa-jpjv.vercel.app`
+- **Additional Redirect URLs** (adicione pelo menos):
+	- `https://painel-qa-jpjv.vercel.app/login/reset-password`
+
+Se você adicionar um domínio de preview (ex.: `https://testing-metric-....vercel.app/login/reset-password`), ele pode parar de funcionar quando o preview mudar/expirar. O recomendado é manter apenas o domínio de produção.
+
+No app, a variável `NEXT_PUBLIC_SITE_URL` deve bater com o **Site URL** do Supabase (é ela que o frontend usa para montar o `redirectTo` do recovery).
+
 ## Validar que está tudo OK
 
 ```bash

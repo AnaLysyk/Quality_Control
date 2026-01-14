@@ -74,8 +74,8 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const publicNav: NavItem[] = useMemo(
     () => [
       { label: t("nav.home"), icon: FiHome, href: "/" },
-      { label: t("nav.dashboard"), icon: FiGrid, href: "/dashboard" },
-      { label: t("nav.metrics"), icon: FiBarChart2, href: "/metricas" },
+      { label: t("nav.companies"), icon: FiUsers, href: "/empresas" },
+      { label: t("nav.profile"), icon: FiUser, href: "/profile" },
       { label: t("nav.newRun"), icon: FiPlusCircle, href: "/admin/runs", roles: ["admin", "client", "user"] },
     ],
     [t]
@@ -83,8 +83,6 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
   const adminNav: NavItem[] = useMemo(
     () => [
-      { label: t("nav.dashboard"), icon: FiGrid, href: "/dashboard" },
-      { label: t("nav.metrics"), icon: FiBarChart2, href: "/metricas" },
       { label: t("nav.adminPanel"), icon: FiCompass, href: "/admin/home" },
       { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
       { label: t("nav.runsManagement"), icon: FiLayers, href: "/admin/runs" },

@@ -5,6 +5,7 @@ import DashboardClient from "./DashboardClient";
 import { getAppMeta } from "@/lib/appMeta";
 import { getSupabaseServer } from "@/lib/supabaseServer";
 import type { Release } from "@/types/release";
+import { redirect } from "next/navigation";
 import { promises as fs } from "fs";
 import path from "path";
 
@@ -242,6 +243,10 @@ async function resolveCompanyScope(companySlug: string): Promise<{ clientId: str
 }
 
 export default async function DashboardPage({ header, showHeader = true, companySlug, mode = "overview" }: DashboardPageProps) {
+  if (!companySlug) {
+    redirect("/empresas");
+  }
+
   const [releasesAll, manualReleasesAll] = await Promise.all([getAllReleases(), getAllManualReleases()]);
   const companyScope = companySlug ? await resolveCompanyScope(companySlug) : null;
   const releases = companySlug

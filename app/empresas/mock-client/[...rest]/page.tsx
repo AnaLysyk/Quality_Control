@@ -8,8 +8,8 @@ export default function RedirectMockClient() {
   const params = useParams();
   useEffect(() => {
     const rest = (params?.rest as string[]) || [];
-    const path = rest.length ? `/${rest.join("/")}` : "/dashboard";
-    router.replace(`/empresas/griaule${path}`);
+    const path = rest.length ? `/${rest.join("/")}` : "";
+    router.replace(path ? `/empresas?path=${encodeURIComponent(path)}` : "/empresas");
   }, [params, router]);
   return null;
 }

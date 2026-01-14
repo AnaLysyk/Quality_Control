@@ -435,10 +435,10 @@ export default function AdminHomePage() {
             </div>
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
-                href="/empresas/griaule/defeitos?me=true"
+                href="/admin/clients"
                 className="inline-flex items-center gap-2 rounded-full border border-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-accent,#ef0001)"
               >
-                Criar defeito manual
+                Selecionar empresa
               </Link>
               <Link
                 href="/admin/defeitos"

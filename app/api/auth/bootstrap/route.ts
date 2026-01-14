@@ -40,10 +40,22 @@ function resolveDisplayName(authUser: MinimalAuthUser): string {
 
 export async function POST(req: Request) {
   if (SUPABASE_MOCK) {
-    if (IS_TEST_ENV) return NextResponse.json({ ok: true, mocked: true }, { status: 200 });
-    return jsonError(
-      "SUPABASE_MOCK=true esta ativo. Para usar somente Supabase, defina SUPABASE_MOCK=false",
-      400
+    // Keep mock mode consistent across auth endpoints.
+    // In non-test environments, we still return a successful payload so the UI can proceed.
+    return NextResponse.json(
+      {
+        ok: true,
+        mocked: true,
+        user: {
+          authUserId: "mock-uid",
+          email: null,
+          role: "admin",
+          clientId: null,
+          clientSlug: null,
+          isAdmin: true,
+        },
+      },
+      { status: 200 }
     );
   }
 

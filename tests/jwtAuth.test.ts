@@ -16,7 +16,9 @@ describe("jwtAuth helpers", () => {
 
   test("signToken emits a token verifiable with JWT_SECRET", () => {
     const token = signToken({ sub: user.id, email: user.email, isGlobalAdmin: user.isGlobalAdmin });
-    const payload = jwt.verify(token, process.env.JWT_SECRET as string) as any;
+    const verified = jwt.verify(token, process.env.JWT_SECRET as string);
+    if (typeof verified === "string") throw new Error("Unexpected string JWT payload");
+    const payload = verified as jwt.JwtPayload & { sub?: string; email?: string; isGlobalAdmin?: boolean };
     expect(payload.sub).toBe(user.id);
     expect(payload.email).toBe(user.email);
     expect(payload.isGlobalAdmin).toBe(false);

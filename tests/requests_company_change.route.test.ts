@@ -39,7 +39,7 @@ describe("/api/requests/company-change POST", () => {
 
   it("retorna 409 se duplicata", async () => {
     getSessionUser.mockResolvedValue({ id: "u1" });
-    const err = new Error("dup") as any;
+    const err = new Error("dup") as Error & { code?: string };
     err.code = "DUPLICATE";
     addRequest.mockImplementation(() => {
       throw err;

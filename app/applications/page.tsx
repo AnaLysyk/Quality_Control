@@ -1,125 +1,30 @@
 ﻿"use client";
 
-import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { FiSearch } from "react-icons/fi";
-
-import { getAppMeta } from "@/lib/appMeta";
-
-type AppInfo = {
-  slug: string;
-  name: string;
-  tag: string;
-};
-
-const fallbackApps: AppInfo[] = [
-  { slug: "smart", name: "SMART", tag: "SMART" },
-  { slug: "print", name: "PRINT", tag: "PRINT" },
-  { slug: "booking", name: "BOOKING", tag: "BOOKING" },
-  { slug: "trust", name: "TRUST", tag: "TRUST" },
-  { slug: "cidadao-smart", name: "CIDADAO SMART", tag: "CIDADAO" },
-  { slug: "mobile-griaule", name: "GRIAULE MOBILE", tag: "MOBILE" },
-];
-
-const APP_COLOR_CLASS: Record<string, string> = {
-  smart: "app-color-smart",
-  sfq: "app-color-smart",
-  print: "app-color-print",
-  booking: "app-color-booking",
-  trust: "app-color-trust",
-  cds: "app-color-cds",
-  "cidadao-smart": "app-color-cidadao",
-  gmt: "app-color-gmt",
-  "mobile-griaule": "app-color-gmt",
-};
+import { ApplicationsList } from "./ApplicationsList";
+import { CompanySelector } from "../components/CompanySelector";
 
 export default function ApplicationsPage() {
-  const [apps, setApps] = useState<AppInfo[]>(fallbackApps);
-  const [query, setQuery] = useState("");
-
-  useEffect(() => {
-    const loadApps = async () => {
-      try {
-        const res = await fetch("/api/applications", { cache: "no-store" });
-        if (!res.ok) {
-          setApps(fallbackApps);
-          return;
-        }
-        const json = await res.json();
-
-        type RawApp = { slug?: string; name?: string; tag?: string };
-        const rawList: RawApp[] = Array.isArray(json.applications) ? json.applications : [];
-
-        const mapped: AppInfo[] = rawList.map((app) => ({
-          slug: app.slug ?? app.name?.toLowerCase()?.replace(/\s+/g, "-") ?? "",
-          name: app.name ?? "Aplicacao",
-          tag: app.tag ?? app.name?.toUpperCase() ?? "APP",
-        }));
-
-        setApps(mapped.length > 0 ? mapped : fallbackApps);
-      } catch {
-        setApps(fallbackApps);
-      }
-    };
-
-    loadApps();
-  }, []);
-
-  const filteredApps = useMemo(() => {
-    const term = query.toLowerCase();
-    return apps.filter((app) => app.name.toLowerCase().includes(term));
-  }, [apps, query]);
-
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c) px-4 sm:px-6 md:px-10 py-8 md:py-10">
-      <div className="max-w-6xl mx-auto space-y-10">
-        <div className="space-y-1">
-          <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent)">Aplicações</p>
-          <h1 className="text-3xl font-bold">Todas as Aplicações</h1>
-        </div>
+      <div className="mx-auto flex max-w-6xl flex-col gap-12">
+        <CompanySelector
+          title="Escolha uma empresa"
+          description="As aplicações listadas abaixo refletem os produtos disponíveis para a empresa selecionada."
+          buildHref={(company) => `/empresas/${encodeURIComponent(company.clientSlug)}/aplicacoes`}
+          ctaLabel={(company) => (company.role === "ADMIN" ? "Gerenciar aplicações" : "Ver aplicações")}
+        />
 
-        <div className="relative max-w-md">
-          <FiSearch className="absolute left-3 top-3 text-gray-500 text-lg" />
-          <input
-            type="text"
-            placeholder="Buscar aplicacao..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full rounded-xl bg-white border border-(--surface-border,#e5e7eb) py-2 pl-10 pr-4 text-sm text-(--page-text,#0b1a3c) placeholder-gray-500 shadow-sm focus:outline-none focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/20"
-          />
-        </div>
-
-        {filteredApps.length === 0 && (
-          <div className="rounded-2xl border border-(--surface-border,#e5e7eb) bg-white p-6 md:p-10 text-center text-(--page-text,#0b1a3c) space-y-4 shadow-sm">
-            <p className="text-lg font-semibold">Nenhuma aplicacao encontrada.</p>
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent)">Aplicações</p>
+            <h2 className="text-2xl font-bold">Visão geral</h2>
+            <p className="text-sm text-(--tc-text-secondary,#4b5563)">
+              Lista consolidada das aplicações suportadas. Use os cards acima para filtrar por empresa.
+            </p>
           </div>
-        )}
 
-        {filteredApps.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredApps.map((app) => {
-              const meta = getAppMeta(app.slug, app.tag);
-              const appColorClass = APP_COLOR_CLASS[app.slug] ?? "app-color-default";
-              return (
-                <Link
-                  key={app.slug}
-                  href={`/applications/${app.slug}`}
-                  className="rounded-2xl border border-(--surface-border,#e5e7eb) bg-white p-6 shadow-lg shadow-black/10 transition hover:border-(--tc-accent)/60 text-(--page-text,#0b1a3c)"
-                >
-                  <div className="space-y-3">
-                    <span className={`app-tag text-[12px] ${appColorClass}`}>
-                      {meta.label.toUpperCase()}
-                    </span>
-                    <p className="text-lg font-semibold">{app.name}</p>
-                    <p className="text-sm font-semibold text-(--tc-accent) flex items-center gap-2">
-                      Ver runs <span aria-hidden="true">→</span>
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
+          <ApplicationsList />
+        </div>
       </div>
     </div>
   );

@@ -1,31 +1,40 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import ApplicationsPage from "@/applications/page";
+import { ApplicationsList } from "@/applications/ApplicationsList";
+import Breadcrumb from "@/components/Breadcrumb";
 
 export default function EmpresaAplicacoesPage() {
   const params = useParams();
   const slug = (params?.slug as string) || "empresa";
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg,#ffffff)] text-[var(--page-text,#0b1a3c)]">
-      <div className="px-6 pt-6 md:px-10 md:pt-10 space-y-2">
-        <nav className="text-xs text-[var(--tc-text-muted,#6B7280)]">
-          <span>Empresas</span>
-          <span className="mx-1">/</span>
-          <span className="font-semibold text-[var(--tc-text-primary,#0b1a3c)] uppercase">{slug}</span>
-          <span className="mx-1">/</span>
-          <span className="text-[var(--tc-text-secondary,#4B5563)]">Aplicações</span>
-        </nav>
-        <h1 className="text-3xl md:text-4xl font-extrabold text-[var(--tc-text-primary,#0b1a3c)]">
-          Aplicações da empresa
-        </h1>
-        <p className="text-sm text-[var(--tc-text-secondary,#4B5563)]">
-          Listagem de aplicações no contexto da empresa — como era anteriormente.
-        </p>
+    <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
+      <div className="mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6 sm:pt-6 lg:px-10 lg:pt-10">
+        <div className="space-y-2">
+          <Breadcrumb
+            items={[
+              { label: "Empresas", href: "/empresas" },
+              {
+                label: slug,
+                href: `/empresas/${encodeURIComponent(slug)}/home`,
+                title: slug,
+              },
+              { label: "Aplicações" },
+            ]}
+          />
+
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">
+            Aplicações da empresa
+          </h1>
+          <p className="text-sm sm:text-base text-(--tc-text-secondary,#4b5563)">
+            Listagem de aplicações no contexto da empresa.
+          </p>
+        </div>
       </div>
-      <div className="mt-4">
-        <ApplicationsPage />
+
+      <div className="mx-auto mt-4 w-full max-w-7xl px-4 sm:mt-6 sm:px-6 lg:px-10">
+        <ApplicationsList />
       </div>
     </div>
   );

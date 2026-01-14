@@ -4,17 +4,98 @@ import { useEffect, useMemo, useState } from "react";
 import { FiAlertTriangle, FiTrendingDown, FiZap } from "react-icons/fi";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 
-type RunItem = { slug: string; title: string; app?: string; project?: string; summary?: string; status?: string; clientName?: string | null };
-type ClientItem = { id: string; name: string; slug?: string | null };
+type DefectItem = {
+  id: string;
+  title: string;
+  status: string;
+  severity?: string;
+  run_id?: string | number | null;
+  tags?: string[];
+  created_at?: string;
+  updated_at?: string;
+  url?: string;
+  projectCode: string;
+  companyName?: string | null;
+  companySlug?: string | null;
+  origin?: "manual" | "automatico";
+  createdBy?: string | null;
+};
+
+type Aggregated = {
+  total: number;
+  byApplication: { name: string; count: number }[];
+  byRun: { runId: string; count: number; app: string }[];
+  byCompany: { name: string; count: number; slug?: string | null }[];
+  byStatus: { status: string; count: number }[];
+  timeline: { month: string; count: number }[];
+  items: DefectItem[];
+  error?: string;
+};
 
 function pctWidthClass(pct: number) {
   const clamped = Math.max(0, Math.min(100, Math.round(pct)));
   return `w-pct-${clamped}`;
 }
 
+const FALLBACK_DEFECTS: DefectItem[] = [
+  {
+    id: "df-1",
+    title: "Checkout falha ao finalizar pagamento PIX",
+    status: "fail",
+    run_id: "run-123",
+    projectCode: "SMART",
+    companyName: "Griaule",
+    companySlug: "griaule",
+    origin: "automatico",
+    createdBy: "Qase",
+    url: "https://app.qase.io/run/123",
+  },
+  {
+    id: "df-2",
+    title: "API de documentos intermitente",
+    status: "blocked",
+    run_id: "run-456",
+    projectCode: "CDS",
+    companyName: "Cidade Digital",
+    companySlug: "cidade-digital",
+    origin: "manual",
+    createdBy: "ana.souza",
+    url: "#",
+  },
+  {
+    id: "df-3",
+    title: "Dashboard sem atualizar métricas",
+    status: "pending",
+    run_id: "run-789",
+    projectCode: "PRINT",
+    companyName: "Griaule",
+    companySlug: "griaule",
+    origin: "manual",
+    createdBy: "carlos.melo",
+  },
+  {
+    id: "df-4",
+    title: "Login mobile expirando antes do tempo",
+    status: "done",
+    run_id: "run-321",
+    projectCode: "GMT",
+    companyName: "MobileCorp",
+    companySlug: "mobilecorp",
+    origin: "automatico",
+    createdBy: "Qase",
+    url: "https://app.qase.io/run/321",
+  },
+];
+
+const STATUS_LABEL: Record<string, string> = {
+  fail: "Em falha",
+  blocked: "Bloqueado",
+  pending: "Aguardando teste",
+  done: "Concluído",
+};
+
 export default function AdminDefeitosPage() {
-  const [runs, setRuns] = useState<RunItem[]>([]);
-  const [clients, setClients] = useState<ClientItem[]>([]);
+  const [payload, setPayload] = useState<Aggregated | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,14 +104,12 @@ export default function AdminDefeitosPage() {
       setLoading(true);
       setError(null);
       try {
-        const [runRes, cliRes] = await Promise.all([
-          fetch("/api/releases", { cache: "no-store" }),
-          fetch("/api/clients", { cache: "no-store" }),
-        ]);
-        const runJson = await runRes.json().catch(() => ({ releases: [] }));
-        const cliJson = await cliRes.json().catch(() => ({ items: [] }));
-        setRuns(Array.isArray(runJson.releases) ? runJson.releases : []);
-        setClients(Array.isArray(cliJson.items) ? cliJson.items : []);
+        const res = await fetch("/api/admin/defeitos", { cache: "no-store" });
+        const json = (await res.json().catch(() => null)) as unknown;
+        const rec = (json ?? null) as Record<string, unknown> | null;
+        const apiError = typeof rec?.error === "string" ? rec.error : null;
+        if (apiError) setError(apiError);
+        setPayload((rec as Aggregated) ?? null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erro ao carregar dados");
       } finally {
@@ -40,43 +119,44 @@ export default function AdminDefeitosPage() {
     load();
   }, []);
 
-  const defects = useMemo(
-    () =>
-      runs.filter((r) => {
-        const st = String(r.status ?? "").toLowerCase();
-        return st === "failed" || st === "fail";
-      }),
-    [runs],
-  );
+  const defects = useMemo(() => {
+    const apiItems = payload?.items ?? [];
+    if (apiItems.length) return apiItems;
+    return FALLBACK_DEFECTS;
+  }, [payload]);
 
-  const defectsByCompany = useMemo(() => {
-    const map: Record<string, number> = {};
+  const companyCards = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        name: string;
+        slug: string | null;
+        total: number;
+        statuses: Record<string, number>;
+      }
+    >();
     defects.forEach((d) => {
-      const name = d.clientName || "Empresa";
-      map[name] = (map[name] || 0) + 1;
+      const slug = d.companySlug || d.companyName?.toLowerCase().replace(/\s+/g, "-") || "empresa";
+      const name = d.companyName || d.projectCode || "Empresa";
+      const key = slug;
+      if (!map.has(key)) {
+        map.set(key, { name, slug, total: 0, statuses: { fail: 0, blocked: 0, pending: 0, done: 0 } });
+      }
+      const item = map.get(key)!;
+      item.total += 1;
+      const status = (d.status || "pending").toLowerCase();
+      if (item.statuses[status] !== undefined) item.statuses[status] += 1;
     });
-    return Object.entries(map).map(([name, count]) => ({ name, count }));
+    return Array.from(map.values());
   }, [defects]);
 
   const defectsByRun = useMemo(() => {
-    const map: Record<string, { count: number; app: string; client: string | null | undefined }> = {};
-    defects.forEach((d) => {
-      const key = d.slug ?? "";
-      if (!key) return;
-      map[key] = map[key] || { count: 0, app: d.app ?? d.project ?? "APP", client: d.clientName };
-      map[key].count += 1;
-    });
-    return Object.entries(map).map(([slug, data]) => ({ slug, ...data }));
-  }, [defects]);
+    return (payload?.byRun ?? []).map((r) => ({ slug: r.runId, count: r.count, app: r.app, client: null }));
+  }, [payload]);
 
   const defectsByApp = useMemo(() => {
-    const map: Record<string, number> = {};
-    defects.forEach((d) => {
-      const app = d.app ?? d.project ?? "APP";
-      map[app] = (map[app] || 0) + 1;
-    });
-    return Object.entries(map).map(([app, count]) => ({ app, count }));
-  }, [defects]);
+    return (payload?.byApplication ?? []).map((a) => ({ app: a.name, count: a.count }));
+  }, [payload]);
 
   return (
     <RequireGlobalAdmin>
@@ -101,55 +181,63 @@ export default function AdminDefeitosPage() {
           <h1 className="text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">
             Painel de defeitos (global)
           </h1>
-          <p className="text-sm text-(--tc-text-secondary,#4B5563)">
+          <p className="text-sm text-(--tc-text-secondary,#4b5563)">
             Visao consolidada de falhas por empresa e por run. Clique para entrar no contexto da empresa.
           </p>
         </div>
 
         {error && <p className="text-sm text-red-500">{error}</p>}
-        {loading && <p className="text-sm text-(--tc-text-muted,#6B7280)">Carregando defeitos...</p>}
+        {loading && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando defeitos...</p>}
 
         {!loading && (
           <>
-            {/* cards de risco */}
+            {/* visão macro por empresa */}
             <section className="grid gap-4 md:grid-cols-3">
               <MetricCard label="Defeitos abertos" value={defects.length} color="text-red-600" icon={<FiAlertTriangle />} />
-              <MetricCard label="Empresas com defeitos" value={defectsByCompany.length} icon={<FiTrendingDown />} />
-              <MetricCard label="Runs inspecionadas" value={runs.length} icon={<FiZap />} />
+              <MetricCard label="Empresas com defeitos" value={companyCards.length} icon={<FiTrendingDown />} />
+              <MetricCard label="Defeitos (Qase + manuais)" value={defects.length} icon={<FiZap />} />
             </section>
 
-            <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-3">
+            <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Por empresa</h2>
-                  <p className="text-sm text-(--tc-text-secondary,#4B5563)">Ranking de falhas</p>
+                  <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Empresas com defeitos</h2>
+                  <p className="text-sm text-(--tc-text-secondary,#4b5563)">Clique para entrar no contexto</p>
                 </div>
               </div>
-              {defectsByCompany.length === 0 ? (
-                <p className="text-sm text-(--tc-text-muted,#6B7280)">Nenhuma falha registrada.</p>
+              {companyCards.length === 0 ? (
+                <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma empresa com defeitos.</p>
               ) : (
-                <div className="space-y-3">
-                  {defectsByCompany.map((c, idx) => {
-                    const slug = clients.find((cl) => cl.name === c.name)?.slug || "empresa";
-                    const barWidth = Math.min(100, c.count * 10);
-                    const tone =
-                      c.count > 10 ? "bg-red-500" : c.count > 5 ? "bg-amber-500" : "bg-emerald-500";
-                    const widthClass = pctWidthClass(barWidth);
+                <div className="grid gap-3 md:grid-cols-2">
+                  {companyCards.map((c) => {
+                    const total = c.total;
+                    const fail = c.statuses.fail ?? 0;
+                    const blocked = c.statuses.blocked ?? 0;
+                    const pending = c.statuses.pending ?? 0;
+                    const done = c.statuses.done ?? 0;
                     return (
-                      <div key={idx} className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <p className="font-semibold text-(--tc-text-primary,#0b1a3c)">{c.name}</p>
+                      <div
+                        key={c.slug ?? c.name}
+                        className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm space-y-3 hover:shadow-md transition"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">{c.name}</p>
+                            <p className="text-xs text-(--tc-text-muted,#6b7280)">{total} defeitos</p>
+                          </div>
                           <a
-                            href={`/empresas/${slug}/defeitos`}
+                            href={`/admin/defeitos/${c.slug || "empresa"}`}
                             className="text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
                           >
-                            Entrar
+                            Ver defeitos
                           </a>
                         </div>
-                        <div className="h-2 rounded-full bg-(--tc-input-bg,#eef4ff)">
-                          <div className={`h-full rounded-full ${tone} ${widthClass}`} />
+                        <div className="grid grid-cols-2 gap-2 text-xs text-(--tc-text-secondary,#4b5563)">
+                          <StatusPill label={STATUS_LABEL.fail} value={fail} colorClass="text-red-600" />
+                          <StatusPill label={STATUS_LABEL.blocked} value={blocked} colorClass="text-amber-600" />
+                          <StatusPill label={STATUS_LABEL.pending} value={pending} colorClass="text-blue-600" />
+                          <StatusPill label={STATUS_LABEL.done} value={done} colorClass="text-emerald-600" />
                         </div>
-                        <p className="text-xs text-(--tc-text-secondary,#4B5563)">{c.count} defeitos</p>
                       </div>
                     );
                   })}
@@ -159,32 +247,36 @@ export default function AdminDefeitosPage() {
 
             <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Runs com falha</h2>
-                <a href="/admin/runs" className="text-sm font-semibold text-(--tc-accent,#ef0001) hover:underline">
-                  Ver todas
-                </a>
+                <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Defeitos recentes</h2>
+                <span className="text-sm text-(--tc-text-muted,#6b7280)">Top 6</span>
               </div>
               {defects.length === 0 ? (
-                <p className="text-sm text-(--tc-text-muted,#6B7280)">Nenhuma run com falha.</p>
+                <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhum defeito encontrado.</p>
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
-                  {defects.slice(0, 6).map((r, idx) => (
+                  {defects.slice(0, 6).map((d) => (
                     <div
-                      key={r.slug ?? idx}
+                      key={d.id}
                       className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm space-y-2 hover:shadow-md transition"
                     >
-                      <div className="flex items-center justify-between">
-                        <p className="font-semibold text-(--tc-text-primary,#0b1a3c)">{r.title}</p>
-                        <span className="text-xs text-red-600">falha</span>
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="font-semibold text-(--tc-text-primary,#0b1a3c)">{d.title}</p>
+                        <span className="text-xs text-red-600">{d.status || "status"}</span>
                       </div>
-                      <p className="text-xs text-(--tc-text-secondary,#4B5563)">App: {r.app ?? r.project ?? "APP"}</p>
-                      <p className="text-xs text-(--tc-text-muted,#6B7280)">Empresa: {r.clientName ?? "Empresa"}</p>
-                      <a
-                        href={`/runs/${r.slug}`}
-                        className="text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
-                      >
-                        Abrir run
-                      </a>
+                      <p className="text-xs text-(--tc-text-secondary,#4b5563)">Projeto: {d.projectCode}</p>
+                      {d.run_id ? (
+                        <p className="text-xs text-(--tc-text-muted,#6b7280)">Run: {String(d.run_id)}</p>
+                      ) : null}
+                      {d.url ? (
+                        <a
+                          href={d.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
+                        >
+                          Abrir no Qase
+                        </a>
+                      ) : null}
                     </div>
                   ))}
                 </div>
@@ -195,7 +287,7 @@ export default function AdminDefeitosPage() {
             <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-3">
               <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Defeitos por run</h2>
               {defectsByRun.length === 0 ? (
-                <p className="text-sm text-(--tc-text-muted,#6B7280)">Nenhuma run com defeitos.</p>
+                <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma run com defeitos.</p>
               ) : (
                 <div className="space-y-2">
                   {defectsByRun.map((r, idx) => {
@@ -215,7 +307,7 @@ export default function AdminDefeitosPage() {
                         <div className="h-2 rounded-full bg-(--tc-input-bg,#eef4ff)">
                           <div className={`h-full rounded-full bg-red-500 ${widthClass}`} />
                         </div>
-                        <p className="text-xs text-(--tc-text-secondary,#4B5563)">
+                        <p className="text-xs text-(--tc-text-secondary,#4b5563)">
                           {r.count} defeitos • {r.app} • {r.client ?? "Empresa"}
                         </p>
                       </div>
@@ -229,7 +321,7 @@ export default function AdminDefeitosPage() {
             <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-3">
               <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Defeitos por aplicação</h2>
               {defectsByApp.length === 0 ? (
-                <p className="text-sm text-(--tc-text-muted,#6B7280)">Nenhuma aplicação com defeitos.</p>
+                <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma aplicação com defeitos.</p>
               ) : (
                 <div className="space-y-2">
                   {defectsByApp.map((a, idx) => {
@@ -243,7 +335,7 @@ export default function AdminDefeitosPage() {
                         <div className="h-2 rounded-full bg-(--tc-input-bg,#eef4ff)">
                           <div className={`h-full rounded-full bg-amber-500 ${widthClass}`} />
                         </div>
-                        <p className="text-xs text-(--tc-text-secondary,#4B5563)">{a.count} defeitos</p>
+                        <p className="text-xs text-(--tc-text-secondary,#4b5563)">{a.count} defeitos</p>
                       </div>
                     );
                   })}
@@ -257,6 +349,15 @@ export default function AdminDefeitosPage() {
   );
 }
 
+function StatusPill({ label, value, colorClass }: { label: string; value: number; colorClass: string }) {
+  return (
+    <div className="flex items-center justify-between rounded-lg border border-(--tc-border,#e5e7eb)/60 bg-(--tc-input-bg,#eef4ff) px-3 py-2">
+      <span className="text-xs font-semibold text-(--tc-text-primary,#0b1a3c)">{label}</span>
+      <span className={`text-sm font-bold ${colorClass}`}>{value}</span>
+    </div>
+  );
+}
+
 function MetricCard({ label, value, color, icon }: { label: string; value: number; color?: string; icon?: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-5 shadow-sm flex items-center gap-3">
@@ -264,7 +365,7 @@ function MetricCard({ label, value, color, icon }: { label: string; value: numbe
         {icon}
       </div>
       <div>
-        <p className="text-sm text-(--tc-text-muted,#6B7280)">{label}</p>
+        <p className="text-sm text-(--tc-text-muted,#6b7280)">{label}</p>
         <p className={`text-3xl font-bold ${color ?? "text-(--tc-text-primary,#0b1a3c)"}`}>{value}</p>
       </div>
     </div>

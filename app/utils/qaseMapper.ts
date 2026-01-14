@@ -16,6 +16,7 @@ export function mapQaseToKanban(entities: RawQaseEntity[]): KanbanData {
   };
 
   entities.forEach((item) => {
+    if (!item.case_id || !Number.isFinite(Number(item.case_id))) return;
     const status = (item.status ?? "").toLowerCase();
     const bucket: keyof KanbanData =
       status === "passed"
@@ -27,9 +28,10 @@ export function mapQaseToKanban(entities: RawQaseEntity[]): KanbanData {
         : "notRun";
 
     data[bucket].push({
-      id: item.case_id ?? 0,
+      id: item.case_id,
       title: item.title ?? "",
       bug: item.bug ?? null,
+      fromApi: true,
     });
   });
 

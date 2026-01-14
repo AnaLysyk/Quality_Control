@@ -4,21 +4,37 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import { CreateUserModal } from "./components/CreateUserModal";
+import { UserDetailsModal } from "./components/UserDetailsModal";
 import { getAccessToken } from "@/lib/api";
+import { toast } from "react-hot-toast";
 
 type ClientOption = { id: string; name: string };
 type UserItem = { id: string; name: string; email?: string; role?: string; job_title?: string | null; client_id?: string | null; active?: boolean; linkedin_url?: string };
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
+}
+
 function AdminUsersPage() {
   const { user } = useAuthUser();
-  const isGlobalAdmin = !!user?.isGlobalAdmin || (user as any)?.is_global_admin === true;
+  const legacyIsGlobalAdmin = asRecord(user)?.is_global_admin === true;
+  const isGlobalAdmin = !!user?.isGlobalAdmin || legacyIsGlobalAdmin;
 
   const [clients, setClients] = useState<ClientOption[]>([]);
   const [users, setUsers] = useState<UserItem[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [openModal, setOpenModal] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsUserId, setDetailsUserId] = useState<string | null>(null);
+  const [detailsDirty, setDetailsDirty] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const selectedUser = useMemo(() => {
+    if (!detailsUserId) return null;
+    return users.find((u) => u.id === detailsUserId) ?? null;
+  }, [users, detailsUserId]);
 
   const filteredUsers = useMemo(() => {
     if (!selectedClientId) return users;
@@ -34,8 +50,18 @@ function AdminUsersPage() {
         const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
         const resClients = await fetch("/api/clients", { cache: "no-store", credentials: "include", headers });
         const clientsJson = await resClients.json().catch(() => ({}));
-        const clientItems = Array.isArray(clientsJson.items) ? clientsJson.items : [];
-        const mappedClients: ClientOption[] = clientItems.map((c: any) => ({ id: c.id, name: c.name ?? c.company_name ?? "" }));
+        const clientItems = Array.isArray(clientsJson.items) ? (clientsJson.items as unknown[]) : [];
+        const mappedClients: ClientOption[] = clientItems
+          .map((c) => {
+            const rec = asRecord(c) ?? {};
+            const id = typeof rec.id === "string" ? rec.id : "";
+            const name =
+              (typeof rec.name === "string" ? rec.name : null) ??
+              (typeof rec.company_name === "string" ? rec.company_name : null) ??
+              "";
+            return { id, name };
+          })
+          .filter((c) => c.id);
         setClients(mappedClients);
         setSelectedClientId(mappedClients[0]?.id ?? null);
 
@@ -45,6 +71,7 @@ function AdminUsersPage() {
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Erro ao carregar dados";
         setMessage(msg);
+        toast.error(msg);
       } finally {
         setLoading(false);
       }
@@ -61,7 +88,9 @@ function AdminUsersPage() {
         </div>
         {isGlobalAdmin && (
           <button
-            onClick={() => setOpenModal(true)}
+            onClick={() => {
+              setCreateOpen(true);
+            }}
             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
           >
             + Criar usuário
@@ -93,22 +122,26 @@ function AdminUsersPage() {
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="divide-y divide-gray-200">
           {filteredUsers.map((u) => (
-            <div key={u.id} className="flex items-center justify-between px-4 py-3">
+            <button
+              key={u.id}
+              type="button"
+              className="w-full text-left flex items-center justify-between px-4 py-3 hover:bg-gray-50"
+              onClick={() => {
+                if (detailsOpen && detailsDirty && detailsUserId && detailsUserId !== u.id) {
+                  const ok = window.confirm("Voce tem alteracoes nao salvas. Deseja descartar e abrir outro usuario?");
+                  if (!ok) return;
+                }
+                setDetailsUserId(u.id);
+                setDetailsOpen(true);
+              }}
+            >
               <div>
                 <div className="font-semibold text-sm text-gray-900">{u.name}</div>
                 <div className="text-xs text-gray-500">{u.email}</div>
                 <div className="text-xs text-gray-500">{u.role ?? "client_user"}</div>
               </div>
-              <button
-                className="text-xs text-indigo-700 hover:underline"
-                onClick={() => {
-                  setSelectedClientId(u.client_id ?? null);
-                  setOpenModal(true);
-                }}
-              >
-                Editar
-              </button>
-            </div>
+              <span className="text-xs text-indigo-700">Detalhes</span>
+            </button>
           ))}
           {filteredUsers.length === 0 && (
             <div className="px-4 py-3 text-sm text-gray-600">Nenhum usuário encontrado.</div>
@@ -117,12 +150,34 @@ function AdminUsersPage() {
       </div>
 
       <CreateUserModal
-        open={openModal}
+        open={createOpen}
         clientId={selectedClientId}
         clients={clients}
-        users={users.filter((u) => !selectedClientId || u.client_id === selectedClientId)}
-        onClose={() => setOpenModal(false)}
+        onClose={() => {
+          setCreateOpen(false);
+        }}
         onCreated={async () => {
+          const resUsers = await fetch("/api/admin/users", { credentials: "include" });
+          const usersJson = await resUsers.json().catch(() => ({ items: [] }));
+          setUsers(Array.isArray(usersJson.items) ? usersJson.items : []);
+        }}
+      />
+
+      <UserDetailsModal
+        open={detailsOpen}
+        user={selectedUser}
+        clients={clients}
+        onDirtyChange={(dirty) => setDetailsDirty(dirty)}
+        onClose={() => {
+          if (detailsDirty) {
+            const ok = window.confirm("Voce tem alteracoes nao salvas. Deseja descartar?");
+            if (!ok) return;
+          }
+          setDetailsOpen(false);
+          setDetailsUserId(null);
+          setDetailsDirty(false);
+        }}
+        onSaved={async () => {
           const resUsers = await fetch("/api/admin/users", { credentials: "include" });
           const usersJson = await resUsers.json().catch(() => ({ items: [] }));
           setUsers(Array.isArray(usersJson.items) ? usersJson.items : []);

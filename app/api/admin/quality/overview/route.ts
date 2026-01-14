@@ -21,6 +21,7 @@ type ClientRow = {
   name?: string | null;
   slug?: string | null;
   logo_url?: string | null;
+  qase_project_code?: string | null;
   active?: boolean | null;
 };
 
@@ -69,6 +70,7 @@ function normalizeClients(items: ClientRow[]) {
       name: item.company_name || item.name || "Empresa",
       slug: item.slug ?? null,
       logo_url: item.logo_url ?? null,
+      qase_project_code: item.qase_project_code ?? null,
       active: item.active ?? false,
     }));
 }

@@ -1,8 +1,86 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { getSupabaseServer } from "@/lib/supabaseServer";
 import { getAllReleases, upsertRelease, type ReleaseEntry } from "@/release/data";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 
 export const runtime = "nodejs";
+
+const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+
+type Access = {
+  authUserId: string;
+  isGlobalAdmin: boolean;
+  clientId: string | null;
+  qaseProjectCode: string | null;
+};
+
+async function extractToken(req: Request): Promise<string | null> {
+  const auth = req.headers.get("authorization");
+  if (auth?.toLowerCase().startsWith("bearer ")) {
+    const token = auth.slice("bearer ".length).trim();
+    if (token) return token;
+  }
+  const store = await cookies();
+  return store.get("sb-access-token")?.value || store.get("auth_token")?.value || null;
+}
+
+async function requireAccess(req: Request): Promise<Access | null> {
+  if (SUPABASE_MOCK) {
+    return { authUserId: "mock-uid", isGlobalAdmin: true, clientId: "mock-client", qaseProjectCode: "SFQ" };
+  }
+
+  const token = await extractToken(req);
+  if (!token) return null;
+
+  const supabase = getSupabaseServer();
+  const { data: authData, error: authError } = await supabase.auth.getUser(token);
+  if (authError || !authData?.user) return null;
+
+  const authUserId = authData.user.id;
+
+  const { data: userRow } = await supabase
+    .from("users")
+    .select("client_id,is_global_admin,role")
+    .eq("auth_user_id", authUserId)
+    .eq("active", true)
+    .maybeSingle();
+
+  const { data: profileRow } = await supabase
+    .from("profiles")
+    .select("is_global_admin,role")
+    .eq("id", authUserId)
+    .maybeSingle();
+
+  const role = (userRow as { role?: unknown } | null)?.role;
+  const isGlobalAdmin =
+    (userRow as { is_global_admin?: unknown } | null)?.is_global_admin === true ||
+    role === "global_admin" ||
+    role === "admin" ||
+    profileRow?.is_global_admin === true ||
+    profileRow?.role === "global_admin";
+
+  const clientIdRaw = (userRow as { client_id?: unknown } | null)?.client_id;
+  const clientId = typeof clientIdRaw === "string" && clientIdRaw.trim() ? clientIdRaw.trim() : null;
+
+  let qaseProjectCode: string | null = null;
+  if (clientId) {
+    const { data: clientRow } = await supabase
+      .from("cliente")
+      .select("qase_project_code")
+      .eq("id", clientId)
+      .maybeSingle();
+    const code = (clientRow as { qase_project_code?: unknown } | null)?.qase_project_code;
+    if (typeof code === "string" && code.trim()) qaseProjectCode = code.trim().toUpperCase();
+  }
+
+  return { authUserId, isGlobalAdmin, clientId, qaseProjectCode };
+}
+
+function resolveReleaseProjectCode(release: ReleaseEntry): string {
+  const raw = (release.qaseProject ?? release.project ?? release.app ?? "").toString();
+  return raw.trim().toUpperCase();
+}
 
 export async function GET(_: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -39,10 +117,27 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sl
   const slug = slugifyRelease(rawSlug);
   const body = await request.json().catch(() => ({}));
 
+  const access = await requireAccess(request);
+  if (!access) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const all = await getAllReleases();
   const existing = all.find((r) => r.slug === slug);
   if (!existing) {
     return NextResponse.json({ error: "Release não encontrada." }, { status: 404 });
+  }
+
+  // Company users can edit runs, but only within their own Qase project.
+  if (!access.isGlobalAdmin) {
+    if (!access.clientId) {
+      return NextResponse.json({ error: "Usuário sem empresa vinculada" }, { status: 403 });
+    }
+
+    const releaseProject = resolveReleaseProjectCode(existing);
+    if (!access.qaseProjectCode || !releaseProject || access.qaseProjectCode !== releaseProject) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
   }
 
   const status = (body.status ?? existing.status ?? "ACTIVE") as ReleaseEntry["status"];

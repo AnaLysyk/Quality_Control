@@ -6,13 +6,12 @@ Single reference for product + integration. This is written to match how this re
 
 - Base: `https://api.qase.io/v1`
 - Auth (backend only):
-  - `Authorization: Bearer QASE_API_TOKEN`
   - `Token: QASE_API_TOKEN`
 - JSON: `Content-Type: application/json`
 - Do not expose tokens in the browser. Use server-only calls or a backend proxy.
 
 Repo notes:
-- SDK: `lib/qaseSdk.ts` (sends both headers by default).
+- SDK: `lib/qaseSdk.ts` (sends `Token` header by default).
 - Server integration: `app/services/qase.ts` (server-only).
 - Backend (Nest): `backend/src/qase/*`.
 
@@ -77,11 +76,10 @@ Use cases:
 - Release status + metrics.
 
 ### Results (test results)
+- `GET /result/{code}` (list; use query params like `run_id`, `limit`, `offset`)
+- `GET /result/{code}/{hash}` (get a specific result by hash)
 - `POST /result/{code}/{run_id}` (single result)
-- `GET /result/{code}/{run_id}` (results list)
 - `POST /result/{code}/{run_id}/bulk` (bulk results)
-
-Note: Some installations still use `GET /result/{code}?run_id=...` for pagination.
 
 ### Milestones (releases)
 - `GET /milestone/{code}`
@@ -113,26 +111,19 @@ Use cases:
 - Evidence, screenshots, logs.
 
 ### Defects (v2)
-- `GET /v2/defect/{code}`
+- `GET /defect/{code}`
 
 Use cases:
 - Defect dashboards (admin/company).
 
-## v2 (when enabled)
-
-- `POST /v2/{project_code}/run/{run_id}/result` (single)
-- `POST /v2/{project_code}/run/{run_id}/results` (bulk)
-
-Paths and schema can vary. Confirm per account before using.
-
 ## Quick cURL
 
 ```bash
-curl -H "Authorization: Bearer $QASE_API_TOKEN" \
+curl -H "Token: $QASE_API_TOKEN" \
   https://api.qase.io/v1/project
 
 curl -X POST https://api.qase.io/v1/run/SFQ \
-  -H "Authorization: Bearer $QASE_API_TOKEN" \
+  -H "Token: $QASE_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"title":"Release 1.2.0","cases":[1,2]}'
 ```

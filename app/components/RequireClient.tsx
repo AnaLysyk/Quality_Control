@@ -17,7 +17,8 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
   useEffect(() => {
     if (loading || !user) return;
 
-    const isAdmin = user.role === "admin" || user.isGlobalAdmin;
+    const role = typeof user.role === "string" ? user.role.toLowerCase() : null;
+    const isAdmin = role === "admin" || role === "global_admin" || user.isGlobalAdmin;
     if (isAdmin) return; // admin pode acessar qualquer empresa
 
     if (!user.clientSlug) {
@@ -26,7 +27,7 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
     }
 
     if (slug && user.clientSlug !== slug) {
-      router.replace(`/empresas/${user.clientSlug}/dashboard`);
+        router.replace(`/empresas/${user.clientSlug}/home`);
     }
   }, [loading, user, slug, router]);
 

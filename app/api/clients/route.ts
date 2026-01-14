@@ -1,10 +1,14 @@
 import { randomUUID } from "crypto";
+import { promises as fs } from "fs";
+import path from "path";
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { type SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServer } from "@/lib/supabaseServer";
+import { extractAccessToken, requireGlobalAdmin } from "@/lib/rbac/requireGlobalAdmin";
 import { ClientCreateRequestSchema, ClientListResponseSchema, ClientSchema } from "@/contracts/client";
 import { ErrorResponseSchema } from "@/contracts/errors";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
+
+export const runtime = "nodejs";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
@@ -23,10 +27,89 @@ type ClienteRow = {
   logo_url?: string | null;
   docs_link?: string | null;
   notes?: string | null;
+  qase_project_code?: string | null;
+  qase_project_codes?: string[] | null;
   active?: boolean | null;
   created_at?: string | null;
   created_by?: string | null;
 };
+
+const MOCK_CLIENTS_FILE = path.join(process.cwd(), "data", "mock-clients.json");
+const IS_TEST_ENV = process.env.NODE_ENV === "test" || !!process.env.JEST_WORKER_ID;
+
+const mockNow = () => new Date().toISOString();
+
+const mockSeed: ClienteRow[] = [
+  {
+    id: "griaule",
+    company_name: "Griaule",
+    slug: "griaule",
+    tax_id: "00.000.000/0000-00",
+    address: "Rua Exemplo, 123",
+    phone: "+55 11 99999-0000",
+    website: "https://www.griaule.com",
+    logo_url: "/images/griaule.png",
+    docs_link: "https://docs.exemplo.com",
+    notes: "Cliente mock para desenvolvimento",
+    qase_project_code: "SFQ",
+    qase_project_codes: ["SFQ"],
+    active: true,
+    created_at: "2026-01-12T00:00:00.000Z",
+  },
+];
+
+let mockMemoryStore: ClienteRow[] = [...mockSeed];
+
+async function readMockClients(): Promise<ClienteRow[]> {
+  if (IS_TEST_ENV) return mockMemoryStore;
+
+  try {
+    const raw = await fs.readFile(MOCK_CLIENTS_FILE, "utf8");
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed as ClienteRow[];
+  } catch {
+    // ignore
+  }
+
+  try {
+    await fs.mkdir(path.dirname(MOCK_CLIENTS_FILE), { recursive: true });
+    await fs.writeFile(MOCK_CLIENTS_FILE, JSON.stringify(mockSeed, null, 2) + "\n", "utf8");
+  } catch {
+    // ignore
+  }
+
+  return [...mockSeed];
+}
+
+async function writeMockClients(clients: ClienteRow[]) {
+  if (IS_TEST_ENV) {
+    mockMemoryStore = clients;
+    return;
+  }
+  await fs.mkdir(path.dirname(MOCK_CLIENTS_FILE), { recursive: true });
+  await fs.writeFile(MOCK_CLIENTS_FILE, JSON.stringify(clients, null, 2) + "\n", "utf8");
+}
+
+function toSlug(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+function uniqueSlug(desired: string, rows: ClienteRow[]) {
+  const base = toSlug(desired) || "cliente";
+  const used = new Set(rows.map((r) => (r.slug ?? "").toLowerCase()).filter(Boolean));
+  if (!used.has(base)) return base;
+  for (let i = 2; i < 1000; i++) {
+    const candidate = `${base}-${i}`;
+    if (!used.has(candidate)) return candidate;
+  }
+  return `${base}-${randomUUID().slice(0, 8)}`;
+}
 
 const MAX_SHORT = 255;
 const MAX_NOTES = 1000;
@@ -38,68 +121,54 @@ const sanitize = (value: unknown, max = MAX_SHORT) => {
   return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
 };
 
-async function extractToken(req: NextRequest): Promise<string | null> {
-  const auth = req.headers.get("authorization");
-  if (auth?.toLowerCase().startsWith("bearer ")) {
-    const token = auth.slice("bearer ".length).trim();
-    if (token) return token;
+function normalizeProjectCodes(value: unknown): string[] | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+
+  const normalize = (code: string) => code.trim().toUpperCase();
+
+  if (Array.isArray(value)) {
+    const arr = value
+      .filter((item): item is string => typeof item === "string")
+      .map(normalize)
+      .filter(Boolean);
+    return arr.length ? Array.from(new Set(arr)) : null;
   }
-  const store = await cookies();
-  return (
-    store.get("sb-access-token")?.value ||
-    store.get("auth_token")?.value ||
-    null
-  );
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const arr = trimmed
+      .split(/[\s,;|]+/g)
+      .map(normalize)
+      .filter(Boolean);
+    return arr.length ? Array.from(new Set(arr)) : null;
+  }
+
+  return undefined;
 }
 
-function createSupabase(): SupabaseClient {
-  // Tests mock `@/lib/supabaseServer` and expect its `supabaseServer` object.
-  // Use the server client for both service and user flows in tests by returning
-  // the server client; real token scoping is handled in production code via
-  // the Supabase client instance, but for tests this provides the expected shape.
-  return getSupabaseServer();
+function isUnknownColumnError(error: unknown) {
+  const message = (error as { message?: unknown } | null)?.message;
+  if (typeof message !== "string") return false;
+  const lower = message.toLowerCase();
+  return lower.includes("column") && lower.includes("does not exist");
 }
 
-function createSupabaseService() {
-  return getSupabaseServer();
+async function extractToken(req: NextRequest): Promise<string | null> {
+  return extractAccessToken(req);
 }
 
 async function requireAdmin(req: NextRequest) {
-  // If running with the internal SUPABASE_MOCK but tests provided their own
-  // `supabaseServer` mock (via jest.mock of the module), prefer the test
-  // mock behavior. Only short-circuit to the internal mock when SUPABASE_MOCK
-  // is true and no external mock module is present.
-  const supMod = await import("@/lib/supabaseServer");
-  if (SUPABASE_MOCK && !("supabaseServer" in supMod)) {
-    return {
+  const admin = await requireGlobalAdmin(req, {
+    mockAdmin: {
       id: "mock-uid",
       email: "ana.testing.company@gmail.com",
       token: "mock-token",
-    };
-  }
+    },
+  });
 
-  const token = await extractToken(req);
-  if (!token) return null;
-
-  const supabase = createSupabase(token);
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data?.user) return null;
-
-  const service = createSupabaseService();
-  const { data: profile, error: profileError } = await service
-    .from("profiles")
-    .select("is_global_admin,role")
-    .eq("id", data.user.id)
-    .maybeSingle();
-
-  const isAdmin =
-    profile?.is_global_admin === true ||
-    profile?.role === "global_admin" ||
-    (data.user.app_metadata as any)?.role === "admin";
-
-  if (profileError || !isAdmin) return null;
-
-  return { id: data.user.id, email: data.user.email ?? "", token };
+  return admin;
 }
 
 // `requireUser` logic is no longer used in this route; authentication
@@ -120,6 +189,11 @@ function mapRow(row: ClienteRow) {
     logo_url: row.logo_url ?? null,
     docs_link: row.docs_link ?? null,
     notes: row.notes ?? null,
+    qase_project_code: row.qase_project_code ?? null,
+    qase_project_codes: row.qase_project_codes ?? null,
+    // Never leak secret tokens in API responses.
+    qase_token: null,
+    jira_api_token: null,
     active: row.active ?? false,
     created_at: row.created_at ?? null,
     created_by: row.created_by ?? null,
@@ -135,32 +209,13 @@ export async function GET(req: NextRequest) {
     if (!admin) return jsonError("Nao autorizado", 403);
 
     if (SUPABASE_MOCK) {
-      const now = new Date().toISOString();
-      const payload = ClientListResponseSchema.parse({
-        items: [
-          {
-            id: "griaule",
-            slug: "griaule",
-            name: "Griaule",
-            company_name: "Griaule",
-            tax_id: "00.000.000/0000-00",
-            address: "Rua Exemplo, 123",
-            phone: "+55 11 99999-0000",
-            website: "https://www.griaule.com",
-            logo_url: "/images/griaule.png",
-            docs_link: "https://docs.exemplo.com",
-            notes: "Cliente mock para desenvolvimento",
-            active: true,
-            created_at: now,
-            created_by: admin.id,
-          },
-        ],
-      });
+      const rows = await readMockClients();
+      const payload = ClientListResponseSchema.parse({ items: rows.map(mapRow) });
       return NextResponse.json(payload, { status: 200 });
     }
 
-    const supabase = createSupabaseService();
-    const { data, error } = await supabase
+    const supabase = getSupabaseServer();
+    const primary = await supabase
       .from("cliente")
       .select(
         `
@@ -174,6 +229,8 @@ export async function GET(req: NextRequest) {
         logo_url,
         docs_link,
         notes,
+        qase_project_code,
+        qase_project_codes,
         active,
         created_at,
         created_by
@@ -181,12 +238,44 @@ export async function GET(req: NextRequest) {
       )
       .order("created_at", { ascending: true });
 
-    if (error) {
-      console.error("Erro ao buscar clientes:", error);
+    if (primary.error && isUnknownColumnError(primary.error)) {
+      const legacy = await supabase
+        .from("cliente")
+        .select(
+          `
+          id,
+          company_name,
+          slug,
+          tax_id,
+          address,
+          phone,
+          website,
+          logo_url,
+          docs_link,
+          notes,
+          qase_project_code,
+          active,
+          created_at,
+          created_by
+        `,
+        )
+        .order("created_at", { ascending: true });
+
+      if (legacy.error) {
+        console.error("Erro ao buscar clientes:", legacy.error);
+        return jsonError("Erro ao buscar clientes", 500);
+      }
+
+      const payload = ClientListResponseSchema.parse({ items: (legacy.data ?? []).map(mapRow) });
+      return NextResponse.json(payload, { status: 200 });
+    }
+
+    if (primary.error) {
+      console.error("Erro ao buscar clientes:", primary.error);
       return jsonError("Erro ao buscar clientes", 500);
     }
 
-    const payload = ClientListResponseSchema.parse({ items: (data ?? []).map(mapRow) });
+    const payload = ClientListResponseSchema.parse({ items: (primary.data ?? []).map(mapRow) });
     return NextResponse.json(payload, { status: 200 });
   } catch (err) {
     console.error("Erro inesperado no GET /api/clients:", err);
@@ -209,14 +298,46 @@ export async function POST(req: NextRequest) {
     }
 
     const input = parsed.data;
+    const qaseProjectCodes = normalizeProjectCodes((input as any).qase_project_codes);
 
     if (SUPABASE_MOCK) {
-      const payload = ClientSchema.parse({
+      const companyName = sanitize(input.company_name || input.name);
+      if (!companyName) {
+        return jsonError("Campo 'name' ou 'company_name' e obrigatorio", 400);
+      }
+
+      const existing = await readMockClients();
+      const row: ClienteRow = {
         id: randomUUID(),
-        name: "Cliente Mock",
-        company_name: "Cliente Mock",
-        active: true,
+        company_name: companyName,
+        name: companyName,
+        slug: uniqueSlug(sanitize(input.slug) ?? companyName, existing),
+        tax_id: sanitize(input.tax_id),
+        address: sanitize(input.address) ?? sanitize(input.description) ?? null,
+        phone: sanitize(input.phone),
+        website: sanitize(input.website),
+        logo_url: sanitize(input.logo_url),
+        docs_link: sanitize(input.docs_link || input.docs_url),
+        notes: sanitize(input.notes, MAX_NOTES),
+        qase_project_code: sanitize(input.qase_project_code)?.toUpperCase() ?? null,
+        qase_project_codes: qaseProjectCodes ?? null,
+        active: typeof input.active === "boolean" ? input.active : true,
+        created_at: mockNow(),
         created_by: auth.id,
+      };
+
+      await writeMockClients([row, ...existing]);
+
+      const payload = ClientSchema.parse(mapRow(row));
+
+      await addAuditLogSafe({
+        actorUserId: auth.id,
+        actorEmail: auth.email,
+        action: "client.created",
+        entityType: "client",
+        entityId: payload.id,
+        entityLabel: payload.name,
+        metadata: { slug: payload.slug, active: payload.active },
       });
       return NextResponse.json(payload, { status: 201 });
     }
@@ -245,11 +366,13 @@ export async function POST(req: NextRequest) {
       logo_url: logoUrl,
       docs_link: docsLink,
       notes,
+      qase_project_code: sanitize(input.qase_project_code)?.toUpperCase() ?? null,
+      qase_project_codes: qaseProjectCodes ?? null,
       active,
       created_by: auth.id,
     };
 
-    const supabase = createSupabaseService();
+    const supabase = getSupabaseServer();
     const { data, error } = await supabase.from("cliente").insert(newRow).select().maybeSingle();
 
     if (error) {
@@ -258,6 +381,17 @@ export async function POST(req: NextRequest) {
     }
 
     const payload = ClientSchema.parse(mapRow(data as ClienteRow));
+
+    await addAuditLogSafe({
+      actorUserId: auth.id,
+      actorEmail: auth.email,
+      action: "client.created",
+      entityType: "client",
+      entityId: payload.id,
+      entityLabel: payload.name,
+      metadata: { slug: payload.slug, active: payload.active },
+    });
+
     return NextResponse.json(payload, { status: 201 });
   } catch (err) {
     console.error("Erro inesperado no POST /api/clients:", err);

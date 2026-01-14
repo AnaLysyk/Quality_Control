@@ -1,9 +1,19 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+
+function normalizeSupabaseUrl(value: string | undefined) {
+  const raw = (value ?? "").trim();
+  if (!raw) return undefined;
+  let url = raw.replace(/\.supabase\.com\b/i, ".supabase.co");
+  if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+  url = url.replace(/\/+$/, "");
+  return url;
+}
+
 const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  process.env.SUPABASE_URL ||
+  normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL) ||
+  normalizeSupabaseUrl(process.env.SUPABASE_URL) ||
   (SUPABASE_MOCK || process.env.NODE_ENV === "test" ? "http://localhost" : undefined);
 const SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||

@@ -123,7 +123,7 @@ function logMissingCaseOnce(testInfo: TestInfo) {
 
 const test = base;
 
-test.afterEach(async (_fixtures, testInfo) => {
+test.afterEach(async ({}, testInfo) => {
   if (!qaseEnabled) {
     logMissingConfigOnce();
     return;

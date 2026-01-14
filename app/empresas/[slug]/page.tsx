@@ -9,7 +9,7 @@ export default function EmpresaIndexRedirect() {
 
   useEffect(() => {
     const slug = (params?.slug as string) || "empresa";
-    router.replace(`/empresas/${slug}/dashboard`);
+    router.replace(`/empresas/${slug}/home`);
   }, [params, router]);
 
   return null;

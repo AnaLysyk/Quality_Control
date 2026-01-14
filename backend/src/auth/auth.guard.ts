@@ -8,7 +8,7 @@ type RequestWithUser = Request & { user?: AuthContext };
 export class AuthGuard implements CanActivate {
   constructor(private readonly authService: AuthService) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<RequestWithUser>();
     const token = this.authService.extractToken(req);
 
@@ -16,7 +16,7 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException("Missing auth token");
     }
 
-    const auth = this.authService.validateToken(token);
+    const auth = await this.authService.validateToken(token);
     req.user = auth;
     return true;
   }

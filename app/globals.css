@@ -168,6 +168,53 @@ video {
   --button-export-bg: #7CD343;
   --button-export-text: #0b1305;
   --button-export-shadow: 0 10px 25px rgba(124, 211, 67, 0.25);
+  --tc-bg: #fdfdfd;
+  --tc-surface: #ffffff;
+  --tc-surface-2: #f3f6ff;
+  --tc-surface-dark: #f1f5ff;
+  --tc-surface-muted: #f6f8ff;
+  --tc-border: rgba(15, 23, 42, 0.08);
+  --tc-input-bg: #ffffff;
+  --tc-text-inverse: #0b1220;
+}
+
+.metrics-shell {
+  --metrics-panel-bg: rgba(255, 255, 255, 0.06);
+  --metrics-panel-border: rgba(255, 255, 255, 0.25);
+  --metrics-text-primary: #ffffff;
+  --metrics-text-muted: rgba(255, 255, 255, 0.75);
+  --metrics-text-strong: rgba(255, 255, 255, 0.9);
+  --metrics-button-bg: rgba(255, 255, 255, 0.1);
+  --metrics-dot-bg: rgba(255, 255, 255, 0.2);
+}
+
+.theme-light .metrics-shell {
+  --metrics-panel-bg: #ffffff;
+  --metrics-panel-border: rgba(15, 23, 42, 0.08);
+  --metrics-text-primary: var(--page-text);
+  --metrics-text-muted: rgba(11, 18, 32, 0.65);
+  --metrics-text-strong: rgba(11, 18, 32, 0.82);
+  --metrics-button-bg: rgba(15, 23, 42, 0.08);
+  --metrics-dot-bg: rgba(15, 23, 42, 0.15);
+}
+
+.metrics-shell .quality-gate-panel {
+  background:
+    radial-gradient(circle at top left, rgba(239, 0, 1, 0.18), transparent 45%),
+    radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.14), transparent 50%);
+}
+
+.metrics-shell .metrics-summary-overlay {
+  background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.12), transparent 55%);
+}
+
+.theme-light .metrics-shell .quality-gate-panel {
+  background: #ffffff;
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.08);
+}
+
+.theme-light .metrics-shell .metrics-summary-overlay {
+  display: none;
 }
 
 /* ===============================

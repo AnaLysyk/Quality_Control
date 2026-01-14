@@ -102,7 +102,7 @@ export default function ApplicationPage() {
         className="block h-full rounded-2xl border border-white/10 bg-linear-to-br from-[#11131e] to-[#0c101a] p-5 shadow-lg shadow-black/60 transition hover:border-(--tc-accent)/60"
       >
         <div className="flex items-start justify-between gap-2 mb-3">
-          <span className={`rounded-full px-2.5 py-1 text-[11px] leading-[1.1] font-semibold text-black text-center min-w-[88px] ${colorClass}`}>
+          <span className={`rounded-full px-2.5 py-1 text-[11px] leading-[1.1] font-semibold text-black text-center min-w-22 ${colorClass}`}>
             {appTag}
           </span>
           <span className="text-xs text-gray-300">{subtitle}</span>

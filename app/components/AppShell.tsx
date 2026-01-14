@@ -18,19 +18,19 @@ export default function AppShell({ children }: AppShellProps) {
 
   if (isLogin) {
     return (
-      <div className="min-h-screen w-full overflow-y-auto bg-white text-slate-900 dark:bg-[#0b1a3c] dark:text-slate-100">
+      <div className="min-h-screen w-full overflow-y-auto bg-(--page-bg) text-(--page-text)">
         {children}
       </div>
     );
   }
 
   return (
-    <div className="h-screen w-full bg-white text-slate-900 dark:bg-[#0b1a3c] dark:text-slate-100 overflow-hidden">
+    <div className="h-screen w-full bg-(--page-bg) text-(--page-text) overflow-hidden">
       <SidebarVisibility mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
       <button
         type="button"
-        className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-white text-slate-900 border border-slate-200 shadow-sm hover:bg-slate-100 lg:hidden dark:bg-[#0d1117] dark:text-white dark:border-white/10 dark:hover:bg-[#131a24]"
+        className="fixed top-4 left-4 z-50 rounded-lg border border-(--tc-border) bg-(--tc-surface) p-2 text-(--tc-text) shadow-sm transition-colors hover:bg-(--tc-surface-2) lg:hidden"
         onClick={() => setMobileOpen(true)}
         aria-label="Abrir menu"
       >
@@ -41,7 +41,7 @@ export default function AppShell({ children }: AppShellProps) {
         <ProfileButton />
       </div>
 
-      <div className="flex flex-col h-full lg:ml-[72px]">
+      <div className="flex flex-col h-full lg:ml-18">
         <div className="flex-1 h-full overflow-y-auto">
           <MainWrapper>{children}</MainWrapper>
         </div>

@@ -16,6 +16,10 @@ Este diretório contém scripts SQL em fases para habilitar Row Level Security, 
    - (se houver tokens em texto) `psql -f scripts/06_encrypt_company_integrations.sql`
    - (lint Supabase) `psql -f scripts/09_lint_fixes.sql`
    - (lint Supabase) `psql -f scripts/10_fix_search_path.sql`
+  - (admin/support tables) `psql -f scripts/16_support_requests_global_admins_security.sql`
+  - (perfil do usuário) `psql -f scripts/11_users_phone.sql`
+  - (perfil do usuário) `psql -f scripts/12_profiles_phone.sql`
+  - (audit logs do app) `psql -f scripts/13_audit_logs.sql`
    Ou cole cada arquivo no editor SQL do Supabase e execute, verificando a cada etapa.
 
 ## Checklist de verificação (staging)

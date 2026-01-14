@@ -63,7 +63,7 @@ export default function TestMetricPage() {
           <h1 className="text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">
             Visão Global
           </h1>
-          <p className="text-(--tc-text-secondary,#4B5563) max-w-3xl">
+          <p className="text-(--tc-text-secondary,#4b5563) max-w-3xl">
             Visão executiva da Testing Company. Dados agregados de todas as empresas. Clique em uma empresa para entrar
             no contexto dela.
           </p>
@@ -71,19 +71,19 @@ export default function TestMetricPage() {
 
         <section className="grid gap-4 md:grid-cols-4">
           <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-5 shadow-sm">
-            <p className="text-sm text-(--tc-text-muted,#6B7280)">Aprovadas</p>
+            <p className="text-sm text-(--tc-text-muted,#6b7280)">Aprovadas</p>
             <p className="text-3xl font-bold text-emerald-600">{totals.approved}</p>
           </div>
           <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-5 shadow-sm">
-            <p className="text-sm text-(--tc-text-muted,#6B7280)">Falhas</p>
+            <p className="text-sm text-(--tc-text-muted,#6b7280)">Falhas</p>
             <p className="text-3xl font-bold text-red-500">{totals.failed}</p>
           </div>
           <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-5 shadow-sm">
-            <p className="text-sm text-(--tc-text-muted,#6B7280)">Neutras / Em andamento</p>
+            <p className="text-sm text-(--tc-text-muted,#6b7280)">Neutras / Em andamento</p>
             <p className="text-3xl font-bold text-amber-500">{totals.neutral}</p>
           </div>
           <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-5 shadow-sm">
-            <p className="text-sm text-(--tc-text-muted,#6B7280)">Qualidade média global</p>
+            <p className="text-sm text-(--tc-text-muted,#6b7280)">Qualidade média global</p>
             <p className="text-3xl font-extrabold text-(--tc-accent,#ef0001)">{totals.quality}%</p>
           </div>
         </section>
@@ -93,7 +93,7 @@ export default function TestMetricPage() {
           <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">Regressão</h3>
-              <span className="text-xs text-(--tc-text-muted,#6B7280)">Global</span>
+              <span className="text-xs text-(--tc-text-muted,#6b7280)">Global</span>
             </div>
             <div className="grid grid-cols-3 gap-2">
               <MetricPill label="Aprovadas" value={regression.approved} color="text-emerald-600" />
@@ -105,7 +105,7 @@ export default function TestMetricPage() {
           <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">Aceitação</h3>
-              <span className="text-xs text-(--tc-text-muted,#6B7280)">Global</span>
+              <span className="text-xs text-(--tc-text-muted,#6b7280)">Global</span>
             </div>
             <div className="grid grid-cols-3 gap-2">
               <MetricPill label="Aprovadas" value={acceptance.approved} color="text-emerald-600" />
@@ -120,7 +120,7 @@ export default function TestMetricPage() {
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Planos de teste (visão global)</h2>
-            <span className="text-xs text-(--tc-text-muted,#6B7280)">Progresso geral por plano</span>
+            <span className="text-xs text-(--tc-text-muted,#6b7280)">Progresso geral por plano</span>
           </div>
           <div className="grid gap-3 md:grid-cols-3">
             {testPlans.map((plan) => (
@@ -143,7 +143,7 @@ export default function TestMetricPage() {
             <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Empresas</h2>
           </div>
 
-          {loading && <p className="text-(--tc-text-muted,#6B7280)">Carregando...</p>}
+          {loading && <p className="text-(--tc-text-muted,#6b7280)">Carregando...</p>}
           {error && !loading && <p className="text-red-500 text-sm">{error}</p>}
 
           {!loading && !error && (
@@ -166,17 +166,17 @@ export default function TestMetricPage() {
                       {c.status ?? "ativo"}
                     </span>
                   </div>
-                  <div className="mt-2 text-sm text-(--tc-text-secondary,#4B5563) space-y-1">
+                  <div className="mt-2 text-sm text-(--tc-text-secondary,#4b5563) space-y-1">
                     <p>Runs: {c.releases ?? "—"}</p>
                     <p>Média de aprovação: {c.approval != null ? `${c.approval}%` : "—"}</p>
                   </div>
-                  <p className="mt-3 text-xs text-(--tc-text-muted,#6B7280) underline">
+                  <p className="mt-3 text-xs text-(--tc-text-muted,#6b7280) underline">
                     Entrar no dashboard
                   </p>
                 </Link>
               ))}
               {clients.length === 0 && (
-                <div className="rounded-xl border border-dashed border-(--tc-border,#e5e7eb) bg-white p-5 text-sm text-(--tc-text-muted,#6B7280)">
+                <div className="rounded-xl border border-dashed border-(--tc-border,#e5e7eb) bg-white p-5 text-sm text-(--tc-text-muted,#6b7280)">
                   Nenhuma empresa encontrada.
                 </div>
               )}
@@ -197,7 +197,7 @@ function calcPercent(a: number, b: number, c: number) {
 function MetricPill({ label, value, color }: { label: string; value: number; color?: string }) {
   return (
     <div className="rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#f6f8fb) p-3 text-center">
-      <p className="text-xs text-(--tc-text-muted,#6B7280)">{label}</p>
+      <p className="text-xs text-(--tc-text-muted,#6b7280)">{label}</p>
       <p className={`text-2xl font-bold ${color ?? "text-(--tc-text-primary,#0b1a3c)"}`}>{value}</p>
     </div>
   );

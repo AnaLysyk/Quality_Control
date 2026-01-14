@@ -3,15 +3,17 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { getAppMeta } from "@/lib/appMeta";
+import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
 
 type AdminRun = {
   slug: string;
   title: string;
   summary: string;
-  runId: number;
+  runId?: number;
   app: string;
   project?: string;
   radis?: string;
+  source?: "API" | "MANUAL";
 };
 
 const APP_COLOR_CLASS: Record<string, string> = {
@@ -46,9 +48,37 @@ export default function AdminRunsPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/releases", { cache: "no-store" });
-      const json = await res.json();
-      setItems(json.releases ?? []);
+      const [apiRes, manualRes] = await Promise.all([
+        fetch("/api/releases", { cache: "no-store" }),
+        fetch("/api/releases-manual", { cache: "no-store" }),
+      ]);
+
+      const apiJson = await apiRes.json().catch(() => ({}));
+      const apiList = Array.isArray(apiJson?.releases) ? (apiJson.releases as AdminRun[]) : [];
+
+      const manualJson = await manualRes.json().catch(() => []);
+      const manualRows = Array.isArray(manualJson) ? (manualJson as unknown[]) : [];
+      const manualList: AdminRun[] = [];
+      for (const row of manualRows) {
+        const r = (row ?? null) as Record<string, unknown> | null;
+        if (!r) continue;
+        const slug = typeof r.slug === "string" ? r.slug : "";
+        if (!slug) continue;
+        const name = typeof r.name === "string" ? r.name : typeof r.title === "string" ? r.title : slug;
+        const summary =
+          typeof r.observations === "string"
+            ? r.observations
+            : typeof r.summary === "string"
+              ? r.summary
+              : "Run manual";
+        const app = typeof r.app === "string" ? r.app : "SMART";
+        const runId = typeof r.runId === "number" ? r.runId : undefined;
+        manualList.push({ slug, title: name, summary, app, runId, source: "MANUAL" });
+      }
+
+      const merged = new Map<string, AdminRun>();
+      [...manualList, ...apiList.map((r) => ({ ...r, source: "API" as const }))].forEach((r) => merged.set(r.slug, r));
+      setItems(Array.from(merged.values()));
     } catch {
       setItems([]);
     } finally {
@@ -127,14 +157,19 @@ export default function AdminRunsPage() {
     }
   };
 
-  const handleDelete = async (slug: string) => {
+  const handleDelete = async (slug: string, source?: AdminRun["source"]) => {
     const confirmDelete = typeof window === "undefined" ? true : window.confirm("Remover esta run?");
     if (!confirmDelete) return;
-    await fetch("/api/releases", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug }),
-    });
+
+    if (source === "MANUAL") {
+      await fetch(`/api/releases-manual/${encodeURIComponent(slug)}`, { method: "DELETE" });
+    } else {
+      await fetch("/api/releases", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+    }
     setItems((prev) => prev.filter((item) => item.slug !== slug));
     setToast({ message: "Run removida.", type: "ok" });
   };
@@ -157,12 +192,19 @@ export default function AdminRunsPage() {
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c) p-6 md:p-10">
       <div className="max-w-5xl mx-auto space-y-8">
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.45em] text-(--tc-accent,#ef0001)">Gestão de Runs</p>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Gerenciar Runs</h1>
-          <p className="text-(--tc-text-secondary,#4B5563) max-w-3xl">
-            Cadastre runs salvando em arquivo JSON do painel. Informe o nome, o ID da run no Qase e o projeto (ex.: sfq)
-            para gerar a URL e permitir buscar estatisticas automaticamente.
-          </p>
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.45em] text-(--tc-accent,#ef0001)">Gestão de Runs</p>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Gerenciar Runs</h1>
+              <p className="text-(--tc-text-secondary,#4b5563) max-w-3xl">
+                Cadastre runs salvando em arquivo JSON do painel. Informe o nome, o ID da run no Qase e o projeto (ex.: sfq)
+                para gerar a URL e permitir buscar estatísticas automaticamente.
+              </p>
+            </div>
+            <div className="flex items-center">
+              <CreateManualReleaseButton />
+            </div>
+          </div>
         </div>
 
         <form
@@ -170,7 +212,7 @@ export default function AdminRunsPage() {
           className="grid gap-4 rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm md:grid-cols-[1fr_1fr_0.6fr_auto]"
         >
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-(--tc-text-secondary,#4B5563)">Nome da run</label>
+            <label className="text-sm text-(--tc-text-secondary,#4b5563)">Nome da run</label>
             <input
               value={title}
               onChange={(e) => {
@@ -178,13 +220,13 @@ export default function AdminRunsPage() {
                 setFeedback(null);
               }}
               placeholder="Ex.: SFQ v1.9.0 ACE"
-              className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-(--tc-text-primary,#011848) placeholder:text-(--tc-text-muted,#6B7280) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
+              className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-(--tc-text-primary,#011848) placeholder:text-(--tc-text-muted,#6b7280) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
             />
-            <p className="text-xs text-(--tc-text-muted,#6B7280)">Slug: {slugPreview}</p>
+            <p className="text-xs text-(--tc-text-muted,#6b7280)">Slug: {slugPreview}</p>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-(--tc-text-secondary,#4B5563)">ID da run no Qase</label>
+            <label className="text-sm text-(--tc-text-secondary,#4b5563)">ID da run no Qase</label>
             <input
               value={runId}
               onChange={(e) => {
@@ -192,12 +234,12 @@ export default function AdminRunsPage() {
                 setFeedback(null);
               }}
               placeholder="Ex.: 21"
-              className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-(--tc-text-primary,#011848) placeholder:text-(--tc-text-muted,#6B7280) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
+              className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-(--tc-text-primary,#011848) placeholder:text-(--tc-text-muted,#6b7280) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-(--tc-text-secondary,#4B5563)">Projeto (Qase)</label>
+            <label className="text-sm text-(--tc-text-secondary,#4b5563)">Projeto (Qase)</label>
             <select
               aria-label="Selecionar projeto do Qase"
               value={app}
@@ -214,12 +256,12 @@ export default function AdminRunsPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-(--tc-text-secondary,#4B5563)">RADIS</label>
+            <label className="text-sm text-(--tc-text-secondary,#4b5563)">RADIS</label>
             <input
               value={radis}
               onChange={(e) => setRadis(e.target.value)}
               placeholder="RADIS_3"
-              className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-(--tc-text-primary,#011848) placeholder:text-(--tc-text-muted,#6B7280) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
+              className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-(--tc-text-primary,#011848) placeholder:text-(--tc-text-muted,#6b7280) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
             />
           </div>
 
@@ -234,13 +276,13 @@ export default function AdminRunsPage() {
           </div>
 
           <div className="md:col-span-4">
-            <label className="text-sm text-(--tc-text-secondary,#4B5563)">Resumo</label>
+            <label className="text-sm text-(--tc-text-secondary,#4b5563)">Resumo</label>
             <textarea
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               rows={3}
               placeholder="Resumo curto (opcional)"
-              className="mt-2 w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-(--tc-text-primary,#011848) placeholder:text-(--tc-text-muted,#6B7280) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
+              className="mt-2 w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-(--tc-text-primary,#011848) placeholder:text-(--tc-text-muted,#6b7280) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
             />
           </div>
 
@@ -258,7 +300,7 @@ export default function AdminRunsPage() {
         <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 space-y-5 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Runs cadastradas</h2>
-            <div className="flex items-center gap-2 text-sm text-(--tc-text-secondary,#4B5563)">
+            <div className="flex items-center gap-2 text-sm text-(--tc-text-secondary,#4b5563)">
               <label className="flex items-center gap-1">
                 <span className="text-xs">por pagina</span>
                 <select
@@ -298,71 +340,82 @@ export default function AdminRunsPage() {
             </div>
           </div>
 
-          {loading ? (
-            <p className="text-(--tc-text-muted,#6B7280)">Carregando...</p>
-          ) : sortedItems.length === 0 ? (
-            <p className="text-(--tc-text-muted,#6B7280)">Nenhuma run salva ainda.</p>
-          ) : (
-            <div className="space-y-4">
-              {pagedItems.map((item) => {
+        {loading ? (
+          <p className="text-(--tc-text-muted,#6b7280)">Carregando...</p>
+        ) : sortedItems.length === 0 ? (
+          <p className="text-(--tc-text-muted,#6b7280)">Nenhuma run salva ainda.</p>
+        ) : (
+          <div className="grid gap-4">
+            {pagedItems.map((item) => {
                 const chipKey = (item.app ?? item.project ?? "smart").toLowerCase();
                 const meta = getAppMeta(chipKey, chipKey.toUpperCase());
                 const chipText = meta.label ?? (item.app ?? item.project ?? "APP").toUpperCase();
                 const appTagClass = APP_COLOR_CLASS[chipKey] ?? "app-color-default";
                 const titleClean = (item.title ?? "").replace(/^run\s*/i, "");
                 return (
-                  <div
-                    key={item.slug}
-                    className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-5 space-y-3 shadow-sm"
-                  >
-                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                      <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
-                        <span className={`app-tag text-[12px] ${appTagClass}`}>
-                          {chipText}
+                <div
+                  key={item.slug}
+                  className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-5 space-y-4 shadow-sm transition hover:border-(--tc-accent,#ef0001)/60 hover:shadow-lg"
+                >
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-1 flex-wrap items-center gap-2 text-xs font-semibold">
+                      <span className={`app-tag text-[12px] ${appTagClass}`}>{chipText}</span>
+                      {item.radis && (
+                        <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-3 py-1 uppercase text-(--page-text,#0b1a3c)">
+                          RADIS: {item.radis}
                         </span>
-                        {item.radis && (
-                          <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-3 py-1 uppercase text-(--page-text,#0b1a3c)">
-                            RADIS: {item.radis}
-                          </span>
-                        )}
+                      )}
+                      {item.runId ? (
                         <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-3 py-1 text-(--page-text,#0b1a3c)">
                           Run {item.runId}
                         </span>
-                        <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-3 py-1 truncate max-w-60 text-(--page-text,#0b1a3c)">
-                          Slug: /run/{item.slug}
+                      ) : (
+                        <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-3 py-1 text-(--page-text,#0b1a3c)">
+                          Manual
                         </span>
-                      </div>
-                      <div className="flex gap-2">
-                        <a
-                          href={`/run/${item.slug}`}
-                          className="rounded-lg border border-(--tc-accent,#ef0001)/70 px-4 py-2 text-sm font-semibold text-(--tc-accent,#ef0001) transition hover:bg-(--tc-accent-soft,rgba(239,0,1,0.12))"
-                        >
-                          Abrir
-                        </a>
-                        <button
-                          onClick={() => handleDelete(item.slug)}
-                          className="rounded-lg border border-red-400/60 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-500/10"
-                        >
-                          Deletar
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <h3 className="text-lg font-semibold text-(--page-text,#0b1a3c)">{titleClean}</h3>
-                      {item.summary && <p className="text-sm text-(--tc-text-secondary,#4B5563)">{item.summary}</p>}
-                      {!item.summary && (
-                        <p className="text-sm text-(--tc-text-secondary,#4B5563) opacity-70">Sem resumo informado.</p>
                       )}
+                      <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-3 py-1 truncate max-w-52 text-(--page-text,#0b1a3c)">
+                        Slug: /release/{item.slug}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <a
+                        href={`/release/${item.slug}`}
+                        aria-label={`Abrir release ${titleClean || item.slug}`}
+                        className="rounded-lg border border-(--tc-accent,#ef0001)/70 px-4 py-2 text-sm font-semibold text-(--tc-accent,#ef0001) transition hover:bg-(--tc-accent-soft,rgba(239,0,1,0.12)) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
+                      >
+                        Abrir
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(item.slug, item.source)}
+                        aria-label={`Deletar release ${titleClean || item.slug}`}
+                        className="rounded-lg border border-red-400/60 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-300"
+                      >
+                        Deletar
+                      </button>
                     </div>
                   </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-(--page-text,#0b1a3c)">{titleClean}</h3>
+                    <p className="text-sm text-(--tc-text-secondary,#4b5563) leading-snug">
+                      {item.summary || "Sem resumo informado."}
+                    </p>
+                    <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
+                      <span>Slug: {item.slug}</span>
+                      <span>Run ID: {item.runId ?? "--"}</span>
+                      {item.radis && <span>RADIS: {item.radis}</span>}
+                    </div>
+                  </div>
+                </div>
                 );
               })}
             </div>
           )}
 
-          <div className="flex items-center justify-between text-sm text-(--tc-text-secondary,#4B5563) pt-2">
-            <span>{sortedItems.length} itens</span>
+          <div className="flex flex-col gap-1 text-sm text-(--tc-text-secondary,#4b5563) pt-2 md:flex-row md:items-center md:justify-between">
+            <span>Mostrando {pagedItems.length} de {sortedItems.length} itens</span>
             <div />
           </div>
         </div>

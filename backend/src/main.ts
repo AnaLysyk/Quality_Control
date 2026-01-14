@@ -2,6 +2,7 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { config } from "dotenv";
 import * as cookieParser from "cookie-parser";
+import { EnvironmentService } from "./config/environment.service";
 
 config();
 
@@ -11,17 +12,14 @@ async function bootstrap() {
   app.setGlobalPrefix("api");
   app.use(cookieParser());
 
-  const originList =
-    process.env.CORS_ORIGIN?.split(",")
-      .map((v) => v.trim())
-      .filter(Boolean) || [];
-  const origin = originList.length > 0 ? originList : true;
+  const env = app.get(EnvironmentService);
+  const origin = env.getCorsOrigins();
   app.enableCors({
     origin,
     credentials: true,
   });
 
-  const port = process.env.PORT || 8080;
+  const port = env.getPort();
   await app.listen(port);
   console.log(`Backend running on http://localhost:${port}`);
 }

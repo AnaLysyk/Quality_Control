@@ -1,7 +1,14 @@
 import { getAllReleases } from "@/release/data";
+import { getAllManualReleases } from "@/release/manualData";
 import { getRunDetails } from "@/services/qase";
 import DashboardClient from "./DashboardClient";
 import { getAppMeta } from "@/lib/appMeta";
+import { getSupabaseServer } from "@/lib/supabaseServer";
+import type { Release } from "@/types/release";
+import { promises as fs } from "fs";
+import path from "path";
+
+export const runtime = "nodejs";
 
 type Stats = { pass: number; fail: number; blocked: number; notRun: number };
 type ReleaseType = "aceitacao" | "regressao" | "outro";
@@ -138,6 +145,8 @@ function evaluateQualityGate(stats: Stats, thresholds: QualityGateThresholds): Q
 
 export const dynamic = "force-dynamic";
 
+const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+
 type DashboardPageProps = {
   header?: {
     kicker?: string;
@@ -145,31 +154,154 @@ type DashboardPageProps = {
     description?: string;
   };
   showHeader?: boolean;
+  companySlug?: string;
+  mode?: "full" | "metrics" | "overview";
 };
 
-export default async function DashboardPage({ header, showHeader = true }: DashboardPageProps) {
-  const releases = await getAllReleases();
+function parseProjectCodes(value: unknown): string[] {
+  const normalize = (code: string) => code.trim().toUpperCase();
+
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === "string")
+      .map(normalize)
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(/[\s,;|]+/g)
+      .map(normalize)
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+async function resolveCompanyScope(companySlug: string): Promise<{ clientId: string | null; projectCodes: string[] }> {
+  if (SUPABASE_MOCK) {
+    try {
+      const filePath = path.join(process.cwd(), "data", "mock-clients.json");
+      const raw = await fs.readFile(filePath, "utf8");
+      const parsed = JSON.parse(raw);
+      const rows = Array.isArray(parsed) ? (parsed as Array<Record<string, unknown>>) : [];
+      const match =
+        rows.find((row) => typeof row?.slug === "string" && row.slug === companySlug) ??
+        rows.find((row) => typeof row?.id === "string" && row.id === companySlug) ??
+        null;
+
+      const clientId = typeof match?.id === "string" ? match.id : null;
+      const fromSingle = parseProjectCodes(match?.qase_project_code);
+      const fromMulti = parseProjectCodes(match?.qase_project_codes);
+      const projectCodes = Array.from(new Set([...fromSingle, ...fromMulti]));
+
+      return { clientId, projectCodes };
+    } catch {
+      return { clientId: null, projectCodes: [] };
+    }
+  }
+
+  try {
+    const supabase = getSupabaseServer();
+    const primary = await supabase
+      .from("cliente")
+      .select("id,slug,qase_project_code,qase_project_codes")
+      .or(`slug.eq.${companySlug},id.eq.${companySlug}`)
+      .limit(1)
+      .maybeSingle();
+
+    if (!primary.error) {
+      const data = primary.data as Record<string, unknown> | null;
+      const clientId = data?.id;
+      const fromSingle = parseProjectCodes(data?.qase_project_code);
+      const fromMulti = parseProjectCodes(data?.qase_project_codes);
+      const projectCodes = Array.from(new Set([...fromSingle, ...fromMulti]));
+      return {
+        clientId: typeof clientId === "string" && clientId.trim() ? clientId : null,
+        projectCodes,
+      };
+    }
+
+    // Legacy schema fallback (no qase_project_codes column)
+    const legacy = await supabase
+      .from("cliente")
+      .select("id,slug,qase_project_code")
+      .or(`slug.eq.${companySlug},id.eq.${companySlug}`)
+      .limit(1)
+      .maybeSingle();
+
+    const clientId = (legacy.data as { id?: unknown } | null)?.id;
+    const projectRaw = (legacy.data as { qase_project_code?: unknown } | null)?.qase_project_code;
+    return {
+      clientId: typeof clientId === "string" && clientId.trim() ? clientId : null,
+      projectCodes: parseProjectCodes(projectRaw),
+    };
+  } catch {
+    return { clientId: null, projectCodes: [] };
+  }
+}
+
+export default async function DashboardPage({ header, showHeader = true, companySlug, mode = "overview" }: DashboardPageProps) {
+  const [releasesAll, manualReleasesAll] = await Promise.all([getAllReleases(), getAllManualReleases()]);
+  const companyScope = companySlug ? await resolveCompanyScope(companySlug) : null;
+  const releases = companySlug
+    ? releasesAll.filter((r) => {
+        const project = typeof r.qaseProject === "string" ? r.qaseProject.toUpperCase() : null;
+        const matchesProject = project ? (companyScope?.projectCodes ?? []).includes(project) : false;
+        const matchesClient =
+          companyScope?.clientId && typeof r.clientId === "string" ? r.clientId === companyScope.clientId : false;
+
+        // In mock mode, when a company has no project codes configured yet, prefer showing all API releases
+        // so the Métricas page doesn't look empty during dev.
+        if (SUPABASE_MOCK && (companyScope?.projectCodes?.length ?? 0) === 0 && !companyScope?.clientId) {
+          return true;
+        }
+
+        return matchesClient || matchesProject;
+      })
+    : releasesAll;
+  const manualReleases = companySlug
+    ? (manualReleasesAll as Release[]).filter((r) => (r.clientSlug ?? null) === companySlug)
+    : manualReleasesAll;
   const thresholds = getQualityGateThresholds();
 
-  const enriched = await Promise.all(
+  const normalizeManualAppKey = (value: Release["app"] | string | undefined) => {
+    const raw = (value ?? "smart").toString().trim().toLowerCase();
+    if (raw === "cidadao smart") return "cidadao-smart";
+    return raw;
+  };
+
+  const apiEnriched = await Promise.all(
     releases.map(async (rel) => {
       const projectKey = rel.project ?? rel.app ?? "smart";
       const projectCode = rel.qaseProject ?? (projectKey === "smart" ? "SFQ" : projectKey.toUpperCase());
-      const appMeta = getAppMeta(projectKey, projectCode);
+      const appKey = projectCode;
+      const appMeta = getAppMeta(appKey, projectCode);
       let stats: Stats = { pass: 0, fail: 0, blocked: 0, notRun: 0 };
 
-      try {
-        const run = await getRunDetails(projectCode, rel.runId);
-        if (run) {
-          stats = {
-            pass: run.pass,
-            fail: run.fail,
-            blocked: run.blocked,
-            notRun: run.notRun,
-          };
+      const manualStats = rel.manualSummary;
+
+      if (manualStats) {
+        stats = {
+          pass: manualStats.pass,
+          fail: manualStats.fail,
+          blocked: manualStats.blocked,
+          notRun: manualStats.notRun,
+        };
+      } else {
+        try {
+          const run = await getRunDetails(projectCode, rel.runId);
+          if (run) {
+            stats = {
+              pass: run.pass,
+              fail: run.fail,
+              blocked: run.blocked,
+              notRun: run.notRun,
+            };
+          }
+        } catch (error) {
+          console.error(`Erro ao buscar stats da run ${rel.runId}:`, error);
         }
-      } catch (error) {
-        console.error(`Erro ao buscar stats da run ${rel.runId}:`, error);
       }
 
       const total = stats.pass + stats.fail + stats.blocked + stats.notRun;
@@ -179,7 +311,7 @@ export default async function DashboardPage({ header, showHeader = true }: Dashb
       const type = inferReleaseType(rel.slug, rel.title);
 
       return {
-        app: projectKey,
+        app: appKey,
         appLabel: appMeta.label,
         appColor: appMeta.color,
         slug: rel.slug,
@@ -195,13 +327,60 @@ export default async function DashboardPage({ header, showHeader = true }: Dashb
     })
   );
 
+  const manualEnriched = manualReleases.map((rel) => {
+    const projectKey = normalizeManualAppKey(rel.app);
+    const projectCode = projectKey === "smart" ? "SFQ" : projectKey.toUpperCase();
+    const appKey = projectCode;
+    const appMeta = getAppMeta(appKey, projectCode);
+    const stats: Stats = {
+      pass: rel.stats.pass,
+      fail: rel.stats.fail,
+      blocked: rel.stats.blocked,
+      notRun: rel.stats.notRun,
+    };
+
+    const total = stats.pass + stats.fail + stats.blocked + stats.notRun;
+    const percent = total > 0 ? Math.round((stats.pass / total) * 100) : 0;
+    const dateValue = rel.createdAt ? new Date(rel.createdAt).getTime() : 0;
+    const gate = evaluateQualityGate(stats, thresholds);
+    const title = (rel.name ?? "").toString().trim() || rel.slug;
+    const type = inferReleaseType(rel.slug, title);
+
+    return {
+      app: appKey,
+      appLabel: appMeta.label,
+      appColor: appMeta.color,
+      slug: rel.slug,
+      title,
+      createdAt: rel.createdAt,
+      createdAtValue: dateValue,
+      stats,
+      percent,
+      appMeta,
+      gate,
+      type,
+    };
+  });
+
+  const enriched = Array.from(
+    new Map<string, (typeof apiEnriched)[number]>(
+      [...manualEnriched, ...apiEnriched].map((item) => [item.slug, item])
+    ).values()
+  );
+
   const grouped = enriched.reduce((acc: Record<string, typeof enriched>, item) => {
     if (!acc[item.app]) acc[item.app] = [];
     acc[item.app].push(item);
     return acc;
   }, {});
 
-  const sections = Object.entries(grouped).map(([app, items]) => {
+  const desiredApps =
+    companySlug && (companyScope?.projectCodes?.length ?? 0) > 0
+      ? companyScope!.projectCodes
+      : Object.keys(grouped);
+
+  const sections = desiredApps.map((app) => {
+    const items = grouped[app] ?? [];
     const sorted = [...items].sort((a, b) => b.createdAtValue - a.createdAtValue);
     const meta = getAppMeta(app);
     return {
@@ -241,25 +420,43 @@ export default async function DashboardPage({ header, showHeader = true }: Dashb
     thresholds,
   };
 
-  const executiveReleases: ExecutiveRelease[] = [...enriched].sort((a, b) => {
-    const order = { fail: 0, warn: 1, pass: 2, no_data: 3 } as const;
-    const statusDiff = order[a.gate.status] - order[b.gate.status];
-    if (statusDiff !== 0) return statusDiff;
-    return b.createdAtValue - a.createdAtValue;
-  });
+  const executiveReleases: ExecutiveRelease[] | null =
+    mode !== "metrics"
+      ? [...enriched].sort((a, b) => {
+          const order = { fail: 0, warn: 1, pass: 2, no_data: 3 } as const;
+          const statusDiff = order[a.gate.status] - order[b.gate.status];
+          if (statusDiff !== 0) return statusDiff;
+          return b.createdAtValue - a.createdAtValue;
+        })
+      : null;
 
-  const resolvedHeader = header ?? {
-    kicker: "Testing Metric",
-    title: "Dashboard Executivo",
-    description: "Releases com quality gate consolidado e leitura rapida das runs mais criticas.",
-  };
+  const resolvedHeader = header ??
+    (mode === "metrics"
+      ? {
+          kicker: "Métricas",
+          title: "Métricas por aplicação",
+          description: "Carrosseis com graficos e estatisticas por run, separados por aplicação.",
+        }
+      : mode === "overview"
+        ? {
+            kicker: "Dashboard",
+            title: "Resumo executivo",
+            description: "Visão consolidada sem os gráficos. Os detalhes por aplicação ficam em Métricas.",
+          }
+      : {
+          kicker: "Testing Metric",
+          title: "Dashboard Executivo",
+          description: "Releases com quality gate consolidado e leitura rapida das runs mais criticas.",
+        });
 
   return (
     <DashboardClient
       sections={sections}
       header={resolvedHeader}
       showHeader={showHeader}
-      executive={{ summary, releases: executiveReleases }}
+      executive={mode !== "metrics" && executiveReleases ? { summary, releases: executiveReleases } : undefined}
+      showMetricsSection={mode !== "overview"}
+      metricsHref={companySlug ? `/empresas/${encodeURIComponent(companySlug)}/metricas` : "/metricas"}
     />
   );
 }

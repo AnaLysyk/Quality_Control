@@ -41,3 +41,8 @@ backend/ (Nest):
 
 ## Run modes
 - SUPABASE_MOCK=true bypasses external services for local/CI.
+
+## Backend tooling and docs
+- The Nest backend lives in `backend/` with `tsconfig.json` configured for strict checks, incremental builds, and `forceConsistentCasingInFileNames` so Windows/Linux layouts stay in sync.
+- The app API folder (`app/api/`) now includes BFF routes such as `/api/empresas/[slug]/defeitos` and `/api/empresas/[slug]/runs`, which fetch Qase defects and run metadata via `lib/qaseConfig` + `lib/qaseRuns.ts` before merging manual records.
+- Keep the README/Architecture docs updated whenever new backends APIs or tokens are required; the current flow relies on `QASE_TOKEN`/`QASE_PROJECT` as fallbacks for quick local testing.

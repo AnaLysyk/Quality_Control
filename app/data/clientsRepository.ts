@@ -22,6 +22,11 @@ export async function getClientById(id: string): Promise<Client | null> {
   return rows[0] ?? null;
 }
 
+export async function getClientBySlug(slug: string): Promise<Client | null> {
+  const { rows } = await sql<Client>`select * from clients where slug = ${slug} limit 1`;
+  return rows[0] ?? null;
+}
+
 export async function createClient(data: { name: string; slug: string; logo_url?: string | null; description?: string | null }): Promise<Client> {
   const { rows } = await sql<Client>`
     insert into clients (name, slug, logo_url, description, active, created_at, updated_at)

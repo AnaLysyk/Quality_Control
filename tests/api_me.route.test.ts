@@ -1,25 +1,12 @@
 import { GET } from "@/api/me/route";
+import { buildQueryResponse, createSupabaseServerMock, resetSupabaseServerMock } from "./utils/supabaseMock";
 
-jest.mock("@/lib/supabaseServer", () => {
-  const auth = { getUser: jest.fn() };
-  const from = jest.fn();
-  const supabaseServer = { auth, from };
-  return { supabaseServer, getSupabaseServer: () => supabaseServer };
-});
+const supabaseServer = createSupabaseServerMock();
 
-const supabaseServer = jest.requireMock("@/lib/supabaseServer").supabaseServer as {
-  auth: { getUser: jest.Mock };
-  from: jest.Mock;
-};
-
-function buildQueryResponse(response: { data: any; error: any }) {
-  return {
-    select: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockReturnThis(),
-    maybeSingle: jest.fn().mockResolvedValue(response),
-  };
-}
+jest.mock("@/lib/supabaseServer", () => ({
+  supabaseServer,
+  getSupabaseServer: () => supabaseServer,
+}));
 
 function requestWithAuth(url: string, token = "token") {
   return new Request(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -27,8 +14,7 @@ function requestWithAuth(url: string, token = "token") {
 
 describe("/api/me route", () => {
   beforeEach(() => {
-    supabaseServer.auth.getUser.mockReset();
-    supabaseServer.from.mockReset();
+    resetSupabaseServerMock(supabaseServer);
   });
 
   it("retorna 401 se não autenticado", async () => {
@@ -45,6 +31,12 @@ describe("/api/me route", () => {
     supabaseServer.from.mockImplementation((table: string) => {
       if (table === "profiles") {
         return buildQueryResponse({ data: { full_name: "Ana", avatar_url: "http://img", is_global_admin: false }, error: null });
+      }
+      if (table === "user_clients") {
+        return buildQueryResponse({
+          data: [{ client_id: "griaule", client_slug: "griaule", active: true }],
+          error: null,
+        });
       }
       return buildQueryResponse({ data: null, error: null });
     });

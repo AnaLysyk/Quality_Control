@@ -38,6 +38,24 @@ function toArray(body: unknown): TestCaseCard[] {
   return body ? [body as TestCaseCard] : [];
 }
 
+function normalizeStatus(value: unknown): TestCaseCard["status"] {
+  if (typeof value !== "string") return "NOT_RUN";
+  const raw = value.trim();
+  if (!raw) return "NOT_RUN";
+  const upper = raw.toUpperCase();
+  if (upper === "PASS" || upper === "PASSED") return "PASS";
+  if (upper === "FAIL" || upper === "FAILED") return "FAIL";
+  if (upper === "BLOCKED") return "BLOCKED";
+  if (upper === "NOTRUN" || upper === "NOT_RUN" || upper === "NOT RUN" || upper === "UNTESTED") return "NOT_RUN";
+
+  const lower = raw.toLowerCase();
+  if (lower === "pass") return "PASS";
+  if (lower === "fail") return "FAIL";
+  if (lower === "blocked") return "BLOCKED";
+  if (lower === "notrun" || lower === "not_run" || lower === "not run" || lower === "notRun".toLowerCase()) return "NOT_RUN";
+  return "NOT_RUN";
+}
+
 export async function GET(_: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const store = await readStore();
@@ -48,10 +66,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   try {
     const { slug } = await params;
     const body = await req.json();
-    const incoming = toArray(body).map((card) => ({
-      ...card,
-      fromApi: Boolean(card.fromApi),
-    }));
+    const incoming = toArray(body)
+      .map((card) => ({
+        ...card,
+        fromApi: Boolean(card.fromApi),
+        status: normalizeStatus((card as unknown as Record<string, unknown>).status),
+      }))
+      .filter((card) => Boolean(card.id) && Boolean(card.title));
     const store = await readStore();
     store[slug] = [...(store[slug] ?? []), ...incoming];
     await writeStore(store);
@@ -66,10 +87,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
   try {
     const { slug } = await params;
     const body = await req.json();
-    const incoming = toArray(body).map((card) => ({
-      ...card,
-      fromApi: Boolean(card.fromApi),
-    }));
+    const incoming = toArray(body)
+      .map((card) => ({
+        ...card,
+        fromApi: Boolean(card.fromApi),
+        status: normalizeStatus((card as unknown as Record<string, unknown>).status),
+      }))
+      .filter((card) => Boolean(card.id));
     const store = await readStore();
     const current = store[slug] ?? [];
 

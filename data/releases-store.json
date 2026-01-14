@@ -24,5 +24,23 @@
     "order": [
       "booking"
     ]
+  },
+  {
+    "slug": "v1_8_0_reg",
+    "title": "Release 1.8.0 - Regressao",
+    "summary": "Execucao completa do ciclo de regressao 1.8.0.",
+    "runId": 17,
+    "project": "smart",
+    "app": "smart",
+    "qaseProject": "SFQ",
+    "radis": "RADIS_1",
+    "order": [
+      "smart"
+    ],
+    "createdAt": "2025-11-19T00:00:00.000Z",
+    "status": "ACTIVE",
+    "source": "API",
+    "clientId": null,
+    "clientName": null
   }
 ]

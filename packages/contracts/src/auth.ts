@@ -84,6 +84,8 @@ export const AuthUserSchema = z
     role: z.string().optional().nullable(),
     clientId: z.string().optional().nullable(),
     clientSlug: z.string().optional().nullable(),
+    defaultClientSlug: z.string().optional().nullable(),
+    clientSlugs: z.array(z.string().min(1)).optional(),
     isGlobalAdmin: z.boolean().optional(),
     is_global_admin: z.boolean().optional(),
   })
@@ -91,9 +93,19 @@ export const AuthUserSchema = z
 
 export type AuthUser = z.infer<typeof AuthUserSchema>;
 
+export const AuthMeErrorSchema = z
+  .object({
+    code: z.string().trim().min(1).max(64),
+    message: z.string().optional().nullable(),
+  })
+  .strip();
+
+export type AuthMeError = z.infer<typeof AuthMeErrorSchema>;
+
 export const AuthMeResponseSchema = z
   .object({
     user: AuthUserSchema.nullable(),
+    error: AuthMeErrorSchema.optional().nullable(),
   })
   .strip();
 

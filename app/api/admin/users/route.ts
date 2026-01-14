@@ -1,7 +1,8 @@
 import { createHash, randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
+import { requireGlobalAdmin } from "@/lib/rbac/requireGlobalAdmin";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -17,12 +18,28 @@ type RoleOption =
   | "client_member";
 type NormalizedRole = "global_admin" | "client_admin" | "client_user";
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
+}
+
 const sanitize = (value: unknown, max = 255) => {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
   return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
 };
+
+function isRoleOption(value: string | null): value is RoleOption {
+  return (
+    value === "global_admin" ||
+    value === "client_admin" ||
+    value === "client_user" ||
+    value === "client_owner" ||
+    value === "client_manager" ||
+    value === "client_member"
+  );
+}
 
 const normalizeRole = (value?: string | null): NormalizedRole => {
   if (value === "global_admin") return "global_admin";
@@ -34,21 +51,9 @@ const normalizeRole = (value?: string | null): NormalizedRole => {
 
 const requiresClient = (role: NormalizedRole) => role !== "global_admin";
 
-async function extractToken(req: NextRequest): Promise<string | null> {
-  const auth = req.headers.get("authorization");
-  if (auth?.toLowerCase().startsWith("bearer ")) {
-    const token = auth.slice("bearer ".length).trim();
-    if (token) return token;
-  }
-  const store = await cookies();
-  return store.get("sb-access-token")?.value || store.get("auth_token")?.value || null;
-}
-
-function createSupabaseUser(token?: string | null) {
-  const headers = token && token.length > 0 ? { Authorization: `Bearer ${token}` } : undefined;
+function createSupabaseAuth() {
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
-    global: headers ? { headers } : undefined,
   });
 }
 
@@ -59,32 +64,17 @@ function createSupabaseService() {
 }
 
 async function requireAdmin(req: NextRequest) {
-  if (SUPABASE_MOCK) {
-    return { id: "mock-admin", email: "admin@example.com", token: "mock-token" };
-  }
-
-  const token = await extractToken(req);
-  if (!token) return null;
-
-  const supabase = createSupabaseUser(token);
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data?.user) return null;
-
   const service = createSupabaseService();
-  const { data: profile, error: profileError } = await service
-    .from("profiles")
-    .select("is_global_admin,role")
-    .eq("id", data.user.id)
-    .maybeSingle();
+  const authClient = createSupabaseAuth();
 
-  const isAdmin =
-    profile?.is_global_admin === true ||
-    profile?.role === "global_admin" ||
-    (data.user.app_metadata as any)?.role === "admin";
+  const admin = await requireGlobalAdmin(req, {
+    supabaseAdmin: service,
+    supabaseAuth: authClient,
+    mockAdmin: { id: "mock-admin", email: "admin@example.com", token: "mock-token" },
+  });
 
-  if (profileError || !isAdmin) return null;
-
-  return { id: data.user.id, email: data.user.email ?? "", token };
+  if (!admin) return null;
+  return { id: admin.id, email: admin.email };
 }
 
 function randomPassword() {
@@ -96,18 +86,21 @@ async function handleCreate(req: NextRequest) {
     const admin = await requireAdmin(req);
     if (!admin) return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
+    const body = (await req.json().catch(() => null)) as unknown;
+    const bodyRecord = asRecord(body);
+    if (!bodyRecord) {
       return NextResponse.json({ error: "Payload invalido" }, { status: 400 });
     }
 
-    const name = sanitize((body as any).name);
-    const email = sanitize((body as any).email);
-    const clientId = sanitize((body as any).client_id);
-    const roleInput = sanitize((body as any).role) as RoleOption | null;
-    const jobTitle = sanitize((body as any).job_title);
-    const linkedin = sanitize((body as any).linkedin_url, 500);
-    const password = sanitize((body as any).password, 128);
+    const name = sanitize(bodyRecord.name);
+    const email = sanitize(bodyRecord.email);
+    const clientId = sanitize(bodyRecord.client_id);
+    const roleRaw = sanitize(bodyRecord.role);
+    const roleInput = isRoleOption(roleRaw) ? roleRaw : null;
+    const jobTitle = sanitize(bodyRecord.job_title);
+    const linkedin = sanitize(bodyRecord.linkedin_url, 500);
+    const avatarUrl = sanitize(bodyRecord.avatar_url, 1000);
+    const password = sanitize(bodyRecord.password, 128);
 
     if (!name || !email) {
       return NextResponse.json({ error: "Nome e email sao obrigatorios" }, { status: 400 });
@@ -139,7 +132,7 @@ async function handleCreate(req: NextRequest) {
       return NextResponse.json({ error: "Falha ao criar usuario no Supabase" }, { status: 500 });
     }
 
-    const record = {
+    const userRecord = {
       id: randomUUID(),
       name,
       email,
@@ -149,11 +142,12 @@ async function handleCreate(req: NextRequest) {
       password_hash: passwordHash,
       job_title: jobTitle,
       linkedin_url: linkedin,
+      avatar_url: avatarUrl ?? null,
       auth_user_id: authUserId,
       is_global_admin: normalizedRole === "global_admin",
     };
 
-    const { error: insertError } = await supabaseService.from("users").insert(record);
+    const { error: insertError } = await supabaseService.from("users").insert(userRecord);
 
     if (insertError) {
       try {
@@ -168,13 +162,27 @@ async function handleCreate(req: NextRequest) {
       );
     }
 
+    if (normalizedRole === "global_admin") {
+      await supabaseService.from("global_admins").insert({ user_id: authUserId });
+    }
+
+    await addAuditLogSafe({
+      actorUserId: admin.id,
+      actorEmail: admin.email,
+      action: "user.created",
+      entityType: "user",
+      entityId: userRecord.id,
+      entityLabel: userRecord.email,
+      metadata: { role: userRecord.role, client_id: userRecord.client_id, invited: true },
+    });
+
     return NextResponse.json(
       {
-        id: record.id,
-        name: record.name,
-        email: record.email,
-        role: record.role,
-        client_id: record.client_id,
+        id: userRecord.id,
+        name: userRecord.name,
+        email: userRecord.email,
+        role: userRecord.role,
+        client_id: userRecord.client_id,
         invited: true,
       },
       { status: 201 },
@@ -191,35 +199,38 @@ async function handleUpdate(req: NextRequest) {
     if (!admin) return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
 
     if (SUPABASE_MOCK) {
-      const body = await req.json().catch(() => null);
-      if (!body?.id) {
+      const body = (await req.json().catch(() => null)) as unknown;
+      const record = asRecord(body);
+      if (!record?.id) {
         return NextResponse.json({ error: "ID obrigatorio" }, { status: 400 });
       }
       return NextResponse.json(
         {
-          ...body,
+          ...record,
           tempPassword: undefined,
         },
         { status: 200 },
       );
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
+    const body = (await req.json().catch(() => null)) as unknown;
+    const record = asRecord(body);
+    if (!record) {
       return NextResponse.json({ error: "Payload invalido" }, { status: 400 });
     }
 
-    const id = sanitize((body as any).id);
+    const id = sanitize(record.id);
     if (!id) return NextResponse.json({ error: "ID obrigatorio" }, { status: 400 });
 
-    const name = sanitize((body as any).name);
-    const email = sanitize((body as any).email);
-    const clientId = sanitize((body as any).client_id);
-    const roleInput = sanitize((body as any).role) as RoleOption | null;
-    const jobTitle = sanitize((body as any).job_title);
-    const linkedin = sanitize((body as any).linkedin_url, 500);
-    const password = sanitize((body as any).password, 128);
-    const active = typeof (body as any).active === "boolean" ? (body as any).active : undefined;
+    const name = sanitize(record.name);
+    const email = sanitize(record.email);
+    const clientId = sanitize(record.client_id);
+    const roleRaw = sanitize(record.role);
+    const roleInput = isRoleOption(roleRaw) ? roleRaw : null;
+    const jobTitle = sanitize(record.job_title);
+    const linkedin = sanitize(record.linkedin_url, 500);
+    const password = sanitize(record.password, 128);
+    const active = typeof record.active === "boolean" ? record.active : undefined;
 
     const normalizedRole: NormalizedRole | undefined = roleInput ? normalizeRole(roleInput) : undefined;
 
@@ -253,6 +264,28 @@ async function handleUpdate(req: NextRequest) {
     if (error) {
       return NextResponse.json({ error: "Falha ao atualizar usuario" }, { status: 500 });
     }
+
+    if (normalizedRole) {
+      const updated = data as unknown as { auth_user_id?: unknown } | null;
+      const authUserId = typeof updated?.auth_user_id === "string" ? updated.auth_user_id : null;
+      if (authUserId) {
+        if (normalizedRole === "global_admin") {
+          await supabaseService.from("global_admins").insert({ user_id: authUserId });
+        } else {
+          await supabaseService.from("global_admins").delete().eq("user_id", authUserId);
+        }
+      }
+    }
+
+    await addAuditLogSafe({
+      actorUserId: admin.id,
+      actorEmail: admin.email,
+      action: "user.updated",
+      entityType: "user",
+      entityId: id,
+      entityLabel: typeof (data as any)?.email === "string" ? (data as any).email : null,
+      metadata: { updates: Object.keys(updates) },
+    });
 
     return NextResponse.json(data, { status: 200 });
   } catch (err) {
@@ -293,7 +326,7 @@ export async function GET(req: NextRequest) {
     const supabaseService = createSupabaseService();
     const query = supabaseService
       .from("users")
-      .select("id,name,email,role,client_id,job_title,linkedin_url,active")
+      .select("id,name,email,role,client_id,job_title,linkedin_url,active,avatar_url")
       .order("name", { ascending: true });
 
     if (clientId) query.eq("client_id", clientId);
@@ -315,9 +348,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (SUPABASE_MOCK) {
     try {
-      const body = await req.json().catch(() => ({} as Record<string, any>));
-      const { name, email, role = "client_user", client_id, job_title, linkedin_url } = body ?? {};
-      const normalizedRole = normalizeRole(role);
+      const body = (await req.json().catch(() => null)) as unknown;
+      const record = asRecord(body) ?? {};
+
+      const name = sanitize(record.name);
+      const email = sanitize(record.email);
+      const roleRaw = sanitize(record.role) ?? "client_user";
+      const normalizedRole = normalizeRole(isRoleOption(roleRaw) ? roleRaw : "client_user");
+      const client_id = sanitize(record.client_id);
+      const job_title = sanitize(record.job_title);
+      const linkedin_url = sanitize(record.linkedin_url, 500);
+
       if (!name || !email) {
         return NextResponse.json({ error: "Nome e email sao obrigatorios" }, { status: 400 });
       }

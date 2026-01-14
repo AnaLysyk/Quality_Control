@@ -14,7 +14,8 @@ export function apiUrl(path: string): string {
 // Helper para obter o token de acesso do Supabase (client-side)
 export async function getAccessToken() {
   // importa dinamicamente para evitar SSR
-  const { supabase } = await import("@/lib/supabase/client");
+  const { getSupabaseClient } = await import("@/lib/supabase/client");
+  const supabase = getSupabaseClient();
   const { data } = await supabase.auth.getSession();
   return data.session?.access_token ?? null;
 }

@@ -1,0 +1,40 @@
+[
+  {
+    "id": "d1f7fb1b-d6a5-4d04-b82a-edf6aff407a1",
+    "company_name": "zdvzxv",
+    "name": "zdvzxv",
+    "slug": "zdvzxv",
+    "tax_id": null,
+    "address": "xdgsd",
+    "phone": null,
+    "website": null,
+    "logo_url": "vbhcn",
+    "docs_link": "xcbxcb",
+    "notes": "zdzdfs",
+    "qase_project_code": null,
+    "integration_mode": "manual",
+    "integration_type": "manual",
+    "status": "active",
+    "active": true,
+    "created_at": "2026-01-12T19:16:20.562Z",
+    "created_by": "mock-uid"
+  },
+  {
+    "id": "griaule",
+    "company_name": "Griaule",
+    "slug": "griaule",
+    "tax_id": "00.000.000/0000-00",
+    "address": "Rua Exemplo, 123",
+    "phone": "+55 11 99999-0000",
+    "website": "https://www.griaule.com",
+    "logo_url": "/images/griaule.png",
+    "docs_link": "https://docs.exemplo.com",
+    "notes": "Cliente mock para desenvolvimento",
+    "qase_project_code": "SFQ,GMT",
+    "integration_mode": "manual",
+    "integration_type": "manual",
+    "status": "active",
+    "active": true,
+    "created_at": "2026-01-12T00:00:00.000Z"
+  }
+]

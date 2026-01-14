@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { requireGlobalAdmin } from "@/lib/rbac/requireGlobalAdmin";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
@@ -13,33 +14,19 @@ function extractToken(req: NextRequest): string | null {
   return match?.[1] ? decodeURIComponent(match[1]) : null;
 }
 
-async function requireAdmin(req: NextRequest) {
-  if (SUPABASE_MOCK) {
-    return { id: "mock-admin", email: "ana.testing.company@gmail.com" };
-  }
-  const token = extractToken(req);
-  if (!token) return null;
-
-  const supabaseAdmin = getSupabaseAdmin();
-  const { data: authData, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !authData?.user) return null;
-
-  const { data: userRow } = await supabaseAdmin
-    .from("users")
-    .select("role,is_global_admin")
-    .eq("auth_user_id", authData.user.id)
-    .eq("active", true)
-    .limit(1)
-    .maybeSingle();
-
-  const isAdmin = userRow?.role === "admin" || userRow?.is_global_admin === true;
-  if (!isAdmin) return null;
-
-  return { id: authData.user.id, email: authData.user.email ?? "" };
-}
-
 export async function GET(req: NextRequest) {
-  const admin = await requireAdmin(req);
+  const token = extractToken(req);
+  let supabaseAdmin = null as ReturnType<typeof getSupabaseAdmin> | null;
+  try {
+    supabaseAdmin = getSupabaseAdmin();
+  } catch {
+    supabaseAdmin = null;
+  }
+  const admin = await requireGlobalAdmin(req, {
+    token,
+    supabaseAdmin: supabaseAdmin ?? undefined,
+    mockAdmin: { id: "mock-admin", email: "ana.testing.company@gmail.com", token: "mock-token" },
+  });
   if (!admin) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }

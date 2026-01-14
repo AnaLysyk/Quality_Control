@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { deleteReleaseFromStore, getAllReleases, upsertRelease } from "@/release/data";
 import { slugifyRelease } from "@/lib/slugifyRelease";
+import { authenticateRequest } from "@/lib/jwtAuth";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 // Garantir ambiente Node para fs
 export const runtime = "nodejs";
@@ -33,6 +35,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const actor = await authenticateRequest(request).catch(() => null);
+
     const body = await request.json().catch(() => ({}));
     const name = (body.name ?? body.title ?? "").toString();
     const runIdRaw = body.runId ?? body.run_id;
@@ -61,6 +65,16 @@ export async function POST(request: Request) {
       project: app,
       radis,
       source: "API",
+    });
+
+    await addAuditLogSafe({
+      actorUserId: actor?.id ?? null,
+      actorEmail: actor?.email ?? null,
+      action: "run.created",
+      entityType: "run",
+      entityId: release.slug,
+      entityLabel: release.title,
+      metadata: { runId: release.runId, app: release.app ?? release.project },
     });
 
     const payload = {
@@ -93,12 +107,25 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const actor = await authenticateRequest(request).catch(() => null);
     const body = await request.json().catch(() => ({}));
     const slug = body.slug ? slugifyRelease(body.slug) : "";
     if (!slug) {
       return NextResponse.json({ error: "Slug e obrigatorio." }, { status: 400 });
     }
     const removed = await deleteReleaseFromStore(slug);
+
+    if (removed) {
+      await addAuditLogSafe({
+        actorUserId: actor?.id ?? null,
+        actorEmail: actor?.email ?? null,
+        action: "run.deleted",
+        entityType: "run",
+        entityId: slug,
+        entityLabel: slug,
+      });
+    }
+
     return NextResponse.json({ ok: removed });
   } catch (error) {
     console.error("DELETE /api/releases error:", error);

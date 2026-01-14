@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { listQaseRuns } from "@/lib/qaseRuns";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
 
 type QaseDefect = {
@@ -17,6 +18,7 @@ type QaseDefect = {
 type NormalizedDefect = {
   id: string;
   runSlug: string;
+  runName?: string;
   title: string;
   app: string;
   status: string;
@@ -24,6 +26,7 @@ type NormalizedDefect = {
   severity: string;
   link: string;
   created_at?: string;
+  origin: "automatico";
 };
 
 type DefectResponse = {
@@ -34,12 +37,17 @@ type DefectResponse = {
   error?: string;
 };
 
-const QASE_BASE_URL = process.env.QASE_BASE_URL || "https://api.qase.io";
+const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const FALLBACK_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
 
 const PROJECT_MAP: Record<string, string> = {
   griaule: process.env.QASE_PROJECT_CODE || process.env.QASE_PROJECT || "",
 };
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
+}
 
 function mapKanbanStatus(raw: string): NormalizedDefect["kanbanStatus"] {
   const st = raw.toLowerCase();
@@ -58,7 +66,7 @@ async function fetchAllDefects(projectCode: string, token: string): Promise<Qase
   const all: QaseDefect[] = [];
 
   while (true) {
-    const res = await fetch(`${QASE_BASE_URL}/v2/defect/${projectCode}?limit=${limit}&offset=${offset}`, {
+    const res = await fetch(`${QASE_BASE_URL}/v1/defect/${projectCode}?limit=${limit}&offset=${offset}`, {
       headers: {
         Token: token,
         Accept: "application/json",
@@ -67,21 +75,27 @@ async function fetchAllDefects(projectCode: string, token: string): Promise<Qase
     });
 
     if (!res.ok) break;
-    const json: any = await res.json().catch(() => null);
-    const entities: any[] = json?.result?.entities ?? [];
+    const json = (await res.json().catch(() => null)) as unknown;
+    const result = asRecord(asRecord(json)?.result);
+    const entities = Array.isArray(result?.entities) ? (result?.entities as unknown[]) : [];
     if (!Array.isArray(entities) || entities.length === 0) break;
 
     entities.forEach((d) => {
+      const rec = asRecord(d) ?? {};
       all.push({
-        id: String(d.id ?? d.defect_id ?? `defect-${offset}`),
-        title: d.title ?? d.name ?? "Defeito",
-        status: String(d.status ?? "open"),
-        severity: d.severity ?? d.severity_name ?? "medium",
-        run_id: d.run_id ?? d.run ?? null,
-        tags: Array.isArray(d.tags) ? d.tags : [],
-        created_at: d.created_at ?? d.created ?? undefined,
-        updated_at: d.updated_at ?? d.updated ?? undefined,
-        url: d.url ?? d.link ?? d.web_url ?? undefined,
+        id: String(rec.id ?? rec.defect_id ?? `defect-${offset}`),
+        title: (typeof rec.title === "string" ? rec.title : null) ?? (typeof rec.name === "string" ? rec.name : null) ?? "Defeito",
+        status: String(rec.status ?? "open"),
+        severity: (typeof rec.severity === "string" ? rec.severity : null) ?? (typeof rec.severity_name === "string" ? rec.severity_name : null) ?? "medium",
+        run_id: (rec.run_id as string | number | null | undefined) ?? (rec.run as string | number | null | undefined) ?? null,
+        tags: Array.isArray(rec.tags) ? (rec.tags as string[]) : [],
+        created_at: (typeof rec.created_at === "string" ? rec.created_at : null) ?? (typeof rec.created === "string" ? rec.created : null) ?? undefined,
+        updated_at: (typeof rec.updated_at === "string" ? rec.updated_at : null) ?? (typeof rec.updated === "string" ? rec.updated : null) ?? undefined,
+        url:
+          (typeof rec.url === "string" ? rec.url : null) ??
+          (typeof rec.link === "string" ? rec.link : null) ??
+          (typeof rec.web_url === "string" ? rec.web_url : null) ??
+          undefined,
       });
     });
 
@@ -92,7 +106,7 @@ async function fetchAllDefects(projectCode: string, token: string): Promise<Qase
   return all;
 }
 
-function normalize(defects: QaseDefect[]): DefectResponse {
+function normalize(defects: QaseDefect[], runNames: Map<string, string>): DefectResponse {
   const byStatus = new Map<string, number>();
   const byApp = new Map<string, number>();
 
@@ -101,9 +115,12 @@ function normalize(defects: QaseDefect[]): DefectResponse {
     const app = d.tags?.[0] ?? "Sem aplicacao";
     byStatus.set(kanban, (byStatus.get(kanban) ?? 0) + 1);
     byApp.set(app, (byApp.get(app) ?? 0) + 1);
+    const runKey = d.run_id ? String(d.run_id) : "";
+    const runName = runKey ? runNames.get(runKey) : undefined;
     return {
       id: d.id ?? `defect-${idx}`,
       runSlug: d.run_id ? String(d.run_id) : "",
+      runName,
       title: d.title ?? "Defeito",
       app,
       status: d.status ?? "open",
@@ -111,6 +128,7 @@ function normalize(defects: QaseDefect[]): DefectResponse {
       severity: d.severity ?? "medium",
       link: d.url ?? "#",
       created_at: d.created_at,
+      origin: "automatico",
     };
   });
 
@@ -142,8 +160,16 @@ export async function GET(_: Request, context: { params: Promise<{ slug: string 
     );
   }
 
+  const qaseRuns = await listQaseRuns(projectCode, token);
+  const runNameMap = new Map<string, string>();
+  qaseRuns.forEach((run) => {
+    if (!run) return;
+    const key = String(run.id);
+    runNameMap.set(key, run.name ?? run.slug ?? `Run ${run.id}`);
+  });
+
   const defects = await fetchAllDefects(projectCode, token);
-  const normalized = normalize(defects);
+  const normalized = normalize(defects, runNameMap);
 
   return NextResponse.json({ defects: normalized.items, ...normalized }, { status: 200 });
 }

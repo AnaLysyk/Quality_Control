@@ -25,7 +25,7 @@ Se quiser exemplos imediatos, posso mostrar a maneira correta de usar `getSupaba
 ## Project overview
 - Next.js 13+ app (App Router) written in TypeScript. UI lives under `app/`, with shared components in `app/components/`. API routes reside in `app/api/**`.
 - There is a secondary `backend/` folder with NestJS-style services; keep frontend and backend changes isolated unless necessary.
-- Styling uses Tailwind (v4 config) plus custom CSS modules. Prefer the canonical variable syntax in classes, e.g. `text-(--tc-text-muted)` / `bg-(--tc-accent,#ef0001)`, not `text-[var(...)]`.
+- Styling uses Tailwind (v4 config) plus custom CSS modules. Prefer the canonical variable syntax in classes, e.g. `text-(--tc-text-muted)` / `bg-(--tc-accent,#ef0001)`, not `text-[var(--tc-text-muted)]`.
 - Some components rely on CSS modules for dynamic colors (e.g., `StatusPill.module.css`, `StatCard.module.css`), so avoid reintroducing inline styles.
 
 ## Commands
@@ -35,7 +35,7 @@ Se quiser exemplos imediatos, posso mostrar a maneira correta de usar `getSupaba
 - E2E: `npm run test:e2e` or `npm run test:e2e:smoke` (Playwright).
 
 ## Conventions & patterns
-- Tailwind: keep gradients `bg-linear-to-*`; use canonical variable forms for borders/text/bg; avoid `text-[var(...)]`.
+- Tailwind: keep gradients `bg-linear-to-*`; use canonical variable forms for borders/text/bg; avoid `text-[var(--tc-text-muted)]`.
 - Accessibility: hidden file inputs/buttons use `aria-label` and `title` (see `UserProfileMenu.tsx`).
 - Status/metrics pills: color comes from CSS modules; pass `colorKey` (`pass|fail|blocked|notRun|total`) instead of raw colors.
 - Avoid inline styles; use CSS modules or Tailwind tokens. When dynamic colors are needed, set CSS vars and apply via classes.

@@ -1,7 +1,9 @@
 // app/layout.tsx
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Geist_Mono, Poppins } from "next/font/google";
 import AppShell from "@/components/AppShell";
+import ToasterProvider from "@/components/ToasterProvider";
 import { AuthProvider } from "@/context/AuthContext";
 import { AppSettingsProvider } from "@/context/AppSettingsContext";
 import { ClientProvider } from "@/context/ClientContext";
@@ -34,12 +36,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       try {
         const root = document.documentElement;
         const isValid = (v) => v === "light" || v === "dark" || v === "system";
-        const raw = localStorage.getItem("tc-settings:guest");
+        const lastUserId = localStorage.getItem("tc-settings:last-user-id");
+        const key = lastUserId ? ("tc-settings:" + lastUserId) : "tc-settings:guest";
+        const raw = localStorage.getItem(key) || localStorage.getItem("tc-settings:guest");
         const parsed = raw ? JSON.parse(raw) : null;
-        const storedTheme = parsed && isValid(parsed.theme) ? parsed.theme : "system";
+        // Standard theme: light by default (avoids dark->light flash on first paint).
+        const storedTheme = parsed && isValid(parsed.theme) ? parsed.theme : "light";
         const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
         const useDark = storedTheme === "system" ? prefersDark : storedTheme === "dark";
         root.classList.toggle("dark", useDark);
+        root.style.colorScheme = useDark ? "dark" : "light";
       } catch (err) {
         /* ignore */
       }
@@ -48,15 +54,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body
         suppressHydrationWarning
         className={`min-h-screen w-full overflow-y-auto ${poppins.variable} ${geistMono.variable} antialiased`}
       >
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <AuthProvider>
           <AppSettingsProvider>
             <ClientProvider>
-              <AppShell>{children}</AppShell>
+              <AppShell>
+                {children}
+                <ToasterProvider />
+              </AppShell>
             </ClientProvider>
           </AppSettingsProvider>
         </AuthProvider>

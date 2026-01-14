@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   FiLogOut,
   FiSettings,
-  FiHelpCircle,
   FiShield,
   FiCopy,
   FiCheck,
@@ -14,6 +13,7 @@ import {
   FiFolder,
 } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useClientContext } from "@/context/ClientContext";
 
 type ToastState =
   | { kind: "idle" }
@@ -45,10 +45,10 @@ function MenuItem(props: {
         type="button"
         onClick={onClick}
         autoFocus={autoFocus}
-        className="group flex w-full items-start gap-3 px-4 py-2.5 text-left hover:bg-white/5"
+        className="group flex w-full items-start gap-3 px-4 py-2.5 text-left transition-colors hover:bg-(--tc-primary,#4e8df5)/10 dark:hover:bg-(--tc-primary,#4e8df5)/12"
       >
         <span
-          className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 group-hover:bg-white/10"
+          className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-primary,#4e8df5)/25 bg-(--tc-primary,#4e8df5)/10 text-(--tc-primary,#4e8df5) group-hover:bg-(--tc-primary,#4e8df5)/16 dark:border-(--tc-primary,#4e8df5)/30"
           aria-hidden
         >
           {icon}
@@ -56,7 +56,9 @@ function MenuItem(props: {
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-medium">{label}</span>
           {hint ? (
-            <span className="block text-xs text-(--tc-text-muted,#cbd5e1) truncate">{hint}</span>
+            <span className="block text-xs text-(--tc-text-muted,#64748b) dark:text-(--tc-text-muted,#cbd5e1) truncate">
+              {hint}
+            </span>
           ) : null}
         </span>
       </button>
@@ -67,7 +69,17 @@ function MenuItem(props: {
 export default function ProfileButton() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useAuthUser();
+  const { user, logout } = useAuthUser();
+  const { activeClient } = useClientContext();
+
+  const legacyUser = (user ?? null) as
+    | {
+        isGlobalAdmin?: boolean;
+        roleGlobal?: string;
+        companyResources?: unknown;
+        company?: { name?: string; slug?: string };
+      }
+    | null;
 
   const [open, setOpen] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
@@ -80,13 +92,52 @@ export default function ProfileButton() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const isAdmin = Boolean((user as any)?.isGlobalAdmin || user?.roleGlobal === "ADMIN");
+  const isAdmin = Boolean(user?.isGlobalAdmin || legacyUser?.isGlobalAdmin || legacyUser?.roleGlobal === "ADMIN");
   const displayName = user?.name || "Usuario";
   const displayEmail = user?.email || "";
-  const companyName = isAdmin ? "Testing Company" : user?.company?.name ?? "Empresa";
-  const companySlug = user?.company?.slug;
-  const companyResources = (user as any)?.companyResources || [];
-  const companyRole = user?.company?.roleAtCompany || user?.role || "-";
+  const companyName = (() => {
+    if (activeClient?.name) return activeClient.name;
+    if (isAdmin) return "Testing Company";
+
+    const legacyCompany = legacyUser?.company;
+    if (legacyCompany && typeof legacyCompany === "object" && legacyCompany !== null) {
+      const name = (legacyCompany as { name?: unknown }).name;
+      if (typeof name === "string" && name.trim()) return name;
+    }
+
+    const userCompany = (user ?? null) && typeof (user as Record<string, unknown>) === "object"
+      ? (user as Record<string, unknown> & { company?: unknown }).company
+      : null;
+
+    if (userCompany && typeof userCompany === "object" && userCompany !== null) {
+      const name = (userCompany as { name?: unknown }).name;
+      if (typeof name === "string" && name.trim()) return name;
+    }
+
+    return "Empresa";
+  })();
+
+  const companySlug = (() => {
+    if (activeClient?.slug) return activeClient.slug;
+
+    const legacyCompany = legacyUser?.company;
+    if (legacyCompany && typeof legacyCompany === "object" && legacyCompany !== null) {
+      const slug = (legacyCompany as { slug?: unknown }).slug;
+      if (typeof slug === "string" && slug.trim()) return slug;
+    }
+
+    const userCompany = (user ?? null) && typeof (user as Record<string, unknown>) === "object"
+      ? (user as Record<string, unknown> & { company?: unknown }).company
+      : null;
+
+    if (userCompany && typeof userCompany === "object" && userCompany !== null) {
+      const slug = (userCompany as { slug?: unknown }).slug;
+      if (typeof slug === "string" && slug.trim()) return slug;
+    }
+
+    return undefined;
+  })();
+  const companyResources = Array.isArray(legacyUser?.companyResources) ? legacyUser.companyResources : [];
 
   useEffect(() => {
     const saved = window.localStorage.getItem("profile_avatar_icon") as AvatarKey | null;
@@ -150,17 +201,10 @@ export default function ProfileButton() {
     }
   }
 
-  function handleLogout() {
-    try {
-      fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
-      localStorage.removeItem("auth_ok");
-      document.cookie = "auth=; Max-Age=0; path=/;";
-    } catch {
-      /* ignore */
-    } finally {
-      setOpen(false);
-      router.replace("/login");
-    }
+  async function handleLogout() {
+    setOpen(false);
+    await logout();
+    router.replace("/login");
   }
 
   function selectAvatar(key: AvatarKey) {
@@ -181,10 +225,10 @@ export default function ProfileButton() {
         aria-expanded={open}
         aria-controls={open ? "profile-menu" : undefined}
         onClick={() => setOpen((v) => !v)}
-        className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/12 bg-(--tc-surface-dark,#0f1828) text-white shadow-[0_10px_22px_rgba(0,0,0,0.28)] transition hover:border-(--tc-primary,#4e8df5) hover:shadow-[0_12px_26px_rgba(78,141,245,0.25)] focus:outline-none focus:ring-2 focus:ring-(--tc-primary,#4e8df5) focus:ring-offset-2 focus:ring-offset-transparent"
+        className="relative flex h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-(--tc-surface-dark,#0f1828) text-white shadow-[0_10px_22px_rgba(0,0,0,0.28)] transition hover:border-(--tc-primary,#4e8df5) hover:shadow-[0_12px_26px_rgba(78,141,245,0.25)] focus:outline-none focus:ring-2 focus:ring-(--tc-primary,#4e8df5) focus:ring-offset-2 focus:ring-offset-transparent"
       >
         <div className="relative h-full w-full overflow-hidden rounded-full bg-linear-to-br from-(--tc-primary,#4e8df5) to-(--tc-surface-dark,#0f1828)">
-          <span className="flex h-full w-full items-center justify-center text-xl" aria-hidden>
+          <span className="flex h-full w-full items-center justify-center text-2xl" aria-hidden>
             {avatarError ? displayName.slice(0, 2).toUpperCase() : avatarIcon}
           </span>
         </div>
@@ -195,22 +239,23 @@ export default function ProfileButton() {
           id="profile-menu"
           aria-label="Menu de perfil"
           ref={menuRef}
-          className="absolute right-0 mt-2 w-[380px] max-h-[80vh] overflow-y-auto rounded-2xl border border-(--tc-border,#e5e7eb)/40 bg-(--tc-surface-dark,#0f1828) text-(--tc-text-inverse,#fff) shadow-[0_18px_50px_rgba(0,0,0,0.4)]"
+        className="absolute right-0 mt-2 w-95 rounded-2xl border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_18px_50px_rgba(0,0,0,0.18)] dark:border-white/12 dark:bg-(--tc-surface-dark,#0f1828) dark:text-(--tc-text-inverse,#fff) dark:shadow-[0_18px_50px_rgba(0,0,0,0.4)]"
         >
           <div className="px-4 pt-4 pb-3">
-            <div className="flex items-start gap-3">
-              <div className="relative h-12 w-12 shrink-0">
-                <button
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="relative h-14 w-14 shrink-0">
+                  <button
                   type="button"
                   aria-label="Trocar avatar"
                   onClick={() => setShowAvatarPicker((v) => !v)}
-                  className="group relative flex h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-black/20 text-xl shadow-[0_0_18px_rgba(78,142,245,0.35)] focus:outline-none focus:ring-2 focus:ring-(--tc-primary,#4e8df5) overflow-visible"
+                  className="group relative flex h-14 w-14 items-center justify-center rounded-full border border-(--tc-primary,#4e8df5)/28 bg-(--tc-primary,#4e8df5)/12 text-2xl shadow-[0_0_18px_rgba(78,142,245,0.30)] focus:outline-none focus:ring-2 focus:ring-(--tc-primary,#4e8df5) overflow-visible dark:border-(--tc-primary,#4e8df5)/25 dark:bg-black/20"
                 >
-                  <span className="text-xl" aria-hidden>
+                  <span className="text-2xl" aria-hidden>
                     {avatarError ? displayName.slice(0, 2).toUpperCase() : avatarIcon}
                   </span>
                   <span
-                    className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border border-white/60 bg-white text-[10px] text-(--tc-surface-dark,#0f1828) shadow-[0_4px_10px_rgba(0,0,0,0.25)] group-hover:bg-(--tc-primary,#4e8df5) group-hover:text-white"
+                    className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-(--tc-primary,#4e8df5)/50 bg-(--tc-primary,#4e8df5) text-[11px] text-white shadow-[0_4px_10px_rgba(0,0,0,0.25)]"
                     aria-hidden
                   >
                     <FiEdit2 />
@@ -218,7 +263,7 @@ export default function ProfileButton() {
                 </button>
 
                 {showAvatarPicker && (
-                  <div className="absolute left-14 top-0 z-10 w-56 rounded-xl border border-white/10 bg-(--tc-surface-dark,#0f1828) p-3 shadow-xl">
+                  <div className="absolute left-14 top-0 z-10 w-56 rounded-xl border border-slate-200 bg-white/90 text-slate-900 p-3 shadow-[0_20px_60px_rgba(15,23,42,0.25)] backdrop-blur-xl dark:border-white/15 dark:bg-slate-900/80 dark:text-white">
                     <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-(--tc-text-muted,#cbd5e1)">
                       <span>Escolher avatar</span>
                       <span className="text-[10px] lowercase">gif/emoji</span>
@@ -231,10 +276,10 @@ export default function ProfileButton() {
                             key={opt.key}
                             type="button"
                             onClick={() => selectAvatar(opt.key)}
-                            className={`flex h-10 items-center justify-center rounded-lg border text-lg ${
+                            className={`flex h-10 items-center justify-center rounded-lg border text-lg transition-colors ${
                               active
-                                ? "border-(--tc-primary,#4e8df5) bg-(--tc-primary,#4e8df5)/15 text-(--tc-primary,#4e8df5)"
-                                : "border-white/10 bg-white/5 text-white hover:border-white/30 hover:bg-white/10"
+                                ? "border-(--tc-primary,#4e8df5) bg-(--tc-primary,#4e8df5)/15 text-(--tc-primary,#4e8df5) shadow-[0_6px_20px_rgba(78,141,245,0.45)]"
+                                : "border-slate-200 bg-white text-slate-900 hover:border-slate-400 hover:bg-slate-100 dark:border-white/15 dark:bg-slate-900/60 dark:text-white dark:hover:border-white/30 dark:hover:bg-slate-800"
                             }`}
                           >
                             <span aria-hidden>{opt.emoji}</span>
@@ -245,47 +290,48 @@ export default function ProfileButton() {
                   </div>
                 )}
               </div>
-              <div className="min-w-0 flex-1 space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-(--tc-text-muted,#cbd5e1)">Conta</p>
-                    <div className="truncate text-sm font-medium leading-tight text-(--tc-text-inverse,#fff)">
-                      {displayName}
-                    </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-(--tc-text-muted,#64748b) dark:text-(--tc-text-muted,#cbd5e1)">Conta</p>
+                  <div className="truncate text-sm font-medium leading-tight text-(--tc-text,#0f172a) dark:text-(--tc-text-inverse,#fff)">
+                    {displayName}
                   </div>
-                  <button
-                    type="button"
-                    className="rounded-lg border border-transparent p-2 hover:border-white/10 hover:bg-white/10"
-                    aria-label="Fechar menu"
-                    onClick={() => {
-                      setOpen(false);
-                      buttonRef.current?.focus();
-                    }}
-                  >
-                    <FiX aria-hidden />
-                  </button>
                 </div>
+              </div>
 
-                <div className="flex flex-col gap-2">
-                  <div className="flex w-full items-center gap-2 rounded-lg border border-(--tc-border,#e5e7eb)/60 bg-(--tc-surface,#ffffff)/95 px-3 py-2 text-sm leading-tight text-(--tc-text,#0f172a) shadow-[0_8px_18px_rgba(0,0,0,0.20)] dark:border-white/15 dark:bg-white/10 dark:text-(--tc-text-inverse,#fff)">
-                    <span className="flex-1 whitespace-nowrap truncate">{displayEmail || "-"}</span>
-                    <button
-                      type="button"
-                      aria-label="Copiar email"
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/60 bg-(--tc-surface,#ffffff)/80 text-base text-(--tc-text,#0f172a) hover:bg-white/40 disabled:opacity-50 dark:border-white/15 dark:bg-white/15 dark:text-(--tc-text-inverse,#fff)"
-                      onClick={copyEmail}
-                      disabled={!displayEmail}
-                      title={copied ? "Copiado" : "Copiar email"}
-                    >
-                      {copied ? <FiCheck aria-hidden /> : <FiCopy aria-hidden />}
-                    </button>
-                  </div>
-                  <div className="flex flex-col gap-1 text-xs">
-                    <span className="inline-flex w-fit items-center rounded-full border border-(--tc-primary,#4e8df5) bg-(--tc-primary,#4e8df5)/18 px-2.5 py-1 font-mono text-[11px] tracking-tight text-(--tc-primary,#4e8df5) shadow-[0_0_18px_rgba(78,142,245,0.55)] dark:text-(--tc-primary,#9cc4ff)">
-                      {companyName}
-                    </span>
-                  </div>
-                </div>
+              <button
+                type="button"
+                className="rounded-lg border border-transparent p-2 transition-colors hover:border-(--tc-border)/60 hover:bg-(--tc-accent-soft)"
+                aria-label="Fechar menu"
+                onClick={() => {
+                  setOpen(false);
+                  buttonRef.current?.focus();
+                }}
+              >
+                <FiX aria-hidden />
+              </button>
+            </div>
+
+            <div className="mt-3 flex flex-col gap-2">
+              <div className="flex w-full items-center gap-2 rounded-lg border border-(--tc-primary,#4e8df5)/25 bg-(--tc-primary,#4e8df5)/6 px-3 py-2 text-sm leading-tight text-(--tc-text,#0f172a) shadow-[0_8px_18px_rgba(0,0,0,0.16)] dark:border-(--tc-primary,#4e8df5)/22 dark:bg-(--tc-primary,#4e8df5)/10 dark:text-(--tc-text-inverse,#fff)">
+                <span className="flex-1 whitespace-nowrap truncate text-(--tc-text-muted,#64748b) dark:text-(--tc-text-muted,#cbd5e1)">{displayEmail || "-"}</span>
+                <button
+                  type="button"
+                  aria-label="Copiar email"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-(--tc-primary,#4e8df5)/30 bg-(--tc-primary,#4e8df5)/14 text-base text-(--tc-primary,#4e8df5) hover:bg-(--tc-primary,#4e8df5)/18 disabled:opacity-50 dark:border-(--tc-primary,#4e8df5)/28 dark:bg-(--tc-primary,#4e8df5)/18 dark:text-white dark:hover:bg-(--tc-primary,#4e8df5)/24"
+                  onClick={copyEmail}
+                  disabled={!displayEmail}
+                  title={copied ? "Copiado" : "Copiar email"}
+                >
+                  {copied ? <FiCheck aria-hidden /> : <FiCopy aria-hidden />}
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-1 text-xs">
+                <span className="inline-flex max-w-full w-fit items-center rounded-full border border-(--tc-accent,#ef0001)/55 bg-(--tc-accent,#ef0001) px-3 py-1.5 font-semibold text-[11px] tracking-[0.08em] text-white shadow-[0_10px_22px_rgba(239,0,1,0.22)]">
+                  <span className="max-w-70 truncate" title={companyName}>
+                    {companyName}
+                  </span>
+                </span>
               </div>
             </div>
 
@@ -305,13 +351,13 @@ export default function ProfileButton() {
             )}
           </div>
 
-          <div className="h-px bg-white/10" />
+          <div className="h-px bg-(--tc-border,#e5e7eb)/70 dark:bg-white/10" />
 
-          <ul aria-label="Opcões do menu de perfil" className="py-2">
+          <ul aria-label="Opções do menu de perfil" className="py-2">
             <MenuItem
               icon={<FiSettings aria-hidden />}
               label="Meu perfil"
-              hint="Dados e preferencias"
+              hint="Dados e preferências"
               onClick={() => {
                 setOpen(false);
                 router.push("/settings/profile");
@@ -320,8 +366,8 @@ export default function ProfileButton() {
             />
             <MenuItem
               icon={<FiSettings aria-hidden />}
-              label="Configuracoes"
-              hint="Conta, segurança, aparencia"
+              label="Configurações"
+              hint="Conta, segurança, aparência"
               onClick={() => {
                 setOpen(false);
                 router.push("/settings");
@@ -329,26 +375,25 @@ export default function ProfileButton() {
             />
           </ul>
 
-          <div className="h-px bg-white/10" />
+          <div className="h-px bg-(--tc-border,#e5e7eb)/70 dark:bg-white/10" />
 
           <div className="px-4 pt-4 pb-3">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-(--tc-text-muted,#cbd5e1)">
-              Documentacoes
+            <p className="text-[11px] uppercase tracking-[0.18em] text-(--tc-text-muted,#64748b) dark:text-(--tc-text-muted,#cbd5e1)">
+              Documentações
             </p>
             <ul className="mt-2 space-y-2" aria-label="Materiais">
               <li>
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm hover:border-white/30 hover:bg-white/10"
+                  className="flex w-full items-center gap-2 rounded-lg border border-(--tc-primary,#4e8df5)/22 bg-(--tc-primary,#4e8df5)/8 px-3 py-2 text-sm text-(--tc-text,#0f172a) transition-colors hover:bg-(--tc-primary,#4e8df5)/12 dark:text-(--tc-text-inverse,#fff) dark:border-(--tc-primary,#4e8df5)/20 dark:bg-(--tc-primary,#4e8df5)/10 dark:hover:bg-(--tc-primary,#4e8df5)/14"
                   onClick={() => {
-                    if (!companySlug) return;
                     setOpen(false);
-                    router.push(`/empresas/${companySlug}/documentos`);
+                    router.push(companySlug ? `/empresas/${companySlug}/documentos` : "/docs");
                   }}
                 >
                   <FiFolder aria-hidden />
                   <span className="truncate">
-                    {companyResources.length ? `${companyResources.length} documentacoes` : "Abrir documentacoes"}
+                    {companyResources.length ? `${companyResources.length} documentações` : "Abrir documentações"}
                   </span>
                 </button>
               </li>
@@ -357,11 +402,11 @@ export default function ProfileButton() {
 
           {isAdmin && (
             <>
-              <div className="h-px bg-white/10" />
+              <div className="h-px bg-(--tc-border,#e5e7eb)/70 dark:bg-white/10" />
               <ul aria-label="Admin" className="py-2">
                 <MenuItem
                   icon={<FiShield aria-hidden />}
-                  label="Administracao"
+                  label="Administração"
                   hint={`Cliente: ${companyName}`}
                   onClick={() => {
                     setOpen(false);
@@ -372,14 +417,14 @@ export default function ProfileButton() {
             </>
           )}
 
-          <div className="h-px bg-white/10" />
+          <div className="h-px bg-(--tc-border,#e5e7eb)/70 dark:bg-white/10" />
 
-          <ul aria-label="Sessao" className="p-2">
+          <ul aria-label="Sessão" className="p-2">
             <li>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex w-full items-center gap-2 rounded-xl border border-transparent px-3 py-2 text-sm text-red-300 hover:border-red-500/20 hover:bg-red-500/10"
+                className="flex w-full items-center gap-2 rounded-xl border border-transparent px-3 py-2 text-sm text-red-600 transition-colors hover:border-red-500/20 hover:bg-red-500/10 dark:text-red-300"
               >
                 <FiLogOut aria-hidden />
                 Sair

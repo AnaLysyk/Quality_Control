@@ -14,11 +14,14 @@ export function RequireGlobalAdmin({ children, fallback }: RequireGlobalAdminPro
   const { user, loading } = useAuthUser();
   const router = useRouter();
   const pathname = usePathname();
+
+  const legacyUser = (user ?? null) as unknown as { is_global_admin?: boolean } | null;
+  const normalizedRole = typeof user?.role === "string" ? user.role.toLowerCase() : null;
   const isAdmin =
-    user?.role === "admin" ||
-    user?.role === "global_admin" ||
+    normalizedRole === "admin" ||
+    normalizedRole === "global_admin" ||
     user?.isGlobalAdmin === true ||
-    (user as any)?.is_global_admin === true;
+    legacyUser?.is_global_admin === true;
 
   useEffect(() => {
     if (loading) return;

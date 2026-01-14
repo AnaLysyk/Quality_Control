@@ -23,14 +23,20 @@ export function ManualStatsForm({ slug, initialStats }: ManualStatsFormProps) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await fetch(`/api/releases-manual/${slug}`, {
+      const res = await fetch(`/api/releases-manual/${slug}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ stats }),
       });
+
+      if (!res.ok) {
+        throw new Error(`save_failed_${res.status}`);
+      }
+
       router.refresh();
     } catch (e) {
       console.error("Erro ao salvar stats manuais", e);
+    } finally {
       setSaving(false);
     }
   };
@@ -58,7 +64,7 @@ export function ManualStatsForm({ slug, initialStats }: ManualStatsFormProps) {
               aria-label={`Total ${key}`}
               value={stats[key]}
               onChange={(e) => update(key, e.target.value)}
-              className="w-full rounded-lg bg-[--tc-surface] border border-(--tc-border) px-3 py-2 text-sm text-[--tc-text-inverse] focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/40"
+              className="w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg) px-3 py-2 text-sm text-(--tc-text) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/40"
             />
           </div>
         ))}

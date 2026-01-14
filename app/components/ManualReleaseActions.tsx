@@ -5,14 +5,19 @@ import { useState } from "react";
 
 type ManualReleaseActionsProps = {
   slug: string;
-  editable: boolean;
+  status?: string;
 };
 
-export default function ManualReleaseActions({ slug, editable }: ManualReleaseActionsProps) {
+function isFinalStatus(status?: string) {
+  const s = (status ?? "").trim().toUpperCase();
+  return s === "FINALIZADA" || s === "FINALIZED" || s === "FINALIZADO";
+}
+
+export default function ManualReleaseActions({ slug, status }: ManualReleaseActionsProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  if (!editable) return null;
+  const finalized = isFinalStatus(status);
 
   const finalize = async () => {
     setLoading(true);
@@ -25,6 +30,22 @@ export default function ManualReleaseActions({ slug, editable }: ManualReleaseAc
       router.refresh();
     } catch (e) {
       console.error("Erro ao finalizar run manual", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const reopen = async () => {
+    setLoading(true);
+    try {
+      await fetch(`/api/releases-manual/${slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "ACTIVE" }),
+      });
+      router.refresh();
+    } catch (e) {
+      console.error("Erro ao reabrir run manual", e);
     } finally {
       setLoading(false);
     }
@@ -58,14 +79,25 @@ export default function ManualReleaseActions({ slug, editable }: ManualReleaseAc
       >
         {loading ? "Salvando..." : "Editar título"}
       </button>
-      <button
-        type="button"
-        onClick={finalize}
-        disabled={loading}
-        className="rounded-xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-60"
-      >
-        {loading ? "..." : "Finalizar run"}
-      </button>
+      {finalized ? (
+        <button
+          type="button"
+          onClick={reopen}
+          disabled={loading}
+          className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/15 disabled:opacity-60"
+        >
+          {loading ? "..." : "Reabrir"}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={finalize}
+          disabled={loading}
+          className="rounded-xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-60"
+        >
+          {loading ? "..." : "Finalizar run"}
+        </button>
+      )}
     </div>
   );
 }

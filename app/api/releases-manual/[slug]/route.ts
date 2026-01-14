@@ -87,3 +87,19 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
     return NextResponse.json({ message: "Erro ao atualizar" }, { status: 500 });
   }
 }
+
+export async function DELETE(_: Request, { params }: { params: Promise<{ slug: string }> }) {
+  try {
+    const { slug } = await params;
+    const releases = await readStore();
+    const filtered = releases.filter((release) => release.slug !== slug);
+    if (filtered.length === releases.length) {
+      return NextResponse.json({ message: "not found" }, { status: 404 });
+    }
+    await writeStore(filtered);
+    return NextResponse.json({ message: "deleted" });
+  } catch (error) {
+    console.error("DELETE /releases-manual/[slug] error", error);
+    return NextResponse.json({ message: "Erro ao excluir" }, { status: 500 });
+  }
+}

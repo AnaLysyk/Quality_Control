@@ -5,6 +5,7 @@ const store: Card[] = [
   {
     id: 1,
     project: "SFQ",
+    client_slug: "mock-client",
     run_id: 99,
     case_id: 123,
     title: "Card de exemplo",

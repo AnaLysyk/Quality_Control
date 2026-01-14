@@ -8,7 +8,7 @@ export default function Error500Page() {
       <div className="max-w-xl w-full space-y-6 text-center">
         <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">Erro 500</p>
         <h1 className="text-3xl md:text-4xl font-extrabold">Ops! Algo deu errado.</h1>
-        <p className="text-(--tc-text-secondary,#4B5563)">
+        <p className="text-(--tc-text-secondary,#4b5563)">
           Encontramos um problema ao carregar esta página. Tente novamente em instantes ou volte para a página inicial.
         </p>
         <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">

@@ -21,6 +21,7 @@ export type Release = {
   slug: string;
   name: string;
   app: string;
+  clientSlug?: string | null;
   environments: string[];
   source: ReleaseSource;
   status: ReleaseStatus;

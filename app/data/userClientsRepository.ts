@@ -19,6 +19,16 @@ export async function getUserRoleInClient(userId: string, clientId: string): Pro
   return rows[0] ?? null;
 }
 
+export async function getUserClientLink(userId: string, clientId: string): Promise<UserClient | null> {
+  const { rows } = await sql<UserClient>`
+    select * from user_clients
+    where user_id = ${userId} and client_id = ${clientId}
+    order by created_at desc
+    limit 1
+  `;
+  return rows[0] ?? null;
+}
+
 export async function listUsersByClient(clientId: string): Promise<UserClient[]> {
   const { rows } = await sql<UserClient>`
     select * from user_clients where client_id = ${clientId} and active = true
@@ -33,4 +43,20 @@ export async function addUserToClient(data: { userId: string; clientId: string; 
     returning *
   `;
   return rows[0];
+}
+
+export async function updateUserClientLink(params: {
+  userId: string;
+  clientId: string;
+  role?: "ADMIN" | "USER";
+  active?: boolean;
+}): Promise<UserClient | null> {
+  const { rows } = await sql<UserClient>`
+    update user_clients set
+      role = coalesce(${params.role ?? null}, role),
+      active = coalesce(${typeof params.active === "boolean" ? params.active : null}, active)
+    where user_id = ${params.userId} and client_id = ${params.clientId}
+    returning *
+  `;
+  return rows[0] ?? null;
 }

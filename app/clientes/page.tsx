@@ -19,23 +19,33 @@ type Client = {
   active: boolean;
 };
 
-function mapClient(row: any): Client {
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
+}
+
+function mapClient(row: unknown): Client {
+  const rec = asRecord(row) ?? {};
   return {
-    id: row.id,
-    name: row.name ?? row.company_name ?? "",
-    slug: row.slug ?? null,
-    taxId: row.tax_id ?? null,
-    address: row.address ?? null,
-    linkedin: row.docs_link ?? null,
-    description: row.description ?? null,
-    logoUrl: row.logo_url ?? null,
-    active: row.active ?? false,
+    id: typeof rec.id === "string" ? rec.id : "",
+    name:
+      (typeof rec.name === "string" ? rec.name : null) ??
+      (typeof rec.company_name === "string" ? rec.company_name : null) ??
+      "",
+    slug: typeof rec.slug === "string" ? rec.slug : null,
+    taxId: typeof rec.tax_id === "string" ? rec.tax_id : null,
+    address: typeof rec.address === "string" ? rec.address : null,
+    linkedin: typeof rec.docs_link === "string" ? rec.docs_link : null,
+    description: typeof rec.description === "string" ? rec.description : null,
+    logoUrl: typeof rec.logo_url === "string" ? rec.logo_url : null,
+    active: rec.active === true,
   };
 }
 
 function ClientesPage() {
   const { user } = useAuthUser();
-  const isGlobalAdmin = !!user?.isGlobalAdmin || (user as any)?.is_global_admin === true;
+  const legacyIsGlobalAdmin = asRecord(user)?.is_global_admin === true;
+  const isGlobalAdmin = !!user?.isGlobalAdmin || legacyIsGlobalAdmin;
 
   const [items, setItems] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
@@ -63,8 +73,12 @@ function ClientesPage() {
         return;
       }
       const json = await res.json().catch(() => ({}));
-      const data = Array.isArray(json.items) ? json.items : Array.isArray(json) ? json : [];
-      setItems(data.map(mapClient));
+      const data = Array.isArray(json.items)
+        ? (json.items as unknown[])
+        : Array.isArray(json)
+          ? (json as unknown[])
+          : [];
+      setItems(data.map(mapClient).filter((c) => c.id));
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao carregar clientes";
       setMessage(msg);
@@ -100,7 +114,7 @@ function ClientesPage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        setMessage(err.message || "Erro ao criar cliente");
+        setMessage(err.error || err.message || "Erro ao criar cliente");
         return null;
       }
       const created = await res.json().catch(() => null);
@@ -155,7 +169,7 @@ function ClientesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {filtered.map((client) => {
-          const profileHref = `/empresas/${client.slug ?? client.id}/dashboard`;
+          const profileHref = `/empresas/${client.slug ?? client.id}/home`;
           return (
             <div key={client.id} className="w-full rounded-lg border border-[#e5e7eb] p-4 bg-white shadow-sm">
               <div className="flex items-center gap-3">

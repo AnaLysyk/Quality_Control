@@ -2,7 +2,11 @@ const config = {
   darkMode: "class",
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./pages/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   theme: {
-    extend: {},
+    extend: {
+      spacing: {
+        65: "16.25rem", // 260px
+      },
+    },
   },
   plugins: [],
 };

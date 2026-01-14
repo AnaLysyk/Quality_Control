@@ -3,19 +3,19 @@
 }
 
 .pass {
-  --pill-color: #22c55e;
+  --pill-color: var(--stat-pass, #7cd343);
 }
 
 .fail {
-  --pill-color: #ef4444;
+  --pill-color: var(--stat-fail, #ef0001);
 }
 
 .blocked {
-  --pill-color: #facc15;
+  --pill-color: var(--stat-blocked, #ffa73a);
 }
 
 .notRun {
-  --pill-color: #64748b;
+  --pill-color: var(--stat-notrun, #94a3b8);
 }
 
 .total {

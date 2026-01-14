@@ -19,8 +19,18 @@ export async function getUserById(id: string): Promise<Usuario | null> {
 }
 
 export async function getUserByEmail(email: string): Promise<Usuario | null> {
-  const { rows } = await sql<Usuario>`select * from users where email = ${email} limit 1`;
-  return rows[0] ?? null;
+  try {
+    const normalized = (email ?? "").trim();
+    if (!normalized) return null;
+    const { rows } = await sql<Usuario>`
+      select * from users
+      where lower(trim(email)) = lower(trim(${normalized}))
+      limit 1
+    `;
+    return rows[0] ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function listUsers(): Promise<Usuario[]> {

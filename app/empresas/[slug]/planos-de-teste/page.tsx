@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import Breadcrumb from "@/components/Breadcrumb";
 
 type PlanItem = { id: string; name: string; scope: string; tests: number; createdAt: string; risk: string; link: string };
 
@@ -50,92 +51,98 @@ export default function PlanosDeTesteEmpresaPage() {
   );
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#f7f9fb) text-(--page-text,#0b1a3c) p-6 md:p-10 space-y-6">
-      <div className="flex items-center justify_between gap-2">
-        <nav className="text-xs text-[var(--tc-text-muted,#6B7280)]">
-          <span>Empresas</span>
-          <span className="mx-1">/</span>
-          <span className="font-semibold text-[var(--tc-text-primary,#0b1a3c)] uppercase">{companyName}</span>
-          <span className="mx-1">/</span>
-          <span className="text-[var(--tc-text-secondary,#4B5563)]">Planos de Teste</span>
-        </nav>
-      </div>
+    <div className="min-h-screen bg-(--page-bg,#f7f9fb) text-(--page-text,#0b1a3c)">
+      <div className="mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6 sm:pt-6 lg:px-10 lg:pt-10 space-y-6">
+        <Breadcrumb
+          items={[
+            { label: "Empresas", href: "/empresas" },
+            {
+              label: companyName,
+              href: `/empresas/${encodeURIComponent(slug)}/home`,
+              title: companyName,
+            },
+            { label: "Planos de teste" },
+          ]}
+        />
 
-      <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)]">Planos de teste</p>
-        <h1 className="text-3xl md:text-4xl font-extrabold text-[var(--tc-text-primary,#0b1a3c)]">
-          Planejamento da {companyName}
-        </h1>
-        <p className="text-sm text-[var(--tc-text-secondary,#4B5563)]">
-          Visão do que está planejado para testar. Dados diretos do Qase (planos).
-        </p>
-      </header>
+        <header className="space-y-2">
+          <p className="text-xs uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Planos de teste</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c) leading-tight wrap-break-word">
+            Planejamento da {companyName}
+          </h1>
+          <p className="text-sm sm:text-base text-(--tc-text-secondary,#4b5563)">
+            Visão do que está planejado para testar. Dados diretos do Qase (planos).
+          </p>
+        </header>
 
-      <section className="grid gap-3 md:grid-cols-3">
-        <MetricCard label="Planos ativos" value={totalPlans} color="text-[var(--tc-text-primary,#0b1a3c)]" />
-        <MetricCard label="Testes planejados (soma)" value={totalTests} color="text-[var(--tc-accent,#ef0001)]" />
-        <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-4 shadow-sm space-y-2">
-          <p className="text-sm text-[var(--tc-text-secondary,#4B5563)] font-semibold">Risco</p>
-          <div className="flex items-center gap-3 text-xs">
-            <RiskBadge label="Alto" value={resumo.alto} tone="red" />
-            <RiskBadge label="Médio" value={resumo.medio} tone="amber" />
-            <RiskBadge label="Baixo" value={resumo.baixo} tone="emerald" />
-          </div>
-        </div>
-      </section>
-
-      {error && <p className="text-sm text-red-500">{error}</p>}
-      {loading && <p className="text-sm text-[var(--tc-text-muted,#6B7280)]">Carregando planos...</p>}
-
-      {!loading && (
-        <section className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-[var(--tc-text-primary,#0b1a3c)]">Planos</h2>
-              <p className="text-sm text-[var(--tc-text-secondary,#4B5563)]">Lista vinda do Qase</p>
+        <section className="grid gap-3 md:grid-cols-3">
+          <MetricCard label="Planos ativos" value={totalPlans} color="text-(--tc-text-primary,#0b1a3c)" />
+          <MetricCard label="Testes planejados (soma)" value={totalTests} color="text-(--tc-accent,#ef0001)" />
+          <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 shadow-sm space-y-2">
+            <p className="text-sm text-(--tc-text-secondary,#4b5563) font-semibold">Risco</p>
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <RiskBadge label="Alto" value={resumo.alto} tone="red" />
+              <RiskBadge label="Médio" value={resumo.medio} tone="amber" />
+              <RiskBadge label="Baixo" value={resumo.baixo} tone="emerald" />
             </div>
           </div>
-          {plans.length === 0 ? (
-            <p className="text-sm text-[var(--tc-text-muted,#6B7280)]">Nenhum plano cadastrado.</p>
-          ) : (
-            <div className="grid gap-3 md:grid-cols-2">
-              {plans.map((p) => (
-                <div
-                  key={p.id}
-                  className="rounded-xl border border-[var(--tc-border,#e5e7eb)] bg-white p-4 shadow-sm space-y-2 hover:shadow-md transition"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{p.name}</div>
-                    <RiskPill tone={p.risk} />
-                  </div>
-                  <p className="text-xs text-[var(--tc-text-secondary,#4B5563)]">Escopo: {p.scope}</p>
-                  <p className="text-xs text-[var(--tc-text-secondary,#4B5563)]">Testes: {p.tests}</p>
-                  <p className="text-xs text-[var(--tc-text-muted,#6B7280)]">Criado em: {p.createdAt}</p>
-                  <div className="pt-1">
-                    <a
-                      href={p.link}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs font-semibold text-[var(--tc-accent,#ef0001)] hover:underline"
-                    >
-                      Abrir no Qase
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </section>
-      )}
+
+        {error && <p className="text-sm text-red-500">{error}</p>}
+        {loading && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando planos...</p>}
+
+        {!loading && (
+          <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 sm:p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg sm:text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Planos</h2>
+                <p className="text-sm text-(--tc-text-secondary,#4b5563)">Lista vinda do Qase</p>
+              </div>
+            </div>
+            {plans.length === 0 ? (
+              <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhum plano cadastrado.</p>
+            ) : (
+              <div className="grid gap-3 md:grid-cols-2">
+                {plans.map((p) => (
+                  <div
+                    key={p.id}
+                    className="rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 shadow-sm space-y-2 hover:shadow-md transition"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 font-semibold text-(--tc-text-primary,#0b1a3c) truncate" title={p.name}>
+                        {p.name}
+                      </div>
+                      <RiskPill tone={p.risk} />
+                    </div>
+                    <p className="text-xs text-(--tc-text-secondary,#4b5563)">Escopo: {p.scope}</p>
+                    <p className="text-xs text-(--tc-text-secondary,#4b5563)">Testes: {p.tests}</p>
+                    <p className="text-xs text-(--tc-text-muted,#6b7280)">Criado em: {p.createdAt}</p>
+                    <div className="pt-1">
+                      <a
+                        href={p.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
+                      >
+                        Abrir no Qase
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+      </div>
     </div>
   );
 }
 
 function MetricCard({ label, value, suffix, color }: { label: string; value: number; suffix?: string; color?: string }) {
   return (
-    <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-5 shadow-sm">
-      <p className="text-sm text-[var(--tc-text-muted,#6B7280)]">{label}</p>
-      <p className={`text-3xl font-bold ${color ?? "text-[var(--tc-text-primary,#0b1a3c)]"}`}>
+    <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-5 shadow-sm">
+      <p className="text-sm text-(--tc-text-muted,#6b7280)">{label}</p>
+      <p className={`text-3xl font-bold ${color ?? "text-(--tc-text-primary,#0b1a3c)"}`}>
         {value}
         {suffix}
       </p>

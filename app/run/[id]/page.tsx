@@ -49,15 +49,16 @@ function normalizeStats(raw: RawRunStats): Stats {
   };
 }
 
-export default async function RunDetailPage({ params }: { params: { id: string } }) {
-  const run = await fetchRun(params.id);
+export default async function RunDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const run = await fetchRun(id);
 
   if (!run) {
     return (
-      <div className="min-h-screen tc-dark flex items-center justify-center text-[var(--tc-text-inverse)] bg-[var(--tc-bg)] px-6">
+      <div className="min-h-screen tc-dark flex items-center justify-center text-(--tc-text-inverse) bg-(--tc-bg) px-6">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold">Run nao encontrada</h1>
-          <p className="text-sm text-[var(--tc-text-secondary)]">ID: {params.id}</p>
+          <p className="text-sm text-(--tc-text-secondary)">ID: {id}</p>
         </div>
       </div>
     );
@@ -70,21 +71,21 @@ export default async function RunDetailPage({ params }: { params: { id: string }
   const formattedCreated = created ? new Date(created).toLocaleString("pt-BR") : "Data N/D";
 
   return (
-    <div className="min-h-screen tc-dark text-[var(--tc-text-inverse)] bg-[var(--tc-bg)] px-6 md:px-10 py-10">
+    <div className="min-h-screen tc-dark text-(--tc-text-inverse) bg-(--tc-bg) px-6 md:px-10 py-10">
       <div className="max-w-5xl mx-auto space-y-8">
         <header className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.4em] text-[var(--tc-accent)]">Run</p>
+          <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent)">Run</p>
           <h1 className="text-3xl md:text-4xl font-extrabold leading-tight">{run.title ?? `Run ${run.id}`}</h1>
-          <p className="text-sm text-[var(--tc-text-muted)]">
+          <p className="text-sm text-(--tc-text-muted)">
             ID: {run.id} {run.status_text ? `| Status: ${run.status_text}` : ""} | Criada em: {formattedCreated}
           </p>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="card-tc bg-[var(--tc-surface-dark)] border-[var(--tc-border)]/20 p-6">
+          <div className="card-tc bg-(--tc-surface-dark) border-(--tc-border)/20 p-6">
             <StatusChart stats={stats} />
           </div>
-          <div className="card-tc bg-[var(--tc-surface-dark)] border-[var(--tc-border)]/20 p-6 space-y-3">
+          <div className="card-tc bg-(--tc-surface-dark) border-(--tc-border)/20 p-6 space-y-3">
             <h2 className="text-xl font-bold">Resumo</h2>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <StatCard label="Pass" value={stats.pass} percent={pct(stats.pass)} tone="pass" />
@@ -94,8 +95,8 @@ export default async function RunDetailPage({ params }: { params: { id: string }
               <StatCard label="Total" value={total} tone="inverse" className="col-span-2" />
             </div>
             {run.description && (
-              <div className="rounded-lg bg-white/5 border border-[var(--tc-border)]/20 px-3 py-2 text-sm text-[var(--tc-text-inverse)]">
-                <p className="text-[var(--tc-text-muted)] text-xs mb-1">Descricao</p>
+              <div className="rounded-lg bg-white/5 border border-(--tc-border)/20 px-3 py-2 text-sm text-(--tc-text-inverse)">
+                <p className="text-(--tc-text-muted) text-xs mb-1">Descricao</p>
                 <p className="whitespace-pre-wrap leading-relaxed">{run.description}</p>
               </div>
             )}
@@ -103,7 +104,7 @@ export default async function RunDetailPage({ params }: { params: { id: string }
               href={`https://app.qase.io/run/${PROJECT}/${run.id}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center rounded-lg border border-[var(--tc-accent)] px-4 py-2 text-sm font-semibold text-[var(--tc-accent)] hover:bg-[var(--tc-accent-soft)] transition"
+              className="inline-flex items-center justify-center rounded-lg border border-(--tc-accent) px-4 py-2 text-sm font-semibold text-(--tc-accent) hover:bg-(--tc-accent-soft) transition"
             >
               Abrir no Qase
             </a>

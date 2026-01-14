@@ -1,0 +1,84 @@
+import { NextResponse } from "next/server";
+import { authenticateRequest } from "@/lib/jwtAuth";
+
+const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
+const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
+
+const PROJECTS_FALLBACK = (process.env.NEXT_PUBLIC_QASE_PROJECTS || process.env.QASE_PROJECTS || "SFQ,PRINT,BOOKING,CDS,GMT")
+  .split(",")
+  .map((p) => p.trim())
+  .filter(Boolean);
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
+}
+
+function normalizeString(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length ? trimmed : null;
+}
+
+type Defect = {
+  id: number;
+  title: string;
+  status?: string;
+  severity?: string | number;
+  description?: string;
+  project?: string;
+  project_code?: string;
+};
+
+async function fetchProjectDefects(projectCode: string): Promise<Defect[]> {
+  const res = await fetch(`${QASE_BASE_URL}/v1/defect/${encodeURIComponent(projectCode)}?limit=100&offset=0`, {
+    headers: { Token: QASE_TOKEN, Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  const json = (await res.json().catch(() => null)) as unknown;
+  if (!res.ok) {
+    return [];
+  }
+
+  const entities = (asRecord(asRecord(json)?.result)?.entities as unknown[]) || [];
+  return entities
+    .map((d) => {
+      const rec = asRecord(d) ?? {};
+      const idRaw = rec.id ?? rec.defect_id;
+      const id = Number(idRaw);
+      if (!Number.isFinite(id)) return null;
+
+      return {
+        id,
+        title:
+          (typeof rec.title === "string" ? rec.title : null) ||
+          (typeof rec.name === "string" ? rec.name : null) ||
+          `Defect ${id}`,
+        status: typeof rec.status === "string" ? rec.status : undefined,
+        severity: (typeof rec.severity === "string" ? rec.severity : null) ?? (typeof rec.severity_name === "string" ? rec.severity_name : null) ?? undefined,
+        description: typeof rec.description === "string" ? rec.description : undefined,
+        project: projectCode,
+        project_code: projectCode,
+      } satisfies Defect;
+    })
+    .filter(Boolean) as Defect[];
+}
+
+export async function GET(request: Request) {
+  const auth = await authenticateRequest(request);
+  if (!auth) return NextResponse.json({ success: false, error: { message: "Unauthorized" } }, { status: 401 });
+
+  const url = new URL(request.url);
+  const project = normalizeString(url.searchParams.get("project")) || "ALL";
+
+  if (!QASE_TOKEN) {
+    return NextResponse.json({ success: true, data: [], warning: "QASE_API_TOKEN ausente" }, { status: 200 });
+  }
+
+  const projects = project.toUpperCase() === "ALL" ? PROJECTS_FALLBACK : [project];
+  const lists = await Promise.all(projects.map((p) => fetchProjectDefects(p)));
+  const merged = lists.flat();
+
+  return NextResponse.json({ success: true, data: merged }, { status: 200 });
+}

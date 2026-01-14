@@ -1,31 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  FiActivity,
-  FiAlertTriangle,
-  FiArrowDownRight,
-  FiArrowUpRight,
-  FiCheckCircle,
-  FiMinus,
-  FiShield,
-  FiTrendingUp,
-  FiUsers,
-} from "react-icons/fi";
+import { useEffect, useMemo, useState } from "react";
+import { FiAlertTriangle, FiChevronDown, FiExternalLink } from "react-icons/fi";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
-import { useI18n } from "@/hooks/useI18n";
-import { type TranslateFn } from "@/lib/i18n";
-import {
-  CompanyRow,
-  QUALITY_THRESHOLDS,
-  QualityGateResult,
-  QualityGateStatus,
-  Stats,
-  TrendPoint,
-  TrendSummary,
-  sumStats,
-} from "@/lib/quality";
+import type { CompanyRow, Stats } from "@/lib/quality";
+import styles from "./page.module.css";
 
 type QualityOverviewResponse = {
   companies: CompanyRow[];
@@ -35,634 +15,443 @@ type QualityOverviewResponse = {
   globalStats: Stats;
   globalPassRate: number | null;
   passRateTone: "good" | "warn" | "neutral";
-  gateCounts: Record<QualityGateStatus, number>;
+  gateCounts: Record<string, number>;
   riskCount: number;
   warningCount: number;
-  trendPoints: TrendPoint[];
-  trendSummary: TrendSummary;
-  policy: typeof QUALITY_THRESHOLDS;
+  trendPoints: { label: string; value: number | null; total: number }[];
+  trendSummary: { direction: "up" | "down" | "flat"; delta: number };
+  policy: Record<string, number>;
 };
 
-function pctWidthClass(value: number, total: number) {
-  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-  const clamped = Math.max(0, Math.min(100, pct));
-  return `w-pct-${clamped}`;
-}
-
-function KpiCard({
-  icon: Icon,
-  label,
-  value,
-  status,
-  tone,
-}: {
-  icon: typeof FiUsers;
-  label: string;
-  value: number | string;
+type DefectItem = {
+  id: string;
+  title: string;
   status: string;
-  tone: "good" | "warn" | "danger" | "neutral";
-}) {
-  const toneMap = {
-    good: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    warn: "border-amber-200 bg-amber-50 text-amber-700",
-    danger: "border-red-200 bg-red-50 text-red-700",
-    neutral: "border-slate-200 bg-slate-100 text-slate-600",
-  };
+  origin?: "manual" | "automatico";
+  companyName?: string | null;
+  run_id?: string | number | null;
+  url?: string;
+};
 
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between">
-        <p className="text-xs uppercase tracking-[0.32em] text-slate-400">{label}</p>
-        <span className={`rounded-full border px-2 py-1 text-[10px] font-semibold ${toneMap[tone]}`}>
-          {status}
-        </span>
-      </div>
-      <div className="mt-4 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700">
-          <Icon />
-        </div>
-        <div className="text-3xl font-extrabold text-slate-900">{value}</div>
-      </div>
-    </div>
-  );
-}
+type DefectsResponse = {
+  items: DefectItem[];
+  total: number;
+};
 
-function TrendChart({ points, emptyLabel }: { points: TrendPoint[]; emptyLabel?: string }) {
-  const hasData = points.some((point) => point.value !== null);
-  const safePoints = points.map((point) => point.value ?? 0);
-  const emptyText = emptyLabel ?? "No data";
-  const pointCoords = safePoints.map((value, index) => {
-    const x = points.length === 1 ? 50 : (index / (points.length - 1)) * 100;
-    const y = 100 - value;
-    return `${x},${y}`;
-  });
+type AuditLogItem = {
+  id: string;
+  created_at: string;
+  action: string;
+  actor_email: string | null;
+  entity_label: string | null;
+  entity_type: string | null;
+};
 
-  const areaPath = `M ${pointCoords[0]} L ${pointCoords.slice(1).join(" ")} L 100 100 L 0 100 Z`;
+const STATUS_LABELS: Record<string, string> = {
+  fail: "Em falha",
+  blocked: "Bloqueado",
+  pending: "Aguardando teste",
+  done: "Concluído",
+};
 
-  return (
-    <div className="mt-4 space-y-4">
-      <div className="relative h-44">
-        <svg viewBox="0 0 100 100" className="h-full w-full">
-          <defs>
-            <linearGradient id="trendStroke" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#ef0001" />
-              <stop offset="100%" stopColor="#ffb44a" />
-            </linearGradient>
-            <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgba(239,0,1,0.25)" />
-              <stop offset="100%" stopColor="rgba(239,0,1,0)" />
-            </linearGradient>
-          </defs>
-          <path d={areaPath} fill="url(#trendFill)" opacity={hasData ? 1 : 0.2} />
-          <polyline
-            fill="none"
-            stroke="url(#trendStroke)"
-            strokeWidth={2.8}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            points={pointCoords.join(" ")}
-            opacity={hasData ? 1 : 0.35}
-          />
-          {points.map((point, index) => {
-            const x = points.length === 1 ? 50 : (index / (points.length - 1)) * 100;
-            const y = 100 - (point.value ?? 0);
-            return (
-              <circle key={point.label} cx={x} cy={y} r={2.8} fill="#0f172a">
-                <title>{point.value !== null ? `${point.value}%` : emptyText}</title>
-              </circle>
-            );
-          })}
-        </svg>
-        {!hasData && (
-          <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-400">
-            {emptyText}
-          </div>
-        )}
-      </div>
-      <div className="flex justify-between text-[11px] text-slate-500">
-        {points.map((point) => (
-          <span key={point.label}>{point.label}</span>
-        ))}
-      </div>
-    </div>
-  );
-}
+const RISK_TONE: Record<string, string> = {
+  failed: "border-red-200 bg-red-50 text-red-600",
+  warning: "border-amber-200 bg-amber-50 text-amber-600",
+  approved: "border-emerald-200 bg-emerald-50 text-emerald-600",
+  no_data: "border-slate-200 bg-slate-50 text-slate-500",
+};
 
-function StatusBreakdown({
-  stats,
-  labels,
-}: {
-  stats: Stats;
-  labels: { pass: string; fail: string; blocked: string; notRun: string };
-}) {
-  const total = sumStats(stats);
-  const segments = [
-    { label: labels.pass, value: stats.pass, className: "bg-emerald-500" },
-    { label: labels.fail, value: stats.fail, className: "bg-red-500" },
-    { label: labels.blocked, value: stats.blocked, className: "bg-amber-400" },
-    { label: labels.notRun, value: stats.notRun, className: "bg-slate-300" },
-  ];
-
-  return (
-    <div className="mt-4 space-y-4">
-      <div className="flex h-3 overflow-hidden rounded-full bg-slate-100">
-        {segments.map((segment) => {
-          const width = total > 0 ? (segment.value / total) * 100 : 0;
-          const widthClass = pctWidthClass(segment.value, total);
-          return <span key={segment.label} className={`${segment.className} ${widthClass}`} />;
-        })}
-      </div>
-      <div className="grid grid-cols-2 gap-3 text-xs text-slate-600">
-        {segments.map((segment) => (
-          <div
-            key={segment.label}
-            className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
-          >
-            <span>{segment.label}</span>
-            <span className="font-semibold text-slate-900">{segment.value}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function GateStack({ counts }: { counts: Record<QualityGateStatus, number> }) {
-  const total = counts.approved + counts.warning + counts.failed + counts.no_data;
-  const segments = [
-    { key: "approved", className: "bg-emerald-500" },
-    { key: "warning", className: "bg-amber-400" },
-    { key: "failed", className: "bg-red-500" },
-    { key: "no_data", className: "bg-slate-300" },
-  ] as const;
-
-  return (
-    <div className="mt-4 flex h-3 overflow-hidden rounded-full bg-slate-100">
-      {segments.map((segment) => {
-        const value = counts[segment.key];
-        const widthClass = pctWidthClass(value, total);
-        return <span key={segment.key} className={`${segment.className} ${widthClass}`} />;
-      })}
-    </div>
-  );
-}
-
-function GateBadge({
-  gate,
-  compact = false,
-  fallbackTitle = "",
-  t,
-}: {
-  gate: QualityGateResult;
-  compact?: boolean;
-  fallbackTitle?: string;
-  t: TranslateFn;
-}) {
-  const styles: Record<QualityGateStatus, string> = {
-    approved: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    warning: "border-amber-200 bg-amber-50 text-amber-700",
-    failed: "border-red-200 bg-red-50 text-red-700",
-    no_data: "border-slate-200 bg-slate-100 text-slate-500",
-  };
-
-  const label = t(`gate.${gate.status}`);
-  const reasonText = gate.reasons.length
-    ? gate.reasons
-        .map((reason) =>
-          reason.value !== undefined
-            ? t(`gate.${reason.key}`, { value: reason.value })
-            : t(`gate.${reason.key}`)
-        )
-        .join(" | ")
-    : fallbackTitle;
-
-  return (
-    <span
-      title={reasonText || fallbackTitle}
-      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${styles[gate.status]} ${
-        compact ? "px-2 py-0.5 text-[10px]" : ""
-      }`}
-    >
-      {label}
-    </span>
-  );
-}
-
-function TrendIndicator({ direction, delta }: { direction: "up" | "down" | "flat"; delta: number }) {
-  const Icon = direction === "up" ? FiArrowUpRight : direction === "down" ? FiArrowDownRight : FiMinus;
-  const color =
-    direction === "up" ? "text-emerald-600" : direction === "down" ? "text-red-600" : "text-slate-400";
-  const sign = delta > 0 ? "+" : "";
-  const label = direction === "flat" ? "0%" : `${sign}${delta}%`;
-
-  return (
-    <div className={`inline-flex items-center gap-1 text-xs font-semibold ${color}`}>
-      <Icon size={14} />
-      <span>{label}</span>
-    </div>
-  );
-}
-
-function RuleLine({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-      <span className="text-xs text-slate-500">{label}</span>
-      <span className="text-sm font-semibold text-slate-900">{value}</span>
-    </div>
-  );
-}
-
-function formatDate(value?: string, locale?: string) {
+function formatDate(value?: string) {
   if (!value) return "--";
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return "--";
-  return date.toLocaleDateString(locale ?? "pt-BR");
+  return date.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+}
+
+function sumStats(stats?: Stats | null) {
+  if (!stats) return 0;
+  return stats.fail + stats.blocked + stats.notRun;
 }
 
 export default function AdminHomePage() {
   const [overview, setOverview] = useState<QualityOverviewResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [period, setPeriod] = useState<7 | 30 | 90>(30);
-  const { t, language } = useI18n();
+  const [defectsPayload, setDefectsPayload] = useState<DefectsResponse | null>(null);
+  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
+  const [loadingOverview, setLoadingOverview] = useState(true);
+  const [loadingDefects, setLoadingDefects] = useState(true);
+  const [loadingAudit, setLoadingAudit] = useState(true);
+  const [selectedCompanySlug, setSelectedCompanySlug] = useState<string | null>(null);
+  const [selectedRunSlug, setSelectedRunSlug] = useState<string | null>(null);
 
   useEffect(() => {
     let canceled = false;
-    const load = async () => {
-      setLoading(true);
-      setError(null);
+    const loadOverview = async () => {
+      setLoadingOverview(true);
       try {
-        const res = await fetch(`/api/admin/quality/overview?period=${period}`, { cache: "no-store" });
+        const res = await fetch("/api/admin/quality/overview?period=30", { cache: "no-store" });
         const payload = (await res.json()) as QualityOverviewResponse;
-
-        if (!canceled) {
-          setOverview(payload);
-        }
-
-      } catch (err) {
-        if (!canceled) {
-          setError(err instanceof Error ? err.message : t("adminHome.errorUnexpected"));
-        }
+        if (!canceled) setOverview(payload);
+      } catch {
+        if (!canceled) setOverview(null);
       } finally {
-        if (!canceled) {
-          setLoading(false);
-        }
+        if (!canceled) setLoadingOverview(false);
       }
     };
-    load();
+    loadOverview();
     return () => {
       canceled = true;
     };
-  }, [period, t]);
+  }, []);
 
-  const coverage = overview?.coverage ?? { total: 0, withStats: 0, percent: 0 };
-  const releaseCount = overview?.releaseCount ?? 0;
+  useEffect(() => {
+    let canceled = false;
+    const loadDefects = async () => {
+      setLoadingDefects(true);
+      try {
+        const res = await fetch("/api/admin/defeitos", { cache: "no-store" });
+        const payload = (await res.json()) as DefectsResponse;
+        if (!canceled) setDefectsPayload(payload);
+      } catch {
+        if (!canceled) setDefectsPayload(null);
+      } finally {
+        if (!canceled) setLoadingDefects(false);
+      }
+    };
+    loadDefects();
+    return () => {
+      canceled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let canceled = false;
+    const loadLogs = async () => {
+      setLoadingAudit(true);
+      try {
+        const res = await fetch("/api/admin/audit-logs?limit=5", { cache: "no-store" });
+        const payload = await res.json();
+        if (!canceled) setAuditLogs(payload?.items ?? []);
+      } catch {
+        if (!canceled) setAuditLogs([]);
+      } finally {
+        if (!canceled) setLoadingAudit(false);
+      }
+    };
+    loadLogs();
+    return () => {
+      canceled = true;
+    };
+  }, []);
+
   const companies = overview?.companies ?? [];
-  const globalStats = overview?.globalStats ?? { pass: 0, fail: 0, blocked: 0, notRun: 0 };
-  const globalTotal = sumStats(globalStats);
-  const globalPassRate =
-    overview?.globalPassRate ?? (globalTotal > 0 ? Math.round((globalStats.pass / globalTotal) * 100) : null);
-  const gateCounts = overview?.gateCounts ?? { approved: 0, warning: 0, failed: 0, no_data: 0 };
-  const riskCount = overview?.riskCount ?? 0;
-  const warningCount = overview?.warningCount ?? 0;
-  const trendPoints = overview?.trendPoints ?? [];
-  const trendSummary = overview?.trendSummary ?? { direction: "flat", delta: 0 };
-  const passRateTone =
-    overview?.passRateTone ??
-    (globalPassRate === null
-      ? "neutral"
-      : globalPassRate >= QUALITY_THRESHOLDS.passRate
-        ? "good"
-        : "warn");
-  const latestTrendLabel = overview
-    ? `${trendSummary.delta > 0 ? "+" : ""}${trendSummary.delta}%`
-    : t("adminHome.latestValueFallback");
-  const boardCompanies = companies.slice(0, 9);
-  const policy = overview?.policy ?? QUALITY_THRESHOLDS;
-  const coverageLabel = t("adminHome.coverage", { percent: coverage.percent });
+  useEffect(() => {
+    if (companies.length && !selectedCompanySlug) {
+      setSelectedCompanySlug(companies[0].slug ?? companies[0].id);
+    }
+  }, [companies, selectedCompanySlug]);
+
+  const selectedCompany = useMemo(() => {
+    if (!companies.length) return null;
+    return companies.find((company) => company.slug === selectedCompanySlug) ?? companies[0];
+  }, [companies, selectedCompanySlug]);
+
+  useEffect(() => {
+    if (!selectedCompany || !selectedCompany.releases.length) return;
+    const firstSlug = selectedCompany.releases[0].slug;
+    if (firstSlug && firstSlug !== selectedRunSlug) {
+      setSelectedRunSlug(firstSlug);
+    }
+  }, [selectedCompany, selectedRunSlug]);
+
+  const runOptions = selectedCompany?.releases ?? [];
+  const selectedRun = runOptions.find((run) => run.slug === selectedRunSlug) ?? runOptions[0] ?? null;
+
+  const attentionItems = useMemo(() => {
+    if (!defectsPayload) return [];
+    const attention: { id: string; text: string; href: string }[] = [];
+    const fail = defectsPayload.items.find((d) => d.status === "fail");
+    if (fail) attention.push({ id: fail.id, text: `Defeito em falha: ${fail.title}`, href: `/admin/defeitos/${fail.id}` });
+    const blocked = defectsPayload.items.find((d) => d.status === "blocked");
+    if (blocked) attention.push({ id: blocked.id, text: `Bloqueado aguardando teste: ${blocked.title}`, href: `/admin/defeitos/${blocked.id}` });
+    if (overview && selectedCompany) {
+      attention.push({
+        id: "release",
+        text: `${selectedCompany.latestRelease?.title ?? "Release crítica"} sem execução recente`,
+        href: `/admin/runs`,
+      });
+    }
+    return attention.slice(0, 5);
+  }, [defectsPayload, overview, selectedCompany]);
+
+  const relevantDefects = useMemo(() => {
+    const defects = defectsPayload?.items ?? [];
+    return defects.filter((d) => ["fail", "blocked", "pending"].includes(d.status)).slice(0, 6);
+  }, [defectsPayload]);
+
+  const historyItems = useMemo(() => auditLogs, [auditLogs]);
+
+  const passRateDisplay = selectedCompany?.passRate ?? overview?.globalPassRate ?? null;
+  const defectCount = defectsPayload?.total ?? "--";
+  const releasesAtRisk = overview?.riskCount ?? ("--" as const);
+
+  const runStats = selectedRun?.stats ?? { pass: 0, fail: 0, blocked: 0, notRun: 0 };
+  const runTotal = Object.values(runStats).reduce((sum, value) => sum + value, 0);
+  const runStatEntries = [
+    { id: "pass", label: "Pass", value: runStats.pass, progressClass: styles.progressPass },
+    { id: "fail", label: "Fail", value: runStats.fail, progressClass: styles.progressFail },
+    { id: "blocked", label: "Blocked", value: runStats.blocked, progressClass: styles.progressBlocked },
+    { id: "notRun", label: "Not run", value: runStats.notRun, progressClass: styles.progressNotRun },
+  ].filter((entry) => entry.value > 0);
+
+  const companyRiskText = selectedCompany?.gate?.status ?? "no_data";
+
+  const companyCards = companies.map((company) => {
+    const totalFailures = sumStats(company.stats);
+    return {
+      id: company.id,
+      slug: company.slug ?? company.id,
+      name: company.name,
+      risk: company.gate?.status ?? "no_data",
+      passRate: company.passRate,
+      defectCount: totalFailures,
+      gateCopy: company.gate?.status === "failed" ? "Risco alto" : company.gate?.status === "warning" ? "Atenção" : "Estável",
+    };
+  });
 
   return (
     <RequireGlobalAdmin>
-      <div className="relative min-h-screen pb-12">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(239,0,1,0.1),transparent_45%),radial-gradient(circle_at_75%_20%,rgba(17,24,39,0.08),transparent_40%),linear-gradient(140deg,#f5f7fb_0%,#eef2f7_45%,#f9fafb_100%)]" />
-        <div className="space-y-10 pt-8">
-          <header className="relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-[0_20px_50px_rgba(15,23,42,0.08)] backdrop-blur md:p-10">
-            <div className="absolute right-0 top-0 h-40 w-40 translate-x-1/3 -translate-y-1/3 rounded-full bg-[radial-gradient(circle,rgba(239,0,1,0.18),transparent_65%)]" />
-            <div className="relative space-y-6">
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                <div className="space-y-3">
-                  <p className="text-xs uppercase tracking-[0.45em] text-red-600">{t("adminHome.headerKicker")}</p>
-                  <h1 className="text-3xl font-extrabold text-slate-900 md:text-5xl">{t("adminHome.headerTitle")}</h1>
-                  <p className="max-w-2xl text-sm text-slate-600 md:text-base">{t("adminHome.headerSubtitle")}</p>
-                </div>
-                <div className="flex flex-col items-start gap-3 rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-xs text-slate-600 shadow-sm">
-                  <span className="uppercase tracking-[0.28em] text-[10px] text-slate-400">{t("adminHome.periodLabel")}</span>
-                  <div className="flex gap-2">
-                    {[7, 30, 90].map((value) => (
-                      <button
-                        key={value}
-                        onClick={() => setPeriod(value as 7 | 30 | 90)}
-                        className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                          period === value
-                            ? "bg-red-600 text-white shadow"
-                            : "border border-slate-200 text-slate-600 hover:bg-slate-100"
-                        }`}
-                      >
-                        {value}d
-                      </button>
-                    ))}
-                  </div>
-                  <div className="text-[11px] text-slate-500">{coverageLabel}</div>
-                </div>
+      <div className="min-h-screen bg-(--page-bg,#f4f5f7) text-(--page-text,#0b1a3c)">
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6 lg:p-8">
+          <section className="rounded-4xl bg-white p-6 shadow-xl">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent,#ef0001)">Testing Metric</p>
+                <h1 className="text-4xl font-extrabold text-(--page-text,#0b1a3c)">Qualidade em execução</h1>
+                <p className="mt-2 max-w-2xl text-sm text-(--tc-text-muted,#6b7280)">
+                  Risco, falhas e decisão em tempo real. O painel responde “onde agir agora” sem criar ruído.
+                </p>
+                {loadingOverview && (
+                  <p className="mt-1 text-xs uppercase tracking-[0.4em] text-(--tc-text-muted,#6b7280)">Atualizando dados...</p>
+                )}
               </div>
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-2xl border border-slate-200/60 bg-slate-900 px-5 py-4 text-white shadow-[0_18px_30px_rgba(15,23,42,0.25)]">
-                  <p className="text-xs uppercase tracking-[0.35em] text-white/60">{t("adminHome.centralSignalTitle")}</p>
-                  <p className="mt-2 text-2xl font-bold">{t("adminHome.centralSignalStatus")}</p>
-                  <p className="text-xs text-white/60">{t("adminHome.centralSignalDesc")}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200/60 bg-white px-5 py-4 shadow-sm">
-                  <p className="text-xs uppercase tracking-[0.35em] text-slate-400">{t("adminHome.qualityGateTitle")}</p>
-                  <p className="mt-2 text-2xl font-bold text-slate-900">
-                    {t("adminHome.qualityGateSummary", { failed: riskCount, warning: warningCount })}
-                  </p>
-                  <p className="text-xs text-slate-500">{t("adminHome.qualityGateDesc")}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200/60 bg-white px-5 py-4 shadow-sm">
-                  <p className="text-xs uppercase tracking-[0.35em] text-slate-400">{t("adminHome.releasePulseTitle")}</p>
-                  <p className="mt-2 text-2xl font-bold text-slate-900">{releaseCount}</p>
-                  <p className="text-xs text-slate-500">{t("adminHome.releasePulseDesc")}</p>
-                </div>
+              <div className="flex items-center gap-3 rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em]">
+                <span>{selectedCompany?.name ?? "Contexto global"}</span>
+                <span className="rounded-full bg-(--tc-accent,#ef0001)/10 px-3 py-1 text-(--tc-accent,#ef0001)">Admin</span>
               </div>
             </div>
-          </header>
-
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <KpiCard
-              icon={FiUsers}
-              label={t("adminHome.kpiCompanies")}
-              value={companies.length}
-              status={companies.length > 0 ? t("adminHome.kpiCompaniesOk") : t("adminHome.kpiCompaniesNone")}
-              tone="good"
-            />
-            <KpiCard
-              icon={FiActivity}
-              label={t("adminHome.kpiReleases")}
-              value={releaseCount}
-              status={releaseCount > 0 ? t("adminHome.kpiReleasesOk") : t("adminHome.kpiReleasesNone")}
-              tone="neutral"
-            />
-            <KpiCard
-              icon={FiTrendingUp}
-              label={t("adminHome.kpiPassRate")}
-              value={globalPassRate !== null ? `${globalPassRate}%` : "--"}
-              status={globalPassRate !== null ? t("adminHome.kpiPassRateOk") : t("adminHome.kpiPassRateNone")}
-              tone={passRateTone}
-            />
-            <KpiCard
-              icon={FiAlertTriangle}
-              label={t("adminHome.kpiRisk")}
-              value={riskCount}
-              status={riskCount > 0 ? t("adminHome.kpiRiskOk") : t("adminHome.kpiRiskNone")}
-              tone={riskCount > 0 ? "danger" : "good"}
-            />
-          </section>
-
-          <section className="space-y-4">
-            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">{t("adminHome.pulseTitle")}</h2>
-                <p className="text-sm text-slate-600">{t("adminHome.pulseSubtitle")}</p>
+            <div className="mt-6 space-y-2 border-t border-(--tc-border,#e5e7eb) pt-6">
+              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
+                <span>Empresas</span>
+                <span>Arraste para ver</span>
               </div>
-              <div className="text-xs text-slate-500">
-                {t("adminHome.pulseRules", {
-                  passRate: policy.passRate,
-                  failRate: policy.maxFailRate,
+              <div className="flex w-full gap-4 overflow-x-auto pb-2">
+                {companyCards.map((company) => {
+                  const tone = RISK_TONE[company.risk] ?? RISK_TONE.no_data;
+                  const isSelected = company.slug === (selectedCompany?.slug ?? selectedCompany?.id);
+                  return (
+                    <button
+                      key={company.id}
+                      type="button"
+                      onClick={() => setSelectedCompanySlug(company.slug)}
+                      className={`flex min-w-56 flex-col gap-2 rounded-2xl border p-4 shadow-sm transition ${tone} ${
+                        isSelected ? "ring-2 ring-offset-2 ring-(--tc-border,#e5e7eb)" : "opacity-80 hover:opacity-100"
+                      }`}
+                    >
+                      <div className="text-sm font-bold text-(--page-text,#0b1a3c)">{company.name}</div>
+                      <div className="text-3xl font-extrabold">{company.defectCount}</div>
+                      <div className="text-xs text-(--tc-text-muted,#6b7280)">{company.gateCopy}</div>
+                      <div className="text-xs text-(--tc-text-muted,#6b7280)">
+                        Pass rate: {company.passRate !== null ? `${company.passRate}%` : "--"}
+                      </div>
+                    </button>
+                  );
                 })}
               </div>
             </div>
+          </section>
 
-            <div className="grid gap-4 lg:grid-cols-3">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.32em] text-slate-400">{t("adminHome.trendTitle")}</p>
-                    <h3 className="text-lg font-semibold text-slate-900">{t("adminHome.trendSubtitle")}</h3>
-                  </div>
-                  <div className="text-xs text-slate-500">{t("adminHome.trendLatest", { value: latestTrendLabel })}</div>
-                </div>
-                <TrendChart points={trendPoints} emptyLabel={t("adminHome.trendNoData")} />
+          <section className="rounded-4xl bg-linear-to-br from-white to-[#fef0ef] p-6 md:p-8 shadow-xl">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <h2 className="text-3xl font-bold text-(--page-text,#0b1a3c)">
+                Estado atual — {selectedCompany?.name ?? "visão global"}
+              </h2>
+              <div className="text-sm font-semibold uppercase tracking-[0.4em] text-(--tc-text-muted,#6b7280)">
+                {companyRiskText === "failed" ? "Risco elevado" : companyRiskText === "warning" ? "Atenção" : "Estável"}
               </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.32em] text-slate-400">{t("adminHome.statusTitle")}</p>
-                    <h3 className="text-lg font-semibold text-slate-900">{t("adminHome.statusSubtitle")}</h3>
-                  </div>
-                  <span className="text-xs text-slate-500">{t("adminHome.statusTotal", { total: globalTotal })}</span>
-                </div>
-                <StatusBreakdown
-                  stats={globalStats}
-                  labels={{
-                    pass: t("status.pass"),
-                    fail: t("status.fail"),
-                    blocked: t("status.blocked"),
-                    notRun: t("status.notRun"),
-                  }}
-                />
+            </div>
+            <div className="mt-8 grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+              <div className="space-y-1">
+                <p className="text-sm text-(--tc-text-secondary,#4b5563)">Pass rate</p>
+                <p className="text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">
+                  {passRateDisplay !== null ? `${passRateDisplay}%` : "--"}
+                </p>
               </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.32em] text-slate-400">{t("adminHome.gateMapTitle")}</p>
-                    <h3 className="text-lg font-semibold text-slate-900">{t("adminHome.gateMapSubtitle")}</h3>
-                  </div>
-                  <FiShield className="text-slate-400" />
-                </div>
-                <GateStack counts={gateCounts} />
-                <div className="mt-4 grid gap-2 text-xs text-slate-600">
-                  <span>{t("adminHome.gateMapApproved", { count: gateCounts.approved })}</span>
-                  <span>{t("adminHome.gateMapWarning", { count: gateCounts.warning })}</span>
-                  <span>{t("adminHome.gateMapFailed", { count: gateCounts.failed })}</span>
-                  <span>{t("adminHome.gateMapNoData", { count: gateCounts.no_data })}</span>
-                </div>
+              <div className="space-y-1">
+                <p className="text-sm text-(--tc-text-secondary,#4b5563)">Defeitos abertos</p>
+                <p className="text-4xl font-extrabold text-red-600">{defectCount}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-(--tc-text-secondary,#4b5563)">Releases em risco</p>
+                <p className="text-4xl font-extrabold text-amber-600">{releasesAtRisk}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-(--tc-text-secondary,#4b5563)">Última execução</p>
+                <p className="text-4xl font-extrabold text-(--page-text,#0b1a3c)">
+                  {formatDate(selectedCompany?.latestRelease?.createdAt)}
+                </p>
               </div>
             </div>
           </section>
 
-          <section className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)] md:p-8">
-            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">{t("adminHome.tableTitle")}</h2>
-                <p className="text-sm text-slate-600">{t("adminHome.tableSubtitle")}</p>
-              </div>
-              <div className="text-xs text-slate-500">
-                {loading ? t("adminHome.tableLoadingCompanies") : t("adminHome.tableCount", { count: companies.length })}
-              </div>
+          <section className="rounded-4xl bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-(--page-text,#0b1a3c)">Atenção agora</h3>
+              <span className="text-xs uppercase tracking-[0.4em] text-(--tc-text-muted,#6b7280)">máx. 5</span>
             </div>
-            {error && !loading && <p className="mt-4 text-sm text-red-600">{error}</p>}
-            <div className="mt-6 overflow-x-auto">
-              <table className="w-full min-w-[980px] text-sm">
-                <thead className="text-xs uppercase tracking-[0.28em] text-slate-400">
-                  <tr className="border-b border-slate-200">
-                    <th className="py-3 text-left">{t("adminHome.tableCompany")}</th>
-                    <th className="py-3 text-left">{t("adminHome.tablePassRate")}</th>
-                    <th className="py-3 text-left">{t("adminHome.tableLatest")}</th>
-                    <th className="py-3 text-left">{t("adminHome.tableCriticalFails")}</th>
-                    <th className="py-3 text-left">{t("adminHome.tableTrend")}</th>
-                    <th className="py-3 text-left">{t("adminHome.tableGate")}</th>
-                    <th className="py-3 text-left">{t("adminHome.tableAnalysts")}</th>
-                    <th className="py-3 text-right">{t("adminHome.tableAction")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading && (
-                    <tr>
-                      <td colSpan={8} className="py-6 text-center text-slate-500">
-                        {t("adminHome.tableLoadingData")}
-                      </td>
-                    </tr>
-                  )}
-                  {!loading && companies.length === 0 && (
-                    <tr>
-                      <td colSpan={8} className="py-6 text-center text-slate-500">
-                        {t("adminHome.tableNoCompanies")}
-                      </td>
-                    </tr>
-                  )}
-                  {!loading &&
-                    companies.map((row) => {
-                      const passRateLabel = row.passRate !== null ? `${row.passRate}%` : "--";
-                      const failCount = row.gate.total ? row.stats.fail : 0;
-                      return (
-                        <tr key={row.id} className="border-b border-slate-100 text-slate-700 hover:bg-slate-50">
-                          <td className="py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-500">
-                                {row.logo ? (
-                                  <img src={row.logo} alt={`${row.name} logo`} className="h-9 w-9 rounded-lg object-contain" />
-                                ) : (
-                                  row.name.slice(0, 2).toUpperCase()
-                                )}
-                              </div>
-                              <div>
-                                <div className="font-semibold text-slate-900">{row.name}</div>
-                                <div className="text-xs text-slate-500">
-                                  {row.active === false ? t("adminHome.tableInactive") : t("adminHome.tableActive")} | {row.releases.length}{" "}
-                                  {t("adminHome.tableReleases")}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-4">
-                            <span
-                              className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                                row.passRate !== null && row.passRate >= policy.passRate
-                                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                  : row.passRate !== null
-                                    ? "border-amber-200 bg-amber-50 text-amber-700"
-                                    : "border-slate-200 bg-slate-100 text-slate-500"
-                              }`}
-                            >
-                              {passRateLabel}
-                            </span>
-                          </td>
-                          <td className="py-4">
-                            <div className="text-sm font-semibold text-slate-900">
-                              {row.latestRelease?.title ?? t("adminHome.tableNoRelease")}
-                            </div>
-                            <div className="text-xs text-slate-500">
-                              {formatDate(row.latestRelease?.createdAt ?? undefined, language)}
-                            </div>
-                          </td>
-                          <td className="py-4 text-sm font-semibold text-slate-900">{row.gate.total ? failCount : "--"}</td>
-                          <td className="py-4">
-                            <TrendIndicator direction={row.trend.direction} delta={row.trend.delta} />
-                          </td>
-                          <td className="py-4">
-                            <GateBadge gate={row.gate} compact t={t} fallbackTitle={t("adminHome.boardGateOk")} />
-                          </td>
-                          <td className="py-4 text-sm text-slate-700">{row.analystCount ?? "--"}</td>
-                          <td className="py-4 text-right">
-                            {row.slug ? (
-                              <Link
-                                href={`/empresas/${row.slug}/dashboard`}
-                                className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-red-600 hover:text-red-600"
-                              >
-                                {t("adminHome.tableViewDetails")}
-                              </Link>
-                            ) : (
-                              <span className="text-xs text-slate-400">{t("adminHome.tableNoLink")}</span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {!loadingDefects && attentionItems.length === 0 && (
+                <p className="text-sm text-(--tc-text-muted,#6b7280)">Nada crítico sendo reportado.</p>
+              )}
+              {attentionItems.map((item) => (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className="flex items-center justify-between rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) px-4 py-3 text-sm font-semibold text-(--page-text,#0b1a3c) transition hover:border-(--tc-accent,#ef0001)"
+                >
+                  <span className="flex items-center gap-2">
+                    <FiAlertTriangle className="text-(--tc-accent,#ef0001)" />
+                    {item.text}
+                  </span>
+                  <FiChevronDown className="text-(--tc-accent,#ef0001)" />
+                </Link>
+              ))}
             </div>
           </section>
 
-          <section className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-            <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)] md:p-8">
+          <section className="rounded-4xl bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-(--page-text,#0b1a3c)">Defeitos abertos</h3>
+              <span className="text-xs uppercase tracking-[0.4em] text-(--tc-text-muted,#6b7280)">Visão por empresa</span>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {!loadingDefects && relevantDefects.length === 0 && (
+                <p className="text-sm text-(--tc-text-muted,#6b7280)">Nada em destaque neste momento.</p>
+              )}
+              {relevantDefects.map((defect) => (
+                <div
+                  key={defect.id}
+                  className="group flex flex-col gap-3 rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-4 shadow-sm transition hover:border-(--tc-accent,#ef0001)"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-base font-semibold text-(--page-text,#0b1a3c)">{defect.title}</p>
+                    <span className="text-xs font-semibold uppercase text-(--tc-accent,#ef0001)">
+                      {STATUS_LABELS[defect.status] ?? defect.status}
+                    </span>
+                  </div>
+                  <div className="text-xs text-(--tc-text-muted,#6b7280)">Origem: {defect.origin === "manual" ? "Manual" : "Automático (Qase)"}</div>
+                  <div className="flex flex-wrap items-center justify-between text-xs text-(--tc-text-secondary,#4b5563)">
+                    <span>Run: {defect.run_id ?? "--"}</span>
+                    <span>Empresa: {defect.companyName ?? "Sem empresa"}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-(--tc-text-secondary,#4b5563)">
+                    <Link href={defect.url ?? "#"} target="_blank" rel="noreferrer" className="font-semibold text-(--tc-accent,#ef0001)">
+                      Ver caso
+                    </Link>
+                    <div className="opacity-0 transition group-hover:opacity-100">
+                      <FiExternalLink className="text-(--tc-text-muted,#6b7280)" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="grid gap-6 rounded-4xl bg-white p-6 shadow-sm lg:grid-cols-[1.2fr_0.8fr]">
+            <div>
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.32em] text-slate-400">{t("adminHome.boardTitle")}</p>
-                  <h2 className="text-xl font-bold text-slate-900">{t("adminHome.boardSubtitle")}</h2>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-lg font-semibold text-(--page-text,#0b1a3c)">Run em foco</h3>
+                  <span className="sr-only">Selecionar run</span>
                 </div>
-                <FiShield className="text-slate-400" />
+                <select
+                  className="rounded-full border border-(--tc-border,#e5e7eb) bg-white px-4 py-1 text-sm font-semibold text-(--page-text,#0b1a3c)"
+                  value={selectedRun?.slug ?? ""}
+                  onChange={(event) => setSelectedRunSlug(event.target.value || null)}
+                  aria-label="Selecionar run em foco"
+                >
+                  {runOptions.map((run) => (
+                    <option key={run.slug} value={run.slug}>
+                      {run.title ?? run.slug}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {boardCompanies.map((row) => (
-                  <div key={row.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm font-semibold text-slate-900">{row.name}</div>
-                      <GateBadge gate={row.gate} compact t={t} fallbackTitle={t("adminHome.boardGateOk")} />
+              <div className="mt-4 space-y-3">
+                {runStatEntries.length === 0 && (
+                  <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhum dado de run disponível.</p>
+                )}
+                {runStatEntries.map((entry) => (
+                  <div key={entry.id} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
+                      <span>{entry.label}</span>
+                      <span>{entry.value}</span>
                     </div>
-                    <div className="mt-2 text-xs text-slate-500">
-                      {t("status.pass")}: {row.passRate !== null ? `${row.passRate}%` : "--"} | {t("status.fail")}: {row.gate.total ? row.stats.fail : "--"}
-                    </div>
-                    <div className="mt-2 text-[11px] text-slate-400 space-y-1">
-                      {row.gate.reasons.length ? (
-                        row.gate.reasons.map((reason, idx) => (
-                          <span key={`${row.id}-reason-${idx}`}>
-                            {reason.value !== undefined ? t(`gate.${reason.key}`, { value: reason.value }) : t(`gate.${reason.key}`)}
-                          </span>
-                        ))
-                      ) : (
-                        <span>{t("adminHome.boardGateOk")}</span>
-                      )}
-                    </div>
+                    <progress
+                      className={`${styles.progress} ${entry.progressClass}`}
+                      value={entry.value}
+                      max={Math.max(runTotal, 1)}
+                      aria-label={`${entry.label} (${entry.value} de ${Math.max(runTotal, 1)})`}
+                    />
                   </div>
                 ))}
-                {boardCompanies.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-sm text-slate-500">
-                    {t("adminHome.boardEmpty")}
-                  </div>
-                )}
+                <div className="text-xs text-(--tc-text-muted,#6b7280)">Total de métricas: {runTotal}</div>
               </div>
             </div>
+            <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-4">
+              <p className="text-xs uppercase tracking-[0.4em] text-(--tc-text-muted,#6b7280)">Histórico rápido</p>
+              <ul className="mt-3 space-y-3 text-sm text-(--tc-text-secondary,#4b5563)">
+                {historyItems.slice(0, 4).map((log) => (
+                  <li key={log.id} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
+                      <span>{log.action}</span>
+                      <span>{formatDate(log.created_at)}</span>
+                    </div>
+                    <div className="text-xs text-(--tc-text-muted,#6b7280)">
+                      {log.actor_email ?? "Sistema"} · {log.entity_label ?? log.entity_type ?? "sem referência"}
+                    </div>
+                  </li>
+                ))}
+                {!historyItems.length && !loadingAudit && (
+                  <li className="text-xs text-(--tc-text-muted,#6b7280)">Nenhuma ação registrada.</li>
+                )}
+                {loadingAudit && <li className="text-xs text-(--tc-text-muted,#6b7280)">Carregando histórico...</li>}
+              </ul>
+            </div>
+          </section>
 
-            <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)] md:p-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.32em] text-slate-400">{t("adminHome.policyTitle")}</p>
-                  <h2 className="text-xl font-bold text-slate-900">{t("adminHome.policySubtitle")}</h2>
-                </div>
-                <FiCheckCircle className="text-emerald-500" />
-              </div>
-              <div className="mt-5 space-y-3 text-sm text-slate-600">
-                <RuleLine label={t("adminHome.policyMinPass")} value={`${policy.passRate}%`} />
-                <RuleLine label={t("adminHome.policyMaxFail")} value={`${policy.maxFailRate}%`} />
-                <RuleLine label={t("adminHome.policyMaxBlocked")} value={`${policy.maxBlockedRate}%`} />
-                <RuleLine label={t("adminHome.policyMaxNotRun")} value={`${policy.maxNotRunRate}%`} />
-                <RuleLine label={t("adminHome.policyMinTotal")} value={`${policy.minTotal}`} />
-              </div>
-              <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-900 px-4 py-3 text-xs text-white">
-                {t("adminHome.policyBanner")}
-              </div>
+          <section className="rounded-4xl bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-(--page-text,#0b1a3c)">Ações rápidas</h3>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link
+                href="/empresas/griaule/defeitos?me=true"
+                className="inline-flex items-center gap-2 rounded-full border border-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-accent,#ef0001)"
+              >
+                Criar defeito manual
+              </Link>
+              <Link
+                href="/admin/defeitos"
+                className="inline-flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
+              >
+                Ver defeitos da empresa
+              </Link>
+              <Link
+                href="/admin/runs"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-700"
+              >
+                Ver releases
+              </Link>
             </div>
           </section>
         </div>

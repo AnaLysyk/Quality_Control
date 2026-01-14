@@ -1,4 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getSupabaseServer } from "@/lib/supabaseServer";
+import { requireGlobalAdmin } from "@/lib/rbac/requireGlobalAdmin";
 
 type QaseDefect = {
   id: string;
@@ -23,14 +25,104 @@ type Aggregated = {
   items: QaseDefect[];
 };
 
-const QASE_BASE_URL = process.env.QASE_BASE_URL || "https://api.qase.io";
+const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
 
-// Ajuste este mapa para cada empresa/projeto que quiser agregar no admin.
-// projectCode = código do projeto no Qase (ex.: GRIAULE, TMETRIC, etc).
-const PROJECT_MAP: { slug: string; projectCode: string }[] = [
-  { slug: "griaule", projectCode: process.env.QASE_PROJECT_CODE || process.env.QASE_PROJECT || "" },
-];
+// Supabase is accessed via server-only client `getSupabaseServer()`.
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
+}
+
+function normalizeString(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length ? trimmed : null;
+}
+
+function normalizeSlug(value: unknown): string | null {
+  const s = normalizeString(value);
+  return s ? s.toLowerCase() : null;
+}
+
+// Admin access is enforced via `requireGlobalAdmin(req)`.
+
+type ProjectEntry = { slug: string; projectCode: string };
+
+function parseProjectMapFromEnv(): ProjectEntry[] {
+  const raw =
+    process.env.QASE_PROJECT_MAP ||
+    process.env.QASE_PROJECTS ||
+    process.env.NEXT_PUBLIC_QASE_PROJECT_MAP ||
+    "";
+
+  const trimmed = raw.trim();
+  if (!trimmed) return [];
+
+  // Option A: JSON array of {slug, projectCode}
+  if (trimmed.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(trimmed) as unknown;
+      if (!Array.isArray(parsed)) return [];
+      const out: ProjectEntry[] = [];
+      for (const item of parsed) {
+        const rec = asRecord(item);
+        const slug = normalizeSlug(rec?.slug);
+        const projectCode = normalizeString(rec?.projectCode ?? rec?.project ?? rec?.code);
+        if (slug && projectCode) out.push({ slug, projectCode });
+      }
+      return out;
+    } catch {
+      return [];
+    }
+  }
+
+  // Option B: "slug:CODE,slug2:CODE2"
+  const out: ProjectEntry[] = [];
+  const parts = trimmed.split(",").map((p) => p.trim()).filter(Boolean);
+  for (const part of parts) {
+    const [slugRaw, codeRaw] = part.split(":").map((p) => p.trim());
+    const slug = normalizeSlug(slugRaw);
+    const projectCode = normalizeString(codeRaw);
+    if (slug && projectCode) out.push({ slug, projectCode });
+  }
+  return out;
+}
+
+function extractProjectCodeFromRow(row: Record<string, unknown>): string | null {
+  return (
+    normalizeString(row.qase_project_code ?? null) ||
+    normalizeString(row.qase_project ?? null) ||
+    normalizeString(row.project_code ?? null) ||
+    normalizeString(row.project ?? null) ||
+    normalizeString(row.projectCode ?? null) ||
+    normalizeString(row.projectKey ?? null)
+  );
+}
+
+async function loadProjectMapFromSupabase(): Promise<ProjectEntry[]> {
+  try {
+    const service = getSupabaseServer();
+    const out: ProjectEntry[] = [];
+
+    for (const table of ["cliente", "clients"] as const) {
+      const { data, error } = await service.from(table).select("*").limit(500);
+      if (error || !Array.isArray(data)) continue;
+      for (const rowAny of data) {
+        const row = asRecord(rowAny);
+        if (!row) continue;
+        const slug = normalizeSlug(row.slug);
+        const projectCode = extractProjectCodeFromRow(row);
+        if (slug && projectCode) out.push({ slug, projectCode });
+      }
+    }
+
+    return out;
+  } catch {
+    return [];
+  }
+}
 
 async function fetchAllDefects(projectCode: string): Promise<QaseDefect[]> {
   if (!QASE_TOKEN || !projectCode) return [];
@@ -40,7 +132,7 @@ async function fetchAllDefects(projectCode: string): Promise<QaseDefect[]> {
   const all: QaseDefect[] = [];
 
   while (true) {
-    const res = await fetch(`${QASE_BASE_URL}/v2/defect/${projectCode}?limit=${limit}&offset=${offset}`, {
+    const res = await fetch(`${QASE_BASE_URL}/v1/defect/${projectCode}?limit=${limit}&offset=${offset}`, {
       headers: {
         Token: QASE_TOKEN,
         Accept: "application/json",
@@ -49,21 +141,27 @@ async function fetchAllDefects(projectCode: string): Promise<QaseDefect[]> {
     });
 
     if (!res.ok) break;
-    const json: any = await res.json().catch(() => null);
-    const entities: any[] = json?.result?.entities ?? [];
+    const json = (await res.json().catch(() => null)) as unknown;
+    const result = asRecord(asRecord(json)?.result);
+    const entities = Array.isArray(result?.entities) ? (result?.entities as unknown[]) : [];
     if (!Array.isArray(entities) || entities.length === 0) break;
 
     entities.forEach((d) => {
+      const rec = asRecord(d) ?? {};
       all.push({
-        id: String(d.id ?? d.defect_id ?? `defect-${offset}`),
-        title: d.title ?? d.name ?? "Defeito",
-        status: String(d.status ?? "open"),
-        severity: d.severity ?? d.severity_name ?? "medium",
-        run_id: d.run_id ?? d.run ?? null,
-        tags: Array.isArray(d.tags) ? d.tags : [],
-        created_at: d.created_at ?? d.created ?? undefined,
-        updated_at: d.updated_at ?? d.updated ?? undefined,
-        url: d.url ?? d.link ?? d.web_url ?? undefined,
+        id: String(rec.id ?? rec.defect_id ?? `defect-${offset}`),
+        title: (typeof rec.title === "string" ? rec.title : null) ?? (typeof rec.name === "string" ? rec.name : null) ?? "Defeito",
+        status: String(rec.status ?? "open"),
+        severity: (typeof rec.severity === "string" ? rec.severity : null) ?? (typeof rec.severity_name === "string" ? rec.severity_name : null) ?? "medium",
+        run_id: (rec.run_id as string | number | null | undefined) ?? (rec.run as string | number | null | undefined) ?? null,
+        tags: Array.isArray(rec.tags) ? (rec.tags as string[]) : [],
+        created_at: (typeof rec.created_at === "string" ? rec.created_at : null) ?? (typeof rec.created === "string" ? rec.created : null) ?? undefined,
+        updated_at: (typeof rec.updated_at === "string" ? rec.updated_at : null) ?? (typeof rec.updated === "string" ? rec.updated : null) ?? undefined,
+        url:
+          (typeof rec.url === "string" ? rec.url : null) ??
+          (typeof rec.link === "string" ? rec.link : null) ??
+          (typeof rec.web_url === "string" ? rec.web_url : null) ??
+          undefined,
         projectCode,
       });
     });
@@ -75,7 +173,7 @@ async function fetchAllDefects(projectCode: string): Promise<QaseDefect[]> {
   return all;
 }
 
-function aggregate(defects: QaseDefect[]): Aggregated {
+function aggregate(defects: QaseDefect[], projectCodeToSlug: Map<string, string>): Aggregated {
   const byApplication = new Map<string, number>();
   const byRun = new Map<string, { count: number; app: string }>();
   const byCompany = new Map<string, number>();
@@ -91,8 +189,9 @@ function aggregate(defects: QaseDefect[]): Aggregated {
     current.count += 1;
     byRun.set(runKey, current);
 
-    const company = d.projectCode || "Projeto";
-    byCompany.set(company, (byCompany.get(company) ?? 0) + 1);
+    const companySlug = projectCodeToSlug.get(d.projectCode) ?? null;
+    const companyKey = companySlug ?? (d.projectCode || "Projeto");
+    byCompany.set(companyKey, (byCompany.get(companyKey) ?? 0) + 1);
 
     const st = d.status ?? "open";
     byStatus.set(st, (byStatus.get(st) ?? 0) + 1);
@@ -105,18 +204,27 @@ function aggregate(defects: QaseDefect[]): Aggregated {
     total: defects.length,
     byApplication: Array.from(byApplication.entries()).map(([name, count]) => ({ name, count })),
     byRun: Array.from(byRun.entries()).map(([runId, { count, app }]) => ({ runId, count, app })),
-    byCompany: Array.from(byCompany.entries()).map(([name, count]) => ({ name, count, slug: undefined })),
+    byCompany: Array.from(byCompany.entries()).map(([name, count]) => {
+      const slug = projectCodeToSlug.get(name) ?? (name && !name.includes(" ") ? name : null);
+      return { name, count, slug };
+    }),
     byStatus: Array.from(byStatus.entries()).map(([status, count]) => ({ status, count })),
     timeline: Array.from(timeline.entries()).map(([month, count]) => ({ month, count })),
     items: defects,
   };
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const admin = await requireGlobalAdmin(req);
+  if (!admin) {
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
+  }
+
   if (!QASE_TOKEN) {
     return NextResponse.json(
       {
-        error: "QASE_TOKEN ausente. Configure QASE_TOKEN/QASE_PROJECT_CODE.",
+        error:
+          "QASE_TOKEN ausente. Configure QASE_TOKEN (e QASE_PROJECT_MAP ou cadastre qase_project_code nas empresas).",
         total: 0,
         byApplication: [],
         byRun: [],
@@ -129,8 +237,35 @@ export async function GET() {
     );
   }
 
-  const projectCodes = PROJECT_MAP.map((p) => p.projectCode).filter(Boolean);
-  const uniqueProjects = Array.from(new Set(projectCodes));
+  const envMap = parseProjectMapFromEnv();
+  const legacyCode = normalizeString(process.env.QASE_PROJECT_CODE || process.env.QASE_PROJECT || "");
+  const legacy = legacyCode ? ([{ slug: "griaule", projectCode: legacyCode }] satisfies ProjectEntry[]) : [];
+  const combined = [...envMap, ...legacy];
+  const projectMap = combined.length ? combined : await loadProjectMapFromSupabase();
+
+  const projectCodeToSlug = new Map<string, string>();
+  for (const entry of projectMap) {
+    if (entry.projectCode && entry.slug) projectCodeToSlug.set(entry.projectCode, entry.slug);
+  }
+
+  const uniqueProjects = Array.from(new Set(projectMap.map((p) => p.projectCode).filter(Boolean)));
+
+  if (!uniqueProjects.length) {
+    return NextResponse.json(
+      {
+        error:
+          "Nenhum projeto Qase configurado. Configure QASE_PROJECT_MAP (ex: griaule:GRIAULE,acme:ACME) ou preencha qase_project_code nas empresas (Supabase).",
+        total: 0,
+        byApplication: [],
+        byRun: [],
+        byCompany: [],
+        byStatus: [],
+        timeline: [],
+        items: [],
+      },
+      { status: 200 },
+    );
+  }
 
   const allDefects: QaseDefect[] = [];
   for (const projectCode of uniqueProjects) {
@@ -138,6 +273,6 @@ export async function GET() {
     allDefects.push(...defects);
   }
 
-  const aggregated = aggregate(allDefects);
+  const aggregated = aggregate(allDefects, projectCodeToSlug);
   return NextResponse.json(aggregated, { status: 200 });
 }

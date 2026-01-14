@@ -231,6 +231,7 @@ export type ClientItem = {
   slug?: string | null;
   logo_url?: string | null;
   logo?: string | null;
+  qase_project_code?: string | null;
   active?: boolean | null;
 };
 
@@ -253,15 +254,20 @@ export type CompanyRow = {
   };
 };
 
-const COMPANY_DAY_MS = 24 * 60 * 60 * 1000;
-
 function resolveCompanyKey(
   release: ReleaseWithStats,
   byId: Map<string, ClientItem>,
   bySlug: Map<string, string>,
-  byName: Map<string, string>
+  byName: Map<string, string>,
+  byQaseProjectCode: Map<string, string>
 ) {
   if (release.clientId && byId.has(release.clientId)) return release.clientId;
+
+  if (release.qaseProject) {
+    const key = byQaseProjectCode.get(release.qaseProject.toLowerCase());
+    if (key) return key;
+  }
+
   if (release.clientName) {
     const key = byName.get(release.clientName.toLowerCase());
     if (key) return key;
@@ -279,10 +285,15 @@ export function buildCompanyRows(clients: ClientItem[], releases: ReleaseWithSta
       .map((client) => [(client.slug ?? "").toLowerCase(), client.id])
   );
   const byName = new Map(clients.map((client) => [client.name.toLowerCase(), client.id]));
+  const byQaseProjectCode = new Map(
+    clients
+      .filter((client) => client.qase_project_code)
+      .map((client) => [(client.qase_project_code ?? "").toLowerCase(), client.id])
+  );
 
   const releasesByCompany = new Map<string, ReleaseWithStats[]>();
   releases.forEach((release) => {
-    const key = resolveCompanyKey(release, byId, bySlug, byName);
+    const key = resolveCompanyKey(release, byId, bySlug, byName, byQaseProjectCode);
     if (!key) return;
     const list = releasesByCompany.get(key) ?? [];
     list.push(release);

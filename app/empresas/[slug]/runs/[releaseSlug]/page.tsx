@@ -1,4 +1,5 @@
 import { ReleasePageContent } from "@/release/ReleaseTemplate";
+import Breadcrumb from "@/components/Breadcrumb";
 
 type PageParams = {
   params: { slug: string; releaseSlug: string };
@@ -7,21 +8,28 @@ type PageParams = {
 export default async function EmpresaRunDetailPage({ params }: PageParams) {
   const slug = params.releaseSlug || "";
   const company = params.slug || "";
-  const content = await ReleasePageContent({ slug });
+  const content = await ReleasePageContent({ slug, companySlug: company });
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg,#ffffff)] text-[var(--page-text,#0b1a3c)] p-6 md:p-10 space-y-4">
-      <nav className="text-xs text-[var(--tc-text-muted,#6B7280)]">
-        <span>Empresas</span> <span className="mx-1">/</span>
-        <span className="font-semibold text-[var(--tc-text-primary,#0b1a3c)] uppercase">{company}</span>{" "}
-        <span className="mx-1">/</span>
-        <a href={`/empresas/${company}/runs`} className="text-[var(--tc-accent,#ef0001)] hover:underline">
-          Runs
-        </a>
-        <span className="mx-1">/</span>
-        <span>{slug}</span>
-      </nav>
-      {content}
+    <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
+      <div className="mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6 sm:pt-6 lg:px-10 lg:pt-10">
+        <Breadcrumb
+          items={[
+            { label: "Empresas", href: "/empresas" },
+            {
+              label: company,
+              href: `/empresas/${encodeURIComponent(company)}/home`,
+              title: company,
+            },
+            { label: "Runs", href: `/empresas/${encodeURIComponent(company)}/runs` },
+            { label: <span className="block truncate">{slug}</span>, title: slug },
+          ]}
+        />
+      </div>
+
+      <div className="mx-auto w-full max-w-7xl px-4 pb-8 sm:px-6 sm:pb-10 lg:px-10">
+        {content}
+      </div>
     </div>
   );
 }

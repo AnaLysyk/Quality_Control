@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Toaster, toast } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
 type Status = "PASS" | "FAIL" | "BLOCKED" | "NOT_RUN";
 
@@ -20,6 +20,7 @@ type Card = {
 type Props = {
   project: string;
   runId: number;
+  slug?: string;
   editable?: boolean;
   authToken?: string;
   onCreate?: (card?: Card | null) => void;
@@ -29,11 +30,13 @@ type Props = {
 
 const base = "/api/kanban";
 
-export default function KanbanClient({ project, runId, editable = true, authToken, onCreate, onUpdate, onDelete }: Props) {
+export default function KanbanClient({ project, runId, slug, editable = true, authToken, onCreate, onUpdate, onDelete }: Props) {
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(false);
   const [busyIds, setBusyIds] = useState<Record<number, boolean>>({});
   const [error, setError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const [newTitle, setNewTitle] = useState("");
   const [newStatus, setNewStatus] = useState<Status>("NOT_RUN");
@@ -52,11 +55,13 @@ export default function KanbanClient({ project, runId, editable = true, authToke
     [authToken]
   );
 
+  const querySlug = useMemo(() => (slug ? `&slug=${encodeURIComponent(slug)}` : ""), [slug]);
+
   const loadCards = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${base}?project=${encodeURIComponent(project)}&runId=${runId}`, {
+      const res = await fetch(`${base}?project=${encodeURIComponent(project)}&runId=${runId}${querySlug}`, {
         cache: "no-store",
         headers: authHeaders,
       });
@@ -83,7 +88,73 @@ export default function KanbanClient({ project, runId, editable = true, authToke
     } finally {
       setLoading(false);
     }
-  }, [project, runId, authHeaders]);
+  }, [project, runId, authHeaders, querySlug]);
+
+  async function exportKanban(format: "csv" | "json") {
+    const url = `${base}/export?project=${encodeURIComponent(project)}&runId=${runId}${querySlug}&format=${format}`;
+    const res = await fetch(url, { headers: authHeaders });
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      throw new Error(`Erro ao exportar${txt ? `: ${txt}` : ""}`);
+    }
+
+    if (format === "json") {
+      const json = await res.json().catch(() => null);
+      const blob = new Blob([JSON.stringify(json, null, 2)], { type: "application/json" });
+      const href = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = href;
+      a.download = `kanban_${project}_${runId}${slug ? `_${slug}` : ""}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(href);
+      return;
+    }
+
+    const blob = await res.blob();
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = `kanban_${project}_${runId}${slug ? `_${slug}` : ""}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(href);
+  }
+
+  async function importKanbanFile(file: File) {
+    const endpoint = `${base}/import?project=${encodeURIComponent(project)}&runId=${runId}${querySlug}`;
+    const name = (file.name || "").toLowerCase();
+    const isJson = file.type.includes("json") || name.endsWith(".json");
+
+    if (isJson) {
+      const text = await file.text();
+      const parsed = JSON.parse(text) as unknown;
+      const body = Array.isArray(parsed) ? { items: parsed } : parsed;
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders ?? {}) },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(`Erro ao importar JSON${txt ? `: ${txt}` : ""}`);
+      }
+      return;
+    }
+
+    const csvText = await file.text();
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "text/csv", ...(authHeaders ?? {}) },
+      body: csvText,
+    });
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      throw new Error(`Erro ao importar CSV${txt ? `: ${txt}` : ""}`);
+    }
+  }
 
   useEffect(() => {
     loadCards();
@@ -93,7 +164,7 @@ export default function KanbanClient({ project, runId, editable = true, authToke
     const res = await fetch(base, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(authHeaders ?? {}) },
-      body: JSON.stringify({ project, runId, ...payload }),
+      body: JSON.stringify({ project, runId, ...(slug ? { slug } : {}), ...payload }),
     });
     if (!res.ok) {
       const txt = await res.text().catch(() => "");
@@ -280,23 +351,101 @@ export default function KanbanClient({ project, runId, editable = true, authToke
 
   return (
     <div className="w-full p-4">
-      <Toaster position="bottom-right" />
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv,text/csv,application/csv,.json,application/json"
+        className="hidden"
+        aria-label="Importar Kanban (CSV/JSON)"
+        title="Importar Kanban (CSV/JSON)"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          e.target.value = "";
+          if (!file) return;
+          setError(null);
+          setImporting(true);
+          try {
+            await importKanbanFile(file);
+            await loadCards();
+            toast.success("Importação concluída");
+          } catch (err) {
+            const message = err instanceof Error ? err.message : "Erro ao importar";
+            setError(message);
+            toast.error(message);
+          } finally {
+            setImporting(false);
+          }
+        }}
+      />
+
       <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <h2 className="text-xl font-semibold">Kanban — {project} / run {runId}</h2>
-        <button
-          className="px-3 py-1 bg-indigo-600 text-white rounded disabled:opacity-50"
-          onClick={() => loadCards()}
-          disabled={loading}
-        >
-          Refresh
-        </button>
+        <h2 className="text-xl font-semibold">
+          Kanban — {project} / run {runId}
+          {slug ? ` (${slug})` : ""}
+        </h2>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            className="px-3 py-1 bg-indigo-600 text-white rounded disabled:opacity-50"
+            onClick={() => loadCards()}
+            disabled={loading || importing}
+          >
+            Refresh
+          </button>
+
+          <button
+            type="button"
+            className="px-3 py-1 border rounded bg-white disabled:opacity-50"
+            disabled={loading || importing}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {importing ? "Importando…" : "Importar (CSV/JSON)"}
+          </button>
+
+          <button
+            type="button"
+            className="px-3 py-1 border rounded bg-white disabled:opacity-50"
+            disabled={loading || importing}
+            onClick={async () => {
+              try {
+                await exportKanban("csv");
+                toast.success("CSV exportado");
+              } catch (err) {
+                const message = err instanceof Error ? err.message : "Erro ao exportar";
+                setError(message);
+                toast.error(message);
+              }
+            }}
+          >
+            Exportar CSV
+          </button>
+
+          <button
+            type="button"
+            className="px-3 py-1 border rounded bg-white disabled:opacity-50"
+            disabled={loading || importing}
+            onClick={async () => {
+              try {
+                await exportKanban("json");
+                toast.success("JSON exportado");
+              } catch (err) {
+                const message = err instanceof Error ? err.message : "Erro ao exportar";
+                setError(message);
+                toast.error(message);
+              }
+            }}
+          >
+            Exportar JSON
+          </button>
+        </div>
       </div>
 
       {error && <div className="mb-4 text-red-600 text-sm">{error}</div>}
 
       {editable && (
         <form className="mb-6 flex flex-wrap gap-3 items-end" onSubmit={handleCreate}>
-          <div className="flex-1 min-w-[200px]">
+          <div className="flex-1 min-w-50">
             <label className="block text-sm text-gray-700" htmlFor="new-title">Título</label>
             <input
               id="new-title"
@@ -307,7 +456,7 @@ export default function KanbanClient({ project, runId, editable = true, authToke
               required
             />
           </div>
-          <div className="min-w-[140px] flex-1 sm:flex-none sm:w-32">
+          <div className="min-w-35 flex-1 sm:flex-none sm:w-32">
             <label className="block text-sm text-gray-700" htmlFor="new-status">Status</label>
             <select
               id="new-status"
@@ -322,7 +471,7 @@ export default function KanbanClient({ project, runId, editable = true, authToke
               ))}
             </select>
           </div>
-          <div className="min-w-[120px] flex-1 sm:flex-none sm:w-28">
+          <div className="min-w-30 flex-1 sm:flex-none sm:w-28">
             <label className="block text-sm text-gray-700" htmlFor="new-case-id">Case ID</label>
             <input
               id="new-case-id"
@@ -333,7 +482,7 @@ export default function KanbanClient({ project, runId, editable = true, authToke
               placeholder="opcional"
             />
           </div>
-          <div className="min-w-[160px] flex-1 sm:flex-none sm:w-40">
+          <div className="min-w-40 flex-1 sm:flex-none sm:w-40">
             <label className="block text-sm text-gray-700" htmlFor="new-bug">Bug</label>
             <input
               id="new-bug"
@@ -343,7 +492,7 @@ export default function KanbanClient({ project, runId, editable = true, authToke
               placeholder="opcional"
             />
           </div>
-          <div className="min-w-[160px] flex-1 sm:flex-none sm:w-40">
+          <div className="min-w-40 flex-1 sm:flex-none sm:w-40">
             <label className="block text-sm text-gray-700" htmlFor="new-link">Link</label>
             <input
               id="new-link"
@@ -365,7 +514,7 @@ export default function KanbanClient({ project, runId, editable = true, authToke
             key={col.status}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, col.status)}
-            className="min-h-[220px] bg-white p-3 rounded border border-gray-200 shadow-sm"
+            className="min-h-55 bg-white p-3 rounded border border-gray-200 shadow-sm"
           >
             <div className="mb-3 flex items-center justify-between">
               <h3 className="font-medium text-[#0b1a3c]">{col.title}</h3>

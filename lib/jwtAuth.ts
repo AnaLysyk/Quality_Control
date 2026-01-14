@@ -17,11 +17,20 @@ export function verifyToken(token: string | undefined): AuthUser | null {
   try {
     const secret = process.env.JWT_SECRET;
     if (!secret) throw new Error("JWT_SECRET not set");
-    const payload = jwt.verify(token, secret) as any;
+    const payload = jwt.verify(token, secret) as jwt.JwtPayload & {
+      sub?: unknown;
+      email?: unknown;
+      isGlobalAdmin?: unknown;
+    };
+
+    const id = typeof payload.sub === "string" ? payload.sub : null;
+    const email = typeof payload.email === "string" ? payload.email : "";
+    if (!id) return null;
+
     return {
-      id: payload.sub,
-      email: payload.email,
-      isGlobalAdmin: Boolean(payload.isGlobalAdmin),
+      id,
+      email,
+      isGlobalAdmin: payload.isGlobalAdmin === true,
     };
   } catch {
     return null;

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Papa from "papaparse";
+import { FiExternalLink } from "react-icons/fi";
 import { KanbanData, KanbanItem } from "@/types/kanban";
 
 type DragInfo = { item: KanbanItem; from: keyof KanbanData };
@@ -23,10 +24,11 @@ type KanbanProps = {
   project: string;
   runId: number;
   qaseProject?: string;
-  runSlug?: string;
+  companySlug?: string;
   persistEndpoint?: string;
   editable?: boolean;
   allowStatusChange?: boolean;
+  allowLinkEdit?: boolean;
 };
 
 export default function Kanban({
@@ -34,13 +36,17 @@ export default function Kanban({
   project,
   runId,
   qaseProject,
+  companySlug,
   persistEndpoint,
   editable = false,
   allowStatusChange = false,
+  allowLinkEdit = false,
 }: KanbanProps) {
   const [localData, setLocalData] = useState<KanbanData>(data);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState("");
+  const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
+  const [editingLinkValue, setEditingLinkValue] = useState("");
   const [dragInfo, setDragInfo] = useState<DragInfo | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const projectAbbr = (qaseProject || project || "").toUpperCase();
@@ -54,6 +60,27 @@ export default function Kanban({
   const getItemKey = (item: KanbanItem, fallback: string) =>
     item.dbId ? `db-${item.dbId}` : item.id ? `case-${item.id}` : fallback;
 
+  function normalizeToColumnKey(value: unknown): keyof KanbanData {
+    if (typeof value !== "string") return "notRun";
+    const raw = value.trim();
+    if (!raw) return "notRun";
+
+    // Accept both stored manual-case statuses (PASS/FAIL/...) and UI column keys (pass/fail/...)
+    const lower = raw.toLowerCase();
+    if (lower === "pass" || lower === "passed") return "pass";
+    if (lower === "fail" || lower === "failed") return "fail";
+    if (lower === "blocked") return "blocked";
+    if (lower === "notrun" || lower === "not_run" || lower === "not run" || lower === "untested" || lower === "notrun") return "notRun";
+
+    const upper = raw.toUpperCase();
+    if (upper === "PASS" || upper === "PASSED") return "pass";
+    if (upper === "FAIL" || upper === "FAILED") return "fail";
+    if (upper === "BLOCKED") return "blocked";
+    if (upper === "NOTRUN" || upper === "NOT_RUN" || upper === "NOT RUN" || upper === "UNTESTED") return "notRun";
+
+    return "notRun";
+  }
+
   function buildCaseLink(caseId?: number | string | null) {
     if (!caseId || !projectAbbr) return null;
     return `https://app.qase.io/case/${projectAbbr}/${caseId}`;
@@ -63,12 +90,46 @@ export default function Kanban({
 
   async function persistKanbanUpdate(payload: KanbanPayload, method: "POST" | "PATCH" = "PATCH") {
     const endpoint = persistEndpoint || "/api/kanban";
+    const shouldAugmentDefaultEndpoint = endpoint === "/api/kanban";
+    const normalizedPayload = shouldAugmentDefaultEndpoint
+      ? {
+          project: projectAbbr || project,
+          runId,
+          ...(companySlug ? { slug: companySlug } : {}),
+          ...payload,
+        }
+      : payload;
     const res = await fetch(endpoint, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(normalizedPayload),
     });
     if (!res.ok) throw new Error("Falha ao salvar");
+    return res.json();
+  }
+
+  async function persistApiLinkUpdate(params: {
+    caseId: string | number;
+    title?: string | null;
+    status: keyof KanbanData;
+    link: string;
+    bug?: string | null;
+  }) {
+    const res = await fetch("/api/kanban/link", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        project: projectAbbr || project,
+        runId,
+        ...(companySlug ? { slug: companySlug } : {}),
+        caseId: params.caseId,
+        title: params.title ?? "",
+        status: params.status,
+        link: params.link,
+        ...(params.bug !== undefined ? { bug: params.bug } : {}),
+      }),
+    });
+    if (!res.ok) throw new Error("Falha ao salvar link");
     return res.json();
   }
 
@@ -80,37 +141,60 @@ export default function Kanban({
       try {
         const res = await fetch(persistEndpoint, { cache: "no-store" });
         if (!res.ok) return;
-        const rows = await res.json();
-        if (!Array.isArray(rows)) return;
+        const json = await res.json().catch(() => null);
+        const rawRows: unknown[] = Array.isArray(json) ? json : (json as { items?: unknown[] } | null)?.items ?? [];
+        if (!Array.isArray(rawRows)) return;
 
-        const extra: KanbanData = {
-          pass: [],
-          fail: [],
-          blocked: [],
-          notRun: [],
+        const merged: KanbanData = {
+          pass: [...data.pass],
+          fail: [...data.fail],
+          blocked: [...data.blocked],
+          notRun: [...data.notRun],
         };
 
-        rows.forEach((row: Record<string, unknown>) => {
-          const item: KanbanItem = {
-            id: (row.id ?? row.case_id ?? row.title ?? "").toString(),
-            title: (row.title as string) ?? "",
-            bug: (row.bug as string) || null,
-            dbId: typeof row.dbId === "number" ? row.dbId : null,
-            link: (row.link as string) ?? "",
-            fromApi: Boolean(row.fromApi),
-          };
-          const status = (row.status as keyof KanbanData) || "notRun";
-          if (extra[status]) {
-            extra[status].push(item);
+        rawRows.forEach((rowRaw) => {
+          const row = (rowRaw ?? {}) as Record<string, unknown>;
+          const status = normalizeToColumnKey(row.status);
+          const caseId = row.case_id ?? row.caseId;
+          const id = (caseId ?? row.id ?? row.title ?? "").toString();
+          if (!id) return;
+
+          const link = (row.link as string | null | undefined) ?? "";
+          const bug = (row.bug as string | null | undefined) ?? null;
+          const title = (row.title as string | null | undefined) ?? "";
+          const dbId = typeof row.id === "number" ? row.id : Number.isFinite(Number(row.id)) ? Number(row.id) : null;
+
+          // Try to merge into existing card (by case id)
+          const list = merged[status];
+          const idx = list.findIndex((c) => String(c.id) === id);
+          if (idx >= 0) {
+            list[idx] = {
+              ...list[idx],
+              ...(title ? { title } : {}),
+              ...(link ? { link } : {}),
+              bug: bug ?? list[idx].bug ?? null,
+              dbId: dbId ?? list[idx].dbId ?? null,
+            };
+            return;
           }
+
+          // Otherwise, treat it as an extra persisted card
+          merged[status].push({
+            id,
+            title,
+            bug,
+            dbId,
+            link,
+            fromApi: Boolean(caseId),
+          });
         });
 
-        setLocalData(extra);
+        setLocalData(merged);
       } catch (e) {
         console.error("Erro ao carregar casos:", e);
       }
     })();
-  }, [persistEndpoint]);
+  }, [persistEndpoint, data]);
 
   async function handleAdd(columnKey: keyof KanbanData) {
     if (!editable) return;
@@ -190,6 +274,13 @@ export default function Kanban({
     } catch (e) {
       console.error("Erro ao atualizar status", e);
     }
+  }
+
+  function handleEditClick(columnKey: keyof KanbanData, item: KanbanItem) {
+    if (!editable) return;
+    const key = getItemKey(item, `${columnKey}-${item.id}`);
+    setEditingId(key);
+    setEditingValue(item.title ?? "");
   }
 
   async function handleDrop(targetKey: keyof KanbanData) {
@@ -349,103 +440,172 @@ export default function Kanban({
               {column.label} <span className="opacity-70 text-(--tc-text-secondary,#4b5563)">({list.length})</span>
             </h2>
 
-            <div className="space-y-4 max-h-[360px] overflow-y-auto pr-2 custom-scroll">
+            <div className="space-y-4 max-h-90 overflow-y-auto pr-2 custom-scroll">
               {list.length === 0 && (
                 <p className="text-(--tc-text-muted,#6b7280) text-sm italic">Nenhum caso</p>
               )}
 
-              {list.map((item, index) => (
-                <div
-                  key={getItemKey(item, `${column.key}-${index}`)}
-                  className="bg-(--tc-surface-dark,#0f1828) border border-(--surface-border,rgba(255,255,255,0.08)) p-4 rounded-lg shadow hover:shadow-md transition-all relative"
-                  draggable={editable && allowStatusChange}
-                  onDragStart={() => editable && allowStatusChange && setDragInfo({ item, from: column.key })}
-                  onDragEnd={() => setDragInfo(null)}
-                >
-                  {editable && (
-                    <button
-                      onClick={() => handleDelete(column.key, item)}
-                      data-hide-on-export="true"
-                      className="absolute top-2 right-2 text-(--tc-accent,#ef0001) hover:text-(--tc-accent-hover,#c80001) text-sm font-bold"
-                    >
-                      ×
-                    </button>
-                  )}
-
-                  <p className="text-xs text-(--tc-text-muted,#6b7280) font-bold mb-1">
-                    ID:{" "}
-                    {buildCaseLink(item.id) ? (
-                      <a
-                        href={buildCaseLink(item.id) as string}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline text-(--tc-primary,#011848)"
+              {list.map((item, index) => {
+                const itemKey = getItemKey(item, `${column.key}-${index}`);
+                const qaseCaseLink = buildCaseLink(item.id);
+                const evidenceLink = (item.link ?? "").trim() || null;
+                const canEditEvidenceLink = editable ? !item.fromApi : allowLinkEdit;
+                return (
+                  <div
+                    key={itemKey}
+                  className="bg-linear-to-br from-[#0c1120] via-[#0a0e1d] to-[#0f1626] border border-(--surface-border,rgba(255,255,255,0.12)) p-5 rounded-3xl shadow-[0_30px_60px_rgba(15,23,42,0.45)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_40px_90px_rgba(0,0,0,0.55)] relative overflow-hidden"
+                    draggable={editable && allowStatusChange}
+                    onDragStart={() => editable && allowStatusChange && setDragInfo({ item, from: column.key })}
+                    onDragEnd={() => setDragInfo(null)}
+                  >
+                    {editable && !item.fromApi && (
+                      <button
+                        onClick={() => handleDelete(column.key, item)}
+                        data-hide-on-export="true"
+                        className="absolute top-3 right-3 text-rose-500 hover:text-red-200 text-lg font-bold"
+                        aria-label="Excluir caso"
                       >
-                        {item.id}
-                      </a>
-                    ) : (
-                      item.id
+                        ×
+                      </button>
                     )}
-                  </p>
+                    {item.fromApi && (
+                      <div className="absolute bottom-3 right-3 rounded-full border border-white/30 bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/80">
+                        API
+                      </div>
+                    )}
 
-                  {editingId === getItemKey(item, `${column.key}-${index}`) ? (
-                    <input
-                      aria-label="Editar título do caso"
-                      className="w-full bg-(--tc-surface-muted,#0f1626) text-(--tc-text-inverse,#ffffff) text-sm rounded px-2 py-1 border border-(--surface-border,rgba(255,255,255,0.08))"
-                      value={editingValue}
-                      autoFocus
-                      disabled={!editable}
-                      onChange={(e) => setEditingValue(e.target.value)}
-                      onBlur={() => handleTitleSave(column.key, item, editingValue)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleTitleSave(column.key, item, editingValue);
-                        }
-                      }}
-                    />
-                  ) : (
-                    <p
-                      className={`font-semibold text-(--tc-text-inverse,#ffffff) text-sm ${editable ? "cursor-text" : ""}`}
-                      onClick={() => {
-                        if (!editable) return;
-                        setEditingId(getItemKey(item, `${column.key}-${index}`));
-                        setEditingValue(item.title ?? "");
-                      }}
-                    >
-                      {item.title}
-                    </p>
-                  )}
+                    <div className="flex items-center justify-between gap-2 text-[11px] uppercase tracking-[0.4em] text-white/70">
+                      <span>ID</span>
+                      <strong className="text-white">{item.id}</strong>
+                    </div>
 
-                  {item.bug && (
-                    <p className="text-xs text-(--tc-accent,#ef0001) mt-1">
-                      Bug: {item.bug}
-                    </p>
-                  )}
-                  {editable && (
-                    <input
-                      aria-label="Link de evidência"
-                      className="w-full mt-2 bg-(--tc-surface-muted,#0f1626) text-(--tc-text-inverse,#ffffff) text-sm rounded px-2 py-1 border border-(--surface-border,rgba(255,255,255,0.08))"
-                      value={item.link ?? ""}
-                      onChange={(e) =>
-                        setLocalData((prev) => ({
-                          ...prev,
-                          [column.key]: prev[column.key].map((c) =>
-                            c.id === item.id ? { ...c, link: e.target.value } : c
-                          ),
-                        }))
-                      }
-                      onBlur={() => {
-                        if (!persistEndpoint) return;
-                        persistKanbanUpdate({ id: item.id, link: item.link, status: column.key }, "PATCH").catch((e) =>
-                          console.error(e)
-                        );
-                      }}
-                      placeholder="Link de evidência (opcional)"
-                    />
-                  )}
-                </div>
-              ))}
+                    <div className="mt-3">
+                      {editingId === itemKey ? (
+                        <input
+                          aria-label="Editar título do caso"
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white focus:border-white/40"
+                          value={editingValue}
+                          autoFocus
+                          disabled={!editable}
+                          onChange={(e) => setEditingValue(e.target.value)}
+                          onBlur={() => handleTitleSave(column.key, item, editingValue)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleTitleSave(column.key, item, editingValue);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <h3
+                          className={`mt-1 text-lg font-bold uppercase tracking-tight ${editable && !item.fromApi ? "cursor-pointer" : ""}`}
+                          onClick={() => (editable && !item.fromApi ? handleEditClick(column.key, item) : undefined)}
+                        >
+                          {item.title || "Sem título"}
+                        </h3>
+                      )}
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between text-xs text-white/70 gap-3">
+                      <div className="flex items-center gap-3">
+                        {qaseCaseLink ? (
+                          <a
+                            href={qaseCaseLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-semibold text-white/90 hover:text-(--tc-accent,#ef0001)"
+                          >
+                            <FiExternalLink size={14} />
+                            Qase
+                          </a>
+                        ) : (
+                          <span className="text-white/60">Sem Qase</span>
+                        )}
+
+                        {evidenceLink ? (
+                          <a
+                            href={evidenceLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-semibold text-white/90 hover:text-(--tc-accent,#ef0001)"
+                            title="Abrir evidência"
+                          >
+                            <FiExternalLink size={14} />
+                            Evidência
+                          </a>
+                        ) : (
+                          <span className="text-white/60">Sem evidência</span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {editable && !item.fromApi && (
+                          <button
+                            type="button"
+                            onClick={() => handleEditClick(column.key, item)}
+                            className="rounded-full border border-white/40 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/80 transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                          >
+                            Editar
+                          </button>
+                        )}
+
+                        {canEditEvidenceLink && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingLinkId(itemKey);
+                              setEditingLinkValue(item.link ?? "");
+                            }}
+                            className="rounded-full border border-white/40 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/80 transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                          >
+                            Link
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {canEditEvidenceLink && editingLinkId === itemKey && (
+                      <input
+                        aria-label="Link de evidência"
+                        className="mt-3 w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80"
+                        value={editingLinkValue}
+                        onChange={(e) => setEditingLinkValue(e.target.value)}
+                        onBlur={async () => {
+                          const nextLink = editingLinkValue.trim();
+                          setEditingLinkId(null);
+                          setEditingLinkValue("");
+
+                          setLocalData((prev) => ({
+                            ...prev,
+                            [column.key]: prev[column.key].map((c) =>
+                              String(c.id) === String(item.id) ? { ...c, link: nextLink } : c
+                            ),
+                          }));
+
+                          try {
+                            if (item.fromApi) {
+                              if (!allowLinkEdit) return;
+                              await persistApiLinkUpdate({
+                                caseId: item.id,
+                                title: item.title,
+                                status: column.key,
+                                link: nextLink,
+                              });
+                              return;
+                            }
+
+                            if (!persistEndpoint) return;
+                            await persistKanbanUpdate({ id: item.id, link: nextLink, status: column.key }, "PATCH");
+                          } catch (e) {
+                            console.error(e);
+                          }
+                        }}
+                        placeholder="Cole o link de evidência"
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         );

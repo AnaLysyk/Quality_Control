@@ -11,7 +11,6 @@ import type { KanbanData } from "@/types/kanban";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import type { Release } from "@/types/release";
 import { getAppMeta } from "@/lib/appMeta";
-import type { CSSProperties } from "react";
 import Image from "next/image";
 
 type AnyRelease = (Release & { name?: string }) | (ReleaseEntry & { name?: string });
@@ -23,17 +22,29 @@ type ReleaseTemplateProps = {
   total: number;
 };
 
-type ReleasePageContentProps = { slug: string };
+type ReleasePageContentProps = { slug: string; companySlug?: string };
 
 const legendClassByLabel: Record<string, string> = {
   Pass: "bg-[#22c55e]",
   Fail: "bg-[#ef4444]",
   Blocked: "bg-[#facc15]",
   "Not Run": "bg-[#64748b]",
-  Total: "bg-[#0b1a3c]",
+  Total: "bg-[#0f172a]",
 };
 
-export async function ReleasePageContent({ slug }: ReleasePageContentProps) {
+const APP_COLOR_CLASS: Record<string, string> = {
+  smart: "app-color-smart",
+  sfq: "app-color-smart",
+  print: "app-color-print",
+  booking: "app-color-booking",
+  cds: "app-color-cds",
+  trust: "app-color-trust",
+  "cidadao-smart": "app-color-cidadao",
+  gmt: "app-color-gmt",
+  "mobile-griaule": "app-color-gmt",
+};
+
+export async function ReleasePageContent({ slug, companySlug }: ReleasePageContentProps) {
   const normalizedSlug = slugifyRelease(slug);
   let manualRelease: Release | null = null;
   let apiRelease: ReleaseEntry | null = null;
@@ -62,6 +73,7 @@ export async function ReleasePageContent({ slug }: ReleasePageContentProps) {
   const projectCode =
     (releaseData as ReleaseEntry).qaseProject ?? (projectKey === "smart" ? "SFQ" : projectKey.toUpperCase());
   const appMeta = getAppMeta(projectKey, projectCode);
+  const appColorClass = APP_COLOR_CLASS[projectKey] ?? "app-color-default";
 
   let stats =
     source === "MANUAL"
@@ -90,29 +102,31 @@ export async function ReleasePageContent({ slug }: ReleasePageContentProps) {
     }
   }
 
-  const editable =
-    source === "MANUAL" && releaseData.status !== "FINALIZADA" && releaseData.status !== "FINALIZED";
+  const editable = source === "MANUAL";
   const total = stats.pass + stats.fail + stats.blocked + stats.notRun;
+  const canPersistApiLinks = source === "API" && Boolean(companySlug);
+  const apiPersistEndpoint =
+    source === "API" && Number.isFinite(Number((releaseData as ReleaseEntry).runId))
+      ? `/api/kanban?project=${encodeURIComponent(projectCode)}&runId=${encodeURIComponent(
+          String((releaseData as ReleaseEntry).runId ?? 0),
+        )}${companySlug ? `&slug=${encodeURIComponent(companySlug)}` : ""}`
+      : undefined;
 
   return (
     <div className="min-h-screen bg-linear-to-b from-white via-white to-[#e6f0ff] text-[#0b1a3c] px-4 py-6 md:px-10 md:py-10">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="space-y-1">
-            <p className="text-xs uppercase tracking-[0.28em] text-[--tc-accent]">Run</p>
+            <p className="text-xs uppercase tracking-[0.28em] text-(--tc-accent)">Run</p>
             <h1 className="text-3xl md:text-4xl font-extrabold text-[#0b1a3c]">
               {(releaseData as ReleaseEntry).title ?? releaseData.slug ?? "Run"}
             </h1>
             {(releaseData as ReleaseEntry).summary && (
-              <p className="text-[--tc-text-secondary]">{(releaseData as ReleaseEntry).summary}</p>
+              <p className="text-(--tc-text-secondary)">{(releaseData as ReleaseEntry).summary}</p>
             )}
           </div>
           <div className="flex items-center gap-3">
-            {/* webhint:disable-next-line no-inline-styles */}
-            <div
-              style={{ "--app-tag-color": appMeta.color } as CSSProperties}
-              className="inline-flex items-center justify-center gap-2 rounded-full px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-white shadow-[0_8px_20px_rgba(0,0,0,0.25)] border border-[--app-tag-color] bg-[--app-tag-color]"
-            >
+            <div className={`inline-flex items-center justify-center gap-2 rounded-full px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-white shadow-[0_8px_20px_rgba(0,0,0,0.25)] border border-(--app-tag-color) bg-(--app-tag-color) ${appColorClass}`}>
               <span className="h-3 w-3 rounded-full bg-white/90 ring-2 ring-white/40" />
               <span className="leading-none">{appMeta.label}</span>
             </div>
@@ -125,20 +139,23 @@ export async function ReleasePageContent({ slug }: ReleasePageContentProps) {
               />
             )}
             {source === "MANUAL" && (
-              <ManualReleaseActions slug={releaseData.slug ?? normalizedSlug} editable={editable} />
+              <ManualReleaseActions
+                slug={releaseData.slug ?? normalizedSlug}
+                status={typeof releaseData.status === "string" ? releaseData.status : undefined}
+              />
             )}
           </div>
         </div>
 
-        {source === "MANUAL" && editable && <ManualStatsForm slug={releaseData.slug} initialStats={stats} />}
+        {source === "MANUAL" && <ManualStatsForm slug={releaseData.slug} initialStats={stats} />}
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
-            { label: "Pass", value: stats.pass, color: "#22c55e" },
-            { label: "Fail", value: stats.fail, color: "#ef4444" },
-            { label: "Blocked", value: stats.blocked, color: "#facc15" },
-            { label: "Not Run", value: stats.notRun, color: "#64748b" },
-            { label: "Total", value: total, color: "#0f172a" },
+            { label: "Pass", value: stats.pass },
+            { label: "Fail", value: stats.fail },
+            { label: "Blocked", value: stats.blocked },
+            { label: "Not Run", value: stats.notRun },
+            { label: "Total", value: total },
           ].map((item) => {
             return (
               <div
@@ -146,8 +163,9 @@ export async function ReleasePageContent({ slug }: ReleasePageContentProps) {
                 className="rounded-2xl px-4 py-4 flex items-center justify-between border border-[#e5e7eb] bg-white shadow-[0_10px_25px_rgba(0,0,0,0.06)]"
               >
                 <div className="flex items-center gap-2">
-                  {/* webhint:disable-next-line no-inline-styles */}
-                  <span className="h-3.5 w-3.5 rounded-full ring-2 ring-white/50" style={{ backgroundColor: item.color }} />
+                  <span
+                    className={`h-3.5 w-3.5 rounded-full ring-2 ring-white/50 ${legendClassByLabel[item.label] ?? "bg-[#0f172a]"}`}
+                  />
                   <span className="text-sm font-semibold text-[#0b1a3c]">{item.label}</span>
                 </div>
                 <div className="text-right leading-tight">
@@ -229,16 +247,17 @@ export async function ReleasePageContent({ slug }: ReleasePageContentProps) {
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Kanban</h2>
           </div>
-          <div className="rounded-2xl border border-[--tc-border]/30 bg-[--tc-primary]/4 p-4">
+          <div className="rounded-2xl border border-(--tc-border)/30 bg-(--tc-primary)/4 p-4">
             <Kanban
               data={kanbanData}
               project={projectKey}
               runId={(releaseData as ReleaseEntry).runId ?? 0}
               qaseProject={projectCode}
-              runSlug={releaseData.slug}
-              persistEndpoint={source === "MANUAL" ? `/api/releases-manual/${releaseData.slug}/cases` : undefined}
+              companySlug={companySlug}
+              persistEndpoint={source === "MANUAL" ? `/api/releases-manual/${releaseData.slug}/cases` : apiPersistEndpoint}
               editable={editable}
               allowStatusChange={editable}
+              allowLinkEdit={canPersistApiLinks}
             />
           </div>
         </section>
@@ -272,7 +291,7 @@ export default function ReleaseTemplate({ appName, finalTitle, stats, total }: R
               <h2 className="text-2xl font-semibold text-[#0b1a3c]">{finalTitle}</h2>
             </div>
           </div>
-          <div className="text-right text-sm text-[#0b1a3c] space-y-1 min-w-[140px]">
+          <div className="text-right text-sm text-[#0b1a3c] space-y-1 min-w-35">
             <div className="font-semibold">Run ID: -</div>
             <div className="font-semibold">Projeto: -</div>
           </div>
@@ -280,7 +299,7 @@ export default function ReleaseTemplate({ appName, finalTitle, stats, total }: R
 
         <div className="flex-1 flex flex-col items-center justify-center gap-8">
           <div className="w-full flex items-center justify-center">
-            <div className="w-[220px] h-[220px]">
+            <div className="w-55 h-55">
               <StatusChart stats={stats} hasData={total > 0} emptyLabel="Sem execucoes" />
             </div>
           </div>

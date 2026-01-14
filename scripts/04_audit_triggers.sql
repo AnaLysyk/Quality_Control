@@ -4,7 +4,7 @@
 
 CREATE OR REPLACE FUNCTION public.audit_redact_row_changes() RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public AS $$
+SET search_path = pg_catalog, public AS $$
 DECLARE
   redacted_new jsonb;
   redacted_old jsonb;

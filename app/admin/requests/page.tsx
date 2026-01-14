@@ -1,6 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-hot-toast";
+import Breadcrumb from "@/components/Breadcrumb";
 
 type RequestRecord = {
   id: string;
@@ -9,10 +12,15 @@ type RequestRecord = {
   companyName: string;
   type: "EMAIL_CHANGE" | "COMPANY_CHANGE";
   status: "PENDING" | "APPROVED" | "REJECTED";
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
   createdAt: string;
   reviewNote?: string;
 };
+
+function payloadString(payload: Record<string, unknown>, key: string): string {
+  const value = payload[key];
+  return typeof value === "string" ? value : "";
+}
 
 export default function AdminRequestsPage() {
   const [items, setItems] = useState<RequestRecord[]>([]);
@@ -62,95 +70,119 @@ export default function AdminRequestsPage() {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      setMessage(err.message || "Erro ao atualizar");
+      const msg = err.message || "Erro ao atualizar";
+      setMessage(msg);
+      toast.error(msg);
       return;
     }
+    toast.success(next === "APPROVED" ? "Solicitação aprovada" : "Solicitação rejeitada");
     await load();
   }
 
   return (
-    <div className="min-h-screen bg-white text-[#0b1a3c] px-6 py-10 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Solicitações (Admin)</h1>
-          <p className="text-sm text-gray-600">Aprovar ou rejeitar pedidos de alteração</p>
-        </div>
-        <button
-          onClick={load}
-          className="rounded-lg border border-[#e5e7eb] px-3 py-2 text-sm"
-          disabled={loading}
-        >
-          Atualizar
-        </button>
-      </div>
+    <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
+      <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-10 space-y-4">
+        <Breadcrumb items={[{ label: "Admin", href: "/admin/home" }, { label: "Solicitações" }]} />
 
-      <div className="flex gap-3 flex-wrap">
-        <select
-          aria-label="Filtrar solicitações por status"
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="border border-[#e5e7eb] rounded-lg px-3 py-2"
-        >
-          <option value="">Status (todos)</option>
-          <option value="PENDING">Pendente</option>
-          <option value="APPROVED">Aprovado</option>
-          <option value="REJECTED">Rejeitado</option>
-        </select>
-
-        <select
-          aria-label="Filtrar solicitações por tipo"
-          value={type}
-          onChange={(e) => setType(e.target.value)}
-          className="border border-[#e5e7eb] rounded-lg px-3 py-2"
-        >
-          <option value="">Tipo (todos)</option>
-          <option value="EMAIL_CHANGE">Email</option>
-          <option value="COMPANY_CHANGE">Empresa</option>
-        </select>
-      </div>
-
-      {message && <p className="text-sm text-red-600">{message}</p>}
-      {loading && <p className="text-sm text-gray-600">Carregando...</p>}
-
-      <div className="space-y-2">
-        {filtered.length === 0 && !loading && <p className="text-sm text-gray-600">Nenhuma solicitação.</p>}
-        {filtered.map((req) => (
-          <div key={req.id} className="rounded-lg border border-[#e5e7eb] p-3 flex flex-col gap-2">
-            <div className="flex flex-wrap justify-between gap-2">
-              <div>
-                <p className="font-semibold">{req.userName} ({req.userEmail})</p>
-                <p className="text-sm text-gray-600">{req.companyName}</p>
-              </div>
-              <div className="text-sm font-bold">
-                {req.status === "PENDING" && <span className="text-yellow-600">Pendente</span>}
-                {req.status === "APPROVED" && <span className="text-green-600">Aprovado</span>}
-                {req.status === "REJECTED" && <span className="text-red-600">Rejeitado</span>}
-              </div>
-            </div>
-            <div className="text-sm text-gray-700">
-              {req.type === "EMAIL_CHANGE" && <div>Solicitou email: {req.payload?.newEmail}</div>}
-              {req.type === "COMPANY_CHANGE" && <div>Solicitou empresa: {req.payload?.newCompanyName}</div>}
-              <div>Criado em {new Date(req.createdAt).toLocaleString()}</div>
-              {req.reviewNote && <div>Nota: {req.reviewNote}</div>}
-            </div>
-            {req.status === "PENDING" && (
-              <div className="flex gap-2 flex-wrap">
-                <button
-                  onClick={() => update(req.id, "APPROVED")}
-                  className="rounded-lg bg-green-600 text-white px-3 py-1 text-sm"
-                >
-                  Aprovar
-                </button>
-                <button
-                  onClick={() => update(req.id, "REJECTED")}
-                  className="rounded-lg bg-red-600 text-white px-3 py-1 text-sm"
-                >
-                  Rejeitar
-                </button>
-              </div>
-            )}
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Solicitações</h1>
+            <p className="text-sm sm:text-base text-(--tc-text-muted,#6b7280)">Aprovar ou rejeitar pedidos de alteração</p>
           </div>
-        ))}
+          <button
+            type="button"
+            onClick={load}
+            className="rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) px-3 py-2 text-sm text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-2,#f3f4f6) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30 disabled:opacity-60"
+            disabled={loading}
+          >
+            Atualizar
+          </button>
+        </div>
+
+        <div className="flex gap-3 flex-wrap" role="group" aria-label="Filtros">
+          <label className="sr-only" htmlFor="requests-filter-status">
+            Filtrar solicitações por status
+          </label>
+          <select
+            id="requests-filter-status"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) text-(--tc-text-primary,#0b1a3c) rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+          >
+            <option value="">Status (todos)</option>
+            <option value="PENDING">Pendente</option>
+            <option value="APPROVED">Aprovado</option>
+            <option value="REJECTED">Rejeitado</option>
+          </select>
+
+          <label className="sr-only" htmlFor="requests-filter-type">
+            Filtrar solicitações por tipo
+          </label>
+          <select
+            id="requests-filter-type"
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            className="border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) text-(--tc-text-primary,#0b1a3c) rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+          >
+            <option value="">Tipo (todos)</option>
+            <option value="EMAIL_CHANGE">Email</option>
+            <option value="COMPANY_CHANGE">Empresa</option>
+          </select>
+        </div>
+
+        {message && (
+          <p className="text-sm text-red-600" role="status" aria-live="polite">
+            {message}
+          </p>
+        )}
+        {loading && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
+
+        <ul className="space-y-2" role="list" aria-busy={loading}>
+          {filtered.length === 0 && !loading && <li className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma solicitação.</li>}
+          {filtered.map((req) => (
+            <li key={req.id} className="rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-3 flex flex-col gap-2">
+              <div className="flex flex-wrap justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-semibold truncate" title={`${req.userName} (${req.userEmail})`}>
+                    {req.userName} ({req.userEmail})
+                  </p>
+                  <p className="text-sm text-(--tc-text-muted,#6b7280) truncate" title={req.companyName}>
+                    {req.companyName}
+                  </p>
+                </div>
+                <div className="text-sm font-bold">
+                  {req.status === "PENDING" && <span className="text-yellow-600">Pendente</span>}
+                  {req.status === "APPROVED" && <span className="text-green-600">Aprovado</span>}
+                  {req.status === "REJECTED" && <span className="text-red-600">Rejeitado</span>}
+                </div>
+              </div>
+              <div className="text-sm text-(--tc-text-secondary,#4b5563)">
+                {req.type === "EMAIL_CHANGE" && <div>Solicitou email: {payloadString(req.payload, "newEmail")}</div>}
+                {req.type === "COMPANY_CHANGE" && <div>Solicitou empresa: {payloadString(req.payload, "newCompanyName")}</div>}
+                <div>Criado em {new Date(req.createdAt).toLocaleString()}</div>
+                {req.reviewNote && <div>Nota: {req.reviewNote}</div>}
+              </div>
+              {req.status === "PENDING" && (
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => update(req.id, "APPROVED")}
+                    className="rounded-lg bg-green-600 text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                  >
+                    Aprovar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => update(req.id, "REJECTED")}
+                    className="rounded-lg bg-red-600 text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                  >
+                    Rejeitar
+                  </button>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

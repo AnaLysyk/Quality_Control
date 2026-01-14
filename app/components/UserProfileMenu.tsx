@@ -13,9 +13,10 @@ type Props = {
 };
 
 export default function UserProfileMenu({ activeClientName, onEditCompany, onOpenTeam, onOpenSettings }: Props) {
-  const { user, loading, refreshUser } = useAuthUser();
+  const { user, loading, refreshUser, logout } = useAuthUser();
   const { t } = useI18n();
-  const isAdmin = !!user?.isGlobalAdmin || (user as any)?.is_global_admin === true;
+  const legacyUser = (user ?? null) as unknown as { is_global_admin?: boolean } | null;
+  const isAdmin = !!user?.isGlobalAdmin || legacyUser?.is_global_admin === true;
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -53,16 +54,10 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
     }
   }
 
-  function handleLogout() {
-    try {
-      localStorage.removeItem("auth_ok");
-      document.cookie = "auth=; Max-Age=0; path=/;";
-      document.cookie = "auth_token=; Max-Age=0; path=/;";
-    } catch {
-      /* ignore */
-    } finally {
-      router.replace("/login");
-    }
+  async function handleLogout() {
+    setOpen(false);
+    await logout();
+    router.replace("/login");
   }
 
   const displayName = loading ? t("profileMenu.loading") : user?.name || t("profileMenu.userFallback");

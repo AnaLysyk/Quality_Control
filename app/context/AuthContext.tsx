@@ -14,8 +14,11 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+const bootstrapAttempts = new Map<string, number>();
+
 async function fetchMe(): Promise<AuthUser | null> {
   const token = await getAccessToken().catch(() => null);
+  const attemptKey = token ?? "__NO_TOKEN__";
   const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
   const res = await fetch("/api/me", {
@@ -25,7 +28,47 @@ async function fetchMe(): Promise<AuthUser | null> {
     cache: "no-store",
   });
 
-  if (!res.ok) return null;
+  // If the user is authenticated but is missing bootstrap records
+  // (public.users/public.profiles), /api/me may return 401.
+  // We only attempt bootstrap when /api/me explicitly signals it's needed.
+  if (!res.ok) {
+    const errorPayload = await res.json().catch(() => null);
+    const errorParsed = AuthMeResponseSchema.safeParse(errorPayload);
+
+    const errorCode = errorParsed.success ? errorParsed.data.error?.code : null;
+    if (
+      res.status === 401 &&
+      headers &&
+      errorCode === "NEEDS_BOOTSTRAP"
+    ) {
+      const attempts = bootstrapAttempts.get(attemptKey) ?? 0;
+      if (attempts > 0) return null;
+      bootstrapAttempts.set(attemptKey, attempts + 1);
+      try {
+        await fetch("/api/auth/bootstrap", {
+          method: "POST",
+          headers,
+          credentials: "include",
+          cache: "no-store",
+        });
+        const retry = await fetch("/api/me", {
+          method: "GET",
+          headers,
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (!retry.ok) return null;
+        const retryPayload = await retry.json().catch(() => null);
+        const retryParsed = AuthMeResponseSchema.safeParse(retryPayload);
+        if (!retryParsed.success) return null;
+        bootstrapAttempts.delete(attemptKey);
+        return retryParsed.data.user ?? null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
 
   const payload = await res.json().catch(() => null);
   const parsed = AuthMeResponseSchema.safeParse(payload);
@@ -54,16 +97,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    bootstrapAttempts.clear();
     try {
-      // Limpa storage/cookies locais. Se existir uma rota de logout no backend, chame aqui.
-      localStorage.removeItem("auth_ok");
-      document.cookie = "auth=; Max-Age=0; path=/;";
-      document.cookie = "auth_token=; Max-Age=0; path=/;";
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+        cache: "no-store",
+      });
     } catch {
       /* ignore */
-    } finally {
-      setUser(null);
     }
+
+    try {
+      const mod = await import("@/lib/supabase/client");
+      await mod.getSupabaseClient().auth.signOut();
+    } catch {
+      /* ignore */
+    }
+
+    try {
+      localStorage.removeItem("auth_ok");
+    } catch {
+      /* ignore */
+    }
+
+    setUser(null);
   };
 
   useEffect(() => {

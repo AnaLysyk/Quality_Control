@@ -68,7 +68,7 @@ export class QaseClient {
     const normalizedBase = base.replace(/\/(v1|v2)\/?$/, "");
     this.baseUrl = normalizedBase.endsWith("/") ? normalizedBase.slice(0, -1) : normalizedBase;
     this.token = options.token || process.env.QASE_API_TOKEN || process.env.QASE_TOKEN || "";
-    this.authStyle = options.authStyle ?? "both";
+    this.authStyle = options.authStyle ?? "token";
     this.defaultHeaders = options.defaultHeaders;
     this.defaultFetchOptions = options.defaultFetchOptions;
     this.fetcher = options.fetcher ?? fetch;
@@ -170,6 +170,10 @@ export class QaseClient {
     return this.get<QaseListResponse<Record<string, unknown>>>(`/run/${projectCode}`, { params });
   }
 
+  listPlans(projectCode: string, params?: QaseRequestOptions["params"]) {
+    return this.get<QaseListResponse<Record<string, unknown>>>(`/plan/${projectCode}`, { params });
+  }
+
   getRun(projectCode: string, runId: number) {
     return this.get<QaseApiResponse<Record<string, unknown>>>(`/run/${projectCode}/${runId}`);
   }
@@ -227,7 +231,12 @@ export class QaseClient {
   }
 
   listResults(projectCode: string, runId: number, params?: QaseRequestOptions["params"]) {
-    return this.get<QaseListResponse<Record<string, unknown>>>(`/result/${projectCode}/${runId}`, { params });
+    return this.get<QaseListResponse<Record<string, unknown>>>(`/result/${projectCode}`, {
+      params: {
+        run_id: runId,
+        ...(params ?? {}),
+      },
+    });
   }
 
   listResultsLegacy<T = Record<string, unknown>>(projectCode: string, params?: QaseRequestOptions["params"]) {
@@ -264,6 +273,12 @@ export class QaseClient {
 
   createResult(projectCode: string, runId: number, payload: Record<string, unknown>) {
     return this.post<QaseApiResponse<Record<string, unknown>>>(`/result/${projectCode}/${runId}`, {
+      body: payload,
+    });
+  }
+
+  createResultsBulk(projectCode: string, runId: number, payload: Record<string, unknown>) {
+    return this.post<QaseApiResponse<Record<string, unknown>>>(`/result/${projectCode}/${runId}/bulk`, {
       body: payload,
     });
   }
@@ -313,24 +328,19 @@ export class QaseClient {
   }
 
   listDefectsV2(projectCode: string, params?: QaseRequestOptions["params"]) {
-    return this.get<QaseListResponse<Record<string, unknown>>>(`/defect/${projectCode}`, {
-      params,
-      version: "v2",
-    });
+    return this.listDefects(projectCode, params);
+  }
+
+  listDefects(projectCode: string, params?: QaseRequestOptions["params"]) {
+    return this.get<QaseListResponse<Record<string, unknown>>>(`/defect/${projectCode}` , { params });
   }
 
   createResultV2(projectCode: string, runId: number, payload: Record<string, unknown>) {
-    return this.post<QaseApiResponse<Record<string, unknown>>>(`/${projectCode}/run/${runId}/result`, {
-      body: payload,
-      version: "v2",
-    });
+    return this.createResult(projectCode, runId, payload);
   }
 
   createResultsBulkV2(projectCode: string, runId: number, payload: Record<string, unknown>) {
-    return this.post<QaseApiResponse<Record<string, unknown>>>(`/${projectCode}/run/${runId}/results`, {
-      body: payload,
-      version: "v2",
-    });
+    return this.createResultsBulk(projectCode, runId, payload);
   }
 
   private buildUrl(path: string, version: QaseVersion) {

@@ -1,16 +1,27 @@
-"use client";
+import { notFound } from "next/navigation";
+import Breadcrumb from "@/components/Breadcrumb";
+import { getClienteBySlug } from "@/lib/clienteServer";
+import CompanyProfileClient from "./profileClient";
 
-import { useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+export default async function EmpresaHomePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
 
-export default function EmpresaHomeRedirect() {
-  const router = useRouter();
-  const params = useParams();
+  const client = await getClienteBySlug(slug);
+  if (!client) notFound();
 
-  useEffect(() => {
-    const slug = (params?.slug as string) || "empresa";
-    router.replace(`/empresas/${slug}/dashboard`);
-  }, [params, router]);
+  return (
+    <div className="min-h-screen bg-(--tc-bg) text-(--tc-text-inverse)">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-10 py-8 space-y-6">
+        <Breadcrumb
+          items={[
+            { label: "Empresas", href: "/empresas" },
+            { label: client.name, href: `/empresas/${encodeURIComponent(client.slug)}/home`, title: client.name },
+            { label: "Perfil" },
+          ]}
+        />
 
-  return null;
+        <CompanyProfileClient clientId={client.id} clientSlug={client.slug} clientName={client.name} />
+      </div>
+    </div>
+  );
 }

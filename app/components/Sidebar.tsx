@@ -4,9 +4,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo } from "react";
 import { usePathname } from "next/navigation";
-import { FiGrid, FiHome, FiLayers, FiSettings, FiUsers } from "react-icons/fi";
+import {
+  FiAlertTriangle,
+  FiBarChart2,
+  FiBell,
+  FiBriefcase,
+  FiClipboard,
+  FiCompass,
+  FiGrid,
+  FiHome,
+  FiLayers,
+  FiList,
+  FiPlusCircle,
+  FiShield,
+  FiUser,
+  FiUserPlus,
+  FiUsers,
+} from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useI18n } from "@/hooks/useI18n";
+import { useClientContext } from "@/context/ClientContext";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
 
@@ -28,13 +45,17 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const logoSrc = useMemo(() => (menuLogoEnv ? menuLogoEnv : "/images/tc.png"), []);
   const pathname = usePathname() || "";
   const { user } = useAuthUser();
+  const { activeClientSlug } = useClientContext();
   const { t } = useI18n();
 
+  const legacyUser = (user ?? null) as unknown as { is_global_admin?: boolean } | null;
+
+  const normalizedRole = typeof user?.role === "string" ? user.role.toLowerCase() : null;
   const isGlobalAdmin =
     user?.isGlobalAdmin === true ||
-    (user as any)?.is_global_admin === true ||
-    user?.role === "admin" ||
-    user?.role === "global_admin";
+    legacyUser?.is_global_admin === true ||
+    normalizedRole === "admin" ||
+    normalizedRole === "global_admin";
 
   const appRole = useMemo<AppRole | null>(() => {
     if (!user) return null;
@@ -47,23 +68,29 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
   const companySlug = useMemo(() => {
     const match = pathname.match(/^\/empresas\/([^/]+)/);
-    return match?.[1] ?? user?.clientSlug ?? null;
-  }, [pathname, user?.clientSlug]);
+    return match?.[1] ?? activeClientSlug ?? user?.clientSlug ?? null;
+  }, [pathname, activeClientSlug, user?.clientSlug]);
 
   const publicNav: NavItem[] = useMemo(
     () => [
       { label: t("nav.home"), icon: FiHome, href: "/" },
-      { label: t("nav.testingMetric"), icon: FiGrid, href: "/dashboard" },
-      { label: t("nav.newRun"), icon: FiSettings, href: "/admin/runs", roles: ["admin", "client", "user"] },
+      { label: t("nav.dashboard"), icon: FiGrid, href: "/dashboard" },
+      { label: t("nav.metrics"), icon: FiBarChart2, href: "/metricas" },
+      { label: t("nav.newRun"), icon: FiPlusCircle, href: "/admin/runs", roles: ["admin", "client", "user"] },
     ],
     [t]
   );
 
   const adminNav: NavItem[] = useMemo(
     () => [
-      { label: t("nav.adminPanel"), icon: FiGrid, href: "/admin/home" },
+      { label: t("nav.dashboard"), icon: FiGrid, href: "/dashboard" },
+      { label: t("nav.metrics"), icon: FiBarChart2, href: "/metricas" },
+      { label: t("nav.adminPanel"), icon: FiCompass, href: "/admin/home" },
       { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
-      { label: t("nav.runsManagement"), icon: FiSettings, href: "/admin/runs" },
+      { label: t("nav.runsManagement"), icon: FiLayers, href: "/admin/runs" },
+      { label: t("nav.defects"), icon: FiShield, href: "/admin/defeitos" },
+      { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
+      { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
     ],
     [t]
   );
@@ -72,10 +99,14 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     () =>
       companySlug
         ? [
+            { label: t("nav.profile"), icon: FiUser, href: `/empresas/${companySlug}/home` },
             { label: t("nav.dashboard"), icon: FiGrid, href: `/empresas/${companySlug}/dashboard` },
-            { label: t("nav.apps"), icon: FiLayers, href: `/empresas/${companySlug}/aplicacoes` },
-            { label: t("nav.runs"), icon: FiLayers, href: `/empresas/${companySlug}/runs` },
-            { label: t("nav.newRun"), icon: FiSettings, href: "/admin/runs", roles: ["admin", "client", "user"] },
+            { label: t("nav.metrics"), icon: FiBarChart2, href: `/empresas/${companySlug}/metricas` },
+            { label: t("nav.apps"), icon: FiBriefcase, href: `/empresas/${companySlug}/aplicacoes` },
+            { label: t("nav.testPlans"), icon: FiClipboard, href: `/empresas/${companySlug}/planos-de-teste` },
+            { label: t("nav.runs"), icon: FiList, href: `/empresas/${companySlug}/runs` },
+            { label: t("nav.defects"), icon: FiAlertTriangle, href: `/empresas/${companySlug}/defeitos` },
+            { label: t("nav.runsManagement"), icon: FiLayers, href: "/admin/runs", roles: ["admin", "client", "user"] },
           ]
         : [],
     [companySlug, t]
@@ -114,7 +145,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
           >
             <span
               aria-hidden
-              className={`absolute left-1 top-2 bottom-2 w-[3px] rounded-full bg-[#4e8df5] transition-all ${
+              className={`absolute left-1 top-2 bottom-2 w-0.75 rounded-full bg-[#4e8df5] transition-all ${
                 isActive ? "opacity-100" : "opacity-0 group-hover/link:opacity-60"
               }`}
             />
@@ -136,7 +167,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
   const DesktopNav = (
     <aside
-      className="group/sidebar hidden lg:flex fixed left-0 top-0 z-40 h-screen w-[84px] hover:w-[260px] overflow-hidden border-r border-slate-200 text-slate-900 flex-col bg-white backdrop-blur-2xl shadow-[0_12px_30px_rgba(15,23,42,0.12)] transition-[width] duration-200 ease-out dark:border-white/10 dark:text-white dark:bg-[linear-gradient(180deg,#03123b_0%,#051a52_60%,#03123b_100%)] dark:shadow-[0_18px_40px_rgba(0,0,0,0.45)]"
+      className="group/sidebar hidden lg:flex fixed left-0 top-0 z-40 h-screen w-21 hover:w-65 overflow-hidden border-r border-slate-200 text-slate-900 flex-col bg-white backdrop-blur-2xl shadow-[0_12px_30px_rgba(15,23,42,0.12)] transition-[width] duration-200 ease-out dark:border-white/10 dark:text-white dark:bg-[linear-gradient(180deg,#03123b_0%,#051a52_60%,#03123b_100%)] dark:shadow-[0_18px_40px_rgba(0,0,0,0.45)]"
     >
       <div className="flex items-center px-2 py-3 border-b border-slate-200/70 dark:border-white/5 relative">
         <Link

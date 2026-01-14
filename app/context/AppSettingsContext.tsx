@@ -25,7 +25,9 @@ type AppSettingsContextValue = {
   refreshSettings: () => Promise<void>;
 };
 
-const DEFAULT_SETTINGS: AppSettings = { theme: "system", language: DEFAULT_LOCALE };
+const DEFAULT_SETTINGS: AppSettings = { theme: "light", language: DEFAULT_LOCALE };
+
+const LAST_USER_ID_KEY = "tc-settings:last-user-id";
 
 const AppSettingsContext = createContext<AppSettingsContextValue | undefined>(undefined);
 
@@ -36,6 +38,31 @@ const isValidLanguage = (value?: string | null): value is Language =>
   Boolean(value) && LOCALES.includes(value as Language);
 
 const storageKey = (userId?: string | null) => `tc-settings:${userId ?? "guest"}`;
+
+function readLastUserId(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const id = window.localStorage.getItem(LAST_USER_ID_KEY);
+    return id && id.trim() ? id : null;
+  } catch {
+    return null;
+  }
+}
+
+function rememberLastUserId(userId: string) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(LAST_USER_ID_KEY, userId);
+  } catch {
+    /* ignore */
+  }
+}
+
+function readInitialSettings(): AppSettings {
+  const lastUserId = readLastUserId();
+  const preferredKey = lastUserId ? storageKey(lastUserId) : storageKey(undefined);
+  return readStoredSettings(preferredKey) ?? readStoredSettings(storageKey(undefined)) ?? DEFAULT_SETTINGS;
+}
 
 function normalizeSettings(input?: Partial<AppSettings> | null): AppSettings {
   const language = isValidLanguage(input?.language) ? (input?.language as Language) : DEFAULT_SETTINGS.language;
@@ -66,7 +93,7 @@ function writeStoredSettings(key: string, settings: AppSettings) {
 
 export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuthUser();
-  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<AppSettings>(() => readInitialSettings());
   const [loading, setLoading] = useState(true);
 
   const refreshSettings = useCallback(async () => {
@@ -99,12 +126,13 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
       const normalized = normalizeSettings(payload?.settings ?? payload);
       setSettings(normalized);
       writeStoredSettings(key, normalized);
+      if (user?.id) rememberLastUserId(user.id);
     } catch {
       /* ignore */
     } finally {
       setLoading(false);
     }
-  }, [user?.id, user]);
+  }, [user]);
 
   const saveSettings = useCallback(
     async (next?: Partial<AppSettings>): Promise<SaveResult> => {
@@ -137,6 +165,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
         const serverSettings = normalizeSettings(payload?.settings ?? payload);
         setSettings(serverSettings);
         writeStoredSettings(key, serverSettings);
+        if (user?.id) rememberLastUserId(user.id);
         return { ok: true };
       } catch {
         return { ok: false, error: "save_failed" };

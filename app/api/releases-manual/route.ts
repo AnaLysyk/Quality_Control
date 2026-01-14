@@ -32,9 +32,12 @@ async function writeStore(releases: Release[]) {
   await fs.writeFile(STORE_PATH, JSON.stringify(releases, null, 2), "utf8");
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   const releases = await readStore();
-  const normalized = releases.map((r) => ({
+  const url = new URL(req.url);
+  const clientSlug = url.searchParams.get("clientSlug")?.trim() || null;
+  const filtered = clientSlug ? releases.filter((r) => (r.clientSlug ?? null) === clientSlug) : releases;
+  const normalized = filtered.map((r) => ({
     ...r,
     id: r.slug ?? r.id,
     metrics: {
@@ -58,6 +61,7 @@ export async function POST(req: Request) {
     const name = (body.name ?? "").toString().trim();
     const app = (body.app ?? "").toString().trim() || "SMART";
     const environments = Array.isArray(body.environments) ? body.environments.map((env: unknown) => String(env)) : [];
+    const clientSlug = body.clientSlug ? String(body.clientSlug).trim() : null;
     const stats = (body.stats ?? {}) as Partial<Stats>;
     const now = new Date().toISOString();
 
@@ -71,6 +75,7 @@ export async function POST(req: Request) {
       name,
       app,
       environments,
+      clientSlug: clientSlug && clientSlug.length > 0 ? clientSlug : null,
       source: "MANUAL",
       status: (body.status as Release["status"]) ?? "ACTIVE",
       stats: {

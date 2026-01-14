@@ -1,27 +1,12 @@
 import { GET, PATCH, PUT } from "@/api/clients/[id]/route";
+import { buildQueryResponse, createSupabaseServerMock, resetSupabaseServerMock } from "./utils/supabaseMock";
 
-jest.mock("@/lib/supabaseServer", () => {
-  const auth = { getUser: jest.fn() };
-  const from = jest.fn();
-  const supabaseServer = { auth, from };
-  return { supabaseServer, getSupabaseServer: () => supabaseServer };
-});
+const supabaseServer = createSupabaseServerMock();
 
-const supabaseServer = jest.requireMock("@/lib/supabaseServer").supabaseServer as {
-  auth: { getUser: jest.Mock };
-  from: jest.Mock;
-};
-
-function buildQueryResponse(response: { data: any; error: any }) {
-  return {
-    select: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    match: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    maybeSingle: jest.fn().mockResolvedValue(response),
-  };
-}
+jest.mock("@/lib/supabaseServer", () => ({
+  supabaseServer,
+  getSupabaseServer: () => supabaseServer,
+}));
 
 function requestWithAuth(url: string, init?: RequestInit) {
   return new Request(url, {
@@ -32,8 +17,7 @@ function requestWithAuth(url: string, init?: RequestInit) {
 
 describe("/api/clients/[id] GET/PATCH/PUT", () => {
   beforeEach(() => {
-    supabaseServer.auth.getUser.mockReset();
-    supabaseServer.from.mockReset();
+    resetSupabaseServerMock(supabaseServer);
   });
 
   describe("GET", () => {

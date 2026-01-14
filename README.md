@@ -16,6 +16,7 @@ npm install
 - Preencha as variáveis do Supabase:
 	- `NEXT_PUBLIC_SUPABASE_URL`
 	- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+	- `NEXT_PUBLIC_SITE_URL` (importante para links de reset de senha; use o domínio fixo do deploy)
 	- (server-only) `SUPABASE_SERVICE_ROLE_KEY`
 - (Opcional, recomendado para Qase) Preencha também `QASE_API_TOKEN` (ou `QASE_TOKEN`) e `QASE_PROJECT_CODE`.
 

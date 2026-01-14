@@ -4,6 +4,15 @@ import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
+function normalizeBaseUrl(value: string | undefined | null) {
+  const raw = (value ?? "").trim();
+  if (!raw) return null;
+  let url = raw.replace(/\s+/g, "");
+  if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+  url = url.replace(/\/+$/, "");
+  return url;
+}
+
 function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
 }
@@ -16,7 +25,8 @@ export default function ForgotPasswordClient() {
 
   const redirectTo = useMemo(() => {
     if (typeof window === "undefined") return null;
-    return `${window.location.origin}/login/reset-password`;
+    const baseUrl = normalizeBaseUrl(process.env.NEXT_PUBLIC_SITE_URL) ?? window.location.origin;
+    return `${baseUrl}/login/reset-password`;
   }, []);
 
   async function onSubmit(e: FormEvent) {

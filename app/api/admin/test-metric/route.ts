@@ -16,7 +16,7 @@ function extractToken(req: NextRequest): string | null {
 
 export async function GET(req: NextRequest) {
   const token = extractToken(req);
-  let supabaseAdmin = null as ReturnType<typeof getSupabaseAdmin> | null;
+  let supabaseAdmin: ReturnType<typeof getSupabaseAdmin> | null = null;
   try {
     supabaseAdmin = getSupabaseAdmin();
   } catch {
@@ -44,8 +44,11 @@ export async function GET(req: NextRequest) {
     );
   }
 
+  if (!supabaseAdmin) {
+    return NextResponse.json({ error: "Supabase admin nao configurado" }, { status: 500 });
+  }
+
   // Em produção: tenta puxar empresas e calcular agregados simples (placeholders).
-  const supabaseAdmin = getSupabaseAdmin();
   const { data: clients, error } = await supabaseAdmin
     .from("cliente")
     .select("id, company_name, slug, active")

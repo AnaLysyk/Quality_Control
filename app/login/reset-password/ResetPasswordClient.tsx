@@ -19,6 +19,13 @@ function parseHashTokens() {
   return { access_token, refresh_token };
 }
 
+function parseQueryTokens(search: URLSearchParams) {
+  const access_token = search.get("access_token");
+  const refresh_token = search.get("refresh_token");
+  if (!access_token || !refresh_token) return null;
+  return { access_token, refresh_token };
+}
+
 export default function ResetPasswordClient() {
   const router = useRouter();
   const search = useSearchParams();
@@ -31,6 +38,14 @@ export default function ResetPasswordClient() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const recoveryToken = useMemo(() => {
+    const token = search.get("token");
+    const type = search.get("type");
+    if (!token || !type) return null;
+    if (type !== "recovery") return null;
+    return token;
+  }, [search]);
 
   const code = useMemo(() => {
     const c = search.get("code");
@@ -58,7 +73,19 @@ export default function ResetPasswordClient() {
           router.replace("/login/reset-password");
         }
 
-        // 2) Implicit flow (hash tokens): #access_token=...&refresh_token=...
+        // 2) Tokens na querystring (muito comum no redirect do /auth/v1/verify)
+        const queryTokens = parseQueryTokens(new URLSearchParams(window.location.search));
+        if (queryTokens) {
+          const { error: setErrorSession } = await supabase.auth.setSession(queryTokens);
+          if (setErrorSession) {
+            setError("Link inválido ou expirado. Solicite um novo reset de senha.");
+            setLoading(false);
+            return;
+          }
+          router.replace("/login/reset-password");
+        }
+
+        // 3) Implicit flow (hash tokens): #access_token=...&refresh_token=...
         const tokens = parseHashTokens();
         if (tokens) {
           const { error: setErrorSession } = await supabase.auth.setSession(tokens);
@@ -72,6 +99,13 @@ export default function ResetPasswordClient() {
 
         const { data, error: sessionError } = await supabase.auth.getSession();
         if (sessionError || !data.session) {
+          // Fallback: alguns templates legados enviam apenas ?type=recovery&token=...
+          if (recoveryToken) {
+            setReady(true);
+            setLoading(false);
+            return;
+          }
+
           setError("Abra este link a partir do e-mail de recuperação.");
           setLoading(false);
           return;
@@ -98,7 +132,7 @@ export default function ResetPasswordClient() {
     return () => {
       cancelled = true;
     };
-  }, [code, router]);
+  }, [code, recoveryToken, router]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -124,11 +158,34 @@ export default function ResetPasswordClient() {
     setSaving(true);
     try {
       const supabase = getSupabaseClient();
-      const { error: updateError } = await supabase.auth.updateUser({ password: p1 });
-      if (updateError) {
-        setError("Não foi possível atualizar a senha. Tente novamente.");
-        return;
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      // Se não houver sessão, tentamos o modo "token-only" via API route.
+      if (!sessionData.session) {
+        if (!recoveryToken) {
+          setError("Link inválido ou expirado. Solicite um novo reset de senha.");
+          return;
+        }
+
+        const res = await fetch("/api/auth/reset-via-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: recoveryToken, new_password: p1 }),
+        });
+
+        const json = (await res.json().catch(() => null)) as { error?: string; details?: string } | null;
+        if (!res.ok) {
+          setError(json?.error || json?.details || "Não foi possível atualizar a senha. Tente novamente.");
+          return;
+        }
+      } else {
+        const { error: updateError } = await supabase.auth.updateUser({ password: p1 });
+        if (updateError) {
+          setError("Não foi possível atualizar a senha. Tente novamente.");
+          return;
+        }
       }
+
       setSuccess("Senha redefinida com sucesso. Você já pode fazer login.");
       setNewPassword("");
       setConfirmPassword("");

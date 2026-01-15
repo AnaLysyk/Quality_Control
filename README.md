@@ -27,7 +27,7 @@ npm install
 	- `POSTGRES_URL_NON_POOLING` (conexão direta, sem pooling)
 	- (aliases opcionais, usados em scripts/docs) `DATABASE_URL` e `DATABASE_URL_UNPOOLED`
 - (Opcional, recomendado para Qase) Preencha também `QASE_API_TOKEN` (ou `QASE_TOKEN`) e `QASE_PROJECT_CODE`.
-- (Opcional) Redis (Upstash): defina `UPSTASH_REDIS_REST_URL` e `UPSTASH_REDIS_REST_TOKEN` (server-only). Se suas env vars vierem prefixadas pelo nome do banco (ex.: `METRICA_DE_TESTE_UPSTASH_REDIS_REST_URL`), defina `UPSTASH_REDIS_REST_PREFIX=METRICA_DE_TESTE`. Endpoint de verificação (admin): `/api/admin/redis/ping`.
+- (Opcional) Redis (Upstash): defina `UPSTASH_REDIS_REST_URL` e `UPSTASH_REDIS_REST_TOKEN` (server-only). Endpoint de verificação (admin): `/api/admin/redis/ping`.
 	- Para testar sem login (Preview/primeiro setup): defina `REDIS_PING_SECRET` e chame `/api/public/redis/ping?secret=...` (ou header `x-redis-ping-secret`).
 
 > Segurança: token `napi_...` do Neon (API/console) **não** é a string de conexão do Postgres. Nunca use token Neon como variável do app; use apenas as connection strings (`POSTGRES_URL*`) e mantenha-as em `.env.local`/Vercel (não commit).

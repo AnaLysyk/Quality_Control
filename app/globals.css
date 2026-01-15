@@ -140,7 +140,7 @@ body {
   background: var(--page-bg);
   color: var(--page-text);
   font-family: var(--font-sans);
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: auto;
 }
 

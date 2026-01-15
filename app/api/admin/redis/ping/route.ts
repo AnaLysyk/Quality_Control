@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     return apiOk(
       req,
       { ok: false, configured: false },
-      "Redis não configurado (defina KV_REST_API_URL e KV_REST_API_TOKEN)",
+      "Redis não configurado (defina UPSTASH_REDIS_REST_URL e UPSTASH_REDIS_REST_TOKEN; ou KV_REST_API_URL/KV_REST_API_TOKEN)",
       { extra: { ok: false, configured: false } },
     );
   }

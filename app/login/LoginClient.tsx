@@ -268,7 +268,6 @@ export default function LoginPage() {
   useEffect(() => {
     if (!showSupport) return;
     refreshPublicClients();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showSupport]);
 
   const companyPickerVisible =

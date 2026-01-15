@@ -8,7 +8,6 @@ jest.mock("@/data/requestsStore", () => ({
   addRequest: jest.fn(),
 }));
 
-const getSessionUser = jest.requireMock("@/lib/session").getSessionUser as jest.Mock;
 const addRequest = jest.requireMock("@/data/requestsStore").addRequest as jest.Mock;
 const authenticateRequest = jest.requireMock("@/lib/jwtAuth").authenticateRequest as jest.Mock;
 

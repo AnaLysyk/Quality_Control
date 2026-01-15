@@ -51,13 +51,11 @@ jest.mock("@supabase/supabase-js", () => {
 });
 
 // Import routes after mocks
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { GET: GET_CLIENTS, POST: POST_CLIENTS } = require("@/api/clients/route") as {
   GET: (req: any) => Promise<NextResponse>;
   POST: (req: any) => Promise<NextResponse>;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { POST: POST_ADMIN_USERS } = require("@/api/admin/users/route") as {
   POST: (req: any) => Promise<NextResponse>;
 };

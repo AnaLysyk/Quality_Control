@@ -13,7 +13,6 @@ jest.mock("@/data/usersStore", () => ({
   updateUserCompany: jest.fn(),
 }));
 
-const getSessionUser = jest.requireMock("@/lib/session").getSessionUser as jest.Mock;
 const updateRequestStatus = jest.requireMock("@/data/requestsStore").updateRequestStatus as jest.Mock;
 const updateUserEmail = jest.requireMock("@/data/usersStore").updateUserEmail as jest.Mock;
 const updateUserCompany = jest.requireMock("@/data/usersStore").updateUserCompany as jest.Mock;

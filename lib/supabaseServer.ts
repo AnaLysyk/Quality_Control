@@ -1,6 +1,11 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+const IS_PROD = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
+const IS_TEST = process.env.NODE_ENV === "test" || !!process.env.JEST_WORKER_ID;
+
+// Allow SUPABASE_MOCK only for local/dev/test environments.
+const ALLOW_MOCK_FALLBACKS = (SUPABASE_MOCK && !IS_PROD) || IS_TEST;
 
 function normalizeSupabaseUrl(value: string | undefined) {
   const raw = (value ?? "").trim();
@@ -14,15 +19,19 @@ function normalizeSupabaseUrl(value: string | undefined) {
 const supabaseUrl =
   normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL) ||
   normalizeSupabaseUrl(process.env.SUPABASE_URL) ||
-  (SUPABASE_MOCK || process.env.NODE_ENV === "test" ? "http://localhost" : undefined);
+  (ALLOW_MOCK_FALLBACKS ? "http://localhost" : undefined);
 const serviceRoleKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  (SUPABASE_MOCK || process.env.NODE_ENV === "test" ? "service-role-test" : undefined);
+  (ALLOW_MOCK_FALLBACKS ? "service-role-test" : undefined);
 
 let cachedClient: SupabaseClient | null = null;
 
 // Server-only client (service role). Do not expose in the browser.
 export function getSupabaseServer() {
+  if (SUPABASE_MOCK && IS_PROD) {
+    throw new Error("SUPABASE_MOCK is enabled in production");
+  }
+
   if (!supabaseUrl || !serviceRoleKey) {
     throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
   }

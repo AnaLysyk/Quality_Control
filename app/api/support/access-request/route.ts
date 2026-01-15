@@ -91,7 +91,14 @@ function composeAccessRequestMessage(input: {
 }
 
 export async function POST(req: Request) {
-  const supabaseServer = getSupabaseServer();
+  let supabaseServer;
+  try {
+    supabaseServer = getSupabaseServer();
+  } catch (err) {
+    console.error("Supabase não configurado para support/access-request:", err);
+    return NextResponse.json({ message: "Supabase não configurado no ambiente" }, { status: 500 });
+  }
+
   const body = (await req.json().catch(() => ({}))) as Payload;
   const email = sanitize(body.email, 255).toLowerCase();
   const company = sanitize(body.company, 255);
@@ -126,18 +133,17 @@ export async function POST(req: Request) {
     notes,
   });
 
-  try {
-    await supabaseServer.from("support_requests").insert({
-      email,
-      message: composedMessage,
-      status: "open",
-      ip_address,
-      user_agent,
-      user_id: userId,
-    });
-  } catch (err) {
-    console.error("Erro ao registrar support_request:", err);
-    // Resposta neutra para o cliente, mas loga no servidor
+  const { error } = await supabaseServer.from("support_requests").insert({
+    email,
+    message: composedMessage,
+    status: "open",
+    ip_address,
+    user_agent,
+    user_id: userId,
+  });
+
+  if (error) {
+    console.error("Erro ao registrar support_request:", error);
     return NextResponse.json({ message: "Erro interno ao registrar solicitação" }, { status: 500 });
   }
 
@@ -156,7 +162,13 @@ export async function GET(req: Request) {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
-  const supabaseServer = getSupabaseServer();
+  let supabaseServer;
+  try {
+    supabaseServer = getSupabaseServer();
+  } catch (err) {
+    console.error("Supabase não configurado para support/access-request GET:", err);
+    return NextResponse.json({ message: "Supabase não configurado no ambiente" }, { status: 500 });
+  }
 
   const { data, error } = await supabaseServer
     .from("support_requests")

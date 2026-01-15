@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     try {
       service = getSupabaseServer();
     } catch {
-      return NextResponse.json({ items: [] }, { status: 200 });
+      return NextResponse.json({ error: "Supabase não configurado no ambiente" }, { status: 500 });
     }
 
     const { data, error } = await service
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       .order("created_at", { ascending: false });
 
     if (error) {
-      return NextResponse.json({ items: [] }, { status: 200 });
+      return NextResponse.json({ error: "Erro ao listar solicitações" }, { status: 500 });
     }
 
     return NextResponse.json({ items: data ?? [] }, { status: 200 });

@@ -47,7 +47,7 @@ export default function AppShell({ children }: AppShellProps) {
         <ProfileButton />
       </div>
 
-      <div className="flex flex-col h-full lg:ml-18">
+      <div className="flex flex-col h-full lg:ml-65">
         <div className="flex-1 h-full overflow-auto">
           <MainWrapper>{children}</MainWrapper>
         </div>

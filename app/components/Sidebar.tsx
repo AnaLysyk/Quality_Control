@@ -132,7 +132,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             className={`group/link relative flex items-center h-11 w-full rounded-xl text-sm font-semibold transition-all duration-200 overflow-hidden min-w-0 ${
               isMobile
                 ? "px-3 justify-start gap-3"
-                : "lg:px-0 lg:justify-center lg:gap-0 lg:group-hover/sidebar:px-3 lg:group-hover/sidebar:justify-start lg:group-hover/sidebar:gap-3"
+                : "px-3 justify-start gap-3"
             } ${
               isActive
                 ? "bg-slate-100 ring-1 ring-[#4e8df5]/40 shadow-[0_10px_24px_rgba(78,141,245,0.18)] text-slate-900 dark:bg-white/10 dark:ring-[#4e8df5]/50 dark:shadow-[0_12px_30px_rgba(78,141,245,0.35)] dark:text-white"
@@ -155,7 +155,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             >
               <item.icon size={20} />
             </div>
-            <span className="hidden lg:inline-flex whitespace-normal text-left leading-snug flex-1 overflow-hidden max-w-0 opacity-0 transition-all duration-200 pl-0 lg:group-hover/sidebar:pl-3 lg:group-hover/sidebar:max-w-40 lg:group-hover/sidebar:opacity-100">
+            <span className="inline-flex whitespace-normal text-left leading-snug flex-1 overflow-hidden pl-3">
               {item.label}
             </span>
           </Link>
@@ -164,12 +164,12 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
   const DesktopNav = (
     <aside
-      className="group/sidebar hidden lg:flex fixed left-0 top-0 z-40 h-screen w-21 hover:w-65 overflow-hidden border-r border-slate-200 text-slate-900 flex-col bg-white backdrop-blur-2xl shadow-[0_12px_30px_rgba(15,23,42,0.12)] transition-[width] duration-200 ease-out dark:border-white/10 dark:text-white dark:bg-[linear-gradient(180deg,#03123b_0%,#051a52_60%,#03123b_100%)] dark:shadow-[0_18px_40px_rgba(0,0,0,0.45)]"
+      className="hidden lg:flex fixed left-0 top-0 z-40 h-screen w-65 overflow-hidden border-r border-slate-200 text-slate-900 flex-col bg-white backdrop-blur-2xl shadow-[0_12px_30px_rgba(15,23,42,0.12)] dark:border-white/10 dark:text-white dark:bg-[linear-gradient(180deg,#03123b_0%,#051a52_60%,#03123b_100%)] dark:shadow-[0_18px_40px_rgba(0,0,0,0.45)]"
     >
       <div className="flex items-center px-2 py-3 border-b border-slate-200/70 dark:border-white/5 relative">
         <Link
           href="/"
-          className="flex items-center gap-0 lg:group-hover/sidebar:gap-3 transition-all duration-200 justify-center lg:group-hover/sidebar:justify-start w-full"
+          className="flex items-center gap-3 transition-all duration-200 justify-start w-full px-2"
         >
           <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 backdrop-blur dark:border-white/10 dark:bg-white/5">
             <span
@@ -184,7 +184,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
               className="object-cover pointer-events-none select-none"
             />
           </div>
-          <div className="flex flex-col leading-tight opacity-0 lg:group-hover/sidebar:opacity-100 transition duration-200 whitespace-nowrap">
+          <div className="flex flex-col leading-tight transition duration-200 whitespace-nowrap">
             <span className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-white/55">Painel QA</span>
             <span className="text-base font-semibold tracking-wide text-slate-900 dark:text-white">Testing Metric</span>
           </div>
@@ -193,23 +193,9 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
       <nav className="flex-1 min-h-0 flex flex-col">
         <div className="flex-1 px-3 py-6 space-y-6">
-          <div className="flex items-center justify-center opacity-100 lg:opacity-100 lg:group-hover/sidebar:opacity-0 transition-all duration-200 -mt-1">
-            <Link
-              href="/"
-              className="relative flex items-center justify-center w-11 h-11 rounded-2xl border border-slate-200 bg-white shadow-[0_8px_18px_rgba(15,23,42,0.12)] hover:border-[#4e8df5]/40 hover:shadow-[0_10px_22px_rgba(78,141,245,0.18)] transition-all duration-200 dark:border-white/12 dark:bg-white/5 dark:shadow-[0_10px_22px_rgba(0,0,0,0.25)] dark:hover:border-[#4e8df5]/50 dark:hover:shadow-[0_12px_26px_rgba(78,141,245,0.22)]"
-            >
-              <Image
-                src={logoSrc}
-                alt="Logo TC"
-                width={32}
-                height={32}
-                className="object-contain pointer-events-none select-none"
-              />
-            </Link>
-          </div>
           <div className="space-y-3">
             <div className="flex items-center px-1">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-white/55 opacity-0 lg:group-hover/sidebar:opacity-100 transition duration-150">
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-white/55 transition duration-150">
                 Navegacao
               </p>
               <span className="h-px flex-1 ml-3 bg-slate-200 dark:bg-white/15" aria-hidden />

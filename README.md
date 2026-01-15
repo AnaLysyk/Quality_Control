@@ -29,6 +29,16 @@ npm install
 
 Guia rápido: `docs/security/neon-vs-postgres.md`.
 
+### Schema do Postgres (Neon/Vercel Postgres)
+
+Além das env vars, o banco precisa ter as tabelas esperadas por `@vercel/postgres`:
+
+- `public.clients`
+- `public.users`
+- `public.user_clients`
+
+Script idempotente para criar o schema mínimo: `scripts/99_vercel_postgres_schema.sql`.
+
 3) Subir o servidor:
 
 ```bash

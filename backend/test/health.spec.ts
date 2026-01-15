@@ -8,6 +8,11 @@ describe("Health (e2e)", () => {
   let app: INestApplication;
 
   beforeAll(async () => {
+    // Backend modules currently require Supabase env vars at construction time.
+    // Provide safe dummy values so this smoke test can run in CI/local without secrets.
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||= "https://example.supabase.co";
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||= "test-anon-key";
+
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -19,7 +24,7 @@ describe("Health (e2e)", () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) await app.close();
   });
 
   it("GET /api/health retorna ok", () => {

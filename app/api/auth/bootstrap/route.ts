@@ -1,7 +1,13 @@
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+const IS_PROD =
+  process.env.NODE_ENV === "production" ||
+  process.env.VERCEL === "1" ||
+  typeof process.env.VERCEL_ENV === "string";
+
+const SUPABASE_MOCK_RAW = process.env.SUPABASE_MOCK === "true";
+const SUPABASE_MOCK = SUPABASE_MOCK_RAW && !IS_PROD;
 
 type SupabaseServerClient = ReturnType<typeof import("@/lib/supabaseServer").getSupabaseServer>;
 
@@ -33,7 +39,16 @@ function resolveDisplayName(authUser: MinimalAuthUser): string {
 }
 
 export async function POST(req: Request) {
+  if (SUPABASE_MOCK_RAW && IS_PROD) {
+    console.warn("/api/auth/bootstrap: SUPABASE_MOCK ignored in production/Vercel");
+  }
+
   if (SUPABASE_MOCK) {
+    const token = extractToken(req);
+    if (!token) {
+      return apiFail(req, "Nao autenticado", { status: 401, code: "NO_TOKEN", extra: { error: "Nao autorizado" } });
+    }
+
     // Keep mock mode consistent across auth endpoints.
     // In non-test environments, we still return a successful payload so the UI can proceed.
     const payload = {

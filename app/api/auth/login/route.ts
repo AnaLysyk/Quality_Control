@@ -2,7 +2,13 @@ import { AuthLoginRequestSchema, AuthLoginResponseSchema } from "@/contracts/aut
 import { createClient } from "@supabase/supabase-js";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+const IS_PROD =
+  process.env.NODE_ENV === "production" ||
+  process.env.VERCEL === "1" ||
+  typeof process.env.VERCEL_ENV === "string";
+
+const SUPABASE_MOCK_RAW = process.env.SUPABASE_MOCK === "true";
+const SUPABASE_MOCK = SUPABASE_MOCK_RAW && !IS_PROD;
 const IS_TEST_ENV = process.env.NODE_ENV === "test" || !!process.env.JEST_WORKER_ID;
 
 // Note: keep this route side-effect free for tests (no DB calls).
@@ -22,6 +28,10 @@ function getSupabaseAnonKey() {
 }
 
 export async function POST(request: Request) {
+  if (SUPABASE_MOCK_RAW && IS_PROD) {
+    console.warn("/api/auth/login: SUPABASE_MOCK ignored in production/Vercel");
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = AuthLoginRequestSchema.safeParse(body);
   if (!parsed.success) {
@@ -139,6 +149,55 @@ export async function POST(request: Request) {
       details: msg,
       extra: { error: msg || "Auth failed" },
     });
+  }
+
+  // Security gate: ensure the user is provisioned in the app database.
+  // Tests mock only Supabase Auth; keep them side-effect free.
+  if (!IS_TEST_ENV) {
+    try {
+      // Use require so Jest module mocking can override it if needed.
+      const mod = require("@/lib/supabaseServer");
+      const supabaseAdmin = mod.getSupabaseServer();
+      const { data: userRow } = await supabaseAdmin
+        .from("users")
+        .select("id, active")
+        .eq("auth_user_id", authUser.id)
+        .limit(1)
+        .maybeSingle();
+
+      const active = (userRow as { active?: unknown } | null)?.active;
+      const isActive = active === undefined ? true : active === true;
+
+      if (!userRow) {
+        return apiFail(
+          request,
+          "Usuario nao provisionado. Peca ao admin para criar o usuario e vincula-lo a uma empresa.",
+          {
+            status: 403,
+            code: "USER_NOT_PROVISIONED",
+            extra: {
+              error:
+                "Usuário não provisionado. Peça ao admin para criar o usuário e vinculá-lo a uma empresa.",
+            },
+          },
+        );
+      }
+
+      if (!isActive) {
+        return apiFail(request, "Usuario bloqueado", {
+          status: 403,
+          code: "USER_INACTIVE",
+          extra: { error: "Usuario bloqueado" },
+        });
+      }
+    } catch (err) {
+      return apiFail(request, "Erro ao validar usuario", {
+        status: 500,
+        code: "USER_LOOKUP_FAILED",
+        details: err instanceof Error ? err.message : err,
+        extra: { error: "Erro ao validar usuario" },
+      });
+    }
   }
 
   const payload = AuthLoginResponseSchema.parse({

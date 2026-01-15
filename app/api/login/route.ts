@@ -1,6 +1,23 @@
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
+  const isProd =
+    process.env.NODE_ENV === "production" || process.env.VERCEL === "1" || typeof process.env.VERCEL_ENV === "string";
+  if (isProd) {
+    const response = NextResponse.json(
+      { error: "Rota desativada. Use /api/auth/login." },
+      { status: 410 },
+    );
+    response.cookies.set("auth", "", {
+      httpOnly: true,
+      maxAge: 0,
+      path: "/",
+      sameSite: "lax",
+      secure: true,
+    });
+    return response;
+  }
+
   const { user, password } = await request.json();
 
   const adminUser = process.env.ADMIN_USER || "admin";

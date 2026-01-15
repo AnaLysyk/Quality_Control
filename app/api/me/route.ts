@@ -7,7 +7,14 @@ import { apiFail, apiOk } from "@/lib/apiResponse";
 import fs from "fs/promises";
 import path from "path";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+const IS_PROD =
+  process.env.NODE_ENV === "production" ||
+  process.env.VERCEL === "1" ||
+  typeof process.env.VERCEL_ENV === "string";
+
+const SUPABASE_MOCK_RAW = process.env.SUPABASE_MOCK === "true";
+const SUPABASE_MOCK = SUPABASE_MOCK_RAW && !IS_PROD;
+const IS_TEST_ENV = process.env.NODE_ENV === "test" || !!process.env.JEST_WORKER_ID;
 
 const MOCK_PROFILE_STORE_PATH = path.join(process.cwd(), "data", "mock-user-profile.json");
 
@@ -84,7 +91,20 @@ function normalizeSlug(value: unknown): string | null {
 }
 
 export async function GET(req: Request) {
+  if (SUPABASE_MOCK_RAW && IS_PROD) {
+    console.warn("/api/me: SUPABASE_MOCK ignored in production/Vercel");
+  }
+
   if (SUPABASE_MOCK) {
+    const token = extractToken(req);
+    if (!token) {
+      const payload = AuthMeResponseSchema.parse({
+        user: null,
+        error: { code: "NO_TOKEN" },
+      });
+      return apiFail(req, "Nao autenticado", { status: 401, code: "NO_TOKEN", extra: payload });
+    }
+
     const cookieHeader = req.headers.get("cookie") ?? "";
     const roleCookie = (readCookieValue(cookieHeader, "mock_role") ?? "admin").trim().toLowerCase();
     const slugCookie = (readCookieValue(cookieHeader, "mock_client_slug") ?? "").trim();
@@ -196,6 +216,24 @@ export async function GET(req: Request) {
       error: { code: "NEEDS_BOOTSTRAP" },
     });
     return apiFail(req, "Precisa inicializar", { status: 401, code: "NEEDS_BOOTSTRAP", extra: payload });
+  }
+
+  // SECURITY RULE: the application user must exist (provisioned by an admin).
+  // Tests may mock only `profiles`, so keep backward-compatible behavior in Jest.
+  if (!userRow && !IS_TEST_ENV) {
+    const payload = AuthMeResponseSchema.parse({
+      user: null,
+      error: { code: "USER_NOT_PROVISIONED" },
+    });
+    return apiFail(
+      req,
+      "Usuario nao provisionado. Peca ao admin para criar o usuario e vincula-lo a uma empresa.",
+      {
+        status: 403,
+        code: "USER_NOT_PROVISIONED",
+        extra: payload,
+      },
+    );
   }
 
   const userRecord = (userRow ?? null) as Record<string, unknown> | null;

@@ -42,7 +42,7 @@ export default function AppShell({ children }: AppShellProps) {
       </div>
 
       <div className="flex flex-col h-full lg:ml-18">
-        <div className="flex-1 h-full overflow-y-auto">
+        <div className="flex-1 h-full overflow-auto">
           <MainWrapper>{children}</MainWrapper>
         </div>
       </div>

@@ -133,7 +133,14 @@ function AccessRequestsPage() {
         fetchWithToken("/api/clients"),
       ]);
 
-      const reqJson = (await reqRes.json().catch(() => ({ items: [] }))) as { items?: unknown[] };
+      const reqJson = (await reqRes.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!reqRes.ok) {
+        const msg = (reqJson.error as string) || (reqJson.message as string) || "Falha ao carregar solicitações";
+        setError(msg);
+        setItems([]);
+        return;
+      }
+
       const rawItems = Array.isArray(reqJson.items) ? (reqJson.items as RawSupportRequest[]) : [];
 
       const parsed: AccessRequestItem[] = rawItems.map((r) => {
@@ -154,7 +161,12 @@ function AccessRequestsPage() {
         };
       });
 
-      const cJson = (await clientsRes.json().catch(() => ({ items: [] }))) as { items?: unknown[] };
+      const cJson = (await clientsRes.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!clientsRes.ok) {
+        const msg = (cJson.error as string) || (cJson.message as string) || "Falha ao carregar empresas";
+        setError(msg);
+        setClients([]);
+      }
       const cItems = Array.isArray(cJson.items) ? cJson.items : [];
       const mappedClients = cItems
         .map((c) => {

@@ -8,6 +8,7 @@ import { CreateUserModal } from "./components/CreateUserModal";
 import { UserDetailsModal } from "./components/UserDetailsModal";
 import { getAccessToken } from "@/lib/api";
 import { toast } from "react-hot-toast";
+import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 
 type ClientOption = { id: string; name: string };
 type UserItem = { id: string; name: string; email?: string; role?: string; job_title?: string | null; client_id?: string | null; active?: boolean; linkedin_url?: string };
@@ -56,8 +57,15 @@ function AdminUsersPage() {
           router.replace("/login");
           return;
         }
-        const clientsJson = await resClients.json().catch(() => ({}));
-        const clientItems = Array.isArray(clientsJson.items) ? (clientsJson.items as unknown[]) : [];
+        const clientsRaw = await resClients.json().catch(() => null);
+        if (!resClients.ok) {
+          const msg = extractMessageFromJson(clientsRaw) || "Falha ao carregar empresas";
+          const requestId = extractRequestIdFromJson(clientsRaw) || resClients.headers.get("x-request-id") || null;
+          throw new Error(formatMessageWithRequestId(msg, requestId));
+        }
+
+        const clientsData = unwrapEnvelopeData<Record<string, unknown>>(clientsRaw) ?? (clientsRaw as Record<string, unknown> | null) ?? {};
+        const clientItems = Array.isArray((clientsData as any).items) ? ((clientsData as any).items as unknown[]) : [];
         const mappedClients: ClientOption[] = clientItems
           .map((c) => {
             const rec = asRecord(c) ?? {};
@@ -78,8 +86,14 @@ function AdminUsersPage() {
           router.replace("/login");
           return;
         }
-        const usersJson = await resUsers.json().catch(() => ({ items: [] }));
-        setUsers(Array.isArray(usersJson.items) ? usersJson.items : []);
+        const usersRaw = await resUsers.json().catch(() => null);
+        if (!resUsers.ok) {
+          const msg = extractMessageFromJson(usersRaw) || "Falha ao carregar usuarios";
+          const requestId = extractRequestIdFromJson(usersRaw) || resUsers.headers.get("x-request-id") || null;
+          throw new Error(formatMessageWithRequestId(msg, requestId));
+        }
+        const usersData = unwrapEnvelopeData<Record<string, unknown>>(usersRaw) ?? (usersRaw as Record<string, unknown> | null) ?? {};
+        setUsers(Array.isArray((usersData as any).items) ? (usersData as any).items : []);
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Erro ao carregar dados";
         setMessage(msg);
@@ -175,8 +189,16 @@ function AdminUsersPage() {
             router.replace("/login");
             return;
           }
-          const usersJson = await resUsers.json().catch(() => ({ items: [] }));
-          setUsers(Array.isArray(usersJson.items) ? usersJson.items : []);
+          const usersRaw = await resUsers.json().catch(() => null);
+          if (!resUsers.ok) {
+            const msg = extractMessageFromJson(usersRaw) || "Falha ao carregar usuarios";
+            const requestId = extractRequestIdFromJson(usersRaw) || resUsers.headers.get("x-request-id") || null;
+            toast.error(formatMessageWithRequestId(msg, requestId));
+            setUsers([]);
+            return;
+          }
+          const usersData = unwrapEnvelopeData<Record<string, unknown>>(usersRaw) ?? (usersRaw as Record<string, unknown> | null) ?? {};
+          setUsers(Array.isArray((usersData as any).items) ? (usersData as any).items : []);
         }}
       />
 

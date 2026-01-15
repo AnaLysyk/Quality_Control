@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import { getAccessToken } from "@/lib/api";
+import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 
 type ClientOption = { id: string; name: string };
 
@@ -133,15 +134,17 @@ function AccessRequestsPage() {
         fetchWithToken("/api/clients"),
       ]);
 
-      const reqJson = (await reqRes.json().catch(() => ({}))) as Record<string, unknown>;
+      const reqRaw = await reqRes.json().catch(() => null);
       if (!reqRes.ok) {
-        const msg = (reqJson.error as string) || (reqJson.message as string) || "Falha ao carregar solicitações";
-        setError(msg);
+        const msg = extractMessageFromJson(reqRaw) || "Falha ao carregar solicitações";
+        const requestId = extractRequestIdFromJson(reqRaw) || reqRes.headers.get("x-request-id") || null;
+        setError(formatMessageWithRequestId(msg, requestId));
         setItems([]);
         return;
       }
 
-      const rawItems = Array.isArray(reqJson.items) ? (reqJson.items as RawSupportRequest[]) : [];
+      const reqData = unwrapEnvelopeData<Record<string, unknown>>(reqRaw) ?? (reqRaw as Record<string, unknown> | null) ?? {};
+      const rawItems = Array.isArray((reqData as any).items) ? ((reqData as any).items as RawSupportRequest[]) : [];
 
       const parsed: AccessRequestItem[] = rawItems.map((r) => {
         const parsedMsg = parseFromMessage(String(r.message ?? ""), String(r.email ?? ""));
@@ -161,13 +164,17 @@ function AccessRequestsPage() {
         };
       });
 
-      const cJson = (await clientsRes.json().catch(() => ({}))) as Record<string, unknown>;
+
+      const cRaw = await clientsRes.json().catch(() => null);
       if (!clientsRes.ok) {
-        const msg = (cJson.error as string) || (cJson.message as string) || "Falha ao carregar empresas";
-        setError(msg);
+        const msg = extractMessageFromJson(cRaw) || "Falha ao carregar empresas";
+        const requestId = extractRequestIdFromJson(cRaw) || clientsRes.headers.get("x-request-id") || null;
+        setError(formatMessageWithRequestId(msg, requestId));
         setClients([]);
       }
-      const cItems = Array.isArray(cJson.items) ? cJson.items : [];
+
+      const cData = unwrapEnvelopeData<Record<string, unknown>>(cRaw) ?? (cRaw as Record<string, unknown> | null) ?? {};
+      const cItems = Array.isArray((cData as any).items) ? ((cData as any).items as unknown[]) : [];
       const mappedClients = cItems
         .map((c) => {
           const rec = (c ?? null) as Record<string, unknown> | null;

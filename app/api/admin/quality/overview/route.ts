@@ -13,6 +13,7 @@ import {
   Stats,
 } from "@/lib/quality";
 import { apiFail, apiOk } from "@/lib/apiResponse";
+import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -61,8 +62,9 @@ async function fetchClients(baseUrl: string, request: NextRequest): Promise<Clie
     throw new Error("failed to load clients");
   }
 
-  const payload = await res.json();
-  const items: ClientRow[] = Array.isArray(payload.items) ? payload.items : [];
+  const raw = await res.json().catch(() => null);
+  const data = unwrapEnvelopeData<Record<string, unknown>>(raw) ?? (raw as Record<string, unknown> | null) ?? {};
+  const items: ClientRow[] = Array.isArray((data as any).items) ? ((data as any).items as ClientRow[]) : [];
   return items;
 }
 

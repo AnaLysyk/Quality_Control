@@ -17,13 +17,18 @@ const SUPABASE_URL =
   (SUPABASE_MOCK || process.env.NODE_ENV === "test" ? "http://localhost" : undefined);
 const SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE ||
+  process.env.SUPABASE_SERVICE_ROLE_SECRET ||
   (SUPABASE_MOCK || process.env.NODE_ENV === "test" ? "service-role-test" : undefined);
 
 let cachedClient: SupabaseClient | null = null;
 
 export function getSupabaseAdmin() {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+    throw new Error(
+      "Missing Supabase configuration. Set NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL, and SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY)."
+    );
   }
 
   if (!cachedClient) {

@@ -42,6 +42,17 @@ function normalizeString(value: unknown): string | null {
   return trimmed.length ? trimmed : null;
 }
 
+function normalizeEnvString(value: unknown): string {
+  const raw = typeof value === "string" ? value.trim() : "";
+  if (!raw) return "";
+  // Vercel env import sometimes wraps values in quotes.
+  const unquoted =
+    (raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))
+      ? raw.slice(1, -1).trim()
+      : raw;
+  return unquoted;
+}
+
 function normalizeSlug(value: unknown): string | null {
   const s = normalizeString(value);
   return s ? s.toLowerCase() : null;
@@ -51,14 +62,26 @@ function normalizeSlug(value: unknown): string | null {
 
 type ProjectEntry = { slug: string; projectCode: string };
 
-function parseProjectMapFromEnv(): ProjectEntry[] {
-  const raw =
-    process.env.QASE_PROJECT_MAP ||
-    process.env.QASE_PROJECTS ||
-    process.env.NEXT_PUBLIC_QASE_PROJECT_MAP ||
-    "";
+function parseProjectCodesFromEnv(): string[] {
+  const raw = normalizeEnvString(
+    process.env.QASE_PROJECT_CODES || process.env.QASE_PROJECTS_CODES || process.env.QASE_PROJECT_KEYS || ""
+  );
 
-  const trimmed = raw.trim();
+  const trimmed = raw;
+  if (!trimmed) return [];
+
+  return trimmed
+    .split(/[,;\s|]+/g)
+    .map((c) => c.trim().toUpperCase())
+    .filter(Boolean);
+}
+
+function parseProjectMapFromEnv(): ProjectEntry[] {
+  const raw = normalizeEnvString(
+    process.env.QASE_PROJECT_MAP || process.env.QASE_PROJECTS || process.env.NEXT_PUBLIC_QASE_PROJECT_MAP || ""
+  );
+
+  const trimmed = raw;
   if (!trimmed) return [];
 
   // Option A: JSON array of {slug, projectCode}
@@ -79,11 +102,29 @@ function parseProjectMapFromEnv(): ProjectEntry[] {
     }
   }
 
-  // Option B: "slug:CODE,slug2:CODE2"
+  // Option B: JSON object map {"slug": "CODE", "slug2": "CODE2"}
+  if (trimmed.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(trimmed) as unknown;
+      const rec = asRecord(parsed);
+      if (!rec) return [];
+      const out: ProjectEntry[] = [];
+      for (const [slugRaw, codeRaw] of Object.entries(rec)) {
+        const slug = normalizeSlug(slugRaw);
+        const projectCode = normalizeString(codeRaw);
+        if (slug && projectCode) out.push({ slug, projectCode });
+      }
+      return out;
+    } catch {
+      return [];
+    }
+  }
+
+  // Option C: "slug:CODE,slug2:CODE2"
   const out: ProjectEntry[] = [];
   const parts = trimmed.split(",").map((p) => p.trim()).filter(Boolean);
   for (const part of parts) {
-    const [slugRaw, codeRaw] = part.split(":").map((p) => p.trim());
+    const [slugRaw, codeRaw] = part.split(/[:=]/).map((p) => p.trim());
     const slug = normalizeSlug(slugRaw);
     const projectCode = normalizeString(codeRaw);
     if (slug && projectCode) out.push({ slug, projectCode });
@@ -125,14 +166,25 @@ function extractProjectCodesFromRow(row: Record<string, unknown>): string[] {
   return Array.from(new Set([...(single ? [single.toUpperCase()] : []), ...multi]));
 }
 
-async function loadProjectMapFromSupabase(): Promise<ProjectEntry[]> {
+async function loadProjectMapFromSupabase(): Promise<{ entries: ProjectEntry[]; error: unknown | null }> {
+  let service: ReturnType<typeof getSupabaseServer>;
   try {
-    const service = getSupabaseServer();
-    const out: ProjectEntry[] = [];
+    service = getSupabaseServer();
+  } catch (err) {
+    return { entries: [], error: err };
+  }
 
-    for (const table of ["cliente", "clients"] as const) {
+  const out: ProjectEntry[] = [];
+  const tableErrors: Record<string, unknown> = {};
+
+  for (const table of ["cliente", "clients"] as const) {
+    try {
       const { data, error } = await service.from(table).select("*").limit(500);
-      if (error || !Array.isArray(data)) continue;
+      if (error) {
+        tableErrors[table] = error;
+        continue;
+      }
+      if (!Array.isArray(data)) continue;
       for (const rowAny of data) {
         const row = asRecord(rowAny);
         if (!row) continue;
@@ -142,12 +194,13 @@ async function loadProjectMapFromSupabase(): Promise<ProjectEntry[]> {
           projectCodes.forEach((projectCode) => out.push({ slug, projectCode }));
         }
       }
+    } catch (err) {
+      tableErrors[table] = err;
     }
-
-    return out;
-  } catch {
-    return [];
   }
+
+  const hadErrors = Object.keys(tableErrors).length > 0;
+  return { entries: out, error: hadErrors ? tableErrors : null };
 }
 
 async function fetchAllDefects(projectCode: string): Promise<QaseDefect[]> {
@@ -263,22 +316,66 @@ export async function GET(req: NextRequest) {
   }
 
   const envMap = parseProjectMapFromEnv();
+  const rawMap = normalizeEnvString(
+    process.env.QASE_PROJECT_MAP || process.env.QASE_PROJECTS || process.env.NEXT_PUBLIC_QASE_PROJECT_MAP || ""
+  );
+  const hadRawMap = !!rawMap;
   const legacyCode = normalizeString(process.env.QASE_PROJECT_CODE || process.env.QASE_PROJECT || "");
   const legacy = legacyCode ? ([{ slug: "griaule", projectCode: legacyCode }] satisfies ProjectEntry[]) : [];
   const combined = [...envMap, ...legacy];
-  const projectMap = combined.length ? combined : await loadProjectMapFromSupabase();
+  const envProjectCodes = parseProjectCodesFromEnv();
+
+  let projectMap: ProjectEntry[] = combined;
+  let supabaseMapError: unknown | null = null;
+  if (!projectMap.length) {
+    const fromDb = await loadProjectMapFromSupabase();
+    projectMap = fromDb.entries;
+    supabaseMapError = fromDb.error;
+  }
 
   const projectCodeToSlug = new Map<string, string>();
   for (const entry of projectMap) {
     if (entry.projectCode && entry.slug) projectCodeToSlug.set(entry.projectCode, entry.slug);
   }
 
-  const uniqueProjects = Array.from(new Set(projectMap.map((p) => p.projectCode).filter(Boolean)));
+  const uniqueProjects = Array.from(
+    new Set([
+      ...projectMap.map((p) => p.projectCode).filter(Boolean),
+      ...envProjectCodes,
+    ])
+  );
 
   if (!uniqueProjects.length) {
+    const baseHint =
+      "Configure QASE_PROJECT_MAP (ex: griaule:GRIAULE,acme:ACME) ou preencha qase_project_code/qase_project_codes nas empresas (Supabase).";
+
+    const altHint = "Alternativa: configure QASE_PROJECT_CODES (ex: GRIAULE,CDS,GMT,BOOKING) para listar defeitos por projeto.";
+
+    const mapParseHint = hadRawMap && !envMap.length
+      ? "Obs: QASE_PROJECT_MAP parece definido, mas nao foi possivel interpretar. Formatos aceitos: 'slug:CODE,slug2:CODE2' ou JSON {\"slug\":\"CODE\"}."
+      : "";
+
+    const error = supabaseMapError
+      ? "Integração Supabase não configurada para ler projetos Qase. Verifique NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (e confirme que SUPABASE_MOCK não está ativo em produção)."
+      : `Nenhum projeto Qase configurado. ${baseHint} ${altHint} ${mapParseHint}`;
+
     const payload = {
-      error:
-        "Nenhum projeto Qase configurado. Configure QASE_PROJECT_MAP (ex: griaule:GRIAULE,acme:ACME) ou preencha qase_project_code nas empresas (Supabase).",
+      error,
+      diagnostics: {
+        hasQaseToken: !!QASE_TOKEN,
+        qaseBaseUrl: QASE_BASE_URL,
+        env: {
+          hasQaseProjectMap: hadRawMap,
+          parsedProjectMapEntries: envMap.length,
+          parsedProjectCodes: envProjectCodes.length,
+          hasLegacyProjectCode: !!legacyCode,
+        },
+        sources: {
+          usedSupabase: !combined.length,
+          supabaseError: !!supabaseMapError,
+          supabaseEntries: projectMap.length,
+        },
+      },
       total: 0,
       byApplication: [],
       byRun: [],
@@ -287,6 +384,9 @@ export async function GET(req: NextRequest) {
       timeline: [],
       items: [],
     };
+    if (supabaseMapError) {
+      console.error("/api/admin/defeitos: failed to load Qase project map from Supabase", supabaseMapError);
+    }
     return apiOk(req, payload, "OK", { extra: payload });
   }
 

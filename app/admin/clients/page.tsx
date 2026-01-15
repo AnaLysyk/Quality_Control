@@ -7,7 +7,7 @@ import { CreateClientModal, type ClientFormValues } from "@/clients/components/C
 import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { getAccessToken } from "@/lib/api";
-import { readApiError } from "@/lib/apiEnvelope";
+import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, readApiError, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import Image from "next/image";
 import { FiExternalLink, FiUsers, FiX, FiCheckCircle, FiXCircle } from "react-icons/fi";
@@ -138,9 +138,20 @@ function AdminClientsPage() {
         setItems([]);
         return;
       }
-      const json = await res.json().catch(() => ({}));
-      const data = Array.isArray(json.items) ? json.items : [];
-      setItems(data.map(mapClient));
+      const raw = await res.json().catch(() => null);
+      if (!res.ok) {
+        const msg = extractMessageFromJson(raw) || "Erro ao carregar empresas";
+        const requestId = extractRequestIdFromJson(raw) || res.headers.get("x-request-id") || null;
+        const formatted = formatMessageWithRequestId(msg, requestId);
+        setMessage(formatted);
+        toast.error(formatted);
+        setItems([]);
+        return;
+      }
+
+      const data = unwrapEnvelopeData<{ items?: unknown[] }>(raw) ?? null;
+      const items = Array.isArray(data?.items) ? data!.items : [];
+      setItems(items.map((row) => mapClient((row ?? {}) as Record<string, unknown>)));
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao carregar clientes";
       setMessage(msg);
@@ -173,8 +184,9 @@ function AdminClientsPage() {
         setMessage("Nao foi possivel carregar o cliente selecionado");
         return;
       }
-      const json = await res.json();
-      setForm(mapClient(json));
+      const raw = await res.json().catch(() => null);
+      const data = unwrapEnvelopeData<Record<string, unknown>>(raw) ?? (raw as Record<string, unknown> | null);
+      setForm(mapClient((data ?? {}) as Record<string, unknown>));
     } catch (err) {
       const fallback = items.find((c) => c.id === id);
       if (fallback) {
@@ -230,13 +242,16 @@ function AdminClientsPage() {
         return;
       }
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        const msg = err.message || "Erro ao salvar cliente";
-        setMessage(msg);
-        toast.error(msg);
+        const err = await res.json().catch(() => null);
+        const msg = extractMessageFromJson(err) || "Erro ao salvar empresa";
+        const requestId = extractRequestIdFromJson(err) || res.headers.get("x-request-id") || null;
+        const formatted = formatMessageWithRequestId(msg, requestId);
+        setMessage(formatted);
+        toast.error(formatted);
         return;
       }
-      const updated = await res.json().catch(() => null);
+      const raw = await res.json().catch(() => null);
+      const updated = unwrapEnvelopeData<Record<string, unknown>>(raw) ?? (raw as Record<string, unknown> | null);
       if (updated) {
         setItems((prev) => prev.map((c) => (c.id === selectedId ? mapClient(updated) : c)));
       }

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FiAlertTriangle, FiChevronDown, FiExternalLink } from "react-icons/fi";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import type { CompanyRow, Stats } from "@/lib/quality";
+import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 import styles from "./page.module.css";
 
 type QualityOverviewResponse = {
@@ -95,8 +96,18 @@ export default function AdminHomePage() {
           router.replace("/login");
           return;
         }
-        const payload = (await res.json()) as QualityOverviewResponse;
-        if (!canceled) setOverview(payload);
+        const raw = await res.json().catch(() => null);
+        if (!res.ok) {
+          const message = extractMessageFromJson(raw) || "Erro ao carregar overview";
+          const requestId = extractRequestIdFromJson(raw) || res.headers.get("x-request-id") || null;
+          console.error("/admin/home overview failed", raw);
+          if (!canceled) setOverview(null);
+          if (!canceled) console.warn(formatMessageWithRequestId(message, requestId));
+          return;
+        }
+
+        const data = unwrapEnvelopeData<QualityOverviewResponse>(raw) ?? null;
+        if (!canceled) setOverview(data);
       } catch {
         if (!canceled) setOverview(null);
       } finally {
@@ -119,8 +130,14 @@ export default function AdminHomePage() {
           router.replace("/login");
           return;
         }
-        const payload = (await res.json()) as DefectsResponse;
-        if (!canceled) setDefectsPayload(payload);
+        const raw = await res.json().catch(() => null);
+        if (!res.ok) {
+          console.error("/admin/home defects failed", raw);
+          if (!canceled) setDefectsPayload(null);
+          return;
+        }
+        const data = unwrapEnvelopeData<DefectsResponse>(raw) ?? null;
+        if (!canceled) setDefectsPayload(data);
       } catch {
         if (!canceled) setDefectsPayload(null);
       } finally {
@@ -143,8 +160,14 @@ export default function AdminHomePage() {
           router.replace("/login");
           return;
         }
-        const payload = await res.json();
-        if (!canceled) setAuditLogs(payload?.items ?? []);
+        const raw = await res.json().catch(() => null);
+        if (!res.ok) {
+          console.error("/admin/home audit logs failed", raw);
+          if (!canceled) setAuditLogs([]);
+          return;
+        }
+        const data = unwrapEnvelopeData<{ items?: AuditLogItem[] }>(raw) ?? null;
+        if (!canceled) setAuditLogs(data?.items ?? []);
       } catch {
         if (!canceled) setAuditLogs([]);
       } finally {

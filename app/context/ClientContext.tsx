@@ -11,6 +11,7 @@ import {
 } from "react";
 import { getAccessToken } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 
 export type ClientAccess = {
   id: string;
@@ -87,20 +88,19 @@ async function fetchClients(): Promise<ClientAccess[]> {
   if (res.status === 401) throw new Error("Sessão expirada. Faça login novamente.");
   if (res.status === 403) throw new Error("Sem empresa vinculada. Peça ao admin para vincular seu usuário.");
 
+  const raw = await res.json().catch(() => null);
+
   if (!res.ok) {
-    const payload = (await res.json().catch(() => null)) as ClientApiResponse | null;
-    const message =
-      payload && typeof payload.message === "string" && payload.message.trim().length > 0
-        ? payload.message
-        : "Erro ao carregar empresas";
-    throw new Error(message);
+    const message = extractMessageFromJson(raw) || "Erro ao carregar empresas";
+    const requestId = extractRequestIdFromJson(raw) || res.headers.get("x-request-id") || null;
+    throw new Error(formatMessageWithRequestId(message, requestId));
   }
 
-  const payload = (await res.json().catch(() => ({}))) as ClientApiResponse | ClientApiItem[] | undefined;
-  const items = Array.isArray((payload as ClientApiResponse)?.items)
-    ? ((payload as ClientApiResponse).items as ClientApiItem[])
-    : Array.isArray(payload)
-      ? (payload as ClientApiItem[])
+  const data = (unwrapEnvelopeData(raw) as ClientApiResponse | ClientApiItem[] | null) ?? raw;
+  const items = Array.isArray((data as ClientApiResponse)?.items)
+    ? ((data as ClientApiResponse).items as ClientApiItem[])
+    : Array.isArray(data)
+      ? (data as ClientApiItem[])
       : [];
   return items.map(normalizeClient).filter((item): item is ClientAccess => Boolean(item));
 }

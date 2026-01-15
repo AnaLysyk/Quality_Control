@@ -207,7 +207,7 @@ function aggregate(defects: QaseDefect[], projectCodeToSlug: Map<string, string>
   const timeline = new Map<string, number>();
 
   defects.forEach((d) => {
-    const app = d.tags?.[0] ?? "Sem aplicação";
+    const app = d.projectCode || d.tags?.[0] || "Sem aplicação";
     byApplication.set(app, (byApplication.get(app) ?? 0) + 1);
 
     const runKey = d.run_id ? String(d.run_id) : "sem-run";

@@ -13,6 +13,7 @@ type QaseDefect = {
   created_at?: string;
   updated_at?: string;
   url?: string;
+  projectCode?: string;
 };
 
 type NormalizedDefect = {
@@ -112,7 +113,7 @@ function normalize(defects: QaseDefect[], runNames: Map<string, string>): Defect
 
   const items: NormalizedDefect[] = defects.map((d, idx) => {
     const kanban = mapKanbanStatus(d.status ?? "open");
-    const app = d.tags?.[0] ?? "Sem aplicacao";
+    const app = d.projectCode || d.tags?.[0] || "Sem aplicacao";
     byStatus.set(kanban, (byStatus.get(kanban) ?? 0) + 1);
     byApp.set(app, (byApp.get(app) ?? 0) + 1);
     const runKey = d.run_id ? String(d.run_id) : "";
@@ -175,6 +176,9 @@ export async function GET(_: Request, context: { params: Promise<{ slug: string 
     });
 
     const defects = await fetchAllDefects(code, token);
+    defects.forEach((d) => {
+      d.projectCode = code;
+    });
     // Namespace run_id so we can find the run name even if multiple projects share ids.
     defects.forEach((d) => {
       if (d.run_id == null) return;

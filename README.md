@@ -13,12 +13,19 @@ npm install
 2) Criar variáveis de ambiente:
 
 - Copie `.env.example` para `.env.local`
+- (Recomendado) Se preferir, use `.env.local.example` como base (inclui Qase + Postgres).
 - Preencha as variáveis do Supabase:
 	- `NEXT_PUBLIC_SUPABASE_URL`
 	- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 	- `NEXT_PUBLIC_SITE_URL` (importante para links de reset de senha; use o domínio fixo do deploy)
 	- (server-only) `SUPABASE_SERVICE_ROLE_KEY`
+- Banco (Postgres) para persistência (server-only, via `@vercel/postgres`):
+	- `POSTGRES_URL` (pool/pgbouncer)
+	- `POSTGRES_URL_NON_POOLING` (conexão direta, sem pooling)
+	- (aliases opcionais, usados em scripts/docs) `DATABASE_URL` e `DATABASE_URL_UNPOOLED`
 - (Opcional, recomendado para Qase) Preencha também `QASE_API_TOKEN` (ou `QASE_TOKEN`) e `QASE_PROJECT_CODE`.
+
+> Segurança: token `napi_...` do Neon (API/console) **não** é a string de conexão do Postgres. Nunca use token Neon como variável do app; use apenas as connection strings (`POSTGRES_URL*`) e mantenha-as em `.env.local`/Vercel (não commit).
 
 3) Subir o servidor:
 

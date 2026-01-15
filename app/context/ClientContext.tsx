@@ -13,6 +13,53 @@ import { getAccessToken } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 
+type ClientTheme = {
+  accent?: string;
+  accentHover?: string;
+  accentActive?: string;
+  accentSoft?: string;
+  watermarkOpacity?: number;
+};
+
+const CLIENT_THEME_MAP_RAW = process.env.NEXT_PUBLIC_CLIENT_THEME_MAP || "";
+
+function parseClientThemeMap(raw: string): Record<string, ClientTheme> {
+  const trimmed = raw.trim();
+  if (!trimmed) return {};
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+    if (!parsed || typeof parsed !== "object") return {};
+    const rec = parsed as Record<string, unknown>;
+    const out: Record<string, ClientTheme> = {};
+    for (const [k, v] of Object.entries(rec)) {
+      if (!k) continue;
+      if (!v || typeof v !== "object") continue;
+      const slug = k.trim().toLowerCase();
+      if (!slug) continue;
+      const vv = v as Record<string, unknown>;
+      out[slug] = {
+        accent: typeof vv.accent === "string" ? vv.accent : undefined,
+        accentHover: typeof vv.accentHover === "string" ? vv.accentHover : undefined,
+        accentActive: typeof vv.accentActive === "string" ? vv.accentActive : undefined,
+        accentSoft: typeof vv.accentSoft === "string" ? vv.accentSoft : undefined,
+        watermarkOpacity: typeof vv.watermarkOpacity === "number" ? vv.watermarkOpacity : undefined,
+      };
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+const CLIENT_THEME_MAP = parseClientThemeMap(CLIENT_THEME_MAP_RAW);
+
+const DEFAULT_THEME: Required<Pick<ClientTheme, "accent" | "accentHover" | "accentActive" | "accentSoft">> = {
+  accent: "#ef0001",
+  accentHover: "#c80001",
+  accentActive: "#a80001",
+  accentSoft: "rgba(239, 0, 1, 0.12)",
+};
+
 export type ClientAccess = {
   id: string;
   name: string;
@@ -118,6 +165,22 @@ export function ClientProvider({ children }: { children: ReactNode }) {
   );
 
   const activeClientId = activeClient?.id ?? null;
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const slug = (activeClientSlug ?? "").trim().toLowerCase();
+    if (slug) root.setAttribute("data-client", slug);
+    else root.removeAttribute("data-client");
+
+    const theme = slug ? CLIENT_THEME_MAP[slug] : undefined;
+    root.style.setProperty("--tc-accent", theme?.accent ?? DEFAULT_THEME.accent);
+    root.style.setProperty("--tc-accent-hover", theme?.accentHover ?? DEFAULT_THEME.accentHover);
+    root.style.setProperty("--tc-accent-active", theme?.accentActive ?? DEFAULT_THEME.accentActive);
+    root.style.setProperty("--tc-accent-soft", theme?.accentSoft ?? DEFAULT_THEME.accentSoft);
+    if (typeof theme?.watermarkOpacity === "number") {
+      root.style.setProperty("--tc-watermark-opacity", String(theme.watermarkOpacity));
+    }
+  }, [activeClientSlug]);
 
   const refreshClients = useCallback(async () => {
     if (!user) {

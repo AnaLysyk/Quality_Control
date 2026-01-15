@@ -35,20 +35,23 @@ input[type="password"]::-ms-clear {
   --tc-text-secondary: #4b5563;
   --tc-text-muted: #6b7280;
   --tc-text-inverse: #ffffff;
-  --page-bg: #ffffff;
+  --page-bg: #f4f6fb;
   --page-text: #0b1a3c;
 
   /* UI */
-  --tc-border: var(--tc-border);
+  --tc-border: rgba(15, 23, 42, 0.10);
   --tc-input-bg: #eef4ff;
   --tc-focus: #ef0001;
   --tc-accent-soft: rgba(239, 0, 1, 0.12);
 
+  /* Watermark */
+  --tc-watermark-opacity: 0.05;
+
   /* STATUS / MÉTRICAS */
   --stat-pass: #7cd343;
-  --stat-fail: var(--stat-fail);
-  --stat-blocked: var(--stat-blocked);
-  --stat-notrun: var(--stat-notrun);
+  --stat-fail: #ef0001;
+  --stat-blocked: #ffa73a;
+  --stat-notrun: #94a3b8;
 
   /* legacy palette (mantido p/ compatibilidade) */
   --primary: #011848;
@@ -92,6 +95,7 @@ input[type="password"]::-ms-clear {
   --surface-primary: #0f1828;
   --surface-secondary: #101a2f;
   --surface-border: rgba(148, 163, 184, 0.18);
+  --tc-watermark-opacity: 0.035;
 }
 
 .tc-dark {
@@ -135,6 +139,7 @@ html {
 
 body {
   position: relative;
+  isolation: isolate;
   min-height: 100%;
   margin: 0;
   background: var(--page-bg);
@@ -142,6 +147,23 @@ body {
   font-family: var(--font-sans);
   overflow-x: auto;
   overflow-y: auto;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(239, 0, 1, 0.07), transparent 38%),
+    radial-gradient(circle at 78% 68%, rgba(1, 24, 72, 0.06), transparent 42%),
+    url("/images/tc.png");
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-size: 900px 900px, 900px 900px, min(820px, 85vw);
+  background-position: -240px -260px, calc(100% + 220px) calc(100% + 260px), 50% 52%;
+  opacity: var(--tc-watermark-opacity);
+  filter: grayscale(100%);
 }
 
 img,
@@ -176,6 +198,8 @@ video {
   --tc-border: rgba(15, 23, 42, 0.08);
   --tc-input-bg: #ffffff;
   --tc-text-inverse: #0b1220;
+  --page-bg: #f3f6ff;
+  --tc-watermark-opacity: 0.045;
 }
 
 .metrics-shell {

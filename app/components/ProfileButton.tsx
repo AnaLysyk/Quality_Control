@@ -101,7 +101,7 @@ export default function ProfileButton() {
   const displayEmail = user?.email || "";
   const companyName = (() => {
     if (activeClient?.name) return activeClient.name;
-    if (isAdmin) return "Testing Company";
+    if (isAdmin) return "Admin do sistema";
 
     const legacyCompany = legacyUser?.company;
     if (legacyCompany && typeof legacyCompany === "object" && legacyCompany !== null) {
@@ -405,10 +405,10 @@ export default function ProfileButton() {
                 <MenuItem
                   icon={<FiShield aria-hidden />}
                   label="Administração"
-                  hint={`Cliente: ${companyName}`}
+                  hint={activeClient?.name ? `Cliente: ${activeClient.name}` : "Sem empresa selecionada"}
                   onClick={() => {
                     setOpen(false);
-                    router.push("/admin");
+                    router.push("/admin/home");
                   }}
                 />
               </ul>

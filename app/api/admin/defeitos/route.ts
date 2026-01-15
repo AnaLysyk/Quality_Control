@@ -14,6 +14,7 @@ type QaseDefect = {
   updated_at?: string;
   url?: string;
   projectCode: string;
+  companySlug?: string | null;
 };
 
 type Aggregated = {
@@ -333,19 +334,49 @@ export async function GET(req: NextRequest) {
     supabaseMapError = fromDb.error;
   }
 
+  const url = new URL(req.url);
+  const companyFilter = normalizeSlug(url.searchParams.get("company") ?? url.searchParams.get("empresa"));
+  const projectFilter = normalizeString(url.searchParams.get("project"));
+
   const projectCodeToSlug = new Map<string, string>();
   for (const entry of projectMap) {
     if (entry.projectCode && entry.slug) projectCodeToSlug.set(entry.projectCode, entry.slug);
   }
 
-  const uniqueProjects = Array.from(
+  let uniqueProjects = Array.from(
     new Set([
       ...projectMap.map((p) => p.projectCode).filter(Boolean),
       ...envProjectCodes,
     ])
   );
 
+  if (companyFilter) {
+    const scoped = projectMap
+      .filter((p) => p.slug === companyFilter)
+      .map((p) => p.projectCode)
+      .filter(Boolean);
+    uniqueProjects = Array.from(new Set(scoped));
+  }
+
+  if (projectFilter) {
+    uniqueProjects = [projectFilter.toUpperCase()];
+  }
+
   if (!uniqueProjects.length) {
+    if (companyFilter) {
+      const payload = {
+        error: `Nenhum projeto Qase configurado para a empresa '${companyFilter}'. Configure qase_project_code/qase_project_codes no cliente (Supabase) ou ajuste QASE_PROJECT_MAP.`,
+        total: 0,
+        byApplication: [],
+        byRun: [],
+        byCompany: [],
+        byStatus: [],
+        timeline: [],
+        items: [],
+      };
+      return apiOk(req, payload, "OK", { extra: payload });
+    }
+
     const baseHint =
       "Configure QASE_PROJECT_MAP (ex: griaule:GRIAULE,acme:ACME) ou preencha qase_project_code/qase_project_codes nas empresas (Supabase).";
 
@@ -393,6 +424,9 @@ export async function GET(req: NextRequest) {
   const allDefects: QaseDefect[] = [];
   for (const projectCode of uniqueProjects) {
     const defects = await fetchAllDefects(projectCode);
+    defects.forEach((d) => {
+      d.companySlug = projectCodeToSlug.get(projectCode) ?? null;
+    });
     allDefects.push(...defects);
   }
 

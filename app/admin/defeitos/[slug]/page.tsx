@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import { toast } from "react-hot-toast";
+import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
 
 type Defect = {
   id: string;
@@ -129,7 +130,8 @@ export default function AdminDefeitosEmpresaPage() {
         }
 
         const json = (await res.json().catch(() => null)) as unknown;
-        const rec = (json ?? null) as Record<string, unknown> | null;
+        const data = unwrapEnvelopeData<Record<string, unknown> | null>(json) ?? null;
+        const rec = (data ?? null) as Record<string, unknown> | null;
         const list = Array.isArray((rec as any)?.items) ? ((rec as any).items as Defect[]) : null;
         if (Array.isArray(list) && list.length) {
           setItems(list);

@@ -181,15 +181,10 @@ export default function AdminHomePage() {
   }, []);
 
   const companies = overview?.companies ?? [];
-  useEffect(() => {
-    if (companies.length && !selectedCompanySlug) {
-      setSelectedCompanySlug(companies[0].slug ?? companies[0].id);
-    }
-  }, [companies, selectedCompanySlug]);
-
   const selectedCompany = useMemo(() => {
     if (!companies.length) return null;
-    return companies.find((company) => company.slug === selectedCompanySlug) ?? companies[0];
+    if (!selectedCompanySlug) return null;
+    return companies.find((company) => company.slug === selectedCompanySlug) ?? null;
   }, [companies, selectedCompanySlug]);
 
   useEffect(() => {
@@ -271,9 +266,12 @@ export default function AdminHomePage() {
                   <p className="mt-1 text-xs uppercase tracking-[0.4em] text-(--tc-text-muted,#6b7280)">Atualizando dados...</p>
                 )}
               </div>
-              <div className="flex items-center gap-3 rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em]">
-                <span>{selectedCompany?.name ?? "Contexto global"}</span>
-                <span className="rounded-full bg-(--tc-accent,#ef0001)/10 px-3 py-1 text-(--tc-accent,#ef0001)">Admin</span>
+              <div className="flex items-center gap-3 rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) px-4 py-3">
+                <span className="text-xs font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Painel Admin</span>
+                <span className="h-4 w-px bg-(--tc-border,#e5e7eb)" aria-hidden />
+                <span className="text-sm font-semibold text-(--page-text,#0b1a3c)">
+                  {selectedCompany?.name ?? "Contexto global"}
+                </span>
               </div>
             </div>
             <div className="mt-6 space-y-2 border-t border-(--tc-border,#e5e7eb) pt-6">
@@ -282,9 +280,19 @@ export default function AdminHomePage() {
                 <span>Arraste para ver</span>
               </div>
               <div className="flex w-full gap-4 overflow-x-auto pb-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCompanySlug(null)}
+                  className={`flex min-w-56 flex-col gap-2 rounded-2xl border p-4 shadow-sm transition border-slate-200 bg-slate-50 text-slate-600 ${
+                    selectedCompanySlug ? "opacity-80 hover:opacity-100" : "ring-2 ring-offset-2 ring-(--tc-border,#e5e7eb)"
+                  }`}
+                >
+                  <div className="text-sm font-bold text-(--page-text,#0b1a3c)">Contexto global</div>
+                  <div className="text-xs text-(--tc-text-muted,#6b7280)">Ver todos os clientes</div>
+                </button>
                 {companyCards.map((company) => {
                   const tone = RISK_TONE[company.risk] ?? RISK_TONE.no_data;
-                  const isSelected = company.slug === (selectedCompany?.slug ?? selectedCompany?.id);
+                  const isSelected = company.slug === selectedCompanySlug;
                   return (
                     <button
                       key={company.id}

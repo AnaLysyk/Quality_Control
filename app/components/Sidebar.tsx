@@ -47,6 +47,8 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const { activeClientSlug } = useClientContext();
   const { t } = useI18n();
 
+  const isAdminArea = pathname.startsWith("/admin");
+
   const legacyUser = (user ?? null) as unknown as { is_global_admin?: boolean } | null;
 
   const normalizedRole = typeof user?.role === "string" ? user.role.toLowerCase() : null;
@@ -69,6 +71,12 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     const match = pathname.match(/^\/empresas\/([^/]+)/);
     return match?.[1] ?? activeClientSlug ?? user?.clientSlug ?? null;
   }, [pathname, activeClientSlug, user?.clientSlug]);
+
+  const logoHref = useMemo(() => {
+    if (isGlobalAdmin) return "/admin/home";
+    if (companySlug) return `/empresas/${companySlug}/home`;
+    return "/";
+  }, [isGlobalAdmin, companySlug]);
 
   const publicNav: NavItem[] = useMemo(
     () => [
@@ -111,10 +119,10 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
   const navigation = useMemo(() => {
     if (!user) return publicNav;
-    if (appRole === "admin" && !companySlug) return adminNav;
+    if (appRole === "admin" && isAdminArea) return adminNav;
     if (companyNav.length) return companyNav;
     return appRole === "admin" ? adminNav : publicNav;
-  }, [user, appRole, companySlug, adminNav, companyNav, publicNav]);
+  }, [user, appRole, isAdminArea, adminNav, companyNav, publicNav]);
 
   const renderNavLinks = (isMobile = false) =>
     navigation
@@ -168,7 +176,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     >
       <div className="flex items-center px-2 py-3 border-b border-slate-200/70 dark:border-white/5 relative">
         <Link
-          href="/"
+          href={logoHref}
           className="flex items-center gap-3 transition-all duration-200 justify-start w-full px-2"
         >
           <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 backdrop-blur dark:border-white/10 dark:bg-white/5">
@@ -217,19 +225,21 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center gap-3 p-4 border-b border-slate-200 dark:border-white/10 relative">
-            <div className="flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-white/5">
-              <Image
-                src={logoSrc}
-                alt="Logo"
-                width={48}
-                height={48}
-                className="object-cover pointer-events-none select-none"
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/55">Painel QA</span>
-              <span className="text-sm font-semibold tracking-wide text-[#2563eb] dark:text-[#4e8df5]">Testing Metric</span>
-            </div>
+            <Link href={logoHref} className="flex items-center gap-3" onClick={onClose}>
+              <div className="flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-white/5">
+                <Image
+                  src={logoSrc}
+                  alt="Logo"
+                  width={48}
+                  height={48}
+                  className="object-cover pointer-events-none select-none"
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/55">Painel QA</span>
+                <span className="text-sm font-semibold tracking-wide text-[#2563eb] dark:text-[#4e8df5]">Testing Metric</span>
+              </div>
+            </Link>
           </div>
 
           <nav className="flex-1 min-h-0 flex flex-col overflow-y-auto custom-scroll">

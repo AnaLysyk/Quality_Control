@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FiAlertTriangle, FiTrendingDown, FiZap } from "react-icons/fi";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import { toast } from "react-hot-toast";
+import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 
 type DefectItem = {
   id: string;
@@ -102,6 +103,7 @@ export default function AdminDefeitosPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authBlocked, setAuthBlocked] = useState(false);
+  const allowFallback = typeof window !== "undefined" && window.location.hostname === "localhost";
 
   function handleUnauthorized() {
     const msg = "Sessão expirada. Faça login novamente.";
@@ -132,19 +134,27 @@ export default function AdminDefeitosPage() {
         }
 
         if (!res.ok) {
-          const json = (await res.json().catch(() => null)) as unknown;
-          const rec = (json ?? null) as Record<string, unknown> | null;
-          const apiError = typeof rec?.error === "string" ? rec.error : null;
+          const raw = await res.json().catch(() => null);
+          const message = extractMessageFromJson(raw) || "Erro ao carregar dados";
+          const requestId = extractRequestIdFromJson(raw) || res.headers.get("x-request-id") || null;
           setPayload(null);
-          setError(apiError || "Erro ao carregar dados");
+          setError(formatMessageWithRequestId(message, requestId));
           return;
         }
 
-        const json = (await res.json().catch(() => null)) as unknown;
-        const rec = (json ?? null) as Record<string, unknown> | null;
-        const apiError = typeof rec?.error === "string" ? rec.error : null;
+        const raw = await res.json().catch(() => null);
+        const data = unwrapEnvelopeData<Aggregated>(raw);
+        if (!data) {
+          const message = extractMessageFromJson(raw) || "Erro ao carregar dados";
+          const requestId = extractRequestIdFromJson(raw) || res.headers.get("x-request-id") || null;
+          setPayload(null);
+          setError(formatMessageWithRequestId(message, requestId));
+          return;
+        }
+
+        const apiError = typeof (data as any)?.error === "string" ? String((data as any).error) : null;
         if (apiError) setError(apiError);
-        setPayload((rec as Aggregated) ?? null);
+        setPayload(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erro ao carregar dados");
       } finally {
@@ -158,8 +168,8 @@ export default function AdminDefeitosPage() {
     if (authBlocked) return [];
     const apiItems = payload?.items ?? [];
     if (apiItems.length) return apiItems;
-    return FALLBACK_DEFECTS;
-  }, [payload, authBlocked]);
+    return allowFallback ? FALLBACK_DEFECTS : [];
+  }, [payload, authBlocked, allowFallback]);
 
   const companyCards = useMemo(() => {
     const map = new Map<

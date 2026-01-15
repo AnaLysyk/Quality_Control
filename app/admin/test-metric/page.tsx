@@ -143,7 +143,7 @@ function gateLabel(status: GateStatus) {
 function isDefectOpen(statusRaw: string) {
   const st = (statusRaw ?? "").toString().toLowerCase();
   if (!st) return true;
-  return !(st.includes("resolve") || st.includes("closed") || st.includes("done") || st.includes("approved"));
+  return !(st.includes("resolve") || st.includes("closed") || st.includes("done") || st.includes("approved") || st.includes("aprovado"));
 }
 
 function isCriticalSeverity(severityRaw?: string) {

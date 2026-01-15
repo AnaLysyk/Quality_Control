@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
 import Breadcrumb from "@/components/Breadcrumb";
+import { formatCompanyDisplayName } from "@/utils/formatCompanyDisplayName";
 
 type CompanyRun = {
   slug: string;
@@ -20,22 +21,37 @@ type CompanyRun = {
 export default function EmpresaReleasesPage() {
   const params = useParams();
   const slug = (params?.slug as string) || "";
+  const companyName = useMemo(() => formatCompanyDisplayName(slug) || slug, [slug]);
 
   const [query, setQuery] = useState("");
   const [runs, setRuns] = useState<CompanyRun[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!slug) return;
     const load = async () => {
       setLoading(true);
+      setError(null);
       try {
         const res = await fetch(`/api/empresas/${encodeURIComponent(slug)}/runs`, { cache: "no-store" });
-        const json = await res.json().catch(() => ({}));
-        const items = Array.isArray(json?.runs) ? (json.runs as CompanyRun[]) : [];
+        const json = await res.json().catch(() => null);
+
+        if (!res.ok) {
+          const message =
+            typeof (json as { message?: unknown } | null)?.message === "string"
+              ? String((json as { message?: unknown }).message)
+              : `Erro ao carregar releases (${res.status})`;
+          setRuns([]);
+          setError(message);
+          return;
+        }
+
+        const items = Array.isArray((json as any)?.runs) ? ((json as any).runs as CompanyRun[]) : [];
         setRuns(items);
       } catch {
         setRuns([]);
+        setError("Erro ao carregar releases");
       } finally {
         setLoading(false);
       }
@@ -57,16 +73,16 @@ export default function EmpresaReleasesPage() {
             items={[
               { label: "Empresas", href: "/empresas" },
               {
-                label: slug,
+                label: companyName,
                 href: `/empresas/${encodeURIComponent(slug)}/home`,
-                title: slug,
+                title: companyName,
               },
               { label: "Releases" },
             ]}
           />
 
           <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c) leading-tight wrap-break-word">
-            Releases — {slug}
+            Releases — {companyName}
           </h1>
           <p className="text-sm sm:text-base text-(--tc-text-secondary,#4b5563)">
             Lista completa de releases desta empresa. Runs manuais e integradas aparecem aqui conforme configurado.
@@ -89,7 +105,8 @@ export default function EmpresaReleasesPage() {
         </div>
 
         {loading && <p className="text-sm text-(--tc-text-muted)">Carregando releases...</p>}
-        {!loading && !filtered.length && (
+        {!loading && error && <p className="text-sm text-red-600">{error}</p>}
+        {!loading && !error && !filtered.length && (
           <p className="text-sm text-(--tc-text-muted)">Nenhuma release encontrada para esta empresa.</p>
         )}
 

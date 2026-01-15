@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getAllReleases } from "@/release/data";
 import {
   buildCompanyRows,
@@ -12,6 +12,7 @@ import {
   TrendPoint,
   Stats,
 } from "@/lib/quality";
+import { apiFail, apiOk } from "@/lib/apiResponse";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -30,6 +31,9 @@ type CompanyListResponse = {
   period: number;
   coverage: { total: number; withStats: number; percent: number };
   releaseCount: number;
+  releaseGateCounts: Record<string, number>;
+  releaseRiskCount: number;
+  releaseWarningCount: number;
   globalStats: Stats;
   globalPassRate: number | null;
   passRateTone: "good" | "warn" | "neutral";
@@ -118,6 +122,21 @@ export async function GET(request: NextRequest) {
 
     const companies = buildCompanyRows(normalizeClients(clientRows), periodReleases);
 
+    const releaseGateCounts: Record<string, number> = {
+      approved: 0,
+      warning: 0,
+      failed: 0,
+      no_data: 0,
+    };
+    let releaseRiskCount = 0;
+    let releaseWarningCount = 0;
+    periodReleases.forEach((release) => {
+      const status = release.gate.status;
+      releaseGateCounts[status] = (releaseGateCounts[status] ?? 0) + 1;
+      if (status === "failed") releaseRiskCount += 1;
+      if (status === "warning") releaseWarningCount += 1;
+    });
+
     const gateCounts: Record<string, number> = {
       approved: 0,
       warning: 0,
@@ -144,6 +163,9 @@ export async function GET(request: NextRequest) {
       period,
       coverage,
       releaseCount: periodReleases.length,
+      releaseGateCounts,
+      releaseRiskCount,
+      releaseWarningCount,
       globalStats,
       globalPassRate,
       passRateTone,
@@ -155,9 +177,10 @@ export async function GET(request: NextRequest) {
       policy: QUALITY_THRESHOLDS,
     };
 
-    return NextResponse.json(response);
+    return apiOk(request, response, "OK", { extra: response });
   } catch (error) {
     console.error("GET /api/admin/quality/overview error", error);
-    return NextResponse.json({ error: "Erro ao gerar overview" }, { status: 500 });
+    const msg = "Erro ao gerar overview";
+    return apiFail(request, msg, { status: 500, code: "INTERNAL", details: error, extra: { error: msg } });
   }
 }

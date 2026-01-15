@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { apiFail, apiOk } from "@/lib/apiResponse";
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
@@ -22,14 +22,27 @@ function normalizeString(value: unknown): string | null {
 
 export async function GET(request: Request) {
   const auth = await authenticateRequest(request);
-  if (!auth) return NextResponse.json({ error: { message: "Unauthorized" } }, { status: 401 });
+  if (!auth) {
+    return apiFail(request, "Unauthorized", {
+      status: 401,
+      code: "AUTH_REQUIRED",
+      extra: { error: { message: "Unauthorized" } },
+    });
+  }
 
   const url = new URL(request.url);
   const project = normalizeString(url.searchParams.get("project")) || DEFAULT_PROJECT;
-  if (!project) return NextResponse.json({ error: { message: "Missing project" } }, { status: 400 });
+  if (!project) {
+    return apiFail(request, "Missing project", {
+      status: 400,
+      code: "VALIDATION_ERROR",
+      extra: { error: { message: "Missing project" } },
+    });
+  }
 
   if (!QASE_TOKEN) {
-    return NextResponse.json({ data: [], warning: "QASE_API_TOKEN ausente" }, { status: 200 });
+    const out = { data: [], warning: "QASE_API_TOKEN ausente" };
+    return apiOk(request, out, "OK", { extra: out });
   }
 
   const res = await fetch(`${QASE_BASE_URL}/v1/run/${encodeURIComponent(project)}?limit=50`, {
@@ -40,16 +53,29 @@ export async function GET(request: Request) {
   const json = (await res.json().catch(() => null)) as unknown;
   if (!res.ok) {
     const message = asRecord(json)?.error && asRecord(asRecord(json)?.error)?.message;
-    return NextResponse.json({ error: { message: (message as string) || "Erro ao consultar Qase" } }, { status: res.status });
+    const msg = (message as string) || "Erro ao consultar Qase";
+    return apiFail(request, msg, {
+      status: res.status,
+      code: "UPSTREAM_ERROR",
+      details: json,
+      extra: { error: { message: msg } },
+    });
   }
 
   const entities = (asRecord(asRecord(json)?.result)?.entities as unknown[]) || [];
-  return NextResponse.json({ data: entities }, { status: 200 });
+  const out = { data: entities };
+  return apiOk(request, out, "OK", { extra: out });
 }
 
 export async function POST(request: Request) {
   const auth = await authenticateRequest(request);
-  if (!auth) return NextResponse.json({ error: { message: "Unauthorized" } }, { status: 401 });
+  if (!auth) {
+    return apiFail(request, "Unauthorized", {
+      status: 401,
+      code: "AUTH_REQUIRED",
+      extra: { error: { message: "Unauthorized" } },
+    });
+  }
 
   const body = (await request.json().catch(() => null)) as unknown;
   const rec = asRecord(body) ?? {};
@@ -59,11 +85,19 @@ export async function POST(request: Request) {
   const customType = normalizeString(rec.custom_type);
 
   if (!project || !title) {
-    return NextResponse.json({ error: { message: "Missing project or title" } }, { status: 400 });
+    return apiFail(request, "Missing project or title", {
+      status: 400,
+      code: "VALIDATION_ERROR",
+      extra: { error: { message: "Missing project or title" } },
+    });
   }
 
   if (!QASE_TOKEN) {
-    return NextResponse.json({ error: { message: "QASE_API_TOKEN ausente" } }, { status: 503 });
+    return apiFail(request, "QASE_API_TOKEN ausente", {
+      status: 503,
+      code: "ENV_MISSING",
+      extra: { error: { message: "QASE_API_TOKEN ausente" } },
+    });
   }
 
   const payload: Record<string, unknown> = {
@@ -84,8 +118,15 @@ export async function POST(request: Request) {
   const json = (await res.json().catch(() => null)) as unknown;
   if (!res.ok) {
     const message = asRecord(json)?.error && asRecord(asRecord(json)?.error)?.message;
-    return NextResponse.json({ error: { message: (message as string) || "Erro ao criar run" } }, { status: res.status });
+    const msg = (message as string) || "Erro ao criar run";
+    return apiFail(request, msg, {
+      status: res.status,
+      code: "UPSTREAM_ERROR",
+      details: json,
+      extra: { error: { message: msg } },
+    });
   }
 
-  return NextResponse.json({ data: asRecord(json)?.result ?? null }, { status: 200 });
+  const out = { data: asRecord(json)?.result ?? null };
+  return apiOk(request, out, "OK", { extra: out });
 }

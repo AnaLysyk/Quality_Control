@@ -1,8 +1,33 @@
 "use client";
 
+import { useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthUser } from "@/hooks/useAuthUser";
+
 import { CompanySelector } from "../components/CompanySelector";
 
 export default function EmpresasIndexPage() {
+  const router = useRouter();
+  const { user, loading } = useAuthUser();
+
+  const isAdmin = useMemo(() => {
+    const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
+    return user?.isGlobalAdmin === true || role === "admin" || role === "global_admin";
+  }, [user]);
+
+  useEffect(() => {
+    if (loading) return;
+    if (!user) return;
+    if (isAdmin) return;
+    const slug = typeof user.clientSlug === "string" ? user.clientSlug.trim() : "";
+    if (!slug) return;
+    router.replace(`/empresas/${encodeURIComponent(slug)}/home`);
+  }, [loading, user, isAdmin, router]);
+
+  if (!loading && user && !isAdmin && (user.clientSlug ?? "")) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-linear-to-b from-[#0a1533] via-[#0f1f4b] to-[#0a1533] px-4 py-12">
       <div className="mx-auto max-w-5xl space-y-10 text-white">

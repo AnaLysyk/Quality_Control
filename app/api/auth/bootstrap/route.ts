@@ -1,15 +1,9 @@
-import { NextResponse } from "next/server";
-import { ErrorResponseSchema } from "@/contracts/errors";
 import { slugifyRelease } from "@/lib/slugifyRelease";
+import { apiFail, apiOk } from "@/lib/apiResponse";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
-const IS_TEST_ENV = process.env.NODE_ENV === "test" || !!process.env.JEST_WORKER_ID;
 
 type SupabaseServerClient = ReturnType<typeof import("@/lib/supabaseServer").getSupabaseServer>;
-
-function jsonError(message: string, status: number) {
-  return NextResponse.json(ErrorResponseSchema.parse({ error: message }), { status });
-}
 
 function extractToken(req: Request): string | null {
   const authHeader = req.headers.get("authorization");
@@ -42,25 +36,26 @@ export async function POST(req: Request) {
   if (SUPABASE_MOCK) {
     // Keep mock mode consistent across auth endpoints.
     // In non-test environments, we still return a successful payload so the UI can proceed.
-    return NextResponse.json(
-      {
-        ok: true,
-        mocked: true,
-        user: {
-          authUserId: "mock-uid",
-          email: null,
-          role: "admin",
-          clientId: null,
-          clientSlug: null,
-          isAdmin: true,
-        },
+    const payload = {
+      ok: true,
+      mocked: true,
+      user: {
+        authUserId: "mock-uid",
+        email: null,
+        role: "admin",
+        clientId: null,
+        clientSlug: null,
+        isAdmin: true,
       },
-      { status: 200 }
-    );
+    };
+
+    return apiOk(req, payload, "OK", { extra: payload });
   }
 
   const token = extractToken(req);
-  if (!token) return jsonError("Nao autorizado", 401);
+  if (!token) {
+    return apiFail(req, "Nao autenticado", { status: 401, code: "NO_TOKEN", extra: { error: "Nao autorizado" } });
+  }
 
   let supabaseAdmin: SupabaseServerClient;
   try {
@@ -68,11 +63,23 @@ export async function POST(req: Request) {
     const mod = require("@/lib/supabaseServer");
     supabaseAdmin = mod.getSupabaseServer();
   } catch (err) {
-    return jsonError(err instanceof Error ? err.message : "Erro ao inicializar Supabase", 500);
+    return apiFail(req, "Erro ao inicializar Supabase", {
+      status: 500,
+      code: "SUPABASE_INIT",
+      details: err instanceof Error ? err.message : err,
+      extra: { error: err instanceof Error ? err.message : "Erro ao inicializar Supabase" },
+    });
   }
 
   const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
-  if (authError || !authData?.user) return jsonError("Nao autorizado", 401);
+  if (authError || !authData?.user) {
+    return apiFail(req, "Nao autenticado", {
+      status: 401,
+      code: "INVALID_TOKEN",
+      details: authError?.message ?? null,
+      extra: { error: "Nao autorizado" },
+    });
+  }
 
   const authUser: MinimalAuthUser = {
     id: authData.user.id,
@@ -153,9 +160,16 @@ export async function POST(req: Request) {
     .maybeSingle();
 
   if (!existingUser) {
-    return jsonError(
-      "Usuário não provisionado. Peça ao admin para criar o usuário e vinculá-lo a uma empresa.",
-      403
+    return apiFail(
+      req,
+      "Usuario nao provisionado. Peca ao admin para criar o usuario e vincula-lo a uma empresa.",
+      {
+        status: 403,
+        code: "USER_NOT_PROVISIONED",
+        extra: {
+          error: "Usuário não provisionado. Peça ao admin para criar o usuário e vinculá-lo a uma empresa.",
+        },
+      },
     );
   } else {
     const updates: Record<string, unknown> = {};
@@ -228,10 +242,11 @@ export async function POST(req: Request) {
     userRecord?.is_global_admin === true ||
     profileRow?.is_global_admin === true;
   if (!isGlobalAdmin && !clientId) {
-    return jsonError(
-      "Sem empresa vinculada. Peça ao admin para vincular seu usuário a uma empresa.",
-      403
-    );
+    return apiFail(req, "Sem empresa vinculada", {
+      status: 403,
+      code: "NO_COMPANY_LINK",
+      extra: { error: "Sem empresa vinculada. Peça ao admin para vincular seu usuário a uma empresa." },
+    });
   }
 
   let clientSlug: string | null = null;
@@ -260,18 +275,16 @@ export async function POST(req: Request) {
     Boolean(userRecord?.is_global_admin) ||
     Boolean(profileRow?.is_global_admin);
 
-  return NextResponse.json(
-    {
-      ok: true,
-      user: {
-        authUserId: authUser.id,
-        email: authUser.email,
-        role: isAdmin ? "admin" : userRole,
-        clientId,
-        clientSlug,
-        isAdmin,
-      },
+  const out = {
+    ok: true,
+    user: {
+      authUserId: authUser.id,
+      email: authUser.email,
+      role: isAdmin ? "admin" : userRole,
+      clientId,
+      clientSlug,
+      isAdmin,
     },
-    { status: 200 }
-  );
+  };
+  return apiOk(req, out, "OK", { extra: out });
 }

@@ -152,16 +152,11 @@ export async function GET(req: Request) {
   const authUser = await authenticateRequest(req);
   if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-  const supabaseServer = getSupabaseServer();
-  const { data: userRow, error: userError } = await supabaseServer
-    .from("users")
-    .select("id, is_global_admin")
-    .eq("id", authUser.id)
-    .maybeSingle();
-
-  if (userError || !userRow || !userRow.is_global_admin) {
+  if (!authUser.isGlobalAdmin) {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
+
+  const supabaseServer = getSupabaseServer();
 
   const { data, error } = await supabaseServer
     .from("support_requests")

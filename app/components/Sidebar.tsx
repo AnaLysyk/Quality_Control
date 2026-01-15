@@ -75,7 +75,6 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     () => [
       { label: t("nav.home"), icon: FiHome, href: "/" },
       { label: t("nav.companies"), icon: FiUsers, href: "/empresas" },
-      { label: t("nav.profile"), icon: FiUser, href: "/profile" },
       { label: t("nav.newRun"), icon: FiPlusCircle, href: "/admin/runs", roles: ["admin", "client", "user"] },
     ],
     [t]
@@ -84,6 +83,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const adminNav: NavItem[] = useMemo(
     () => [
       { label: t("nav.adminPanel"), icon: FiCompass, href: "/admin/home" },
+      { label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric" },
       { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
       { label: t("nav.runsManagement"), icon: FiLayers, href: "/admin/runs" },
       { label: t("nav.defects"), icon: FiShield, href: "/admin/defeitos" },
@@ -97,7 +97,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     () =>
       companySlug
         ? [
-            { label: t("nav.profile"), icon: FiUser, href: `/empresas/${companySlug}/home` },
+            { label: t("nav.home"), icon: FiHome, href: `/empresas/${companySlug}/home` },
             { label: t("nav.dashboard"), icon: FiGrid, href: `/empresas/${companySlug}/dashboard` },
             { label: t("nav.metrics"), icon: FiBarChart2, href: `/empresas/${companySlug}/metricas` },
             { label: t("nav.apps"), icon: FiBriefcase, href: `/empresas/${companySlug}/aplicacoes` },

@@ -17,6 +17,26 @@ type RunPayload = {
   origin: "automatico" | "manual";
 };
 
+function parseProjectCodes(value: unknown): string[] {
+  const normalize = (code: string) => code.trim().toUpperCase();
+
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === "string")
+      .map(normalize)
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(/[\s,;|]+/g)
+      .map(normalize)
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
 const FALLBACK_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
 
 const PROJECT_MAP: Record<string, string> = {
@@ -101,28 +121,39 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   if (!access.isGlobalAdmin && requestedSlug !== effectiveSlug) return jsonError("Forbidden", 403);
 
   const clientSettings = await getClientQaseSettings(effectiveSlug);
-  const projectCode = clientSettings?.projectCode ?? PROJECT_MAP[effectiveSlug];
   const token = clientSettings?.token ?? FALLBACK_TOKEN;
+  const projectCodes = Array.from(
+    new Set([
+      ...parseProjectCodes(clientSettings?.projectCodes ?? clientSettings?.projectCode ?? null),
+      ...parseProjectCodes(PROJECT_MAP[effectiveSlug] ?? null),
+    ]),
+  );
 
   const runs: RunPayload[] = [];
 
-  if (projectCode && token) {
-    const qaseRuns = await listQaseRuns(projectCode, token);
-    runs.push(
-      ...qaseRuns
-        .filter((run) => !!run)
-        .map(
-          (run): RunPayload => ({
-            slug: run.slug ?? `qase-${run.id}`,
-            name: run.name ?? `Run ${run.id}`,
-            runId: run.id,
-            status: run.status ?? "ACTIVE",
-            createdAt: run.createdAt,
-            source: "QASE",
-            origin: "automatico",
-          }),
-        ),
+  if (token && projectCodes.length) {
+    const results = await Promise.all(
+      projectCodes.map(async (projectCode) => ({ projectCode, runs: await listQaseRuns(projectCode, token) })),
     );
+
+    results.forEach(({ projectCode, runs: qaseRuns }) => {
+      runs.push(
+        ...qaseRuns
+          .filter((run) => !!run)
+          .map(
+            (run): RunPayload => ({
+              // Encode project+id so the detail page can resolve the project.
+              slug: `qase-${projectCode}-${run.id}`,
+              name: run.name ?? `Run ${run.id}`,
+              runId: run.id,
+              status: run.status ?? "ACTIVE",
+              createdAt: run.createdAt,
+              source: "QASE",
+              origin: "automatico",
+            }),
+          ),
+      );
+    });
   }
 
   const [persistedRuns, manualReleases] = await Promise.all([getAllReleases(), getAllManualReleases()]);
@@ -133,8 +164,9 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
 
   persistedRuns
     .filter((release) => {
-      if (!projectCode) return false;
-      return (release.qaseProject ?? "").toUpperCase() === projectCode.toUpperCase();
+      if (!projectCodes.length) return false;
+      const project = (release.qaseProject ?? "").toUpperCase();
+      return projectCodes.includes(project);
     })
     .forEach((release) => {
       merged.set(release.slug, {
@@ -162,5 +194,19 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
       });
     });
 
-  return NextResponse.json({ runs: Array.from(merged.values()) }, { status: 200 });
+  const sorted = Array.from(merged.values()).sort((a, b) => {
+    const aTime = a.createdAt ? Date.parse(a.createdAt) : NaN;
+    const bTime = b.createdAt ? Date.parse(b.createdAt) : NaN;
+    const aSort = Number.isFinite(aTime) ? aTime : 0;
+    const bSort = Number.isFinite(bTime) ? bTime : 0;
+    if (aSort !== bSort) return bSort - aSort;
+
+    const aId = typeof a.runId === "number" ? a.runId : -1;
+    const bId = typeof b.runId === "number" ? b.runId : -1;
+    if (aId !== bId) return bId - aId;
+
+    return a.slug.localeCompare(b.slug);
+  });
+
+  return NextResponse.json({ runs: sorted }, { status: 200 });
 }

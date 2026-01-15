@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { AuthMeResponseSchema, type AuthUser } from "@/contracts/auth";
 import { getAccessToken } from "@/lib/api";
+import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -18,7 +19,7 @@ const bootstrapAttempts = new Map<string, number>();
 
 async function fetchMe(): Promise<AuthUser | null> {
   const token = await getAccessToken().catch(() => null);
-  const attemptKey = token ?? "__NO_TOKEN__";
+  const attemptKey = token ?? "__COOKIE_OR_NO_TOKEN__";
   const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
   const res = await fetch("/api/me", {
@@ -35,10 +36,17 @@ async function fetchMe(): Promise<AuthUser | null> {
     const errorPayload = await res.json().catch(() => null);
     const errorParsed = AuthMeResponseSchema.safeParse(errorPayload);
 
-    const errorCode = errorParsed.success ? errorParsed.data.error?.code : null;
+    const errorCode = (() => {
+      if (errorParsed.success) return errorParsed.data.error?.code ?? null;
+      if (errorPayload && typeof errorPayload === "object") {
+        const rec = errorPayload as Record<string, any>;
+        const code = rec?.error?.code;
+        if (typeof code === "string" && code.trim()) return code.trim();
+      }
+      return null;
+    })();
     if (
       res.status === 401 &&
-      headers &&
       errorCode === "NEEDS_BOOTSTRAP"
     ) {
       const attempts = bootstrapAttempts.get(attemptKey) ?? 0;
@@ -59,7 +67,8 @@ async function fetchMe(): Promise<AuthUser | null> {
         });
         if (!retry.ok) return null;
         const retryPayload = await retry.json().catch(() => null);
-        const retryParsed = AuthMeResponseSchema.safeParse(retryPayload);
+        const retryData = unwrapEnvelopeData(retryPayload);
+        const retryParsed = AuthMeResponseSchema.safeParse(retryData);
         if (!retryParsed.success) return null;
         bootstrapAttempts.delete(attemptKey);
         return retryParsed.data.user ?? null;
@@ -71,7 +80,8 @@ async function fetchMe(): Promise<AuthUser | null> {
   }
 
   const payload = await res.json().catch(() => null);
-  const parsed = AuthMeResponseSchema.safeParse(payload);
+  const data = unwrapEnvelopeData(payload);
+  const parsed = AuthMeResponseSchema.safeParse(data);
   if (!parsed.success) return null;
   return parsed.data.user ?? null;
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listAllRequests, type RequestStatus, type RequestType } from "@/data/requestsStore";
-import { getSessionUser } from "@/lib/session";
+import { authenticateRequest } from "@/lib/jwtAuth";
 
 function isRequestStatus(value: string | null): value is RequestStatus {
   return value === "PENDING" || value === "APPROVED" || value === "REJECTED";
@@ -15,8 +15,11 @@ function isSort(value: string | null): value is "createdAt_desc" | "createdAt_as
 }
 
 export async function GET(request: NextRequest) {
-  const sessionUser = await getSessionUser();
-  if (sessionUser.role !== "admin") {
+  const authUser = await authenticateRequest(request);
+  if (!authUser) {
+    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+  }
+  if (!authUser.isGlobalAdmin) {
     return NextResponse.json({ message: "Sem permissao" }, { status: 403 });
   }
 

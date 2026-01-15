@@ -127,4 +127,41 @@ export async function requireGlobalAdmin(
   };
 }
 
+export async function requireGlobalAdminWithStatus(
+  req: NextRequest,
+  opts?: {
+    token?: string | null;
+    supabaseAdmin?: SupabaseClient;
+    supabaseAuth?: SupabaseClient;
+    mockAdmin?: AdminSession;
+  },
+): Promise<{ admin: AdminSession | null; status: 200 | 401 | 403 }>
+{
+  const admin = await requireGlobalAdmin(req, opts);
+  if (admin) return { admin, status: 200 };
+
+  const token = opts?.token ?? (await extractAccessToken(req));
+  if (!token) return { admin: null, status: 401 };
+
+  let supabaseAuth: SupabaseClient | null = opts?.supabaseAuth ?? opts?.supabaseAdmin ?? null;
+  if (!supabaseAuth) {
+    try {
+      supabaseAuth = getSupabaseServer();
+    } catch {
+      supabaseAuth = null;
+    }
+  }
+
+  if (!supabaseAuth) return { admin: null, status: 401 };
+
+  try {
+    const { data, error } = await supabaseAuth.auth.getUser(token);
+    if (error || !data?.user) return { admin: null, status: 401 };
+  } catch {
+    return { admin: null, status: 401 };
+  }
+
+  return { admin: null, status: 403 };
+}
+
 export type { AdminSession };

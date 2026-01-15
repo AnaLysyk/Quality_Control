@@ -101,6 +101,7 @@ export default function Kanban({
       : payload;
     const res = await fetch(endpoint, {
       method,
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(normalizedPayload),
     });
@@ -117,6 +118,7 @@ export default function Kanban({
   }) {
     const res = await fetch("/api/kanban/link", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         project: projectAbbr || project,
@@ -237,6 +239,7 @@ export default function Kanban({
       try {
         await fetch(persistEndpoint, {
           method: "DELETE",
+          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: item.id }),
         });

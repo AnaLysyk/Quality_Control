@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
+import { toast } from "react-hot-toast";
 
 type Defect = {
   id: string;
@@ -82,16 +83,51 @@ export default function AdminDefeitosEmpresaPage() {
   const [items, setItems] = useState<Defect[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authBlocked, setAuthBlocked] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [originFilter, setOriginFilter] = useState<"all" | "manual" | "automatico">("all");
   const [userFilter, setUserFilter] = useState("");
+
+  function handleUnauthorized() {
+    const msg = "Sessão expirada. Faça login novamente.";
+    setAuthBlocked(true);
+    setError(msg);
+    toast.error(msg);
+    router.push("/login");
+  }
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       setError(null);
+      setAuthBlocked(false);
       try {
-        const res = await fetch(`/api/admin/defeitos?company=${encodeURIComponent(slug)}`, { cache: "no-store" });
+        const res = await fetch(`/api/admin/defeitos?company=${encodeURIComponent(slug)}`, {
+          cache: "no-store",
+          credentials: "include",
+        });
+
+        if (res.status === 401) {
+          setItems([]);
+          handleUnauthorized();
+          return;
+        }
+        if (res.status === 403) {
+          setItems([]);
+          setAuthBlocked(true);
+          setError("Sem permissão");
+          return;
+        }
+
+        if (!res.ok) {
+          const json = (await res.json().catch(() => null)) as unknown;
+          const rec = (json ?? null) as Record<string, unknown> | null;
+          const apiError = typeof rec?.error === "string" ? rec.error : null;
+          setItems([]);
+          setError(apiError || "Erro ao carregar defeitos");
+          return;
+        }
+
         const json = (await res.json().catch(() => null)) as unknown;
         const rec = (json ?? null) as Record<string, unknown> | null;
         const list = Array.isArray((rec as any)?.items) ? ((rec as any).items as Defect[]) : null;
@@ -115,13 +151,14 @@ export default function AdminDefeitosEmpresaPage() {
   }, [slug]);
 
   const filtered = useMemo(() => {
+    if (authBlocked) return [];
     return items.filter((item) => {
       if (statusFilter !== "all" && item.status !== statusFilter) return false;
       if (originFilter !== "all" && item.origin !== originFilter) return false;
       if (userFilter && !`${item.createdBy || ""}`.toLowerCase().includes(userFilter.toLowerCase())) return false;
       return true;
     });
-  }, [items, statusFilter, originFilter, userFilter]);
+  }, [items, statusFilter, originFilter, userFilter, authBlocked]);
 
   const companyName =
     items[0]?.companyName ||

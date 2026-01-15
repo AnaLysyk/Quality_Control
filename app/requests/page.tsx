@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import Breadcrumb from "@/components/Breadcrumb";
@@ -15,16 +16,34 @@ type RequestRecord = {
 };
 
 export default function RequestsPage() {
+  const router = useRouter();
   const [items, setItems] = useState<RequestRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
+  function handleUnauthorized() {
+    const msg = "Sessão expirada. Faça login novamente.";
+    setMessage(msg);
+    toast.error(msg);
+    router.push("/login");
+  }
+
   async function loadRequests() {
     setLoading(true);
     try {
-      const res = await fetch("/api/requests/me");
+      const res = await fetch("/api/requests/me", {
+        credentials: "include",
+        cache: "no-store",
+      });
+
+      if (res.status === 401) {
+        setItems([]);
+        handleUnauthorized();
+        return;
+      }
+
       const json = await res.json();
       setItems(json.items || []);
     } catch {
@@ -44,7 +63,15 @@ export default function RequestsPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ newEmail: email }),
+      credentials: "include",
+      cache: "no-store",
     });
+
+    if (res.status === 401) {
+      handleUnauthorized();
+      return;
+    }
+
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       const msg = err.message || "Erro ao enviar solicitação";
@@ -64,7 +91,15 @@ export default function RequestsPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ newCompanyName: company }),
+      credentials: "include",
+      cache: "no-store",
     });
+
+    if (res.status === 401) {
+      handleUnauthorized();
+      return;
+    }
+
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       const msg = err.message || "Erro ao enviar solicitação";

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import { CreateUserModal } from "./components/CreateUserModal";
@@ -17,6 +18,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 }
 
 function AdminUsersPage() {
+  const router = useRouter();
   const { user } = useAuthUser();
   const legacyIsGlobalAdmin = asRecord(user)?.is_global_admin === true;
   const isGlobalAdmin = !!user?.isGlobalAdmin || legacyIsGlobalAdmin;
@@ -49,6 +51,11 @@ function AdminUsersPage() {
         const token = await getAccessToken().catch(() => null);
         const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
         const resClients = await fetch("/api/clients", { cache: "no-store", credentials: "include", headers });
+        if (resClients.status === 401) {
+          toast.error("Sessão expirada. Faça login novamente.");
+          router.replace("/login");
+          return;
+        }
         const clientsJson = await resClients.json().catch(() => ({}));
         const clientItems = Array.isArray(clientsJson.items) ? (clientsJson.items as unknown[]) : [];
         const mappedClients: ClientOption[] = clientItems
@@ -66,6 +73,11 @@ function AdminUsersPage() {
         setSelectedClientId(mappedClients[0]?.id ?? null);
 
         const resUsers = await fetch("/api/admin/users", { credentials: "include" });
+        if (resUsers.status === 401) {
+          toast.error("Sessão expirada. Faça login novamente.");
+          router.replace("/login");
+          return;
+        }
         const usersJson = await resUsers.json().catch(() => ({ items: [] }));
         setUsers(Array.isArray(usersJson.items) ? usersJson.items : []);
       } catch (err) {
@@ -77,7 +89,7 @@ function AdminUsersPage() {
       }
     };
     load();
-  }, []);
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-white text-[#0b1a3c] px-6 py-10 space-y-4">
@@ -158,6 +170,11 @@ function AdminUsersPage() {
         }}
         onCreated={async () => {
           const resUsers = await fetch("/api/admin/users", { credentials: "include" });
+          if (resUsers.status === 401) {
+            toast.error("Sessão expirada. Faça login novamente.");
+            router.replace("/login");
+            return;
+          }
           const usersJson = await resUsers.json().catch(() => ({ items: [] }));
           setUsers(Array.isArray(usersJson.items) ? usersJson.items : []);
         }}
@@ -179,6 +196,11 @@ function AdminUsersPage() {
         }}
         onSaved={async () => {
           const resUsers = await fetch("/api/admin/users", { credentials: "include" });
+          if (resUsers.status === 401) {
+            toast.error("Sessão expirada. Faça login novamente.");
+            router.replace("/login");
+            return;
+          }
           const usersJson = await resUsers.json().catch(() => ({ items: [] }));
           setUsers(Array.isArray(usersJson.items) ? usersJson.items : []);
         }}

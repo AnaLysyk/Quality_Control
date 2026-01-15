@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { fetchApi } from "@/lib/api";
+import { readApiError } from "@/lib/apiEnvelope";
 
 type Project = { code: string; title?: string };
 
@@ -64,8 +65,8 @@ export default function ReleaseManager() {
         }),
       });
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData?.message || "Falha ao criar run");
+        const err = await readApiError(res, "Falha ao criar run");
+        throw new Error(err.displayMessage);
       }
       setStatus("Run criada com sucesso.");
       setTitle("");

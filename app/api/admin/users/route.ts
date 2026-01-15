@@ -2,7 +2,8 @@ import { createHash, randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { requireGlobalAdmin } from "@/lib/rbac/requireGlobalAdmin";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { apiFail, apiOk } from "@/lib/apiResponse";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -67,14 +68,14 @@ async function requireAdmin(req: NextRequest) {
   const service = createSupabaseService();
   const authClient = createSupabaseAuth();
 
-  const admin = await requireGlobalAdmin(req, {
+  const { admin, status } = await requireGlobalAdminWithStatus(req, {
     supabaseAdmin: service,
     supabaseAuth: authClient,
     mockAdmin: { id: "mock-admin", email: "admin@example.com", token: "mock-token" },
   });
 
-  if (!admin) return null;
-  return { id: admin.id, email: admin.email };
+  if (!admin) return { admin: null, status };
+  return { admin: { id: admin.id, email: admin.email }, status: 200 };
 }
 
 function randomPassword() {
@@ -83,13 +84,21 @@ function randomPassword() {
 
 async function handleCreate(req: NextRequest) {
   try {
-    const admin = await requireAdmin(req);
-    if (!admin) return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
+    const { admin, status } = await requireAdmin(req);
+    if (!admin) {
+      const msg = status === 401 ? "Nao autenticado" : "Sem permissao";
+      return apiFail(req, msg, {
+        status,
+        code: status === 401 ? "AUTH_REQUIRED" : "FORBIDDEN",
+        extra: { error: msg },
+      });
+    }
 
     const body = (await req.json().catch(() => null)) as unknown;
     const bodyRecord = asRecord(body);
     if (!bodyRecord) {
-      return NextResponse.json({ error: "Payload invalido" }, { status: 400 });
+      const msg = "Payload invalido";
+      return apiFail(req, msg, { status: 400, code: "VALIDATION_ERROR", extra: { error: msg } });
     }
 
     const name = sanitize(bodyRecord.name);
@@ -103,12 +112,14 @@ async function handleCreate(req: NextRequest) {
     const password = sanitize(bodyRecord.password, 128);
 
     if (!name || !email) {
-      return NextResponse.json({ error: "Nome e email sao obrigatorios" }, { status: 400 });
+      const msg = "Nome e email sao obrigatorios";
+      return apiFail(req, msg, { status: 400, code: "VALIDATION_ERROR", extra: { error: msg } });
     }
 
     const normalizedRole = normalizeRole(roleInput);
     if (requiresClient(normalizedRole) && !clientId) {
-      return NextResponse.json({ error: "Empresa e obrigatoria para este perfil" }, { status: 400 });
+      const msg = "Empresa e obrigatoria para este perfil";
+      return apiFail(req, msg, { status: 400, code: "VALIDATION_ERROR", extra: { error: msg } });
     }
     const tempPassword = password || randomPassword();
     const passwordHash = createHash("sha256").update(tempPassword).digest("hex");
@@ -121,15 +132,19 @@ async function handleCreate(req: NextRequest) {
     if (inviteError) {
       const message = inviteError.message?.toLowerCase() || "";
       const duplicate = inviteError.status === 422 || message.includes("already") || message.includes("exists");
-      return NextResponse.json(
-        { error: duplicate ? "Usuario ja existe no Supabase" : "Falha ao criar usuario no Supabase" },
-        { status: duplicate ? 409 : 500 },
-      );
+      const msg = duplicate ? "Usuario ja existe no Supabase" : "Falha ao criar usuario no Supabase";
+      return apiFail(req, msg, {
+        status: duplicate ? 409 : 500,
+        code: duplicate ? "DUPLICATE" : "SUPABASE_INVITE_FAILED",
+        details: inviteError,
+        extra: { error: msg },
+      });
     }
 
     const authUserId = inviteData?.user?.id;
     if (!authUserId) {
-      return NextResponse.json({ error: "Falha ao criar usuario no Supabase" }, { status: 500 });
+      const msg = "Falha ao criar usuario no Supabase";
+      return apiFail(req, msg, { status: 500, code: "SUPABASE_INVITE_FAILED", extra: { error: msg } });
     }
 
     const userRecord = {
@@ -156,10 +171,13 @@ async function handleCreate(req: NextRequest) {
         /* ignore cleanup errors */
       }
       const duplicate = insertError.message?.toLowerCase().includes("duplicate") || insertError.code === "23505";
-      return NextResponse.json(
-        { error: duplicate ? "Usuario ja existe" : "Falha ao criar usuario" },
-        { status: duplicate ? 409 : 500 },
-      );
+      const msg = duplicate ? "Usuario ja existe" : "Falha ao criar usuario";
+      return apiFail(req, msg, {
+        status: duplicate ? 409 : 500,
+        code: duplicate ? "DUPLICATE" : "DB_ERROR",
+        details: insertError,
+        extra: { error: msg },
+      });
     }
 
     if (normalizedRole === "global_admin") {
@@ -176,27 +194,28 @@ async function handleCreate(req: NextRequest) {
       metadata: { role: userRecord.role, client_id: userRecord.client_id, invited: true },
     });
 
-    return NextResponse.json(
-      {
-        id: userRecord.id,
-        name: userRecord.name,
-        email: userRecord.email,
-        role: userRecord.role,
-        client_id: userRecord.client_id,
-        invited: true,
-      },
-      { status: 201 },
-    );
+    const out = {
+      id: userRecord.id,
+      name: userRecord.name,
+      email: userRecord.email,
+      role: userRecord.role,
+      client_id: userRecord.client_id,
+      invited: true,
+    };
+    return apiOk(req, out, "Usuario criado", { status: 201, extra: out });
   } catch (err) {
     console.error("Erro inesperado em /api/admin/users:", err);
-    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+    const msg = "Erro interno";
+    return apiFail(req, msg, { status: 500, code: "INTERNAL", details: err, extra: { error: msg } });
   }
 }
 
 async function handleUpdate(req: NextRequest) {
   try {
-    const admin = await requireAdmin(req);
-    if (!admin) return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
+    const { admin, status } = await requireAdmin(req);
+    if (!admin) {
+      return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    }
 
     if (SUPABASE_MOCK) {
       const body = (await req.json().catch(() => null)) as unknown;
@@ -315,8 +334,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ items }, { status: 200 });
     }
 
-    const admin = await requireAdmin(req);
-    if (!admin) return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
+    const { admin, status } = await requireAdmin(req);
+    if (!admin) {
+      return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    }
 
     // Se faltar configuracao de service role, retorna lista vazia para nao quebrar UI
     if (!SUPABASE_SERVICE_ROLE_KEY || !SUPABASE_URL) {
@@ -360,28 +381,29 @@ export async function POST(req: NextRequest) {
       const linkedin_url = sanitize(record.linkedin_url, 500);
 
       if (!name || !email) {
-        return NextResponse.json({ error: "Nome e email sao obrigatorios" }, { status: 400 });
+        const msg = "Nome e email sao obrigatorios";
+        return apiFail(req, msg, { status: 400, code: "VALIDATION_ERROR", extra: { error: msg } });
       }
       if (requiresClient(normalizedRole) && !client_id) {
-        return NextResponse.json({ error: "Empresa e obrigatoria para este perfil" }, { status: 400 });
+        const msg = "Empresa e obrigatoria para este perfil";
+        return apiFail(req, msg, { status: 400, code: "VALIDATION_ERROR", extra: { error: msg } });
       }
-      return NextResponse.json(
-        {
-          id: "mock-local-user-id",
-          name,
-          email,
-          role: normalizedRole,
-          client_id: requiresClient(normalizedRole) ? client_id : null,
-          job_title: job_title ?? null,
-          linkedin_url: linkedin_url ?? null,
-          invited: true,
-          message: "Usuario criado (mock).",
-        },
-        { status: 201 },
-      );
+      const out = {
+        id: "mock-local-user-id",
+        name,
+        email,
+        role: normalizedRole,
+        client_id: requiresClient(normalizedRole) ? client_id : null,
+        job_title: job_title ?? null,
+        linkedin_url: linkedin_url ?? null,
+        invited: true,
+        message: "Usuario criado (mock).",
+      };
+      return apiOk(req, out, "Usuario criado", { status: 201, extra: out });
     } catch (err) {
       console.error("Erro mock /api/admin/users:", err);
-      return NextResponse.json({ error: "Erro interno (mock)" }, { status: 500 });
+      const msg = "Erro interno (mock)";
+      return apiFail(req, msg, { status: 500, code: "INTERNAL", details: err, extra: { error: msg } });
     }
   }
 

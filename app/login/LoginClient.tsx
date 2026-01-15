@@ -223,6 +223,8 @@ export default function LoginPage() {
       const res = await fetch("/api/support/access-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        cache: "no-store",
         body: JSON.stringify({
           email: accessEmail,
           company: accessCompany,

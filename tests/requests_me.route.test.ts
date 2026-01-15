@@ -1,7 +1,7 @@
 import { GET } from "@/api/requests/me/route";
 
-jest.mock("@/lib/session", () => ({
-  getSessionUser: jest.fn(),
+jest.mock("@/lib/jwtAuth", () => ({
+  authenticateRequest: jest.fn(),
 }));
 
 jest.mock("@/data/requestsStore", () => ({
@@ -10,15 +10,16 @@ jest.mock("@/data/requestsStore", () => ({
 
 const getSessionUser = jest.requireMock("@/lib/session").getSessionUser as jest.Mock;
 const listUserRequests = jest.requireMock("@/data/requestsStore").listUserRequests as jest.Mock;
+const authenticateRequest = jest.requireMock("@/lib/jwtAuth").authenticateRequest as jest.Mock;
 
 describe("/api/requests/me GET", () => {
   beforeEach(() => {
-    getSessionUser.mockReset();
+    authenticateRequest.mockReset();
     listUserRequests.mockReset();
   });
 
   it("retorna lista de requests do usuário", async () => {
-    getSessionUser.mockResolvedValue({ id: "u1" });
+    authenticateRequest.mockResolvedValue({ id: "u1", email: "u1@example.com", isGlobalAdmin: false });
     listUserRequests.mockReturnValue([{ id: "r1", userId: "u1" }]);
     const res = await GET(new Request("http://localhost/api/requests/me?status=PENDING&type=EMAIL_CHANGE"));
     expect(res.status).toBe(200);

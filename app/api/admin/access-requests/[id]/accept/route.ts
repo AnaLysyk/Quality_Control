@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServer } from "@/lib/supabaseServer";
-import { requireGlobalAdmin } from "@/lib/rbac/requireGlobalAdmin";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export const runtime = "nodejs";
 
@@ -60,8 +60,8 @@ async function findAuthUserIdByEmail(service: SupabaseClient, email: string): Pr
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const admin = await requireGlobalAdmin(req);
-    if (!admin) return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
+    const { admin, status } = await requireGlobalAdminWithStatus(req);
+    if (!admin) return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const overrideEmail = sanitize(body.email, 255).toLowerCase();

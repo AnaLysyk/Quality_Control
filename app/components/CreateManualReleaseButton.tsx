@@ -100,6 +100,7 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [form, setForm] = useState<NewManualRelease>(initialState);
   const [cases, setCases] = useState<ManualCaseDraft[]>([]);
   const [caseDraft, setCaseDraft] = useState<ManualCaseDraft>({ ...initialCaseDraft });
@@ -160,10 +161,12 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
   const handleSubmit = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
+    setSubmitError(null);
     try {
       const res = await fetch("/api/releases-manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           name: form.name.trim(),
           app: form.app,
@@ -177,12 +180,16 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
           observations: form.observations,
         }),
       });
-      if (!res.ok) throw new Error("Erro ao criar run");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({} as any));
+        throw new Error((data?.message || data?.error || "Erro ao criar run") as string);
+      }
       const created = await res.json();
       if (cases.length) {
         const casesRes = await fetch(`/api/releases-manual/${created.slug}/cases`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(
             cases.map((item) => ({
               id: item.id,
@@ -209,6 +216,7 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
       }
     } catch (e) {
       console.error(e);
+      setSubmitError(e instanceof Error ? e.message : "Erro ao criar run");
       setSaving(false);
     }
   };
@@ -217,7 +225,10 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
     <div className="relative">
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setSubmitError(null);
+          setOpen(true);
+        }}
         className="rounded-xl bg-(--tc-accent) px-4 py-2 text-sm font-semibold text-white shadow hover:brightness-110"
       >
         Criar run manual
@@ -446,10 +457,15 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
               </div>
             </div>
 
+            {submitError && <p className="text-sm text-rose-600">{submitError}</p>}
+
             <div className="flex items-center justify-end gap-3">
               <button
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  setSubmitError(null);
+                  setOpen(false);
+                }}
                 className="rounded-2xl border border-(--tc-border)/60 px-4 py-2 text-sm font-semibold text-(--tc-text,#0f172a) transition hover:border-(--tc-text-primary,#0b1a3c) hover:text-(--tc-text-primary,#0b1a3c) dark:border-white/20 dark:text-(--tc-text-inverse,#fff)"
               >
                 Cancelar

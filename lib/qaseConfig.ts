@@ -21,7 +21,28 @@ export type ClientQaseSettings = {
   slug: string;
   token: string | null;
   projectCode: string | null;
+  projectCodes: string[];
 };
+
+function parseProjectCodes(value: unknown): string[] {
+  const normalize = (code: string) => code.trim().toUpperCase();
+
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === "string")
+      .map(normalize)
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(/[\s,;|]+/g)
+      .map(normalize)
+      .filter(Boolean);
+  }
+
+  return [];
+}
 
 export async function getClientQaseSettings(slug?: string) {
   const normalized = normalizeSlug(slug);
@@ -41,7 +62,7 @@ export async function getClientQaseSettings(slug?: string) {
         const row = data as Record<string, unknown>;
         const token =
           normalizeString(row.qase_token ?? row.token ?? row.api_token ?? row.qaseToken ?? null) ?? null;
-        const projectCode =
+        const singleProject =
           normalizeString(
             row.qase_project_code ??
               row.qase_project ??
@@ -51,8 +72,18 @@ export async function getClientQaseSettings(slug?: string) {
               row.projectKey ??
               null
           ) ?? null;
+        const multiProjects = parseProjectCodes(row.qase_project_codes ?? row.project_codes ?? row.projects ?? null);
 
-        return { slug: normalized, token, projectCode };
+        const combined = Array.from(
+          new Set([...(singleProject ? [singleProject.toUpperCase()] : []), ...multiProjects])
+        );
+
+        return {
+          slug: normalized,
+          token,
+          projectCode: combined[0] ?? null,
+          projectCodes: combined,
+        };
       }
     } catch (error) {
       console.error(`[QASE][CONFIG] Unable to read settings for slug "${normalized}"`, error);

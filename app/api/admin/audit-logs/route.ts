@@ -1,10 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { AUDIT_LOG_RETENTION_DAYS, isAuditLogStorageConfigured, listAuditLogs } from "@/data/auditLogRepository";
-import { requireGlobalAdmin } from "@/lib/rbac/requireGlobalAdmin";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { apiFail, apiOk } from "@/lib/apiResponse";
 
 export async function GET(req: NextRequest) {
-  const admin = await requireGlobalAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    const msg = status === 401 ? "Nao autenticado" : "Sem permissao";
+    return apiFail(req, msg, {
+      status,
+      code: status === 401 ? "AUTH_REQUIRED" : "FORBIDDEN",
+      extra: { error: msg },
+    });
+  }
 
   const { searchParams } = new URL(req.url);
   const limit = Number(searchParams.get("limit") ?? "200");
@@ -15,22 +23,21 @@ export async function GET(req: NextRequest) {
 
   try {
     const items = await listAuditLogs({ limit, offset, action });
-    return NextResponse.json({
+    const payload = {
       items,
       retentionDays: AUDIT_LOG_RETENTION_DAYS,
       warning: storageReady
         ? null
         : "Audit logs desativado neste ambiente: configure POSTGRES_URL/DATABASE_URL para persistir os registros.",
-    });
+    };
+    return apiOk(req, payload, "OK", { extra: payload });
   } catch {
-    return NextResponse.json(
-      {
-        items: [],
-        retentionDays: AUDIT_LOG_RETENTION_DAYS,
-        warning:
-          "Não foi possível carregar audit logs (banco indisponível ou tabela ausente). Configure POSTGRES_URL/DATABASE_URL e rode a migração da tabela audit_logs.",
-      },
-      { status: 200 }
-    );
+    const payload = {
+      items: [],
+      retentionDays: AUDIT_LOG_RETENTION_DAYS,
+      warning:
+        "Não foi possível carregar audit logs (banco indisponível ou tabela ausente). Configure POSTGRES_URL/DATABASE_URL e rode a migração da tabela audit_logs.",
+    };
+    return apiOk(req, payload, "OK", { extra: payload });
   }
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabaseServer";
-import { requireGlobalAdmin } from "@/lib/rbac/requireGlobalAdmin";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export const runtime = "nodejs";
 
@@ -100,8 +100,10 @@ function composeAccessRequestMessage(input: {
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const admin = await requireGlobalAdmin(req);
-    if (!admin) return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
+    const { admin, status: authStatus } = await requireGlobalAdminWithStatus(req);
+    if (!admin) {
+      return NextResponse.json({ error: authStatus === 401 ? "Nao autenticado" : "Sem permissao" }, { status: authStatus });
+    }
 
     const body = (await req.json().catch(() => ({}))) as Payload;
 

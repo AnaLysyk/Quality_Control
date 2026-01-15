@@ -3,6 +3,7 @@ import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import { slugifyRelease } from "@/lib/slugifyRelease";
+import { authenticateRequest } from "@/lib/jwtAuth";
 import type { Release, Stats } from "@/types/release";
 
 const STORE_PATH = path.join(process.cwd(), "data", "releases-manual.json");
@@ -56,6 +57,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const authUser = await authenticateRequest(req);
+  if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
   try {
     const body = await req.json();
     const name = (body.name ?? "").toString().trim();

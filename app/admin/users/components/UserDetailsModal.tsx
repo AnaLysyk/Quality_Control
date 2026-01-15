@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 
 type ClientOption = { id: string; name: string };
@@ -72,6 +73,7 @@ function isDirty(a: {
 }
 
 export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirtyChange }: Props) {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<RoleValue>("client_user");
@@ -148,6 +150,13 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
 
   if (!open || !user) return null;
 
+  function handleUnauthorized() {
+    const msg = "Sessão expirada. Faça login novamente.";
+    setError(msg);
+    toast.error(msg);
+    router.push("/login");
+  }
+
   async function save() {
     if (!canSave || loading) return;
     setLoading(true);
@@ -172,6 +181,12 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
         credentials: "include",
         body: JSON.stringify(payload),
       });
+
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
 
       if (!res.ok) {

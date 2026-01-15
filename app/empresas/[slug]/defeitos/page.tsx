@@ -109,6 +109,7 @@ export default function DefeitosEmpresaPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [originFilter, setOriginFilter] = useState<string>("all");
   const [creating, setCreating] = useState(false);
+  const [createManualError, setCreateManualError] = useState<string | null>(null);
   const [runs, setRuns] = useState<RunOption[]>([]);
   const [loadingRuns, setLoadingRuns] = useState(false);
   const [runsError, setRunsError] = useState<string | null>(null);
@@ -271,12 +272,14 @@ export default function DefeitosEmpresaPage() {
   async function addManualDefect() {
     if (!form.title.trim()) return;
     setCreating(true);
+    setCreateManualError(null);
     const manualApp = slug.toUpperCase();
     const responsibleValue = form.responsible.trim() || user?.name || "Manual";
     try {
-      await fetch("/api/releases-manual", {
+      const res = await fetch("/api/releases-manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           name: form.title.trim(),
           app: manualApp,
@@ -287,10 +290,19 @@ export default function DefeitosEmpresaPage() {
           responsible: responsibleValue,
         }),
       });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({} as any));
+        const message = (data?.message || data?.error || "Não foi possível criar o defeito manual") as string;
+        setCreateManualError(message);
+        return;
+      }
+
       setForm({ ...defaultForm, responsible: user?.name ?? "" });
       await load();
     } catch (err) {
       console.error("Erro ao criar defeito manual", err);
+      setCreateManualError(err instanceof Error ? err.message : "Não foi possível criar o defeito manual");
     } finally {
       setCreating(false);
     }
@@ -306,6 +318,7 @@ export default function DefeitosEmpresaPage() {
     try {
       const res = await fetch(`/api/releases-manual/${encodeURIComponent(defect.runSlug)}`, {
         method: "DELETE",
+        credentials: "include",
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -361,6 +374,7 @@ export default function DefeitosEmpresaPage() {
       const res = await fetch(`/api/releases-manual/${encodeURIComponent(slug)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
@@ -529,6 +543,7 @@ export default function DefeitosEmpresaPage() {
                 >
                   {creating ? "Incluindo..." : "Adicionar defeito manual"}
                 </button>
+                {createManualError && <p className="text-sm text-red-500">{createManualError}</p>}
             </section>
 
             <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 sm:p-6 shadow-sm space-y-4">

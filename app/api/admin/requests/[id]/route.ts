@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateRequestStatus } from "@/data/requestsStore";
-import { getSessionUser } from "@/lib/session";
+import { authenticateRequest } from "@/lib/jwtAuth";
 
 type ReviewStatus = "APPROVED" | "REJECTED";
 
@@ -10,8 +10,11 @@ function readReviewStatus(value: unknown): ReviewStatus | null {
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const sessionUser = await getSessionUser();
-  if (sessionUser.role !== "admin") {
+  const authUser = await authenticateRequest(request);
+  if (!authUser) {
+    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+  }
+  if (!authUser.isGlobalAdmin) {
     return NextResponse.json({ message: "Sem permissao" }, { status: 403 });
   }
 
@@ -24,7 +27,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ message: "Status invalido" }, { status: 400 });
   }
 
-  const updated = updateRequestStatus(id, status, sessionUser, reviewNote);
+  const updated = updateRequestStatus(
+    id,
+    status,
+    {
+      id: authUser.id,
+    },
+    reviewNote
+  );
   if (!updated) {
     return NextResponse.json({ message: "Solicitacao nao encontrada" }, { status: 404 });
   }

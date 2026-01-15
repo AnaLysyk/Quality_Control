@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getSupabaseServer } from "@/lib/supabaseServer";
-import { requireGlobalAdmin } from "@/lib/rbac/requireGlobalAdmin";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { apiFail, apiOk } from "@/lib/apiResponse";
 
 type QaseDefect = {
   id: string;
@@ -101,6 +102,29 @@ function extractProjectCodeFromRow(row: Record<string, unknown>): string | null 
   );
 }
 
+function parseProjectCodes(value: unknown): string[] {
+  const normalize = (code: string) => code.trim().toUpperCase();
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === "string")
+      .map(normalize)
+      .filter(Boolean);
+  }
+  if (typeof value === "string") {
+    return value
+      .split(/[\s,;|]+/g)
+      .map(normalize)
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function extractProjectCodesFromRow(row: Record<string, unknown>): string[] {
+  const single = extractProjectCodeFromRow(row);
+  const multi = parseProjectCodes(row.qase_project_codes ?? row.project_codes ?? row.projects ?? null);
+  return Array.from(new Set([...(single ? [single.toUpperCase()] : []), ...multi]));
+}
+
 async function loadProjectMapFromSupabase(): Promise<ProjectEntry[]> {
   try {
     const service = getSupabaseServer();
@@ -113,8 +137,10 @@ async function loadProjectMapFromSupabase(): Promise<ProjectEntry[]> {
         const row = asRecord(rowAny);
         if (!row) continue;
         const slug = normalizeSlug(row.slug);
-        const projectCode = extractProjectCodeFromRow(row);
-        if (slug && projectCode) out.push({ slug, projectCode });
+        const projectCodes = extractProjectCodesFromRow(row);
+        if (slug && projectCodes.length) {
+          projectCodes.forEach((projectCode) => out.push({ slug, projectCode }));
+        }
       }
     }
 
@@ -215,26 +241,25 @@ function aggregate(defects: QaseDefect[], projectCodeToSlug: Map<string, string>
 }
 
 export async function GET(req: NextRequest) {
-  const admin = await requireGlobalAdmin(req);
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
+    const msg = status === 401 ? "Nao autenticado" : "Sem permissao";
+    return apiFail(req, msg, { status, code: status === 401 ? "AUTH_REQUIRED" : "FORBIDDEN", extra: { error: msg } });
   }
 
   if (!QASE_TOKEN) {
-    return NextResponse.json(
-      {
-        error:
-          "QASE_TOKEN ausente. Configure QASE_TOKEN (e QASE_PROJECT_MAP ou cadastre qase_project_code nas empresas).",
-        total: 0,
-        byApplication: [],
-        byRun: [],
-        byCompany: [],
-        byStatus: [],
-        timeline: [],
-        items: [],
-      },
-      { status: 200 },
-    );
+    const payload = {
+      error:
+        "QASE_TOKEN ausente. Configure QASE_TOKEN (e QASE_PROJECT_MAP ou cadastre qase_project_code nas empresas).",
+      total: 0,
+      byApplication: [],
+      byRun: [],
+      byCompany: [],
+      byStatus: [],
+      timeline: [],
+      items: [],
+    };
+    return apiOk(req, payload, "OK", { extra: payload });
   }
 
   const envMap = parseProjectMapFromEnv();
@@ -251,20 +276,18 @@ export async function GET(req: NextRequest) {
   const uniqueProjects = Array.from(new Set(projectMap.map((p) => p.projectCode).filter(Boolean)));
 
   if (!uniqueProjects.length) {
-    return NextResponse.json(
-      {
-        error:
-          "Nenhum projeto Qase configurado. Configure QASE_PROJECT_MAP (ex: griaule:GRIAULE,acme:ACME) ou preencha qase_project_code nas empresas (Supabase).",
-        total: 0,
-        byApplication: [],
-        byRun: [],
-        byCompany: [],
-        byStatus: [],
-        timeline: [],
-        items: [],
-      },
-      { status: 200 },
-    );
+    const payload = {
+      error:
+        "Nenhum projeto Qase configurado. Configure QASE_PROJECT_MAP (ex: griaule:GRIAULE,acme:ACME) ou preencha qase_project_code nas empresas (Supabase).",
+      total: 0,
+      byApplication: [],
+      byRun: [],
+      byCompany: [],
+      byStatus: [],
+      timeline: [],
+      items: [],
+    };
+    return apiOk(req, payload, "OK", { extra: payload });
   }
 
   const allDefects: QaseDefect[] = [];
@@ -274,5 +297,5 @@ export async function GET(req: NextRequest) {
   }
 
   const aggregated = aggregate(allDefects, projectCodeToSlug);
-  return NextResponse.json(aggregated, { status: 200 });
+  return apiOk(req, aggregated, "OK", { extra: aggregated });
 }

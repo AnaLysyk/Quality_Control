@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/session";
 import { listUserRequests, type RequestStatus, type RequestType } from "@/data/requestsStore";
+import { authenticateRequest } from "@/lib/jwtAuth";
 
 function isRequestStatus(value: string | null): value is RequestStatus {
   return value === "PENDING" || value === "APPROVED" || value === "REJECTED";
@@ -11,14 +11,17 @@ function isRequestType(value: string | null): value is RequestType {
 }
 
 export async function GET(request: Request) {
-  const user = await getSessionUser();
+  const authUser = await authenticateRequest(request);
+  if (!authUser) {
+    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+  }
   const { searchParams } = new URL(request.url);
   const statusParam = searchParams.get("status");
   const typeParam = searchParams.get("type");
   const status = isRequestStatus(statusParam) ? statusParam : undefined;
   const type = isRequestType(typeParam) ? typeParam : undefined;
 
-  const items = listUserRequests(user.id, {
+  const items = listUserRequests(authUser.id, {
     status,
     type,
   });

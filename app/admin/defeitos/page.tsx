@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FiAlertTriangle, FiTrendingDown, FiZap } from "react-icons/fi";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
+import { toast } from "react-hot-toast";
 
 type DefectItem = {
   id: string;
@@ -95,16 +97,49 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function AdminDefeitosPage() {
+  const router = useRouter();
   const [payload, setPayload] = useState<Aggregated | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authBlocked, setAuthBlocked] = useState(false);
+
+  function handleUnauthorized() {
+    const msg = "Sessão expirada. Faça login novamente.";
+    setAuthBlocked(true);
+    setError(msg);
+    toast.error(msg);
+    router.push("/login");
+  }
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       setError(null);
+      setAuthBlocked(false);
       try {
-        const res = await fetch("/api/admin/defeitos", { cache: "no-store" });
+        const res = await fetch("/api/admin/defeitos", { cache: "no-store", credentials: "include" });
+
+        if (res.status === 401) {
+          setPayload(null);
+          handleUnauthorized();
+          return;
+        }
+        if (res.status === 403) {
+          setPayload(null);
+          setAuthBlocked(true);
+          setError("Sem permissão");
+          return;
+        }
+
+        if (!res.ok) {
+          const json = (await res.json().catch(() => null)) as unknown;
+          const rec = (json ?? null) as Record<string, unknown> | null;
+          const apiError = typeof rec?.error === "string" ? rec.error : null;
+          setPayload(null);
+          setError(apiError || "Erro ao carregar dados");
+          return;
+        }
+
         const json = (await res.json().catch(() => null)) as unknown;
         const rec = (json ?? null) as Record<string, unknown> | null;
         const apiError = typeof rec?.error === "string" ? rec.error : null;
@@ -120,10 +155,11 @@ export default function AdminDefeitosPage() {
   }, []);
 
   const defects = useMemo(() => {
+    if (authBlocked) return [];
     const apiItems = payload?.items ?? [];
     if (apiItems.length) return apiItems;
     return FALLBACK_DEFECTS;
-  }, [payload]);
+  }, [payload, authBlocked]);
 
   const companyCards = useMemo(() => {
     const map = new Map<

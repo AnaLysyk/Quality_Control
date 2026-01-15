@@ -25,6 +25,7 @@ export function ManualStatsForm({ slug, initialStats }: ManualStatsFormProps) {
     try {
       const res = await fetch(`/api/releases-manual/${slug}`, {
         method: "PATCH",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ stats }),
       });

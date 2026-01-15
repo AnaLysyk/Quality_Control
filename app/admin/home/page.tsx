@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { FiAlertTriangle, FiChevronDown, FiExternalLink } from "react-icons/fi";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
@@ -74,6 +75,7 @@ function sumStats(stats?: Stats | null) {
 }
 
 export default function AdminHomePage() {
+  const router = useRouter();
   const [overview, setOverview] = useState<QualityOverviewResponse | null>(null);
   const [defectsPayload, setDefectsPayload] = useState<DefectsResponse | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
@@ -89,6 +91,10 @@ export default function AdminHomePage() {
       setLoadingOverview(true);
       try {
         const res = await fetch("/api/admin/quality/overview?period=30", { cache: "no-store" });
+        if (res.status === 401) {
+          router.replace("/login");
+          return;
+        }
         const payload = (await res.json()) as QualityOverviewResponse;
         if (!canceled) setOverview(payload);
       } catch {
@@ -109,6 +115,10 @@ export default function AdminHomePage() {
       setLoadingDefects(true);
       try {
         const res = await fetch("/api/admin/defeitos", { cache: "no-store" });
+        if (res.status === 401) {
+          router.replace("/login");
+          return;
+        }
         const payload = (await res.json()) as DefectsResponse;
         if (!canceled) setDefectsPayload(payload);
       } catch {
@@ -129,6 +139,10 @@ export default function AdminHomePage() {
       setLoadingAudit(true);
       try {
         const res = await fetch("/api/admin/audit-logs?limit=5", { cache: "no-store" });
+        if (res.status === 401) {
+          router.replace("/login");
+          return;
+        }
         const payload = await res.json();
         if (!canceled) setAuditLogs(payload?.items ?? []);
       } catch {

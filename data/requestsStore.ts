@@ -1,5 +1,12 @@
 import { randomUUID } from "crypto";
-import type { SessionUser } from "@/lib/session";
+
+export type RequestUser = {
+  id: string;
+  name?: string;
+  email?: string;
+  companyId?: string;
+  companyName?: string;
+};
 
 export type RequestType = "EMAIL_CHANGE" | "COMPANY_CHANGE";
 export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -62,7 +69,7 @@ export function listAllRequests(filters?: {
   return results;
 }
 
-export function addRequest(user: SessionUser, type: RequestType, payload: Record<string, unknown>) {
+export function addRequest(user: RequestUser, type: RequestType, payload: Record<string, unknown>) {
   const duplicate = REQUESTS.find((r) => r.userId === user.id && r.type === type && r.status === "PENDING");
   if (duplicate) {
     const err = new Error("Duplicated pending request") as Error & { code?: string };
@@ -70,13 +77,18 @@ export function addRequest(user: SessionUser, type: RequestType, payload: Record
     throw err;
   }
 
+  const safeEmail = user.email ?? "";
+  const safeName = user.name ?? safeEmail ?? "Usuário";
+  const safeCompanyId = user.companyId ?? "";
+  const safeCompanyName = user.companyName ?? "";
+
   const record: RequestRecord = {
     id: randomUUID(),
     userId: user.id,
-    userName: user.name,
-    userEmail: user.email,
-    companyId: user.companyId,
-    companyName: user.companyName,
+    userName: safeName,
+    userEmail: safeEmail,
+    companyId: safeCompanyId,
+    companyName: safeCompanyName,
     type,
     payload,
     status: "PENDING",
@@ -89,7 +101,7 @@ export function addRequest(user: SessionUser, type: RequestType, payload: Record
 export function updateRequestStatus(
   id: string,
   status: Exclude<RequestStatus, "PENDING">,
-  reviewer: SessionUser,
+  reviewer: { id: string },
   reviewNote?: string
 ) {
   const req = REQUESTS.find((r) => r.id === id);

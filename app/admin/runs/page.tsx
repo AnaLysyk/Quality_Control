@@ -162,7 +162,7 @@ export default function AdminRunsPage() {
     if (!confirmDelete) return;
 
     if (source === "MANUAL") {
-      await fetch(`/api/releases-manual/${encodeURIComponent(slug)}`, { method: "DELETE" });
+      await fetch(`/api/releases-manual/${encodeURIComponent(slug)}`, { method: "DELETE", credentials: "include" });
     } else {
       await fetch("/api/releases", {
         method: "DELETE",

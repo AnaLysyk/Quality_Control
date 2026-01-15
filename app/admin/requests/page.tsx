@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import Breadcrumb from "@/components/Breadcrumb";
@@ -23,11 +24,19 @@ function payloadString(payload: Record<string, unknown>, key: string): string {
 }
 
 export default function AdminRequestsPage() {
+  const router = useRouter();
   const [items, setItems] = useState<RequestRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string>("");
   const [type, setType] = useState<string>("");
   const [message, setMessage] = useState<string | null>(null);
+
+  function handleUnauthorized() {
+    const msg = "Sessão expirada. Faça login novamente.";
+    setMessage(msg);
+    toast.error(msg);
+    router.push("/login");
+  }
 
   const filtered = useMemo(() => {
     return items.filter(
@@ -41,7 +50,17 @@ export default function AdminRequestsPage() {
     setLoading(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/admin/requests");
+      const res = await fetch("/api/admin/requests", {
+        credentials: "include",
+        cache: "no-store",
+      });
+
+      if (res.status === 401) {
+        setItems([]);
+        handleUnauthorized();
+        return;
+      }
+
       if (res.status === 403) {
         setMessage("Sem permissão (faça login como admin)");
         setItems([]);
@@ -67,7 +86,15 @@ export default function AdminRequestsPage() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: next }),
+      credentials: "include",
+      cache: "no-store",
     });
+
+    if (res.status === 401) {
+      handleUnauthorized();
+      return;
+    }
+
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       const msg = err.message || "Erro ao atualizar";

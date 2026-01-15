@@ -1,7 +1,7 @@
 import { PATCH } from "@/api/admin/requests/[id]/route";
 
-jest.mock("@/lib/session", () => ({
-  getSessionUser: jest.fn(),
+jest.mock("@/lib/jwtAuth", () => ({
+  authenticateRequest: jest.fn(),
 }));
 
 jest.mock("@/data/requestsStore", () => ({
@@ -17,23 +17,24 @@ const getSessionUser = jest.requireMock("@/lib/session").getSessionUser as jest.
 const updateRequestStatus = jest.requireMock("@/data/requestsStore").updateRequestStatus as jest.Mock;
 const updateUserEmail = jest.requireMock("@/data/usersStore").updateUserEmail as jest.Mock;
 const updateUserCompany = jest.requireMock("@/data/usersStore").updateUserCompany as jest.Mock;
+const authenticateRequest = jest.requireMock("@/lib/jwtAuth").authenticateRequest as jest.Mock;
 
 describe("/api/admin/requests/[id] PATCH", () => {
   beforeEach(() => {
-    getSessionUser.mockReset();
+    authenticateRequest.mockReset();
     updateRequestStatus.mockReset();
     updateUserEmail.mockReset();
     updateUserCompany.mockReset();
   });
 
   it("retorna 403 se não admin", async () => {
-    getSessionUser.mockResolvedValue({ role: "user" });
+    authenticateRequest.mockResolvedValue({ id: "u1", email: "u1@example.com", isGlobalAdmin: false });
     const res = await PATCH(new Request("http://localhost/api/admin/requests/1", { method: "PATCH" }), { params: Promise.resolve({ id: "1" }) });
     expect(res.status).toBe(403);
   });
 
   it("retorna 400 se status inválido", async () => {
-    getSessionUser.mockResolvedValue({ role: "admin" });
+    authenticateRequest.mockResolvedValue({ id: "admin1", email: "admin@example.com", isGlobalAdmin: true });
     const res = await PATCH(
       new Request("http://localhost/api/admin/requests/1", { method: "PATCH", body: JSON.stringify({ status: "X" }) }),
       { params: Promise.resolve({ id: "1" }) }
@@ -42,7 +43,7 @@ describe("/api/admin/requests/[id] PATCH", () => {
   });
 
   it("retorna 404 se request não encontrada", async () => {
-    getSessionUser.mockResolvedValue({ role: "admin" });
+    authenticateRequest.mockResolvedValue({ id: "admin1", email: "admin@example.com", isGlobalAdmin: true });
     updateRequestStatus.mockReturnValue(null);
     const res = await PATCH(
       new Request("http://localhost/api/admin/requests/1", { method: "PATCH", body: JSON.stringify({ status: "APPROVED" }) }),
@@ -52,7 +53,7 @@ describe("/api/admin/requests/[id] PATCH", () => {
   });
 
   it("chama efeitos colaterais ao aprovar EMAIL_CHANGE", async () => {
-    getSessionUser.mockResolvedValue({ role: "admin", id: "admin1" });
+    authenticateRequest.mockResolvedValue({ id: "admin1", email: "admin@example.com", isGlobalAdmin: true });
     updateRequestStatus.mockReturnValue({
       id: "req1",
       type: "EMAIL_CHANGE",
@@ -69,7 +70,7 @@ describe("/api/admin/requests/[id] PATCH", () => {
   });
 
   it("chama efeitos colaterais ao aprovar COMPANY_CHANGE", async () => {
-    getSessionUser.mockResolvedValue({ role: "admin", id: "admin1" });
+    authenticateRequest.mockResolvedValue({ id: "admin1", email: "admin@example.com", isGlobalAdmin: true });
     updateRequestStatus.mockReturnValue({
       id: "req2",
       type: "COMPANY_CHANGE",

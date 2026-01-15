@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
+import { authenticateRequest } from "@/lib/jwtAuth";
 import type { TestCaseCard } from "@/types/release";
 
 const STORE_PATH = path.join(process.cwd(), "data", "releases-manual-cases.json");
@@ -63,6 +64,9 @@ export async function GET(_: Request, { params }: { params: Promise<{ slug: stri
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const authUser = await authenticateRequest(req);
+  if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
   try {
     const { slug } = await params;
     const body = await req.json();
@@ -84,6 +88,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const authUser = await authenticateRequest(req);
+  if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
   try {
     const { slug } = await params;
     const body = await req.json();
@@ -114,6 +121,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const authUser = await authenticateRequest(req);
+  if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
   try {
     const { slug } = await params;
     const body = await req.json().catch(() => ({} as { id?: string }));

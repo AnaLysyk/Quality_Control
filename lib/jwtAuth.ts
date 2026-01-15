@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { getUserById } from "@/data/usersRepository";
 import { getUserRoleInClient } from "@/data/userClientsRepository";
+import { getSupabaseServer } from "@/lib/supabaseServer";
+import { isAuthUserGlobalAdmin } from "@/lib/rbac/globalAdmin";
 
 export type AuthUser = {
   id: string;
@@ -31,6 +33,62 @@ export function verifyToken(token: string | undefined): AuthUser | null {
       id,
       email,
       isGlobalAdmin: payload.isGlobalAdmin === true,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function verifySupabaseToken(token: string | null): Promise<AuthUser | null> {
+  if (!token) return null;
+  try {
+    const supabaseAdmin = getSupabaseServer();
+    const { data, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !data?.user) return null;
+
+    const metadata = data.user.app_metadata;
+    const metadataRole =
+      metadata && typeof metadata === "object" && "role" in metadata ? (metadata as Record<string, unknown>).role : null;
+
+    let userRow: Record<string, unknown> | null = null;
+    try {
+      const { data: row } = await supabaseAdmin
+        .from("users")
+        .select("is_global_admin,role")
+        .eq("auth_user_id", data.user.id)
+        .eq("active", true)
+        .maybeSingle();
+      userRow = (row as Record<string, unknown> | null) ?? null;
+    } catch {
+      userRow = null;
+    }
+
+    let profileRow: Record<string, unknown> | null = null;
+    try {
+      const primary = await supabaseAdmin.from("profiles").select("is_global_admin,role").eq("id", data.user.id).maybeSingle();
+      profileRow = (primary.data as Record<string, unknown> | null) ?? null;
+
+      if (!profileRow) {
+        const fallback = await supabaseAdmin
+          .from("profiles")
+          .select("is_global_admin,role")
+          .eq("auth_user_id", data.user.id)
+          .maybeSingle();
+        profileRow = (fallback.data as Record<string, unknown> | null) ?? null;
+      }
+    } catch {
+      profileRow = null;
+    }
+
+    const isGlobalAdmin = await isAuthUserGlobalAdmin(supabaseAdmin, data.user.id, {
+      metadataRole,
+      userRow,
+      profileRow,
+    });
+    return {
+      id: data.user.id,
+      email: data.user.email ?? "",
+      isGlobalAdmin,
     };
   } catch {
     return null;
@@ -72,7 +130,13 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   const headerToken = headerAuth?.startsWith("Bearer ") ? headerAuth.replace("Bearer ", "") : null;
   const cookieStore = await cookies();
   const cookieToken = cookieStore.get(COOKIE_NAME)?.value;
-  return verifyToken(headerToken || cookieToken);
+
+  const token = headerToken || cookieToken;
+  const jwtUser = verifyToken(token || undefined);
+  if (jwtUser) return jwtUser;
+
+  // Current Next.js login flow stores a Supabase access token in `auth_token`.
+  return verifySupabaseToken(token ?? null);
 }
 
 export function getClientIdFromHeader(req: Request): string | null {

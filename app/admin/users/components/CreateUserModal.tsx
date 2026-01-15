@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { readApiError } from "@/lib/apiEnvelope";
 
 type ClientOption = { id: string; name: string };
 
@@ -20,6 +22,7 @@ const ROLE_OPTIONS = [
 ];
 
 export function CreateUserModal({ open, clientId, clients, onClose, onCreated }: Props) {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("client_user");
@@ -59,6 +62,13 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
 
   if (!open) return null;
 
+  function handleUnauthorized() {
+    const msg = "Sessão expirada. Faça login novamente.";
+    setError(msg);
+    toast.error(msg);
+    router.push("/login");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit || loading) return;
@@ -81,11 +91,15 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
         credentials: "include",
         body: JSON.stringify(payload),
       });
-      const json = await res.json().catch(() => ({}));
+
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       if (!res.ok) {
-        const msg = json?.error || "Erro ao salvar usuario";
-        setError(msg);
-        toast.error(msg);
+        const err = await readApiError(res, "Erro ao salvar usuario");
+        setError(err.message);
+        toast.error(err.displayMessage);
         return;
       }
       const okMsg = "Usuario criado. Convite enviado.";

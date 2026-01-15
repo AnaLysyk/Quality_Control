@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
+import { authenticateRequest } from "@/lib/jwtAuth";
 import type { Release } from "@/types/release";
 
 const STORE_PATH = path.join(process.cwd(), "data", "releases-manual.json");
@@ -51,6 +52,9 @@ export async function GET(_: Request, { params }: { params: Promise<{ slug: stri
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const authUser = await authenticateRequest(req);
+  if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
   try {
     const { slug } = await params;
     const patch = await req.json();
@@ -89,6 +93,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
 }
 
 export async function DELETE(_: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const authUser = await authenticateRequest(_);
+  if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
   try {
     const { slug } = await params;
     const releases = await readStore();

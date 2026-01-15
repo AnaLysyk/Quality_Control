@@ -1,28 +1,11 @@
-import { NextResponse } from "next/server";
-import { AuthLoginRequestSchema, AuthLoginResponseSchema, type AuthLoginResponse } from "@/contracts/auth";
-import { ErrorResponseSchema } from "@/contracts/errors";
+import { AuthLoginRequestSchema, AuthLoginResponseSchema } from "@/contracts/auth";
 import { createClient } from "@supabase/supabase-js";
+import { apiFail, apiOk } from "@/lib/apiResponse";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 const IS_TEST_ENV = process.env.NODE_ENV === "test" || !!process.env.JEST_WORKER_ID;
 
-// Note: this route uses local `usersRepository` for auth; do not create
-// a Supabase client here to avoid accidental network calls in tests.
-
-const jsonError = (message: string, status: number) =>
-  NextResponse.json(ErrorResponseSchema.parse({ error: message }), { status });
-
-function withAuthCookie(payload: AuthLoginResponse) {
-  const response = NextResponse.json(payload, { status: 200 });
-  response.cookies.set("auth_token", payload.session.access_token, {
-    httpOnly: true,
-    sameSite: "lax",
-    maxAge: payload.session.expires_in,
-    path: "/",
-    secure: process.env.NODE_ENV === "production",
-  });
-  return response;
-}
+// Note: keep this route side-effect free for tests (no DB calls).
 
 function getSupabaseUrl() {
   const raw = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
@@ -42,8 +25,13 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const parsed = AuthLoginRequestSchema.safeParse(body);
   if (!parsed.success) {
-    // Keep `message` for Jest expectations.
-    return NextResponse.json({ message: "Email e senha sao obrigatorios" }, { status: 400 });
+    const msg = "Email e senha sao obrigatorios";
+    return apiFail(request, msg, {
+      status: 400,
+      code: "VALIDATION_ERROR",
+      details: parsed.error.flatten(),
+      extra: { message: msg },
+    });
   }
 
   const { login, password } = parsed.data;
@@ -64,18 +52,32 @@ export async function POST(request: Request) {
       },
     });
 
-    const res = withAuthCookie(payload);
-    return NextResponse.json(
-      { token: payload.session.access_token, user: payload.user, mocked: true },
-      { status: 200, headers: res.headers }
+    const res = apiOk(
+      request,
+      { token: payload.session.access_token, user: payload.user },
+      "Login realizado",
+      { extra: { token: payload.session.access_token, user: payload.user, mocked: true } },
     );
+    res.cookies.set("auth_token", payload.session.access_token, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: payload.session.expires_in,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+    });
+    return res;
   }
 
   // Real Supabase auth (local/prod): sign in with password using anon key.
   const supabaseUrl = getSupabaseUrl();
   const supabaseAnonKey = getSupabaseAnonKey();
   if (!supabaseUrl || !supabaseAnonKey) {
-    return jsonError("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY", 500);
+    return apiFail(request, "Supabase nao configurado", {
+      status: 500,
+      code: "ENV_MISSING",
+      details: "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      extra: { error: "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY" },
+    });
   }
 
   const supabase = createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false } });
@@ -86,10 +88,15 @@ export async function POST(request: Request) {
   } catch (err) {
     // Avoid crashing the dev server on DNS/network issues.
     console.error("Supabase signInWithPassword failed", err);
-    return jsonError(
-      "Falha ao conectar no Supabase. Verifique NEXT_PUBLIC_SUPABASE_URL/NEXT_PUBLIC_SUPABASE_ANON_KEY e sua rede/DNS",
-      502
-    );
+    return apiFail(request, "Falha ao conectar no Supabase", {
+      status: 502,
+      code: "SUPABASE_NETWORK",
+      details: err instanceof Error ? err.message : err,
+      extra: {
+        error:
+          "Falha ao conectar no Supabase. Verifique NEXT_PUBLIC_SUPABASE_URL/NEXT_PUBLIC_SUPABASE_ANON_KEY e sua rede/DNS",
+      },
+    });
   }
 
   const authError = result?.error ?? null;
@@ -104,7 +111,12 @@ export async function POST(request: Request) {
     const normalized = msg.trim().toLowerCase();
 
     if (normalized.includes("email not confirmed") || normalized.includes("not confirmed")) {
-      return jsonError("Email ainda nao confirmado", 403);
+      return apiFail(request, "Email ainda nao confirmado", {
+        status: 403,
+        code: "AUTH_EMAIL_NOT_CONFIRMED",
+        details: msg,
+        extra: { error: "Email ainda nao confirmado" },
+      });
     }
 
     if (
@@ -113,10 +125,20 @@ export async function POST(request: Request) {
       normalized.includes("login") ||
       normalized.includes("senha")
     ) {
-      return jsonError("Email ou senha invalidos", 401);
+      return apiFail(request, "Email ou senha invalidos", {
+        status: 401,
+        code: "AUTH_INVALID",
+        details: msg,
+        extra: { error: "Email ou senha invalidos" },
+      });
     }
 
-    return jsonError(msg || "Auth failed", 401);
+    return apiFail(request, msg || "Auth failed", {
+      status: 401,
+      code: "AUTH_FAILED",
+      details: msg,
+      extra: { error: msg || "Auth failed" },
+    });
   }
 
   const payload = AuthLoginResponseSchema.parse({
@@ -132,11 +154,20 @@ export async function POST(request: Request) {
     },
   });
 
-  const res = withAuthCookie(payload);
-  return NextResponse.json(
+  const res = apiOk(
+    request,
     { token: payload.session.access_token, user: payload.user },
-    { status: 200, headers: res.headers }
+    "Login realizado",
+    { extra: { token: payload.session.access_token, user: payload.user } },
   );
+  res.cookies.set("auth_token", payload.session.access_token, {
+    httpOnly: true,
+    sameSite: "lax",
+    maxAge: payload.session.expires_in,
+    path: "/",
+    secure: process.env.NODE_ENV === "production",
+  });
+  return res;
 }
 
 // Re-export GET from the /api/me handler so tests that import GET from
@@ -146,9 +177,16 @@ export async function GET(request: Request) {
     const cookieHeader = request.headers.get("cookie") ?? "";
     const match = cookieHeader.match(/auth_token=([^;]+)/);
     const token = match?.[1] ?? null;
-    if (!token) return NextResponse.json({ user: null }, { status: 401 });
+    if (!token) {
+      return apiFail(request, "Nao autenticado", {
+        status: 401,
+        code: "NO_TOKEN",
+        extra: { user: null },
+      });
+    }
 
-    return NextResponse.json({ user: { id: "mock-uid", email: "ana.testing.company@gmail.com", name: "Usuario Mock" } }, { status: 200 });
+    const user = { id: "mock-uid", email: "ana.testing.company@gmail.com", name: "Usuario Mock" };
+    return apiOk(request, { user }, "OK", { extra: { user } });
   }
 
   const mod = await import("../../me/route");

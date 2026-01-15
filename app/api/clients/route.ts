@@ -3,10 +3,11 @@ import { promises as fs } from "fs";
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabaseServer";
-import { extractAccessToken, requireGlobalAdmin } from "@/lib/rbac/requireGlobalAdmin";
+import { extractAccessToken, requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { ClientCreateRequestSchema, ClientListResponseSchema, ClientSchema } from "@/contracts/client";
 import { ErrorResponseSchema } from "@/contracts/errors";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
+import { apiFail, apiOk } from "@/lib/apiResponse";
 
 export const runtime = "nodejs";
 
@@ -160,7 +161,7 @@ async function extractToken(req: NextRequest): Promise<string | null> {
 }
 
 async function requireAdmin(req: NextRequest) {
-  const admin = await requireGlobalAdmin(req, {
+  const { admin, status } = await requireGlobalAdminWithStatus(req, {
     mockAdmin: {
       id: "mock-uid",
       email: "ana.testing.company@gmail.com",
@@ -168,7 +169,7 @@ async function requireAdmin(req: NextRequest) {
     },
   });
 
-  return admin;
+  return { admin, status };
 }
 
 // `requireUser` logic is no longer used in this route; authentication
@@ -202,11 +203,8 @@ function mapRow(row: ClienteRow) {
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await extractToken(req);
-    if (!token) return jsonError("Nao autorizado", 401);
-
-    const admin = await requireAdmin(req);
-    if (!admin) return jsonError("Nao autorizado", 403);
+    const { admin, status } = await requireAdmin(req);
+    if (!admin) return jsonError(status === 401 ? "Nao autenticado" : "Sem permissao", status);
 
     if (SUPABASE_MOCK) {
       const rows = await readMockClients();
@@ -285,16 +283,26 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await extractToken(req);
-    if (!token) return jsonError("Nao autorizado", 401);
-
-    const auth = await requireAdmin(req);
-    if (!auth) return jsonError("Nao autorizado", 403);
+    const { admin: auth, status } = await requireAdmin(req);
+    if (!auth) {
+      const msg = status === 401 ? "Nao autenticado" : "Sem permissao";
+      return apiFail(req, msg, {
+        status,
+        code: status === 401 ? "AUTH_REQUIRED" : "FORBIDDEN",
+        extra: ErrorResponseSchema.parse({ error: msg }),
+      });
+    }
 
     const body = await req.json().catch(() => null);
     const parsed = ClientCreateRequestSchema.safeParse(body);
     if (!parsed.success) {
-      return jsonError("Payload invalido", 400);
+      const msg = "Payload invalido";
+      return apiFail(req, msg, {
+        status: 400,
+        code: "VALIDATION_ERROR",
+        details: parsed.error.flatten(),
+        extra: ErrorResponseSchema.parse({ error: msg }),
+      });
     }
 
     const input = parsed.data;
@@ -303,7 +311,8 @@ export async function POST(req: NextRequest) {
     if (SUPABASE_MOCK) {
       const companyName = sanitize(input.company_name || input.name);
       if (!companyName) {
-        return jsonError("Campo 'name' ou 'company_name' e obrigatorio", 400);
+        const msg = "Campo 'name' ou 'company_name' e obrigatorio";
+        return apiFail(req, msg, { status: 400, code: "VALIDATION_ERROR", extra: ErrorResponseSchema.parse({ error: msg }) });
       }
 
       const existing = await readMockClients();
@@ -339,7 +348,7 @@ export async function POST(req: NextRequest) {
         entityLabel: payload.name,
         metadata: { slug: payload.slug, active: payload.active },
       });
-      return NextResponse.json(payload, { status: 201 });
+      return apiOk(req, payload, "Cliente criado", { status: 201, extra: payload });
     }
 
     const companyName = sanitize(input.company_name || input.name);
@@ -354,7 +363,8 @@ export async function POST(req: NextRequest) {
     const active = typeof input.active === "boolean" ? input.active : true;
 
     if (!companyName) {
-      return jsonError("Campo 'name' ou 'company_name' e obrigatorio", 400);
+      const msg = "Campo 'name' ou 'company_name' e obrigatorio";
+      return apiFail(req, msg, { status: 400, code: "VALIDATION_ERROR", extra: ErrorResponseSchema.parse({ error: msg }) });
     }
 
     const newRow: Record<string, unknown> = {
@@ -377,7 +387,8 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error("Erro ao criar cliente:", error);
-      return jsonError("Erro ao criar cliente", 500);
+      const msg = "Erro ao criar cliente";
+      return apiFail(req, msg, { status: 500, code: "DB_ERROR", details: error, extra: ErrorResponseSchema.parse({ error: msg }) });
     }
 
     const payload = ClientSchema.parse(mapRow(data as ClienteRow));
@@ -392,9 +403,10 @@ export async function POST(req: NextRequest) {
       metadata: { slug: payload.slug, active: payload.active },
     });
 
-    return NextResponse.json(payload, { status: 201 });
+    return apiOk(req, payload, "Cliente criado", { status: 201, extra: payload });
   } catch (err) {
     console.error("Erro inesperado no POST /api/clients:", err);
-    return jsonError("Erro interno", 500);
+    const msg = "Erro interno";
+    return apiFail(req, msg, { status: 500, code: "INTERNAL", details: err, extra: ErrorResponseSchema.parse({ error: msg }) });
   }
 }

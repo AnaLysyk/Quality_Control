@@ -2,10 +2,12 @@
 
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { CreateClientModal, type ClientFormValues } from "@/clients/components/CreateClientModal";
 import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { getAccessToken } from "@/lib/api";
+import { readApiError } from "@/lib/apiEnvelope";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import Image from "next/image";
 import { FiExternalLink, FiUsers, FiX, FiCheckCircle, FiXCircle } from "react-icons/fi";
@@ -88,6 +90,7 @@ function mapClient(row: Record<string, unknown>): Client {
 }
 
 function AdminClientsPage() {
+  const router = useRouter();
   const { user } = useAuthUser();
   const isGlobalAdmin = !!user?.isGlobalAdmin || (user as { is_global_admin?: boolean } | null)?.is_global_admin === true;
 
@@ -110,6 +113,13 @@ function AdminClientsPage() {
     if (selected) setForm(selected);
   };
 
+  function handleUnauthorized() {
+    const msg = "Sessão expirada. Faça login novamente.";
+    setMessage(msg);
+    toast.error(msg);
+    router.replace("/login");
+  }
+
   async function load() {
     setLoading(true);
     setMessage(null);
@@ -117,6 +127,11 @@ function AdminClientsPage() {
       const token = await getAccessToken();
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
       const res = await fetch("/api/clients", { cache: "no-store", headers, credentials: "include" });
+      if (res.status === 401) {
+        handleUnauthorized();
+        setItems([]);
+        return;
+      }
       if (res.status === 403) {
         setMessage("Acesso negado: use uma conta de admin global.");
         toast.error("Acesso negado: use uma conta de admin global.");
@@ -145,6 +160,10 @@ function AdminClientsPage() {
       const token = await getAccessToken();
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
       const res = await fetch(`/api/clients/${id}`, { cache: "no-store", headers, credentials: "include" });
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       if (!res.ok) {
         const fallback = items.find((c) => c.id === id);
         if (fallback) {
@@ -206,6 +225,10 @@ function AdminClientsPage() {
         credentials: "include",
         body: JSON.stringify(payload),
       });
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         const msg = err.message || "Erro ao salvar cliente";
@@ -263,11 +286,14 @@ function AdminClientsPage() {
         credentials: "include",
         body: JSON.stringify(payload),
       });
+      if (res.status === 401) {
+        handleUnauthorized();
+        return null;
+      }
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        const msg = err.error || err.message || "Erro ao criar cliente";
-        setMessage(msg);
-        toast.error(msg);
+        const err = await readApiError(res, "Erro ao criar cliente");
+        setMessage(err.message);
+        toast.error(err.displayMessage);
         return null;
       }
       const created = await res.json().catch(() => null);
@@ -877,6 +903,7 @@ type CompanyUsersProps = {
 };
 
 function CompanyUsers({ clientId, onAddUser, disabled = false }: CompanyUsersProps) {
+  const router = useRouter();
   const [users, setUsers] = useState<Array<{ id: string; name: string; job_title?: string | null; role?: string | null; avatar_url?: string | null }>>([]);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"view" | "edit">("view");
@@ -885,7 +912,13 @@ function CompanyUsers({ clientId, onAddUser, disabled = false }: CompanyUsersPro
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/admin/users?client_id=${clientId}`, { credentials: "include" });
+        const res = await fetch(`/api/admin/users?client_id=${clientId}`, { credentials: "include", cache: "no-store" });
+        if (res.status === 401) {
+          toast.error("Sessão expirada. Faça login novamente.");
+          router.replace("/login");
+          setUsers([]);
+          return;
+        }
         const json = await res.json().catch(() => ({ items: [] }));
         setUsers(Array.isArray(json.items) ? json.items : []);
       } catch {
@@ -895,7 +928,7 @@ function CompanyUsers({ clientId, onAddUser, disabled = false }: CompanyUsersPro
       }
     };
     fetchUsers();
-  }, [clientId]);
+  }, [clientId, router]);
 
   useEffect(() => {
     if (disabled && mode === "edit") {

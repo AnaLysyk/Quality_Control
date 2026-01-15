@@ -24,6 +24,7 @@ export default function ManualReleaseActions({ slug, status }: ManualReleaseActi
     try {
       await fetch(`/api/releases-manual/${slug}`, {
         method: "PATCH",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "FINALIZADA" }),
       });
@@ -40,6 +41,7 @@ export default function ManualReleaseActions({ slug, status }: ManualReleaseActi
     try {
       await fetch(`/api/releases-manual/${slug}`, {
         method: "PATCH",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "ACTIVE" }),
       });
@@ -58,6 +60,7 @@ export default function ManualReleaseActions({ slug, status }: ManualReleaseActi
     try {
       const res = await fetch(`/api/releases-manual/${slug}`, {
         method: "PATCH",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: next, name: next }),
       });

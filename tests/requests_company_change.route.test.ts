@@ -1,7 +1,7 @@
 import { POST } from "@/api/requests/company-change/route";
 
-jest.mock("@/lib/session", () => ({
-  getSessionUser: jest.fn(),
+jest.mock("@/lib/jwtAuth", () => ({
+  authenticateRequest: jest.fn(),
 }));
 
 jest.mock("@/data/requestsStore", () => ({
@@ -10,15 +10,16 @@ jest.mock("@/data/requestsStore", () => ({
 
 const getSessionUser = jest.requireMock("@/lib/session").getSessionUser as jest.Mock;
 const addRequest = jest.requireMock("@/data/requestsStore").addRequest as jest.Mock;
+const authenticateRequest = jest.requireMock("@/lib/jwtAuth").authenticateRequest as jest.Mock;
 
 describe("/api/requests/company-change POST", () => {
   beforeEach(() => {
-    getSessionUser.mockReset();
+    authenticateRequest.mockReset();
     addRequest.mockReset();
   });
 
   it("retorna 400 se newCompanyName faltando", async () => {
-    getSessionUser.mockResolvedValue({ id: "u1" });
+    authenticateRequest.mockResolvedValue({ id: "u1", email: "u1@example.com", isGlobalAdmin: false });
     const res = await POST(
       new Request("http://localhost/api/requests/company-change", { method: "POST", body: JSON.stringify({}) })
     );
@@ -26,7 +27,7 @@ describe("/api/requests/company-change POST", () => {
   });
 
   it("retorna 201 se criado", async () => {
-    getSessionUser.mockResolvedValue({ id: "u1" });
+    authenticateRequest.mockResolvedValue({ id: "u1", email: "u1@example.com", isGlobalAdmin: false });
     addRequest.mockReturnValue({ id: "req1" });
     const res = await POST(
       new Request("http://localhost/api/requests/company-change", {
@@ -38,7 +39,7 @@ describe("/api/requests/company-change POST", () => {
   });
 
   it("retorna 409 se duplicata", async () => {
-    getSessionUser.mockResolvedValue({ id: "u1" });
+    authenticateRequest.mockResolvedValue({ id: "u1", email: "u1@example.com", isGlobalAdmin: false });
     const err = new Error("dup") as Error & { code?: string };
     err.code = "DUPLICATE";
     addRequest.mockImplementation(() => {

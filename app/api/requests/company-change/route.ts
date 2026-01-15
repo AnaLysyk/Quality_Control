@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { addRequest } from "@/data/requestsStore";
-import { getSessionUser } from "@/lib/session";
+import { authenticateRequest } from "@/lib/jwtAuth";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object") return null;
@@ -8,7 +8,10 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 }
 
 export async function POST(request: Request) {
-  const user = await getSessionUser();
+  const authUser = await authenticateRequest(request);
+  if (!authUser) {
+    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+  }
   const body = (await request.json().catch(() => null)) as unknown;
   const rec = asRecord(body);
   const newCompanyName = typeof rec?.newCompanyName === "string" ? rec.newCompanyName : undefined;
@@ -18,7 +21,14 @@ export async function POST(request: Request) {
   }
 
   try {
-    const record = addRequest(user, "COMPANY_CHANGE", { newCompanyName });
+    const record = addRequest(
+      {
+        id: authUser.id,
+        email: authUser.email,
+      },
+      "COMPANY_CHANGE",
+      { newCompanyName }
+    );
     return NextResponse.json(record, { status: 201 });
   } catch (err: unknown) {
     const code = asRecord(err)?.code;

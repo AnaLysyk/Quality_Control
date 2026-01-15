@@ -3,6 +3,7 @@
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { AuthMeResponseSchema } from "@/contracts/auth";
 import { isAuthUserGlobalAdmin } from "@/lib/rbac/globalAdmin";
+import { apiFail, apiOk } from "@/lib/apiResponse";
 import fs from "fs/promises";
 import path from "path";
 
@@ -112,10 +113,7 @@ export async function GET(req: Request) {
       },
     });
 
-    return new Response(
-      JSON.stringify(payload),
-      { status: 200, headers: { "Content-Type": "application/json" } },
-    );
+    return apiOk(req, payload, "OK", { extra: payload });
   }
 
   const token = extractToken(req);
@@ -124,10 +122,7 @@ export async function GET(req: Request) {
       user: null,
       error: { code: "NO_TOKEN" },
     });
-    return new Response(JSON.stringify(payload), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+    return apiFail(req, "Nao autenticado", { status: 401, code: "NO_TOKEN", extra: payload });
   }
 
   // Use require here so Jest's module mocking is honored reliably.
@@ -140,10 +135,7 @@ export async function GET(req: Request) {
       user: null,
       error: { code: "INVALID_TOKEN" },
     });
-    return new Response(JSON.stringify(payload), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+    return apiFail(req, "Nao autenticado", { status: 401, code: "INVALID_TOKEN", extra: payload });
   }
 
   const authUser = authData.user;
@@ -203,10 +195,7 @@ export async function GET(req: Request) {
       user: null,
       error: { code: "NEEDS_BOOTSTRAP" },
     });
-    return new Response(JSON.stringify(payload), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+    return apiFail(req, "Precisa inicializar", { status: 401, code: "NEEDS_BOOTSTRAP", extra: payload });
   }
 
   const userRecord = (userRow ?? null) as Record<string, unknown> | null;
@@ -388,17 +377,11 @@ export async function GET(req: Request) {
         },
       });
 
-      return new Response(JSON.stringify(payload), {
-        status: 403,
-        headers: { "Content-Type": "application/json" },
-      });
+      return apiFail(req, "Sem empresa vinculada", { status: 403, code: "NO_COMPANY_LINK", extra: payload });
     }
 
   const payload = AuthMeResponseSchema.parse({ user });
-  return new Response(JSON.stringify(payload), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+  return apiOk(req, payload, "OK", { extra: payload });
 }
 
 export async function PATCH(req: Request) {
@@ -425,10 +408,7 @@ export async function PATCH(req: Request) {
 
   const token = extractToken(req);
   if (!token) {
-    return new Response(JSON.stringify({ error: "Nao autorizado" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+    return apiFail(req, "Nao autenticado", { status: 401, code: "NO_TOKEN", extra: { error: "Nao autorizado" } });
   }
 
   // Use require here so Jest's module mocking is honored reliably.
@@ -436,9 +416,11 @@ export async function PATCH(req: Request) {
   const supabaseAdmin = supabaseAdminModule.getSupabaseServer();
   const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
   if (authError || !authData?.user) {
-    return new Response(JSON.stringify({ error: "Nao autorizado" }), {
+    return apiFail(req, "Nao autenticado", {
       status: 401,
-      headers: { "Content-Type": "application/json" },
+      code: "INVALID_TOKEN",
+      extra: { error: "Nao autorizado" },
+      details: authError?.message ?? null,
     });
   }
 

@@ -6,6 +6,7 @@ export type ReleaseWithStats = ReleaseEntry & {
   createdAtValue: number;
   stats: Stats | null;
   passRate: number | null;
+  gate: QualityGateResult;
 };
 
 export type TrendPoint = {
@@ -116,11 +117,13 @@ export function buildReleaseWithStats(release: ReleaseEntry): ReleaseWithStats {
   const stats = statsFromRelease(release);
   const total = stats ? sumStats(stats) : 0;
   const passRate = total > 0 ? toPercent(stats!.pass, total) : null;
+  const gate = evaluateQualityGate(stats);
   return {
     ...release,
     stats,
     createdAtValue: getCreatedAtValue(release),
     passRate,
+    gate,
   };
 }
 

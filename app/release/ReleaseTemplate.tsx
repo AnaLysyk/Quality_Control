@@ -24,6 +24,17 @@ type ReleaseTemplateProps = {
 
 type ReleasePageContentProps = { slug: string; companySlug?: string };
 
+function parseQaseRunSlug(value: string): { projectCode: string; runId: number } | null {
+  const trimmed = (value ?? "").trim();
+  if (!trimmed) return null;
+  const match = trimmed.match(/^qase-([a-z0-9_-]+)-(\d+)$/i);
+  if (!match) return null;
+  const projectCode = match[1].trim().toUpperCase();
+  const runId = Number(match[2]);
+  if (!projectCode || !Number.isFinite(runId)) return null;
+  return { projectCode, runId };
+}
+
 const legendClassByLabel: Record<string, string> = {
   Pass: "bg-[#22c55e]",
   Fail: "bg-[#ef4444]",
@@ -63,8 +74,26 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
     apiRelease = (await getReleaseBySlug(normalizedSlug)) ?? null;
   }
 
-  const source = manualRelease ? "MANUAL" : "API";
-  const releaseData: AnyRelease | null = (manualRelease as AnyRelease) || (apiRelease as AnyRelease);
+  let source: "MANUAL" | "API" = manualRelease ? "MANUAL" : "API";
+  let releaseData: AnyRelease | null = (manualRelease as AnyRelease) || (apiRelease as AnyRelease);
+
+  if (!releaseData) {
+    const parsed = parseQaseRunSlug(slug);
+    if (parsed) {
+      apiRelease = {
+        slug: normalizedSlug,
+        title: `Run ${parsed.runId}`,
+        summary: "Execucao integrada via Qase.",
+        runId: parsed.runId,
+        project: parsed.projectCode.toLowerCase(),
+        app: parsed.projectCode.toLowerCase(),
+        qaseProject: parsed.projectCode,
+      };
+      releaseData = apiRelease as AnyRelease;
+      source = "API";
+    }
+  }
+
   if (!releaseData) {
     return <div className="p-6 text-sm text-red-400">Run nao encontrada.</div>;
   }
@@ -85,8 +114,9 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
   if (source === "API") {
     const runId = Number((releaseData as ReleaseEntry).runId);
     if (Number.isFinite(runId)) {
+      const qaseSlugKey = companySlug ?? normalizedSlug;
       try {
-        const run = await getRunDetails(projectCode, runId, normalizedSlug);
+        const run = await getRunDetails(projectCode, runId, qaseSlugKey);
         if (run) {
           stats = { pass: run.pass, fail: run.fail, blocked: run.blocked, notRun: run.notRun };
           hasData = run.hasData;
@@ -95,7 +125,7 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
         /* ignore */
       }
       try {
-        kanbanData = await getQaseRunKanban(projectCode, runId, normalizedSlug);
+        kanbanData = await getQaseRunKanban(projectCode, runId, qaseSlugKey);
       } catch {
         /* ignore */
       }

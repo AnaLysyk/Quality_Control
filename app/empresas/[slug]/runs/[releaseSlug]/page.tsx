@@ -1,5 +1,6 @@
 import { ReleasePageContent } from "@/release/ReleaseTemplate";
 import Breadcrumb from "@/components/Breadcrumb";
+import { formatCompanyDisplayName } from "@/utils/formatCompanyDisplayName";
 
 type PageParams = {
   params: { slug: string; releaseSlug: string };
@@ -8,6 +9,7 @@ type PageParams = {
 export default async function EmpresaRunDetailPage({ params }: PageParams) {
   const slug = params.releaseSlug || "";
   const company = params.slug || "";
+  const companyName = formatCompanyDisplayName(company) || company;
   const content = await ReleasePageContent({ slug, companySlug: company });
 
   return (
@@ -17,9 +19,9 @@ export default async function EmpresaRunDetailPage({ params }: PageParams) {
           items={[
             { label: "Empresas", href: "/empresas" },
             {
-              label: company,
+              label: companyName,
               href: `/empresas/${encodeURIComponent(company)}/home`,
-              title: company,
+              title: companyName,
             },
             { label: "Runs", href: `/empresas/${encodeURIComponent(company)}/runs` },
             { label: <span className="block truncate">{slug}</span>, title: slug },

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabaseServer";
-import { requireGlobalAdmin } from "@/lib/rbac/requireGlobalAdmin";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export const runtime = "nodejs";
 
@@ -17,8 +17,8 @@ function sanitize(value: unknown, max = 1000): string {
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const admin = await requireGlobalAdmin(req);
-    if (!admin) return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
+    const { admin, status } = await requireGlobalAdminWithStatus(req);
+    if (!admin) return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const reason = sanitize(body.reason ?? body.admin_notes, 800);

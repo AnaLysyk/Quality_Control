@@ -7,13 +7,6 @@ import { CompanySelector } from "./components/CompanySelector";
 
 const cards = [
   {
-    title: "Perfil pessoal",
-    description:
-      "Identidade, cargo, empresa ativa e contexto de trabalho. Não administra o sistema, só mostra quem você é.",
-    href: "/profile",
-    badge: "Identidade",
-  },
-  {
     title: "Empresa ativa",
     description: "Entenda onde você está trabalhando agora e acesse o hub da empresa.",
     href: "/empresas",
@@ -32,13 +25,9 @@ export default function HomePage() {
     <div className="min-h-screen bg-linear-to-b from-(--page-bg,#f8f8fb) to-(--page-bg,#f0f4ff)">
       <div className="max-w-6xl mx-auto px-4 py-12 space-y-10">
         <header className="rounded-[28px] bg-white/80 p-8 shadow-xl text-center">
-          <Link
-            href="/profile"
-            className="text-sm uppercase tracking-[0.6em] text-(--tc-accent,#ef0001) hover:text-(--tc-accent,#f44336) flex items-center justify-center gap-2"
-          >
+          <div className="text-sm uppercase tracking-[0.6em] text-(--tc-accent,#ef0001) flex items-center justify-center gap-2">
             <span>Testing Company</span>
-            <FiArrowRight size={14} />
-          </Link>
+          </div>
           <h1 className="mt-4 text-4xl font-extrabold text-(--page-text,#0b1a3c)">Testing Metric</h1>
           <p className="mt-3 text-sm text-(--tc-text-secondary,#4b5563) max-w-3xl mx-auto">
             Esta tela não administra o sistema. Ela mostra quem você é, onde está e no que está trabalhando agora.

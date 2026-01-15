@@ -144,9 +144,12 @@ export async function GET(_: Request, context: { params: Promise<{ slug: string 
   const { slug } = await context.params;
   const clientSettings = await getClientQaseSettings(slug);
   const projectCode = clientSettings?.projectCode ?? PROJECT_MAP[slug];
+  const projectCodes = (clientSettings?.projectCodes?.length ? clientSettings.projectCodes : projectCode ? [projectCode] : [])
+    .map((c) => c.trim())
+    .filter(Boolean);
   const token = clientSettings?.token ?? FALLBACK_TOKEN;
 
-  if (!slug || !projectCode) {
+  if (!slug || !projectCodes.length) {
     return NextResponse.json(
       { defects: [], total: 0, byStatus: {}, byApplication: [], error: "Projeto Qase nao configurado para esta empresa." },
       { status: 200 }
@@ -160,16 +163,26 @@ export async function GET(_: Request, context: { params: Promise<{ slug: string 
     );
   }
 
-  const qaseRuns = await listQaseRuns(projectCode, token);
   const runNameMap = new Map<string, string>();
-  qaseRuns.forEach((run) => {
-    if (!run) return;
-    const key = String(run.id);
-    runNameMap.set(key, run.name ?? run.slug ?? `Run ${run.id}`);
-  });
+  const allDefects: QaseDefect[] = [];
 
-  const defects = await fetchAllDefects(projectCode, token);
-  const normalized = normalize(defects, runNameMap);
+  for (const code of projectCodes) {
+    const qaseRuns = await listQaseRuns(code, token);
+    qaseRuns.forEach((run) => {
+      if (!run) return;
+      const key = `${code}:${String(run.id)}`;
+      runNameMap.set(key, run.name ?? run.slug ?? `Run ${run.id}`);
+    });
 
+    const defects = await fetchAllDefects(code, token);
+    // Namespace run_id so we can find the run name even if multiple projects share ids.
+    defects.forEach((d) => {
+      if (d.run_id == null) return;
+      (d as any).run_id = `${code}:${String(d.run_id)}`;
+    });
+    allDefects.push(...defects);
+  }
+
+  const normalized = normalize(allDefects, runNameMap);
   return NextResponse.json({ defects: normalized.items, ...normalized }, { status: 200 });
 }

@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
-import { requireGlobalAdmin } from "@/lib/rbac/requireGlobalAdmin";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { apiFail, apiOk } from "@/lib/apiResponse";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
@@ -23,30 +24,34 @@ export async function GET(req: NextRequest) {
       return null;
     }
   })();
-  const admin = await requireGlobalAdmin(req, {
+  const { admin, status } = await requireGlobalAdminWithStatus(req, {
     token,
     supabaseAdmin: supabaseAdmin ?? undefined,
     mockAdmin: { id: "mock-admin", email: "ana.testing.company@gmail.com", token: "mock-token" },
   });
   if (!admin) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
+    const legacy = { error: status === 401 ? "Nao autenticado" : "Sem permissao" };
+    return apiFail(req, legacy.error, {
+      status,
+      code: status === 401 ? "UNAUTHENTICATED" : "FORBIDDEN",
+      extra: legacy,
+    });
   }
 
   if (SUPABASE_MOCK) {
-    return NextResponse.json(
-      {
-        totals: { approved: 120, failed: 30, neutral: 15, quality: 74 },
-        clients: [
-          { id: "mock-client", name: "Griaule", slug: "griaule", status: "ativo", releases: 8, approval: 92 },
-          { id: "mock-b", name: "Acme", slug: "acme", status: "ativo", releases: 5, approval: 81 },
-        ],
-      },
-      { status: 200 },
-    );
+    const payload = {
+      totals: { approved: 120, failed: 30, neutral: 15, quality: 74 },
+      clients: [
+        { id: "mock-client", name: "Griaule", slug: "griaule", status: "ativo", releases: 8, approval: 92 },
+        { id: "mock-b", name: "Acme", slug: "acme", status: "ativo", releases: 5, approval: 81 },
+      ],
+    };
+    return apiOk(req, payload, "OK", { extra: payload });
   }
 
   if (!supabaseAdmin) {
-    return NextResponse.json({ error: "Supabase admin nao configurado" }, { status: 500 });
+    const legacy = { error: "Supabase admin nao configurado" };
+    return apiFail(req, legacy.error, { status: 500, code: "SUPABASE_NOT_CONFIGURED", extra: legacy });
   }
 
   // Em produção: tenta puxar empresas e calcular agregados simples (placeholders).
@@ -57,13 +62,11 @@ export async function GET(req: NextRequest) {
 
   if (error) {
     console.error("Erro ao carregar clientes:", error);
-    return NextResponse.json(
-      {
-        totals: { approved: 0, failed: 0, neutral: 0, quality: 0 },
-        clients: [],
-      },
-      { status: 200 },
-    );
+    const payload = {
+      totals: { approved: 0, failed: 0, neutral: 0, quality: 0 },
+      clients: [],
+    };
+    return apiOk(req, payload, "OK", { extra: payload });
   }
 
   const mapped =
@@ -76,11 +79,9 @@ export async function GET(req: NextRequest) {
       approval: null,
     })) ?? [];
 
-  return NextResponse.json(
-    {
-      totals: { approved: 0, failed: 0, neutral: 0, quality: 0 },
-      clients: mapped,
-    },
-    { status: 200 },
-  );
+  const payload = {
+    totals: { approved: 0, failed: 0, neutral: 0, quality: 0 },
+    clients: mapped,
+  };
+  return apiOk(req, payload, "OK", { extra: payload });
 }

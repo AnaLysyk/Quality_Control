@@ -27,6 +27,8 @@ npm install
 
 > Segurança: token `napi_...` do Neon (API/console) **não** é a string de conexão do Postgres. Nunca use token Neon como variável do app; use apenas as connection strings (`POSTGRES_URL*`) e mantenha-as em `.env.local`/Vercel (não commit).
 
+Guia rápido: `docs/security/neon-vs-postgres.md`.
+
 3) Subir o servidor:
 
 ```bash

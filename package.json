@@ -18,10 +18,8 @@
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test --grep @smoke",
     "dev:daemon": "node scripts/dev-daemon.js",
-    "dev:stop": "node scripts/dev-stop.js"
-    ,
-    "rls:check:global-admins": "node scripts/rls-check-global-admins.mjs"
-    ,
+    "dev:stop": "node scripts/dev-stop.js",
+    "rls:check:global-admins": "node scripts/rls-check-global-admins.mjs",
     "edge:test:cron-snapshots": "node scripts/test-cron-snapshots-api.mjs"
   },
   "dependencies": {
@@ -31,6 +29,7 @@
     "@supabase/supabase-js": "^2.89.0",
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/slim": "^3.9.1",
+    "@upstash/redis": "^1.36.1",
     "@vercel/postgres": "^0.10.0",
     "framer-motion": "^12.23.26",
     "html2canvas": "^1.4.1",

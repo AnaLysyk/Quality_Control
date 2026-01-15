@@ -4,6 +4,7 @@ import { getSupabaseServer } from "@/lib/supabaseServer";
 export const runtime = "nodejs";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+const IS_PROD = process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
 
 type ClientItem = { id: string; name: string; slug?: string | null };
 
@@ -125,11 +126,15 @@ async function fetchClientItems(supabase: ReturnType<typeof getSupabaseServer>, 
 
 export async function GET() {
   try {
-    if (SUPABASE_MOCK) {
+    if (SUPABASE_MOCK && !IS_PROD) {
       const items: ClientItem[] = [
         { id: "mock-client", name: "Cliente Mock", slug: "mock-client" },
       ];
       return NextResponse.json({ items }, { status: 200 });
+    }
+
+    if (SUPABASE_MOCK && IS_PROD) {
+      console.warn("/api/public/clients: SUPABASE_MOCK ignored in production/Vercel");
     }
 
     let supabase: ReturnType<typeof getSupabaseServer>;

@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { FiMenu } from "react-icons/fi";
 import MainWrapper from "./MainWrapper";
@@ -15,6 +15,12 @@ export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname() || "";
   const isLogin = pathname.startsWith("/login");
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Prevent a stale mobile overlay from blocking navigation after route changes
+  // (common when viewport/zoom toggles lg breakpoint).
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   if (isLogin) {
     return (

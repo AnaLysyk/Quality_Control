@@ -236,57 +236,58 @@ export default function ProfileButton() {
           id="profile-menu"
           aria-label="Menu de perfil"
           ref={menuRef}
-        className="absolute right-0 mt-2 w-95 rounded-2xl border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_18px_50px_rgba(0,0,0,0.18)] dark:border-white/12 dark:bg-(--tc-surface-dark,#0f1828) dark:text-(--tc-text-inverse,#fff) dark:shadow-[0_18px_50px_rgba(0,0,0,0.4)]"
+          className="absolute right-0 mt-2 w-[min(380px,calc(100vw-1rem))] max-h-[calc(100vh-5rem)] overflow-y-auto overscroll-contain rounded-2xl border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_18px_50px_rgba(0,0,0,0.18)] dark:border-white/12 dark:bg-(--tc-surface-dark,#0f1828) dark:text-(--tc-text-inverse,#fff) dark:shadow-[0_18px_50px_rgba(0,0,0,0.4)]"
         >
           <div className="px-4 pt-4 pb-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-start gap-3">
                 <div className="relative h-14 w-14 shrink-0">
                   <button
-                  type="button"
-                  aria-label="Trocar avatar"
-                  onClick={() => setShowAvatarPicker((v) => !v)}
-                  className="group relative flex h-14 w-14 items-center justify-center rounded-full border border-(--tc-primary,#4e8df5)/28 bg-(--tc-primary,#4e8df5)/12 text-2xl shadow-[0_0_18px_rgba(78,142,245,0.30)] focus:outline-none focus:ring-2 focus:ring-(--tc-primary,#4e8df5) overflow-visible dark:border-(--tc-primary,#4e8df5)/25 dark:bg-black/20"
-                >
-                  <span className="text-2xl" aria-hidden>
-                    {avatarError ? displayName.slice(0, 2).toUpperCase() : avatarIcon}
-                  </span>
-                  <span
-                    className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-(--tc-primary,#4e8df5)/50 bg-(--tc-primary,#4e8df5) text-[11px] text-white shadow-[0_4px_10px_rgba(0,0,0,0.25)]"
-                    aria-hidden
+                    type="button"
+                    aria-label="Trocar avatar"
+                    onClick={() => setShowAvatarPicker((v) => !v)}
+                    className="group relative flex h-14 w-14 items-center justify-center rounded-full border border-(--tc-primary,#4e8df5)/28 bg-(--tc-primary,#4e8df5)/12 text-2xl shadow-[0_0_18px_rgba(78,142,245,0.30)] focus:outline-none focus:ring-2 focus:ring-(--tc-primary,#4e8df5) overflow-visible dark:border-(--tc-primary,#4e8df5)/25 dark:bg-black/20"
                   >
-                    <FiEdit2 />
-                  </span>
-                </button>
+                    <span className="text-2xl" aria-hidden>
+                      {avatarError ? displayName.slice(0, 2).toUpperCase() : avatarIcon}
+                    </span>
+                    <span
+                      className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-(--tc-primary,#4e8df5)/50 bg-(--tc-primary,#4e8df5) text-[11px] text-white shadow-[0_4px_10px_rgba(0,0,0,0.25)]"
+                      aria-hidden
+                    >
+                      <FiEdit2 />
+                    </span>
+                  </button>
 
-                {showAvatarPicker && (
-                  <div className="absolute left-14 top-0 z-10 w-56 rounded-xl border border-slate-200 bg-white/90 text-slate-900 p-3 shadow-[0_20px_60px_rgba(15,23,42,0.25)] backdrop-blur-xl dark:border-white/15 dark:bg-slate-900/80 dark:text-white">
-                    <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-(--tc-text-muted,#cbd5e1)">
-                      <span>Escolher avatar</span>
-                      <span className="text-[10px] lowercase">gif/emoji</span>
+                  {showAvatarPicker && (
+                    <div className="absolute left-14 top-0 z-10 w-56 rounded-xl border border-slate-200 bg-white/90 p-3 text-slate-900 shadow-[0_20px_60px_rgba(15,23,42,0.25)] backdrop-blur-xl dark:border-white/15 dark:bg-slate-900/80 dark:text-white">
+                      <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-(--tc-text-muted,#cbd5e1)">
+                        <span>Escolher avatar</span>
+                        <span className="text-[10px] lowercase">gif/emoji</span>
+                      </div>
+                      <div className="grid grid-cols-5 gap-2">
+                        {AVATAR_OPTIONS.map((opt) => {
+                          const active = opt.key === avatarKey;
+                          return (
+                            <button
+                              key={opt.key}
+                              type="button"
+                              onClick={() => selectAvatar(opt.key)}
+                              className={`flex h-10 items-center justify-center rounded-lg border text-lg transition-colors ${
+                                active
+                                  ? "border-(--tc-primary,#4e8df5) bg-(--tc-primary,#4e8df5)/15 text-(--tc-primary,#4e8df5) shadow-[0_6px_20px_rgba(78,141,245,0.45)]"
+                                  : "border-slate-200 bg-white text-slate-900 hover:border-slate-400 hover:bg-slate-100 dark:border-white/15 dark:bg-slate-900/60 dark:text-white dark:hover:border-white/30 dark:hover:bg-slate-800"
+                              }`}
+                            >
+                              <span aria-hidden>{opt.emoji}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-5 gap-2">
-                      {AVATAR_OPTIONS.map((opt) => {
-                        const active = opt.key === avatarKey;
-                        return (
-                          <button
-                            key={opt.key}
-                            type="button"
-                            onClick={() => selectAvatar(opt.key)}
-                            className={`flex h-10 items-center justify-center rounded-lg border text-lg transition-colors ${
-                              active
-                                ? "border-(--tc-primary,#4e8df5) bg-(--tc-primary,#4e8df5)/15 text-(--tc-primary,#4e8df5) shadow-[0_6px_20px_rgba(78,141,245,0.45)]"
-                                : "border-slate-200 bg-white text-slate-900 hover:border-slate-400 hover:bg-slate-100 dark:border-white/15 dark:bg-slate-900/60 dark:text-white dark:hover:border-white/30 dark:hover:bg-slate-800"
-                            }`}
-                          >
-                            <span aria-hidden>{opt.emoji}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-[0.18em] text-(--tc-text-muted,#64748b) dark:text-(--tc-text-muted,#cbd5e1)">Conta</p>
                   <div className="truncate text-sm font-medium leading-tight text-(--tc-text,#0f172a) dark:text-(--tc-text-inverse,#fff)">

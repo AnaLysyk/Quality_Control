@@ -375,11 +375,12 @@ export default function LoginPage() {
   }, []);
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-[#041a49] overflow-hidden">
-      <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 w-full h-full" />
+    <div className="relative min-h-screen w-full bg-[#041a49] overflow-x-hidden">
+      <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full" />
 
-      <div className="relative z-10 w-full max-w-md bg-white shadow-2xl rounded-xl overflow-visible">
-        <div className="flex flex-col justify-center px-8 py-10 bg-white">
+      <div className="relative z-10 flex min-h-screen w-full items-start justify-center px-4 py-10 sm:items-center sm:px-6">
+        <div className="w-full max-w-md rounded-xl bg-white shadow-2xl">
+          <div className="flex flex-col justify-center bg-white px-6 py-8 sm:px-8 sm:py-10">
           <div className="flex items-center gap-3 mb-6">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/tc.png" alt="Testing Company" className="h-10 w-10 object-contain" />
@@ -756,6 +757,7 @@ export default function LoginPage() {
             </form>
           )}
         </div>
+      </div>
       </div>
 
       {loading && (

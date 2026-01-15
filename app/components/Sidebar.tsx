@@ -17,7 +17,6 @@ import {
   FiList,
   FiPlusCircle,
   FiShield,
-  FiUser,
   FiUserPlus,
   FiUsers,
 } from "react-icons/fi";

@@ -3,7 +3,7 @@ export type ApiEnvelopeMeta = {
   timestamp?: string;
 };
 
-type AnyRecord = Record<string, any>;
+type AnyRecord = Record<string, unknown>;
 
 function asRecord(value: unknown): AnyRecord | null {
   if (!value || typeof value !== "object") return null;

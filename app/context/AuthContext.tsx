@@ -39,9 +39,12 @@ async function fetchMe(): Promise<AuthUser | null> {
     const errorCode = (() => {
       if (errorParsed.success) return errorParsed.data.error?.code ?? null;
       if (errorPayload && typeof errorPayload === "object") {
-        const rec = errorPayload as Record<string, any>;
-        const code = rec?.error?.code;
-        if (typeof code === "string" && code.trim()) return code.trim();
+        const rec = errorPayload as Record<string, unknown>;
+        const error = rec.error;
+        if (error && typeof error === "object") {
+          const code = (error as Record<string, unknown>).code;
+          if (typeof code === "string" && code.trim()) return code.trim();
+        }
       }
       return null;
     })();

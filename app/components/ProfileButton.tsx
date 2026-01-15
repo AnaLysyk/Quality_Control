@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   FiLogOut,
   FiSettings,
@@ -68,7 +68,6 @@ function MenuItem(props: {
 
 export default function ProfileButton() {
   const router = useRouter();
-  const pathname = usePathname();
   const { user, logout } = useAuthUser();
   const { activeClient } = useClientContext();
 
@@ -85,7 +84,12 @@ export default function ProfileButton() {
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [toast, setToast] = useState<ToastState>({ kind: "idle" });
   const [copied, setCopied] = useState(false);
-  const [avatarKey, setAvatarKey] = useState<AvatarKey>("rocket");
+  const [avatarOverrideKey, setAvatarOverrideKey] = useState<AvatarKey | null>(() => {
+    if (typeof window === "undefined") return null;
+    const saved = window.localStorage.getItem("profile_avatar_icon");
+    if (typeof saved === "string" && AVATAR_OPTIONS.some((a) => a.key === saved)) return saved as AvatarKey;
+    return null;
+  });
   const [avatarError, setAvatarError] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -139,19 +143,12 @@ export default function ProfileButton() {
   })();
   const companyResources = Array.isArray(legacyUser?.companyResources) ? legacyUser.companyResources : [];
 
-  useEffect(() => {
-    const saved = window.localStorage.getItem("profile_avatar_icon") as AvatarKey | null;
-    if (saved && AVATAR_OPTIONS.find((a) => a.key === saved)) {
-      setAvatarKey(saved);
-    } else if (user?.avatarKey && AVATAR_OPTIONS.find((a) => a.key === (user.avatarKey as AvatarKey))) {
-      setAvatarKey(user.avatarKey as AvatarKey);
-    }
-  }, [user?.avatarKey]);
-
-  useEffect(() => {
-    setOpen(false);
-    setShowAvatarPicker(false);
-  }, [pathname]);
+  const avatarKey: AvatarKey = useMemo(() => {
+    if (avatarOverrideKey) return avatarOverrideKey;
+    const candidate = user?.avatarKey;
+    if (typeof candidate === "string" && AVATAR_OPTIONS.some((a) => a.key === candidate)) return candidate as AvatarKey;
+    return "rocket";
+  }, [avatarOverrideKey, user?.avatarKey]);
 
   useEffect(() => {
     function onMouseDown(e: MouseEvent) {
@@ -208,7 +205,7 @@ export default function ProfileButton() {
   }
 
   function selectAvatar(key: AvatarKey) {
-    setAvatarKey(key);
+    setAvatarOverrideKey(key);
     setAvatarError(false);
     window.localStorage.setItem("profile_avatar_icon", key);
     setShowAvatarPicker(false);

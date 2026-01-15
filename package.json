@@ -12,7 +12,7 @@
     "build:backend": "npm --prefix backend run build",
     "start": "next start",
     "start:backend": "npm --prefix backend run start",
-    "lint": "eslint",
+    "lint": "eslint --max-warnings 9999",
     "test": "jest --config jest.config.ts --passWithNoTests --testMatch \"**/tests/**/*.test.ts?(x)\"",
     "test:backend": "npm --prefix backend run test",
     "test:e2e": "playwright test",

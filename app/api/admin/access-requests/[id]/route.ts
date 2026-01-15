@@ -4,8 +4,6 @@ import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export const runtime = "nodejs";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
-
 type Payload = {
   email?: string;
   name?: string;

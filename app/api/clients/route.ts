@@ -156,10 +156,6 @@ function isUnknownColumnError(error: unknown) {
   return lower.includes("column") && lower.includes("does not exist");
 }
 
-async function extractToken(req: NextRequest): Promise<string | null> {
-  return extractAccessToken(req);
-}
-
 async function requireAdmin(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req, {
     mockAdmin: {

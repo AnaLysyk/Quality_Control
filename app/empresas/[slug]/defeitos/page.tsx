@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { FiEdit3, FiSearch, FiTrash2 } from "react-icons/fi";
 import { useParams } from "next/navigation";

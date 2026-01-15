@@ -1,6 +1,5 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { notFound } from "next/navigation";

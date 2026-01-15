@@ -1,13 +1,5 @@
 import { redirect } from "next/navigation";
 
-const applications = [
-  { slug: "sfq", name: "SFQ", info: "Runs monitoradas com gráficos e detalhamento." },
-  { slug: "print", name: "PRINT", info: "Status resumido e avisos rápidos assim que forem publicados." },
-  { slug: "booking", name: "Booking", info: "Linha do tempo simples para as próximas entregas." },
-  { slug: "cds", name: "CDS", info: "Indicadores e runs priorizados para o CDS." },
-  { slug: "gmt", name: "GMT", info: "Histórico compacto das execuções GMT." },
-];
-
 export default function DashboardApps() {
   redirect("/empresas");
 

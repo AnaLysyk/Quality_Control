@@ -1,36 +1,18 @@
-jest.mock("@supabase/supabase-js", () => ({
-  createClient: jest.fn(),
-}));
-
-import { createClient } from "@supabase/supabase-js";
 import { POST } from "@/api/auth/login/route";
 
-const createClientMock = createClient as unknown as jest.Mock;
+jest.mock("@/data/usersRepository", () => ({
+  getUserByEmail: jest.fn(),
+}));
 
-function mockSupabaseSignIn(result: { ok: true } | { ok: false }) {
-  const signInWithPassword = jest.fn();
-  if (result.ok) {
-    signInWithPassword.mockResolvedValue({
-      data: {
-        user: { id: "uid-1", email: "a@b", user_metadata: { full_name: "A" } },
-        session: { access_token: "sb-token", token_type: "bearer", expires_in: 3600 },
-      },
-      error: null,
-    });
-  } else {
-    signInWithPassword.mockResolvedValue({ data: { user: null, session: null }, error: { message: "Invalid" } });
-  }
+import { getUserByEmail } from "@/data/usersRepository";
 
-  createClientMock.mockReturnValue({ auth: { signInWithPassword } });
-  return { signInWithPassword };
-}
+const getUserByEmailMock = getUserByEmail as unknown as jest.Mock;
 
 describe("/api/auth/login", () => {
   beforeEach(() => {
-    createClientMock.mockReset();
-    process.env.SUPABASE_MOCK = "false";
-    process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://localhost:9999";
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "anon-key";
+    getUserByEmailMock.mockReset();
+    process.env.SUPABASE_DISABLED = "true";
+    process.env.JWT_SECRET = process.env.JWT_SECRET ?? "test-jwt-secret";
   });
 
   it("retorna 400 se email/senha ausentes", async () => {
@@ -39,7 +21,7 @@ describe("/api/auth/login", () => {
   });
 
   it("retorna 401 se usuário não existe", async () => {
-    mockSupabaseSignIn({ ok: false });
+    getUserByEmailMock.mockResolvedValue(null);
     const res = await POST(
       new Request("http://localhost/api/auth/login", { method: "POST", body: JSON.stringify({ email: "a@b", password: "x" }) })
     );
@@ -47,7 +29,12 @@ describe("/api/auth/login", () => {
   });
 
   it("retorna 401 se usuário inativo", async () => {
-    mockSupabaseSignIn({ ok: false });
+    getUserByEmailMock.mockResolvedValue({
+      id: "u1",
+      email: "a@b",
+      password_hash: "deadbeef",
+      active: false,
+    });
     const res = await POST(
       new Request("http://localhost/api/auth/login", { method: "POST", body: JSON.stringify({ email: "a@b", password: "x" }) })
     );
@@ -55,7 +42,12 @@ describe("/api/auth/login", () => {
   });
 
   it("retorna 401 se senha inválida", async () => {
-    mockSupabaseSignIn({ ok: false });
+    getUserByEmailMock.mockResolvedValue({
+      id: "u1",
+      email: "a@b",
+      password_hash: "not-a-match",
+      active: true,
+    });
     const res = await POST(
       new Request("http://localhost/api/auth/login", { method: "POST", body: JSON.stringify({ email: "a@b", password: "x" }) })
     );
@@ -63,14 +55,23 @@ describe("/api/auth/login", () => {
   });
 
   it("retorna token se login ok", async () => {
-    mockSupabaseSignIn({ ok: true });
+    // sha256("x")
+    getUserByEmailMock.mockResolvedValue({
+      id: "u1",
+      email: "a@b",
+      name: "A",
+      password_hash: "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      active: true,
+      is_global_admin: false,
+    });
     const res = await POST(
       new Request("http://localhost/api/auth/login", { method: "POST", body: JSON.stringify({ email: "a@b", password: "x" }) })
     );
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.token).toBe("sb-token");
+    expect(typeof json.token).toBe("string");
+    expect(json.token.length).toBeGreaterThan(10);
     const setCookie = res.headers.get("set-cookie") || "";
-    expect(setCookie).toMatch(/auth_token=sb-token/);
+    expect(setCookie).toMatch(/auth_token=/);
   });
 });

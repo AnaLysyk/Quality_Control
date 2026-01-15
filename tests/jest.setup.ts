@@ -11,3 +11,6 @@ process.env.SUPABASE_MOCK = process.env.SUPABASE_MOCK ?? "false";
 process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://localhost:9999";
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "anon-key";
 process.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "service-role-key";
+
+// JWT auth (used when SUPABASE_DISABLED=true in specific tests and in future migration)
+process.env.JWT_SECRET = process.env.JWT_SECRET ?? "test-jwt-secret";

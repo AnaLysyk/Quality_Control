@@ -1,11 +1,12 @@
 import { AuthLoginRequestSchema, AuthLoginResponseSchema } from "@/contracts/auth";
 import { createClient } from "@supabase/supabase-js";
 import { apiFail, apiOk } from "@/lib/apiResponse";
+import { isSupabaseDisabled, isProdLike } from "@/lib/envFlags";
+import { getUserByEmail } from "@/data/usersRepository";
+import { hashPasswordSha256, safeEqualHex } from "@/lib/passwordHash";
+import { signToken } from "@/lib/jwtAuth";
 
-const IS_PROD =
-  process.env.NODE_ENV === "production" ||
-  process.env.VERCEL === "1" ||
-  typeof process.env.VERCEL_ENV === "string";
+const IS_PROD = isProdLike();
 
 const SUPABASE_MOCK_RAW = process.env.SUPABASE_MOCK === "true";
 const SUPABASE_MOCK = SUPABASE_MOCK_RAW && !IS_PROD;
@@ -45,6 +46,71 @@ export async function POST(request: Request) {
   }
 
   const { login, password } = parsed.data;
+
+  // JWT-only auth mode (no Supabase): validate against the app DB and issue our own JWT.
+  if (isSupabaseDisabled()) {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      return apiFail(request, "JWT_SECRET nao configurado", {
+        status: 500,
+        code: "ENV_MISSING",
+        details: "Missing JWT_SECRET",
+        extra: { error: "Missing JWT_SECRET" },
+      });
+    }
+
+    const user = await getUserByEmail(login);
+    if (!user || user.active === false) {
+      return apiFail(request, "Email ou senha invalidos", {
+        status: 401,
+        code: "AUTH_INVALID",
+        extra: { error: "Email ou senha invalidos" },
+      });
+    }
+
+    const expectedHash = typeof user.password_hash === "string" ? user.password_hash : "";
+    const providedHash = hashPasswordSha256(password);
+    const ok = expectedHash && safeEqualHex(expectedHash, providedHash);
+    if (!ok) {
+      return apiFail(request, "Email ou senha invalidos", {
+        status: 401,
+        code: "AUTH_INVALID",
+        extra: { error: "Email ou senha invalidos" },
+      });
+    }
+
+    const token = signToken({
+      sub: user.id,
+      email: user.email,
+      isGlobalAdmin: user.is_global_admin === true,
+    });
+
+    const res = apiOk(
+      request,
+      {
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          user_metadata: {
+            full_name: user.name ?? null,
+          },
+        },
+      },
+      "Login realizado",
+      { extra: { token, userId: user.id, auth: "jwt" } },
+    );
+
+    res.cookies.set("auth_token", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 8,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    return res;
+  }
 
   if (SUPABASE_MOCK) {
     const payload = AuthLoginResponseSchema.parse({

@@ -5,6 +5,7 @@ import { getUserById } from "@/data/usersRepository";
 import { getUserRoleInClient } from "@/data/userClientsRepository";
 import { getSupabaseServer } from "@/lib/supabaseServer";
 import { isAuthUserGlobalAdmin } from "@/lib/rbac/globalAdmin";
+import { isSupabaseDisabled } from "@/lib/envFlags";
 
 export type AuthUser = {
   id: string;
@@ -134,6 +135,8 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   const token = headerToken || cookieToken;
   const jwtUser = verifyToken(token || undefined);
   if (jwtUser) return jwtUser;
+
+  if (isSupabaseDisabled()) return null;
 
   // Current Next.js login flow stores a Supabase access token in `auth_token`.
   return verifySupabaseToken(token ?? null);

@@ -14,7 +14,10 @@ npm install
 
 - Copie `.env.example` para `.env.local`
 - (Recomendado) Se preferir, use `.env.local.example` como base (inclui Qase + Postgres).
-- Preencha as variáveis do Supabase:
+- Auth (recomendado: modo JWT, sem Supabase):
+	- `SUPABASE_DISABLED=true`
+	- `JWT_SECRET` (server-only)
+- Supabase (legado; apenas se ainda usar Supabase Auth / reset de senha):
 	- `NEXT_PUBLIC_SUPABASE_URL`
 	- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 	- `NEXT_PUBLIC_SITE_URL` (importante para links de reset de senha; use o domínio fixo do deploy)
@@ -60,7 +63,9 @@ npm run dev:stop
 
 Abrir: http://localhost:3000
 
-## Supabase Auth (reset de senha)
+## Reset de senha (legado / Supabase)
+
+Se `SUPABASE_DISABLED=true`, este fluxo não é usado.
 
 Para o link de recuperação de senha não cair em `DEPLOYMENT_NOT_FOUND` (Vercel preview expira), use sempre o domínio de produção.
 

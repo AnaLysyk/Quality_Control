@@ -41,10 +41,6 @@ type DefectResponse = {
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const FALLBACK_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
 
-const PROJECT_MAP: Record<string, string> = {
-  griaule: process.env.QASE_PROJECT_CODE || process.env.QASE_PROJECT || "",
-};
-
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object") return null;
   return value as Record<string, unknown>;
@@ -144,11 +140,18 @@ function normalize(defects: QaseDefect[], runNames: Map<string, string>): Defect
 export async function GET(_: Request, context: { params: Promise<{ slug: string }> }) {
   const { slug } = await context.params;
   const clientSettings = await getClientQaseSettings(slug);
-  const projectCode = clientSettings?.projectCode ?? PROJECT_MAP[slug];
-  const projectCodes = (clientSettings?.projectCodes?.length ? clientSettings.projectCodes : projectCode ? [projectCode] : [])
-    .map((c) => c.trim())
-    .filter(Boolean);
   const token = clientSettings?.token ?? FALLBACK_TOKEN;
+  const projectCodesSet = new Set<string>();
+  const settingsCodes = clientSettings?.projectCodes ?? [];
+  settingsCodes.forEach((code) => {
+    const normalized = typeof code === "string" ? code.trim().toUpperCase() : "";
+    if (normalized) projectCodesSet.add(normalized);
+  });
+  if (!projectCodesSet.size && clientSettings?.projectCode) {
+    const normalized = clientSettings.projectCode.trim().toUpperCase();
+    if (normalized) projectCodesSet.add(normalized);
+  }
+  const projectCodes = Array.from(projectCodesSet);
 
   if (!slug || !projectCodes.length) {
     return NextResponse.json(

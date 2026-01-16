@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -129,9 +130,23 @@ export default function LoginClient() {
                 Entrando...
               </div>
             ) : (
-              'Entrar'
+              "Entrar"
             )}
           </button>
+          <div className="mt-4 flex items-center justify-between text-sm text-[#4b5563]">
+            <Link
+              href="/login/forgot-password"
+              className="font-medium text-[#011848]/90 hover:text-[#011848]"
+            >
+              Esqueci minha senha
+            </Link>
+            <Link
+              href="/login/access-request"
+              className="font-medium text-[#ef0001]/90 hover:text-[#ef0001]"
+            >
+              Solicitar acesso
+            </Link>
+          </div>
         </form>
       </div>
     </div>

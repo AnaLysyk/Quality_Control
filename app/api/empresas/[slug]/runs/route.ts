@@ -17,31 +17,7 @@ type RunPayload = {
   origin: "automatico" | "manual";
 };
 
-function parseProjectCodes(value: unknown): string[] {
-  const normalize = (code: string) => code.trim().toUpperCase();
-
-  if (Array.isArray(value)) {
-    return value
-      .filter((item): item is string => typeof item === "string")
-      .map(normalize)
-      .filter(Boolean);
-  }
-
-  if (typeof value === "string") {
-    return value
-      .split(/[\s,;|]+/g)
-      .map(normalize)
-      .filter(Boolean);
-  }
-
-  return [];
-}
-
 const FALLBACK_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
-
-const PROJECT_MAP: Record<string, string> = {
-  griaule: process.env.QASE_PROJECT_CODE || process.env.QASE_PROJECT || "",
-};
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
@@ -122,12 +98,17 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
 
   const clientSettings = await getClientQaseSettings(effectiveSlug);
   const token = clientSettings?.token ?? FALLBACK_TOKEN;
-  const projectCodes = Array.from(
-    new Set([
-      ...parseProjectCodes(clientSettings?.projectCodes ?? clientSettings?.projectCode ?? null),
-      ...parseProjectCodes(PROJECT_MAP[effectiveSlug] ?? null),
-    ]),
-  );
+  const projectCodesSet = new Set<string>();
+  const settingsCodes = clientSettings?.projectCodes ?? [];
+  settingsCodes.forEach((code) => {
+    const normalized = typeof code === "string" ? code.trim().toUpperCase() : "";
+    if (normalized) projectCodesSet.add(normalized);
+  });
+  if (!projectCodesSet.size && clientSettings?.projectCode) {
+    const normalized = clientSettings.projectCode.trim().toUpperCase();
+    if (normalized) projectCodesSet.add(normalized);
+  }
+  const projectCodes = Array.from(projectCodesSet);
 
   const runs: RunPayload[] = [];
 

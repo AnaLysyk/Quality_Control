@@ -22,10 +22,6 @@ const sanitizeEnvValue = (value: string | null | undefined, fallback = "") => {
 };
 
 const FALLBACK_TOKEN = sanitizeEnvValue(process.env.QASE_TOKEN || process.env.QASE_API_TOKEN);
-const PROJECT_MAP: Record<string, string> = {
-  griaule: sanitizeEnvValue(process.env.QASE_PROJECT_CODE || process.env.QASE_PROJECT),
-};
-
 const QASE_APP_URL = sanitizeEnvValue(
   process.env.QASE_APP_URL || process.env.NEXT_PUBLIC_QASE_APP_URL,
   "https://app.qase.io",
@@ -198,8 +194,18 @@ export async function GET(_: Request, context: RouteContext) {
   }
 
   const clientSettings = await getClientQaseSettings(slug);
-  const projectCode = clientSettings?.projectCode ?? PROJECT_MAP[slug];
   const token = clientSettings?.token ?? FALLBACK_TOKEN;
+  const projectCodesSet = new Set<string>();
+  const settingsCodes = clientSettings?.projectCodes ?? [];
+  settingsCodes.forEach((code) => {
+    const normalized = typeof code === "string" ? code.trim().toUpperCase() : "";
+    if (normalized) projectCodesSet.add(normalized);
+  });
+  if (!projectCodesSet.size && clientSettings?.projectCode) {
+    const normalized = clientSettings.projectCode.trim().toUpperCase();
+    if (normalized) projectCodesSet.add(normalized);
+  }
+  const projectCode = projectCodesSet.values().next().value ?? null;
 
   if (!projectCode) {
     return NextResponse.json(

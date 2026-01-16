@@ -122,13 +122,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const mod = await import("@/lib/supabase/client");
-      await mod.getSupabaseClient().auth.signOut();
-    } catch {
-      /* ignore */
-    }
-
-    try {
       localStorage.removeItem("auth_ok");
     } catch {
       /* ignore */

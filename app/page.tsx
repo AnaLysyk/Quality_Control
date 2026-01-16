@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { FiArrowRight } from "react-icons/fi";
-
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useClientContext } from "@/context/ClientContext";
 import { CompanySelector } from "./components/CompanySelector";
 
 const cards = [
@@ -20,7 +23,31 @@ const cards = [
   },
 ];
 
-export default function HomePage() {
+export default function Page() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const { clients, loading: clientsLoading } = useClientContext();
+
+  useEffect(() => {
+    if (authLoading || clientsLoading) return;
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+    if (!clients || clients.length === 0) {
+      router.replace("/empresas");
+      return;
+    }
+  }, [user, clients, authLoading, clientsLoading, router]);
+
+  if (authLoading || clientsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-xl text-(--tc-text-muted,#6b7280)">
+        Carregando...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-linear-to-b from-(--page-bg,#f8f8fb) to-(--page-bg,#f0f4ff)">
       <div className="max-w-6xl mx-auto px-4 py-12 space-y-10">

@@ -16,10 +16,9 @@ export default function AppShell({ children }: AppShellProps) {
   const isLogin = pathname.startsWith("/login");
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Prevent a stale mobile overlay from blocking navigation after route changes
-  // (common when viewport/zoom toggles lg breakpoint).
   useEffect(() => {
-    setMobileOpen((prev) => prev ? false : prev);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMobileOpen(false);
   }, [pathname]);
 
   if (isLogin) {
@@ -31,7 +30,7 @@ export default function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className="h-screen w-full bg-(--page-bg) text-(--page-text) overflow-hidden">
+    <div className="min-h-screen w-full bg-(--page-bg) text-(--page-text)">
       <SidebarVisibility mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
       <button
@@ -47,8 +46,8 @@ export default function AppShell({ children }: AppShellProps) {
         <ProfileButton />
       </div>
 
-      <div className="flex flex-col h-full lg:ml-65">
-        <div className="flex-1 h-full overflow-auto">
+      <div className="flex flex-col min-h-screen lg:ml-65">
+        <div className="flex-1 min-h-screen overflow-auto">
           <MainWrapper>{children}</MainWrapper>
         </div>
       </div>

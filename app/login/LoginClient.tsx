@@ -41,7 +41,7 @@ export default function LoginClient() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative overflow-hidden px-4 py-10">
       {/* Animated background elements com as cores da marca */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Canto superior esquerdo */}
@@ -62,7 +62,7 @@ export default function LoginClient() {
         <div className="absolute top-1/2 right-2 w-14 h-14 bg-[#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
       </div>
 
-      <div className="max-w-md w-full space-y-8 relative z-10">
+      <div className="max-w-lg w-full space-y-8 relative z-10">
         <div className="text-center">
           <div className="mx-auto w-24 h-24 bg-linear-to-r from-[#011848] to-[#ef0001] rounded-full flex items-center justify-center mb-6 shadow-lg">
             <img src="/images/tc.png" alt="Logo Testing Company" className="w-16 h-16 animate-spin-slower select-none pointer-events-none" />
@@ -75,7 +75,7 @@ export default function LoginClient() {
           </p>
         </div>
         
-        <form className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-[#011848]/10" onSubmit={handleSubmit}>
+        <form className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-[#011848]/10 w-full max-w-md mx-auto" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-[#011848] mb-1">

@@ -133,19 +133,26 @@ export default function LoginClient() {
               "Entrar"
             )}
           </button>
-          <div className="mt-4 flex flex-col gap-2 text-sm text-[#4b5563]">
-            <Link
-              href="/login/forgot-password"
-              className="font-medium text-[#011848]/90 hover:text-[#011848]"
-            >
-              Esqueci minha senha
-            </Link>
-            <Link
-              href="/login/access-request"
-              className="font-medium text-[#ef0001]/90 hover:text-[#ef0001]"
-            >
-              Solicitar acesso
-            </Link>
+          <div className="mt-6 space-y-3 text-sm text-[#4b5563]">
+            <div className="flex items-center justify-center gap-3 text-xs uppercase tracking-[0.3em] text-[#a1a4b2]">
+              <span className="h-px w-12 bg-[#d6d9e6]" />
+              <span>ou</span>
+              <span className="h-px w-12 bg-[#d6d9e6]" />
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <Link
+                href="/login/forgot-password"
+                className="font-semibold text-[#011848]/90 hover:text-[#011848]"
+              >
+                Esqueci minha senha
+              </Link>
+              <Link
+                href="/login/access-request"
+                className="font-semibold text-[#ef0001] hover:text-[#c70000]"
+              >
+                Solicitar acesso
+              </Link>
+            </div>
           </div>
         </form>
       </div>

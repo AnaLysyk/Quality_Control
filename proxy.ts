@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getRedis } from "@/lib/redis";
+import { hasPermission, getUserRoleFromSession } from "@/lib/permissions";
 
-export default function proxy(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isPublicAsset =
     pathname.startsWith("/images") ||
@@ -11,9 +13,12 @@ export default function proxy(req: NextRequest) {
   // Public routes and assets
   if (
     pathname.startsWith("/login") ||
-    pathname.startsWith("/api/login") ||
-    pathname.startsWith("/api/auth") || // permite fluxos de auth
-    pathname.startsWith("/api/") || // não intercepta outras rotas API
+    pathname.startsWith("/api/auth/login") ||
+    pathname.startsWith("/api/auth/logout") ||
+    pathname.startsWith("/api/auth/reset-request") ||
+    pathname.startsWith("/api/auth/reset-password") ||
+    pathname.startsWith("/api/auth/reset-via-token") ||
+    pathname.startsWith("/api/public") ||
     pathname.startsWith("/_next") ||
     pathname === "/favicon.ico" ||
     isPublicAsset
@@ -21,15 +26,42 @@ export default function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const auth = req.cookies.get("auth_token")?.value;
+  // Rotas protegidas
+  const protectedPaths = ['/dashboard', '/admin', '/empresas', '/me', '/settings', '/api/me', '/api/user'];
+  const isProtected = protectedPaths.some(path => pathname.startsWith(path));
 
-  // Authenticated
-  if (auth) {
+  if (!isProtected) {
     return NextResponse.next();
   }
 
-  // Redirect unauthenticated to login
-  return NextResponse.redirect(new URL("/login", req.url));
+  // Verificar sessão
+  const sessionId = req.cookies.get("session_id")?.value;
+  if (!sessionId) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  try {
+    const redis = getRedis();
+    const raw = await redis.get(`session:${sessionId}`);
+    if (!raw) {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+
+    // Parse session
+    const session = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const userRole = getUserRoleFromSession(session);
+
+    // Check permissions for specific routes
+    if (pathname.startsWith('/admin/') && !hasPermission(userRole, 'view_admin')) {
+      return NextResponse.redirect(new URL("/dashboard", req.url)); // or 403
+    }
+
+    // For other protected routes, session is valid
+    return NextResponse.next();
+  } catch (error) {
+    console.error('Proxy session validation error:', error);
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
 }
 
 export const config = {

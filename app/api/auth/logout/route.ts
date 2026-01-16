@@ -1,28 +1,26 @@
 import { NextResponse } from "next/server";
-import { clearAuthCookie } from "@/lib/jwtAuth";
+import { getRedis } from "@/lib/redis";
 
-const EXTRA_COOKIES = [
-  "access_token",
-  "refresh_token",
-  "sb-access-token",
-  "sb-refresh-token",
-];
+function getSessionId(req: Request): string | null {
+  const cookie = req.headers.get("cookie") ?? "";
+  const match = cookie.match(/session_id=([^;]+)/);
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
+}
 
-export const runtime = "nodejs";
+export async function POST(req: Request) {
+  const sessionId = getSessionId(req);
 
-export async function POST() {
-  await clearAuthCookie();
-  const response = NextResponse.json({ ok: true });
-
-  for (const name of EXTRA_COOKIES) {
-    response.cookies.set(name, "", {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 0,
-    });
+  if (sessionId) {
+    const redis = getRedis();
+    await redis.del(`session:${sessionId}`);
   }
 
-  return response;
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set("session_id", "", {
+    httpOnly: true,
+    path: "/",
+    maxAge: 0,
+  });
+
+  return res;
 }

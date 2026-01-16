@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseServer } from "@/lib/supabaseServer";
+import { prisma } from "@/lib/prisma";
 import { authenticateRequest } from "@/lib/jwtAuth";
 
 type Payload = {
@@ -40,14 +40,15 @@ export async function POST(req: Request) {
   const user_agent = req.headers.get("user-agent") || null;
 
   try {
-    const supabaseServer = getSupabaseServer();
-    await supabaseServer.from("support_requests").insert({
-      email,
-      message,
-      status: "open",
-      ip_address,
-      user_agent,
-      user_id: userId,
+    await prisma.supportRequest.create({
+      data: {
+        email,
+        message,
+        status: "open",
+        ip_address,
+        user_agent,
+        user_id: userId,
+      },
     });
   } catch (err) {
     // Não vaza detalhes; apenas loga no servidor

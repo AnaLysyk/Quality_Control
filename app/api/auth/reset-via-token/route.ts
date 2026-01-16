@@ -1,56 +1,57 @@
 import { NextResponse } from "next/server";
-
-function normalizeSupabaseUrl(value: string | undefined) {
-  const raw = (value ?? "").trim();
-  if (!raw) return null;
-  let url = raw.replace(/\.supabase\.com\b/i, ".supabase.co");
-  if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
-  url = url.replace(/\/+$/, "");
-  return url;
-}
+import { getRedis } from "@/lib/redis";
+import { prisma } from "@/lib/prisma";
+import { hashPasswordSha256 } from "@/lib/passwordHash";
 
 export async function POST(req: Request) {
-  let payload: unknown;
-  try {
-    payload = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
-
-  const body = payload as { token?: unknown; new_password?: unknown };
-  const token = typeof body.token === "string" ? body.token.trim() : "";
-  const newPassword = typeof body.new_password === "string" ? body.new_password : "";
+  const body = await req.json().catch(() => null);
+  const { token, newPassword } = body ?? {};
 
   if (!token || !newPassword) {
-    return NextResponse.json({ error: "token and new_password are required" }, { status: 400 });
-  }
-
-  const explicitUrl = (process.env.RESET_VIA_TOKEN_FN_URL ?? "").trim();
-  const supabaseUrl = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
-  const fallbackUrl = supabaseUrl ? `${supabaseUrl}/functions/v1/reset-via-token` : null;
-  const functionUrl = explicitUrl || fallbackUrl;
-
-  if (!functionUrl) {
     return NextResponse.json(
-      {
-        error: "Reset function URL not configured",
-        details: "Set RESET_VIA_TOKEN_FN_URL or NEXT_PUBLIC_SUPABASE_URL",
-      },
-      { status: 500 }
+      { error: "Token e nova senha são obrigatórios" },
+      { status: 400 }
     );
   }
 
-  const upstream = await fetch(functionUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token, new_password: newPassword }),
-  });
+  if (typeof newPassword !== "string" || newPassword.length < 8) {
+    return NextResponse.json(
+      { error: "A senha deve ter pelo menos 8 caracteres" },
+      { status: 400 }
+    );
+  }
 
-  const text = await upstream.text();
-  const contentType = upstream.headers.get("content-type") || "application/json";
+  const redis = getRedis();
 
-  return new NextResponse(text, {
-    status: upstream.status,
-    headers: { "Content-Type": contentType },
-  });
+  // Buscar userId pelo token
+  const userId = await redis.get(`reset:${token}`);
+
+  if (!userId) {
+    return NextResponse.json(
+      { error: "Token inválido ou expirado" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    // Hash da nova senha
+    const hashedPassword = hashPasswordSha256(newPassword);
+
+    // Atualizar senha no banco
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    // Remover token usado
+    await redis.del(`reset:${token}`);
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    return NextResponse.json(
+      { error: "Erro interno do servidor" },
+      { status: 500 }
+    );
+  }
 }

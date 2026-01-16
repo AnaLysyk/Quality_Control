@@ -1,21 +1,7 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { getSupabaseClient } from "@/lib/supabase/client";
-
-function normalizeBaseUrl(value: string | undefined | null) {
-  const raw = (value ?? "").trim();
-  if (!raw) return null;
-  let url = raw.replace(/\s+/g, "");
-  if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
-  url = url.replace(/\/+$/, "");
-  return url;
-}
-
-function normalizeEmail(value: string) {
-  return value.trim().toLowerCase();
-}
 
 export default function ForgotPasswordClient() {
   const [email, setEmail] = useState("");
@@ -23,92 +9,110 @@ export default function ForgotPasswordClient() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const redirectTo = useMemo(() => {
-    if (typeof window === "undefined") return null;
-    const baseUrl = normalizeBaseUrl(process.env.NEXT_PUBLIC_SITE_URL) ?? window.location.origin;
-    return `${baseUrl}/login/reset-password`;
-  }, []);
-
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
-    const normalized = normalizeEmail(email);
-    if (!normalized) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
       setError("Informe seu e-mail");
+      return;
+    }
+
+    // Validação básica de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      setError("E-mail inválido");
       return;
     }
 
     setLoading(true);
     try {
-      const supabase = getSupabaseClient();
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalized, {
-        redirectTo: redirectTo ?? undefined,
+      const response = await fetch("/api/auth/reset-request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: normalizedEmail }),
       });
 
-      if (resetError) {
-        setError("Não foi possível enviar o e-mail de recuperação.");
-        return;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erro ao solicitar reset");
       }
 
-      // Mensagem neutra para evitar enumeração de usuários.
-      setSuccess("Se esse e-mail existir, enviamos um link para redefinir sua senha.");
+      setSuccess("Se o e-mail existir em nossa base, enviamos instruções para redefinir sua senha. Verifique sua caixa de entrada (e spam).");
+
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Não foi possível enviar o e-mail de recuperação.";
-      if (message === "Failed to fetch" || /failed to fetch/i.test(message)) {
-        setError(
-          "Não foi possível conectar ao Supabase. Verifique NEXT_PUBLIC_SUPABASE_URL/NEXT_PUBLIC_SUPABASE_ANON_KEY e sua conectividade."
-        );
-      } else {
-        setError(message);
-      }
+      setError(err instanceof Error ? err.message : "Erro desconhecido");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#041a49] flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-xl bg-white shadow-2xl overflow-hidden">
-        <div className="px-6 py-6">
-          <h1 className="text-2xl font-bold text-[#0b1a3c]">Recuperar senha</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Informe seu e-mail e enviaremos um link para redefinir sua senha.
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Esqueceu sua senha?
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Digite seu e-mail e enviaremos instruções para redefinir sua senha.
           </p>
+        </div>
 
-          <form className="mt-4 space-y-3" onSubmit={onSubmit}>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">E-mail</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/70"
-                placeholder="seu@email.com"
-                autoComplete="email"
-                required
-              />
+        <form className="mt-8 space-y-6" onSubmit={onSubmit}>
+          {error && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="text-sm text-red-700">{error}</div>
             </div>
+          )}
 
-            {error && <div className="text-sm text-red-600">{error}</div>}
-            {success && <div className="text-sm text-green-700">{success}</div>}
+          {success && (
+            <div className="rounded-md bg-green-50 p-4">
+              <div className="text-sm text-green-700">{success}</div>
+            </div>
+          )}
 
+          <div>
+            <label htmlFor="email" className="sr-only">
+              E-mail
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+              placeholder="Seu e-mail"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-full bg-linear-to-r from-[#e53935] to-[#d81b60] py-2 text-white font-semibold shadow-md hover:opacity-90 disabled:opacity-50 transition"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Enviando..." : "Enviar link"}
+              {loading ? "Enviando..." : "Enviar instruções"}
             </button>
+          </div>
 
-            <div className="text-center text-sm">
-              <Link href="/login" className="text-blue-700 hover:underline">
-                Voltar ao login
-              </Link>
-            </div>
-          </form>
-        </div>
+          <div className="text-center">
+            <Link
+              href="/login"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              Voltar ao login
+            </Link>
+          </div>
+        </form>
       </div>
     </div>
   );

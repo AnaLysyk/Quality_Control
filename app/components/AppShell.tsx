@@ -19,7 +19,7 @@ export default function AppShell({ children }: AppShellProps) {
   // Prevent a stale mobile overlay from blocking navigation after route changes
   // (common when viewport/zoom toggles lg breakpoint).
   useEffect(() => {
-    setMobileOpen(false);
+    setMobileOpen((prev) => prev ? false : prev);
   }, [pathname]);
 
   if (isLogin) {

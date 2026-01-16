@@ -1,3 +1,7 @@
+/* Animação spin mais lenta para o logo da Testing Company */
+.animate-spin-slower {
+  animation: spin 7s linear infinite;
+}
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 

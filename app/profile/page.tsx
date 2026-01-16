@@ -239,7 +239,7 @@ export default function ProfilePage() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {[
-              { title: "Visão geral", description: "Indicadores-chave para sua operação", href: "/painel" },
+              { title: "Visão geral", description: "Indicadores-chave para sua operação", href: "/applications-panel" },
               { title: "Runs do cliente", description: "Apps e runs ativos para o contexto atual", href: `/empresas/${encodeURIComponent(slug)}/runs` },
               { title: "Configurações", description: "Tema, notificações e dados pessoais", href: "/settings" },
             ].map((item) => (

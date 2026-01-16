@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseServer } from "@/lib/supabaseServer";
+import { prisma } from "@/lib/prisma";
 import { authenticateRequest } from "@/lib/jwtAuth";
 
 type Payload = {
@@ -91,14 +91,6 @@ function composeAccessRequestMessage(input: {
 }
 
 export async function POST(req: Request) {
-  let supabaseServer;
-  try {
-    supabaseServer = getSupabaseServer();
-  } catch (err) {
-    console.error("Supabase não configurado para support/access-request:", err);
-    return NextResponse.json({ message: "Supabase não configurado no ambiente" }, { status: 500 });
-  }
-
   const body = (await req.json().catch(() => ({}))) as Payload;
   const email = sanitize(body.email, 255).toLowerCase();
   const company = sanitize(body.company, 255);
@@ -133,16 +125,18 @@ export async function POST(req: Request) {
     notes,
   });
 
-  const { error } = await supabaseServer.from("support_requests").insert({
-    email,
-    message: composedMessage,
-    status: "open",
-    ip_address,
-    user_agent,
-    user_id: userId,
-  });
-
-  if (error) {
+  try {
+    await prisma.supportRequest.create({
+      data: {
+        email,
+        message: composedMessage,
+        status: "open",
+        ip_address,
+        user_agent,
+        user_id: userId,
+      },
+    });
+  } catch (error) {
     console.error("Erro ao registrar support_request:", error);
     return NextResponse.json({ message: "Erro interno ao registrar solicitação" }, { status: 500 });
   }
@@ -162,23 +156,13 @@ export async function GET(req: Request) {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
-  let supabaseServer;
   try {
-    supabaseServer = getSupabaseServer();
-  } catch (err) {
-    console.error("Supabase não configurado para support/access-request GET:", err);
-    return NextResponse.json({ message: "Supabase não configurado no ambiente" }, { status: 500 });
-  }
-
-  const { data, error } = await supabaseServer
-    .from("support_requests")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
+    const items = await prisma.supportRequest.findMany({
+      orderBy: { created_at: "desc" },
+    });
+    return NextResponse.json({ items });
+  } catch (error) {
     console.error("Erro ao listar support_requests:", error);
     return NextResponse.json({ message: "Erro interno" }, { status: 500 });
   }
-
-  return NextResponse.json({ items: data ?? [] });
 }

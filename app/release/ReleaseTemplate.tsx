@@ -6,7 +6,7 @@ import ManualReleaseActions from "@/components/ManualReleaseActions";
 import { EditReleaseButton } from "@/components/EditReleaseButton";
 import { ManualStatsForm } from "@/components/ManualStatsForm";
 import { getReleaseBySlug, type ReleaseEntry } from "./data";
-import { getRunDetails, getQaseRunKanban } from "@/services/qase";
+import { getRunDetails, getQaseRunKanban } from "@/integrations/qase";
 import type { KanbanData } from "@/types/kanban";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import type { Release } from "@/types/release";

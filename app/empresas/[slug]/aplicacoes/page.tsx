@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { ApplicationsList } from "@/applications/ApplicationsList";
+import { ApplicationsList } from "@/applications-hub/ApplicationsList";
 import Breadcrumb from "@/components/Breadcrumb";
 
 export default function EmpresaAplicacoesPage() {

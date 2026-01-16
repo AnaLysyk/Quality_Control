@@ -1,0 +1,12 @@
+.poppinsFont {
+	font-family: 'Poppins', sans-serif;
+}
+.color-swatch-primary { background-color: #011848; }
+.color-swatch-primary-dark { background-color: #000f2e; }
+.color-swatch-accent { background-color: #ef0001; }
+.color-swatch-accent-hover { background-color: #c80001; }
+.color-swatch-accent-active { background-color: #a80001; }
+.color-swatch-background { background-color: #f4f6fb; }
+.color-swatch-text-primary { background-color: #0b1a3c; }
+.color-swatch-text-secondary { background-color: #4b5563; }
+.color-swatch-surface { background-color: #ffffff; }

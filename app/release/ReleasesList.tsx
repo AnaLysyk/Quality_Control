@@ -143,7 +143,7 @@ export function ReleasesList({ className }: ReleasesListProps) {
                   {meta.label.toUpperCase()}
                 </span>
                 <Link
-                  href={`/applications/${appKey}`}
+                  href={`/applications-hub/${appKey}`}
                   className="cursor-pointer text-sm font-semibold text-(--tc-accent) hover:brightness-110 transition"
                 >
                   Ver todas as runs desta aplicacao →

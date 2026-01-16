@@ -43,7 +43,7 @@ export default async function EmpresaMetricasPage({
       </div>
 
       <div className="mx-auto mt-4 w-full max-w-7xl px-4 sm:mt-6 sm:px-6 lg:px-10">
-        <DashboardPage showHeader={false} companySlug={slug} mode="metrics" />
+        <DashboardPage />
       </div>
     </div>
   );

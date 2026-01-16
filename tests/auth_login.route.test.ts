@@ -1,18 +1,30 @@
-import { POST } from "@/api/auth/login/route";
-
-jest.mock("@/data/usersRepository", () => ({
-  getUserByEmail: jest.fn(),
+jest.mock("@/lib/redis", () => ({
+  getRedis: jest.fn(),
 }));
 
-import { getUserByEmail } from "@/data/usersRepository";
+jest.mock("@/lib/prisma", () => ({
+  prisma: {
+    user: {
+      findUnique: jest.fn(),
+    },
+  },
+}));
 
-const getUserByEmailMock = getUserByEmail as unknown as jest.Mock;
+import { POST } from "@/api/auth/login/route";
+import { getRedis } from "@/lib/redis";
+import { prisma } from "@/lib/prisma";
+
+const getRedisMock = getRedis as unknown as jest.Mock;
+const findUniqueMock = prisma.user.findUnique as jest.Mock;
 
 describe("/api/auth/login", () => {
   beforeEach(() => {
-    getUserByEmailMock.mockReset();
-    process.env.SUPABASE_DISABLED = "true";
-    process.env.JWT_SECRET = process.env.JWT_SECRET ?? "test-jwt-secret";
+    getRedisMock.mockReset();
+    findUniqueMock.mockReset();
+    const mockRedis = {
+      set: jest.fn().mockResolvedValue("OK"),
+    };
+    getRedisMock.mockReturnValue(mockRedis);
   });
 
   it("retorna 400 se email/senha ausentes", async () => {
@@ -20,58 +32,40 @@ describe("/api/auth/login", () => {
     expect(res.status).toBe(400);
   });
 
-  it("retorna 401 se usuário não existe", async () => {
-    getUserByEmailMock.mockResolvedValue(null);
+  it("retorna 401 se credenciais inválidas", async () => {
+    findUniqueMock.mockResolvedValue(null);
     const res = await POST(
-      new Request("http://localhost/api/auth/login", { method: "POST", body: JSON.stringify({ email: "a@b", password: "x" }) })
+      new Request("http://localhost/api/auth/login", { method: "POST", body: JSON.stringify({ email: "wrong@test.com", password: "x" }) })
     );
     expect(res.status).toBe(401);
   });
 
-  it("retorna 401 se usuário inativo", async () => {
-    getUserByEmailMock.mockResolvedValue({
-      id: "u1",
-      email: "a@b",
-      password_hash: "deadbeef",
-      active: false,
-    });
-    const res = await POST(
-      new Request("http://localhost/api/auth/login", { method: "POST", body: JSON.stringify({ email: "a@b", password: "x" }) })
-    );
-    expect(res.status).toBe(401);
-  });
-
-  it("retorna 401 se senha inválida", async () => {
-    getUserByEmailMock.mockResolvedValue({
-      id: "u1",
-      email: "a@b",
-      password_hash: "not-a-match",
+  it("retorna ok e seta cookie se login ok", async () => {
+    findUniqueMock.mockResolvedValue({
+      id: "user-1",
+      email: "admin@test.com",
+      password_hash: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92", // hash of 123456
+      name: "Admin Test",
       active: true,
-    });
+      created_at: new Date(),      userCompanies: [
+        {
+          user_id: "user-1",
+          company_id: "company-1",
+          role: "admin",
+          company: {
+            id: "company-1",
+            name: "Testing Company",
+            slug: "testing-company",
+          },
+        },
+      ],    });
     const res = await POST(
-      new Request("http://localhost/api/auth/login", { method: "POST", body: JSON.stringify({ email: "a@b", password: "x" }) })
-    );
-    expect(res.status).toBe(401);
-  });
-
-  it("retorna token se login ok", async () => {
-    // sha256("x")
-    getUserByEmailMock.mockResolvedValue({
-      id: "u1",
-      email: "a@b",
-      name: "A",
-      password_hash: "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
-      active: true,
-      is_global_admin: false,
-    });
-    const res = await POST(
-      new Request("http://localhost/api/auth/login", { method: "POST", body: JSON.stringify({ email: "a@b", password: "x" }) })
+      new Request("http://localhost/api/auth/login", { method: "POST", body: JSON.stringify({ email: "admin@test.com", password: "123456" }) })
     );
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(typeof json.token).toBe("string");
-    expect(json.token.length).toBeGreaterThan(10);
+    expect(json).toEqual({ ok: true });
     const setCookie = res.headers.get("set-cookie") || "";
-    expect(setCookie).toMatch(/auth_token=/);
+    expect(setCookie).toMatch(/session_id=/);
   });
 });

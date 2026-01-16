@@ -56,3 +56,5 @@ test-results/
 playwright-report/
 blob-report/
 
+
+/generated/prisma

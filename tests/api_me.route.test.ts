@@ -1,55 +1,54 @@
 import { GET } from "@/api/me/route";
-import { buildQueryResponse, createSupabaseServerMock, resetSupabaseServerMock } from "./utils/supabaseMock";
 
-const supabaseServer = createSupabaseServerMock();
-
-jest.mock("@/lib/supabaseServer", () => ({
-  supabaseServer,
-  getSupabaseServer: () => supabaseServer,
+jest.mock("@/lib/redis", () => ({
+  getRedis: jest.fn(),
 }));
 
-function requestWithAuth(url: string, token = "token") {
-  return new Request(url, { headers: { Authorization: `Bearer ${token}` } });
+import { getRedis } from "@/lib/redis";
+
+const getRedisMock = getRedis as unknown as jest.Mock;
+
+function requestWithAuth(url: string, sessionId = "test-session") {
+  return new Request(url, { headers: { cookie: `session_id=${sessionId}` } });
 }
 
 describe("/api/me route", () => {
   beforeEach(() => {
-    resetSupabaseServerMock(supabaseServer);
+    getRedisMock.mockReset();
   });
 
   it("retorna 401 se não autenticado", async () => {
-    supabaseServer.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+    const mockRedis = {
+      get: jest.fn().mockResolvedValue(null),
+      expire: jest.fn(),
+    };
+    getRedisMock.mockReturnValue(mockRedis);
     const res = await GET(new Request("http://localhost/api/me"));
     expect(res.status).toBe(401);
   });
 
-  it("retorna usuário autenticado via bearer", async () => {
-    supabaseServer.auth.getUser.mockResolvedValue({
-      data: { user: { id: "usr1", email: "ana@example.com", user_metadata: { full_name: "Ana" } } },
-      error: null,
-    });
-    supabaseServer.from.mockImplementation((table: string) => {
-      if (table === "profiles") {
-        return buildQueryResponse({ data: { full_name: "Ana", avatar_url: "http://img", is_global_admin: false }, error: null });
-      }
-      if (table === "user_clients") {
-        return buildQueryResponse({
-          data: [{ client_id: "griaule", client_slug: "griaule", active: true }],
-          error: null,
-        });
-      }
-      return buildQueryResponse({ data: null, error: null });
-    });
+  it("retorna usuário autenticado via session_id", async () => {
+    const user = {
+      userId: "usr1",
+      email: "ana@example.com",
+      name: "Ana",
+      companyId: "comp1",
+      companySlug: "test-company",
+      role: "admin",
+    };
+    const mockRedis = {
+      get: jest.fn().mockResolvedValue(JSON.stringify(user)),
+      expire: jest.fn().mockResolvedValue(1),
+    };
+    getRedisMock.mockReturnValue(mockRedis);
 
     const res = await GET(requestWithAuth("http://localhost/api/me"));
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.user).toMatchObject({
-      id: "usr1",
-      name: "Ana",
-      email: "ana@example.com",
-      avatarUrl: "http://img",
-      isGlobalAdmin: false,
-    });
+    expect(json.user).toMatchObject(user);
+    expect(mockRedis.expire).toHaveBeenCalledWith("session:test-session", 28800); // 8*3600
+    const setCookie = res.headers.get("set-cookie") || "";
+    expect(setCookie).toMatch(/session_id=test-session/);
+    expect(setCookie).toMatch(/Max-Age=28800/);
   });
 });

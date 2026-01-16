@@ -133,7 +133,7 @@ export default function LoginClient() {
               "Entrar"
             )}
           </button>
-          <div className="mt-4 flex items-center justify-between text-sm text-[#4b5563]">
+          <div className="mt-4 flex flex-col gap-2 text-sm text-[#4b5563]">
             <Link
               href="/login/forgot-password"
               className="font-medium text-[#011848]/90 hover:text-[#011848]"

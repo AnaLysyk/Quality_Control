@@ -11,7 +11,7 @@ const normalizeString = (value: unknown) => {
   return trimmed.length ? trimmed : null;
 };
 
-const normalizeSlug = (slug?: string) => {
+const normalizeSlug = (slug?: string | null) => {
   if (!slug) return null;
   const trimmed = slug.trim().toLowerCase();
   return trimmed.length ? trimmed : null;

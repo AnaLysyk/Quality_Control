@@ -58,7 +58,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!authUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   try {
     const body = await req.json();

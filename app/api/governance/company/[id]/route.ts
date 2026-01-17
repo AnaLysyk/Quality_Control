@@ -89,7 +89,7 @@ export async function GET(
 
   if (!company) {
     return NextResponse.json(
-      { success: false, error: { message: "Company not found" } },
+      { success: false, error: { message: "Empresa não encontrada" } },
       { status: 404 }
     );
   }

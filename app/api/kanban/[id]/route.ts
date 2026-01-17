@@ -121,7 +121,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!body) return jsonError("JSON invalido", 400);
 
   const access = await requireAccess(request);
-  if (!access) return jsonError("Unauthorized", 401);
+  if (!access) return jsonError("Não autorizado", 401);
 
   if (!access.isGlobalAdmin && !access.clientSlug) return jsonError("Usuário sem empresa vinculada", 403);
 
@@ -203,7 +203,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   }
 
   const access = await requireAccess(request);
-  if (!access) return jsonError("Unauthorized", 401);
+  if (!access) return jsonError("Não autorizado", 401);
 
   if (!access.isGlobalAdmin && !access.clientSlug) return jsonError("Usuário sem empresa vinculada", 403);
 

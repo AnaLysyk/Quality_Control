@@ -91,6 +91,7 @@ export default function ProfileButton() {
     return null;
   });
   const [avatarError, setAvatarError] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -180,6 +181,15 @@ export default function ProfileButton() {
     const found = AVATAR_OPTIONS.find((a) => a.key === avatarKey);
     return found?.emoji || "\u{1F680}";
   }, [avatarKey]);
+  const avatarDisplay = avatarError
+    ? displayName.slice(0, 2).toUpperCase()
+    : hasMounted
+      ? avatarIcon
+      : "\u{1F680}";
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   function showToast(kind: "success" | "error", message: string) {
     setToast({ kind, message });
@@ -226,7 +236,7 @@ export default function ProfileButton() {
       >
         <div className="relative h-full w-full overflow-hidden rounded-full bg-linear-to-br from-(--tc-primary,#4e8df5) to-(--tc-surface-dark,#0f1828)">
           <span className="flex h-full w-full items-center justify-center text-2xl" aria-hidden>
-            {avatarError ? displayName.slice(0, 2).toUpperCase() : avatarIcon}
+            {avatarDisplay}
           </span>
         </div>
       </button>
@@ -249,7 +259,7 @@ export default function ProfileButton() {
                     className="group relative flex h-14 w-14 items-center justify-center rounded-full border border-(--tc-primary,#4e8df5)/28 bg-(--tc-primary,#4e8df5)/12 text-2xl shadow-[0_0_18px_rgba(78,142,245,0.30)] focus:outline-none focus:ring-2 focus:ring-(--tc-primary,#4e8df5) overflow-visible dark:border-(--tc-primary,#4e8df5)/25 dark:bg-black/20"
                   >
                     <span className="text-2xl" aria-hidden>
-                      {avatarError ? displayName.slice(0, 2).toUpperCase() : avatarIcon}
+                      {avatarDisplay}
                     </span>
                     <span
                       className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-(--tc-primary,#4e8df5)/50 bg-(--tc-primary,#4e8df5) text-[11px] text-white shadow-[0_4px_10px_rgba(0,0,0,0.25)]"

@@ -46,7 +46,7 @@ type CaseColumn = {
 const CASE_COLUMNS: CaseColumn[] = [
   {
     key: "pass",
-    label: "Pass",
+    label: "Aprovado",
     containerBg: "bg-[rgba(124,211,67,0.08)] dark:bg-[rgba(124,211,67,0.15)]",
     borderClass: "border-[rgba(124,211,67,0.45)]",
     cardBorder: "border-[rgba(124,211,67,0.35)]",
@@ -55,7 +55,7 @@ const CASE_COLUMNS: CaseColumn[] = [
   },
   {
     key: "fail",
-    label: "Fail",
+    label: "Falha",
     containerBg: "bg-[rgba(239,0,1,0.08)] dark:bg-[rgba(239,0,1,0.15)]",
     borderClass: "border-[rgba(239,0,1,0.45)]",
     cardBorder: "border-[rgba(239,0,1,0.35)]",
@@ -64,7 +64,7 @@ const CASE_COLUMNS: CaseColumn[] = [
   },
   {
     key: "blocked",
-    label: "Blocked",
+    label: "Bloqueado",
     containerBg: "bg-[rgba(255,167,58,0.12)] dark:bg-[rgba(255,167,58,0.2)]",
     borderClass: "border-[rgba(255,167,58,0.45)]",
     cardBorder: "border-[rgba(255,167,58,0.35)]",
@@ -73,7 +73,7 @@ const CASE_COLUMNS: CaseColumn[] = [
   },
   {
     key: "notRun",
-    label: "Not Run",
+    label: "Não Executado",
     containerBg: "bg-[rgba(15,22,38,0.08)] dark:bg-[rgba(15,22,38,0.4)]",
     borderClass: "border-[rgba(15,22,38,0.35)]",
     cardBorder: "border-[rgba(15,22,38,0.30)]",
@@ -82,11 +82,11 @@ const CASE_COLUMNS: CaseColumn[] = [
   },
 ];
 
-const CASE_STATUS_VALUES: Record<CaseStatus, "PASS" | "FAIL" | "BLOCKED" | "NOT_RUN"> = {
-  pass: "PASS",
-  fail: "FAIL",
-  blocked: "BLOCKED",
-  notRun: "NOT_RUN",
+const CASE_STATUS_VALUES: Record<CaseStatus, "APROVADO" | "FALHA" | "BLOQUEADO" | "NAO_EXECUTADO"> = {
+  pass: "APROVADO",
+  fail: "FALHA",
+  blocked: "BLOQUEADO",
+  notRun: "NAO_EXECUTADO",
 };
 
 const initialCaseDraft: ManualCaseDraft = {

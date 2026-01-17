@@ -150,10 +150,10 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   // Apenas admins podem listar
   const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!authUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   if (!authUser.isGlobalAdmin) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
   }
 
   try {

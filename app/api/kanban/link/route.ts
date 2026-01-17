@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
   if (!body) return jsonError("JSON invalido", 400);
 
   const access = await requireAccess(request);
-  if (!access) return jsonError("Unauthorized", 401);
+  if (!access) return jsonError("Não autorizado", 401);
 
   const record = body as Record<string, unknown>;
   const project = asProject(record.project);
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
     effectiveSlug = requestedSlug ?? access.clientSlug;
   } else {
     if (!access.clientSlug) return jsonError("slug é obrigatório", 400);
-    if (requestedSlug && requestedSlug !== access.clientSlug) return jsonError("Forbidden", 403);
+    if (requestedSlug && requestedSlug !== access.clientSlug) return jsonError("Acesso proibido", 403);
     effectiveSlug = access.clientSlug;
   }
 
@@ -251,7 +251,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // 2) Insert when not found
+  // 2) Inserir quando não encontrado
   if (!title || !status) {
     return jsonError("Para criar, informe title e status", 400);
   }

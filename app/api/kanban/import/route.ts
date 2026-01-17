@@ -355,15 +355,15 @@ export async function POST(request: NextRequest) {
   const requestedSlug = normalizeSlug(asSlug(searchParams.get("slug")));
 
   const access = await requireAccess(request);
-  if (!access) return jsonError("Unauthorized", 401);
+  if (!access) return jsonError("Não autorizado", 401);
 
   let effectiveSlug: string | null = null;
   if (access.isGlobalAdmin) {
     effectiveSlug = requestedSlug ?? access.defaultSlug;
   } else {
-    if (!access.clientSlugs.length) return jsonError("Forbidden", 403);
+    if (!access.clientSlugs.length) return jsonError("Acesso proibido", 403);
     if (requestedSlug) {
-      if (!access.clientSlugs.includes(requestedSlug)) return jsonError("Forbidden", 403);
+      if (!access.clientSlugs.includes(requestedSlug)) return jsonError("Acesso proibido", 403);
       effectiveSlug = requestedSlug;
     } else {
       effectiveSlug = access.defaultSlug;
@@ -396,8 +396,8 @@ export async function POST(request: NextRequest) {
       if (access.isGlobalAdmin) {
         effectiveSlug = bodySlug;
       } else {
-        if (!access.clientSlugs.includes(bodySlug)) return jsonError("Forbidden", 403);
-        if (requestedSlug && bodySlug !== requestedSlug) return jsonError("Forbidden", 403);
+        if (!access.clientSlugs.includes(bodySlug)) return jsonError("Acesso proibido", 403);
+        if (requestedSlug && bodySlug !== requestedSlug) return jsonError("Acesso proibido", 403);
         effectiveSlug = bodySlug;
       }
     }

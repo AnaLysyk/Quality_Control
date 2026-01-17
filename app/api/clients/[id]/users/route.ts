@@ -126,27 +126,27 @@ function roleToUi(role: unknown): "ADMIN" | "USER" {
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const access = await requireAccess(request);
-  if (!access) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!access) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const clientId = id;
-  if (!clientId) return NextResponse.json({ message: "Client not found" }, { status: 404 });
+  if (!clientId) return NextResponse.json({ message: "Cliente não encontrado" }, { status: 404 });
 
   const supabaseModule = require("@/lib/supabaseServer");
   const supabase = supabaseModule.getSupabaseServer();
 
   const { data: client } = await supabase.from("cliente").select("id").eq("id", clientId).maybeSingle();
-  if (!client) return NextResponse.json({ message: "Client not found" }, { status: 404 });
+  if (!client) return NextResponse.json({ message: "Cliente não encontrado" }, { status: 404 });
 
   const url = new URL(request.url);
   const all = url.searchParams.get("all") === "true";
 
   // empresa user can list only its own company; admin can list any.
   if (!access.isGlobalAdmin && access.clientId !== clientId) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
   }
 
   if (all && !access.isGlobalAdmin) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
   }
 
   const query = supabase
@@ -177,17 +177,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const access = await requireAccess(request);
-  if (!access) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  if (!access.isGlobalAdmin) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  if (!access) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  if (!access.isGlobalAdmin) return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
 
   const clientId = id;
-  if (!clientId) return NextResponse.json({ message: "Client not found" }, { status: 404 });
+  if (!clientId) return NextResponse.json({ message: "Cliente não encontrado" }, { status: 404 });
 
   const supabaseModule = require("@/lib/supabaseServer");
   const supabase = supabaseModule.getSupabaseServer();
 
   const { data: client } = await supabase.from("cliente").select("id").eq("id", clientId).maybeSingle();
-  if (!client) return NextResponse.json({ message: "Client not found" }, { status: 404 });
+  if (!client) return NextResponse.json({ message: "Cliente não encontrado" }, { status: 404 });
 
   const body = await request.json().catch(() => ({}));
   const rawEmail = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
@@ -237,17 +237,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const access = await requireAccess(request);
-  if (!access) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  if (!access.isGlobalAdmin) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  if (!access) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  if (!access.isGlobalAdmin) return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
 
   const clientId = id;
-  if (!clientId) return NextResponse.json({ message: "Client not found" }, { status: 404 });
+  if (!clientId) return NextResponse.json({ message: "Cliente não encontrado" }, { status: 404 });
 
   const supabaseModule = require("@/lib/supabaseServer");
   const supabase = supabaseModule.getSupabaseServer();
 
   const { data: client } = await supabase.from("cliente").select("id").eq("id", clientId).maybeSingle();
-  if (!client) return NextResponse.json({ message: "Client not found" }, { status: 404 });
+  if (!client) return NextResponse.json({ message: "Cliente não encontrado" }, { status: 404 });
 
   const body = await request.json().catch(() => ({}));
   const userId = typeof body?.userId === "string" ? body.userId : undefined;

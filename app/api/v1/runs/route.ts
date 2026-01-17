@@ -23,10 +23,10 @@ function normalizeString(value: unknown): string | null {
 export async function GET(request: Request) {
   const auth = await authenticateRequest(request);
   if (!auth) {
-    return apiFail(request, "Unauthorized", {
+    return apiFail(request, "Não autorizado", {
       status: 401,
       code: "AUTH_REQUIRED",
-      extra: { error: { message: "Unauthorized" } },
+      extra: { error: { message: "Não autorizado" } },
     });
   }
 
@@ -70,10 +70,10 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const auth = await authenticateRequest(request);
   if (!auth) {
-    return apiFail(request, "Unauthorized", {
+    return apiFail(request, "Não autorizado", {
       status: 401,
       code: "AUTH_REQUIRED",
-      extra: { error: { message: "Unauthorized" } },
+      extra: { error: { message: "Não autorizado" } },
     });
   }
 

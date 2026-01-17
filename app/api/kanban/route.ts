@@ -145,14 +145,14 @@ export async function GET(request: NextRequest) {
   }
 
   const access = await requireAccess(request);
-  if (!access) return jsonError("Unauthorized", 401);
+  if (!access) return jsonError("Não autorizado", 401);
 
   let effectiveSlug: string | null = null;
   if (access.isGlobalAdmin) {
     effectiveSlug = requestedSlug;
   } else {
     if (!access.clientSlug) return jsonError("Usuário sem empresa vinculada", 403);
-    if (requestedSlug && requestedSlug !== access.clientSlug) return jsonError("Forbidden", 403);
+    if (requestedSlug && requestedSlug !== access.clientSlug) return jsonError("Acesso proibido", 403);
     // default to user's own company if slug wasn't provided
     effectiveSlug = access.clientSlug;
   }
@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
   if (!body) return jsonError("JSON invalido", 400);
 
   const access = await requireAccess(request);
-  if (!access) return jsonError("Unauthorized", 401);
+  if (!access) return jsonError("Não autorizado", 401);
 
   const record = body as Record<string, unknown>;
   const project = asProject(record.project);
@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
     effectiveSlug = requestedSlug ?? access.clientSlug;
   } else {
     if (!access.clientSlug) return jsonError("slug é obrigatório para usuários não-admin", 400);
-    if (requestedSlug && requestedSlug !== access.clientSlug) return jsonError("Forbidden", 403);
+    if (requestedSlug && requestedSlug !== access.clientSlug) return jsonError("Acesso proibido", 403);
     effectiveSlug = access.clientSlug;
   }
 

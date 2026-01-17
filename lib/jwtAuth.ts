@@ -159,10 +159,11 @@ export async function authorizeClientAccess(params: {
   requiredRole?: "ADMIN" | "USER";
 }) {
   if (params.user.isGlobalAdmin) return;
-  if (!params.clientId) throw new Error("Forbidden");
+  const FORBIDDEN_MESSAGE = "Acesso proibido";
+  if (!params.clientId) throw new Error(FORBIDDEN_MESSAGE);
   const role = await getUserRoleInClient(params.user.id, params.clientId);
-  if (!role) throw new Error("Forbidden");
+  if (!role) throw new Error(FORBIDDEN_MESSAGE);
   if (params.requiredRole === "ADMIN" && role.role !== "ADMIN") {
-    throw new Error("Forbidden");
+    throw new Error(FORBIDDEN_MESSAGE);
   }
 }

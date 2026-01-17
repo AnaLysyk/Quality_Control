@@ -16,7 +16,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 
 export async function GET(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const auth = await authenticateRequest(request);
-  if (!auth) return NextResponse.json({ error: { message: "Unauthorized" } }, { status: 401 });
+  if (!auth) return NextResponse.json({ error: { message: "Não autorizado" } }, { status: 401 });
 
   const { id } = await ctx.params;
   const url = new URL(request.url);

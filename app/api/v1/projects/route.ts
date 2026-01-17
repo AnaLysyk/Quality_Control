@@ -11,7 +11,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 
 export async function GET(request: Request) {
   const auth = await authenticateRequest(request);
-  if (!auth) return NextResponse.json({ error: { message: "Unauthorized" } }, { status: 401 });
+  if (!auth) return NextResponse.json({ error: { message: "Não autorizado" } }, { status: 401 });
 
   if (!QASE_TOKEN) {
     return NextResponse.json({ data: [], warning: "QASE_API_TOKEN ausente" }, { status: 200 });

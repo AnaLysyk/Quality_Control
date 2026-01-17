@@ -48,20 +48,20 @@ describe("jwtAuth helpers", () => {
     getUserRoleInClient.mockResolvedValue(null);
     await expect(
       authorizeClientAccess({ user, clientId: "cli_1", requiredRole: "USER" })
-    ).rejects.toThrow("Forbidden");
+    ).rejects.toThrow("Acesso proibido");
   });
 
   test("authorizeClientAccess denies quando requiredRole ADMIN mas role USER", async () => {
     getUserRoleInClient.mockResolvedValue({ role: "USER" });
     await expect(
       authorizeClientAccess({ user, clientId: "cli_1", requiredRole: "ADMIN" })
-    ).rejects.toThrow("Forbidden");
+    ).rejects.toThrow("Acesso proibido");
   });
 
   test("authorizeClientAccess nega se clientId ausente e não global admin", async () => {
     getUserRoleInClient.mockResolvedValue(null);
     await expect(
       authorizeClientAccess({ user, clientId: null, requiredRole: "USER" })
-    ).rejects.toThrow("Forbidden");
+    ).rejects.toThrow("Acesso proibido");
   });
 });

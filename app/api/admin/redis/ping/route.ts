@@ -1,13 +1,24 @@
-import { NextRequest } from "next/server";
+﻿import { NextRequest } from "next/server";
 
 import { apiFail, apiOk } from "@/lib/apiResponse";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
+function isAuthorized(req: NextRequest): boolean {
+  const secret = process.env.REDIS_PING_SECRET;
+  if (!secret) return false;
+
+  const url = new URL(req.url);
+  const q = url.searchParams.get("secret") ?? "";
+  const header = req.headers.get("x-redis-ping-secret") ?? "";
+
+  return q === secret || header === secret;
+}
+
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    const msg = status === 401 ? "Nao autenticado" : "Sem permissao";
+    const msg = status === 401 ? "Não autenticado" : "Sem permissão";
     return apiFail(req, msg, {
       status,
       code: status === 401 ? "AUTH_REQUIRED" : "FORBIDDEN",
@@ -31,10 +42,10 @@ export async function GET(req: NextRequest) {
     const value = await redis.get<string>(key);
 
     const payload = { ok: value === "pong", configured: true };
-    return apiOk(req, payload, payload.ok ? "OK" : "Redis ping failed", { extra: payload });
+    return apiOk(req, payload, payload.ok ? "OK" : "Falha no ping do Redis", { extra: payload });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "Redis error";
+    const msg = error instanceof Error ? error.message : "Erro no Redis";
     const payload = { ok: false, configured: true, error: msg };
-    return apiOk(req, payload, "Redis error", { extra: payload });
+    return apiOk(req, payload, "Erro no Redis", { extra: payload });
   }
 }

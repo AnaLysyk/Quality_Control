@@ -1,7 +1,11 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from "@nestjs/common";
+import { Request } from "express";
 import { AuthGuard } from "../auth/auth.guard";
+import { AuthContext } from "../auth/auth.service";
 import { QaseService } from "./qase.service";
 import { EnvironmentService } from "../config/environment.service";
+
+type RequestWithUser = Request & { user?: AuthContext };
 
 @Controller()
 @UseGuards(AuthGuard)
@@ -12,23 +16,37 @@ export class QaseController {
     return project || this.env.getQaseDefaultProject() || "";
   }
 
+  private resolveCompanyId(req: RequestWithUser, override?: string) {
+    const user = req.user;
+    if (user?.isGlobalAdmin && typeof override === "string" && override.trim()) {
+      return override.trim();
+    }
+    if (!user) return undefined;
+    return user.companyId ?? user.clientId;
+  }
+
   @Get("projects")
-  getProjects() {
-    return this.qaseService.getProjects();
+  getProjects(@Req() req: RequestWithUser, @Query("companyId") companyId?: string) {
+    const resolved = this.resolveCompanyId(req, companyId);
+    return this.qaseService.getProjects(resolved);
   }
 
   @Get("runs")
-  getRuns(@Query("project") project?: string) {
-    return this.qaseService.getRuns(project);
+  getRuns(@Req() req: RequestWithUser, @Query("project") project?: string, @Query("companyId") companyId?: string) {
+    const resolved = this.resolveCompanyId(req, companyId);
+    return this.qaseService.getRuns(resolved, project);
   }
 
   @Post("runs")
   createRun(
+    @Req() req: RequestWithUser,
     @Body() body: { project?: string; title?: string; description?: string; custom_type?: string },
     @Query("project") projectFromQuery?: string,
+    @Query("companyId") companyId?: string,
   ) {
+    const resolved = this.resolveCompanyId(req, companyId);
     const project = body?.project || projectFromQuery || undefined;
-    return this.qaseService.createRun({
+    return this.qaseService.createRun(resolved, {
       project,
       title: body?.title,
       description: body?.description,
@@ -37,19 +55,32 @@ export class QaseController {
   }
 
   @Get("runs/:id")
-  getRunDetail(@Param("id") id: string, @Query("project") project?: string) {
+  getRunDetail(
+    @Req() req: RequestWithUser,
+    @Param("id") id: string,
+    @Query("project") project?: string,
+    @Query("companyId") companyId?: string,
+  ) {
     const projectCode = this.resolveProject(project);
-    return this.qaseService.getRunDetail(projectCode, Number(id));
+    const resolved = this.resolveCompanyId(req, companyId);
+    return this.qaseService.getRunDetail(projectCode, Number(id), resolved);
   }
 
   @Get("runs/:id/cases")
-  getRunCases(@Param("id") id: string, @Query("project") project?: string) {
+  getRunCases(
+    @Req() req: RequestWithUser,
+    @Param("id") id: string,
+    @Query("project") project?: string,
+    @Query("companyId") companyId?: string,
+  ) {
     const projectCode = this.resolveProject(project);
-    return this.qaseService.getRunCases(projectCode, Number(id));
+    const resolved = this.resolveCompanyId(req, companyId);
+    return this.qaseService.getRunCases(projectCode, Number(id), resolved);
   }
 
   @Get("defects")
-  getDefects(@Query("project") project?: string) {
-    return this.qaseService.getDefects(project);
+  getDefects(@Req() req: RequestWithUser, @Query("project") project?: string, @Query("companyId") companyId?: string) {
+    const resolved = this.resolveCompanyId(req, companyId);
+    return this.qaseService.getDefects(resolved, project);
   }
 }

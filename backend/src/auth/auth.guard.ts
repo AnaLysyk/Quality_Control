@@ -13,7 +13,7 @@ export class AuthGuard implements CanActivate {
     const token = this.authService.extractToken(req);
 
     if (!token) {
-      throw new UnauthorizedException("Missing auth token");
+      throw new UnauthorizedException("Token de autenticação ausente");
     }
 
     const auth = await this.authService.validateToken(token);

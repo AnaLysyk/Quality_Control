@@ -199,9 +199,9 @@ async function isGlobalAdmin(userId: string, isMockUser: boolean) {
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await getAuthUser(req);
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const admin = await isGlobalAdmin(user.id, !!user.is_global_admin);
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!admin) return NextResponse.json({ error: "Acesso proibido" }, { status: 403 });
 
   if (!id) return NextResponse.json({ error: "ID obrigatorio" }, { status: 400 });
 
@@ -288,9 +288,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await getAuthUser(req);
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const admin = await isGlobalAdmin(user.id, !!user.is_global_admin);
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!admin) return NextResponse.json({ error: "Acesso proibido" }, { status: 403 });
 
   if (!id) return NextResponse.json({ error: "ID obrigatorio" }, { status: 400 });
 
@@ -502,9 +502,9 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
 export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const user = await getAuthUser(req);
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const admin = await isGlobalAdmin(user.id, !!user.is_global_admin);
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!admin) return NextResponse.json({ error: "Acesso proibido" }, { status: 403 });
   if (!id) return NextResponse.json({ error: "ID obrigatorio" }, { status: 400 });
 
   if (SUPABASE_MOCK) {

@@ -90,11 +90,11 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   const { slug: requestedSlug } = await context.params;
 
   const access = await requireAccess(req);
-  if (!access) return jsonError("Unauthorized", 401);
+  if (!access) return jsonError("Não autorizado", 401);
 
   const effectiveSlug = access.isGlobalAdmin ? requestedSlug : access.clientSlug;
   if (!effectiveSlug) return jsonError("Usuário sem empresa vinculada", 403);
-  if (!access.isGlobalAdmin && requestedSlug !== effectiveSlug) return jsonError("Forbidden", 403);
+  if (!access.isGlobalAdmin && requestedSlug !== effectiveSlug) return jsonError("Acesso proibido", 403);
 
   const clientSettings = await getClientQaseSettings(effectiveSlug);
   const token = clientSettings?.token ?? FALLBACK_TOKEN;

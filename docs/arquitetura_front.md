@@ -1,46 +1,41 @@
-# Arquitetura — Frontend (Next.js)
+﻿# Arquitetura – Frontend (Next.js)
 
 ## Visão geral
 Este projeto usa **Next.js (App Router)** com **TypeScript**.
 
 - Rotas e páginas: pasta `app/`.
-- Componentes compartilhados: `app/components/` (e alguns em `components/`).
-- Lógica de contexto (ex.: settings): `app/context/`.
-- Utilitários compartilhados: `lib/`.
-- Dados locais (modo mock e fixtures): `data/`.
+- Componentes compartilhados: `app/components/` (alguns ainda em `components/`).
+- Contextos e hooks globais: `app/context/`.
+- Utilitários reutilizáveis: `lib/`.
+- Dados de apoio (mock e fixtures): `data/`.
 
-> Regra importante: módulos de `lib/` que são *server-only* (ex.: `lib/supabaseServer.ts`) devem ser importados apenas em **Server Components** ou **API routes**.
+> Regra importante: módulos de `lib/` marcados como server-only (ex.: `lib/supabaseServer.ts`) devem ser importados apenas por **Server Components** ou rotas de API.
 
 ## Estrutura do App Router
-Padrões comuns:
+Padrões convencionados:
 
-- `app/layout.tsx`: layout global (inclui CSS, providers, e inicialização de tema).
-- `app/page.tsx`: home.
-- `app/<segment>/page.tsx`: páginas por feature.
-- `app/api/**/route.ts`: endpoints (GET/POST/PATCH/DELETE).
+- `app/layout.tsx`: layout global com CSS, providers e inicialização do tema.
+- `app/page.tsx`: página inicial.
+- `app/<segment>/page.tsx`: páginas por funcionalidade.
+- `app/api/**/route.ts`: endpoints HTTP (GET, POST, PATCH, DELETE).
 
-## Estilo / UI
-O projeto usa **Tailwind v4** + tokens via **CSS Variables**.
+## Estilo e UI
+O projeto usa **Tailwind v4** com tokens acessados por **CSS Variables**.
 
-- Preferir classes com variáveis no formato canônico:
+- Prefira classes na forma canônica, por exemplo:
   - `text-(--tc-text-muted)`
   - `bg-(--tc-surface)`
   - `border-(--tc-border)`
-- Evitar a forma antiga `text-[var(--tc-text-muted)]` (prefira `text-(--tc-text-muted)`).
-- Para cores dinâmicas por status/métrica, preferir **CSS Modules** existentes (ex.: componentes de pills/cards).
+- Evite a sintaxe antiga `text-[var(--tc-text-muted)]`; use o parêntese simples.
+- Para estilos dinâmicos (status, métricas), reutilize CSS Modules existentes (pills, cards etc.).
 
-## Tema (dark/light)
-O tema é controlado via classe (ex.: `.dark`) e variáveis.
+## Tema (claro/escuro)
+O tema é controlado com classe (`.dark`) e variáveis CSS.
 
-- Há uma inicialização pré-hidratação no `app/layout.tsx` para evitar “flash” (escuro → claro ou vice-versa).
-- Settings persistem em `localStorage` com chave por usuário (ex.: `tc-settings:<userId>`), e uma chave auxiliar para lembrar o último usuário.
+- O `app/layout.tsx` aplica uma inicialização antes da hidratação para evitar flash de tema.
+- As preferências ficam em `localStorage` com chave por usuário (ex.: `tc-settings:<userId>`) e há uma chave auxiliar para lembrar o último usuário logado.
 
-## Autenticação (visão rápida)
-- O login gera um cookie `auth_token`.
-- Telas/client-side consomem dados de usuário via `/api/me`.
-
-## Onde mexer (checklist)
-- UI nova: preferir `app/components/`.
-- Nova página: `app/<feature>/page.tsx`.
-- Nova API: `app/api/<feature>/route.ts`.
-- Integrações/clients: `lib/`.
+## Autenticação (resumo)
+- O login gera o cookie `auth_token`.
+- As telas do cliente consomem os dados do usuário via `/api/me`.
+- Os componentes acessam configurações e permissões pelo contexto `UserContext`.

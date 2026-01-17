@@ -119,7 +119,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sl
 
   const access = await requireAccess(request);
   if (!access) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const all = await getAllReleases();
@@ -136,7 +136,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sl
 
     const releaseProject = resolveReleaseProjectCode(existing);
     if (!access.qaseProjectCode || !releaseProject || access.qaseProjectCode !== releaseProject) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "Acesso proibido" }, { status: 403 });
     }
   }
 

@@ -16,7 +16,7 @@ function isAuthorized(req: NextRequest): boolean {
 
 export async function GET(req: NextRequest) {
   if (!isAuthorized(req)) {
-    return apiFail(req, "Unauthorized", {
+    return apiFail(req, "Não autorizado", {
       status: 401,
       code: "UNAUTHORIZED",
     });
@@ -40,12 +40,12 @@ export async function GET(req: NextRequest) {
     return apiOk(
       req,
       { ok },
-      ok ? "OK" : "Redis ping failed",
+      ok ? "OK" : "Falha no ping do Redis",
       { extra: { ok } },
     );
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "Redis error";
-    return apiFail(req, "Redis error", {
+    const msg = error instanceof Error ? error.message : "Erro no Redis";
+    return apiFail(req, "Erro no Redis", {
       status: 502,
       code: "REDIS_ERROR",
       details: msg,

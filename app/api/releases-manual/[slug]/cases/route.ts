@@ -65,7 +65,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ slug: stri
 
 export async function POST(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!authUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   try {
     const { slug } = await params;
@@ -89,7 +89,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!authUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   try {
     const { slug } = await params;
@@ -122,7 +122,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!authUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   try {
     const { slug } = await params;

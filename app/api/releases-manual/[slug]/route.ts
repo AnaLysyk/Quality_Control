@@ -35,7 +35,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ slug: stri
   const { slug } = await params;
   const releases = await readStore();
   const found = releases.find((r) => r.slug === slug);
-  if (!found) return NextResponse.json({ message: "not found" }, { status: 404 });
+  if (!found) return NextResponse.json({ message: "Não encontrado" }, { status: 404 });
   const total = found.stats.pass + found.stats.fail + found.stats.blocked + found.stats.notRun;
   return NextResponse.json({
     ...found,
@@ -53,14 +53,14 @@ export async function GET(_: Request, { params }: { params: Promise<{ slug: stri
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!authUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   try {
     const { slug } = await params;
     const patch = await req.json();
     const releases = await readStore();
     const idx = releases.findIndex((r) => r.slug === slug);
-    if (idx < 0) return NextResponse.json({ message: "not found" }, { status: 404 });
+    if (idx < 0) return NextResponse.json({ message: "Não encontrado" }, { status: 404 });
 
     const current = releases[idx];
     const updated: Release = {
@@ -94,14 +94,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
 
 export async function DELETE(_: Request, { params }: { params: Promise<{ slug: string }> }) {
   const authUser = await authenticateRequest(_);
-  if (!authUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!authUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   try {
     const { slug } = await params;
     const releases = await readStore();
     const filtered = releases.filter((release) => release.slug !== slug);
     if (filtered.length === releases.length) {
-      return NextResponse.json({ message: "not found" }, { status: 404 });
+      return NextResponse.json({ message: "Não encontrado" }, { status: 404 });
     }
     await writeStore(filtered);
     return NextResponse.json({ message: "deleted" });

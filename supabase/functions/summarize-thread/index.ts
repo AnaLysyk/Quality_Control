@@ -30,7 +30,7 @@ const RATE_WINDOW_SECONDS = Number(denoEnvGet("SUMMARY_RATE_WINDOW") ?? "60");
 const FALLBACK_MESSAGE_LIMIT = Number(denoEnvGet("SUMMARY_FALLBACK_LIMIT") ?? "5");
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error("Missing Supabase configuration: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required");
+  throw new Error("Configuração do Supabase ausente: SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY são obrigatórias");
 }
 
 function jsonResponse(body: unknown, status = 200, extraHeaders?: Record<string, string>) {
@@ -117,7 +117,7 @@ async function checkRateLimit(userId: string, threadId: string, skip: boolean) {
 async function fetchThread(threadId: string): Promise<ThreadRow | null> {
   const url = `${SUPABASE_URL}/rest/v1/threads?id=eq.${encodeURIComponent(threadId)}&select=id,created_by,messages(id,sender_id,content,created_at)&limit=1`;
   const res = await fetch(url, { headers: serviceHeaders() });
-  if (!res.ok) throw new Error("Thread lookup failed");
+  if (!res.ok) throw new Error("Falha ao buscar thread");
   const rows = (await res.json()) as ThreadRow[];
   return rows?.[0] ?? null;
 }
@@ -162,7 +162,7 @@ async function buildSummary(messages: MessageRow[]): Promise<{ summary: string; 
 
   if (!resp.ok) {
     const txt = await resp.text();
-    throw new Error(`OpenAI request failed: ${resp.status} ${txt}`);
+    throw new Error(`Falha na requisição à OpenAI: ${resp.status} ${txt}`);
   }
 
   const json = (await resp.json()) as any;
@@ -177,45 +177,45 @@ async function storeSummary(threadId: string, summary: string, userId: string, m
     headers: serviceHeaders({ "Content-Type": "application/json", Prefer: "return=representation" }),
     body: JSON.stringify({ thread_id: threadId, summary_text: summary, model, created_by: userId }),
   });
-  if (!res.ok) throw new Error("Insert failed");
+  if (!res.ok) throw new Error("Falha ao gravar registro");
   const created = (await res.json()) as Array<{ id?: string }>;
   return created?.[0]?.id ?? null;
 }
 
 const serve = (globalThis as any).Deno?.serve as ((handler: (req: Request) => Response | Promise<Response>) => void) | undefined;
 if (!serve) {
-  throw new Error("Deno.serve is not available in this runtime");
+  throw new Error("Deno.serve não está disponível neste runtime");
 }
 
 serve(async (req: Request) => {
   try {
     if (req.method !== "POST") {
-      return jsonResponse({ error: "Method not allowed" }, 405);
+      return jsonResponse({ error: "Método não permitido" }, 405);
     }
 
     const user = await verifyJwt(req);
     if (!user) {
-      return jsonResponse({ error: "Unauthorized" }, 401);
+      return jsonResponse({ error: "Não autorizado" }, 401);
     }
 
     const { thread_id: threadId, max_messages: maxMessages } = await req.json().catch(() => ({ thread_id: null }));
     if (!threadId || typeof threadId !== "string") {
-      return jsonResponse({ error: "thread_id is required" }, 400);
+      return jsonResponse({ error: "thread_id é obrigatório" }, 400);
     }
 
     const thread = await fetchThread(threadId);
     if (!thread) {
-      return jsonResponse({ error: "Thread not found" }, 404);
+      return jsonResponse({ error: "Thread não encontrada" }, 404);
     }
 
     const admin = isAdmin(user);
     if (!ensureAuthorized(thread, user) && !admin) {
-      return jsonResponse({ error: "Forbidden" }, 403);
+      return jsonResponse({ error: "Acesso proibido" }, 403);
     }
 
     const rate = await checkRateLimit(user.id, threadId, admin);
     if (!rate.allowed) {
-      return jsonResponse({ error: "Too Many Requests", retry_after: rate.retryAfter }, 429);
+      return jsonResponse({ error: "Muitas requisições", retry_after: rate.retryAfter }, 429);
     }
 
     const sortedMessages = [...(thread.messages ?? [])]
@@ -223,7 +223,7 @@ serve(async (req: Request) => {
       .slice(0, typeof maxMessages === "number" && maxMessages > 0 ? maxMessages : undefined);
 
     if (!sortedMessages.length) {
-      return jsonResponse({ error: "No messages in thread" }, 404);
+      return jsonResponse({ error: "Não há mensagens nesta thread" }, 404);
     }
 
     const { summary, model } = await buildSummary(sortedMessages);
@@ -232,6 +232,6 @@ serve(async (req: Request) => {
     return jsonResponse({ id, thread_id: threadId, created_by: user.id, summary, model }, 200);
   } catch (error) {
     console.error(error);
-    return jsonResponse({ error: "Internal error" }, 500);
+    return jsonResponse({ error: "Erro interno" }, 500);
   }
 });

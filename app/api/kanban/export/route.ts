@@ -316,15 +316,15 @@ export async function GET(request: NextRequest) {
   }
 
   const access = await requireAccess(request);
-  if (!access) return jsonError("Unauthorized", 401);
+  if (!access) return jsonError("Não autorizado", 401);
 
   let effectiveSlug: string | null = null;
   if (access.isGlobalAdmin) {
     effectiveSlug = requestedSlug;
   } else {
-    if (!access.clientSlugs.length) return jsonError("Forbidden", 403);
+    if (!access.clientSlugs.length) return jsonError("Acesso proibido", 403);
     if (requestedSlug) {
-      if (!access.clientSlugs.includes(requestedSlug)) return jsonError("Forbidden", 403);
+      if (!access.clientSlugs.includes(requestedSlug)) return jsonError("Acesso proibido", 403);
       effectiveSlug = requestedSlug;
     } else {
       effectiveSlug = access.defaultSlug;

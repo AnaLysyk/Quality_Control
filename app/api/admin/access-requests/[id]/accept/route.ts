@@ -47,7 +47,7 @@ function randomPassword() {
 
 async function findAuthUserIdByEmail(service: SupabaseClient, email: string): Promise<string | null> {
   try {
-    // Best-effort lookup (works for small user bases)
+    // Busca otimista (funciona para bases pequenas)
     const { data, error } = await service.auth.admin.listUsers({ page: 1, perPage: 1000 });
     if (error) return null;
     const match = (data?.users ?? []).find((u) => (u.email ?? "").toLowerCase() === email.toLowerCase());
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ ok: true, invited: true, created: true }, { status: 200 });
     }
 
-    // 1) Create/invite auth user
+    // 1) Criar/convidar o usuário de autenticação
     let authUserId: string | null = null;
 
     const { data: inviteData, error: inviteError } = await service.auth.admin.inviteUserByEmail(email, {
@@ -126,13 +126,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: "Falha ao criar usuario no Supabase" }, { status: 500 });
     }
 
-    // If the access type grants global admin, also record it in `public.global_admins`.
-    // Best-effort: ignore failures (e.g., table not present in some environments).
+    // Se o acesso concede um admin global, registra em `public.global_admins`.
+    // Tentativa cautelosa: ignora falhas (ex.: tabela ausente em alguns ambientes).
     if (mappedRole === "global_admin") {
       await service.from("global_admins").insert({ user_id: authUserId });
     }
 
-    // 2) Insert application user record (public.users)
+    // 2) Inserir registro de usuário na aplicação (public.users)
     const tempPassword = randomPassword();
     const passwordHash = createHash("sha256").update(tempPassword).digest("hex");
 
@@ -154,7 +154,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: duplicate ? "Usuario ja existe" : "Falha ao criar usuario" }, { status: duplicate ? 409 : 500 });
     }
 
-    // 3) Close request
+    // 3) Encerrar a solicitação
     await service
       .from("support_requests")
       .update({ status: "closed", admin_notes: "Aceito: usuario criado automaticamente" })

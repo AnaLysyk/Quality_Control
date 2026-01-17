@@ -3,12 +3,17 @@ import { Request } from "express";
 import { createClient } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
 import { EnvironmentService } from "../config/environment.service";
+import { SupabaseService } from "../supabase/supabase.service";
+import { TenantContext, TenantService } from "../tenancy/tenant.service";
 
 export type AuthContext = {
   userId: string;
   email?: string;
-  role?: string;
+  role?: string | null;
   clientId?: string;
+  clientSlug?: string | null;
+  companyId?: string | null;
+  isGlobalAdmin?: boolean;
   raw: Record<string, unknown>;
 };
 
@@ -31,21 +36,17 @@ type SupabaseClientLike = ReturnType<typeof createClient>;
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private readonly supabaseAnon: SupabaseClientLike;
-  private readonly supabaseService: SupabaseClientLike | null;
   private readonly jwtSecret: string | null;
 
-  constructor(private readonly env: EnvironmentService) {
+  constructor(
+    private readonly env: EnvironmentService,
+    private readonly supabaseService: SupabaseService,
+    private readonly tenantService: TenantService,
+  ) {
     const supabaseUrl = this.env.getSupabaseUrl();
     this.supabaseAnon = createClient(supabaseUrl, this.env.getSupabaseAnonKey(), {
       auth: { persistSession: false, autoRefreshToken: false },
     });
-
-    const serviceKey = this.env.getSupabaseServiceRoleKey();
-    this.supabaseService = serviceKey
-      ? createClient(supabaseUrl, serviceKey, {
-          auth: { persistSession: false, autoRefreshToken: false },
-        })
-      : null;
 
     this.jwtSecret = this.env.getJwtSecretOptional();
   }
@@ -130,28 +131,42 @@ export class AuthService {
   }
 
   async validateToken(token: string): Promise<AuthContext> {
-    // 1) Prefer Supabase validation when service role is configured.
-    if (this.supabaseService) {
-      try {
-        const { data, error } = await this.supabaseService.auth.getUser(token);
-        if (!error && data?.user) {
-          return this.toAuthContext(data.user as unknown as SupabaseUserLike);
-        }
-        if (error) {
-          const message = typeof error.message === "string" ? error.message : "Unknown error";
-          this.logger.debug(`Supabase token validation failed: ${message}`);
-        }
-      } catch (err) {
-        const message = err instanceof Error ? err.message : JSON.stringify(err);
-        this.logger.error(`Supabase token validation threw: ${message}`);
+    try {
+      const { data, error } = await this.supabaseService.supabase.auth.getUser(token);
+      if (!error && data?.user) {
+        const baseContext = this.toAuthContext(data.user as unknown as SupabaseUserLike);
+        const tenantContext = await this.resolveTenantContext(data.user.id);
+        return {
+          ...baseContext,
+          clientSlug: baseContext.clientSlug ?? tenantContext.clientSlug,
+          companyId: tenantContext.companyId,
+          isGlobalAdmin: tenantContext.isGlobalAdmin,
+          role: baseContext.role ?? tenantContext.role,
+        };
       }
+      if (error) {
+        const message = typeof error.message === "string" ? error.message : "Unknown error";
+        this.logger.debug(`Supabase token validation failed: ${message}`);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : JSON.stringify(err);
+      this.logger.error(`Supabase token validation threw: ${message}`);
     }
 
-    // 2) Fallback: accept the app JWT used by the Next.js `/api/auth/login` route.
     const appJwt = this.tryValidateAppJwt(token);
     if (appJwt) return appJwt;
 
-    throw new UnauthorizedException("Erro ao autenticar: token inválido ou expirado");
+    throw new UnauthorizedException("Erro ao autenticar: token invǭlido ou expirado");
+  }
+
+  private async resolveTenantContext(userId: string): Promise<TenantContext> {
+    try {
+      return await this.tenantService.resolve(userId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown";
+      this.logger.debug(`Tenant resolution failed: ${message}`);
+      return { companyId: null, clientSlug: null, isGlobalAdmin: false, role: null };
+    }
   }
 
   async loginWithPassword(login: string, password: string): Promise<{ user: SupabaseUserLike; session: SupabaseAuthSessionLike }> {

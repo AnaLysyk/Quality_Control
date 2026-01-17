@@ -1,54 +1,53 @@
-# Banco de Dados — Tabelas e fluxos
+﻿# Banco de dados – tabelas e fluxos
 
 ## Visão geral
-O projeto usa Supabase (Postgres) como base principal.
+O projeto usa Supabase (Postgres) como base de dados principal.
 
 Tabelas comuns no fluxo:
 - `users`: usuários internos do painel (mapeia `auth_user_id` do Supabase Auth)
-- `cliente`: empresas/clientes (normalmente com `id` e `slug`)
-- Outras tabelas podem existir para runs/releases/integrações
+- `cliente`: empresas/organizações (cada registro tem `id` e `slug`)
+- Outras tabelas conectadas a runs, releases e integrações específicas
 
-## Autenticação vs Perfil
-- Supabase Auth: usuário autenticado (`auth_user_id`).
-- Tabela `users`: informações do usuário no contexto da aplicação.
+## Autenticação versus perfil
 
-Padrão esperado:
-- `users.auth_user_id` referencia o `auth.users.id`.
-- `users.client_id` define a empresa do usuário (quando não é admin global).
-- `users.is_global_admin` permite acesso cross-empresa.
+- Supabase Auth autentica o usuário (`auth_user_id`).
+- A tabela `users` armazena os dados do usuário no contexto da aplicação.
+
+Padrões esperados:
+
+- `users.auth_user_id` referencia o `auth.users.id` do Supabase.
+- `users.client_id` determina a empresa do usuário (quando ele não é admin global).
+- `users.is_global_admin` autoriza o acesso entre empresas.
 
 ## Segurança e privacidade
-Regras:
-- Usuário não-admin só pode acessar dados do seu `client_id`.
-- Admin global pode acessar todas as empresas.
 
-Se você usar RLS (Row Level Security):
-- Definir policies por `client_id`.
-- Garantir que APIs server-side usem a chave apropriada (sem vazar para o client).
+- Usuários não admin só veem dados do `client_id` associado.
+- Admins globais conseguem consultar todas as empresas.
+
+Para Row Level Security:
+
+- Defina políticas condicionadas a `client_id`.
+- Garanta que APIs server-side usem a chave certa para não vazar dados sensíveis no cliente.
 
 ## Documentos por empresa
-Duas camadas:
+O modelo tem duas camadas:
 
-1) Metadados em tabela (recomendado)
-- `company_documents` (sugestão de colunas):
-  - `id` (uuid)
-  - `company_slug` (texto) ou `company_id` (uuid)
-  - `kind` (`file`/`link`)
-  - `title`, `description`
-  - `url` (para link)
-  - `storage_path` (para arquivo)
-  - `mime_type`, `size_bytes`, `file_name`
-  - `created_at`, `created_by`
+1. Metadados em tabela (recomendado)
+   - Tabela `company_documents` com colunas como:
+     - `id` (uuid)
+     - `company_slug` ou `company_id`
+     - `kind` (`file` ou `link`)
+     - `title`, `description`
+     - `url` (quando for link)
+     - `storage_path` e `file_name` (quando for upload)
+     - `mime_type`, `size_bytes`
+     - `created_by`, `visibility`
+2. Arquivos/links no storage
+   - Os uploads ficam em buckets dedicados (ex.: `company-documents` no Supabase Storage)
+   - As URLs são assinadas e só liberadas via APIs server-side
 
-2) Arquivos em Storage
-- Bucket: `company-documents`
-- Path sugerido: `<companySlug>/<id>-<fileName>`
-- Expor via URL assinada (curta duração) ou via endpoint autenticado.
+## Auditoria e histórico
 
-## Migrações
-Há scripts SQL em `scripts/`.
-
-Boa prática:
-- Versionar mudanças e aplicar em ordem.
-- Evitar mudanças destrutivas sem backup.
-- Para colunas novas, escrever código resiliente quando a coluna pode ainda não existir (durante rollout).
+- A tabela `audit_log` registra operações críticas (quem fez o quê e quando).
+- O gatilho de auditoria usa `app.audit_actor` para identificar o ator atual.
+- Os logs auxiliam na investigação de acessos indevidos ou falhas operacionais.

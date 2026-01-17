@@ -1,42 +1,42 @@
-# painel-qa
+﻿# painel-qa
 
-Next.js (App Router) + TypeScript. Frontend em `app/`, utilitários server-only em `lib/`, dados em `data/`, e testes em `tests/` e `tests-e2e/`.
+Next.js (App Router) + TypeScript. Front-end em `app/`, utilitários restritos ao servidor em `lib/`, dados em `data/` e testes em `tests/` e `tests-e2e/`.
 
-## Rodar localmente (Windows)
+## Executar localmente (Windows)
 
-1) Instalar deps:
+1) Instalar dependências:
 
 ```bash
 npm install
 ```
 
-2) Criar variáveis de ambiente:
+2) Criar e ajustar variáveis de ambiente:
 
-- Copie `.env.example` para `.env.local`
-- (Recomendado) Se preferir, use `.env.local.example` como base (inclui Qase + Postgres).
-- Auth (recomendado: modo JWT, sem Supabase):
+- Copie `.env.example` para `.env.local`.
+- (Recomendado) Use `.env.local.example` como base (ele já traz Qase + Postgres).
+- Autenticação (modo sugerido: JWT sem Supabase):
 	- `SUPABASE_DISABLED=true`
-	- `JWT_SECRET` (server-only)
-- Supabase (legado; apenas se ainda usar Supabase Auth / reset de senha):
+	- `JWT_SECRET` (somente no servidor)
+- Supabase (legado; apenas se ainda usar autenticação do Supabase ou redefinição de senha):
 	- `NEXT_PUBLIC_SUPABASE_URL`
 	- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-	- `NEXT_PUBLIC_SITE_URL` (importante para links de reset de senha; use o domínio fixo do deploy)
-	- (server-only) `SUPABASE_SERVICE_ROLE_KEY`
-- Banco (Postgres) para persistência (server-only, via `@vercel/postgres`):
-	- `POSTGRES_URL` (pool/pgbouncer)
+	- `NEXT_PUBLIC_SITE_URL` (fundamental para links de redefinição; deve ser o domínio final do deploy)
+	- (somente servidor) `SUPABASE_SERVICE_ROLE_KEY`
+- Banco Postgres (persistência em `@vercel/postgres`, apenas no servidor):
+	- `POSTGRES_URL` (conexão com pool/pgbouncer)
 	- `POSTGRES_URL_NON_POOLING` (conexão direta, sem pooling)
-	- (aliases opcionais, usados em scripts/docs) `DATABASE_URL` e `DATABASE_URL_UNPOOLED`
-- (Opcional, recomendado para Qase) Preencha também `QASE_API_TOKEN` (ou `QASE_TOKEN`) e `QASE_PROJECT_CODE`.
-- (Opcional) Redis (Upstash): defina `UPSTASH_REDIS_REST_URL` e `UPSTASH_REDIS_REST_TOKEN` (server-only). Endpoint de verificação (admin): `/api/admin/redis/ping`.
-	- Para testar sem login (Preview/primeiro setup): defina `REDIS_PING_SECRET` e chame `/api/public/redis/ping?secret=...` (ou header `x-redis-ping-secret`).
+	- (aliases opcionais usados por scripts/docs) `DATABASE_URL` e `DATABASE_URL_UNPOOLED`
+- (Opcional, recomendável para Qase) Informe também `QASE_API_TOKEN` (ou `QASE_TOKEN`) e `QASE_PROJECT_CODE`.
+- (Opcional) Redis Upstash (somente servidor): defina `UPSTASH_REDIS_REST_URL` e `UPSTASH_REDIS_REST_TOKEN`. O endpoint de verificação do admin é `/api/admin/redis/ping`.
+	- Para testes sem autenticação (preview ou primeiro setup), configure `REDIS_PING_SECRET` e acesse `/api/public/redis/ping?secret=...` (ou envie o cabeçalho `x-redis-ping-secret`).
 
-> Segurança: token `napi_...` do Neon (API/console) **não** é a string de conexão do Postgres. Nunca use token Neon como variável do app; use apenas as connection strings (`POSTGRES_URL*`) e mantenha-as em `.env.local`/Vercel (não commit).
+> Segurança: o token `napi_...` do Neon (API/console) **não** é a string de conexão do Postgres. Nunca exponha esse token no app; utilize apenas as strings de conexão (`POSTGRES_URL*`) e mantenha-as em `.env.local`/Vercel (não commit).
 
 Guia rápido: `docs/security/neon-vs-postgres.md`.
 
-### Schema do Postgres (Neon/Vercel Postgres)
+### Schema do Postgres (Neon / Vercel Postgres)
 
-Além das env vars, o banco precisa ter as tabelas esperadas por `@vercel/postgres`:
+Além das variáveis, o banco precisa das tabelas esperadas por `@vercel/postgres`:
 
 - `public.clients`
 - `public.users`
@@ -50,37 +50,37 @@ Script idempotente para criar o schema mínimo: `scripts/99_vercel_postgres_sche
 npm run dev
 ```
 
-Se o `npm run dev` encerrar no terminal e o browser mostrar `ERR_CONNECTION_REFUSED`, use o modo daemon:
+Se o `npm run dev` encerrar e o navegador exibir `ERR_CONNECTION_REFUSED`, use o modo daemon:
 
 ```bash
 npm run dev:daemon
 ```
 
-Logs ficam em `dev.out.log` / `dev.err.log`. Para parar:
+Os logs ficam em `dev.out.log` / `dev.err.log`. Para encerrar o daemon:
 
 ```bash
 npm run dev:stop
 ```
 
-Abrir: http://localhost:3000
+Abra http://localhost:3000 no navegador.
 
-## Reset de senha (legado / Supabase)
+## Redefinição de senha (legado / Supabase)
 
-Se `SUPABASE_DISABLED=true`, este fluxo não é usado.
+Se `SUPABASE_DISABLED=true`, este fluxo não é utilizado.
 
-Para o link de recuperação de senha não cair em `DEPLOYMENT_NOT_FOUND` (Vercel preview expira), use sempre o domínio de produção.
+Para evitar o erro `DEPLOYMENT_NOT_FOUND` em previews (o Vercel expira), use sempre o domínio de produção nos links de recuperação.
 
-No Supabase Dashboard → **Authentication** → **URL Configuration**:
+No painel do Supabase, navegue em **Authentication** > **URL Configuration**:
 
 - **Site URL**: `https://painel-qa-jpjv.vercel.app`
-- **Additional Redirect URLs** (adicione pelo menos):
+- **Additional Redirect URLs** (adicione ao menos):
 	- `https://painel-qa-jpjv.vercel.app/login/reset-password`
 
-Se você adicionar um domínio de preview (ex.: `https://testing-metric-....vercel.app/login/reset-password`), ele pode parar de funcionar quando o preview mudar/expirar. O recomendado é manter apenas o domínio de produção.
+Se incluir um domínio de preview (ex.: `https://testing-metric-....vercel.app/login/reset-password`), ele pode parar de funcionar quando o preview mudar/expirar. O ideal é manter apenas o domínio de produção.
 
-No app, a variável `NEXT_PUBLIC_SITE_URL` deve bater com o **Site URL** do Supabase (é ela que o frontend usa para montar o `redirectTo` do recovery).
+No app, a variável `NEXT_PUBLIC_SITE_URL` precisa ser igual ao **Site URL** do Supabase (é ela que o front end utiliza para montar o `redirectTo` do recovery).
 
-## Validar que está tudo OK
+## Verificações recomendadas
 
 ```bash
 npm run lint
@@ -91,5 +91,5 @@ npm run test:e2e:smoke
 
 ## Notas sobre Qase
 
-- A integração usa o header `Token: <API_TOKEN>` (conforme docs oficiais da Qase).
-- Sem token configurado, as telas/rotas que dependem da Qase tendem a retornar dados vazios (sem quebrar o app).
+- A integração envia o header `Token: <API_TOKEN>` (conforme a documentação da Qase).
+- Sem o token, as telas/rotas dependentes da Qase retornam dados vazios, mas o app continua operacional.

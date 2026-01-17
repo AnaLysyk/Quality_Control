@@ -5,7 +5,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/server";
 export async function POST(request: Request) {
   const auth = await authenticateRequest(request);
   const user = await requireUserRecord(auth);
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const supabaseAdmin = getSupabaseAdmin();
   const form = await request.formData();

@@ -107,14 +107,14 @@ export async function GET(request: Request) {
   }
 
   const token = extractToken(request);
-  if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!token) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   // Use require so Jest's module mocking is honored.
   const supabaseModule = require("@/lib/supabaseServer");
   const supabase = supabaseModule.getSupabaseServer();
 
   const { data: authData, error: authError } = await supabase.auth.getUser(token);
-  if (authError || !authData?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (authError || !authData?.user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const authUserId = authData.user.id;
 

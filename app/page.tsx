@@ -2,11 +2,12 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import HomeContent from "./home/HomeContent";
 
-export default function Page() {
+export default async function Page() {
+  const cookieStore = await cookies();
   const authToken =
-    cookies().get("auth_token")?.value ??
-    cookies().get("sb-access-token")?.value ??
-    cookies().get("access_token")?.value ??
+    cookieStore.get("auth_token")?.value ??
+    cookieStore.get("sb-access-token")?.value ??
+    cookieStore.get("access_token")?.value ??
     null;
 
   if (!authToken) {

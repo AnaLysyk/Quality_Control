@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { evaluateQualityGate } from "@/lib/quality";
+import { canDeleteManualDefect, canEditManualDefect, getMockRole, resolveDefectRole } from "@/lib/rbac/defects";
 import type { Release } from "@/types/release";
 
 const STORE_PATH = path.join(process.cwd(), "data", "releases-manual.json");
@@ -31,11 +33,16 @@ async function writeStore(releases: Release[]) {
   await fs.writeFile(STORE_PATH, JSON.stringify(releases, null, 2), "utf8");
 }
 
+function isFinalStatus(status?: string) {
+  const value = (status ?? "").trim().toUpperCase();
+  return value === "FINALIZADA" || value === "FINALIZED" || value === "FINALIZADO";
+}
+
 export async function GET(_: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const releases = await readStore();
   const found = releases.find((r) => r.slug === slug);
-  if (!found) return NextResponse.json({ message: "Não encontrado" }, { status: 404 });
+  if (!found) return NextResponse.json({ message: "Nao encontrado" }, { status: 404 });
   const total = found.stats.pass + found.stats.fail + found.stats.blocked + found.stats.notRun;
   return NextResponse.json({
     ...found,
@@ -53,21 +60,67 @@ export async function GET(_: Request, { params }: { params: Promise<{ slug: stri
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  const mockRole = getMockRole();
+  const effectiveAuthUser =
+    authUser ?? (mockRole ? { id: "mock-user", isGlobalAdmin: mockRole === "admin" } : null);
+  if (!effectiveAuthUser) return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
 
   try {
     const { slug } = await params;
     const patch = await req.json();
     const releases = await readStore();
     const idx = releases.findIndex((r) => r.slug === slug);
-    if (idx < 0) return NextResponse.json({ message: "Não encontrado" }, { status: 404 });
+    if (idx < 0) return NextResponse.json({ message: "Nao encontrado" }, { status: 404 });
 
     const current = releases[idx];
+    const role = await resolveDefectRole(effectiveAuthUser, current.clientSlug ?? null);
+    if (!canEditManualDefect(role)) {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    }
+
+    // Normaliza status recebido
+    const rawStatus = patch.status ?? current.status;
+    const nextStatus = String(rawStatus ?? "").trim().toLowerCase();
+    let statusToSave: "open" | "in_progress" | "done" = "open";
+    if (nextStatus === "done") statusToSave = "done";
+    else if (nextStatus === "in_progress") statusToSave = "in_progress";
+    else statusToSave = "open";
+
+    // Regra de closedAt
+    let closedAtToSave = current.closedAt ?? null;
+    if (statusToSave === "done" && !current.closedAt) {
+      closedAtToSave = new Date().toISOString();
+    }
+    // Nunca apaga closedAt
+
+    const nextStats =
+      current.source === "MANUAL"
+        ? { ...current.stats, ...(patch.stats ?? {}) }
+        : current.stats;
+
+    // --- Run link/unlink logic ---
+    let runSlugToSave = current.runSlug;
+    let runNameToSave = current.runName;
+    if (patch.hasOwnProperty("runSlug")) {
+      if (patch.runSlug === null) {
+        runSlugToSave = undefined;
+        runNameToSave = undefined;
+      } else {
+        runSlugToSave = patch.runSlug;
+        if (patch.hasOwnProperty("runName")) {
+          runNameToSave = patch.runName;
+        }
+      }
+    }
+
     const updated: Release = {
       ...current,
       ...patch,
-      // stats só atualiza se continuar sendo MANUAL
-      stats: current.source === "MANUAL" ? { ...current.stats, ...(patch.stats ?? {}) } : current.stats,
+      runSlug: runSlugToSave,
+      runName: runNameToSave,
+      status: statusToSave,
+      stats: nextStats,
+      closedAt: closedAtToSave,
       updatedAt: new Date().toISOString(),
     };
 
@@ -92,17 +145,25 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
   }
 }
 
-export async function DELETE(_: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const authUser = await authenticateRequest(_);
-  if (!authUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+export async function DELETE(req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const authUser = await authenticateRequest(req);
+  const mockRole = getMockRole();
+  const effectiveAuthUser =
+    authUser ?? (mockRole ? { id: "mock-user", isGlobalAdmin: mockRole === "admin" } : null);
+  if (!effectiveAuthUser) return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
 
   try {
     const { slug } = await params;
     const releases = await readStore();
-    const filtered = releases.filter((release) => release.slug !== slug);
-    if (filtered.length === releases.length) {
-      return NextResponse.json({ message: "Não encontrado" }, { status: 404 });
+    const target = releases.find((release) => release.slug === slug);
+    if (!target) {
+      return NextResponse.json({ message: "Nao encontrado" }, { status: 404 });
     }
+    const role = await resolveDefectRole(effectiveAuthUser, target.clientSlug ?? null);
+    if (!canDeleteManualDefect(role)) {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    }
+    const filtered = releases.filter((release) => release.slug !== slug);
     await writeStore(filtered);
     return NextResponse.json({ message: "deleted" });
   } catch (error) {

@@ -29,6 +29,7 @@ type KanbanProps = {
   editable?: boolean;
   allowStatusChange?: boolean;
   allowLinkEdit?: boolean;
+  onChange?: (data: KanbanData) => void;
 };
 
 export default function Kanban({
@@ -41,6 +42,7 @@ export default function Kanban({
   editable = false,
   allowStatusChange = false,
   allowLinkEdit = false,
+  onChange,
 }: KanbanProps) {
   const [localData, setLocalData] = useState<KanbanData>(data);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -48,6 +50,8 @@ export default function Kanban({
   const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
   const [editingLinkValue, setEditingLinkValue] = useState("");
   const [dragInfo, setDragInfo] = useState<DragInfo | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exported, setExported] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const projectAbbr = (qaseProject || project || "").toUpperCase();
 
@@ -56,6 +60,16 @@ export default function Kanban({
     localData.fail.length ||
     localData.blocked.length ||
     localData.notRun.length;
+
+  // Sincroniza dados externos (ex.: localStorage ou troca de slug) com o estado interno do Kanban.
+  useEffect(() => {
+    setLocalData((prev) => (prev === data ? prev : data));
+  }, [data]);
+
+  // Expõe mudanças para quem consome o componente (ex.: persistir em localStorage).
+  useEffect(() => {
+    onChange?.(localData);
+  }, [localData, onChange]);
 
   const getItemKey = (item: KanbanItem, fallback: string) =>
     item.dbId ? `db-${item.dbId}` : item.id ? `case-${item.id}` : fallback;
@@ -286,6 +300,22 @@ export default function Kanban({
     setEditingValue(item.title ?? "");
   }
 
+  function moveItem(from: keyof KanbanData, item: KanbanItem, to: keyof KanbanData) {
+    if (!allowStatusChange || !editable || from === to) return;
+    setLocalData((prev) => {
+      const updated: KanbanData = {
+        pass: [...prev.pass],
+        fail: [...prev.fail],
+        blocked: [...prev.blocked],
+        notRun: [...prev.notRun],
+      };
+      updated[from] = updated[from].filter((c) => c.id !== item.id);
+      updated[to] = [...updated[to], { ...item }];
+      return updated;
+    });
+    void persistStatusChange(item, to);
+  }
+
   async function handleDrop(targetKey: keyof KanbanData) {
     if (!dragInfo || dragInfo.from === targetKey || !allowStatusChange || !editable) {
       setDragInfo(null);
@@ -361,6 +391,8 @@ export default function Kanban({
   }
 
   function handleExportCSV() {
+    setExported(false);
+    setExporting(true);
     const rows: Record<string, unknown>[] = [];
     (Object.keys(localData) as (keyof KanbanData)[]).forEach((col) => {
       localData[col].forEach((item) => {
@@ -372,18 +404,29 @@ export default function Kanban({
         });
       });
     });
-    const csv = Papa.unparse(rows);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `kanban-${runId}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    try {
+      const csv = Papa.unparse(rows);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `kanban-${runId}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setExported(true);
+    } catch (error) {
+      console.error("Erro ao exportar CSV", error);
+    } finally {
+      setExporting(false);
+    }
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 w-full" data-hide-on-export="true">
+    <div
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 w-full"
+      data-hide-on-export="true"
+      data-testid="kanban-page"
+    >
       {!hasItems && (
         <div className="col-span-full text-sm text-(--page-text,#0b1a3c) bg-[#f8fafc] border border-(--surface-border,#e5e7eb) rounded-xl px-3 py-2">
           Cases nao disponiveis para este run.
@@ -424,10 +467,23 @@ export default function Kanban({
         <button
           type="button"
           onClick={handleExportCSV}
-          className="text-xs text-white bg-(--tc-primary-dark,#000f2e) px-3 py-2 rounded hover:bg-(--tc-primary,#011848) transition"
+          data-testid="export-csv"
+          disabled={exporting}
+          aria-disabled={exporting}
+          className="text-xs text-white bg-(--tc-primary-dark,#000f2e) px-3 py-2 rounded hover:bg-(--tc-primary,#011848) transition disabled:opacity-60"
         >
           Exportar CSV
         </button>
+        {exporting && (
+          <span data-testid="export-loading" className="text-xs text-(--tc-text-muted)">
+            Exportando...
+          </span>
+        )}
+        {!exporting && exported && (
+          <span data-testid="export-success" className="text-xs text-(--tc-text-muted)">
+            Exportado
+          </span>
+        )}
       </div>
 
       {columns.map((column) => {
@@ -438,6 +494,8 @@ export default function Kanban({
             className={`rounded-xl p-5 shadow-lg backdrop-blur-sm border ${column.bgClass} ${column.borderClass}`}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => handleDrop(column.key)}
+            data-testid={`kanban-column-${column.key}`}
+            data-drop-target={column.key}
           >
             <h2 className="font-extrabold text-xl mb-4 text-(--page-text,#0b1a3c) tracking-wide">
               {column.label} <span className="opacity-70 text-(--tc-text-secondary,#4b5563)">({list.length})</span>
@@ -453,6 +511,8 @@ export default function Kanban({
                 const qaseCaseLink = buildCaseLink(item.id);
                 const evidenceLink = (item.link ?? "").trim() || null;
                 const canEditEvidenceLink = editable ? !item.fromApi : allowLinkEdit;
+                const moveTargets = columns.filter((c) => c.key !== column.key).map((c) => c.key);
+                const cardTestId = item.id ? String(item.id) : itemKey;
                 return (
                   <div
                     key={itemKey}
@@ -460,6 +520,8 @@ export default function Kanban({
                     draggable={editable && allowStatusChange}
                     onDragStart={() => editable && allowStatusChange && setDragInfo({ item, from: column.key })}
                     onDragEnd={() => setDragInfo(null)}
+                    data-testid={`kanban-card-${cardTestId}`}
+                    data-status={column.key}
                   >
                     {editable && !item.fromApi && (
                       <button
@@ -566,6 +628,22 @@ export default function Kanban({
                         )}
                       </div>
                     </div>
+
+                    {editable && allowStatusChange && (
+                      <div className="mt-3 flex flex-wrap gap-2" data-testid={`kanban-actions-${cardTestId}`}>
+                        {moveTargets.map((targetKey) => (
+                          <button
+                            key={targetKey}
+                            type="button"
+                            data-testid={`move-to-${targetKey}`}
+                            className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/80 transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                            onClick={() => moveItem(column.key, item, targetKey)}
+                          >
+                            Mover para {targetKey}
+                          </button>
+                        ))}
+                      </div>
+                    )}
 
                     {canEditEvidenceLink && editingLinkId === itemKey && (
                       <input

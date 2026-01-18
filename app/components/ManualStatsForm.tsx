@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 type ManualStatsFormProps = {
   slug: string;
@@ -9,9 +10,14 @@ type ManualStatsFormProps = {
 };
 
 export function ManualStatsForm({ slug, initialStats }: ManualStatsFormProps) {
+  const { user, loading: authLoading } = useAuthUser();
   const router = useRouter();
+  const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
+  const canEdit = Boolean(user?.isGlobalAdmin || role === "admin" || role === "company");
   const [stats, setStats] = useState(initialStats);
   const [saving, setSaving] = useState(false);
+
+  if (authLoading || !canEdit) return null;
 
   const total = stats.pass + stats.fail + stats.blocked + stats.notRun;
 

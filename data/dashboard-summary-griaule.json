@@ -1,0 +1,9 @@
+{
+  "score": 90,
+  "mttr": { "value": 2, "trend": "down" },
+  "defects": { "open": 0, "overSla": 0 },
+  "alerts": [],
+  "releases": [
+    { "version": "v1_8_0_reg" }
+  ]
+}

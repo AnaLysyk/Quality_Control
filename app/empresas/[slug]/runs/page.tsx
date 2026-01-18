@@ -66,7 +66,7 @@ export default function EmpresaRunsPage() {
   }, [runs, query]);
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
+    <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)" data-testid="runs-page">
       <div className="mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6 sm:pt-6 lg:px-10 lg:pt-10">
         <div className="space-y-2">
           <Breadcrumb
@@ -95,6 +95,7 @@ export default function EmpresaRunsPage() {
           <div className="flex items-center gap-3">
             <CreateManualReleaseButton companySlug={slug} />
             <input
+              data-testid="runs-search"
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -110,9 +111,10 @@ export default function EmpresaRunsPage() {
           <p className="text-sm text-(--tc-text-muted)">Nenhuma run encontrada para esta empresa.</p>
         )}
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2" data-testid="runs-list">
           {filtered.map((run) => (
             <Link
+              data-testid={`run-item-${run.slug}`}
               key={run.slug}
               href={`/empresas/${encodeURIComponent(slug)}/runs/${encodeURIComponent(run.slug)}`}
               className="group rounded-2xl border border-(--tc-border)/40 bg-white p-4 shadow-sm transition hover:border-(--tc-accent)/50 hover:shadow-[0_12px_30px_var(--tc-accent-soft)]"

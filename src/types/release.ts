@@ -30,6 +30,7 @@ export type Release = {
   observations?: string;
   createdAt: string;
   updatedAt: string;
+  closedAt?: string | null;
 };
 
 export function calcTotal(s: Stats) {

@@ -3,10 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { getAppMeta } from "@/lib/appMeta";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 type NewManualRelease = {
   name: string;
   app: string;
+  slug: string;
   pass: number;
   fail: number;
   blocked: number;
@@ -17,6 +19,7 @@ type NewManualRelease = {
 const initialState: NewManualRelease = {
   name: "",
   app: "SMART",
+  slug: "v1_8_0_reg",
   pass: 0,
   fail: 0,
   blocked: 0,
@@ -97,6 +100,7 @@ const initialCaseDraft: ManualCaseDraft = {
 };
 
 export function CreateManualReleaseButton({ companySlug }: { companySlug?: string }) {
+  const { user, loading } = useAuthUser();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -104,6 +108,11 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
   const [form, setForm] = useState<NewManualRelease>(initialState);
   const [cases, setCases] = useState<ManualCaseDraft[]>([]);
   const [caseDraft, setCaseDraft] = useState<ManualCaseDraft>({ ...initialCaseDraft });
+
+  const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
+  const canCreate = Boolean(user?.isGlobalAdmin || role === "admin" || role === "company");
+
+  if (loading || !canCreate) return null;
 
   const apps = [
     "SMART",
@@ -167,18 +176,19 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          name: form.name.trim(),
-          app: form.app,
-          ...(companySlug ? { clientSlug: companySlug } : {}),
-          stats: {
-            pass: form.pass,
-            fail: form.fail,
-            blocked: form.blocked,
-            notRun: form.notRun,
-          },
-          observations: form.observations,
-        }),
+          body: JSON.stringify({
+            name: form.name.trim(),
+            app: form.app,
+            slug: form.slug,
+            ...(companySlug ? { clientSlug: companySlug } : {}),
+            stats: {
+              pass: form.pass,
+              fail: form.fail,
+              blocked: form.blocked,
+              notRun: form.notRun,
+            },
+            observations: form.observations,
+          }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({} as any));
@@ -224,6 +234,7 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
   return (
     <div className="relative">
       <button
+        data-testid="create-run"
         type="button"
         onClick={() => {
           setSubmitError(null);
@@ -251,11 +262,12 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
             <div className="space-y-6">
               <div className="grid gap-6">
                 <div className="min-w-0 space-y-6">
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-3">
                     <div className="space-y-1">
                       <label className="text-sm font-semibold text-(--tc-text-muted)">Título</label>
                       <input
                         className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
+                        data-testid="run-name"
                         value={form.name}
                         onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
                         placeholder="Ex: Run 1.9.0 - Aceitação"
@@ -280,6 +292,18 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
                         {appMeta.label} • cor aplicada automaticamente
                       </div>
                     </div>
+
+                    <div className="space-y-1">
+                      <label className="text-sm font-semibold text-(--tc-text-muted)">Release (slug)</label>
+                      <input
+                        className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
+                        data-testid="run-slug"
+                        value={form.slug}
+                        onChange={(e) => setForm((prev) => ({ ...prev, slug: e.target.value }))}
+                        placeholder="Ex: v1_8_0_reg"
+                      />
+                      <div className="text-xs text-(--tc-text-muted)">Slug da release a ser impactada (ex: v1_8_0_reg)</div>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -291,6 +315,7 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
                           min={0}
                           aria-label={`Total ${key}`}
                           className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
+                          data-testid={key === "fail" ? "run-status-fail" : undefined}
                           value={form[key]}
                           onChange={(e) => handleNumber(key, e.target.value)}
                         />
@@ -474,6 +499,7 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
                 type="button"
                 onClick={handleSubmit}
                 disabled={saving || !form.name.trim()}
+                data-testid="run-save"
                 className="rounded-2xl bg-(--tc-accent) px-4 py-2 text-sm font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
               >
                 {saving ? "Salvando..." : "Salvar e abrir"}

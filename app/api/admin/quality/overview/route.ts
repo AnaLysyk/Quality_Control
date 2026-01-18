@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
-import { getAllReleases } from "@/release/data";
+import { getAllReleases, type ReleaseEntry } from "@/release/data";
+import { getAllManualReleases } from "@/release/manualData";
+import type { Release as ManualRelease } from "@/types/release";
 import {
   buildCompanyRows,
   buildReleaseWithStats,
@@ -81,15 +83,42 @@ function normalizeClients(items: ClientRow[]) {
     }));
 }
 
+function mapManualRelease(release: ManualRelease): ReleaseEntry {
+  const app = (release.app ?? "smart").toString();
+  return {
+    slug: release.slug,
+    title: release.name,
+    summary: release.observations ?? "Release manual",
+    runId: release.runId ?? 0,
+    project: app,
+    app,
+    order: [app],
+    source: "MANUAL",
+    createdAt: release.createdAt,
+    clientName: release.clientSlug ?? null,
+    manualSummary: {
+      pass: release.stats.pass,
+      fail: release.stats.fail,
+      blocked: release.stats.blocked,
+      notRun: release.stats.notRun,
+    },
+  };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const periodParam = Number(request.nextUrl.searchParams.get("period") ?? 30);
     const period = [7, 30, 90].includes(periodParam) ? periodParam : 30;
     const baseUrl = new URL(request.url).origin;
 
-    const [clientRows, releases] = await Promise.all([fetchClients(baseUrl, request), getAllReleases()]);
+    const [clientRows, releases, manualReleases] = await Promise.all([
+      fetchClients(baseUrl, request),
+      getAllReleases(),
+      getAllManualReleases(),
+    ]);
 
-    const enrichedReleases = releases.map((release) => buildReleaseWithStats(release));
+    const manualReleaseEntries = manualReleases.map(mapManualRelease);
+    const enrichedReleases = [...releases, ...manualReleaseEntries].map((release) => buildReleaseWithStats(release));
 
     const start = Date.now() - period * DAY_MS;
     const periodReleases = enrichedReleases.filter((release) => release.createdAtValue >= start);

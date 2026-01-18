@@ -1,11 +1,58 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { getRedis } from "@/lib/redis";
 import { prisma } from "@/lib/prisma";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 
+const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+const MOCK_PASSWORD = "senha";
+const MOCK_EMAILS = new Set(["admin@example.com", "user@example.com"]);
+
+function readCookieValue(cookieHeader: string | null, name: string): string | null {
+  if (!cookieHeader) return null;
+  const cookies = cookieHeader.split(";");
+  for (const cookie of cookies) {
+    const [key, ...rest] = cookie.trim().split("=");
+    if (key === name) {
+      return rest.join("=").trim();
+    }
+  }
+  return null;
+}
+
 // Validação real no banco
-async function validateUser(email: string, password: string) {
+async function validateUser(
+  email: string,
+  password: string,
+  cookieHeader: string | null = null
+) {
+  if (SUPABASE_MOCK) {
+    const normalizedEmail = (email ?? "").trim().toLowerCase();
+    if (!normalizedEmail || !MOCK_EMAILS.has(normalizedEmail)) {
+      return null;
+    }
+
+    if (password !== MOCK_PASSWORD) {
+      return null;
+    }
+
+    const mockRole = (readCookieValue(cookieHeader, "mock_role") ?? "admin")
+      .trim()
+      .toLowerCase();
+    const mockSlug = (readCookieValue(cookieHeader, "mock_client_slug") ?? "griaule").trim();
+    const companySlug = mockSlug || "griaule";
+    const role = mockRole === "admin" ? "admin" : "user";
+
+    return {
+      userId: `${role}-mock-${companySlug}`,
+      email: normalizedEmail,
+      name: role === "admin" ? "Mock Admin" : "Mock User",
+      companyId: `mock-company-${companySlug}`,
+      companySlug,
+      role,
+    };
+  }
+
   const user = await prisma.user.findUnique({
     where: { email },
     include: {
@@ -29,7 +76,7 @@ async function validateUser(email: string, password: string) {
   // Assumir primeira empresa como ativa (pode ser melhorado depois)
   const activeCompany = user.userCompanies[0];
   if (!activeCompany) {
-    return null; // Usuário sem empresa
+    return null;
   }
 
   return {
@@ -53,7 +100,8 @@ export async function POST(req: Request) {
     );
   }
 
-  const user = await validateUser(email, password);
+  const cookieHeader = req.headers.get("cookie") ?? null;
+  const user = await validateUser(email, password, cookieHeader);
   if (!user) {
     return NextResponse.json(
       { error: "Credenciais inválidas" },

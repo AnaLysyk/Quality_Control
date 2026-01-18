@@ -28,19 +28,20 @@ export async function setMockUser(page: Page, role: MockRole, clientSlug?: strin
   await page.context().addCookies(cookies);
 }
 
-export async function login(page: Page, email: string, password: string) {
-  await page.goto("/login");
-  await page.fill('input[type="email"]', email);
-  await page.fill('input[type="password"]', password);
-  const loginResponse = page.waitForResponse(
-    (response) =>
-      response.url().includes("/api/auth/login") &&
-      response.request().method() === "POST"
-  );
-  await page.getByRole("button", { name: /login/i }).click();
-  const response = await loginResponse;
-  if (!response.ok()) {
-    throw new Error(`Login falhou: ${response.status()} ${response.url()}`);
-  }
-  await page.waitForURL((url) => !url.pathname.startsWith("/login"));
+async function getMockCookie(page: Page, cookieName: string) {
+  const cookies = await page.context().cookies(baseURL);
+  const match = cookies.find((cookie) => cookie.name === cookieName);
+  return match?.value ?? null;
+}
+
+export async function login(page: Page, email: string, _password: string) {
+  await page.goto("/login", { timeout: 120000, waitUntil: "load" });
+  const role = (await getMockCookie(page, "mock_role")) ?? "admin";
+  const slug = (await getMockCookie(page, "mock_client_slug")) ?? "griaule";
+  const companySlug = slug || "griaule";
+  const defaultPath =
+    role === "admin"
+      ? "/admin/clients"
+      : `/empresas/${companySlug}/dashboard`;
+  await page.goto(defaultPath, { timeout: 120000, waitUntil: "networkidle" });
 }

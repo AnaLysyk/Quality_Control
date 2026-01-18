@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
@@ -85,6 +86,9 @@ interface ExportPDFButtonProps {
 }
 
 export default function ExportPDFButton({ fileName, targetId = "pdf-summary" }: ExportPDFButtonProps) {
+  const [exporting, setExporting] = useState(false);
+  const [exported, setExported] = useState(false);
+
   async function handleExport() {
     const area = document.getElementById(targetId);
     if (!area) return;
@@ -96,6 +100,9 @@ export default function ExportPDFButton({ fileName, targetId = "pdf-summary" }: 
     area.style.overflow = "visible";
 
     window.scrollTo(0, 0);
+
+    setExported(false);
+    setExporting(true);
 
     try {
       const canvas = await html2canvas(area, {
@@ -148,24 +155,41 @@ export default function ExportPDFButton({ fileName, targetId = "pdf-summary" }: 
       const offsetY = (pageH - drawH) / 2;
       pdf.addImage(imgData, "PNG", offsetX, offsetY, drawW, drawH);
       pdf.save(`${fileName}.pdf`);
+      setExported(true);
     } catch (error) {
       console.error("Erro ao gerar PDF", error);
       alert("Não foi possível gerar o PDF. Veja o console para mais detalhes.");
     } finally {
+      setExporting(false);
       area.style.overflow = previousOverflow;
     }
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleExport}
-      className="inline-flex items-center justify-center rounded-full bg-white text-[#0b1a3c] border border-white/60 px-3 py-2 hover:shadow-md hover:scale-[1.02] transition focus:outline-none"
-      aria-label="Exportar PDF"
-      title="Baixar PDF desta run"
-    >
-      <span className="text-lg font-bold leading-none">{String.fromCharCode(0x2193)}</span>
-    </button>
+    <div className="inline-flex items-center gap-2">
+      <button
+        data-testid="export-pdf"
+        type="button"
+        onClick={handleExport}
+        disabled={exporting}
+        aria-disabled={exporting}
+        className="inline-flex items-center justify-center rounded-full bg-white text-[#0b1a3c] border border-white/60 px-3 py-2 hover:shadow-md hover:scale-[1.02] transition focus:outline-none disabled:opacity-60"
+        aria-label="Exportar PDF"
+        title="Baixar PDF desta run"
+      >
+        <span className="text-lg font-bold leading-none">{String.fromCharCode(0x2193)}</span>
+      </button>
+      {exporting && (
+        <span data-testid="export-loading" className="text-xs text-white/80">
+          Gerando...
+        </span>
+      )}
+      {!exporting && exported && (
+        <span data-testid="export-success" className="text-xs text-white/80">
+          Exportado
+        </span>
+      )}
+    </div>
   );
 }
 

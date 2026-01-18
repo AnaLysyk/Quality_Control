@@ -2,10 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 type ManualReleaseActionsProps = {
   slug: string;
   status?: string;
+  gateStatus?: "approved" | "warning" | "failed" | "no_data";
 };
 
 function isFinalStatus(status?: string) {
@@ -13,13 +15,20 @@ function isFinalStatus(status?: string) {
   return s === "FINALIZADA" || s === "FINALIZED" || s === "FINALIZADO";
 }
 
-export default function ManualReleaseActions({ slug, status }: ManualReleaseActionsProps) {
+export default function ManualReleaseActions({ slug, status, gateStatus }: ManualReleaseActionsProps) {
+  const { user, loading: authLoading } = useAuthUser();
   const router = useRouter();
+  const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
+  const canEdit = Boolean(user?.isGlobalAdmin || role === "admin" || role === "company");
   const [loading, setLoading] = useState(false);
 
+  if (authLoading || !canEdit) return null;
+
   const finalized = isFinalStatus(status);
+  const gateBlocked = gateStatus === "failed";
 
   const finalize = async () => {
+    if (gateBlocked) return;
     setLoading(true);
     try {
       await fetch(`/api/releases-manual/${slug}`, {
@@ -95,11 +104,18 @@ export default function ManualReleaseActions({ slug, status }: ManualReleaseActi
         <button
           type="button"
           onClick={finalize}
-          disabled={loading}
+          disabled={loading || gateBlocked}
+          aria-disabled={gateBlocked}
+          data-testid="release-approve"
           className="rounded-xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-60"
         >
           {loading ? "..." : "Finalizar run"}
         </button>
+      )}
+      {gateBlocked && !finalized && (
+        <p className="text-xs text-rose-200" data-testid="quality-gate-blocked-message">
+          Qualidade insuficiente para aprovação
+        </p>
       )}
     </div>
   );

@@ -93,6 +93,18 @@ export const AuthUserSchema = z
 
 export type AuthUser = z.infer<typeof AuthUserSchema>;
 
+export const AuthCompanySchema = z
+  .object({
+    id: z.string().min(1),
+    name: z.string().min(1),
+    slug: z.string().min(1),
+    role: z.string().min(1),
+    active: z.boolean().optional(),
+  })
+  .strip();
+
+export type AuthCompany = z.infer<typeof AuthCompanySchema>;
+
 export const AuthMeErrorSchema = z
   .object({
     code: z.string().trim().min(1).max(64),
@@ -105,6 +117,7 @@ export type AuthMeError = z.infer<typeof AuthMeErrorSchema>;
 export const AuthMeResponseSchema = z
   .object({
     user: AuthUserSchema.nullable(),
+    companies: z.array(AuthCompanySchema).optional(),
     error: AuthMeErrorSchema.optional().nullable(),
   })
   .strip();

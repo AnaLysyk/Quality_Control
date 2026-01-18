@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { canDeleteManualDefect, canEditManualDefect, getMockRole, resolveDefectRole } from "@/lib/rbac/defects";
 import type { TestCaseCard } from "@/types/release";
 
 const STORE_PATH = path.join(process.cwd(), "data", "releases-manual-cases.json");
+const RELEASES_STORE_PATH = path.join(process.cwd(), "data", "releases-manual.json");
 
 async function ensureStore() {
   await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
@@ -29,6 +31,18 @@ async function readStore(): Promise<Record<string, TestCaseCard[]>> {
 async function writeStore(data: Record<string, TestCaseCard[]>) {
   await ensureStore();
   await fs.writeFile(STORE_PATH, JSON.stringify(data, null, 2), "utf8");
+}
+
+async function getReleaseClientSlug(slug: string): Promise<string | null> {
+  try {
+    const raw = await fs.readFile(RELEASES_STORE_PATH, "utf8");
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    const match = parsed.find((item) => item?.slug === slug);
+    return typeof match?.clientSlug === "string" ? match.clientSlug : null;
+  } catch {
+    return null;
+  }
 }
 
 function toArray(body: unknown): TestCaseCard[] {
@@ -65,10 +79,17 @@ export async function GET(_: Request, { params }: { params: Promise<{ slug: stri
 
 export async function POST(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-
+  const mockRole = getMockRole();
+  const effectiveAuthUser =
+    authUser ?? (mockRole ? { id: "mock-user", isGlobalAdmin: mockRole === "admin" } : null);
+  if (!effectiveAuthUser) return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
   try {
     const { slug } = await params;
+    const clientSlug = await getReleaseClientSlug(slug);
+    const role = await resolveDefectRole(effectiveAuthUser, clientSlug);
+    if (!canEditManualDefect(role)) {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    }
     const body = await req.json();
     const incoming = toArray(body)
       .map((card) => ({
@@ -89,10 +110,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-
+  const mockRole = getMockRole();
+  const effectiveAuthUser =
+    authUser ?? (mockRole ? { id: "mock-user", isGlobalAdmin: mockRole === "admin" } : null);
+  if (!effectiveAuthUser) return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
   try {
     const { slug } = await params;
+    const clientSlug = await getReleaseClientSlug(slug);
+    const role = await resolveDefectRole(effectiveAuthUser, clientSlug);
+    if (!canEditManualDefect(role)) {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    }
     const body = await req.json();
     const incoming = toArray(body)
       .map((card) => ({
@@ -122,10 +150,17 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-
+  const mockRole = getMockRole();
+  const effectiveAuthUser =
+    authUser ?? (mockRole ? { id: "mock-user", isGlobalAdmin: mockRole === "admin" } : null);
+  if (!effectiveAuthUser) return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
   try {
     const { slug } = await params;
+    const clientSlug = await getReleaseClientSlug(slug);
+    const role = await resolveDefectRole(effectiveAuthUser, clientSlug);
+    if (!canDeleteManualDefect(role)) {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    }
     const body = await req.json().catch(() => ({} as { id?: string }));
     const targetId = body.id as string | undefined;
     if (!targetId) {

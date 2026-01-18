@@ -11,7 +11,9 @@ import type { KanbanData } from "@/types/kanban";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import type { Release } from "@/types/release";
 import { getAppMeta } from "@/lib/appMeta";
+import { evaluateQualityGate } from "@/lib/quality";
 import Image from "next/image";
+import { QualityGateHistory } from "./QualityGateHistory";
 
 type AnyRelease = (Release & { name?: string }) | (ReleaseEntry & { name?: string });
 
@@ -134,6 +136,7 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
 
   const editable = source === "MANUAL";
   const total = stats.pass + stats.fail + stats.blocked + stats.notRun;
+  const gate = evaluateQualityGate(total > 0 ? stats : null);
   const canPersistApiLinks = source === "API" && Boolean(companySlug);
   const apiPersistEndpoint =
     source === "API" && Number.isFinite(Number((releaseData as ReleaseEntry).runId))
@@ -155,25 +158,37 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
               <p className="text-(--tc-text-secondary)">{(releaseData as ReleaseEntry).summary}</p>
             )}
           </div>
-          <div className="flex items-center gap-3">
-            <div className={`inline-flex items-center justify-center gap-2 rounded-full px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-white shadow-[0_8px_20px_rgba(0,0,0,0.25)] border border-(--app-tag-color) bg-(--app-tag-color) ${appColorClass}`}>
-              <span className="h-3 w-3 rounded-full bg-white/90 ring-2 ring-white/40" />
-              <span className="leading-none">{appMeta.label}</span>
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-3">
+              <div className={`inline-flex items-center justify-center gap-2 rounded-full px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-white shadow-[0_8px_20px_rgba(0,0,0,0.25)] border border-(--app-tag-color) bg-(--app-tag-color) ${appColorClass}`}>
+                <span className="h-3 w-3 rounded-full bg-white/90 ring-2 ring-white/40" />
+                <span className="leading-none">{appMeta.label}</span>
+              </div>
+              <div
+                data-testid="quality-gate-status"
+                data-status={gate.status}
+                className="inline-flex items-center rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)"
+              >
+                Gate: {gate.status}
+              </div>
+              <ExportPDFButton fileName={releaseData.slug || "run"} targetId="pdf-summary" />
+              {source === "API" && (
+                <EditReleaseButton
+                  slug={releaseData.slug}
+                  currentTitle={(releaseData as ReleaseEntry).title}
+                  currentRunId={(releaseData as ReleaseEntry).runId}
+                />
+              )}
+              {source === "MANUAL" && (
+                <ManualReleaseActions
+                  slug={releaseData.slug ?? normalizedSlug}
+                  status={typeof releaseData.status === "string" ? releaseData.status : undefined}
+                  gateStatus={gate.status}
+                />
+              )}
             </div>
-            <ExportPDFButton fileName={releaseData.slug || "run"} targetId="pdf-summary" />
-            {source === "API" && (
-              <EditReleaseButton
-                slug={releaseData.slug}
-                currentTitle={(releaseData as ReleaseEntry).title}
-                currentRunId={(releaseData as ReleaseEntry).runId}
-              />
-            )}
-            {source === "MANUAL" && (
-              <ManualReleaseActions
-                slug={releaseData.slug ?? normalizedSlug}
-                status={typeof releaseData.status === "string" ? releaseData.status : undefined}
-              />
-            )}
+            {/* Quality Gate History UI */}
+            <QualityGateHistory companySlug={companySlug || "griaule"} releaseSlug={releaseData.slug} />
           </div>
         </div>
 

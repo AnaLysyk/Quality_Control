@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 type EditReleaseButtonProps = {
   slug: string;
@@ -9,7 +10,13 @@ type EditReleaseButtonProps = {
 };
 
 export function EditReleaseButton({ slug, currentTitle, currentRunId }: EditReleaseButtonProps) {
+  const { user, loading: authLoading } = useAuthUser();
   const [loading, setLoading] = useState(false);
+
+  const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
+  const canEdit = Boolean(user?.isGlobalAdmin || role === "admin" || role === "company");
+
+  if (authLoading || !canEdit) return null;
 
   const handleEdit = async () => {
     const nextTitle = prompt("Novo titulo da run:", currentTitle ?? "");
@@ -33,6 +40,7 @@ export function EditReleaseButton({ slug, currentTitle, currentRunId }: EditRele
 
   return (
     <button
+      data-testid="run-edit"
       type="button"
       onClick={handleEdit}
       disabled={loading}

@@ -272,7 +272,13 @@ export function CompanyMetricsCard(props: {
               {company.name}
             </h2>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold ${tone.className}`}>{tone.label}</span>
+              <span
+                data-testid="company-quality-status"
+                data-status={company.gate.status}
+                className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold ${tone.className}`}
+              >
+                {tone.label}
+              </span>
               <span className="text-[11px] text-(--tc-text-muted)">Janela: {periodDays}d</span>
               {company.active === false && (
                 <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-700">

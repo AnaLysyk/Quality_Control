@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { FiArrowRight } from "react-icons/fi";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useClientContext } from "@/context/ClientContext";
+import { useClientContext, type ClientAccess } from "@/context/ClientContext";
+import type { AuthUser } from "@/contracts/auth";
 import { CompanySelector } from "@/components/CompanySelector";
 
 const cards = [
@@ -23,10 +24,31 @@ const cards = [
   },
 ];
 
+function resolveCompanySlug(user: AuthUser | null, clients: ClientAccess[], activeClientSlug: string | null) {
+  if (activeClientSlug) return activeClientSlug;
+  if (clients.length) return clients[0].slug;
+  if (typeof user?.clientSlug === "string" && user.clientSlug.trim()) return user.clientSlug;
+  if (typeof user?.defaultClientSlug === "string" && user.defaultClientSlug.trim())
+    return user.defaultClientSlug;
+  return null;
+}
+
+function decideLandingRoute(user: AuthUser | null, clients: ClientAccess[], activeClientSlug: string | null) {
+  if (!user) return null;
+  const role = (user.role ?? "").toLowerCase();
+  if (role === "admin") return "/admin";
+  if (role === "company") {
+    const slug = resolveCompanySlug(user, clients, activeClientSlug);
+    return slug ? `/empresas/${encodeURIComponent(slug)}/home` : "/empresas";
+  }
+  return "/user/home";
+}
+
 export default function HomeContent() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, loading: authLoading } = useAuth();
-  const { clients, loading: clientsLoading } = useClientContext();
+  const { clients, activeClientSlug, loading: clientsLoading } = useClientContext();
 
   useEffect(() => {
     if (authLoading || clientsLoading) return;
@@ -34,11 +56,19 @@ export default function HomeContent() {
       router.replace("/login");
       return;
     }
-    if (!clients || clients.length === 0) {
+    if ((!clients || clients.length === 0) && (user.role ?? "").toLowerCase() !== "admin") {
       router.replace("/empresas");
       return;
     }
-  }, [user, clients, authLoading, clientsLoading, router]);
+    const nextRoute = decideLandingRoute(user, clients, activeClientSlug);
+    if (!nextRoute) {
+      router.replace("/empresas");
+      return;
+    }
+    if (pathname !== nextRoute) {
+      router.replace(nextRoute);
+    }
+  }, [user, clients, activeClientSlug, authLoading, clientsLoading, router, pathname]);
 
   if (authLoading || clientsLoading) {
     return (

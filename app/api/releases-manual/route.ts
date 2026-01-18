@@ -4,6 +4,7 @@ import path from "path";
 import crypto from "crypto";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { canCreateManualDefect, getMockRole, resolveDefectRole } from "@/lib/rbac/defects";
 import type { Release, Stats } from "@/types/release";
 
 const STORE_PATH = path.join(process.cwd(), "data", "releases-manual.json");
@@ -33,6 +34,13 @@ async function writeStore(releases: Release[]) {
   await fs.writeFile(STORE_PATH, JSON.stringify(releases, null, 2), "utf8");
 }
 
+function shouldCloseFromStats(stats: Partial<Stats>) {
+  const fail = Math.max(0, Number(stats.fail ?? 0));
+  const blocked = Math.max(0, Number(stats.blocked ?? 0));
+  const notRun = Math.max(0, Number(stats.notRun ?? 0));
+  return fail === 0 && blocked === 0 && notRun === 0;
+}
+
 export async function GET(req: Request) {
   const releases = await readStore();
   const url = new URL(req.url);
@@ -58,16 +66,24 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-
+  const mockRole = getMockRole();
+  const effectiveAuthUser =
+    authUser ?? (mockRole ? { id: "mock-user", isGlobalAdmin: mockRole === "admin" } : null);
+  if (!effectiveAuthUser) return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
   try {
     const body = await req.json();
     const name = (body.name ?? "").toString().trim();
     const app = (body.app ?? "").toString().trim() || "SMART";
     const environments = Array.isArray(body.environments) ? body.environments.map((env: unknown) => String(env)) : [];
     const clientSlug = body.clientSlug ? String(body.clientSlug).trim() : null;
+    const role = await resolveDefectRole(effectiveAuthUser, clientSlug);
+    if (!canCreateManualDefect(role)) {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    }
     const stats = (body.stats ?? {}) as Partial<Stats>;
     const now = new Date().toISOString();
+    const requestedClosedAt = typeof body.closedAt === "string" ? body.closedAt : null;
+    const closedAt = requestedClosedAt ?? (shouldCloseFromStats(stats) ? now : null);
 
     if (!name) {
       return NextResponse.json({ message: "Nome obrigatorio" }, { status: 400 });
@@ -89,6 +105,7 @@ export async function POST(req: Request) {
         notRun: Math.max(0, Number(stats.notRun ?? 0)),
       },
       observations: body.observations ? String(body.observations) : undefined,
+      closedAt,
       createdAt: now,
       updatedAt: now,
     };

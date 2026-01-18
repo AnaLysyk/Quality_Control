@@ -1,5 +1,8 @@
 import DashboardPage from "@/dashboard/page";
 import Breadcrumb from "@/components/Breadcrumb";
+import ExecutiveDashboard from "./ExecutiveDashboard";
+import { ExportQualityButton } from "./ExportQualityButton";
+import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
 
 export default async function EmpresaDashboardPage({
   params,
@@ -31,18 +34,23 @@ export default async function EmpresaDashboardPage({
               { label: "Dashboard" },
             ]}
           />
-
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">
             Dashboard da empresa
           </h1>
+          <div className="flex flex-row gap-3 items-center">
+            <ExportQualityButton slug={slug} />
+            <CreateManualReleaseButton companySlug={slug} data-testid="create-run" />
+          </div>
           <p className="text-sm sm:text-base text-(--tc-text-secondary,#4b5563)">
-            Visão principal com gráficos de runs e métricas ajustada diretamente na plataforma.
+            Visão executiva consolidada da empresa.
           </p>
         </div>
       </div>
-
       <div className="mx-auto mt-4 w-full max-w-7xl px-4 sm:mt-6 sm:px-6 lg:px-10">
-        <DashboardPage />
+        {/* Bloco executivo */}
+        <div className="mb-8">
+          <ExecutiveDashboard slug={slug} />
+        </div>
       </div>
     </div>
   );

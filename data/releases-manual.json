@@ -1,1 +1,40 @@
-[]
+[
+  {
+    "id": "715ef2e4-c487-4847-aa05-03f0dfa93449",
+    "slug": "v1_8_0_reg",
+    "name": "run-falha",
+    "app": "SMART",
+    "environments": [],
+    "clientSlug": "griaule",
+    "source": "MANUAL",
+    "status": "ACTIVE",
+    "stats": {
+      "pass": 0,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": "2026-01-18T03:37:22.826Z",
+    "createdAt": "2026-01-18T03:37:22.826Z",
+    "updatedAt": "2026-01-18T03:37:22.826Z"
+  },
+  {
+    "id": "546b4900-31de-42d3-86d2-f2af735abfad",
+    "slug": "run_falha",
+    "name": "run-falha",
+    "app": "SMART",
+    "environments": [],
+    "clientSlug": "griaule",
+    "source": "MANUAL",
+    "status": "ACTIVE",
+    "stats": {
+      "pass": 0,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": "2026-01-18T03:34:17.211Z",
+    "createdAt": "2026-01-18T03:34:17.211Z",
+    "updatedAt": "2026-01-18T03:34:17.211Z"
+  }
+]

@@ -57,6 +57,22 @@ const mockSeed: ClienteRow[] = [
     active: true,
     created_at: "2026-01-12T00:00:00.000Z",
   },
+  {
+    id: "testing-company",
+    company_name: "Testing Company",
+    slug: "testing-company",
+    tax_id: "11.111.111/0001-11",
+    address: "Rua Alpha, 456",
+    phone: "+55 11 98888-1111",
+    website: "https://www.testing-company.com",
+    logo_url: "/images/testing-company.png",
+    docs_link: "https://docs.testing-company.com",
+    notes: "Cliente mock para comparacao",
+    qase_project_code: "TST",
+    qase_project_codes: ["TST"],
+    active: true,
+    created_at: "2026-01-13T00:00:00.000Z",
+  },
 ];
 
 let mockMemoryStore: ClienteRow[] = [...mockSeed];

@@ -3,16 +3,25 @@ import { cookies } from "next/headers";
 import { getSupabaseServer } from "@/lib/supabaseServer";
 import { getAllReleases, upsertRelease, type ReleaseEntry } from "@/release/data";
 import { slugifyRelease } from "@/lib/slugifyRelease";
+import { canEditRun } from "@/lib/rbac/runs";
 
 export const runtime = "nodejs";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+
+function normalizeAccessRole(value: unknown): "admin" | "company" | "user" {
+  const raw = typeof value === "string" ? value.toLowerCase() : "";
+  if (raw == "admin" || raw == "global_admin") return "admin";
+  if (["company", "client", "client_admin", "client_owner", "client_manager"].includes(raw)) return "company";
+  return "user";
+}
 
 type Access = {
   authUserId: string;
   isGlobalAdmin: boolean;
   clientId: string | null;
   qaseProjectCode: string | null;
+  role: "admin" | "company" | "user";
 };
 
 async function extractToken(req: Request): Promise<string | null> {
@@ -27,7 +36,10 @@ async function extractToken(req: Request): Promise<string | null> {
 
 async function requireAccess(req: Request): Promise<Access | null> {
   if (SUPABASE_MOCK) {
-    return { authUserId: "mock-uid", isGlobalAdmin: true, clientId: "mock-client", qaseProjectCode: "SFQ" };
+    const store = await cookies();
+    const mockRaw = store.get("mock_role")?.value?.toLowerCase();
+    const role = mockRaw === "company" ? "company" : mockRaw === "user" ? "user" : "admin";
+    return { authUserId: "mock-uid", isGlobalAdmin: role === "admin", clientId: "mock-client", qaseProjectCode: "SFQ", role };
   }
 
   const token = await extractToken(req);
@@ -38,6 +50,10 @@ async function requireAccess(req: Request): Promise<Access | null> {
   if (authError || !authData?.user) return null;
 
   const authUserId = authData.user.id;
+
+  const metadata = authData.user.app_metadata;
+  const metadataRole =
+    metadata && typeof metadata === "object" && "role" in metadata ? (metadata as Record<string, unknown>).role : null;
 
   const { data: userRow } = await supabase
     .from("users")
@@ -52,11 +68,11 @@ async function requireAccess(req: Request): Promise<Access | null> {
     .eq("id", authUserId)
     .maybeSingle();
 
-  const role = (userRow as { role?: unknown } | null)?.role;
+  const roleValue = (userRow as { role?: unknown } | null)?.role;
   const isGlobalAdmin =
     (userRow as { is_global_admin?: unknown } | null)?.is_global_admin === true ||
-    role === "global_admin" ||
-    role === "admin" ||
+    roleValue === "global_admin" ||
+    roleValue === "admin" ||
     profileRow?.is_global_admin === true ||
     profileRow?.role === "global_admin";
 
@@ -74,7 +90,10 @@ async function requireAccess(req: Request): Promise<Access | null> {
     if (typeof code === "string" && code.trim()) qaseProjectCode = code.trim().toUpperCase();
   }
 
-  return { authUserId, isGlobalAdmin, clientId, qaseProjectCode };
+  const roleRaw = (userRow as { role?: unknown } | null)?.role ?? profileRow?.role ?? metadataRole ?? null;
+  const role = isGlobalAdmin ? "admin" : normalizeAccessRole(roleRaw);
+
+  return { authUserId, isGlobalAdmin, clientId, qaseProjectCode, role };
 }
 
 function resolveReleaseProjectCode(release: ReleaseEntry): string {
@@ -126,6 +145,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sl
   const existing = all.find((r) => r.slug === slug);
   if (!existing) {
     return NextResponse.json({ error: "Release não encontrada." }, { status: 404 });
+  }
+
+  if (!canEditRun(access.role)) {
+    return NextResponse.json({ error: "Acesso proibido" }, { status: 403 });
   }
 
   // Company users can edit runs, but only within their own Qase project.

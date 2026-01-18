@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-
 import { listQaseRuns } from "@/lib/qaseRuns";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
+import { readManualReleaseStore } from "@/data/manualData";
+import { calcMTTR } from "@/lib/mttr";
 
 type QaseDefect = {
   id: string;
@@ -16,25 +17,26 @@ type QaseDefect = {
   projectCode?: string;
 };
 
-type NormalizedDefect = {
+// Contrato único de Defect
+export type Defect = {
   id: string;
-  runSlug: string;
-  runName?: string;
   title: string;
-  app: string;
-  status: string;
-  kanbanStatus: "aberto" | "bloqueado" | "reteste" | "aprovado" | "backlog";
-  severity: string;
-  link: string;
+  status: "open" | "in_progress" | "done";
+  openedAt: string;
+  closedAt: string | null;
+  mttrMs: number | null;
+  origin: "manual" | "qase";
+  runSlug?: string;
+  app?: string;
+  severity?: string;
+  link?: string;
   created_at?: string;
-  origin: "automatico";
+  updated_at?: string;
 };
 
 type DefectResponse = {
   total: number;
-  byStatus: Record<string, number>;
-  byApplication: { name: string; count: number }[];
-  items: NormalizedDefect[];
+  items: Defect[];
   error?: string;
 };
 
@@ -46,13 +48,11 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value as Record<string, unknown>;
 }
 
-function mapKanbanStatus(raw: string): NormalizedDefect["kanbanStatus"] {
-  const st = raw.toLowerCase();
-  if (st.includes("block")) return "bloqueado";
-  if (st.includes("retest") || st.includes("retestar") || st.includes("in_progress")) return "reteste";
-  if (st.includes("resolve") || st.includes("closed") || st.includes("done")) return "aprovado";
-  if (st.includes("backlog") || st.includes("todo")) return "backlog";
-  return "aberto";
+function normalizeQaseStatus(status: string): "open" | "in_progress" | "done" {
+  const st = status.toLowerCase();
+  if (st.includes("done") || st.includes("closed") || st.includes("aprovado")) return "done";
+  if (st.includes("progress") || st.includes("retest")) return "in_progress";
+  return "open";
 }
 
 async function fetchAllDefects(projectCode: string, token: string): Promise<QaseDefect[]> {
@@ -103,42 +103,46 @@ async function fetchAllDefects(projectCode: string, token: string): Promise<Qase
   return all;
 }
 
-function normalize(defects: QaseDefect[], runNames: Map<string, string>): DefectResponse {
-  const byStatus = new Map<string, number>();
-  const byApp = new Map<string, number>();
-
-  const items: NormalizedDefect[] = defects.map((d, idx) => {
-    const kanban = mapKanbanStatus(d.status ?? "open");
-    const app = d.projectCode || d.tags?.[0] || "Sem aplicacao";
-    byStatus.set(kanban, (byStatus.get(kanban) ?? 0) + 1);
-    byApp.set(app, (byApp.get(app) ?? 0) + 1);
-    const runKey = d.run_id ? String(d.run_id) : "";
-    const runName = runKey ? runNames.get(runKey) : undefined;
+function normalizeQaseDefects(defects: QaseDefect[], runNames: Map<string, string>): Defect[] {
+  return defects.map((d, idx) => {
+    const normalizedStatus = normalizeQaseStatus(d.status ?? "open");
+    const isDone = normalizedStatus === "done";
+    const openedAt = d.created_at ?? d.updated_at ?? new Date().toISOString();
+    const closedAt = (d as any).closed_at ?? (isDone ? d.updated_at ?? null : null);
     return {
       id: d.id ?? `defect-${idx}`,
-      runSlug: d.run_id ? String(d.run_id) : "",
-      runName,
       title: d.title ?? "Defeito",
-      app,
-      status: d.status ?? "open",
-      kanbanStatus: kanban,
-      severity: d.severity ?? "medium",
-      link: d.url ?? "#",
-      created_at: d.created_at,
-      origin: "automatico",
+      status: normalizedStatus,
+      openedAt,
+      closedAt,
+      mttrMs: calcMTTR(openedAt, closedAt),
+      origin: "qase",
+      runSlug: d.run_id ? String(d.run_id) : undefined,
     };
   });
-
-  return {
-    total: defects.length,
-    byStatus: Object.fromEntries(byStatus.entries()),
-    byApplication: Array.from(byApp.entries()).map(([name, count]) => ({ name, count })),
-    items,
-  };
 }
 
-export async function GET(_: Request, context: { params: Promise<{ slug: string }> }) {
+function normalizeManualDefects(releases: any[]): Defect[] {
+  return releases.map((r, idx) => {
+    const openedAt = r.createdAt;
+    const closedAt = r.closedAt ?? null;
+    return {
+      id: r.slug ?? r.id ?? `manual-${idx}`,
+      title: r.name ?? r.title ?? "Defeito manual",
+      status: r.status,
+      openedAt,
+      closedAt,
+      mttrMs: calcMTTR(openedAt, closedAt),
+      origin: "manual",
+      runSlug: r.runId ? String(r.runId) : undefined,
+    };
+  });
+}
+
+export async function GET(req: Request, context: { params: Promise<{ slug: string }> }) {
   const { slug } = await context.params;
+  const url = new URL(req.url);
+  const runFilter = url.searchParams.get("run");
   const clientSettings = await getClientQaseSettings(slug);
   const token = clientSettings?.token ?? FALLBACK_TOKEN;
   const projectCodesSet = new Set<string>();
@@ -167,29 +171,87 @@ export async function GET(_: Request, context: { params: Promise<{ slug: string 
     );
   }
 
+  // Qase defects
   const runNameMap = new Map<string, string>();
-  const allDefects: QaseDefect[] = [];
-
+  const allQaseDefects: QaseDefect[] = [];
+  const allQaseRuns: any[] = [];
   for (const code of projectCodes) {
     const qaseRuns = await listQaseRuns(code, token);
     qaseRuns.forEach((run) => {
       if (!run) return;
       const key = `${code}:${String(run.id)}`;
       runNameMap.set(key, run.name ?? run.slug ?? `Run ${run.id}`);
+      allQaseRuns.push({
+        id: key,
+        name: run.name ?? run.slug ?? `Run ${run.id}`,
+        status: run.status ?? "",
+        createdAt: run.createdAt,
+      });
     });
-
     const defects = await fetchAllDefects(code, token);
     defects.forEach((d) => {
       d.projectCode = code;
     });
-    // Namespace run_id so we can find the run name even if multiple projects share ids.
     defects.forEach((d) => {
       if (d.run_id == null) return;
       (d as any).run_id = `${code}:${String(d.run_id)}`;
     });
-    allDefects.push(...defects);
+    allQaseDefects.push(...defects);
   }
 
-  const normalized = normalize(allDefects, runNameMap);
-  return NextResponse.json({ defects: normalized.items, ...normalized }, { status: 200 });
+  // Manual defects
+  const manualReleases = await readManualReleaseStore();
+  const manualDefects = normalizeManualDefects(manualReleases);
+
+  // Releases
+  const { getAllReleases } = await import("@/release/data");
+  const allReleases = await getAllReleases();
+
+  // Unify
+  let allDefects: Defect[] = [
+    ...manualDefects,
+    ...normalizeQaseDefects(allQaseDefects, runNameMap),
+  ];
+  allDefects = allDefects.filter((d) => d.openedAt).sort((a, b) => String(b.openedAt).localeCompare(String(a.openedAt)));
+  if (runFilter) {
+    allDefects = allDefects.filter((d) => d.runSlug === runFilter);
+  }
+  const closed = allDefects.filter((d) => d.mttrMs != null);
+  const avgMttrMs = closed.length ? closed.reduce((acc, d) => acc + (d.mttrMs || 0), 0) / closed.length : null;
+
+  // Enriquecer cada defeito com run e release
+  const items = allDefects.map((defect) => {
+    // Run
+    let run = undefined;
+    if (defect.runSlug) {
+      run = allQaseRuns.find((r) => r.id === defect.runSlug) ||
+            manualReleases.find((r) => String(r.runId) === defect.runSlug);
+      if (run) {
+        run = {
+          id: run.id || run.slug || run.runId,
+          name: run.name || run.title,
+          status: run.status,
+        };
+      }
+    }
+    // Release
+    let release = undefined;
+    if (defect.runSlug) {
+      release = allReleases.find((rel) => String(rel.runId) === defect.runSlug);
+      if (release) {
+        release = {
+          id: release.slug,
+          version: release.title,
+          status: release.status,
+        };
+      }
+    }
+    return {
+      ...defect,
+      run,
+      release,
+    };
+  });
+
+  return NextResponse.json({ total: items.length, items, avgMttrMs }, { status: 200 });
 }

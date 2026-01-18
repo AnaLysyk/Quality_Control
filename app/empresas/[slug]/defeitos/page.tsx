@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { FiEdit3, FiSearch, FiTrash2 } from "react-icons/fi";
 import { useParams } from "next/navigation";
 import Breadcrumb from "@/components/Breadcrumb";
@@ -8,17 +9,21 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 
 type DefectItem = {
   id: string;
-  runSlug: string;
   title: string;
-  app: string;
-  status: "fail" | "blocked" | "pending" | "done" | string;
-  severity: string;
+  status: "open" | "in_progress" | "done";
+  openedAt: string;
+  closedAt: string | null;
+  mttrMs: number | null;
+  origin: "manual" | "qase";
+  runSlug?: string;
+  app?: string;
+  severity?: string;
   link?: string;
-  origin?: "manual" | "automatico";
-  createdBy?: string | null;
-  responsible?: string | null;
-  createdAt?: string | null;
-  runName?: string;
+  responsible?: string;
+  created_at?: string;
+  updated_at?: string;
+  run?: { id: string; name: string; status?: string };
+  release?: { id: string; version: string; status?: string };
 };
 
 type NewDefectForm = {
@@ -40,16 +45,14 @@ type RunOption = {
 };
 
 const STATUS_OPTIONS: { id: DefectItem["status"]; label: string }[] = [
-  { id: "fail", label: "Em falha" },
-  { id: "blocked", label: "Bloqueado" },
-  { id: "pending", label: "Aguardando teste" },
+  { id: "open", label: "Aberto" },
+  { id: "in_progress", label: "Em andamento" },
   { id: "done", label: "Concluído" },
 ];
 
 const STATUS_COLOR_CLASSES: Record<DefectItem["status"], string> = {
-  fail: "border-rose-300/70 bg-rose-50 text-rose-700",
-  blocked: "border-amber-300/70 bg-amber-50 text-amber-700",
-  pending: "border-sky-300/70 bg-sky-50 text-sky-700",
+  open: "border-rose-300/70 bg-rose-50 text-rose-700",
+  in_progress: "border-sky-300/70 bg-sky-50 text-sky-700",
   done: "border-emerald-300/70 bg-emerald-50 text-emerald-700",
 };
 
@@ -58,21 +61,24 @@ function getStatusColor(status: DefectItem["status"]) {
 }
 
 const STATUS_TO_STATS: Record<DefectItem["status"], { fail: number; blocked: number; notRun: number; pass: number }> = {
-  fail: { fail: 1, blocked: 0, notRun: 0, pass: 0 },
-  blocked: { fail: 0, blocked: 1, notRun: 0, pass: 0 },
-  pending: { fail: 0, blocked: 0, notRun: 1, pass: 0 },
+  open: { fail: 1, blocked: 0, notRun: 0, pass: 0 },
+  in_progress: { fail: 0, blocked: 0, notRun: 1, pass: 0 },
   done: { fail: 0, blocked: 0, notRun: 0, pass: 1 },
 };
 
-function deriveStatusFromStats(stats: { fail?: number; blocked?: number; notRun?: number }) {
-  const { fail = 0, blocked = 0, notRun = 0 } = stats;
-  if (blocked > 0) return "blocked";
-  if (fail > 0) return "fail";
-  if (notRun > 0) return "pending";
-  return "done";
+// No longer needed: deriveStatusFromStats
+
+function formatMTTR(ms?: number | null) {
+  if (!ms) return "—";
+  const minutes = Math.floor(ms / 60000);
+  const hours = Math.floor(minutes / 60);
+  if (hours > 0) return `${hours}h ${minutes % 60}m`;
+  return `${minutes}m`;
 }
 
 export default function DefeitosEmpresaPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const params = useParams();
   const slug = (params?.slug as string) || "empresa";
   const companyName =
@@ -86,13 +92,15 @@ export default function DefeitosEmpresaPage() {
   const defaultForm: NewDefectForm = {
     title: "",
     description: "",
-    status: "pending",
+    status: "open",
     link: "",
     runSlug: "",
     responsible: "",
   };
 
   const { user } = useAuthUser();
+  // Get run filter from query param
+  const runFilter = searchParams?.get("run") || "";
   const [form, setForm] = useState<NewDefectForm>(defaultForm);
 
   useEffect(() => {
@@ -121,9 +129,10 @@ export default function DefeitosEmpresaPage() {
   const [editingDefect, setEditingDefect] = useState<DefectItem | null>(null);
   const [modalForm, setModalForm] = useState({
     title: "",
-    status: "fail" as DefectItem["status"],
+    status: "open" as DefectItem["status"],
     link: "",
     responsible: "",
+    runSlug: "",
   });
   const [modalError, setModalError] = useState<string | null>(null);
   const [modalSaving, setModalSaving] = useState(false);
@@ -132,60 +141,22 @@ export default function DefeitosEmpresaPage() {
     setLoading(true);
     setError(null);
     try {
-      const [qaseRes, manualRes] = await Promise.all([
-        fetch(`/api/empresas/${slug}/defeitos`, { cache: "no-store" }),
-        fetch(`/api/releases-manual?clientSlug=${encodeURIComponent(slug)}`, { cache: "no-store" }),
-      ]);
-      const qaseJson = (await qaseRes.json().catch(() => null)) as unknown;
-      const qaseRecord = (qaseJson ?? null) as Record<string, unknown> | null;
-      const qaseError = typeof qaseRecord?.error === "string" ? qaseRecord.error : null;
-      const qaseList =
-        (Array.isArray(qaseRecord?.defects) ? (qaseRecord?.defects as unknown[]) : null) ??
-        (Array.isArray(qaseRecord?.items) ? (qaseRecord?.items as unknown[]) : []);
-
-      const manualJson = (await manualRes.json().catch(() => null)) as unknown;
-      const manualList = Array.isArray(manualJson)
-        ? (manualJson as {
-            slug: string;
-            name: string;
-            app: string;
-            stats: Record<string, number>;
-            createdAt?: string;
-            responsible?: string;
-          }[])
-        : [];
-
-      const manualDefects: DefectItem[] = manualList.map((release) => {
-        const { fail = 0, blocked = 0, notRun = 0 } = release.stats ?? {};
-        const status =
-          blocked > 0 ? "blocked" : fail > 0 ? "fail" : notRun > 0 ? "pending" : "done";
-        const severity = blocked > 0 ? "Crítica" : fail > 0 ? "Alta" : "Média";
-        return {
-          id: `manual-${release.slug}`,
-          runSlug: release.slug,
-          title: release.name,
-          app: release.app,
-          status,
-          severity,
-          link: `/empresas/${encodeURIComponent(slug)}/runs/${encodeURIComponent(release.slug)}`,
-          origin: "manual",
-          createdBy: "Manual",
-          responsible: release.responsible ?? "Manual",
-          createdAt: release.createdAt,
-        };
-      });
-
-      const qaseItems = Array.isArray(qaseList) ? (qaseList as DefectItem[]) : [];
-      const merged = [...manualDefects, ...qaseItems];
-      setDefects(merged);
-      setError(qaseError);
+      const url = new URL(`/api/empresas/${slug}/defeitos`, window.location.origin);
+      if (runFilter) url.searchParams.set("run", runFilter);
+      const res = await fetch(url.toString(), { cache: "no-store" });
+      const json = await res.json().catch(() => null);
+      const record = (json ?? null) as Record<string, unknown> | null;
+      const errorMsg = typeof record?.error === "string" ? record.error : null;
+      const items = Array.isArray(record?.items) ? (record.items as DefectItem[]) : [];
+      setDefects(items);
+      setError(errorMsg);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao carregar defeitos");
       setDefects([]);
     } finally {
       setLoading(false);
     }
-  }, [slug]);
+  }, [slug, runFilter]);
 
   const fetchUsers = useCallback(
     async (clientId: string | null) => {
@@ -222,7 +193,7 @@ export default function DefeitosEmpresaPage() {
       setRunsError(null);
       try {
         const res = await fetch(`/api/empresas/${slug}/runs`, { cache: "no-store" });
-        if (!res.ok) throw new Error("Não foi possível carregar as runs");
+        if (!res.ok) throw new Error("NÃƒÂ£o foi possÃƒÂ­vel carregar as runs");
         const data = (await res.json().catch(() => ({}))) as { runs?: RunOption[] };
         if (!canceled) {
           setRuns(Array.isArray(data.runs) ? data.runs : []);
@@ -264,9 +235,20 @@ export default function DefeitosEmpresaPage() {
     return defects.filter((d) => {
       if (statusFilter !== "all" && d.status !== statusFilter) return false;
       if (originFilter !== "all" && d.origin !== originFilter) return false;
+      // runFilter is already applied in backend, but keep for clarity
+      if (runFilter && d.runSlug !== runFilter) return false;
       return true;
     });
-  }, [defects, statusFilter, originFilter]);
+  }, [defects, statusFilter, originFilter, runFilter]);
+
+  const role = user?.role;
+  const isAdmin = role === "admin";
+  const isCompany = role === "company";
+
+  const closedCount = defects.filter((d) => d.closedAt).length;
+  const openCount = defects.length - closedCount;
+  const closedWithMttr = defects.filter((d) => d.mttrMs != null);
+  const mttrMs = closedWithMttr.length ? closedWithMttr.reduce((acc, d) => acc + (d.mttrMs || 0), 0) / closedWithMttr.length : null;
 
   async function addManualDefect() {
     if (!form.title.trim()) return;
@@ -274,6 +256,7 @@ export default function DefeitosEmpresaPage() {
     setCreateManualError(null);
     const manualApp = slug.toUpperCase();
     const responsibleValue = form.responsible.trim() || user?.name || "Manual";
+    const isClosed = form.status === "done";
     try {
       const res = await fetch("/api/releases-manual", {
         method: "POST",
@@ -283,16 +266,17 @@ export default function DefeitosEmpresaPage() {
           name: form.title.trim(),
           app: manualApp,
           clientSlug: slug,
-          stats: { pass: 0, fail: form.status === "fail" ? 1 : 0, blocked: form.status === "blocked" ? 1 : 0, notRun: form.status === "pending" ? 1 : 0 },
+          stats: STATUS_TO_STATS[form.status],
           observations: form.description,
           slug: form.runSlug,
           responsible: responsibleValue,
+          closedAt: isClosed ? new Date().toISOString() : null,
         }),
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({} as any));
-        const message = (data?.message || data?.error || "Não foi possível criar o defeito manual") as string;
+        const message = (data?.message || data?.error || "NÃƒÂ£o foi possÃƒÂ­vel criar o defeito manual") as string;
         setCreateManualError(message);
         return;
       }
@@ -301,14 +285,10 @@ export default function DefeitosEmpresaPage() {
       await load();
     } catch (err) {
       console.error("Erro ao criar defeito manual", err);
-      setCreateManualError(err instanceof Error ? err.message : "Não foi possível criar o defeito manual");
+      setCreateManualError(err instanceof Error ? err.message : "NÃƒÂ£o foi possÃƒÂ­vel criar o defeito manual");
     } finally {
       setCreating(false);
     }
-  }
-
-  function updateStatus(id: string, next: DefectItem["status"]) {
-    setDefects((prev) => prev.map((d) => (d.id === id ? { ...d, status: next } : d)));
   }
 
   async function deleteManualDefect(defect: DefectItem) {
@@ -321,7 +301,7 @@ export default function DefeitosEmpresaPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data?.message ?? "Não foi possível excluir o defeito");
+        throw new Error(data?.message ?? "NÃƒÂ£o foi possÃƒÂ­vel excluir o defeito");
       }
       await load();
     } catch (err) {
@@ -337,7 +317,8 @@ export default function DefeitosEmpresaPage() {
       title: defect.title,
       status: defect.status,
       link: defect.link ?? "",
-      responsible: defect.responsible ?? defect.createdBy ?? "",
+      responsible: defect.responsible ?? "",
+      runSlug: defect.runSlug ?? "",
     });
     setModalError(null);
     setModalSaving(false);
@@ -356,21 +337,20 @@ export default function DefeitosEmpresaPage() {
     }
     setModalSaving(true);
     setModalError(null);
-    const slug =
-      editingDefect.origin === "manual" ? editingDefect.runSlug : editingDefect.id.replace("manual-", "");
+    const slug = editingDefect.origin === "manual" ? editingDefect.runSlug : editingDefect.id.replace("manual-", "");
     try {
       const payload: Record<string, unknown> = { name: modalForm.title.trim() };
-      const statusStats = STATUS_TO_STATS[modalForm.status] ?? STATUS_TO_STATS["fail"];
+      const statusStats = STATUS_TO_STATS[modalForm.status] ?? STATUS_TO_STATS["open"];
       payload.stats = statusStats;
-      const responsibleValue =
-        modalForm.responsible.trim() || editingDefect.responsible || editingDefect.createdBy || "";
-      if (responsibleValue) {
-        payload.responsible = responsibleValue;
+      if (modalForm.status === "done") {
+        payload.closedAt = new Date().toISOString();
+      } else {
+        payload.closedAt = null;
       }
-      if (modalForm.link.trim()) {
-        payload.observations = modalForm.link.trim();
-      }
-      const res = await fetch(`/api/releases-manual/${encodeURIComponent(slug)}`, {
+      const responsibleValue = modalForm.responsible.trim() || editingDefect.responsible || "";
+      if (responsibleValue) payload.responsible = responsibleValue;
+      if (modalForm.link.trim()) payload.observations = modalForm.link.trim();
+      const res = await fetch(`/api/releases-manual/${encodeURIComponent(slug ?? "")}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -380,21 +360,8 @@ export default function DefeitosEmpresaPage() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data?.message ?? "Não foi possível atualizar o defeito");
       }
-      const updated = await res.json().catch(() => null);
-      const nextStatus = updated?.stats ? deriveStatusFromStats(updated.stats) : modalForm.status;
-      setDefects((prev) =>
-        prev.map((d) =>
-          d.id === editingDefect.id
-          ? {
-              ...d,
-              title: modalForm.title.trim(),
-              status: nextStatus,
-              link: modalForm.link.trim() || d.link,
-              responsible: responsibleValue || d.responsible,
-            }
-            : d
-        )
-      );
+      // Após salvar, recarrega a lista do backend (fonte de verdade)
+      await load();
       closeModal();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erro ao salvar";
@@ -405,7 +372,7 @@ export default function DefeitosEmpresaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#f7f9fb) text-(--page-text,#0b1a3c)">
+    <div className="min-h-screen bg-(--page-bg,#f7f9fb) text-(--page-text,#0b1a3c)" data-testid="defects-page">
       <div className="mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6 sm:pt-6 lg:px-10 lg:pt-10 space-y-6">
         <Breadcrumb
           items={[
@@ -425,7 +392,7 @@ export default function DefeitosEmpresaPage() {
             Controle de defeitos
           </h1>
           <p className="text-sm sm:text-base text-(--tc-text-secondary,#4b5563)">
-            Visão consolidada da empresa {companyName}. Agrupa execuções com status crítico e links para investigação.
+            VisÃƒÂ£o consolidada da empresa {companyName}. Agrupa execuÃƒÂ§ÃƒÂµes com status crÃƒÂ­tico e links para investigaÃƒÂ§ÃƒÂ£o.
           </p>
         </header>
 
@@ -434,12 +401,34 @@ export default function DefeitosEmpresaPage() {
 
         {!loading && (
           <>
-            <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 sm:p-6 shadow-sm space-y-4">
+            <section className="grid gap-3 md:grid-cols-3">
+              <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm">
+                <p className="text-xs uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">MTTR</p>
+                <p className="mt-2 text-2xl font-extrabold text-(--tc-text-primary,#0b1a3c)" data-testid="metric-mttr">
+                  {formatMTTR(mttrMs)}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm">
+                <p className="text-xs uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Defeitos abertos</p>
+                <p className="mt-2 text-2xl font-extrabold text-(--tc-text-primary,#0b1a3c)" data-testid="metric-defects-open">
+                  {openCount}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm">
+                <p className="text-xs uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Defeitos fechados</p>
+                <p className="mt-2 text-2xl font-extrabold text-(--tc-text-primary,#0b1a3c)" data-testid="metric-defects-closed">
+                  {closedCount}
+                </p>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 sm:p-6 shadow-sm space-y-4" data-testid="defects-create">
               <h2 className="text-lg sm:text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Criar defeito manual</h2>
               <div className="grid gap-3 md:grid-cols-2">
                 <label className="grid gap-1 text-sm">
-                  Título
+                  TÃƒÂ­tulo
                   <input
+                    data-testid="defect-title"
                     className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-sm"
                     value={form.title}
                     onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
@@ -481,6 +470,7 @@ export default function DefeitosEmpresaPage() {
                   ) : (
                     <div className="relative">
                       <input
+                        data-testid="defect-run-select"
                         list={runListId}
                         className="w-full rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 pr-10 text-sm"
                         value={form.runSlug}
@@ -507,13 +497,13 @@ export default function DefeitosEmpresaPage() {
                   {runsError && <span className="text-xs text-red-500">{runsError}</span>}
                 </label>
                 <label className="grid gap-1 text-sm">
-                  Responsável
+                  ResponsÃƒÂ¡vel
                   <input
                     className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-sm"
                     list="responsible-options"
                     value={form.responsible}
                     onChange={(e) => setForm((p) => ({ ...p, responsible: e.target.value }))}
-                    placeholder="Nome do responsável"
+                    placeholder="Nome do responsÃƒÂ¡vel"
                   />
                   <datalist id="responsible-options">
                     {responsibleOptions.map((item) => (
@@ -524,7 +514,7 @@ export default function DefeitosEmpresaPage() {
                   </datalist>
                 </label>
                 <label className="grid gap-1 text-sm md:col-span-2">
-                  Descrição (opcional)
+                  DescriÃƒÂ§ÃƒÂ£o (opcional)
                   <textarea
                     className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-sm"
                     rows={3}
@@ -535,6 +525,7 @@ export default function DefeitosEmpresaPage() {
                 </label>
               </div>
                 <button
+                  data-testid="defect-create"
                   type="button"
                   onClick={addManualDefect}
                   className="inline-flex justify-center rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white shadow hover:brightness-110 disabled:opacity-60"
@@ -545,7 +536,23 @@ export default function DefeitosEmpresaPage() {
                 {createManualError && <p className="text-sm text-red-500">{createManualError}</p>}
             </section>
 
-            <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 sm:p-6 shadow-sm space-y-4">
+            <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 sm:p-6 shadow-sm space-y-4" data-testid="defects-list">
+              {runFilter && (
+                <div className="mb-2 flex items-center gap-2 text-xs bg-yellow-50 border border-yellow-200 rounded px-3 py-2">
+                  <span className="font-semibold text-yellow-800">Filtro ativo:</span>
+                  <span className="text-yellow-900">Run <b>{runFilter}</b></span>
+                  <button
+                    className="ml-2 rounded border border-yellow-300 px-2 py-0.5 text-yellow-800 hover:bg-yellow-100"
+                    onClick={() => {
+                      const params = new URLSearchParams(searchParams?.toString() || "");
+                      params.delete("run");
+                      router.replace(`?${params.toString()}`);
+                    }}
+                  >
+                    Remover filtro
+                  </button>
+                </div>
+              )}
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-lg sm:text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Lista de defeitos</h2>
                 <div className="flex flex-wrap gap-2 text-sm">
@@ -570,7 +577,7 @@ export default function DefeitosEmpresaPage() {
                   >
                     <option value="all">Origem: todas</option>
                     <option value="manual">Manuais</option>
-                    <option value="automatico">Automáticos</option>
+                    <option value="automatico">AutomÃƒÂ¡ticos</option>
                   </select>
                 </div>
               </div>
@@ -578,11 +585,16 @@ export default function DefeitosEmpresaPage() {
                 <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhum defeito encontrado.</p>
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
-                  {filtered.map((d) => (
-                    <div
-                      key={d.id}
-                      className="rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 shadow-sm space-y-2 hover:shadow-md transition"
-                    >
+                      {filtered.map((d) => {
+                        const canEdit = isAdmin || (isCompany && d.origin === "manual");
+                        const canDelete = isAdmin && d.origin === "manual";
+                        const canLinkRun = isAdmin || (isCompany && d.origin === "manual");
+                        return (
+                        <div
+                          data-testid={`defect-item-${d.id}`}
+                          key={d.id}
+                          className="rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 shadow-sm space-y-2 hover:shadow-md transition"
+                        >
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0 font-semibold text-(--tc-text-primary,#0b1a3c) truncate" title={d.title}>
                           {d.title}
@@ -592,8 +604,8 @@ export default function DefeitosEmpresaPage() {
                             d.status
                           )}`}
                           value={d.status}
-                          onChange={(e) => updateStatus(d.id, e.target.value as DefectItem['status'])}
-                          aria-label={`Atualizar status do defeito ${d.title}`}
+                          aria-label={`Status do defeito ${d.title}`}
+                          disabled
                         >
                           {STATUS_OPTIONS.map((s) => (
                             <option key={s.id} value={s.id}>
@@ -603,13 +615,22 @@ export default function DefeitosEmpresaPage() {
                         </select>
                       </div>
                       <p className="text-xs text-(--tc-text-secondary,#4b5563)">
-                        Run: {(d.runName ?? d.runSlug) || "Não informado"}
-                        {(d.runName && d.runSlug && d.runName !== d.runSlug) ? ` (${d.runSlug})` : ""}
+                        <span data-testid="defect-run">
+                          Run: {d.run?.name || d.runSlug || "Não informado"}
+                          {d.run?.status ? ` (${d.run.status})` : ""}
+                        </span>
+                                            {d.release && (
+                                              <span className="text-xs text-(--tc-text-secondary,#4b5563)" data-testid="defect-release">
+                                                Release: {d.release.version || d.release.id}
+                                                {d.release.status ? ` (${d.release.status})` : ""}
+                                              </span>
+                                            )}
                       </p>
                       <p className="text-xs text-(--tc-text-secondary,#4b5563)">Caso: {d.id}</p>
                       <p className="text-xs text-(--tc-text-secondary,#4b5563)">App: {d.app}</p>
-                      <p className="text-xs text-(--tc-text-secondary,#4b5563)">Origem: {d.origin === "manual" ? "Manual" : "Automática"}</p>
-                      <p className="text-xs text-(--tc-text-secondary,#4b5563)">Responsável: {d.responsible ?? d.createdBy ?? "N/D"}</p>
+                      <p className="text-xs text-(--tc-text-secondary,#4b5563)">Origem: {d.origin === "manual" ? "Manual" : "AutomÃƒÂ¡tica"}</p>
+                      <p className="text-xs text-(--tc-text-secondary,#4b5563)">Responsável: {d.responsible ?? "N/D"}</p>
+                      <span className="text-xs text-(--tc-text-secondary,#4b5563)" data-testid="defect-mttr">MTTR: {formatMTTR(d.mttrMs)}</span>
                       {d.link && d.link !== "#" && (
                         <a
                           href={d.link}
@@ -622,27 +643,43 @@ export default function DefeitosEmpresaPage() {
                       )}
                       {d.origin === "manual" && (
                         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-(--tc-border,#e5e7eb) pt-3 text-xs">
-                          <button
-                            type="button"
-                            onClick={() => openEditModal(d)}
-                            className="flex items-center gap-1 rounded-full border border-(--tc-border,#e5e7eb) px-3 py-1 text-(--tc-text-secondary,#4b5563) hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
-                          >
-                            <FiEdit3 size={14} />
-                            Editar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => deleteManualDefect(d)}
-                            disabled={deletingId === d.id}
-                            className="flex items-center gap-1 rounded-full border border-red-200 px-3 py-1 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-60"
-                          >
-                            <FiTrash2 size={14} />
-                            {deletingId === d.id ? "Excluindo..." : "Excluir"}
-                          </button>
+                          {canLinkRun && (
+                            <button
+                              type="button"
+                              data-testid="defect-link-run"
+                              onClick={() => openEditModal(d)}
+                              className="flex items-center gap-1 rounded-full border border-(--tc-border,#e5e7eb) px-3 py-1 text-(--tc-text-secondary,#4b5563) hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                            >
+                              Linkar a run
+                            </button>
+                          )}
+                          {canEdit && (
+                            <button
+                              type="button"
+                              data-testid="defect-edit"
+                              onClick={() => openEditModal(d)}
+                              className="flex items-center gap-1 rounded-full border border-(--tc-border,#e5e7eb) px-3 py-1 text-(--tc-text-secondary,#4b5563) hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                            >
+                              <FiEdit3 size={14} />
+                              Editar
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button
+                              type="button"
+                              data-testid="defect-delete"
+                              onClick={() => deleteManualDefect(d)}
+                              disabled={deletingId === d.id}
+                              className="flex items-center gap-1 rounded-full border border-red-200 px-3 py-1 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+                            >
+                              <FiTrash2 size={14} />
+                              {deletingId === d.id ? "Excluindo..." : "Excluir"}
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
-                  ))}
+                  )})}
                 </div>
               )}
             </section>
@@ -650,14 +687,12 @@ export default function DefeitosEmpresaPage() {
         )}
       </div>
       {editingDefect && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" data-testid="defect-modal">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.4em] text-(--tc-text-muted,#6b7280)">Editar defeito</p>
-                <h3 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">
-                  {editingDefect.title}
-                </h3>
+                <h3 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">{editingDefect.title}</h3>
               </div>
               <button
                 type="button"
@@ -668,6 +703,11 @@ export default function DefeitosEmpresaPage() {
               </button>
             </div>
             <div className="mt-4 space-y-4">
+              {editingDefect.origin === "qase" && (
+                <div className="rounded bg-yellow-50 border border-yellow-200 p-3 text-xs text-yellow-800 mb-2">
+                  Defeito sincronizado do Qase (somente leitura)
+                </div>
+              )}
               <label className="block text-sm font-semibold text-(--tc-text-secondary,#4b5563)">
                 Título
                 <input
@@ -675,14 +715,37 @@ export default function DefeitosEmpresaPage() {
                   value={modalForm.title}
                   onChange={(event) => setModalForm((prev) => ({ ...prev, title: event.target.value }))}
                   className="mt-1 w-full rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-sm"
+                  disabled={editingDefect.origin !== "manual"}
                 />
+              </label>
+              <label className="block text-sm font-semibold text-(--tc-text-secondary,#4b5563)">
+                Run associada
+                <input
+                  type="text"
+                  data-testid="defect-run-input"
+                  list="modal-run-list"
+                  value={modalForm.runSlug ?? ''}
+                  onChange={event => setModalForm(prev => ({ ...prev, runSlug: event.target.value }))}
+                  className="mt-1 w-full rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-sm"
+                  placeholder="Buscar run..."
+                  disabled={editingDefect.origin !== "manual"}
+                />
+                <datalist id="modal-run-list">
+                  {runs.map(run => (
+                    <option key={run.slug} value={run.slug} data-testid={`run-option-${run.slug}`}>
+                      {run.name ? `${run.name} (${run.slug})` : run.slug}
+                    </option>
+                  ))}
+                </datalist>
               </label>
               <label className="block text-sm font-semibold text-(--tc-text-secondary,#4b5563)">
                 Status
                 <select
+                  data-testid="defect-status-select"
                   value={modalForm.status}
                   onChange={(event) => setModalForm((prev) => ({ ...prev, status: event.target.value as DefectItem["status"] }))}
                   className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm ${getStatusColor(modalForm.status)}`}
+                  disabled={editingDefect.origin !== "manual"}
                 >
                   {STATUS_OPTIONS.map((option) => (
                     <option key={option.id} value={option.id}>
@@ -691,16 +754,17 @@ export default function DefeitosEmpresaPage() {
                   ))}
                 </select>
               </label>
-                  <label className="block text-sm font-semibold text-(--tc-text-secondary,#4b5563)">
-                    Link
-                    <input
-                      type="text"
-                      value={modalForm.link}
-                      onChange={(event) => setModalForm((prev) => ({ ...prev, link: event.target.value }))}
-                      className="mt-1 w-full rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-sm"
-                      placeholder="https://"
-                    />
-                  </label>
+              <label className="block text-sm font-semibold text-(--tc-text-secondary,#4b5563)">
+                Link
+                <input
+                  type="text"
+                  value={modalForm.link}
+                  onChange={(event) => setModalForm((prev) => ({ ...prev, link: event.target.value }))}
+                  className="mt-1 w-full rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-sm"
+                  placeholder="https://"
+                  disabled={editingDefect.origin !== "manual"}
+                />
+              </label>
               <label className="block text-sm font-semibold text-(--tc-text-secondary,#4b5563)">
                 Responsável
                 <input
@@ -709,8 +773,14 @@ export default function DefeitosEmpresaPage() {
                   onChange={(event) => setModalForm((prev) => ({ ...prev, responsible: event.target.value }))}
                   className="mt-1 w-full rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-sm"
                   placeholder="Nome do responsável"
+                  disabled={editingDefect.origin !== "manual"}
                 />
               </label>
+                <div className="text-xs text-gray-500">
+                  <div>Abertura: {editingDefect.openedAt ? new Date(editingDefect.openedAt).toLocaleString() : "-"}</div>
+                  <div>Fechamento: {editingDefect.closedAt ? new Date(editingDefect.closedAt).toLocaleString() : "-"}</div>
+                  <div>MTTR: <span data-testid="defect-mttr">{formatMTTR(editingDefect.mttrMs)}</span></div>
+                </div>
             </div>
             {modalError && <p className="mt-2 text-xs text-rose-600">{modalError}</p>}
             <div className="mt-5 flex justify-end gap-3">
@@ -721,14 +791,17 @@ export default function DefeitosEmpresaPage() {
               >
                 Cancelar
               </button>
-              <button
-                type="button"
-                onClick={handleModalSave}
-                disabled={modalSaving}
-                className="rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
-              >
-                {modalSaving ? "Salvando..." : "Salvar alterações"}
-              </button>
+              {editingDefect.origin === "manual" && (
+                <button
+                  type="button"
+                  onClick={handleModalSave}
+                  disabled={modalSaving}
+                  data-testid="defect-save"
+                  className="rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
+                >
+                  {modalSaving ? "Salvando..." : "Salvar alterações"}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -736,3 +809,4 @@ export default function DefeitosEmpresaPage() {
     </div>
   );
 }
+

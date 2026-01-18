@@ -1,5 +1,6 @@
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { apiFail, apiOk } from "@/lib/apiResponse";
+import { canCreateRun, getRunMockRole, resolveRunRole } from "@/lib/rbac/runs";
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
@@ -22,11 +23,12 @@ function normalizeString(value: unknown): string | null {
 
 export async function GET(request: Request) {
   const auth = await authenticateRequest(request);
-  if (!auth) {
-    return apiFail(request, "Não autorizado", {
+  const mockRole = getRunMockRole();
+  if (!auth && !mockRole) {
+    return apiFail(request, "Nao autorizado", {
       status: 401,
       code: "AUTH_REQUIRED",
-      extra: { error: { message: "Não autorizado" } },
+      extra: { error: { message: "Nao autorizado" } },
     });
   }
 
@@ -69,11 +71,22 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const auth = await authenticateRequest(request);
-  if (!auth) {
-    return apiFail(request, "Não autorizado", {
+  const mockRole = getRunMockRole();
+  const effectiveAuth = auth ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "admin" } : null);
+
+  if (!effectiveAuth) {
+    return apiFail(request, "Nao autorizado", {
       status: 401,
       code: "AUTH_REQUIRED",
-      extra: { error: { message: "Não autorizado" } },
+      extra: { error: { message: "Nao autorizado" } },
+    });
+  }
+  const role = mockRole ?? (await resolveRunRole(effectiveAuth));
+  if (!canCreateRun(role)) {
+    return apiFail(request, "Acesso proibido", {
+      status: 403,
+      code: "FORBIDDEN",
+      extra: { error: { message: "Acesso proibido" } },
     });
   }
 

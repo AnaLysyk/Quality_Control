@@ -7,6 +7,7 @@ import { FiAlertTriangle, FiChevronDown, FiExternalLink } from "react-icons/fi";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import type { CompanyRow, Stats } from "@/lib/quality";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
+import Badge from "@/components/Badge";
 import styles from "./page.module.css";
 
 type QualityOverviewResponse = {
@@ -80,9 +81,11 @@ export default function AdminHomePage() {
   const [overview, setOverview] = useState<QualityOverviewResponse | null>(null);
   const [defectsPayload, setDefectsPayload] = useState<DefectsResponse | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
+  const [ranking, setRanking] = useState<{ companies: { slug: string; name: string; score: number; status: "healthy" | "attention" | "risk" }[] } | null>(null);
   const [loadingOverview, setLoadingOverview] = useState(true);
   const [loadingDefects, setLoadingDefects] = useState(true);
   const [loadingAudit, setLoadingAudit] = useState(true);
+  const [loadingRanking, setLoadingRanking] = useState(true);
   const [selectedCompanySlug, setSelectedCompanySlug] = useState<string | null>(null);
   const [selectedRunSlug, setSelectedRunSlug] = useState<string | null>(null);
 
@@ -180,6 +183,32 @@ export default function AdminHomePage() {
     };
   }, []);
 
+  useEffect(() => {
+    let canceled = false;
+    const loadRanking = async () => {
+      setLoadingRanking(true);
+      try {
+        const res = await fetch("/api/admin/metrics/ranking", { cache: "no-store" });
+        if (res.status === 401 || res.status === 403) {
+          router.replace("/login");
+          return;
+        }
+        const raw = await res.json().catch(() => null);
+        if (!res.ok) {
+          if (!canceled) setRanking(null);
+          return;
+        }
+        if (!canceled) setRanking(raw);
+      } catch {
+        if (!canceled) setRanking(null);
+      } finally {
+        if (!canceled) setLoadingRanking(false);
+      }
+    };
+    loadRanking();
+    return () => { canceled = true; };
+  }, [router]);
+
   const companies = overview?.companies ?? [];
   const selectedCompany = useMemo(() => {
     if (!companies.length) return null;
@@ -246,6 +275,7 @@ export default function AdminHomePage() {
       risk: company.gate?.status ?? "no_data",
       passRate: company.passRate,
       defectCount: totalFailures,
+      runsTotal: company.releases?.length ?? 0,
       gateCopy: company.gate?.status === "failed" ? "Risco alto" : company.gate?.status === "warning" ? "Atenção" : "Estável",
     };
   });
@@ -279,7 +309,7 @@ export default function AdminHomePage() {
                 <span>Empresas</span>
                 <span>Arraste para ver</span>
               </div>
-              <div className="flex w-full gap-4 overflow-x-auto pb-2">
+              <div className="flex w-full gap-4 overflow-x-auto pb-2" data-testid="benchmark-table">
                 <button
                   type="button"
                   onClick={() => setSelectedCompanySlug(null)}
@@ -298,13 +328,25 @@ export default function AdminHomePage() {
                       key={company.id}
                       type="button"
                       onClick={() => setSelectedCompanySlug(company.slug)}
+                      data-testid={`benchmark-row-${company.slug}`}
                       className={`flex min-w-56 flex-col gap-2 rounded-2xl border p-4 shadow-sm transition ${tone} ${
                         isSelected ? "ring-2 ring-offset-2 ring-(--tc-border,#e5e7eb)" : "opacity-80 hover:opacity-100"
                       }`}
                     >
                       <div className="text-sm font-bold text-(--page-text,#0b1a3c)">{company.name}</div>
-                      <div className="text-3xl font-extrabold">{company.defectCount}</div>
-                      <div className="text-xs text-(--tc-text-muted,#6b7280)">{company.gateCopy}</div>
+                      <div className="text-3xl font-extrabold" data-testid="benchmark-defects-total">
+                        {company.defectCount}
+                      </div>
+                      <div className="text-xs text-(--tc-text-muted,#6b7280)" data-testid="benchmark-runs-total">
+                        Runs: {company.runsTotal}
+                      </div>
+                      <div
+                        className="text-xs text-(--tc-text-muted,#6b7280)"
+                        data-testid="benchmark-quality-status"
+                        data-status={company.risk}
+                      >
+                        {company.gateCopy}
+                      </div>
                       <div className="text-xs text-(--tc-text-muted,#6b7280)">
                         Pass rate: {company.passRate !== null ? `${company.passRate}%` : "--"}
                       </div>
@@ -498,6 +540,34 @@ export default function AdminHomePage() {
                 Ver releases
               </Link>
             </div>
+          </section>
+
+          <section className="rounded-4xl bg-white p-6 shadow-sm">
+            <h2 className="text-2xl font-bold mb-4 text-(--page-text,#0b1a3c)">Ranking de Qualidade por Empresa</h2>
+            {loadingRanking ? (
+              <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando ranking...</p>
+            ) : ranking && ranking.companies.length > 0 ? (
+              <table data-testid="ranking-table" className="min-w-full border-separate border-spacing-y-2">
+                <thead>
+                  <tr className="text-xs uppercase text-(--tc-text-muted,#6b7280)">
+                    <th className="text-left px-2 py-1">Empresa</th>
+                    <th className="text-left px-2 py-1">Score</th>
+                    <th className="text-left px-2 py-1">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ranking.companies.map((c) => (
+                    <tr key={c.slug} className="bg-white hover:bg-(--tc-surface,#f9fafb) transition">
+                      <td className="px-2 py-1 font-semibold text-(--page-text,#0b1a3c)">{c.name}</td>
+                      <td className="px-2 py-1 font-mono font-bold text-lg">{c.score}</td>
+                      <td className="px-2 py-1"><Badge status={c.status} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma empresa encontrada.</p>
+            )}
           </section>
         </div>
       </div>

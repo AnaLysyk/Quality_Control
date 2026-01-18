@@ -93,6 +93,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
       { label: t("nav.adminPanel"), icon: FiCompass, href: "/admin/home" },
       { label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric" },
       { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
+      { label: "Benchmark", icon: FiBarChart2, href: "/admin/benchmark", roles: ["admin"] },
       { label: t("nav.runsManagement"), icon: FiLayers, href: "/admin/runs" },
       { label: t("nav.defects"), icon: FiShield, href: "/admin/defeitos" },
       { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
@@ -134,10 +135,14 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             ? pathname === "/"
             : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
+        // Adiciona data-testid para o link Benchmark
+        const extraProps = item.href === "/admin/benchmark" ? { "data-testid": "nav-benchmark" } : {};
+
         return (
           <Link
             key={item.label}
             href={item.href}
+            {...extraProps}
             className={`group/link relative flex items-center h-11 w-full rounded-xl text-sm font-semibold transition-all duration-200 overflow-hidden min-w-0 ${
               isMobile
                 ? "px-3 justify-start gap-3"

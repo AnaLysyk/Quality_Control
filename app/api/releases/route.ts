@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { deleteReleaseFromStore, getAllReleases, upsertRelease } from "@/release/data";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { canCreateRun, canDeleteRun, getRunMockRole, resolveRunRole } from "@/lib/rbac/runs";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 // Garantir ambiente Node para fs
@@ -37,6 +38,16 @@ export async function POST(request: Request) {
   try {
     const actor = await authenticateRequest(request).catch(() => null);
 
+    const mockRole = getRunMockRole();
+    const effectiveActor = actor ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "admin" } : null);
+    if (!effectiveActor) {
+      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    }
+    const role = mockRole ?? (await resolveRunRole(effectiveActor));
+    if (!canCreateRun(role)) {
+      return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+    }
+
     const body = await request.json().catch(() => ({}));
     const name = (body.name ?? body.title ?? "").toString();
     const runIdRaw = body.runId ?? body.run_id;
@@ -68,8 +79,8 @@ export async function POST(request: Request) {
     });
 
     await addAuditLogSafe({
-      actorUserId: actor?.id ?? null,
-      actorEmail: actor?.email ?? null,
+      actorUserId: effectiveActor?.id ?? null,
+      actorEmail: effectiveActor?.email ?? null,
       action: "run.created",
       entityType: "run",
       entityId: release.slug,
@@ -108,6 +119,15 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const actor = await authenticateRequest(request).catch(() => null);
+    const mockRole = getRunMockRole();
+    const effectiveActor = actor ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "admin" } : null);
+    if (!effectiveActor) {
+      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    }
+    const role = mockRole ?? (await resolveRunRole(effectiveActor));
+    if (!canDeleteRun(role)) {
+      return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+    }
     const body = await request.json().catch(() => ({}));
     const slug = body.slug ? slugifyRelease(body.slug) : "";
     if (!slug) {
@@ -117,8 +137,8 @@ export async function DELETE(request: Request) {
 
     if (removed) {
       await addAuditLogSafe({
-        actorUserId: actor?.id ?? null,
-        actorEmail: actor?.email ?? null,
+        actorUserId: effectiveActor?.id ?? null,
+        actorEmail: effectiveActor?.email ?? null,
         action: "run.deleted",
         entityType: "run",
         entityId: slug,

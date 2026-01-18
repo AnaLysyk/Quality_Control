@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSupabaseServer } from "@/lib/supabaseServer";
+import { rateLimit } from "@/lib/rateLimit";
 import store from "../store";
 import type { Status } from "../types";
 
@@ -307,6 +308,10 @@ function toCsv(rows: ExportRow[]) {
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const project = asProject(searchParams.get("project"));
+  // Rate limit: 30 req/min per IP
+  const ip = (request.headers.get("x-forwarded-for") || "").split(",")[0] || request.headers.get("x-real-ip") || "unknown";
+  const rate = await rateLimit(request, `kanban-export:${ip}`);
+  if (rate.limited) return rate.response;
   const runId = asRunId(searchParams.get("runId"));
   const requestedSlug = normalizeSlug(asSlug(searchParams.get("slug")));
   const format = (searchParams.get("format") || "csv").toLowerCase();

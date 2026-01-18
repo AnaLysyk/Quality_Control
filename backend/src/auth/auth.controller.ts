@@ -75,7 +75,7 @@ export class AuthController {
   async me(@Req() req: Request) {
     const token = this.authService.extractToken(req);
     if (!token) {
-      return AuthMeResponseSchema.parse({ user: null });
+    return AuthMeResponseSchema.parse({ user: null, companies: [] });
     }
 
     const ctx = await this.authService.validateToken(token);
@@ -103,6 +103,7 @@ export class AuthController {
         clientId: ctx.clientId ?? null,
         isGlobalAdmin,
       },
+      companies: [],
     });
   }
 

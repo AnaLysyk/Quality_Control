@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { getAppMeta } from "@/lib/appMeta";
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
@@ -29,6 +30,13 @@ const APP_COLOR_CLASS: Record<string, string> = {
 };
 
 export default function AdminRunsPage() {
+  const { user } = useAuthUser();
+  const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
+  const isAdmin = Boolean(user?.isGlobalAdmin || role === "admin");
+  const isCompany = role === "company";
+  const canCreate = isAdmin || isCompany;
+  const canDelete = isAdmin;
+
   const [title, setTitle] = useState("");
   const [runId, setRunId] = useState("");
   const [app, setApp] = useState("");
@@ -207,6 +215,7 @@ export default function AdminRunsPage() {
           </div>
         </div>
 
+        {canCreate && (
         <form
           onSubmit={handleSubmit}
           className="grid gap-4 rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm md:grid-cols-[1fr_1fr_0.6fr_auto]"
@@ -296,6 +305,7 @@ export default function AdminRunsPage() {
             </p>
           )}
         </form>
+        )}
 
         <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 space-y-5 shadow-sm">
           <div className="flex items-center justify-between">
@@ -386,14 +396,17 @@ export default function AdminRunsPage() {
                       >
                         Abrir
                       </a>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(item.slug, item.source)}
-                        aria-label={`Deletar release ${titleClean || item.slug}`}
-                        className="rounded-lg border border-red-400/60 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-300"
-                      >
-                        Deletar
-                      </button>
+                      {canDelete && (
+                        <button
+                          data-testid="run-delete"
+                          type="button"
+                          onClick={() => handleDelete(item.slug, item.source)}
+                          aria-label={`Deletar release ${titleClean || item.slug}`}
+                          className="rounded-lg border border-red-400/60 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-300"
+                        >
+                          Deletar
+                        </button>
+                      )}
                     </div>
                   </div>
 

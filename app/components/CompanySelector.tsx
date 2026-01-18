@@ -62,7 +62,7 @@ export function CompanySelector({
   const hasCompanies = companies.length > 0;
 
   return (
-    <div className={`space-y-6 ${tone}`}>
+    <div data-testid="company-selector" className={`space-y-6 ${tone}`}>
       <div className="space-y-2">
         <h1 className="text-2xl sm:text-3xl font-extrabold">{title}</h1>
         {description && <p className="text-sm text-(--tc-text-secondary,#4b5563)">{description}</p>}
@@ -102,24 +102,26 @@ export function CompanySelector({
             const isDisabled = !company.linkActive;
 
             return (
-              <Link
-                key={`${company.clientId}-${company.clientSlug}`}
-                href={buildHref(company)}
-                aria-disabled={isDisabled}
-                tabIndex={isDisabled ? -1 : undefined}
-                onClick={(event) => {
-                  if (isDisabled) {
-                    event.preventDefault();
-                    return;
-                  }
-                  setActiveClientSlug(company.clientSlug);
-                }}
-                className={`group relative rounded-2xl border border-(--tc-border)/40 bg-white p-5 shadow-sm transition ${
-                  isDisabled
-                    ? "cursor-not-allowed opacity-60"
-                    : "cursor-pointer hover:-translate-y-1 hover:border-(--tc-accent)/60 hover:shadow-[0_18px_38px_rgba(15,23,42,0.12)]"
-                } ${isActive ? "border-(--tc-accent)/70 ring-2 ring-(--tc-accent,#ef0001)/30" : ""}`}
-              >
+            <Link
+              data-testid={`company-item-${company.clientSlug}`}
+              data-disabled={isDisabled ? "true" : undefined}
+              key={`${company.clientId}-${company.clientSlug}`}
+              href={buildHref(company)}
+              aria-disabled={isDisabled}
+              tabIndex={isDisabled ? -1 : undefined}
+              onClick={(event) => {
+                if (isDisabled) {
+                  event.preventDefault();
+                  return;
+                }
+                setActiveClientSlug(company.clientSlug);
+              }}
+              className={`group relative rounded-2xl border border-(--tc-border)/40 bg-white p-5 shadow-sm transition ${
+                isDisabled
+                  ? "cursor-not-allowed opacity-60"
+                  : "cursor-pointer hover:-translate-y-1 hover:border-(--tc-accent)/60 hover:shadow-[0_18px_38px_rgba(15,23,42,0.12)]"
+              } ${isActive ? "border-(--tc-accent)/70 ring-2 ring-(--tc-accent,#ef0001)/30" : ""}`}
+            >
                 {isActive && (
                   <span className="absolute right-4 top-4 inline-flex items-center rounded-full bg-(--tc-accent,#ef0001)/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">
                     Atual

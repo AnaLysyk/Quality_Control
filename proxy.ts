@@ -3,6 +3,19 @@ import type { NextRequest } from "next/server";
 import { getRedis } from "@/lib/redis";
 import { hasPermission, getUserRoleFromSession } from "@/lib/permissions";
 
+const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+
+function readCookieValue(cookieHeader: string, name: string): string | null {
+  const cookies = cookieHeader.split(";");
+  for (const cookie of cookies) {
+    const [key, ...rest] = cookie.trim().split("=");
+    if (key === name) {
+      return rest.join("=").trim();
+    }
+  }
+  return null;
+}
+
 export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isPublicAsset =
@@ -26,7 +39,7 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Rotas protegidas
+  // Protected routes
   const protectedPaths = ['/dashboard', '/admin', '/empresas', '/me', '/settings', '/api/me', '/api/user'];
   const isProtected = protectedPaths.some(path => pathname.startsWith(path));
 
@@ -34,7 +47,17 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Verificar sessão
+  const cookieHeader = req.headers.get("cookie") ?? "";
+  const mockRole = SUPABASE_MOCK ? (readCookieValue(cookieHeader, "mock_role") ?? "admin").trim().toLowerCase() : null;
+  if (SUPABASE_MOCK && mockRole) {
+    const userRole = mockRole === "admin" ? "admin" : "user";
+    if (pathname.startsWith('/admin/') && !hasPermission(userRole, 'view_admin')) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+    return NextResponse.next();
+  }
+
+  // Session verification
   const sessionId = req.cookies.get("session_id")?.value;
   if (!sessionId) {
     return NextResponse.redirect(new URL("/login", req.url));
@@ -47,16 +70,13 @@ export default async function proxy(req: NextRequest) {
       return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    // Parse session
     const session = typeof raw === "string" ? JSON.parse(raw) : raw;
     const userRole = getUserRoleFromSession(session);
 
-    // Check permissions for specific routes
     if (pathname.startsWith('/admin/') && !hasPermission(userRole, 'view_admin')) {
-      return NextResponse.redirect(new URL("/dashboard", req.url)); // or 403
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
-    // For other protected routes, session is valid
     return NextResponse.next();
   } catch (error) {
     console.error('Proxy session validation error:', error);

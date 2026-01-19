@@ -80,8 +80,8 @@ endstream endobj`);
   return Buffer.from(pdf, "utf8");
 }
 
-export async function GET(req: NextRequest, context: { params: { slug: string; release: string } }) {
-  const { slug: companySlug, release: releaseSlug } = context.params;
+export async function GET(req: NextRequest, context: { params: Promise<{ slug: string; release: string }> }) {
+  const { slug: companySlug, release: releaseSlug } = await context.params;
   const formatType = req.nextUrl.searchParams.get("format") || "csv";
 
   const user = await authenticateRequest(req);
@@ -128,7 +128,8 @@ export async function GET(req: NextRequest, context: { params: { slug: string; r
     });
 
     const pdfBuffer = buildSimplePdf(lines);
-    return new NextResponse(pdfBuffer, {
+    const pdfBytes = new Uint8Array(pdfBuffer);
+    return new NextResponse(pdfBytes, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",

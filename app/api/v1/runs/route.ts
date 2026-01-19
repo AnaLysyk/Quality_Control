@@ -23,7 +23,7 @@ function normalizeString(value: unknown): string | null {
 
 export async function GET(request: Request) {
   const auth = await authenticateRequest(request);
-  const mockRole = getRunMockRole();
+  const mockRole = await getRunMockRole();
   if (!auth && !mockRole) {
     return apiFail(request, "Nao autorizado", {
       status: 401,
@@ -71,7 +71,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const auth = await authenticateRequest(request);
-  const mockRole = getRunMockRole();
+  const mockRole = await getRunMockRole();
   const effectiveAuth = auth ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "admin" } : null);
 
   if (!effectiveAuth) {

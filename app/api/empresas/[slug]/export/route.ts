@@ -4,12 +4,12 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { getCompanyQualitySummary, getCompanyDefects } from "@/lib/quality";
 import { format } from "date-fns";
 
-export async function GET(req: NextRequest, context: { params: { slug: string } }) {
+export async function GET(req: NextRequest, context: { params: Promise<{ slug: string }> }) {
   // Rate limit: 30 req/min per IP
   const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0] || req.headers.get("x-real-ip") || "unknown";
   const rate = await rateLimit(req, `empresas-export:${ip}`);
   if (rate.limited) return rate.response;
-  const { slug } = context.params;
+  const { slug } = await context.params;
   const user = await authenticateRequest(req);
   if (!user) return new Response("Unauthorized", { status: 401 });
   // Only allow global admin for now (backend AuthUser only has isGlobalAdmin)

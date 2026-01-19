@@ -30,12 +30,13 @@ export async function resolveDefectRole(authUser: AuthUser | null, clientSlug?: 
     where: { user_id: authUser.id },
     include: { company: true },
   });
+  type Link = { role?: string | null; company?: { slug?: string | null } | null };
 
   if (!links.length) return "user";
 
-  const hasAdminLink = links.some((link) => (link.role ?? "").toLowerCase() === "admin");
+  const hasAdminLink = links.some((link: Link) => (link.role ?? "").toLowerCase() === "admin");
   if (clientSlug) {
-    const hasClient = links.some((link) => link.company?.slug === clientSlug);
+    const hasClient = links.some((link: Link) => link.company?.slug === clientSlug);
     if (!hasClient) return "user";
   }
 

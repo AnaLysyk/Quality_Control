@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { streamText } from 'ai';
 import 'dotenv/config';
 

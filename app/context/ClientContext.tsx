@@ -98,7 +98,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
         name: company.name,
         slug: company.slug,
         active: company.active ?? true,
-        role: (company.role ?? "").toUpperCase() === "ADMIN" ? "ADMIN" : "USER",
+        role: ((company.role ?? "").toUpperCase() === "ADMIN" ? "ADMIN" : "USER") as ClientAccess["role"],
         linkActive: true,
       })),
     [companies]

@@ -61,7 +61,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ slug: stri
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const authUser = await authenticateRequest(req);
-  const mockRole = getMockRole();
+  const mockRole = await getMockRole();
   const effectiveAuthUser =
     authUser ?? (mockRole ? { id: "mock-user", isGlobalAdmin: mockRole === "admin" } : null);
   if (!effectiveAuthUser) return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
@@ -137,7 +137,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const authUser = await authenticateRequest(req);
-  const mockRole = getMockRole();
+  const mockRole = await getMockRole();
   const effectiveAuthUser =
     authUser ?? (mockRole ? { id: "mock-user", isGlobalAdmin: mockRole === "admin" } : null);
   if (!effectiveAuthUser) return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });

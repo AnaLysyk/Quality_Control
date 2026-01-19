@@ -110,6 +110,8 @@ export type ClientQaseSettings = {
   token: string | null;
   projectCode: string | null;
   projectCodes: string[];
+  name?: string | null;
+  company_name?: string | null;
 };
 
 function parseProjectCodes(value: unknown): string[] {
@@ -163,6 +165,7 @@ export async function getClientQaseSettings(slug?: string) {
               null
           ) ?? null;
         const multiProjects = parseProjectCodes(row.qase_project_codes ?? row.project_codes ?? row.projects ?? null);
+        const companyName = normalizeString(row.company_name ?? row.name ?? row.company ?? null);
 
         const combined = Array.from(
           new Set([
@@ -177,6 +180,8 @@ export async function getClientQaseSettings(slug?: string) {
           token,
           projectCode: combined[0] ?? null,
           projectCodes: combined,
+          name: companyName,
+          company_name: companyName,
         };
       }
     } catch (error) {
@@ -189,6 +194,8 @@ export async function getClientQaseSettings(slug?: string) {
         token: null,
         projectCode: envProjectCodes[0] ?? null,
         projectCodes: envProjectCodes,
+        name: null,
+        company_name: null,
       };
     }
 

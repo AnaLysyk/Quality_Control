@@ -1,4 +1,8 @@
-export const permissions = {
+type RoleKey = "admin" | "company" | "user";
+type ResourceKey = "defect" | "run";
+type PermissionResourceMap = Record<ResourceKey, string[]>;
+
+export const permissions: Record<RoleKey, PermissionResourceMap> = {
   admin: {
     defect: ["create", "edit", "delete", "linkRun"],
     run: ["create", "linkDefect"],
@@ -14,5 +18,11 @@ export const permissions = {
 };
 
 export function can(userRole: string, resource: string, action: string) {
-  return permissions[userRole]?.[resource]?.includes(action) ?? false;
+  if (!Object.prototype.hasOwnProperty.call(permissions, userRole)) {
+    return false;
+  }
+  const roleKey = userRole as RoleKey;
+  const resourceKey = resource as ResourceKey;
+  const allowed = permissions[roleKey]?.[resourceKey];
+  return Array.isArray(allowed) ? allowed.includes(action) : false;
 }

@@ -7,10 +7,10 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import type { KanbanData } from "@/types/kanban";
 
 const baseKanban: KanbanData = {
-  pass: [{ id: "k1", title: "Login ok", status: "pass" }],
-  fail: [{ id: "k2", title: "Erro no login", status: "fail" }],
-  blocked: [{ id: "k3", title: "Dependência externa", status: "blocked" }],
-  notRun: [{ id: "k4", title: "Caso não executado", status: "notRun" }],
+  pass: [{ id: "k1", title: "Login ok" }],
+  fail: [{ id: "k2", title: "Erro no login" }],
+  blocked: [{ id: "k3", title: "Dependencia externa" }],
+  notRun: [{ id: "k4", title: "Caso nao executado" }],
 };
 
 function isKanbanData(value: unknown): value is KanbanData {
@@ -35,7 +35,7 @@ export default function KanbanDefeitosPage() {
         setData(parsed);
       }
     } catch {
-      // ignora parse falho
+      // ignore parse errors
     }
   }, [storageKey]);
 

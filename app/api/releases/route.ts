@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   try {
     const actor = await authenticateRequest(request).catch(() => null);
 
-    const mockRole = getRunMockRole();
+    const mockRole = await getRunMockRole();
     const effectiveActor = actor ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "admin" } : null);
     if (!effectiveActor) {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const actor = await authenticateRequest(request).catch(() => null);
-    const mockRole = getRunMockRole();
+    const mockRole = await getRunMockRole();
     const effectiveActor = actor ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "admin" } : null);
     if (!effectiveActor) {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });

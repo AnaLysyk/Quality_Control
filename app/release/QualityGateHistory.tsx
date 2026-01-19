@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 
 type TimelineEvent = {
@@ -35,7 +36,7 @@ export function QualityGateHistory({ companySlug, releaseSlug }: { companySlug: 
         onClick={() => setOpen((v) => !v)}
         className="rounded border px-3 py-1 text-xs font-semibold"
       >
-        Ver histórico
+        Ver historico
       </button>
       {open && (
         <div
@@ -43,36 +44,44 @@ export function QualityGateHistory({ companySlug, releaseSlug }: { companySlug: 
           data-testid="quality-gate-history-list"
           data-release-timeline="true"
         >
-          {events.length === 0 && <div className="text-xs text-gray-500">Nenhum histórico encontrado.</div>}
+          {events.length === 0 && <div className="text-xs text-gray-500">Nenhum historico encontrado.</div>}
           <ul className="space-y-2" data-testid="release-timeline">
-            {events.map((item, i) => (
-              <li key={item.id || i} data-testid="gate-history-item" className="border-b pb-2">
-                <div data-testid="timeline-event">
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="font-bold">{item.label}</span>
-                    <span className="text-gray-500">
-                      {item.occurred_at ? new Date(item.occurred_at).toLocaleString() : "Sem data"}
-                    </span>
-                  </div>
-                  {item.meta?.reasons && Array.isArray(item.meta.reasons) && (item.meta.reasons as unknown[]).length > 0 && (
-                    <ul className="text-xs text-red-600 list-disc ml-4">
-                      {(item.meta.reasons as string[]).map((r, idx) => (
-                        <li key={idx}>{r}</li>
-                      ))}
-                    </ul>
-                  )}
-                  {item.type === "gate_override" && item.meta?.override && typeof item.meta.override === "object" && (
-                    <div className="mt-1 rounded bg-yellow-50 border border-yellow-200 px-2 py-1 text-[11px] text-yellow-800">
-                      Override por {(item.meta.override as { by?: string }).by ?? "admin"} em{" "}
-                      {(item.meta.override as { at?: string }).at
-                        ? new Date((item.meta.override as { at?: string }).at as string).toLocaleString()
-                        : "N/D"}{" "}
-                      — {(item.meta.override as { reason?: string }).reason ?? "Override aplicado"}
+            {events.map((item, i) => {
+              const reasons = Array.isArray(item.meta?.reasons)
+                ? (item.meta.reasons as unknown[]).filter((r): r is string => typeof r === "string" && r.length > 0)
+                : [];
+              const overrideMeta =
+                item.type === "gate_override" && item.meta?.override && typeof item.meta.override === "object"
+                  ? (item.meta.override as { by?: string; reason?: string; at?: string })
+                  : null;
+
+              return (
+                <li key={item.id || i} data-testid="gate-history-item" className="border-b pb-2">
+                  <div data-testid="timeline-event">
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="font-bold">{item.label}</span>
+                      <span className="text-gray-500">
+                        {item.occurred_at ? new Date(item.occurred_at).toLocaleString() : "Sem data"}
+                      </span>
                     </div>
-                  )}
-                </div>
-              </li>
-            ))}
+                    {reasons.length > 0 && (
+                      <ul className="text-xs text-red-600 list-disc ml-4">
+                        {reasons.map((r, idx) => (
+                          <li key={idx}>{r}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {overrideMeta && (
+                      <div className="mt-1 rounded bg-yellow-50 border border-yellow-200 px-2 py-1 text-[11px] text-yellow-800">
+                        Override por {overrideMeta.by ?? "admin"} em{" "}
+                        {overrideMeta.at ? new Date(overrideMeta.at).toLocaleString() : "N/D"}{" "}
+                        - {overrideMeta.reason ?? "Override aplicado"}
+                      </div>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

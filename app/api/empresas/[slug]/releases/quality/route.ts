@@ -43,7 +43,7 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
       return {
         release: rel.slug,
         started_at: rel.createdAt ?? null,
-        ended_at: rel.closedAt ?? null,
+        ended_at: gate?.evaluated_at ?? null,
         defects: {
           total: totalDefects,
           open: openDefects,

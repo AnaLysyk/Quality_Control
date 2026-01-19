@@ -192,6 +192,12 @@ export async function GET(req: Request) {
       { status: 401 }
     );
   }
+  if (!sessionUser) {
+    return NextResponse.json(
+      { user: null, companies: [], error: { code: "INVALID_SESSION" } },
+      { status: 401 }
+    );
+  }
 
   if (SUPABASE_MOCK) {
     const cookieHeader = req.headers.get("cookie") ?? "";
@@ -252,7 +258,7 @@ export async function GET(req: Request) {
   }
 
   const linkedCompanies = userRecord.userCompanies
-    .map((link) => {
+    .map((link: { company: { id: string; slug: string; name: string } | null; role?: string | null }) => {
       const company = link.company;
       if (!company) return null;
       return {
@@ -263,7 +269,7 @@ export async function GET(req: Request) {
         active: true,
       };
     })
-    .filter((value): value is AuthCompany => Boolean(value));
+    .filter((value: AuthCompany | null): value is AuthCompany => Boolean(value));
 
   const companies = dedupeCompanies(linkedCompanies);
   const landingRole = decideLandingRole(companies, sessionUser.role ?? null);

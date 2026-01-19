@@ -13,7 +13,7 @@ export async function mockAuth(
   context: BrowserContext,
   { role, companies = [], clientSlug }: MockAuthOptions
 ) {
-  const cookies = [
+  const cookies: { name: string; value: string; url: string }[] = [
     {
       name: "mock_role",
       value: role,

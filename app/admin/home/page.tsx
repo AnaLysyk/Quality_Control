@@ -287,7 +287,7 @@ export default function AdminHomePage() {
           <section className="rounded-4xl bg-white p-6 shadow-xl">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent,#ef0001)">Testing Metric</p>
+                <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent,#ef0001)">Quality Control</p>
                 <h1 className="text-4xl font-extrabold text-(--page-text,#0b1a3c)">Qualidade em execução</h1>
                 <p className="mt-2 max-w-2xl text-sm text-(--tc-text-muted,#6b7280)">
                   Risco, falhas e decisão em tempo real. O painel responde “onde agir agora” sem criar ruído.

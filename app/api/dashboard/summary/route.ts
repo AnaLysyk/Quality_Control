@@ -4,6 +4,7 @@ import { getAllReleases } from "@/release/data";
 import { sendQualityAlert, readAlertsStore } from "@/lib/qualityAlert";
 import { getRedis } from "@/lib/redis";
 import { rateLimit } from "@/lib/rateLimit";
+import { calculateQualityScore } from "@/lib/qualityScore";
 
 export async function GET(req: Request, context: { params: Promise<{ slug?: string }> }) {
     // Rate limit: 30 req/min per IP
@@ -91,6 +92,12 @@ export async function GET(req: Request, context: { params: Promise<{ slug?: stri
 
   const response = {
     score: summary.qualityScore,
+    quality_score: calculateQualityScore({
+      gate_status: summary.qualityScore >= 90 ? "approved" : summary.qualityScore >= 70 ? "warning" : "failed",
+      mttr_hours: summary.mttrAvg ?? null,
+      open_defects: summary.openDefects ?? null,
+      fail_rate: undefined,
+    }),
     mttr: { value: summary.mttrAvg, trend: "flat" },
     defects: { open, overSla },
     releases: impacted,

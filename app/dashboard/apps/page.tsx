@@ -8,7 +8,7 @@ export default function DashboardApps() {
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="space-y-1">
           <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent)">Aplicações</p>
-          <h1 className="text-3xl font-bold leading-tight text-(--tc-text-inverse)">Testing Metric</h1>
+          <h1 className="text-3xl font-bold leading-tight text-(--tc-text-inverse)">Quality Control</h1>
           <p className="text-sm text-(--tc-text-secondary)">Selecione uma aplicação para navegar pelas runs e execuções.</p>
         </div>
 

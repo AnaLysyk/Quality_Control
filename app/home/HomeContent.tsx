@@ -85,7 +85,7 @@ export default function HomeContent() {
           <div className="text-sm uppercase tracking-[0.6em] text-(--tc-accent,#ef0001) flex items-center justify-center gap-2">
             <span>Testing Company</span>
           </div>
-          <h1 className="mt-4 text-4xl font-extrabold text-(--page-text,#0b1a3c)">Testing Metric</h1>
+          <h1 className="mt-4 text-4xl font-extrabold text-(--page-text,#0b1a3c)">Quality Control</h1>
           <p className="mt-3 text-sm text-(--tc-text-secondary,#4b5563) max-w-3xl mx-auto">
             Esta tela não administra o sistema. Ela mostra quem você é, onde está e no que está trabalhando agora.
           </p>

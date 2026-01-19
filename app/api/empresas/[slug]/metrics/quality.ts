@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
-import { listQaseRuns } from "@/lib/qaseRuns";
 import { readManualReleaseStore } from "../../../../data/manualData";
-import { calcMTTR } from "@/lib/mttr";
+import { normalizeDefectStatus, resolveOpenedAt } from "@/lib/defectNormalization";
 
 const SLA_MS = 172800000; // 48h
 
@@ -14,8 +13,8 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   const manualDefects = manualReleases.map((r: any) => ({
     id: r.slug ?? r.id ?? "",
     title: r.name ?? r.title ?? "Defeito manual",
-    status: r.status,
-    openedAt: r.createdAt,
+    status: normalizeDefectStatus(r.status),
+    openedAt: resolveOpenedAt((r as any).openedAt ?? r.createdAt),
     origin: "manual",
   }));
 
@@ -47,8 +46,8 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
       ...defects.map((d: any) => ({
         id: d.id ?? d.defect_id ?? "",
         title: d.title ?? d.name ?? "Defeito Qase",
-        status: d.status ?? "open",
-        openedAt: d.created_at ?? d.updated_at ?? new Date().toISOString(),
+        status: normalizeDefectStatus(d.status ?? "open"),
+        openedAt: resolveOpenedAt(d.created_at ?? d.updated_at),
         origin: "qase" as const,
       }))
     );

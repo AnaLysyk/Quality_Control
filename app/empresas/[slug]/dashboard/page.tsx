@@ -34,12 +34,14 @@ export default async function EmpresaDashboardPage({
               { label: "Dashboard" },
             ]}
           />
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">
-            Dashboard da empresa
-          </h1>
-          <div className="flex flex-row gap-3 items-center">
-            <ExportQualityButton slug={slug} />
-            <CreateManualReleaseButton companySlug={slug} data-testid="create-run" />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">
+              Dashboard da empresa
+            </h1>
+            <div className="flex flex-wrap gap-3 sm:justify-end">
+              <ExportQualityButton slug={slug} />
+              <CreateManualReleaseButton companySlug={slug} data-testid="create-run" />
+            </div>
           </div>
           <p className="text-sm sm:text-base text-(--tc-text-secondary,#4b5563)">
             Visão executiva consolidada da empresa.

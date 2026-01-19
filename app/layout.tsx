@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Testing Metric",
+  title: "Quality Control",
   description: "Monitoramento inteligente de qualidade em tempo real.",
 };
 

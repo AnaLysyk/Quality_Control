@@ -6,6 +6,7 @@ import { slugifyRelease } from "@/lib/slugifyRelease";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { canCreateManualDefect, getMockRole, resolveDefectRole } from "@/lib/rbac/defects";
 import type { Release, Stats } from "@/types/release";
+import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalization";
 
 const STORE_PATH = path.join(process.cwd(), "data", "releases-manual.json");
 
@@ -83,7 +84,11 @@ export async function POST(req: Request) {
     const stats = (body.stats ?? {}) as Partial<Stats>;
     const now = new Date().toISOString();
     const requestedClosedAt = typeof body.closedAt === "string" ? body.closedAt : null;
-    const closedAt = requestedClosedAt ?? (shouldCloseFromStats(stats) ? now : null);
+    let status = normalizeDefectStatus(body.status);
+    if (!body.status && shouldCloseFromStats(stats)) {
+      status = "done";
+    }
+    const closedAt = resolveClosedAt(status, requestedClosedAt, shouldCloseFromStats(stats) ? now : null);
 
     if (!name) {
       return NextResponse.json({ message: "Nome obrigatorio" }, { status: 400 });
@@ -97,7 +102,7 @@ export async function POST(req: Request) {
       environments,
       clientSlug: clientSlug && clientSlug.length > 0 ? clientSlug : null,
       source: "MANUAL",
-      status: (body.status as Release["status"]) ?? "ACTIVE",
+      status,
       stats: {
         pass: Math.max(0, Number(stats.pass ?? 0)),
         fail: Math.max(0, Number(stats.fail ?? 0)),

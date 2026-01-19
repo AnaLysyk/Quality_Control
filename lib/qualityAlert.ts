@@ -2,7 +2,16 @@ import fs from "fs";
 import path from "path";
 
 const ALERTS_STORE = path.join(process.cwd(), "data", "quality_alerts.json");
-const ALERT_TYPES = ["quality_score", "sla", "mttr", "release_failed"] as const;
+const ALERT_TYPES = [
+  "quality_score",
+  "sla",
+  "mttr",
+  "release_failed",
+  "gate_failed",
+  "override",
+  "mttr_exceeded",
+  "run_failed",
+] as const;
 
 export type QualityAlertType = typeof ALERT_TYPES[number];
 

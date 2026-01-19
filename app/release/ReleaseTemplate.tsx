@@ -14,6 +14,8 @@ import { getAppMeta } from "@/lib/appMeta";
 import { evaluateQualityGate } from "@/lib/quality";
 import Image from "next/image";
 import { QualityGateHistory } from "./QualityGateHistory";
+import { readQualityGateHistory } from "@/lib/qualityGateHistory";
+import { calculateQualityScore } from "@/lib/qualityScore";
 
 type AnyRelease = (Release & { name?: string }) | (ReleaseEntry & { name?: string });
 
@@ -137,6 +139,15 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
   const editable = source === "MANUAL";
   const total = stats.pass + stats.fail + stats.blocked + stats.notRun;
   const gate = evaluateQualityGate(total > 0 ? stats : null);
+  const history = await readQualityGateHistory(companySlug || "griaule", releaseData.slug);
+  const latestGate = history[0] ?? null;
+  const inferredFailRate = total > 0 ? Math.round((stats.fail / total) * 100) : 0;
+  const qualityScore = calculateQualityScore({
+    gate_status: latestGate?.gate_status ?? gate.status,
+    mttr_hours: latestGate?.mttr_hours ?? null,
+    open_defects: latestGate?.open_defects ?? null,
+    fail_rate: latestGate?.fail_rate ?? inferredFailRate,
+  });
   const canPersistApiLinks = source === "API" && Boolean(companySlug);
   const apiPersistEndpoint =
     source === "API" && Number.isFinite(Number((releaseData as ReleaseEntry).runId))
@@ -171,6 +182,30 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
               >
                 Gate: {gate.status}
               </div>
+              <div
+                data-testid="quality-score"
+                className="inline-flex items-center rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#0b1a3c)"
+              >
+                Score: {qualityScore}
+              </div>
+              <a
+                data-testid="release-export"
+                href={`/api/empresas/${encodeURIComponent(companySlug || "griaule")}/releases/${encodeURIComponent(
+                  releaseData.slug,
+                )}/export?format=csv`}
+                className="inline-flex items-center rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280) hover:border-(--tc-accent,#ef0001)"
+              >
+                Exportar
+              </a>
+              <a
+                data-testid="release-export-pdf"
+                href={`/api/empresas/${encodeURIComponent(companySlug || "griaule")}/releases/${encodeURIComponent(
+                  releaseData.slug,
+                )}/export?format=pdf`}
+                className="inline-flex items-center rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280) hover:border-(--tc-accent,#ef0001)"
+              >
+                Exportar PDF
+              </a>
               <ExportPDFButton fileName={releaseData.slug || "run"} targetId="pdf-summary" />
               {source === "API" && (
                 <EditReleaseButton

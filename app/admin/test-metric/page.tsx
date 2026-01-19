@@ -218,6 +218,7 @@ export default function TestMetricPage() {
   const [activeAppByCompany, setActiveAppByCompany] = useState<Record<string, string | null>>({});
 
   const [defectsBySlug, setDefectsBySlug] = useState<Record<string, DefectsSummary>>({});
+  const loadedDefectsRef = useRef<Set<string>>(new Set());
   const [globalDefects, setGlobalDefects] = useState<{ loaded: boolean; criticalOpen: number | null; error?: string | null }>(
     { loaded: false, criticalOpen: null, error: null }
   );
@@ -389,23 +390,28 @@ export default function TestMetricPage() {
   useEffect(() => {
     const slug = typeof activeCompanySlug === "string" ? activeCompanySlug : null;
     if (!slug) return;
-    if (defectsBySlug[slug]?.loaded) return;
+    if (loadedDefectsRef.current.has(slug)) return;
 
+    loadedDefectsRef.current.add(slug);
     let cancelled = false;
+
     const run = async () => {
-      setDefectsBySlug((prev) => ({
-        ...prev,
-        [slug]: prev[slug] ?? { loaded: false, openTotal: null, openByApp: {}, appsFromDefects: [] },
-      }));
+      setDefectsBySlug((prev) => {
+        if (prev[slug]) return prev;
+        return {
+          ...prev,
+          [slug]: { loaded: false, openTotal: null, openByApp: {}, appsFromDefects: [] },
+        };
+      });
+
       try {
         const res = await fetch(`/api/empresas/${encodeURIComponent(slug)}/defeitos`, { cache: "no-store", credentials: "include" });
         if (res.status === 401) {
-          handleUnauthorized();
+          if (!cancelled) handleUnauthorized();
           return;
         }
         const json = (await res.json().catch(() => null)) as CompanyDefectsResponse | null;
-        if (!res.ok || !json) return;
-        if (json.error) return;
+        if (!res.ok || !json || json.error) return;
 
         const items = Array.isArray((json as any).defects) ? ((json as any).defects as CompanyDefectItem[]) : [];
         const openByApp: Record<string, number> = {};
@@ -437,12 +443,13 @@ export default function TestMetricPage() {
         // ignore (keep placeholder)
       }
     };
+
     run();
 
     return () => {
       cancelled = true;
     };
-  }, [activeCompanySlug, defectsBySlug]);
+  }, [activeCompanySlug]);
 
   const focusCompany = (index: number) => {
     const clamped = Math.max(0, Math.min(companies.length - 1, index));

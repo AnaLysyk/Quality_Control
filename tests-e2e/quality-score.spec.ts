@@ -1,16 +1,17 @@
 import { test, expect } from "@playwright/test";
-import { mockAuth } from "../helpers/mockAuth";
+import { mockAuth } from "./helpers/mockAuth";
 
-test("dashboard mostra quality score", async ({ page, context }) => {
+test("release exibe quality score", async ({ page, context }) => {
   await mockAuth(context, {
     role: "company",
     companies: ["griaule"],
     clientSlug: "griaule",
   });
 
-  await page.goto("/empresas/griaule/dashboard", {
-    waitUntil: "networkidle",
-  });
+  await page.goto("/empresas/griaule/dashboard", { waitUntil: "networkidle" });
 
-  await expect(page.getByTestId("quality-score")).toBeVisible();
+  const score = page.getByTestId("quality-score");
+
+  await expect(score).toBeVisible();
+  await expect(score).toHaveText(/\d{2,3}/);
 });

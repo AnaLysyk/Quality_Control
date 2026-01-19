@@ -131,8 +131,8 @@ const staticReleasesMap: Record<ReleaseId, Omit<ReleaseEntry, "slug">> = {
     createdAt: "2025-11-01T00:00:00.000Z",
   },
   release_1_teste_painel_qa_ace: {
-    title: "Release 1 Testing Metric - Aceitacao",
-    summary: "Execucao do Testing Metric - Griaule Mobile (run: https://app.qase.io/run/GMT/dashboard/1) - Aceitacao",
+    title: "Release 1 Quality Control - Aceitacao",
+    summary: "Execucao do Quality Control - Griaule Mobile (run: https://app.qase.io/run/GMT/dashboard/1) - Aceitacao",
     runId: 1,
     project: "mobile-griaule",
     app: "mobile-griaule",

@@ -25,7 +25,7 @@
     "slug": "griaule",
     "tax_id": "00.000.000/0000-00",
     "address": "Rua Exemplo, 123",
-    "phone": "+55 11 99999-0000",
+    "phone": "dfsdfdsgv",
     "website": "https://www.griaule.com",
     "logo_url": "/images/griaule.png",
     "docs_link": "https://docs.exemplo.com",
@@ -35,6 +35,8 @@
     "integration_type": "manual",
     "status": "active",
     "active": true,
-    "created_at": "2026-01-12T00:00:00.000Z"
+    "created_at": "2026-01-12T00:00:00.000Z",
+    "name": "Griaule",
+    "qase_project_codes": null
   }
 ]

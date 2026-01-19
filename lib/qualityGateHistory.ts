@@ -43,3 +43,23 @@ export async function appendQualityGateHistory(entry: QualityGateHistoryEntry) {
   arr.push(entry);
   await fs.writeFile(STORE_PATH, JSON.stringify(arr, null, 2), "utf8");
 }
+
+export async function readQualityGateHistory(companySlug?: string, releaseSlug?: string): Promise<QualityGateHistoryEntry[]> {
+  await ensureStore();
+  const raw = await fs.readFile(STORE_PATH, "utf8");
+  let arr: QualityGateHistoryEntry[] = [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) arr = parsed as QualityGateHistoryEntry[];
+  } catch {
+    arr = [];
+  }
+  if (companySlug) {
+    arr = arr.filter((item) => item.company_slug === companySlug);
+  }
+  if (releaseSlug) {
+    arr = arr.filter((item) => item.release_slug === releaseSlug);
+  }
+  arr.sort((a, b) => String(b.evaluated_at).localeCompare(String(a.evaluated_at)));
+  return arr;
+}

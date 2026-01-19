@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { readManualReleaseStore } from "../../../../data/manualData";
 import { calcMTTR } from "@/lib/mttr";
+import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
 
 const SLA_MS = 172800000; // 48h
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -20,13 +21,18 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
 
   // Manual defects
   const manualReleases = await readManualReleaseStore();
-  const manualDefects = manualReleases.map((r: any) => ({
-    openedAt: r.createdAt,
-    closedAt: r.closedAt ?? null,
-    status: r.status,
-    origin: "manual",
-    mttrMs: calcMTTR(r.createdAt, r.closedAt ?? null),
-  }));
+  const manualDefects = manualReleases.map((r: any) => {
+    const status = normalizeDefectStatus(r.status);
+    const openedAt = resolveOpenedAt((r as any).openedAt ?? r.createdAt);
+    const closedAt = resolveClosedAt(status, r.closedAt ?? null, r.updatedAt ?? null);
+    return {
+      openedAt,
+      closedAt,
+      status,
+      origin: "manual",
+      mttrMs: calcMTTR(openedAt, closedAt),
+    };
+  });
 
   // Qase defects
   const clientSettings = await getClientQaseSettings(slug);
@@ -54,9 +60,9 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
       .catch(() => []);
     qaseDefects.push(
       ...defects.map((d: any) => {
-        const status = d.status ?? "open";
-        const openedAt = d.created_at ?? d.updated_at ?? new Date().toISOString();
-        const closedAt = d.closed_at ?? (status === "done" ? d.updated_at ?? null : null);
+        const status = normalizeDefectStatus(d.status ?? "open");
+        const openedAt = resolveOpenedAt(d.created_at ?? d.updated_at);
+        const closedAt = resolveClosedAt(status, d.closed_at ?? null, d.updated_at ?? null);
         return {
           openedAt,
           closedAt,

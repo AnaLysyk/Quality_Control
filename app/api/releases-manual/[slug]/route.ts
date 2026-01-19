@@ -5,6 +5,7 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { evaluateQualityGate } from "@/lib/quality";
 import { canDeleteManualDefect, canEditManualDefect, getMockRole, resolveDefectRole } from "@/lib/rbac/defects";
 import type { Release } from "@/types/release";
+import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalization";
 
 const STORE_PATH = path.join(process.cwd(), "data", "releases-manual.json");
 
@@ -79,19 +80,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
     }
 
     // Normaliza status recebido
-    const rawStatus = patch.status ?? current.status;
-    const nextStatus = String(rawStatus ?? "").trim().toLowerCase();
-    let statusToSave: "open" | "in_progress" | "done" = "open";
-    if (nextStatus === "done") statusToSave = "done";
-    else if (nextStatus === "in_progress") statusToSave = "in_progress";
-    else statusToSave = "open";
-
-    // Regra de closedAt
-    let closedAtToSave = current.closedAt ?? null;
-    if (statusToSave === "done" && !current.closedAt) {
-      closedAtToSave = new Date().toISOString();
-    }
-    // Nunca apaga closedAt
+    const statusToSave = normalizeDefectStatus(patch.status ?? current.status);
+    const closedAtToSave = resolveClosedAt(statusToSave, patch.closedAt ?? current.closedAt, current.updatedAt ?? current.closedAt ?? null);
 
     const nextStats =
       current.source === "MANUAL"

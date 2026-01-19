@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getAllReleases } from "@/release/data";
 import { readManualReleaseStore } from "@/data/manualData";
 import { appendQualityGateHistory } from "@/lib/qualityGateHistory";
+import { sendQualityAlert } from "@/lib/qualityAlert";
+import { calculateQualityScore } from "@/lib/qualityScore";
 import { randomUUID } from "crypto";
 
 // Helper: get all runs for a release (manual + Qase)
@@ -44,7 +46,7 @@ export async function GET(req: Request) {
     // (ajuste conforme regras reais)
 
     // Salvar snapshot (imutável)
-    await appendQualityGateHistory({
+    const snapshot = {
       id: randomUUID(),
       company_slug: rel.clientId || "griaule", // fallback
       release_slug: rel.slug,
@@ -54,12 +56,54 @@ export async function GET(req: Request) {
       fail_rate,
       reasons,
       evaluated_at: new Date().toISOString(),
+    };
+    await appendQualityGateHistory(snapshot);
+
+    // Disparar alertas automáticos
+    const companySlug = rel.clientId || "griaule";
+    if (gate_status === "failed") {
+      await sendQualityAlert({
+        companySlug,
+        type: "gate_failed",
+        severity: "critical",
+        message: `Quality Gate falhou na release ${rel.slug}`,
+        metadata: { release: rel.slug, reasons },
+        timestamp: new Date().toISOString(),
+      });
+    }
+    if (snapshot.mttr_hours && snapshot.mttr_hours > 48) {
+      await sendQualityAlert({
+        companySlug,
+        type: "mttr_exceeded",
+        severity: "critical",
+        message: `MTTR alto na release ${rel.slug}: ${snapshot.mttr_hours}h`,
+        metadata: { release: rel.slug, mttr_hours: snapshot.mttr_hours },
+        timestamp: new Date().toISOString(),
+      });
+    }
+    if (fail_rate > 0) {
+      await sendQualityAlert({
+        companySlug,
+        type: "run_failed",
+        severity: "warning",
+        message: `Runs com falha na release ${rel.slug} (fail rate ${fail_rate}%)`,
+        metadata: { release: rel.slug, fail_rate },
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const qualityScore = calculateQualityScore({
+      gate_status,
+      mttr_hours: snapshot.mttr_hours,
+      open_defects: snapshot.open_defects,
+      fail_rate,
     });
 
     result.push({
       releaseSlug: rel.slug,
       status,
       failedRunsCount: failedRuns.length,
+      quality_score: qualityScore,
     });
   }
   return NextResponse.json({ releases: result });

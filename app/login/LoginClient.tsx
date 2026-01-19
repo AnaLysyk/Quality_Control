@@ -58,10 +58,10 @@ export default function LoginClient() {
       <div className="max-w-lg w-full space-y-8 relative z-10 sm:max-w-xl md:max-w-2xl">
         <div className="text-center">
           <div className="mx-auto w-24 h-24 bg-linear-to-r from-[#011848] to-[#ef0001] rounded-full flex items-center justify-center mb-6 shadow-lg">
-            <img src="/images/tc.png" alt="Logo Testing Company" className="w-16 h-16 animate-spin-slower select-none pointer-events-none" />
+            <img src="/images/tc.png" alt="Logo Quality Control" className="w-16 h-16 animate-spin-slower select-none pointer-events-none" />
           </div>
-          <h2 className="text-4xl font-bold text-[#011848] mb-2">Bem-vindo</h2>
-          <p className="text-[#4b5563]">Entre na sua conta</p>
+          <h2 className="text-4xl font-bold text-[#011848] mb-2">Quality Control</h2>
+          <p className="text-[#4b5563]">Bem-vindo, entre na sua conta</p>
         </div>
 
         <form

@@ -1,21 +1,27 @@
 import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { readManualReleaseStore } from "@/data/manualData";
 import { calcMTTR } from "@/lib/mttr";
+import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
 // Resumo de qualidade para exportação executiva
 export async function getCompanyQualitySummary(slug: string, period: string = "30d") {
   // Manual defects
   const manualReleases = await readManualReleaseStore();
-  const manualDefects = manualReleases.map((r: any) => ({
-    id: r.slug ?? r.id ?? "",
-    title: r.name ?? r.title ?? "Defeito manual",
-    status: r.status,
-    openedAt: r.createdAt,
-    closedAt: r.closedAt ?? null,
-    mttrMs: calcMTTR(r.createdAt, r.closedAt ?? null),
-    origin: "manual",
-    runSlug: r.runId ? String(r.runId) : undefined,
-    severity: r.severity ?? null,
-  }));
+  const manualDefects = manualReleases.map((r: any) => {
+    const status = normalizeDefectStatus(r.status);
+    const openedAt = resolveOpenedAt((r as any).openedAt ?? r.createdAt);
+    const closedAt = resolveClosedAt(status, r.closedAt ?? null, r.updatedAt ?? null);
+    return {
+      id: r.slug ?? r.id ?? "",
+      title: r.name ?? r.title ?? "Defeito manual",
+      status,
+      openedAt,
+      closedAt,
+      mttrMs: calcMTTR(openedAt, closedAt),
+      origin: "manual",
+      runSlug: r.runId ? String(r.runId) : undefined,
+      severity: r.severity ?? null,
+    };
+  });
 
   // Qase defects
   const clientSettings = await getClientQaseSettings(slug);
@@ -42,17 +48,22 @@ export async function getCompanyQualitySummary(slug: string, period: string = "3
       .then((json) => Array.isArray(json?.result?.entities) ? json.result.entities : [])
       .catch(() => []);
     qaseDefects.push(
-      ...defects.map((d: any) => ({
-        id: d.id ?? d.defect_id ?? "",
-        title: d.title ?? d.name ?? "Defeito Qase",
-        status: d.status ?? "open",
-        openedAt: d.created_at ?? d.updated_at ?? new Date().toISOString(),
-        closedAt: d.closed_at ?? (d.status === "done" ? d.updated_at ?? null : null),
-        mttrMs: calcMTTR(d.created_at ?? d.updated_at, d.closed_at ?? (d.status === "done" ? d.updated_at ?? null : null)),
-        origin: "qase",
-        runSlug: d.run_id ? String(d.run_id) : undefined,
-        severity: d.severity ?? d.severity_name ?? null,
-      }))
+      ...defects.map((d: any) => {
+        const status = normalizeDefectStatus(d.status ?? "open");
+        const openedAt = resolveOpenedAt(d.created_at ?? d.updated_at);
+        const closedAt = resolveClosedAt(status, d.closed_at ?? null, d.updated_at ?? null);
+        return {
+          id: d.id ?? d.defect_id ?? "",
+          title: d.title ?? d.name ?? "Defeito Qase",
+          status,
+          openedAt,
+          closedAt,
+          mttrMs: calcMTTR(openedAt, closedAt),
+          origin: "qase",
+          runSlug: d.run_id ? String(d.run_id) : undefined,
+          severity: d.severity ?? d.severity_name ?? null,
+        };
+      })
     );
   }
 
@@ -95,17 +106,22 @@ export async function getCompanyDefects(slug: string, period: string = "30d") {
   const summary = await getCompanyQualitySummary(slug, period);
   // Manual + Qase
   const manualReleases = await readManualReleaseStore();
-  const manualDefects = manualReleases.map((r: any) => ({
-    id: r.slug ?? r.id ?? "",
-    title: r.name ?? r.title ?? "Defeito manual",
-    status: r.status,
-    openedAt: r.createdAt,
-    closedAt: r.closedAt ?? null,
-    mttrMs: calcMTTR(r.createdAt, r.closedAt ?? null),
-    origin: "manual",
-    runSlug: r.runId ? String(r.runId) : undefined,
-    severity: r.severity ?? null,
-  }));
+  const manualDefects = manualReleases.map((r: any) => {
+    const status = normalizeDefectStatus(r.status);
+    const openedAt = resolveOpenedAt((r as any).openedAt ?? r.createdAt);
+    const closedAt = resolveClosedAt(status, r.closedAt ?? null, r.updatedAt ?? null);
+    return {
+      id: r.slug ?? r.id ?? "",
+      title: r.name ?? r.title ?? "Defeito manual",
+      status,
+      openedAt,
+      closedAt,
+      mttrMs: calcMTTR(openedAt, closedAt),
+      origin: "manual",
+      runSlug: r.runId ? String(r.runId) : undefined,
+      severity: r.severity ?? null,
+    };
+  });
   const clientSettings = await getClientQaseSettings(slug);
   const token = clientSettings?.token || process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
   const projectCodesSet = new Set<string>();
@@ -129,17 +145,22 @@ export async function getCompanyDefects(slug: string, period: string = "30d") {
       .then((json) => Array.isArray(json?.result?.entities) ? json.result.entities : [])
       .catch(() => []);
     qaseDefects.push(
-      ...defects.map((d: any) => ({
-        id: d.id ?? d.defect_id ?? "",
-        title: d.title ?? d.name ?? "Defeito Qase",
-        status: d.status ?? "open",
-        openedAt: d.created_at ?? d.updated_at ?? new Date().toISOString(),
-        closedAt: d.closed_at ?? (d.status === "done" ? d.updated_at ?? null : null),
-        mttrMs: calcMTTR(d.created_at ?? d.updated_at, d.closed_at ?? (d.status === "done" ? d.updated_at ?? null : null)),
-        origin: "qase",
-        runSlug: d.run_id ? String(d.run_id) : undefined,
-        severity: d.severity ?? d.severity_name ?? null,
-      }))
+      ...defects.map((d: any) => {
+        const status = normalizeDefectStatus(d.status ?? "open");
+        const openedAt = resolveOpenedAt(d.created_at ?? d.updated_at);
+        const closedAt = resolveClosedAt(status, d.closed_at ?? null, d.updated_at ?? null);
+        return {
+          id: d.id ?? d.defect_id ?? "",
+          title: d.title ?? d.name ?? "Defeito Qase",
+          status,
+          openedAt,
+          closedAt,
+          mttrMs: calcMTTR(openedAt, closedAt),
+          origin: "qase",
+          runSlug: d.run_id ? String(d.run_id) : undefined,
+          severity: d.severity ?? d.severity_name ?? null,
+        };
+      })
     );
   }
   // Unify
@@ -498,4 +519,3 @@ export function buildCompanyRows(clients: ClientItem[], releases: ReleaseWithSta
     };
   });
 }
-

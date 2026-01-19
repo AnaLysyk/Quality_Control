@@ -135,6 +135,21 @@ function getSessionIdFromRequest(req: Request): string | null {
   return null;
 }
 
+function parseSession(raw: unknown): SessionPayload | null {
+  if (!raw) return null;
+  if (typeof raw === "string") {
+    try {
+      return JSON.parse(raw) as SessionPayload;
+    } catch {
+      return null;
+    }
+  }
+  if (typeof raw === "object") {
+    return raw as SessionPayload;
+  }
+  return null;
+}
+
 function buildUserPayload(userRecord: {
   id: string;
   email: string;
@@ -155,11 +170,6 @@ function buildUserPayload(userRecord: {
 }
 
 export async function GET(req: Request) {
-  if (SUPABASE_MOCK) {
-    const mock = buildMockCompanies(req.headers.get("cookie") ?? "");
-    return NextResponse.json({ user: mock.user, companies: mock.companies });
-  }
-
   const sessionId = getSessionIdFromRequest(req);
   if (!sessionId) {
     return NextResponse.json({ user: null, companies: [], error: { code: "NO_SESSION" } }, { status: 401 });
@@ -174,13 +184,53 @@ export async function GET(req: Request) {
     );
   }
 
-  const sessionUser = (typeof raw === "string" ? JSON.parse(raw) : raw) as SessionPayload;
+  const sessionUser = parseSession(raw);
   const userId = typeof sessionUser?.userId === "string" ? sessionUser.userId : null;
   if (!userId) {
     return NextResponse.json(
       { user: null, companies: [], error: { code: "INVALID_SESSION" } },
       { status: 401 }
     );
+  }
+
+  if (SUPABASE_MOCK) {
+    const cookieHeader = req.headers.get("cookie") ?? "";
+    const baseMock = buildMockCompanies(cookieHeader);
+
+    const role = typeof sessionUser.role === "string" ? sessionUser.role : baseMock.user.role;
+    const normalizedRole = (role ?? "user").toLowerCase() as LandingRole;
+    const mergedCompanies = dedupeCompanies(
+      baseMock.companies.map((company) => {
+        const matchesSessionSlug = company.slug === sessionUser.companySlug;
+        const isAdmin = normalizedRole === "admin" || normalizedRole === "company";
+        return {
+          ...company,
+          id: matchesSessionSlug && sessionUser.companyId ? sessionUser.companyId : company.id,
+          role: isAdmin ? "ADMIN" : "USER",
+        };
+      }),
+    );
+
+    const landingRole = decideLandingRole(mergedCompanies, role);
+    const user = buildUserPayload(
+      {
+        id: sessionUser.userId ?? `mock-${landingRole}-${mergedCompanies.map((c) => c.slug).join("_")}`,
+        email: sessionUser.email ?? baseMock.user.email ?? `${landingRole}@example.com`,
+        name: sessionUser.name ?? baseMock.user.name ?? "Mock User",
+      },
+      mergedCompanies,
+      landingRole,
+    );
+
+    await redis.expire(`session:${sessionId}`, 60 * 60 * 8);
+
+    const res = NextResponse.json({ user, companies: mergedCompanies });
+    res.cookies.set("session_id", sessionId, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 8,
+    });
+    return res;
   }
 
   const userRecord = await prisma.user.findUnique({

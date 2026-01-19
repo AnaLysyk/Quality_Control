@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
-import { listQaseRuns } from "@/lib/qaseRuns";
 import { readManualReleaseStore } from "../../../../data/manualData";
 import { calcMTTR } from "@/lib/mttr";
+import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
 
 function clamp(val: number, min: number, max: number) {
   return Math.max(min, Math.min(max, val));
@@ -18,14 +18,19 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   const { slug } = await context.params;
   // Manual defects
   const manualReleases = await readManualReleaseStore();
-  const manualDefects = manualReleases.map((r: any) => ({
-    run: r.runSlug ?? r.slug ?? r.id ?? "manual",
-    status: r.status,
-    openedAt: r.createdAt,
-    closedAt: r.closedAt ?? null,
-    mttrMs: calcMTTR(r.createdAt, r.closedAt ?? null),
-    origin: "manual",
-  }));
+  const manualDefects = manualReleases.map((r: any) => {
+    const status = normalizeDefectStatus(r.status);
+    const openedAt = resolveOpenedAt((r as any).openedAt ?? r.createdAt);
+    const closedAt = resolveClosedAt(status, r.closedAt ?? null, r.updatedAt ?? null);
+    return {
+      run: r.runSlug ?? r.slug ?? r.id ?? "manual",
+      status,
+      openedAt,
+      closedAt,
+      mttrMs: calcMTTR(openedAt, closedAt),
+      origin: "manual",
+    };
+  });
 
   // Qase defects
   const clientSettings = await getClientQaseSettings(slug);
@@ -52,14 +57,19 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
       .then((json) => Array.isArray(json?.result?.entities) ? json.result.entities : [])
       .catch(() => []);
     qaseDefects.push(
-      ...defects.map((d: any) => ({
-        run: d.run_slug ?? d.run_id ?? "qase",
-        status: d.status ?? "open",
-        openedAt: d.created_at ?? d.updated_at ?? new Date().toISOString(),
-        closedAt: d.closed_at ?? null,
-        mttrMs: calcMTTR(d.created_at, d.closed_at ?? null),
-        origin: "qase",
-      }))
+      ...defects.map((d: any) => {
+        const status = normalizeDefectStatus(d.status ?? "open");
+        const openedAt = resolveOpenedAt(d.created_at ?? d.updated_at);
+        const closedAt = resolveClosedAt(status, d.closed_at ?? null, d.updated_at ?? null);
+        return {
+          run: d.run_slug ?? d.run_id ?? "qase",
+          status,
+          openedAt,
+          closedAt,
+          mttrMs: calcMTTR(openedAt, closedAt),
+          origin: "qase",
+        };
+      })
     );
   }
 

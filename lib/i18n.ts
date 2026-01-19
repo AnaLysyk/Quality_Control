@@ -13,7 +13,7 @@ const DICTIONARY: Record<Locale, Dictionary> = {
   "pt-BR": {
     nav: {
       home: "Home",
-      testingMetric: "Testing Metric",
+      testingMetric: "Quality Control",
       newRun: "Nova run",
       adminPanel: "Painel admin",
       companies: "Empresas",
@@ -161,7 +161,7 @@ const DICTIONARY: Record<Locale, Dictionary> = {
   "en-US": {
     nav: {
       home: "Home",
-      testingMetric: "Testing Metric",
+      testingMetric: "Quality Control",
       newRun: "New run",
       adminPanel: "Admin panel",
       companies: "Companies",

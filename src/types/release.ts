@@ -1,5 +1,5 @@
 export type ReleaseSource = "MANUAL" | "API";
-export type ReleaseStatus = "DRAFT" | "ACTIVE" | "FINALIZED";
+export type ReleaseStatus = "DRAFT" | "ACTIVE" | "FINALIZED" | "open" | "in_progress" | "done";
 
 export type Stats = {
   pass: number;

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
-import { listQaseRuns } from "@/lib/qaseRuns";
 import { readManualReleaseStore } from "../../../../data/manualData";
 import { calcMTTR } from "@/lib/mttr";
+import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
 
 const PERIODS = ["7d", "30d", "90d"] as const;
 type Period = typeof PERIODS[number];
@@ -29,8 +29,9 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   // Manual defects
   const manualReleases = await readManualReleaseStore();
   const manualDefects = manualReleases.map((r: any) => {
-    const openedAt = r.createdAt;
-    const closedAt = r.closedAt ?? null;
+    const status = normalizeDefectStatus(r.status);
+    const openedAt = resolveOpenedAt((r as any).openedAt ?? r.createdAt);
+    const closedAt = resolveClosedAt(status, r.closedAt ?? null, r.updatedAt ?? null);
     return {
       origin: "manual",
       openedAt,
@@ -65,10 +66,9 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
       .catch(() => []);
     qaseDefects.push(
       ...defects.map((d: any) => {
-        const status = (d.status ?? "").toLowerCase();
-        const isDone = status === "done" || status === "closed" || status === "aprovado";
-        const openedAt = d.created_at ?? d.updated_at ?? new Date().toISOString();
-        const closedAt = d.closed_at ?? (isDone ? d.updated_at ?? null : null);
+        const status = normalizeDefectStatus(d.status ?? "open");
+        const openedAt = resolveOpenedAt(d.created_at ?? d.updated_at);
+        const closedAt = resolveClosedAt(status, d.closed_at ?? null, d.updated_at ?? null);
         return {
           origin: "qase" as const,
           openedAt,

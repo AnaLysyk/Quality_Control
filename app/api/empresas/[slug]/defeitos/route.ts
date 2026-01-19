@@ -3,6 +3,7 @@ import { listQaseRuns } from "@/lib/qaseRuns";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { readManualReleaseStore } from "@/data/manualData";
 import { calcMTTR } from "@/lib/mttr";
+import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
 
 type QaseDefect = {
   id: string;
@@ -103,12 +104,11 @@ async function fetchAllDefects(projectCode: string, token: string): Promise<Qase
   return all;
 }
 
-function normalizeQaseDefects(defects: QaseDefect[], runNames: Map<string, string>): Defect[] {
+function normalizeQaseDefects(defects: QaseDefect[]): Defect[] {
   return defects.map((d, idx) => {
     const normalizedStatus = normalizeQaseStatus(d.status ?? "open");
-    const isDone = normalizedStatus === "done";
-    const openedAt = d.created_at ?? d.updated_at ?? new Date().toISOString();
-    const closedAt = (d as any).closed_at ?? (isDone ? d.updated_at ?? null : null);
+    const openedAt = resolveOpenedAt(d.created_at ?? d.updated_at);
+    const closedAt = resolveClosedAt(normalizedStatus, (d as any).closed_at, d.updated_at ?? null);
     return {
       id: d.id ?? `defect-${idx}`,
       title: d.title ?? "Defeito",
@@ -124,12 +124,13 @@ function normalizeQaseDefects(defects: QaseDefect[], runNames: Map<string, strin
 
 function normalizeManualDefects(releases: any[]): Defect[] {
   return releases.map((r, idx) => {
-    const openedAt = r.createdAt;
-    const closedAt = r.closedAt ?? null;
+    const status = normalizeDefectStatus(r.status);
+    const openedAt = resolveOpenedAt((r as any).openedAt ?? r.createdAt);
+    const closedAt = resolveClosedAt(status, r.closedAt ?? null, r.updatedAt ?? null);
     return {
       id: r.slug ?? r.id ?? `manual-${idx}`,
       title: r.name ?? r.title ?? "Defeito manual",
-      status: r.status,
+      status,
       openedAt,
       closedAt,
       mttrMs: calcMTTR(openedAt, closedAt),
@@ -172,7 +173,6 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   }
 
   // Qase defects
-  const runNameMap = new Map<string, string>();
   const allQaseDefects: QaseDefect[] = [];
   const allQaseRuns: any[] = [];
   for (const code of projectCodes) {
@@ -180,7 +180,6 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
     qaseRuns.forEach((run) => {
       if (!run) return;
       const key = `${code}:${String(run.id)}`;
-      runNameMap.set(key, run.name ?? run.slug ?? `Run ${run.id}`);
       allQaseRuns.push({
         id: key,
         name: run.name ?? run.slug ?? `Run ${run.id}`,
@@ -210,7 +209,7 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   // Unify
   let allDefects: Defect[] = [
     ...manualDefects,
-    ...normalizeQaseDefects(allQaseDefects, runNameMap),
+    ...normalizeQaseDefects(allQaseDefects),
   ];
   allDefects = allDefects.filter((d) => d.openedAt).sort((a, b) => String(b.openedAt).localeCompare(String(a.openedAt)));
   if (runFilter) {

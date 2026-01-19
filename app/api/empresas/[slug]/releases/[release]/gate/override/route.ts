@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { appendQualityGateHistory, QualityGateHistoryEntry } from "@/lib/qualityGateHistory";
 import { randomUUID } from "crypto";
 import { getMockRole } from "@/lib/rbac/defects";
+import { sendQualityAlert } from "@/lib/qualityAlert";
 
 export async function POST(req: Request, context: { params: Promise<{ slug: string; release: string }> }) {
   const { slug, release } = await context.params;
@@ -45,5 +46,13 @@ export async function POST(req: Request, context: { params: Promise<{ slug: stri
     },
   };
   await appendQualityGateHistory(entry);
+  await sendQualityAlert({
+    companySlug: slug,
+    type: "override",
+    severity: "warning",
+    message: `Release ${release} aprovada com override`,
+    metadata: { release, overrideBy: user.email, reason },
+    timestamp: now,
+  });
   return NextResponse.json({ ok: true });
 }

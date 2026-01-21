@@ -4,6 +4,7 @@ import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { readManualReleaseStore } from "@/data/manualData";
 import { calcMTTR } from "@/lib/mttr";
 import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
+import { externalFailure, externalSuccess, type ExternalServiceResult } from "@/lib/external";
 
 type QaseDefect = {
   id: string;
@@ -56,52 +57,57 @@ function normalizeQaseStatus(status: string): "open" | "in_progress" | "done" {
   return "open";
 }
 
-async function fetchAllDefects(projectCode: string, token: string): Promise<QaseDefect[]> {
-  if (!token || !projectCode) return [];
+async function fetchAllDefects(projectCode: string, token: string): Promise<ExternalServiceResult<QaseDefect[]>> {
+  if (!token || !projectCode) return externalFailure("Qase nao configurado (token/projeto ausente)", []);
 
   const limit = 100;
   let offset = 0;
   const all: QaseDefect[] = [];
 
-  while (true) {
-    const res = await fetch(`${QASE_BASE_URL}/v1/defect/${projectCode}?limit=${limit}&offset=${offset}`, {
-      headers: {
-        Token: token,
-        Accept: "application/json",
-      },
-      cache: "no-store",
-    });
-
-    if (!res.ok) break;
-    const json = (await res.json().catch(() => null)) as unknown;
-    const result = asRecord(asRecord(json)?.result);
-    const entities = Array.isArray(result?.entities) ? (result?.entities as unknown[]) : [];
-    if (!Array.isArray(entities) || entities.length === 0) break;
-
-    entities.forEach((d) => {
-      const rec = asRecord(d) ?? {};
-      all.push({
-        id: String(rec.id ?? rec.defect_id ?? `defect-${offset}`),
-        title: (typeof rec.title === "string" ? rec.title : null) ?? (typeof rec.name === "string" ? rec.name : null) ?? "Defeito",
-        status: String(rec.status ?? "open"),
-        severity: (typeof rec.severity === "string" ? rec.severity : null) ?? (typeof rec.severity_name === "string" ? rec.severity_name : null) ?? "medium",
-        run_id: (rec.run_id as string | number | null | undefined) ?? (rec.run as string | number | null | undefined) ?? null,
-        tags: Array.isArray(rec.tags) ? (rec.tags as string[]) : [],
-        created_at: (typeof rec.created_at === "string" ? rec.created_at : null) ?? (typeof rec.created === "string" ? rec.created : null) ?? undefined,
-        updated_at: (typeof rec.updated_at === "string" ? rec.updated_at : null) ?? (typeof rec.updated === "string" ? rec.updated : null) ?? undefined,
-        url:
-          (typeof rec.url === "string" ? rec.url : null) ??
-          (typeof rec.link === "string" ? rec.link : null) ??
-          (typeof rec.web_url === "string" ? rec.web_url : null) ??
-          undefined,
+  try {
+    while (true) {
+      const res = await fetch(`${QASE_BASE_URL}/v1/defect/${projectCode}?limit=${limit}&offset=${offset}`, {
+        headers: {
+          Token: token,
+          Accept: "application/json",
+        },
+        cache: "no-store",
       });
-    });
 
-    if (entities.length < limit) break;
-    offset += limit;
+      if (!res.ok) break;
+      const json = (await res.json().catch(() => null)) as unknown;
+      const result = asRecord(asRecord(json)?.result);
+      const entities = Array.isArray(result?.entities) ? (result?.entities as unknown[]) : [];
+      if (!Array.isArray(entities) || entities.length === 0) break;
+
+      entities.forEach((d) => {
+        const rec = asRecord(d) ?? {};
+        all.push({
+          id: String(rec.id ?? rec.defect_id ?? `defect-${offset}`),
+          title: (typeof rec.title === "string" ? rec.title : null) ?? (typeof rec.name === "string" ? rec.name : null) ?? "Defeito",
+          status: String(rec.status ?? "open"),
+          severity: (typeof rec.severity === "string" ? rec.severity : null) ?? (typeof rec.severity_name === "string" ? rec.severity_name : null) ?? "medium",
+          run_id: (rec.run_id as string | number | null | undefined) ?? (rec.run as string | number | null | undefined) ?? null,
+          tags: Array.isArray(rec.tags) ? (rec.tags as string[]) : [],
+          created_at: (typeof rec.created_at === "string" ? rec.created_at : null) ?? (typeof rec.created === "string" ? rec.created : null) ?? undefined,
+          updated_at: (typeof rec.updated_at === "string" ? rec.updated_at : null) ?? (typeof rec.updated === "string" ? rec.updated : null) ?? undefined,
+          url:
+            (typeof rec.url === "string" ? rec.url : null) ??
+            (typeof rec.link === "string" ? rec.link : null) ??
+            (typeof rec.web_url === "string" ? rec.web_url : null) ??
+            undefined,
+        });
+      });
+
+      if (entities.length < limit) break;
+      offset += limit;
+    }
+
+    return externalSuccess(all);
+  } catch (error) {
+    console.error(`[QASE][DEFECTS] Falha ao listar defeitos para projeto ${projectCode}:`, error);
+    return externalFailure("Falha ao listar defeitos no Qase", []);
   }
-
-  return all;
 }
 
 function normalizeQaseDefects(defects: QaseDefect[]): Defect[] {
@@ -175,27 +181,36 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   // Qase defects
   const allQaseDefects: QaseDefect[] = [];
   const allQaseRuns: any[] = [];
+  const warnings: string[] = [];
   for (const code of projectCodes) {
-    const qaseRuns = await listQaseRuns(code, token);
-    qaseRuns.forEach((run) => {
-      if (!run) return;
-      const key = `${code}:${String(run.id)}`;
-      allQaseRuns.push({
-        id: key,
-        name: run.name ?? run.slug ?? `Run ${run.id}`,
-        status: run.status ?? "",
-        createdAt: run.createdAt,
+    const runsResult = await listQaseRuns(code, token);
+    if (runsResult.ok) {
+      runsResult.data.forEach((run) => {
+        const key = `${code}:${String(run.id)}`;
+        allQaseRuns.push({
+          id: key,
+          name: run.name ?? run.slug ?? `Run ${run.id}`,
+          status: run.status ?? "",
+          createdAt: run.createdAt,
+        });
       });
-    });
-    const defects = await fetchAllDefects(code, token);
-    defects.forEach((d) => {
-      d.projectCode = code;
-    });
-    defects.forEach((d) => {
-      if (d.run_id == null) return;
-      (d as any).run_id = `${code}:${String(d.run_id)}`;
-    });
-    allQaseDefects.push(...defects);
+    } else if (runsResult.warning) {
+      warnings.push(`[${code}] ${runsResult.warning}`);
+    }
+
+    const defectsResult = await fetchAllDefects(code, token);
+    if (defectsResult.ok) {
+      defectsResult.data.forEach((d) => {
+        d.projectCode = code;
+      });
+      defectsResult.data.forEach((d) => {
+        if (d.run_id == null) return;
+        (d as any).run_id = `${code}:${String(d.run_id)}`;
+      });
+      allQaseDefects.push(...defectsResult.data);
+    } else if (defectsResult.warning) {
+      warnings.push(`[${code}] ${defectsResult.warning}`);
+    }
   }
 
   // Manual defects
@@ -252,5 +267,8 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
     };
   });
 
-  return NextResponse.json({ total: items.length, items, avgMttrMs }, { status: 200 });
+  const responseBody: Record<string, unknown> = { total: items.length, items, avgMttrMs };
+  if (warnings.length) responseBody.warnings = warnings;
+
+  return NextResponse.json(responseBody, { status: 200 });
 }

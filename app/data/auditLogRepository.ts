@@ -95,7 +95,9 @@ export async function addAuditLog(input: {
 }
 
 export async function listAuditLogs(params?: { limit?: number; offset?: number; action?: string | null }) {
-  if (!hasPostgresConfig()) return [] as AuditLogRow[];
+  if (!hasPostgresConfig()) {
+    throw new Error("AUDIT_LOG_STORAGE_DISABLED");
+  }
 
   await cleanupOldAuditLogs();
 
@@ -103,26 +105,29 @@ export async function listAuditLogs(params?: { limit?: number; offset?: number; 
   const offset = Math.max(params?.offset ?? 0, 0);
   const action = params?.action ?? null;
 
-  try {
-    const supabase = getSupabaseService();
-    if (!supabase) return [] as AuditLogRow[];
-
-    const rangeStart = offset;
-    const rangeEnd = offset + limit - 1;
-
-    const query = supabase
-      .from("audit_logs")
-      .select("*", { count: "exact", head: false })
-      .order("created_at", { ascending: false })
-      .range(rangeStart, rangeEnd);
-
-    const { data, error } = action ? await query.eq("action", action) : await query;
-
-    if (error || !data) return [] as AuditLogRow[];
-    return data as AuditLogRow[];
-  } catch {
-    return [] as AuditLogRow[];
+  const supabase = getSupabaseService();
+  if (!supabase) {
+    throw new Error("AUDIT_LOG_STORAGE_DISABLED");
   }
+
+  const rangeStart = offset;
+  const rangeEnd = offset + limit - 1;
+
+  const query = supabase
+    .from("audit_logs")
+    .select("*", { count: "exact", head: false })
+    .order("created_at", { ascending: false })
+    .range(rangeStart, rangeEnd);
+
+  const { data, error } = action ? await query.eq("action", action) : await query;
+
+  if (error) {
+    const code = (error as { code?: string }).code;
+    const message = (error as { message?: string }).message || "Unknown error";
+    throw new Error(`AUDIT_LOG_QUERY_FAILED${code ? `:${code}` : ""} - ${message}`);
+  }
+  if (!data) return [] as AuditLogRow[];
+  return data as AuditLogRow[];
 }
 
 export async function addAuditLogSafe(input: Parameters<typeof addAuditLog>[0]) {

@@ -8,6 +8,10 @@ const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 const MOCK_PASSWORD = "senha";
 const MOCK_EMAILS = new Set(["admin@example.com", "user@example.com"]);
 
+function isPrismaConfigError(err: unknown): boolean {
+  return err instanceof Error && err.message.includes("PRISMA_NOT_CONFIGURED");
+}
+
 function readCookieValue(cookieHeader: string | null, name: string): string | null {
   if (!cookieHeader) return null;
   const cookies = cookieHeader.split(";");
@@ -20,12 +24,8 @@ function readCookieValue(cookieHeader: string | null, name: string): string | nu
   return null;
 }
 
-// Validação real no banco
-async function validateUser(
-  email: string,
-  password: string,
-  cookieHeader: string | null = null
-) {
+// Validacao real no banco
+async function validateUser(email: string, password: string, cookieHeader: string | null = null) {
   if (SUPABASE_MOCK) {
     const normalizedEmail = (email ?? "").trim().toLowerCase();
     if (!normalizedEmail || !MOCK_EMAILS.has(normalizedEmail)) {
@@ -36,9 +36,7 @@ async function validateUser(
       return null;
     }
 
-    const mockRole = (readCookieValue(cookieHeader, "mock_role") ?? "admin")
-      .trim()
-      .toLowerCase();
+    const mockRole = (readCookieValue(cookieHeader, "mock_role") ?? "admin").trim().toLowerCase();
     const mockSlug = (readCookieValue(cookieHeader, "mock_client_slug") ?? "griaule").trim();
     const companySlug = mockSlug || "griaule";
     const role = mockRole === "admin" ? "admin" : "user";
@@ -94,19 +92,25 @@ export async function POST(req: Request) {
   const { email, password } = body ?? {};
 
   if (!email || !password) {
-    return NextResponse.json(
-      { error: "Email e senha obrigatórios" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Email e senha obrigatorios" }, { status: 400 });
   }
 
   const cookieHeader = req.headers.get("cookie") ?? null;
-  const user = await validateUser(email, password, cookieHeader);
+  let user = null;
+  try {
+    user = await validateUser(email, password, cookieHeader);
+  } catch (err) {
+    if (isPrismaConfigError(err)) {
+      return NextResponse.json(
+        { error: "Banco nao configurado (defina DATABASE_URL ou POSTGRES_URL)" },
+        { status: 503 },
+      );
+    }
+    throw err;
+  }
+
   if (!user) {
-    return NextResponse.json(
-      { error: "Credenciais inválidas" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
   }
 
   const sessionId = randomUUID();
@@ -115,7 +119,7 @@ export async function POST(req: Request) {
   await redis.set(
     `session:${sessionId}`,
     JSON.stringify(user),
-    { ex: 60 * 60 * 8 } // 8 horas
+    { ex: 60 * 60 * 8 }, // 8 horas
   );
 
   const res = NextResponse.json({ ok: true });

@@ -1,22 +1,51 @@
-import { PrismaClient } from './prisma-generated';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
+import { PrismaClient } from "./prisma-generated";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: any;
+type GlobalPrisma = {
+  prisma?: PrismaClient;
+  pool?: Pool;
 };
 
-const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+const globalForPrisma = globalThis as unknown as GlobalPrisma;
 
-if (!connectionString) {
-  throw new Error("DATABASE_URL or POSTGRES_URL must be set to connect to Postgres.");
+function getConnectionString(): string | null {
+  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL || null;
+  return url && url.trim() ? url.trim() : null;
 }
 
-const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
+function buildClient(): PrismaClient {
+  const connectionString = getConnectionString();
+  if (!connectionString) {
+    throw new Error("PRISMA_NOT_CONFIGURED: defina DATABASE_URL ou POSTGRES_URL para usar o Postgres.");
+  }
 
-export const prisma = globalForPrisma.prisma ?? new (PrismaClient as any)({ adapter });
+  const pool = globalForPrisma.pool ?? new Pool({ connectionString });
+  globalForPrisma.pool = pool;
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+  const adapter = new PrismaPg(pool);
+  const client = new (PrismaClient as any)({ adapter }) as PrismaClient;
+  return client;
+}
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+function getClient(): PrismaClient {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = buildClient();
+  }
+  return globalForPrisma.prisma;
+}
+
+// Proxy evita inicialização imediata (lazy). Só conecta ao acessar um método.
+export const prisma = new Proxy(
+  {},
+  {
+    get(_target, prop) {
+      const client = getClient() as any;
+      return client[prop];
+    },
+  },
+) as unknown as PrismaClient;
+
+export function isPrismaConfigured(): boolean {
+  return !!getConnectionString();
+}

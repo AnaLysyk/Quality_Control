@@ -1,4 +1,5 @@
 import { QaseClient } from "@/lib/qaseSdk";
+import { externalFailure, externalSuccess, type ExternalServiceResult } from "@/lib/external";
 
 export type QaseRunRecord = {
   id: number;
@@ -14,13 +15,15 @@ function normalizeRunName(value?: unknown) {
   return trimmed.length ? trimmed : null;
 }
 
-export async function listQaseRuns(projectCode?: string | null, token?: string | null) {
-  if (!projectCode || !token) return [];
+export async function listQaseRuns(projectCode?: string | null, token?: string | null): Promise<ExternalServiceResult<QaseRunRecord[]>> {
+  if (!projectCode || !token) {
+    return externalFailure("Qase nao configurado (token/projeto ausente)", []);
+  }
   const client = new QaseClient({ token });
   try {
     const response = await client.listRuns(projectCode, { limit: 500 });
     const entities = response.result?.entities ?? [];
-    return entities
+    const mapped = entities
       .map((entry) => {
         if (!entry || typeof entry !== "object") return null;
         const raw = entry as Record<string, unknown>;
@@ -41,8 +44,9 @@ export async function listQaseRuns(projectCode?: string | null, token?: string |
         };
       })
       .filter((entry): entry is QaseRunRecord => entry !== null);
+    return externalSuccess(mapped);
   } catch (error) {
     console.error(`[QASE][RUNS] Unable to list runs for project ${projectCode}:`, error);
-    return [];
+    return externalFailure("Falha ao listar runs no Qase", []);
   }
 }

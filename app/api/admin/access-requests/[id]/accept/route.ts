@@ -47,11 +47,22 @@ function randomPassword() {
 
 async function findAuthUserIdByEmail(service: SupabaseClient, email: string): Promise<string | null> {
   try {
-    // Busca otimista (funciona para bases pequenas)
-    const { data, error } = await service.auth.admin.listUsers({ page: 1, perPage: 1000 });
-    if (error) return null;
-    const match = (data?.users ?? []).find((u) => (u.email ?? "").toLowerCase() === email.toLowerCase());
-    return match?.id ?? null;
+    const target = email.toLowerCase();
+    const perPage = 200;
+    const maxPages = 25; // 25 * 200 = 5000 usuarios, evita loops infinitos
+
+    for (let page = 1; page <= maxPages; page += 1) {
+      const { data, error } = await service.auth.admin.listUsers({ page, perPage });
+      if (error) return null;
+
+      const users = data?.users ?? [];
+      const match = users.find((u) => (u.email ?? "").toLowerCase() === target);
+      if (match?.id) return match.id;
+
+      if (users.length < perPage) break; // acabou a lista antes de maxPages
+    }
+
+    return null;
   } catch {
     return null;
   }

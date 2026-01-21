@@ -78,6 +78,7 @@ type RedisClient = Redis | InMemoryRedis;
 
 let redis: RedisClient | null = null;
 let mockRedis: InMemoryRedis | null = null;
+let warnedRedisMissing = false;
 
 export function getRedis() {
   if (redis) return redis;
@@ -86,12 +87,14 @@ export function getRedis() {
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {
-    if (SUPABASE_MOCK) {
-      mockRedis = mockRedis ?? new InMemoryRedis();
-      redis = mockRedis;
-      return redis;
+    // Graceful degrade: never block auth/public APIs; use in-memory (non-persistent).
+    mockRedis = mockRedis ?? new InMemoryRedis();
+    redis = mockRedis;
+    if (!warnedRedisMissing && !SUPABASE_MOCK) {
+      warnedRedisMissing = true;
+      console.warn("[REDIS] UPSTASH_REDIS_REST_URL/TOKEN ausentes; usando fallback em memoria (nao persistente).");
     }
-    throw new Error("Upstash Redis não configurado");
+    return redis;
   }
 
   redis = new Redis({ url, token });

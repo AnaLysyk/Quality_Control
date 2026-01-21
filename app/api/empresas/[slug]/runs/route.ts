@@ -111,19 +111,18 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   const projectCodes = Array.from(projectCodesSet);
 
   const runs: RunPayload[] = [];
+  const warnings: string[] = [];
 
   if (token && projectCodes.length) {
     const results = await Promise.all(
-      projectCodes.map(async (projectCode) => ({ projectCode, runs: await listQaseRuns(projectCode, token) })),
+      projectCodes.map(async (projectCode) => ({ projectCode, result: await listQaseRuns(projectCode, token) })),
     );
 
-    results.forEach(({ projectCode, runs: qaseRuns }) => {
-      runs.push(
-        ...qaseRuns
-          .filter((run) => !!run)
-          .map(
+    results.forEach(({ projectCode, result }) => {
+      if (result.ok) {
+        runs.push(
+          ...(result.data ?? []).map(
             (run): RunPayload => ({
-              // Encode project+id so the detail page can resolve the project.
               slug: `qase-${projectCode}-${run.id}`,
               name: run.name ?? `Run ${run.id}`,
               runId: run.id,
@@ -133,7 +132,10 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
               origin: "automatico",
             }),
           ),
-      );
+        );
+      } else if (result?.warning) {
+        warnings.push(`[${projectCode}] ${result.warning}`);
+      }
     });
   }
 
@@ -189,5 +191,8 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
     return a.slug.localeCompare(b.slug);
   });
 
-  return NextResponse.json({ runs: sorted }, { status: 200 });
+  const responseBody: Record<string, unknown> = { runs: sorted };
+  if (warnings.length) responseBody.warnings = warnings;
+
+  return NextResponse.json(responseBody, { status: 200 });
 }

@@ -20,24 +20,35 @@ export async function GET(req: NextRequest) {
   const action = searchParams.get("action");
 
   const storageReady = isAuditLogStorageConfigured();
+  if (!storageReady) {
+    const msg = "Audit logs desativado neste ambiente: configure POSTGRES_URL/DATABASE_URL para persistir os registros.";
+    return apiFail(req, msg, {
+      status: 503,
+      code: "AUDIT_LOGS_DISABLED",
+      extra: { warning: msg },
+    });
+  }
 
   try {
     const items = await listAuditLogs({ limit, offset, action });
     const payload = {
       items,
       retentionDays: AUDIT_LOG_RETENTION_DAYS,
-      warning: storageReady
-        ? null
-        : "Audit logs desativado neste ambiente: configure POSTGRES_URL/DATABASE_URL para persistir os registros.",
+      warning: null,
     };
     return apiOk(req, payload, "OK", { extra: payload });
-  } catch {
+  } catch (err) {
     const payload = {
       items: [],
       retentionDays: AUDIT_LOG_RETENTION_DAYS,
       warning:
-        "Não foi possível carregar audit logs (banco indisponível ou tabela ausente). Configure POSTGRES_URL/DATABASE_URL e rode a migração da tabela audit_logs.",
+        "Nao foi possivel carregar audit logs (banco indisponivel ou tabela ausente). Configure POSTGRES_URL/DATABASE_URL e rode a migracao da tabela audit_logs.",
     };
-    return apiOk(req, payload, "OK", { extra: payload });
+    const message = err instanceof Error ? err.message : "Falha ao consultar audit logs";
+    return apiFail(req, message, {
+      status: 500,
+      code: "AUDIT_LOGS_UNAVAILABLE",
+      extra: payload,
+    });
   }
 }

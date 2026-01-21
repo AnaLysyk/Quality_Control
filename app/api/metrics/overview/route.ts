@@ -38,7 +38,7 @@ export async function GET() {
       // Total de execuções de teste (últimos 30 dias)
       prisma.testRun.count({
         where: {
-          createdAt: {
+          created_at: {
             gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 dias atrás
           },
         },
@@ -57,10 +57,10 @@ export async function GET() {
     ]);
 
     // Status dos testes (últimos 30 dias)
-    const testStatusCounts: TestStatusCount[] = await prisma.testRun.groupBy({
+    const testStatusCounts = await prisma.testRun.groupBy({
       by: ['status'],
       where: {
-        createdAt: {
+        created_at: {
           gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         },
       },
@@ -79,7 +79,7 @@ export async function GET() {
     };
 
     // Releases por status
-    const releaseStatusCounts: ReleaseStatusCount[] = await prisma.release.groupBy({
+    const releaseStatusCounts = await prisma.release.groupBy({
       by: ['status'],
       _count: {
         status: true,

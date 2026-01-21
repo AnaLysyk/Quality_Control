@@ -37,10 +37,10 @@ export async function POST(req: Request) {
     // Hash da nova senha
     const hashedPassword = hashPasswordSha256(newPassword);
 
-    // Atualizar senha no banco
+    // Atualizar senha no banco (campo correto: password_hash)
     await prisma.user.update({
       where: { id: userId },
-      data: { password: hashedPassword },
+      data: { password_hash: hashedPassword },
     });
 
     // Remover token usado

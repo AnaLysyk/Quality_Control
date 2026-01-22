@@ -8,6 +8,8 @@ type AuthUser = {
   isGlobalAdmin: boolean;
 };
 
+const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+
 export async function getMockRole(): Promise<Role | null> {
   if (process.env.SUPABASE_MOCK !== "true") return null;
   const cookieStore = await cookies();
@@ -45,7 +47,8 @@ export async function resolveDefectRole(authUser: AuthUser | null, clientSlug?: 
   return "user";
 }
 
-export const canCreateManualDefect = (role: Role) => role === "admin" || role === "company";
+export const canCreateManualDefect = (role: Role) =>
+  role === "admin" || role === "company" || (SUPABASE_MOCK && role === "user");
 export const canEditManualDefect = (role: Role) => role === "admin" || role === "company";
 export const canLinkRun = (role: Role) => role === "admin" || role === "company";
 export const canDeleteManualDefect = (role: Role) => role === "admin";

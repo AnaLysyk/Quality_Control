@@ -26,6 +26,26 @@ export async function setMockUser(page: Page, role: MockRole, clientSlug?: strin
   }
 
   await page.context().addCookies(cookies);
+
+  const loginEmail = role === "admin" ? "admin@example.com" : "user@example.com";
+  const loginUrl = new URL("/api/auth/login", baseURL).toString();
+  const response = await page.context().request.post(loginUrl, {
+    data: {
+      email: loginEmail,
+      password: "senha",
+    },
+  });
+
+  if (!response.ok()) {
+    throw new Error(`setMockUser login failed: ${response.status()} ${response.statusText()}`);
+  }
+
+  const setCookie = response.headers()["set-cookie"];
+  const match = typeof setCookie === "string" ? setCookie.match(/session_id=([^;]+)/) : null;
+  if (!match?.[1]) {
+    throw new Error("setMockUser login failed: missing session_id cookie");
+  }
+  await page.context().addCookies([{ name: "session_id", value: match[1], url: baseURL }]);
 }
 
 async function getMockCookie(page: Page, cookieName: string) {
@@ -34,8 +54,32 @@ async function getMockCookie(page: Page, cookieName: string) {
   return match?.value ?? null;
 }
 
-export async function login(page: Page, email: string, _password: string) {
-  await page.goto("/login", { timeout: 120000, waitUntil: "load" });
+export async function login(page: Page, email: string, password: string) {
+  const sessionId = await getMockCookie(page, "session_id");
+  if (!sessionId) {
+    const role = (await getMockCookie(page, "mock_role")) ?? "admin";
+    const useMock = process.env.SUPABASE_MOCK === "true";
+    const loginEmail = useMock ? (role === "admin" ? "admin@example.com" : "user@example.com") : email;
+    const loginPassword = useMock ? "senha" : password;
+    const loginUrl = new URL("/api/auth/login", baseURL).toString();
+    const response = await page.context().request.post(loginUrl, {
+      data: {
+        email: loginEmail,
+        password: loginPassword,
+      },
+    });
+    if (!response.ok()) {
+      throw new Error(`login failed: ${response.status()} ${response.statusText()}`);
+    }
+
+    const setCookie = response.headers()["set-cookie"];
+    const match = typeof setCookie === "string" ? setCookie.match(/session_id=([^;]+)/) : null;
+    if (!match?.[1]) {
+      throw new Error("login failed: missing session_id cookie");
+    }
+    await page.context().addCookies([{ name: "session_id", value: match[1], url: baseURL }]);
+  }
+
   const role = (await getMockCookie(page, "mock_role")) ?? "admin";
   const slug = (await getMockCookie(page, "mock_client_slug")) ?? "griaule";
   const companySlug = slug || "griaule";

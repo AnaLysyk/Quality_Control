@@ -1,5 +1,6 @@
 import { GET, POST } from "@/api/clients/[id]/users/route";
 import { buildQueryResponse, createSupabaseServerMock, resetSupabaseServerMock } from "./utils/supabaseMock";
+import { NextRequest } from "next/server";
 
 const supabaseServer = createSupabaseServerMock();
 
@@ -9,7 +10,8 @@ jest.mock("@/lib/supabaseServer", () => ({
 }));
 
 function requestWithAuth(url: string, init?: RequestInit) {
-  return new Request(url, { ...(init || {}), headers: { Authorization: "Bearer token", ...(init?.headers || {}) } });
+  const req = new Request(url, { ...(init || {}), headers: { Authorization: "Bearer token", ...(init?.headers || {}) } });
+  return new NextRequest(req);
 }
 
 describe("/api/clients/[id]/users GET/POST", () => {
@@ -18,7 +20,7 @@ describe("/api/clients/[id]/users GET/POST", () => {
   });
 
   it("GET retorna 401 se não autenticado", async () => {
-    const res = await GET(new Request("http://localhost/api/clients/cli/users"), { params: { id: "cli" } } as any);
+    const res = await GET(new NextRequest("http://localhost/api/clients/cli/users"), { params: { id: "cli" } } as any);
     expect(res.status).toBe(401);
   });
 
@@ -73,7 +75,7 @@ describe("/api/clients/[id]/users GET/POST", () => {
       if (table === "users") {
         // First call: current user access row
         // Second call: list users for client
-        const callIndex = supabaseServer.from.mock.calls.filter((c) => c[0] === "users").length;
+        const callIndex = supabaseServer.from.mock.calls.filter((c: [string]) => c[0] === "users").length;
         if (callIndex === 1) {
           return buildQueryResponse({ data: { id: "u1", client_id: "cli", active: true, role: "client_user" }, error: null });
         }
@@ -116,7 +118,7 @@ describe("/api/clients/[id]/users GET/POST", () => {
     supabaseServer.auth.getUser.mockResolvedValue({ data: { user: { id: "auth1", email: "a@b" } }, error: null });
     supabaseServer.from.mockImplementation((table: string) => {
       if (table === "users") {
-        const callIndex = supabaseServer.from.mock.calls.filter((c) => c[0] === "users").length;
+        const callIndex = supabaseServer.from.mock.calls.filter((c: [string]) => c[0] === "users").length;
         if (callIndex === 1) {
           // current user is admin
           return buildQueryResponse({ data: { id: "uAdmin", client_id: null, active: true, role: "global_admin", is_global_admin: true }, error: null });
@@ -166,7 +168,7 @@ describe("/api/clients/[id]/users GET/POST", () => {
     supabaseServer.auth.getUser.mockResolvedValue({ data: { user: { id: "auth1", email: "a@b" } }, error: null });
     supabaseServer.from.mockImplementation((table: string) => {
       if (table === "users") {
-        const callIndex = supabaseServer.from.mock.calls.filter((c) => c[0] === "users").length;
+        const callIndex = supabaseServer.from.mock.calls.filter((c: [string]) => c[0] === "users").length;
         if (callIndex === 1) {
           return buildQueryResponse({ data: { id: "uAdmin", client_id: null, active: true, role: "global_admin", is_global_admin: true }, error: null });
         }
@@ -193,7 +195,7 @@ describe("/api/clients/[id]/users GET/POST", () => {
     supabaseServer.auth.getUser.mockResolvedValue({ data: { user: { id: "auth1", email: "a@b" } }, error: null });
     supabaseServer.from.mockImplementation((table: string) => {
       if (table === "users") {
-        const callIndex = supabaseServer.from.mock.calls.filter((c) => c[0] === "users").length;
+        const callIndex = supabaseServer.from.mock.calls.filter((c: [string]) => c[0] === "users").length;
         if (callIndex === 1) {
           return buildQueryResponse({ data: { id: "uAdmin", client_id: null, active: true, role: "global_admin", is_global_admin: true }, error: null });
         }

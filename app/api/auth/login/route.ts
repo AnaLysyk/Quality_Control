@@ -39,7 +39,7 @@ async function validateUser(email: string, password: string, cookieHeader: strin
     const mockRole = (readCookieValue(cookieHeader, "mock_role") ?? "admin").trim().toLowerCase();
     const mockSlug = (readCookieValue(cookieHeader, "mock_client_slug") ?? "griaule").trim();
     const companySlug = mockSlug || "griaule";
-    const role = mockRole === "admin" ? "admin" : "user";
+    const role = mockRole === "admin" ? "admin" : mockRole === "company" ? "company" : "user";
 
     return {
       userId: `${role}-mock-${companySlug}`,

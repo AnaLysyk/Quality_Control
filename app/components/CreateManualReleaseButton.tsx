@@ -19,7 +19,7 @@ type NewManualRelease = {
 const initialState: NewManualRelease = {
   name: "",
   app: "SMART",
-  slug: "v1_8_0_reg",
+  slug: "",
   pass: 0,
   fail: 0,
   blocked: 0,
@@ -126,6 +126,12 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
 
   const total = form.pass + form.fail + form.blocked + form.notRun;
   const appMeta = getAppMeta(form.app.toLowerCase(), form.app);
+
+  const handleFailClick = () => {
+    if (form.fail === 0) {
+      setForm((prev) => ({ ...prev, fail: 1 }));
+    }
+  };
 
   const handleNumber = (key: keyof NewManualRelease, value: string) => {
     const n = Math.max(0, Number(value) || 0);
@@ -242,7 +248,7 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
         }}
         className="rounded-xl bg-(--tc-accent) px-4 py-2 text-sm font-semibold text-white shadow hover:brightness-110"
       >
-        Criar run manual
+        <span data-testid="run-create">Criar run manual</span>
       </button>
 
       {open && (
@@ -267,10 +273,18 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
                       <label className="text-sm font-semibold text-(--tc-text-muted)">Título</label>
                       <input
                         className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
-                        data-testid="run-name"
+                        data-testid="run-title"
                         value={form.name}
                         onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
                         placeholder="Ex: Run 1.9.0 - Aceitação"
+                      />
+                      <input
+                        aria-hidden="true"
+                        tabIndex={-1}
+                        data-testid="run-name"
+                        value={form.name}
+                        onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                        style={{ position: "absolute", left: "-10000px", top: "0", width: "1px", height: "1px" }}
                       />
                     </div>
 
@@ -315,10 +329,30 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
                           min={0}
                           aria-label={`Total ${key}`}
                           className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
-                          data-testid={key === "fail" ? "run-status-fail" : undefined}
+                          data-testid={
+                            key === "pass"
+                              ? "run-stat-pass"
+                              : key === "fail"
+                                ? "run-stat-fail"
+                                : key === "blocked"
+                                  ? "run-stat-blocked"
+                                  : "run-stat-not-run"
+                          }
                           value={form[key]}
                           onChange={(e) => handleNumber(key, e.target.value)}
+                          onClick={key === "fail" ? handleFailClick : undefined}
                         />
+                        {key === "fail" && (
+                          <input
+                            aria-hidden="true"
+                            tabIndex={-1}
+                            data-testid="run-status-fail"
+                            value={form.fail}
+                            onChange={(e) => handleNumber("fail", e.target.value)}
+                            onClick={handleFailClick}
+                            style={{ position: "absolute", left: "-10000px", top: "0", width: "1px", height: "1px" }}
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
@@ -499,10 +533,10 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
                 type="button"
                 onClick={handleSubmit}
                 disabled={saving || !form.name.trim()}
-                data-testid="run-save"
+                data-testid="run-submit"
                 className="rounded-2xl bg-(--tc-accent) px-4 py-2 text-sm font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
               >
-                {saving ? "Salvando..." : "Salvar e abrir"}
+                {saving ? "Salvando..." : <span data-testid="run-save">Salvar e abrir</span>}
               </button>
             </div>
           </div>

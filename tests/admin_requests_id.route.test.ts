@@ -1,4 +1,5 @@
 import { PATCH } from "@/api/admin/requests/[id]/route";
+import { NextRequest } from "next/server";
 
 jest.mock("@/lib/jwtAuth", () => ({
   authenticateRequest: jest.fn(),
@@ -28,14 +29,14 @@ describe("/api/admin/requests/[id] PATCH", () => {
 
   it("retorna 403 se não admin", async () => {
     authenticateRequest.mockResolvedValue({ id: "u1", email: "u1@example.com", isGlobalAdmin: false });
-    const res = await PATCH(new Request("http://localhost/api/admin/requests/1", { method: "PATCH" }), { params: Promise.resolve({ id: "1" }) });
+    const res = await PATCH(new NextRequest("http://localhost/api/admin/requests/1", { method: "PATCH" }), { params: Promise.resolve({ id: "1" }) });
     expect(res.status).toBe(403);
   });
 
   it("retorna 400 se status inválido", async () => {
     authenticateRequest.mockResolvedValue({ id: "admin1", email: "admin@example.com", isGlobalAdmin: true });
     const res = await PATCH(
-      new Request("http://localhost/api/admin/requests/1", { method: "PATCH", body: JSON.stringify({ status: "X" }) }),
+      new NextRequest("http://localhost/api/admin/requests/1", { method: "PATCH", body: JSON.stringify({ status: "X" }) }),
       { params: Promise.resolve({ id: "1" }) }
     );
     expect(res.status).toBe(400);
@@ -45,7 +46,7 @@ describe("/api/admin/requests/[id] PATCH", () => {
     authenticateRequest.mockResolvedValue({ id: "admin1", email: "admin@example.com", isGlobalAdmin: true });
     updateRequestStatus.mockReturnValue(null);
     const res = await PATCH(
-      new Request("http://localhost/api/admin/requests/1", { method: "PATCH", body: JSON.stringify({ status: "APPROVED" }) }),
+      new NextRequest("http://localhost/api/admin/requests/1", { method: "PATCH", body: JSON.stringify({ status: "APPROVED" }) }),
       { params: Promise.resolve({ id: "1" }) }
     );
     expect(res.status).toBe(404);
@@ -61,7 +62,7 @@ describe("/api/admin/requests/[id] PATCH", () => {
       userId: "user1",
     });
     const res = await PATCH(
-      new Request("http://localhost/api/admin/requests/1", { method: "PATCH", body: JSON.stringify({ status: "APPROVED" }) }),
+      new NextRequest("http://localhost/api/admin/requests/1", { method: "PATCH", body: JSON.stringify({ status: "APPROVED" }) }),
       { params: Promise.resolve({ id: "1" }) }
     );
     expect(res.status).toBe(200);
@@ -78,7 +79,7 @@ describe("/api/admin/requests/[id] PATCH", () => {
       userId: "user1",
     });
     const res = await PATCH(
-      new Request("http://localhost/api/admin/requests/2", { method: "PATCH", body: JSON.stringify({ status: "APPROVED" }) }),
+      new NextRequest("http://localhost/api/admin/requests/2", { method: "PATCH", body: JSON.stringify({ status: "APPROVED" }) }),
       { params: Promise.resolve({ id: "2" }) }
     );
     expect(res.status).toBe(200);

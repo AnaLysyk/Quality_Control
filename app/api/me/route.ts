@@ -72,8 +72,9 @@ function parseMockCompanySlugs(cookieHeader: string) {
 
 function buildMockCompanies(cookieHeader: string) {
   const normalizedRole = (readCookieValue(cookieHeader, "mock_role") ?? "admin").trim().toLowerCase();
+  const rawCompanies = readCookieValue(cookieHeader, "mock_companies");
   const uniqueSlugs = Array.from(new Set(parseMockCompanySlugs(cookieHeader)));
-  const slugs = uniqueSlugs.length ? uniqueSlugs : ["griaule"];
+  const slugs = rawCompanies !== null ? uniqueSlugs : uniqueSlugs.length ? uniqueSlugs : ["griaule"];
   const companyRole: "ADMIN" | "USER" =
     normalizedRole === "admin" || normalizedRole === "company" ? "ADMIN" : "USER";
 

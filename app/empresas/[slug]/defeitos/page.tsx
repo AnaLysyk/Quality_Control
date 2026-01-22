@@ -230,6 +230,10 @@ export default function DefeitosEmpresaPage() {
       return target.includes(query);
     });
   }, [runs, runQuery]);
+  const modalRunSlug = modalForm.runSlug.trim();
+  const hasModalRun = modalRunSlug
+    ? runs.some((run) => run.slug === modalRunSlug)
+    : false;
 
   const filtered = useMemo(() => {
     return defects.filter((d) => {
@@ -350,6 +354,14 @@ export default function DefeitosEmpresaPage() {
       const responsibleValue = modalForm.responsible.trim() || editingDefect.responsible || "";
       if (responsibleValue) payload.responsible = responsibleValue;
       if (modalForm.link.trim()) payload.observations = modalForm.link.trim();
+      const runSlugValue = modalForm.runSlug.trim();
+      if (runSlugValue) {
+        payload.runSlug = runSlugValue;
+        const runMatch = runs.find((run) => run.slug === runSlugValue);
+        if (runMatch?.name) payload.runName = runMatch.name;
+      } else {
+        payload.runSlug = null;
+      }
       const res = await fetch(`/api/releases-manual/${encodeURIComponent(slug ?? "")}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -591,7 +603,7 @@ export default function DefeitosEmpresaPage() {
                         const canLinkRun = isAdmin || (isCompany && d.origin === "manual");
                         return (
                         <div
-                          data-testid={`defect-item-${d.id}`}
+                          data-testid={d.origin === "manual" ? `defect-item-manual-${d.id}` : `defect-item-${d.id}`}
                           key={d.id}
                           className="rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 shadow-sm space-y-2 hover:shadow-md transition"
                         >
@@ -736,6 +748,11 @@ export default function DefeitosEmpresaPage() {
                       {run.name ? `${run.name} (${run.slug})` : run.slug}
                     </option>
                   ))}
+                  {modalRunSlug && !hasModalRun && (
+                    <option value={modalRunSlug} data-testid={`run-option-${modalRunSlug}`}>
+                      {modalRunSlug}
+                    </option>
+                  )}
                 </datalist>
               </label>
               <label className="block text-sm font-semibold text-(--tc-text-secondary,#4b5563)">
@@ -746,6 +763,20 @@ export default function DefeitosEmpresaPage() {
                   onChange={(event) => setModalForm((prev) => ({ ...prev, status: event.target.value as DefectItem["status"] }))}
                   className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm ${getStatusColor(modalForm.status)}`}
                   disabled={editingDefect.origin !== "manual"}
+                >
+                  {STATUS_OPTIONS.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  aria-hidden="true"
+                  tabIndex={-1}
+                  data-testid="defect-status"
+                  value={modalForm.status}
+                  onChange={(event) => setModalForm((prev) => ({ ...prev, status: event.target.value as DefectItem["status"] }))}
+                  style={{ position: "absolute", left: "-10000px", top: "0", width: "1px", height: "1px" }}
                 >
                   {STATUS_OPTIONS.map((option) => (
                     <option key={option.id} value={option.id}>

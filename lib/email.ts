@@ -27,8 +27,8 @@ class EmailService {
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
-      // Em desenvolvimento, apenas logar
-      if (process.env.NODE_ENV === 'development') {
+      // Avoid network calls in dev/test environments.
+      if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
         console.log('📧 [DEV MODE] Email would be sent:');
         console.log(`To: ${options.to}`);
         console.log(`Subject: ${options.subject}`);

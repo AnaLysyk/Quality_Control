@@ -3,12 +3,11 @@ import Breadcrumb from "@/components/Breadcrumb";
 import { formatCompanyDisplayName } from "@/utils/formatCompanyDisplayName";
 
 type PageParams = {
-  params: { slug: string; releaseSlug: string };
+  params: Promise<{ slug: string; releaseSlug: string }>;
 };
 
 export default async function EmpresaRunDetailPage({ params }: PageParams) {
-  const slug = params.releaseSlug || "";
-  const company = params.slug || "";
+  const { releaseSlug: slug = "", slug: company = "" } = await params;
   const companyName = formatCompanyDisplayName(company) || company;
   const content = await ReleasePageContent({ slug, companySlug: company });
 

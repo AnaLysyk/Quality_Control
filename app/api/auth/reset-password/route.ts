@@ -5,7 +5,8 @@ import { hashPasswordSha256 } from "@/lib/passwordHash";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
-  const { token, newPassword } = body ?? {};
+  const token = typeof body?.token === "string" ? body.token : null;
+  const newPassword = typeof body?.newPassword === "string" ? body.newPassword : null;
 
   if (!token || !newPassword) {
     return NextResponse.json(
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
   const redis = getRedis();
 
   // Buscar userId pelo token
-  const userId = await redis.get(`reset:${token}`);
+  const userId = await redis.get<string>(`reset:${token}`);
   if (!userId) {
     return NextResponse.json(
       { error: "Token inválido ou expirado" },

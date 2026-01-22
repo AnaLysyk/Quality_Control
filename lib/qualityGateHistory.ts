@@ -3,7 +3,6 @@ import fs from "fs/promises";
 import path from "path";
 
 const STORE_PATH = path.join(process.cwd(), "data", "quality_gate_history.json");
-
 export type QualityGateHistoryEntry = {
   id: string;
   company_slug: string;
@@ -33,20 +32,35 @@ async function ensureStore() {
 }
 
 export async function appendQualityGateHistory(entry: QualityGateHistoryEntry) {
-  await ensureStore();
-  const raw = await fs.readFile(STORE_PATH, "utf8");
-  let arr: QualityGateHistoryEntry[] = [];
   try {
-    arr = JSON.parse(raw);
-    if (!Array.isArray(arr)) arr = [];
-  } catch {}
-  arr.push(entry);
-  await fs.writeFile(STORE_PATH, JSON.stringify(arr, null, 2), "utf8");
+    await ensureStore();
+    const raw = await fs.readFile(STORE_PATH, "utf8");
+    let arr: QualityGateHistoryEntry[] = [];
+    try {
+      arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) arr = [];
+    } catch {}
+    arr.push(entry);
+    await fs.writeFile(STORE_PATH, JSON.stringify(arr, null, 2), "utf8");
+  } catch (err) {
+    console.warn("qualityGateHistory: unable to write store", err);
+  }
 }
 
 export async function readQualityGateHistory(companySlug?: string, releaseSlug?: string): Promise<QualityGateHistoryEntry[]> {
-  await ensureStore();
-  const raw = await fs.readFile(STORE_PATH, "utf8");
+  try {
+    await ensureStore();
+  } catch (err) {
+    console.warn("qualityGateHistory: unable to ensure store", err);
+    return [];
+  }
+  let raw = "";
+  try {
+    raw = await fs.readFile(STORE_PATH, "utf8");
+  } catch (err) {
+    console.warn("qualityGateHistory: unable to read store", err);
+    return [];
+  }
   let arr: QualityGateHistoryEntry[] = [];
   try {
     const parsed = JSON.parse(raw);

@@ -1,5 +1,6 @@
 import { GET, PATCH, PUT } from "@/api/clients/[id]/route";
 import { buildQueryResponse, createSupabaseServerMock, resetSupabaseServerMock } from "./utils/supabaseMock";
+import { NextRequest } from "next/server";
 
 const supabaseServer = createSupabaseServerMock();
 
@@ -9,10 +10,11 @@ jest.mock("@/lib/supabaseServer", () => ({
 }));
 
 function requestWithAuth(url: string, init?: RequestInit) {
-  return new Request(url, {
+  const req = new Request(url, {
     ...init,
     headers: { ...(init?.headers || {}), Authorization: "Bearer token" },
   });
+  return new NextRequest(req);
 }
 
 describe("/api/clients/[id] GET/PATCH/PUT", () => {
@@ -23,7 +25,7 @@ describe("/api/clients/[id] GET/PATCH/PUT", () => {
   describe("GET", () => {
     it("retorna 401 sem user", async () => {
       supabaseServer.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
-      const res = await GET(new Request("http://localhost/api/clients/cli"), { params: { id: "cli" } });
+      const res = await GET(new NextRequest("http://localhost/api/clients/cli"), { params: Promise.resolve({ id: "cli" }) });
       expect(res.status).toBe(401);
     });
 
@@ -35,7 +37,7 @@ describe("/api/clients/[id] GET/PATCH/PUT", () => {
         return buildQueryResponse({ data: null, error: null });
       });
 
-      const res = await GET(requestWithAuth("http://localhost/api/clients/cli"), { params: { id: "cli" } });
+      const res = await GET(requestWithAuth("http://localhost/api/clients/cli"), { params: Promise.resolve({ id: "cli" }) });
       expect(res.status).toBe(404);
     });
 
@@ -48,7 +50,7 @@ describe("/api/clients/[id] GET/PATCH/PUT", () => {
         return buildQueryResponse({ data: null, error: null });
       });
 
-      const res = await GET(requestWithAuth("http://localhost/api/clients/cli"), { params: { id: "cli" } });
+      const res = await GET(requestWithAuth("http://localhost/api/clients/cli"), { params: Promise.resolve({ id: "cli" }) });
       expect(res.status).toBe(403);
     });
 
@@ -61,7 +63,7 @@ describe("/api/clients/[id] GET/PATCH/PUT", () => {
         return buildQueryResponse({ data: null, error: null });
       });
 
-      const res = await GET(requestWithAuth("http://localhost/api/clients/cli"), { params: { id: "cli" } });
+      const res = await GET(requestWithAuth("http://localhost/api/clients/cli"), { params: Promise.resolve({ id: "cli" }) });
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json.id).toBe("cli");
@@ -74,8 +76,8 @@ describe("/api/clients/[id] GET/PATCH/PUT", () => {
     it("retorna 401 sem user", async () => {
       supabaseServer.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
       const res = await PATCH(
-        new Request("http://localhost/api/clients/cli", { method: "PATCH", body: JSON.stringify(payload) }),
-        { params: { id: "cli" } }
+        new NextRequest("http://localhost/api/clients/cli", { method: "PATCH", body: JSON.stringify(payload) }),
+        { params: Promise.resolve({ id: "cli" }) }
       );
       expect(res.status).toBe(401);
     });
@@ -91,7 +93,7 @@ describe("/api/clients/[id] GET/PATCH/PUT", () => {
 
       const res = await PATCH(
         requestWithAuth("http://localhost/api/clients/cli", { method: "PATCH", body: JSON.stringify(payload) }),
-        { params: { id: "cli" } }
+        { params: Promise.resolve({ id: "cli" }) }
       );
       expect(res.status).toBe(403);
     });
@@ -107,7 +109,7 @@ describe("/api/clients/[id] GET/PATCH/PUT", () => {
 
       const res = await PATCH(
         requestWithAuth("http://localhost/api/clients/cli", { method: "PATCH", body: JSON.stringify(payload) }),
-        { params: { id: "cli" } }
+        { params: Promise.resolve({ id: "cli" }) }
       );
       expect(res.status).toBe(200);
       const json = await res.json();
@@ -125,7 +127,7 @@ describe("/api/clients/[id] GET/PATCH/PUT", () => {
 
       const res = await PUT(
         requestWithAuth("http://localhost/api/clients/cli", { method: "PUT", body: JSON.stringify(payload) }),
-        { params: { id: "cli" } }
+        { params: Promise.resolve({ id: "cli" }) }
       );
       expect(res.status).toBe(200);
     });

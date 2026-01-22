@@ -69,7 +69,7 @@ describe("Login mock flow", () => {
     const res = await POST(req);
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.error).toMatch(/Email e senha obrigatórios/i);
+    expect(body.error).toMatch(/Email e senha obrigatorios/i);
   });
 
   it("loga com credenciais mock e define session_id cookie", async () => {
@@ -77,8 +77,8 @@ describe("Login mock flow", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email: "admin@test.com",
-        password: "123456",
+        email: "admin@example.com",
+        password: "senha",
       }),
     });
     const res = await POST(req);

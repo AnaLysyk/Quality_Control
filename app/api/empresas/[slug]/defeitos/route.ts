@@ -141,7 +141,7 @@ function normalizeManualDefects(releases: any[]): Defect[] {
       closedAt,
       mttrMs: calcMTTR(openedAt, closedAt),
       origin: "manual",
-      runSlug: r.runId ? String(r.runId) : undefined,
+      runSlug: (r as any).runSlug ? String((r as any).runSlug) : r.runId ? String(r.runId) : undefined,
     };
   });
 }
@@ -238,8 +238,14 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
     // Run
     let run = undefined;
     if (defect.runSlug) {
-      run = allQaseRuns.find((r) => r.id === defect.runSlug) ||
-            manualReleases.find((r) => String(r.runId) === defect.runSlug);
+      run =
+        allQaseRuns.find((r) => r.id === defect.runSlug) ||
+        manualReleases.find(
+          (r) =>
+            String(r.runId) === defect.runSlug ||
+            (r as any).runSlug === defect.runSlug ||
+            r.slug === defect.runSlug,
+        );
       if (run) {
         run = {
           id: run.id || run.slug || run.runId,

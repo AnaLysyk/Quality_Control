@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { mockAuth } from "../helpers/mockAuth";
+import { mockAuth } from "./helpers/mockAuth";
 
 const DEFECTS_URL = "/empresas/griaule/defeitos";
 

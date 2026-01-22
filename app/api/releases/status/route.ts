@@ -7,10 +7,14 @@ import { calculateQualityScore } from "@/lib/qualityScore";
 import { randomUUID } from "crypto";
 
 // Helper: get all runs for a release (manual + Qase)
-async function getRunsForRelease(releaseSlug: string) {
+async function getRunsForRelease(releaseSlug: string, clientKey?: string | null) {
   // Manual runs
   const manualRuns = await readManualReleaseStore();
   const runs = manualRuns.filter(r => r.slug === releaseSlug);
+  if (runs.length) return runs;
+  if (clientKey) {
+    return manualRuns.filter((r) => (r.clientSlug ?? null) === clientKey);
+  }
   // TODO: Add Qase runs if needed
   return runs;
 }
@@ -19,8 +23,11 @@ export async function GET(req: Request) {
   const releases = await getAllReleases();
   const result = [];
   for (const rel of releases) {
-    const runs = await getRunsForRelease(rel.slug);
-    const failedRuns = runs.filter(r => {
+    const companyKey = rel.clientId ?? rel.clientName ?? null;
+    const runs = await getRunsForRelease(rel.slug, companyKey);
+    const failedRuns = runs.filter((r: any) => {
+      const failCount = Number(r?.stats?.fail ?? r?.metrics?.fail ?? 0);
+      if (Number.isFinite(failCount) && failCount > 0) return true;
       if (!r.status) return false;
       const s = String(r.status).toLowerCase();
       return s === "fail" || s === "falha" || s === "failed";

@@ -3,6 +3,8 @@ import { AUDIT_LOG_RETENTION_DAYS, isAuditLogStorageConfigured, listAuditLogs } 
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 
+const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
@@ -20,13 +22,16 @@ export async function GET(req: NextRequest) {
   const action = searchParams.get("action");
 
   const storageReady = isAuditLogStorageConfigured();
-  if (!storageReady) {
-    const msg = "Audit logs desativado neste ambiente: configure POSTGRES_URL/DATABASE_URL para persistir os registros.";
-    return apiFail(req, msg, {
-      status: 503,
-      code: "AUDIT_LOGS_DISABLED",
-      extra: { warning: msg },
-    });
+  if (SUPABASE_MOCK || !storageReady) {
+    const warning = SUPABASE_MOCK
+      ? "Audit logs desativado em SUPABASE_MOCK."
+      : "Audit logs desativado neste ambiente: configure POSTGRES_URL/DATABASE_URL para persistir os registros.";
+    const payload = {
+      items: [],
+      retentionDays: AUDIT_LOG_RETENTION_DAYS,
+      warning,
+    };
+    return apiOk(req, payload, "OK", { extra: payload });
   }
 
   try {

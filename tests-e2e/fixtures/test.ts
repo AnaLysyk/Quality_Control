@@ -56,9 +56,7 @@ function extractCaseIds(testInfo: TestInfo): number[] {
   const ids = new Set<number>();
   collectIdsFromText(testInfo.title, ids);
 
-  if (typeof testInfo.titlePath === "function") {
-    collectIdsFromText(testInfo.titlePath().join(" "), ids);
-  }
+  collectIdsFromText(testInfo.titlePath.join(" "), ids);
 
   for (const annotation of testInfo.annotations ?? []) {
     const annotationText = `${annotation.type} ${annotation.description ?? ""}`.trim();
@@ -135,7 +133,7 @@ test.afterEach(async ({}, testInfo) => {
     return;
   }
 
-  const status = mapStatus(testInfo.status);
+  const status = mapStatus(testInfo.status ?? "failed");
   const comment = buildComment(testInfo, status);
   const stacktrace = buildStacktrace(testInfo);
   const duration = Math.max(0, Math.round(testInfo.duration));

@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { test, expect } from "@playwright/test";
 import { mockAuth } from "./utils/mockAuth";
 
@@ -18,7 +19,11 @@ test("company consegue exportar CSV de qualidade", async ({ page, context }) => 
   ]);
 
   expect(download.suggestedFilename()).toContain("quality");
-  const csv = await download.text();
+  const downloadPath = await download.path();
+  if (!downloadPath) {
+    throw new Error("Download path unavailable");
+  }
+  const csv = await readFile(downloadPath, "utf8");
   expect(csv).toContain("company,period,quality_score");
   expect(csv).toContain("id,title,origin,status,opened_at");
 });

@@ -1,5 +1,6 @@
 import { GET, POST } from "@/api/kanban/route";
 import { buildQueryResponse, createSupabaseServerMock, resetSupabaseServerMock } from "./utils/supabaseMock";
+import { NextRequest } from "next/server";
 
 const supabaseServer = createSupabaseServerMock();
 
@@ -9,10 +10,11 @@ jest.mock("@/lib/supabaseServer", () => ({
 }));
 
 function requestWithAuth(url: string, init?: RequestInit) {
-  return new Request(url, {
+  const req = new Request(url, {
     ...(init || {}),
     headers: { Authorization: "Bearer token", ...(init?.headers || {}) },
   });
+  return new NextRequest(req);
 }
 
 describe("/api/kanban - Supabase DB + RBAC", () => {

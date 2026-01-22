@@ -1,10 +1,15 @@
 import { jest } from "@jest/globals";
 
+type SupabaseAuthResponse = {
+  data: { user: { id: string; email?: string | null } | null };
+  error: unknown;
+};
+
 type SupabaseServerMock = {
   auth: {
-    getUser: jest.Mock;
+    getUser: jest.Mock<(token?: string) => Promise<SupabaseAuthResponse>>;
   };
-  from: jest.Mock;
+  from: jest.Mock<(table: string) => any>;
 };
 
 type QueryResponse<T> = {
@@ -94,9 +99,9 @@ export function buildQueryResponse<T>(response: QueryResponse<T>): ChainableQuer
 export function createSupabaseServerMock(): SupabaseServerMock {
   return {
     auth: {
-      getUser: jest.fn(),
+      getUser: jest.fn<(token?: string) => Promise<SupabaseAuthResponse>>(),
     },
-    from: jest.fn(),
+    from: jest.fn<(table: string) => any>(),
   };
 }
 

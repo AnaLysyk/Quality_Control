@@ -1,22 +1,117 @@
 [
   {
-    "id": "715ef2e4-c487-4847-aa05-03f0dfa93449",
+    "id": "c96c212f-03af-4709-8e4f-4390a08f1cb7",
     "slug": "v1_8_0_reg",
     "name": "run-falha",
     "app": "SMART",
     "environments": [],
     "clientSlug": "griaule",
     "source": "MANUAL",
-    "status": "ACTIVE",
+    "status": "done",
     "stats": {
       "pass": 0,
       "fail": 0,
       "blocked": 0,
       "notRun": 0
     },
-    "closedAt": "2026-01-18T03:37:22.826Z",
-    "createdAt": "2026-01-18T03:37:22.826Z",
-    "updatedAt": "2026-01-18T03:37:22.826Z"
+    "closedAt": "2026-01-22T15:19:37.257Z",
+    "createdAt": "2026-01-22T15:19:37.257Z",
+    "updatedAt": "2026-01-22T15:19:37.257Z"
+  },
+  {
+    "id": "7bc30ab5-366a-43ab-b6a5-278f7162cca2",
+    "slug": "defeito_mttr",
+    "name": "Defeito MTTR",
+    "app": "GRIAULE",
+    "environments": [],
+    "clientSlug": "griaule",
+    "source": "MANUAL",
+    "status": "open",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": null,
+    "createdAt": "2026-01-22T15:18:20.412Z",
+    "updatedAt": "2026-01-22T15:18:20.412Z"
+  },
+  {
+    "id": "5dde4791-91ee-4538-ac0c-861dce12346e",
+    "slug": "defeito_manual_admin",
+    "name": "Defeito manual - admin",
+    "app": "GRIAULE",
+    "environments": [],
+    "clientSlug": "griaule",
+    "source": "MANUAL",
+    "status": "open",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": null,
+    "createdAt": "2026-01-22T15:17:52.989Z",
+    "updatedAt": "2026-01-22T15:17:52.989Z"
+  },
+  {
+    "id": "5951a3ae-3b9b-4f4b-882a-4bc9587df4f5",
+    "slug": "defeito_manual_company",
+    "name": "Defeito manual - company",
+    "app": "GRIAULE",
+    "environments": [],
+    "clientSlug": "griaule",
+    "source": "MANUAL",
+    "status": "open",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": null,
+    "createdAt": "2026-01-22T15:17:40.213Z",
+    "updatedAt": "2026-01-22T15:17:40.213Z"
+  },
+  {
+    "id": "957276c7-935a-44e9-a80b-ef9d3549353a",
+    "slug": "defeito_proibido",
+    "name": "Defeito proibido",
+    "app": "GRIAULE",
+    "environments": [],
+    "clientSlug": "griaule",
+    "source": "MANUAL",
+    "status": "open",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": null,
+    "createdAt": "2026-01-22T15:17:33.259Z",
+    "updatedAt": "2026-01-22T15:17:33.259Z"
+  },
+  {
+    "id": "3b7e84fe-b9d7-43c2-9577-4a4cd1b3fa61",
+    "slug": "defeito_com_run",
+    "name": "Defeito com run",
+    "app": "GRIAULE",
+    "environments": [],
+    "clientSlug": "griaule",
+    "source": "MANUAL",
+    "status": "open",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": null,
+    "createdAt": "2026-01-22T15:16:57.169Z",
+    "updatedAt": "2026-01-22T15:16:57.169Z"
   },
   {
     "id": "546b4900-31de-42d3-86d2-f2af735abfad",

@@ -18,6 +18,8 @@ type ThreadRow = {
   messages: MessageRow[];
 };
 
+export {};
+
 const denoEnvGet = (key: string): string | undefined => {
   const deno = (globalThis as any).Deno;
   return deno?.env?.get?.(key);

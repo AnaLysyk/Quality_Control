@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { mockAuth } from "../helpers/mockAuth";
+import { mockAuth } from "./helpers/mockAuth";
 
 test("dashboard mostra tendência de MTTR", async ({ page, context }) => {
   await mockAuth(context, {

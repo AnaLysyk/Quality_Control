@@ -2,12 +2,11 @@ import { ReleasePageContent } from "@/release/ReleaseTemplate";
 import Breadcrumb from "@/components/Breadcrumb";
 
 type PageParams = {
-  params: { slug: string; releaseSlug: string };
+  params: Promise<{ slug: string; releaseSlug: string }>;
 };
 
 export default async function EmpresaReleaseDetailPage({ params }: PageParams) {
-  const slug = params.releaseSlug || "";
-  const company = params.slug || "";
+  const { releaseSlug: slug = "", slug: company = "" } = await params;
   const content = await ReleasePageContent({ slug, companySlug: company });
 
   return (

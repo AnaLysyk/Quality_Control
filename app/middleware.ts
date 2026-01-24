@@ -1,8 +1,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-const LOGIN_PATH = "/login";
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -14,12 +12,6 @@ export function middleware(request: NextRequest) {
   } else {
     (request as any).user = undefined;
     (globalThis as any).user = undefined;
-  }
-
-  if (pathname === "/") {
-    const url = request.nextUrl.clone();
-    url.pathname = LOGIN_PATH;
-    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();

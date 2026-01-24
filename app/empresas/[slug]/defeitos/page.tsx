@@ -776,7 +776,7 @@ export default function DefeitosEmpresaPage() {
                   data-testid="defect-status"
                   value={modalForm.status}
                   onChange={(event) => setModalForm((prev) => ({ ...prev, status: event.target.value as DefectItem["status"] }))}
-                  style={{ position: "absolute", left: "-10000px", top: "0", width: "1px", height: "1px" }}
+                  className="sr-only"
                 >
                   {STATUS_OPTIONS.map((option) => (
                     <option key={option.id} value={option.id}>

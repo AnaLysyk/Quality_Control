@@ -57,14 +57,14 @@ export default function CompanyProfileClient({
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-end">
             <Link
               href={`/empresas/${encodeURIComponent(clientSlug)}/dashboard`}
-              className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-center text-sm font-semibold text-white/90 hover:bg-white/15 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-center text-sm font-semibold text-white/90 hover:bg-white/15 transition focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               Ir para dashboard
             </Link>
             {canManage && (
               <Link
                 href={`/admin/defeitos?empresa=${encodeURIComponent(clientSlug)}`}
-                className="w-full rounded-lg border border-transparent bg-(--tc-accent,#ef0001) px-3 py-2 text-center text-sm font-semibold text-white shadow hover:shadow-lg transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="w-full rounded-lg border border-transparent bg-(--tc-accent,#ef0001) px-3 py-2 text-center text-sm font-semibold text-white shadow hover:shadow-lg transition focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 Ações rápidas
               </Link>

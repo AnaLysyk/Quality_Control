@@ -29,14 +29,14 @@ Estes scripts devem ser executados em CI (GitHub Actions, GitLab CI, etc.) e fal
 - `SENSITIVE_TABLES` (opcional)
   - Lista separada por vírgulas de tabelas totalmente qualificadas a serem tratadas como sensíveis.
   - Formato: `schema.tabela`
-  - Padrão: `public.global_admins`
-  - Exemplo: `SENSITIVE_TABLES="public.global_admins,admin.critical_table"`
+- Padrão: `public.users,public.company_users`
+- Exemplo: `SENSITIVE_TABLES="public.users,public.company_users,admin.critical_table"`
 
 - `SENSITIVE_VIEWS` (opcional)
   - Lista separada por vírgulas de nomes de views (sem schema) a serem checadas quanto a privilégios de `PUBLIC`.
   - Se não definido, o script gera padrões adicionando `_view` ao nome de cada tabela sensível.
-    - Exemplo: `public.global_admins` → `global_admins_view`
-  - Exemplo: `SENSITIVE_VIEWS="global_admins_view,critical_table_view"`
+    - Exemplo: `public.users` → `users_view`
+  - Exemplo: `SENSITIVE_VIEWS="users_view,company_users_view,critical_table_view"`
 
 - `ALLOWED_SECURITY_DEFINER_FUNCTIONS` (opcional; apenas no script com allowlist)
   - Lista separada por vírgulas de nomes de funções totalmente qualificadas permitidas como `SECURITY DEFINER`.
@@ -58,7 +58,7 @@ Local (rápido):
 
 Override de tabelas sensíveis:
 
-- `export SENSITIVE_TABLES="public.global_admins,admin.critical_table"`
+- `export SENSITIVE_TABLES="public.users,public.company_users,admin.critical_table"`
 - `./scripts/db-security-check.sh`
 
 Script com allowlist:

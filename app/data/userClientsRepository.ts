@@ -1,5 +1,5 @@
 import "server-only";
-import { sql } from "@vercel/postgres";
+import { getPostgresSql, requirePostgresSql } from "@/lib/vercelPostgres";
 
 export type UserClient = {
   id: string;
@@ -11,6 +11,8 @@ export type UserClient = {
 };
 
 export async function getUserRoleInClient(userId: string, clientId: string): Promise<UserClient | null> {
+  const sql = getPostgresSql();
+  if (!sql) return null;
   const { rows } = await sql<UserClient>`
     select * from user_clients
     where user_id = ${userId} and client_id = ${clientId} and active = true
@@ -20,6 +22,8 @@ export async function getUserRoleInClient(userId: string, clientId: string): Pro
 }
 
 export async function getUserClientLink(userId: string, clientId: string): Promise<UserClient | null> {
+  const sql = getPostgresSql();
+  if (!sql) return null;
   const { rows } = await sql<UserClient>`
     select * from user_clients
     where user_id = ${userId} and client_id = ${clientId}
@@ -30,6 +34,8 @@ export async function getUserClientLink(userId: string, clientId: string): Promi
 }
 
 export async function listUsersByClient(clientId: string): Promise<UserClient[]> {
+  const sql = getPostgresSql();
+  if (!sql) return [];
   const { rows } = await sql<UserClient>`
     select * from user_clients where client_id = ${clientId} and active = true
   `;
@@ -37,6 +43,7 @@ export async function listUsersByClient(clientId: string): Promise<UserClient[]>
 }
 
 export async function addUserToClient(data: { userId: string; clientId: string; role: "ADMIN" | "USER" }): Promise<UserClient> {
+  const sql = requirePostgresSql();
   const { rows } = await sql<UserClient>`
     insert into user_clients (user_id, client_id, role, active, created_at)
     values (${data.userId}, ${data.clientId}, ${data.role}, true, now())
@@ -51,6 +58,7 @@ export async function updateUserClientLink(params: {
   role?: "ADMIN" | "USER";
   active?: boolean;
 }): Promise<UserClient | null> {
+  const sql = requirePostgresSql();
   const { rows } = await sql<UserClient>`
     update user_clients set
       role = coalesce(${params.role ?? null}, role),

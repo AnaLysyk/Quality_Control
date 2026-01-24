@@ -4,8 +4,9 @@
 O projeto usa Supabase (Postgres) como base de dados principal.
 
 Tabelas comuns no fluxo:
-- `users`: usuários internos do painel (mapeia `auth_user_id` do Supabase Auth)
-- `cliente`: empresas/organizações (cada registro tem `id` e `slug`)
+- `users`: usuários internos do painel (id = `auth.users.id`)
+- `company_users`: vínculos usuário ↔ empresa (multi-empresa, role por empresa)
+- `cliente`: tabela de integração/status (nao representa empresa)
 - Outras tabelas conectadas a runs, releases e integrações específicas
 
 ## Autenticação versus perfil
@@ -15,13 +16,43 @@ Tabelas comuns no fluxo:
 
 Padrões esperados:
 
-- `users.auth_user_id` referencia o `auth.users.id` do Supabase.
-- `users.client_id` determina a empresa do usuário (quando ele não é admin global).
+- `users.id` referencia o `auth.users.id` do Supabase.
 - `users.is_global_admin` autoriza o acesso entre empresas.
+
+## Multitenancy (company_users)
+
+- `company_users` guarda o vínculo por empresa (`company_id`) e o papel no contexto (`role`).
+- `ativo` controla se o vínculo está habilitado.
+- A tabela `cliente` nao e usada para RBAC/tenant.
+
+## Resolução de contexto (backend)
+
+Ordem de resolução usada pelo backend (`TenantService.resolve`):
+
+1. **Empresa ativa**: primeiro vínculo ativo em `company_users` (por `user_id`).
+2. **Role**: `company_users.role` (normalizado para minúsculas).
+3. **Global admin**: `users.is_global_admin` → role `global_admin/admin`.
+
+Isso evita ambiguidade e garante que a empresa mande mais que metadata/token.
+
+## Empresa ativa (frontend)
+
+- O frontend mantém a empresa ativa no `ClientContext` (ver `app/context/ClientContext.tsx`).
+- A seleção é persistida em `localStorage` com a chave `activeClient:<userId>`.
+- Quando nao houver slug disponivel, use `companyId` como fallback no frontend.
+- Ao trocar empresa ativa, o identificador é salvo localmente e usado para filtrar telas e chamadas de API.
+
+## Papéis (roles)
+
+Valores esperados no banco (normalizados para minúsculas):
+
+- `global_admin` (admin do sistema)
+- `client_admin` (admin de empresa)
+- `client_user` (usuário padrão)
 
 ## Segurança e privacidade
 
-- Usuários não admin só veem dados do `client_id` associado.
+- Usuários não admin só veem dados do `company_id` associado.
 - Admins globais conseguem consultar todas as empresas.
 
 Para Row Level Security:

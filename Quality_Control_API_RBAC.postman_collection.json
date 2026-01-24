@@ -1,0 +1,297 @@
+{
+  "info": {
+    "name": "Quality Control API - RBAC + Company",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Colecao oficial para testar Auth, Health e RBAC/Company no backend."
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "auth_token",
+      "value": ""
+    },
+    {
+      "key": "companyId",
+      "value": ""
+    },
+    {
+      "key": "isGlobalAdmin",
+      "value": ""
+    },
+    {
+      "key": "companyIdNegative",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Health - status 200', () => {\n  pm.response.to.have.status(200);\n});",
+                  "const json = pm.response.json();",
+                  "pm.test('Health - resposta ok', () => {\n  pm.expect(json.status).to.eql('ok');\n});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"EMAIL_AQUI\",\n  \"password\": \"SENHA_AQUI\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login - status 200 ou 201', () => {\n  pm.expect([200,201]).to.include(pm.response.code);\n});",
+                  "const json = pm.response.json();",
+                  "pm.test('Login - token presente', () => {\n  pm.expect(json.session).to.have.property('access_token');\n});",
+                  "pm.environment.set('auth_token', json.session.access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Me - status 200', () => {\n  pm.response.to.have.status(200);\n});",
+                  "const json = pm.response.json();",
+                  "pm.test('Me - usuario presente', () => {\n  pm.expect(json.user).to.exist;\n});",
+                  "const companyId = json?.user?.companyId || json?.user?.clientId;",
+                  "const isGlobalAdmin = json?.user?.isGlobalAdmin === true;",
+                  "pm.environment.set('isGlobalAdmin', isGlobalAdmin ? 'true' : 'false');",
+                  "pm.test('Me - global admin OU companyId', () => {\n  pm.expect(json.user.isGlobalAdmin === true || !!companyId).to.be.true;\n});",
+                  "if (companyId) { pm.environment.set('companyId', companyId); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Logout - status 200 ou 201', () => {\n  pm.expect([200,201]).to.include(pm.response.code);\n});",
+                  "pm.environment.unset('auth_token');",
+                  "pm.environment.unset('companyId');"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Qase (RBAC + Company)",
+      "item": [
+        {
+          "name": "POST Create Country (admin only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Brazil\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/countries?companyId={{companyId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "countries"
+              ],
+              "query": [
+                {
+                  "key": "companyId",
+                  "value": "{{companyId}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Countries - status 201', () => {\n  pm.response.to.have.status(201);\n});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Create Country (rbac forbidden)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const companyId = pm.environment.get('companyId');",
+                  "const negative = companyId ? `${companyId}-forbidden` : '__invalid__';",
+                  "pm.environment.set('companyIdNegative', negative);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const isGlobalAdmin = pm.environment.get('isGlobalAdmin') === 'true';",
+                  "if (isGlobalAdmin) {",
+                  "  pm.test('Countries forbidden - global admin bypass', () => {\n    pm.expect([200,201]).to.include(pm.response.code);\n  });",
+                  "} else {",
+                  "  pm.test('Countries forbidden - status 403', () => {\n    pm.response.to.have.status(403);\n  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Brazil Forbidden\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/countries?companyId={{companyIdNegative}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "countries"
+              ],
+              "query": [
+                {
+                  "key": "companyId",
+                  "value": "{{companyIdNegative}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

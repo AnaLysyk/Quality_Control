@@ -146,9 +146,9 @@ export default function LoginClient() {
                 Esqueci minha senha
               </Link>
               <div className="flex w-full items-center gap-3 text-xs uppercase tracking-[0.4em] text-[#c1c5d1]">
-                <span className="flex-1 h-px bg-gradient-to-r from-[#E5E7EB]/0 via-[#E5E7EB] to-[#E5E7EB]/0" />
+                <span className="flex-1 h-px bg-linear-to-r from-[#E5E7EB]/0 via-[#E5E7EB] to-[#E5E7EB]/0" />
                 <span className="px-1 text-[10px] tracking-[0.35em] text-[#c1c5d1]">OU</span>
-                <span className="flex-1 h-px bg-gradient-to-r from-[#E5E7EB]/0 via-[#E5E7EB] to-[#E5E7EB]/0" />
+                <span className="flex-1 h-px bg-linear-to-r from-[#E5E7EB]/0 via-[#E5E7EB] to-[#E5E7EB]/0" />
               </div>
               <Link href="/login/access-request" className="font-semibold text-[#ef0001] hover:text-[#c70000]">
                 Solicitar acesso

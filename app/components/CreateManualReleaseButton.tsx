@@ -284,7 +284,7 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
                         data-testid="run-name"
                         value={form.name}
                         onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                        style={{ position: "absolute", left: "-10000px", top: "0", width: "1px", height: "1px" }}
+                        className="sr-only"
                       />
                     </div>
 
@@ -350,7 +350,7 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
                             value={form.fail}
                             onChange={(e) => handleNumber("fail", e.target.value)}
                             onClick={handleFailClick}
-                            style={{ position: "absolute", left: "-10000px", top: "0", width: "1px", height: "1px" }}
+                            className="sr-only"
                           />
                         )}
                       </div>

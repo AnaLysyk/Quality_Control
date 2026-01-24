@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { getRedis } from "@/lib/redis";
-import { prisma } from "@/lib/prisma";
+import { prisma, isPrismaConfigured } from "@/lib/prisma";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
@@ -10,6 +10,51 @@ const MOCK_EMAILS = new Set(["admin@example.com", "user@example.com"]);
 
 function isPrismaConfigError(err: unknown): boolean {
   return err instanceof Error && err.message.includes("PRISMA_NOT_CONFIGURED");
+}
+
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "string") return err;
+  return "";
+}
+
+function getErrorName(err: unknown): string {
+  const name = (err as { name?: unknown } | null)?.name;
+  return typeof name === "string" ? name : "";
+}
+
+function getErrorCode(err: unknown): string {
+  const code = (err as { code?: unknown } | null)?.code;
+  return typeof code === "string" ? code : "";
+}
+
+function isPrismaSchemaError(err: unknown): boolean {
+  const code = getErrorCode(err);
+  if (code === "P2021" || code === "P2022") return true;
+  const message = getErrorMessage(err).toLowerCase();
+  return message.includes("does not exist") || message.includes("no such table");
+}
+
+function isPrismaConnectionError(err: unknown): boolean {
+  const code = getErrorCode(err);
+  if (code.startsWith("P100")) return true;
+  const message = getErrorMessage(err).toLowerCase();
+  return (
+    message.includes("can't reach database server") ||
+    message.includes("connection refused") ||
+    message.includes("connection") && message.includes("timeout")
+  );
+}
+
+function isPrismaRuntimeError(err: unknown): boolean {
+  const name = getErrorName(err).toLowerCase();
+  if (name.includes("prisma")) return true;
+  const code = getErrorCode(err);
+  return code.startsWith("P");
+}
+
+function isPrismaDbError(err: unknown): boolean {
+  return isPrismaRuntimeError(err) || isPrismaSchemaError(err) || isPrismaConnectionError(err);
 }
 
 function readCookieValue(cookieHeader: string | null, name: string): string | null {
@@ -95,18 +140,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email e senha obrigatorios" }, { status: 400 });
   }
 
+  if (!SUPABASE_MOCK && !isPrismaConfigured()) {
+    return NextResponse.json(
+      { error: "Banco nao configurado (defina DATABASE_URL ou POSTGRES_URL)" },
+      { status: 503 },
+    );
+  }
+
   const cookieHeader = req.headers.get("cookie") ?? null;
   let user = null;
   try {
     user = await validateUser(email, password, cookieHeader);
   } catch (err) {
-    if (isPrismaConfigError(err)) {
-      return NextResponse.json(
-        { error: "Banco nao configurado (defina DATABASE_URL ou POSTGRES_URL)" },
-        { status: 503 },
-      );
+    if (isPrismaConfigError(err) || isPrismaDbError(err)) {
+      const message = isPrismaSchemaError(err)
+        ? "Banco sem schema. Rode as migracoes do Prisma."
+        : "Banco nao configurado ou indisponivel (defina DATABASE_URL ou POSTGRES_URL).";
+      return NextResponse.json({ error: message }, { status: 503 });
     }
-    throw err;
+    console.error("Erro ao autenticar:", err);
+    return NextResponse.json({ error: "Erro interno ao autenticar" }, { status: 500 });
   }
 
   if (!user) {

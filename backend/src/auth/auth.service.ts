@@ -109,7 +109,7 @@ export class AuthService {
     const role =
       (appMetadata.role as string | undefined) ||
       (userMetadata.role as string | undefined) ||
-      "user";
+      undefined;
 
     const clientId =
       (appMetadata.client_id as string | undefined) ||
@@ -141,7 +141,7 @@ export class AuthService {
           clientSlug: baseContext.clientSlug ?? tenantContext.clientSlug,
           companyId: tenantContext.companyId,
           isGlobalAdmin: tenantContext.isGlobalAdmin,
-          role: baseContext.role ?? tenantContext.role,
+          role: tenantContext.role ?? baseContext.role ?? "user",
         };
       }
       if (error) {
@@ -156,7 +156,7 @@ export class AuthService {
     const appJwt = this.tryValidateAppJwt(token);
     if (appJwt) return appJwt;
 
-    throw new UnauthorizedException("Erro ao autenticar: token invǭlido ou expirado");
+    throw new UnauthorizedException("Erro ao autenticar: token invalido ou expirado");
   }
 
   private async resolveTenantContext(userId: string): Promise<TenantContext> {
@@ -173,7 +173,7 @@ export class AuthService {
     try {
       const { data, error } = await this.supabaseAnon.auth.signInWithPassword({ email: login, password });
       if (error || !data?.session || !data?.user) {
-        const reason = typeof error?.message === "string" ? error.message : "credenciais inválidas";
+        const reason = typeof error?.message === "string" ? error.message : "credenciais invalidas";
         throw new UnauthorizedException(`Erro ao autenticar: ${reason}`);
       }
 

@@ -1,4 +1,5 @@
 import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
+import { SupabaseService } from "../supabase/supabase.service";
 import { EnvironmentService } from "../config/environment.service";
 import { CompanyIntegrationService } from "./company-integration.service";
 
@@ -37,10 +38,98 @@ export class QaseService {
   constructor(
     private readonly env: EnvironmentService,
     private readonly integrationService: CompanyIntegrationService,
+    private readonly supabaseService: SupabaseService,
   ) {
     const defaultProject = this.env.getQaseDefaultProject();
     this.defaultToken = this.env.getQaseApiToken();
     this.defaultProject = defaultProject ? defaultProject.trim().toUpperCase() : null;
+  }
+  // Exemplo: buscar todos os todos do Supabase
+  async getAllTodosFromSupabase() {
+    const supabase = this.supabaseService.supabase;
+    const { data, error } = await supabase.from("todos").select();
+    if (error) {
+      this.logger.error(`Erro ao buscar todos do Supabase: ${error.message}`);
+      throw new HttpException({ error: error.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    return data;
+  }
+
+  // Buscar todos os paises do Supabase
+  async getAllCountriesFromSupabase() {
+    const supabase = this.supabaseService.supabase;
+    const { data, error } = await supabase.from("countries").select();
+    if (error) {
+      this.logger.error(`Erro ao buscar paises do Supabase: ${error.message}`);
+      throw new HttpException({ error: error.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    return data;
+  }
+
+  // Metodo para buscar pais por id
+  async getCountryByIdFromSupabase(id: number) {
+    const supabase = this.supabaseService.supabase;
+    const { data, error } = await supabase.from("countries").select().eq("id", id).single();
+    if (error) {
+      this.logger.error(`Erro ao buscar pais do Supabase: ${error.message}`);
+      throw new HttpException({ error: error.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    return data;
+  }
+
+  // Metodo para criar pais
+  async createCountryInSupabase(name: string) {
+    const supabase = this.supabaseService.supabase;
+    const { data, error } = await supabase.from("countries").insert([{ name }]).select();
+    if (error) {
+      this.logger.error(`Erro ao criar pais no Supabase: ${error.message}`);
+      throw new HttpException({ error: error.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    return data?.[0] ?? null;
+  }
+
+  // Metodo para atualizar pais
+  async updateCountryInSupabase(id: number, name: string) {
+    const supabase = this.supabaseService.supabase;
+    const { data, error } = await supabase.from("countries").update({ name }).eq("id", id).select();
+    if (error) {
+      this.logger.error(`Erro ao atualizar pais no Supabase: ${error.message}`);
+      throw new HttpException({ error: error.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    return data?.[0] ?? null;
+  }
+
+  // Metodo para remover pais
+  async deleteCountryInSupabase(id: number) {
+    const supabase = this.supabaseService.supabase;
+    const { error } = await supabase.from("countries").delete().eq("id", id);
+    if (error) {
+      this.logger.error(`Erro ao remover pais do Supabase: ${error.message}`);
+      throw new HttpException({ error: error.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    return { success: true };
+  }
+
+  // Metodo para deletar um todo do Supabase
+  async deleteTodoInSupabase(id: number) {
+    const supabase = this.supabaseService.supabase;
+    const { error } = await supabase.from("todos").delete().eq("id", id);
+    if (error) {
+      this.logger.error(`Erro ao deletar todo no Supabase: ${error.message}`);
+      throw new HttpException({ error: error.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    return { success: true };
+  }
+
+  // Metodo para inserir um novo todo no Supabase
+  async createTodoInSupabase(text: string) {
+    const supabase = this.supabaseService.supabase;
+    const { data, error } = await supabase.from("todos").insert([{ text }]).select();
+    if (error) {
+      this.logger.error(`Erro ao inserir todo no Supabase: ${error.message}`);
+      throw new HttpException({ error: error.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    return data?.[0] ?? null;
   }
 
   private buildHeaders(token: string | null, isFormData: boolean, hasBody: boolean) {
@@ -54,7 +143,7 @@ export class QaseService {
     }
     return headers;
   }
-
+    
   private preparePayload(body: unknown) {
     if (body === undefined || body === null) return { payload: undefined, isFormData: false };
     if (typeof FormData !== "undefined" && body instanceof FormData) {

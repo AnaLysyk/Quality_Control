@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, isPrismaConfigured } from "@/lib/prisma";
 import { getRedis } from "@/lib/redis";
 
 const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
-const HAS_DATABASE = Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL);
+const HAS_DATABASE = isPrismaConfigured();
 
 interface TestStatusCount {
   status: string;

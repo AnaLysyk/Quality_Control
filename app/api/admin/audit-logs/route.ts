@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   if (SUPABASE_MOCK || !storageReady) {
     const warning = SUPABASE_MOCK
       ? "Audit logs desativado em SUPABASE_MOCK."
-      : "Audit logs desativado neste ambiente: configure POSTGRES_URL/DATABASE_URL para persistir os registros.";
+      : "Audit logs desativado neste ambiente: configure DATABASE_URL, POSTGRES_URL ou POSTGRES_PRISMA_URL.";
     const payload = {
       items: [],
       retentionDays: AUDIT_LOG_RETENTION_DAYS,
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
       items: [],
       retentionDays: AUDIT_LOG_RETENTION_DAYS,
       warning:
-        "Nao foi possivel carregar audit logs (banco indisponivel ou tabela ausente). Configure POSTGRES_URL/DATABASE_URL e rode a migracao da tabela audit_logs.",
+        "Nao foi possivel carregar audit logs (banco indisponivel ou tabela ausente). Configure DATABASE_URL, POSTGRES_URL ou POSTGRES_PRISMA_URL e rode a migracao da tabela audit_logs.",
     };
     const message = err instanceof Error ? err.message : "Falha ao consultar audit logs";
     return apiFail(req, message, {

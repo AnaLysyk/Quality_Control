@@ -142,7 +142,7 @@ export async function POST(req: Request) {
 
   if (!SUPABASE_MOCK && !isPrismaConfigured()) {
     return NextResponse.json(
-      { error: "Banco nao configurado (defina DATABASE_URL ou POSTGRES_URL)" },
+      { error: "Banco nao configurado (defina DATABASE_URL, POSTGRES_URL ou POSTGRES_PRISMA_URL)" },
       { status: 503 },
     );
   }
@@ -155,7 +155,7 @@ export async function POST(req: Request) {
     if (isPrismaConfigError(err) || isPrismaDbError(err)) {
       const message = isPrismaSchemaError(err)
         ? "Banco sem schema. Rode as migracoes do Prisma."
-        : "Banco nao configurado ou indisponivel (defina DATABASE_URL ou POSTGRES_URL).";
+        : "Banco nao configurado ou indisponivel (defina DATABASE_URL, POSTGRES_URL ou POSTGRES_PRISMA_URL).";
       return NextResponse.json({ error: message }, { status: 503 });
     }
     console.error("Erro ao autenticar:", err);

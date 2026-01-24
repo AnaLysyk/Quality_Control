@@ -9,15 +9,38 @@ type GlobalPrisma = {
 
 const globalForPrisma = globalThis as unknown as GlobalPrisma;
 
+const CONNECTION_KEYS = [
+  "DATABASE_URL",
+  "POSTGRES_URL",
+  "POSTGRES_PRISMA_URL",
+  "POSTGRES_URL_NON_POOLING",
+  "DATABASE_URL_UNPOOLED",
+  "painelQa_POSTGRES_PRISMA_URL",
+  "painelQa_POSTGRES_URL",
+  "painelQa_POSTGRES_URL_NON_POOLING",
+];
+
+function readEnv(key: string): string | null {
+  const value = process.env[key];
+  if (!value) return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
 function getConnectionString(): string | null {
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL || null;
-  return url && url.trim() ? url.trim() : null;
+  for (const key of CONNECTION_KEYS) {
+    const value = readEnv(key);
+    if (value) return value;
+  }
+  return null;
 }
 
 function buildClient(): PrismaClient {
   const connectionString = getConnectionString();
   if (!connectionString) {
-    throw new Error("PRISMA_NOT_CONFIGURED: defina DATABASE_URL ou POSTGRES_URL para usar o Postgres.");
+    throw new Error(
+      "PRISMA_NOT_CONFIGURED: defina DATABASE_URL, POSTGRES_URL ou POSTGRES_PRISMA_URL para usar o Postgres.",
+    );
   }
 
   const pool = globalForPrisma.pool ?? new Pool({ connectionString });

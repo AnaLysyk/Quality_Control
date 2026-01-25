@@ -320,7 +320,7 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     {(["pass", "fail", "blocked", "notRun"] as const).map((key) => (
                       <div key={key} className="space-y-1">
                         <label className="text-xs uppercase tracking-wide text-(--tc-text-muted)">{key}</label>
@@ -357,7 +357,7 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-(--tc-text-muted)">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between text-xs text-(--tc-text-muted)">
                     <span>Total: {total}</span>
                     <span>
                       Pass%: {total > 0 ? Math.round((form.pass / total) * 100) : 0}%
@@ -451,7 +451,7 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs text-(--tc-text-muted)">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between text-xs text-(--tc-text-muted)">
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-wide text-(--tc-text-muted)">Kanban</p>
                     <p className="text-xs text-(--tc-text-muted)">{cases.length} caso(s)</p>
@@ -459,7 +459,7 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
                   <div className="text-xs text-(--tc-text-muted)">Role para ver todos os cartões</div>
                 </div>
                 <div className="rounded-2xl border border-(--tc-border)/60 bg-white/90 p-4 shadow-sm dark:bg-(--tc-surface-dark,#0f1828) dark:border-white/10">
-                  <div className="grid gap-4 grid-cols-2 md:grid-cols-4 max-h-80 overflow-y-auto pr-2">
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 max-h-80 overflow-y-auto pr-2">
                     {CASE_COLUMNS.map((column) => {
                       const batch = groupedCases[column.key];
                       return (

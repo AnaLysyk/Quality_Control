@@ -146,7 +146,7 @@ export default function AdminAuditLogsPage() {
         )}
 
         <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow shadow-black/5">
-          <div className="grid grid-cols-[200px_140px_1fr_220px] gap-3 border-b border-(--tc-border,#e5e7eb) px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted)">
+          <div className="hidden sm:grid grid-cols-[200px_140px_1fr_220px] gap-3 border-b border-(--tc-border,#e5e7eb) px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted)">
             <div>Data / Hora</div>
             <div>Ação</div>
             <div>Alvo</div>
@@ -156,7 +156,7 @@ export default function AdminAuditLogsPage() {
           {showSkeleton && (
             <div className="space-y-3 px-4 py-4">
               {[...Array(4)].map((_, idx) => (
-                <div key={idx} className="flex animate-pulse items-center justify-between gap-3 rounded-2xl bg-(--tc-surface-2) px-4 py-3">
+                <div key={idx} className="flex flex-col sm:flex-row animate-pulse items-start sm:items-center justify-between gap-3 rounded-2xl bg-(--tc-surface-2) px-4 py-3">
                   <div className="h-4 w-20 rounded-full bg-(--tc-border)" />
                   <div className="h-4 w-12 rounded-full bg-(--tc-border)" />
                   <div className="flex-1 rounded-full bg-(--tc-border) py-2" />
@@ -178,34 +178,42 @@ export default function AdminAuditLogsPage() {
                 <button
                   type="button"
                   onClick={() => setExpandedId((prev) => (prev === item.id ? null : item.id))}
-                  className="group grid w-full grid-cols-[200px_140px_1fr_220px] gap-3 px-4 py-3 text-left text-sm text-(--tc-text) hover:bg-(--tc-surface-2)"
+                  className="group grid w-full grid-cols-1 sm:grid-cols-[200px_140px_1fr_220px] gap-3 px-4 py-3 text-left text-sm text-(--tc-text) hover:bg-(--tc-surface-2)"
                 >
-                  <time className="text-(--tc-text-muted)" title={new Date(item.created_at).toISOString()}>
-                    {formatDate(item.created_at)}
-                  </time>
-                  <span className="flex items-center">
-                    <span
-                      className={`rounded-full px-3 py-0.5 text-[11px] font-semibold tracking-[0.25em] uppercase ${
-                        ACTION_BADGE[item.action] ?? "bg-slate-100 text-slate-900"
-                      }`}
-                    >
-                      {item.action}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase tracking-[0.3em] text-(--tc-text-muted) sm:hidden">Data / Hora</span>
+                    <time className="text-(--tc-text-muted)" title={new Date(item.created_at).toISOString()}>
+                      {formatDate(item.created_at)}
+                    </time>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase tracking-[0.3em] text-(--tc-text-muted) sm:hidden">AÃ§Ã£o</span>
+                    <span className="flex items-center">
+                      <span
+                        className={`rounded-full px-3 py-0.5 text-[11px] font-semibold tracking-[0.25em] uppercase ${
+                          ACTION_BADGE[item.action] ?? "bg-slate-100 text-slate-900"
+                        }`}
+                      >
+                        {item.action}
+                      </span>
                     </span>
-                  </span>
-                  <div className="min-w-0">
+                  </div>
+                  <div className="min-w-0 flex flex-col gap-1">
+                    <span className="text-[10px] uppercase tracking-[0.3em] text-(--tc-text-muted) sm:hidden">Alvo</span>
                     <div className="truncate font-semibold text-(--tc-text)">
                       {item.entity_type}
                       {item.entity_label ? `: ${item.entity_label}` : ""}
                     </div>
                     {item.entity_id && <div className="text-xs text-(--tc-text-muted)">id: {item.entity_id}</div>}
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex flex-col gap-1">
+                    <span className="text-[10px] uppercase tracking-[0.3em] text-(--tc-text-muted) sm:hidden">Ator</span>
                     <div className="truncate text-(--tc-text)">{item.actor_email || "desconhecido"}</div>
                     {item.actor_user_id && <div className="text-xs text-(--tc-text-muted)">uid: {item.actor_user_id}</div>}
                   </div>
                 </button>
                 {expandedId === item.id && (
-                  <div className="border-t border-(--tc-border,#e5e7eb) bg-(--tc-surface-2) px-8 py-4 text-xs text-(--tc-text-muted)">
+                  <div className="border-t border-(--tc-border,#e5e7eb) bg-(--tc-surface-2) px-4 sm:px-8 py-4 text-xs text-(--tc-text-muted)">
                     <div className="grid gap-4 lg:grid-cols-3">
                       <div>
                         <p className="text-[10px] uppercase tracking-[0.35em] text-(--tc-text-muted)">Origem</p>

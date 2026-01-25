@@ -278,7 +278,7 @@ export default function AdminDefeitosPage() {
                             Ver defeitos
                           </a>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-xs text-(--tc-text-secondary,#4b5563)">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-(--tc-text-secondary,#4b5563)">
                           <StatusPill label={STATUS_LABEL.fail} value={fail} colorClass="text-red-600" />
                           <StatusPill label={STATUS_LABEL.blocked} value={blocked} colorClass="text-amber-600" />
                           <StatusPill label={STATUS_LABEL.pending} value={pending} colorClass="text-blue-600" />

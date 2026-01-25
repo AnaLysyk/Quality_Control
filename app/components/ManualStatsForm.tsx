@@ -50,7 +50,7 @@ export function ManualStatsForm({ slug, initialStats }: ManualStatsFormProps) {
 
   return (
     <div className="rounded-2xl border border-(--tc-border)/40 bg-(--tc-surface-dark,#0f1828) p-4 space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm font-semibold text-(--tc-text-inverse)">Resultados manuais</p>
         <button
           type="button"
@@ -61,7 +61,7 @@ export function ManualStatsForm({ slug, initialStats }: ManualStatsFormProps) {
           {saving ? "Salvando..." : "Salvar"}
         </button>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {(["pass", "fail", "blocked", "notRun"] as const).map((key) => (
           <div key={key} className="space-y-1">
             <label className="text-[10px] uppercase tracking-wide text-(--tc-text-muted)">{key}</label>
@@ -76,7 +76,7 @@ export function ManualStatsForm({ slug, initialStats }: ManualStatsFormProps) {
           </div>
         ))}
       </div>
-      <div className="flex items-center justify-between text-xs text-(--tc-text-muted)">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between text-xs text-(--tc-text-muted)">
         <span>Total: {total}</span>
         <span>Pass%: {total > 0 ? Math.round((stats.pass / total) * 100) : 0}%</span>
       </div>

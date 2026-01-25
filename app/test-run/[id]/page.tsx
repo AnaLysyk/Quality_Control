@@ -87,12 +87,12 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
           </div>
           <div className="card-tc bg-(--tc-surface-dark) border-(--tc-border)/20 p-6 space-y-3">
             <h2 className="text-xl font-bold">Resumo</h2>
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <StatCard label="Pass" value={stats.pass} percent={pct(stats.pass)} tone="pass" />
               <StatCard label="Fail" value={stats.fail} percent={pct(stats.fail)} tone="fail" />
               <StatCard label="Blocked" value={stats.blocked} percent={pct(stats.blocked)} tone="blocked" />
               <StatCard label="Not Run" value={stats.notRun} percent={pct(stats.notRun)} tone="notRun" />
-              <StatCard label="Total" value={total} tone="inverse" className="col-span-2" />
+              <StatCard label="Total" value={total} tone="inverse" className="sm:col-span-2" />
             </div>
             {run.description && (
               <div className="rounded-lg bg-white/5 border border-(--tc-border)/20 px-3 py-2 text-sm text-(--tc-text-inverse)">

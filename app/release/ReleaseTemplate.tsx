@@ -169,8 +169,8 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
               <p className="text-(--tc-text-secondary)">{(releaseData as ReleaseEntry).summary}</p>
             )}
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col items-start md:items-end gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <div className={`inline-flex items-center justify-center gap-2 rounded-full px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-white shadow-[0_8px_20px_rgba(0,0,0,0.25)] border border-(--app-tag-color) bg-(--app-tag-color) ${appColorClass}`}>
                 <span className="h-3 w-3 rounded-full bg-white/90 ring-2 ring-white/40" />
                 <span className="leading-none">{appMeta.label}</span>
@@ -229,7 +229,7 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
 
         {source === "MANUAL" && <ManualStatsForm slug={releaseData.slug} initialStats={stats} />}
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
           {[
             { label: "Pass", value: stats.pass },
             { label: "Fail", value: stats.fail },
@@ -266,7 +266,7 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
             className="w-full max-w-[200mm] min-h-[270mm] mx-auto rounded-2xl border border-[#e5e7eb] bg-white text-[#0b1a3c] p-6 md:p-8 space-y-6"
           >
             <section className="space-y-4 text-[#0b1a3c]">
-              <div className="flex items-start justify-between gap-8">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-center gap-3 flex-1">
                   <Image src="/images/tc.png" alt="Testing Company" width={44} height={44} className="h-11 w-auto" />
                   <div className="space-y-1 leading-tight">
@@ -276,7 +276,7 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
                     </h1>
                   </div>
                 </div>
-                <div className="text-right text-sm text-[#0b1a3c] space-y-1 min-w-40">
+                <div className="text-left sm:text-right text-sm text-[#0b1a3c] space-y-1 min-w-0 sm:min-w-40">
                   <div className="font-semibold">Run ID: {(releaseData as ReleaseEntry).runId ?? "-"}</div>
                   <div className="font-semibold">Projeto: {appMeta.label}</div>
                 </div>

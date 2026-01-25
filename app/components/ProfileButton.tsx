@@ -275,7 +275,7 @@ export default function ProfileButton() {
                         <span>Escolher avatar</span>
                         <span className="text-[10px] lowercase">gif/emoji</span>
                       </div>
-                      <div className="grid grid-cols-5 gap-2">
+                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                         {AVATAR_OPTIONS.map((opt) => {
                           const active = opt.key === avatarKey;
                           return (

@@ -607,7 +607,7 @@ export default function DefeitosEmpresaPage() {
                           key={d.id}
                           className="rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 shadow-sm space-y-2 hover:shadow-md transition"
                         >
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="min-w-0 font-semibold text-(--tc-text-primary,#0b1a3c) truncate" title={d.title}>
                           {d.title}
                         </div>
@@ -701,7 +701,7 @@ export default function DefeitosEmpresaPage() {
       {editingDefect && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" data-testid="defect-modal">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.4em] text-(--tc-text-muted,#6b7280)">Editar defeito</p>
                 <h3 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">{editingDefect.title}</h3>

@@ -93,7 +93,7 @@ export default function PlanosDeTesteEmpresaPage() {
 
         {!loading && (
           <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 sm:p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg sm:text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Planos</h2>
                 <p className="text-sm text-(--tc-text-secondary,#4b5563)">Lista vinda do Qase</p>
@@ -108,7 +108,7 @@ export default function PlanosDeTesteEmpresaPage() {
                     key={p.id}
                     className="rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 shadow-sm space-y-2 hover:shadow-md transition"
                   >
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="min-w-0 font-semibold text-(--tc-text-primary,#0b1a3c) truncate" title={p.name}>
                         {p.name}
                       </div>

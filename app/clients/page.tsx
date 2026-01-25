@@ -104,7 +104,7 @@ export default function ClientsPage() {
   return (
     <div className="min-h-screen bg-linear-to-b from-[#0a1533] via-[#0f1f4b] to-[#0a1533] px-6 py-8 text-[#0b1a3c]">
       <div className="mx-auto max-w-6xl space-y-6">
-        <header className="flex items-center justify-between text-white">
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-white">
           <div>
             <p className="text-xs uppercase tracking-wide text-indigo-200">Gestao</p>
             <h1 className="text-3xl font-bold">Clientes</h1>

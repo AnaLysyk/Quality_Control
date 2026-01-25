@@ -136,12 +136,12 @@ function ClientesPage() {
 
   return (
     <div className="min-h-screen bg-white text-[#0b1a3c] px-6 py-10 space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Clientes</h1>
           <p className="text-sm text-gray-600">Crie e gerencie empresas (clientes). Perfil nao e criado aqui.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {isGlobalAdmin && (
             <button
               onClick={() => setOpenCreate(true)}

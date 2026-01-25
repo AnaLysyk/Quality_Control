@@ -177,7 +177,7 @@ export default function RequestsPage() {
         )}
 
         <section className="rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 space-y-2">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">Status</h2>
             {loading && <span className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</span>}
           </div>

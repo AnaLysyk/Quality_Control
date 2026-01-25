@@ -43,7 +43,7 @@ export default function LoginClient() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative overflow-hidden px-4 py-10 sm:px-6 md:px-10">
+    <div className="min-h-[100svh] flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-10 sm:px-6 md:px-10">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-6 left-6 w-32 h-32 bg-[#011848] rounded-full opacity-20 blur-2xl animate-ping"></div>
         <div className="absolute bottom-6 right-6 w-28 h-28 bg-[#ef0001] rounded-full opacity-20 blur-2xl animate-pulse"></div>
@@ -57,15 +57,15 @@ export default function LoginClient() {
 
       <div className="max-w-lg w-full space-y-8 relative z-10 sm:max-w-xl md:max-w-2xl">
         <div className="text-center">
-          <div className="mx-auto w-24 h-24 bg-linear-to-r from-[#011848] to-[#ef0001] rounded-full flex items-center justify-center mb-6 shadow-lg">
-            <img src="/images/tc.png" alt="Logo Quality Control" className="w-16 h-16 animate-spin-slower select-none pointer-events-none" />
+          <div className="mx-auto w-20 h-20 sm:w-24 sm:h-24 bg-linear-to-r from-[#011848] to-[#ef0001] rounded-full flex items-center justify-center mb-6 shadow-lg">
+            <img src="/images/tc.png" alt="Logo Quality Control" className="w-12 h-12 sm:w-16 sm:h-16 animate-spin-slower select-none pointer-events-none" />
           </div>
-          <h2 className="text-4xl font-bold text-[#011848] mb-2">Quality Control</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#011848] mb-2 leading-tight">Quality Control</h2>
           <p className="text-[#4b5563]">Bem-vindo, entre na sua conta</p>
         </div>
 
         <form
-          className="bg-white/90 backdrop-blur-sm p-6 sm:p-8 rounded-2xl shadow-2xl border border-[#011848]/10 w-full max-w-md sm:max-w-lg mx-auto"
+          className="bg-white/90 backdrop-blur-sm p-6 sm:p-8 rounded-2xl shadow-2xl border border-[#011848]/10 w-full max-w-md sm:max-w-lg mx-auto min-w-0"
           onSubmit={handleSubmit}
         >
           <div className="space-y-4">

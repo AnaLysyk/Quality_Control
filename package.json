@@ -44,6 +44,7 @@
     "nodemailer": "^6.9.8",
     "papaparse": "^5.5.3",
     "pg": "^8.17.1",
+    "postgres": "^3.4.8",
     "prisma": "^7.2.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",

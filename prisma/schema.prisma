@@ -12,10 +12,12 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 model User {
-  id            String   @id @default(cuid())
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email         String   @unique
   password_hash String
   name          String
@@ -27,7 +29,7 @@ model User {
 }
 
 model Company {
-  id   String @id @default(cuid())
+  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name String
   slug String @unique
 
@@ -36,8 +38,8 @@ model Company {
 }
 
 model UserCompany {
-  user_id    String
-  company_id String
+  user_id    String   @db.Uuid
+  company_id String   @db.Uuid
   role       String @default("user")
 
   user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -47,18 +49,18 @@ model UserCompany {
 }
 
 model SupportRequest {
-  id         String   @id @default(cuid())
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email      String
   message    String
   status     String   @default("open")
   ip_address String?
   user_agent String?
-  user_id    String?
+  user_id    String?  @db.Uuid
   created_at DateTime @default(now())
 }
 
 model Release {
-  id          String   @id @default(cuid())
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   slug        String   @unique
   title       String
   summary     String?
@@ -71,12 +73,12 @@ model Release {
   createdAt   DateTime @default(now())
   status      String   @default("draft") // draft, published, archived
   source      String?
-  clientId    String?
+  clientId    String?  @db.Uuid
   clientName  String?
 }
 
 model TestRun {
-  id         String   @id @default(cuid())
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   status     String   // passed, failed, blocked, skipped
   created_at DateTime @default(now())
   // Add other fields as needed

@@ -90,7 +90,7 @@ export default function AccessRequestClient() {
   const currentOption = ACCESS_OPTIONS.find((option) => option.value === accessType);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f4f6fb] via-[#eff0f6] to-[#ffffff] py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-[100svh] flex items-start sm:items-center justify-start sm:justify-center bg-gradient-to-br from-[#f4f6fb] via-[#eff0f6] to-[#ffffff] py-12 px-4 sm:px-6 lg:px-8 overflow-x-hidden overflow-y-auto">
       <div className="max-w-xl w-full space-y-8">
         <div>
           <h2 className="text-3xl font-extrabold text-[#0b1a3c] text-center">

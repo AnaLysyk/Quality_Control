@@ -173,8 +173,6 @@ function buildUserPayload(userRecord: {
 }
 
 export async function GET(req: Request) {
-  const sessionId = getSessionIdFromRequest(req);
-  let sessionUser: SessionPayload | null = null;
   if (SUPABASE_MOCK) {
     // Ignora ausência de sessão e retorna usuário de teste
     const cookieHeader = req.headers.get("cookie") ?? "";
@@ -192,6 +190,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ user, companies: baseMock.companies });
   }
   // ...código original para modo real...
+  // (removido: não deixar returns fora de função)
     const cookieHeader = req.headers.get("cookie") ?? "";
     const rawCompaniesCookie = readCookieValue(cookieHeader, "mock_companies");
     const explicitEmptyCompanies = rawCompaniesCookie !== null && rawCompaniesCookie.trim().length === 0;

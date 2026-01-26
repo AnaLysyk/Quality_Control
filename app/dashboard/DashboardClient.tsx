@@ -34,8 +34,26 @@ export default function DashboardClient() {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
+  // Permitir renderização em modo mock
   if (!user) {
-    return <div className="min-h-screen flex items-center justify-center">Not authenticated</div>;
+    // Dados de usuário mock
+    const mockUser = {
+      userId: "mock-admin-griaule",
+      email: "admin@example.com",
+      name: "Mock Admin",
+      companyId: "mock-company-griaule",
+      companySlug: "griaule",
+      role: "admin",
+    };
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="mb-4">Modo mock: usuário de teste</div>
+        <div>Email: {mockUser.email}</div>
+        <div>Nome: {mockUser.name}</div>
+        <div>Empresa: {mockUser.companySlug}</div>
+        <div>Role: {mockUser.role}</div>
+      </div>
+    );
   }
 
   const safeUser = user as any;

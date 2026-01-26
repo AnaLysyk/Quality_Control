@@ -163,7 +163,7 @@ export type CompanyWhereInput = {
   AND?: Prisma.CompanyWhereInput | Prisma.CompanyWhereInput[]
   OR?: Prisma.CompanyWhereInput[]
   NOT?: Prisma.CompanyWhereInput | Prisma.CompanyWhereInput[]
-  id?: Prisma.StringFilter<"Company"> | string
+  id?: Prisma.UuidFilter<"Company"> | string
   name?: Prisma.StringFilter<"Company"> | string
   slug?: Prisma.StringFilter<"Company"> | string
   userCompanies?: Prisma.UserCompanyListRelationFilter
@@ -199,7 +199,7 @@ export type CompanyScalarWhereWithAggregatesInput = {
   AND?: Prisma.CompanyScalarWhereWithAggregatesInput | Prisma.CompanyScalarWhereWithAggregatesInput[]
   OR?: Prisma.CompanyScalarWhereWithAggregatesInput[]
   NOT?: Prisma.CompanyScalarWhereWithAggregatesInput | Prisma.CompanyScalarWhereWithAggregatesInput[]
-  id?: Prisma.StringWithAggregatesFilter<"Company"> | string
+  id?: Prisma.UuidWithAggregatesFilter<"Company"> | string
   name?: Prisma.StringWithAggregatesFilter<"Company"> | string
   slug?: Prisma.StringWithAggregatesFilter<"Company"> | string
 }

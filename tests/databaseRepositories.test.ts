@@ -1,13 +1,18 @@
 import { listClients, getClientById, createClient, updateClient } from "@/data/clientsRepository";
 import { getUserById, getUserByEmail, listUsers, updateUserAvatar } from "@/data/usersRepository";
 import { getUserRoleInClient, listUsersByClient, addUserToClient } from "@/data/userClientsRepository";
-import { sql } from "@vercel/postgres";
 
-jest.mock("@vercel/postgres", () => ({
-  sql: jest.fn(),
-}));
+jest.mock("@/lib/vercelPostgres", () => {
+  const sqlMock = jest.fn();
+  return {
+    getPostgresSql: jest.fn(() => sqlMock),
+    requirePostgresSql: jest.fn(() => sqlMock),
+    __sqlMock: sqlMock,
+  };
+});
 
-const sqlMock = sql as unknown as jest.Mock;
+const { __sqlMock } = jest.requireMock("@/lib/vercelPostgres") as { __sqlMock: jest.Mock };
+const sqlMock = __sqlMock as jest.Mock;
 
 beforeEach(() => {
   sqlMock.mockReset();

@@ -46,8 +46,9 @@ function toTitleCase(value: string) {
 
 function parseMockCompanySlugs(cookieHeader: string) {
   const rawValue = readCookieValue(cookieHeader, "mock_companies");
-  if (rawValue) {
+  if (rawValue !== null) {
     const trimmed = rawValue.trim();
+    if (!trimmed) return [];
     if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
       try {
         const parsed = JSON.parse(trimmed);
@@ -122,6 +123,7 @@ function decideLandingRole(linked: AuthCompany[], sessionRole?: string | null): 
   const normalizedSession = (sessionRole ?? "").toLowerCase();
   if (normalizedSession === "admin") return "admin";
   if (normalizedSession === "company") return "company";
+  if (normalizedSession === "user") return "user";
 
   const hasAdminLink = linked.some((company) => company.role.toLowerCase() === "admin");
   if (hasAdminLink) return "admin";
@@ -202,11 +204,13 @@ export async function GET(req: Request) {
 
   if (SUPABASE_MOCK) {
     const cookieHeader = req.headers.get("cookie") ?? "";
+    const rawCompaniesCookie = readCookieValue(cookieHeader, "mock_companies");
+    const explicitEmptyCompanies = rawCompaniesCookie !== null && rawCompaniesCookie.trim().length === 0;
     const baseMock = buildMockCompanies(cookieHeader);
 
     const role = typeof sessionUser.role === "string" ? sessionUser.role : baseMock.user.role;
     const normalizedRole = (role ?? "user").toLowerCase() as LandingRole;
-    const mergedCompanies = dedupeCompanies(
+    let mergedCompanies = dedupeCompanies(
       baseMock.companies.map((company) => {
         const matchesSessionSlug = company.slug === sessionUser.companySlug;
         const isAdmin = normalizedRole === "admin" || normalizedRole === "company";
@@ -217,6 +221,29 @@ export async function GET(req: Request) {
         };
       }),
     );
+    const sessionCompanySlug = typeof sessionUser.companySlug === "string" ? sessionUser.companySlug.trim() : null;
+    if (!explicitEmptyCompanies && sessionCompanySlug) {
+      const existingIndex = mergedCompanies.findIndex((company) => company.slug === sessionCompanySlug);
+      if (existingIndex === -1) {
+        mergedCompanies = [
+          {
+            id: sessionUser.companyId ?? `mock-company-${sessionCompanySlug}`,
+            slug: sessionCompanySlug,
+            name: toTitleCase(sessionCompanySlug),
+            role: normalizedRole === "admin" || normalizedRole === "company" ? "ADMIN" : "USER",
+            active: true,
+          },
+          ...mergedCompanies,
+        ];
+      } else if (existingIndex > 0) {
+        const [match] = mergedCompanies.splice(existingIndex, 1);
+        mergedCompanies.unshift(match);
+      }
+    }
+
+    if (explicitEmptyCompanies) {
+      mergedCompanies = [];
+    }
 
     const landingRole = decideLandingRole(mergedCompanies, role);
     const user = buildUserPayload(

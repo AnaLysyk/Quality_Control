@@ -13,12 +13,22 @@ export default function AdminBenchmarkPage() {
 
   useEffect(() => {
     if (userLoading || !user || user.role !== "admin") return;
+    let canceled = false;
     setLoading(true);
     fetch(`/api/admin/benchmark?period=${period}`)
       .then((res) => res.json())
-      .then((json) => setData(json))
-      .catch(() => setError("Erro ao carregar benchmark"))
-      .finally(() => setLoading(false));
+      .then((json) => {
+        if (!canceled) setData(json);
+      })
+      .catch(() => {
+        if (!canceled) setError("Erro ao carregar benchmark");
+      })
+      .finally(() => {
+        if (!canceled) setLoading(false);
+      });
+    return () => {
+      canceled = true;
+    };
   }, [period, userLoading, user]);
 
 

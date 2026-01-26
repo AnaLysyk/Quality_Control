@@ -17,17 +17,39 @@ type TimelineEvent = {
   meta?: Record<string, unknown>;
 };
 
-export function QualityGateHistory({ companySlug, releaseSlug }: { companySlug: string; releaseSlug: string }) {
-  const [events, setEvents] = useState<TimelineEvent[]>([]);
+export function QualityGateHistory({
+  companySlug,
+  releaseSlug,
+  initialEvents = [],
+}: {
+  companySlug: string;
+  releaseSlug: string;
+  initialEvents?: TimelineEvent[];
+}) {
+  const [events, setEvents] = useState<TimelineEvent[]>(initialEvents);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
+    if (initialEvents.length) {
+      setEvents((prev) => (prev.length ? prev : initialEvents));
+    }
+    let active = true;
     fetch(`/api/empresas/${encodeURIComponent(companySlug)}/releases/${encodeURIComponent(releaseSlug)}/timeline`)
       .then((res) => res.json())
-      .then((data) => setEvents(Array.isArray(data) ? (data as TimelineEvent[]) : []))
-      .catch(() => setEvents([]));
-  }, [open, companySlug, releaseSlug]);
+      .then((data) => {
+        if (!active) return;
+        if (Array.isArray(data) && data.length) {
+          setEvents(data as TimelineEvent[]);
+        }
+      })
+      .catch(() => {
+        if (!active) return;
+      });
+    return () => {
+      active = false;
+    };
+  }, [open, companySlug, releaseSlug, initialEvents]);
 
   return (
     <div>

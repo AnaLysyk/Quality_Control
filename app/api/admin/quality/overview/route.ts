@@ -152,6 +152,13 @@ export async function GET(request: NextRequest) {
           : "warn";
 
     const companies = buildCompanyRows(normalizeClients(clientRows), periodReleases);
+    const gatePriority: Record<string, number> = { failed: 0, warning: 1, approved: 2, no_data: 3 };
+    companies.sort((a, b) => {
+      const aRank = gatePriority[a.gate.status] ?? 99;
+      const bRank = gatePriority[b.gate.status] ?? 99;
+      if (aRank !== bRank) return aRank - bRank;
+      return a.name.localeCompare(b.name);
+    });
 
     const releaseGateCounts: Record<string, number> = {
       approved: 0,

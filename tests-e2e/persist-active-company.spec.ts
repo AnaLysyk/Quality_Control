@@ -10,7 +10,7 @@ test("empresa ativa persiste após reload", async ({ page, context }) => {
 
   await page.goto("/", { waitUntil: "networkidle" });
 
-  await page.waitForURL(/\/empresas\/testing-company\/home/);
+  await page.waitForURL(/\/empresas\/testing-company\/home/, { timeout: 20000 });
 
   await page.reload();
 

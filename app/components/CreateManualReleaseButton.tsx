@@ -225,10 +225,17 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
       setCases([]);
       setCaseDraft({ ...initialCaseDraft });
       setSaving(false);
-      if (companySlug) {
-        router.push(`/empresas/${encodeURIComponent(companySlug)}/runs/${created.slug}`);
-      } else {
-        router.push(`/release/${created.slug}`);
+      const target = companySlug
+        ? `/empresas/${encodeURIComponent(companySlug)}/runs/${created.slug}`
+        : `/release/${created.slug}`;
+      router.push(target);
+      if (typeof window !== "undefined") {
+        const expectedPath = new URL(target, window.location.origin).pathname;
+        setTimeout(() => {
+          if (window.location.pathname !== expectedPath) {
+            window.location.assign(target);
+          }
+        }, 50);
       }
     } catch (e) {
       console.error(e);

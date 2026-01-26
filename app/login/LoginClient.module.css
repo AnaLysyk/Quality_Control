@@ -1,0 +1,26 @@
+.loginContainer {
+  /* Fallback for browsers that do not support clamp */
+  font-size: 1rem;
+  /* Responsive font scaling */
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+@media (max-width: 640px) {
+  .loginContainer {
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 641px) {
+  .loginContainer {
+    padding: 2.5rem;
+  }
+}
+
+/* High zoom accessibility: ensure min width and readable font */
+@media (max-width: 400px), (max-zoom: 2.5) {
+  .loginContainer {
+    min-width: 0;
+    font-size: 1.25rem;
+  }
+}

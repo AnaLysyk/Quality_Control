@@ -2,6 +2,8 @@ import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { readManualReleaseStore } from "@/data/manualData";
 import { calcMTTR } from "@/lib/mttr";
 import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
+
+const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 // Resumo de qualidade para exportação executiva
 export async function getCompanyQualitySummary(slug: string, period: string = "30d") {
   // Manual defects
@@ -24,8 +26,8 @@ export async function getCompanyQualitySummary(slug: string, period: string = "3
   });
 
   // Qase defects
-  const clientSettings = await getClientQaseSettings(slug);
-  const token = clientSettings?.token || process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
+  const clientSettings = SUPABASE_MOCK ? null : await getClientQaseSettings(slug);
+  const token = SUPABASE_MOCK ? "" : clientSettings?.token || process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
   const projectCodesSet = new Set<string>();
   const settingsCodes = clientSettings?.projectCodes ?? [];
   settingsCodes.forEach((code) => {
@@ -39,32 +41,34 @@ export async function getCompanyQualitySummary(slug: string, period: string = "3
   const projectCodes = Array.from(projectCodesSet);
 
   let qaseDefects: any[] = [];
-  for (const code of projectCodes) {
-    const defects = await fetch(`https://api.qase.io/v1/defect/${code}?limit=1000`, {
-      headers: { Token: token, Accept: "application/json" },
-      cache: "no-store",
-    })
-      .then((res) => res.json())
-      .then((json) => Array.isArray(json?.result?.entities) ? json.result.entities : [])
-      .catch(() => []);
-    qaseDefects.push(
-      ...defects.map((d: any) => {
-        const status = normalizeDefectStatus(d.status ?? "open");
-        const openedAt = resolveOpenedAt(d.created_at ?? d.updated_at);
-        const closedAt = resolveClosedAt(status, d.closed_at ?? null, d.updated_at ?? null);
-        return {
-          id: d.id ?? d.defect_id ?? "",
-          title: d.title ?? d.name ?? "Defeito Qase",
-          status,
-          openedAt,
-          closedAt,
-          mttrMs: calcMTTR(openedAt, closedAt),
-          origin: "qase",
-          runSlug: d.run_id ? String(d.run_id) : undefined,
-          severity: d.severity ?? d.severity_name ?? null,
-        };
+  if (token && projectCodes.length && !SUPABASE_MOCK) {
+    for (const code of projectCodes) {
+      const defects = await fetch(`https://api.qase.io/v1/defect/${code}?limit=1000`, {
+        headers: { Token: token, Accept: "application/json" },
+        cache: "no-store",
       })
-    );
+        .then((res) => res.json())
+        .then((json) => Array.isArray(json?.result?.entities) ? json.result.entities : [])
+        .catch(() => []);
+      qaseDefects.push(
+        ...defects.map((d: any) => {
+          const status = normalizeDefectStatus(d.status ?? "open");
+          const openedAt = resolveOpenedAt(d.created_at ?? d.updated_at);
+          const closedAt = resolveClosedAt(status, d.closed_at ?? null, d.updated_at ?? null);
+          return {
+            id: d.id ?? d.defect_id ?? "",
+            title: d.title ?? d.name ?? "Defeito Qase",
+            status,
+            openedAt,
+            closedAt,
+            mttrMs: calcMTTR(openedAt, closedAt),
+            origin: "qase",
+            runSlug: d.run_id ? String(d.run_id) : undefined,
+            severity: d.severity ?? d.severity_name ?? null,
+          };
+        })
+      );
+    }
   }
 
   // Unify
@@ -122,8 +126,8 @@ export async function getCompanyDefects(slug: string, period: string = "30d") {
       severity: r.severity ?? null,
     };
   });
-  const clientSettings = await getClientQaseSettings(slug);
-  const token = clientSettings?.token || process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
+  const clientSettings = SUPABASE_MOCK ? null : await getClientQaseSettings(slug);
+  const token = SUPABASE_MOCK ? "" : clientSettings?.token || process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
   const projectCodesSet = new Set<string>();
   const settingsCodes = clientSettings?.projectCodes ?? [];
   settingsCodes.forEach((code) => {
@@ -136,32 +140,34 @@ export async function getCompanyDefects(slug: string, period: string = "30d") {
   }
   const projectCodes = Array.from(projectCodesSet);
   let qaseDefects: any[] = [];
-  for (const code of projectCodes) {
-    const defects = await fetch(`https://api.qase.io/v1/defect/${code}?limit=1000`, {
-      headers: { Token: token, Accept: "application/json" },
-      cache: "no-store",
-    })
-      .then((res) => res.json())
-      .then((json) => Array.isArray(json?.result?.entities) ? json.result.entities : [])
-      .catch(() => []);
-    qaseDefects.push(
-      ...defects.map((d: any) => {
-        const status = normalizeDefectStatus(d.status ?? "open");
-        const openedAt = resolveOpenedAt(d.created_at ?? d.updated_at);
-        const closedAt = resolveClosedAt(status, d.closed_at ?? null, d.updated_at ?? null);
-        return {
-          id: d.id ?? d.defect_id ?? "",
-          title: d.title ?? d.name ?? "Defeito Qase",
-          status,
-          openedAt,
-          closedAt,
-          mttrMs: calcMTTR(openedAt, closedAt),
-          origin: "qase",
-          runSlug: d.run_id ? String(d.run_id) : undefined,
-          severity: d.severity ?? d.severity_name ?? null,
-        };
+  if (token && projectCodes.length && !SUPABASE_MOCK) {
+    for (const code of projectCodes) {
+      const defects = await fetch(`https://api.qase.io/v1/defect/${code}?limit=1000`, {
+        headers: { Token: token, Accept: "application/json" },
+        cache: "no-store",
       })
-    );
+        .then((res) => res.json())
+        .then((json) => Array.isArray(json?.result?.entities) ? json.result.entities : [])
+        .catch(() => []);
+      qaseDefects.push(
+        ...defects.map((d: any) => {
+          const status = normalizeDefectStatus(d.status ?? "open");
+          const openedAt = resolveOpenedAt(d.created_at ?? d.updated_at);
+          const closedAt = resolveClosedAt(status, d.closed_at ?? null, d.updated_at ?? null);
+          return {
+            id: d.id ?? d.defect_id ?? "",
+            title: d.title ?? d.name ?? "Defeito Qase",
+            status,
+            openedAt,
+            closedAt,
+            mttrMs: calcMTTR(openedAt, closedAt),
+            origin: "qase",
+            runSlug: d.run_id ? String(d.run_id) : undefined,
+            severity: d.severity ?? d.severity_name ?? null,
+          };
+        })
+      );
+    }
   }
   // Unify
   const all = [...manualDefects, ...qaseDefects].filter((d) => d.openedAt);

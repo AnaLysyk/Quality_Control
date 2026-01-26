@@ -96,8 +96,8 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   if (!effectiveSlug) return jsonError("Usuário sem empresa vinculada", 403);
   if (!access.isGlobalAdmin && requestedSlug !== effectiveSlug) return jsonError("Acesso proibido", 403);
 
-  const clientSettings = await getClientQaseSettings(effectiveSlug);
-  const token = clientSettings?.token ?? FALLBACK_TOKEN;
+  const clientSettings = SUPABASE_MOCK ? null : await getClientQaseSettings(effectiveSlug);
+  const token = SUPABASE_MOCK ? "" : clientSettings?.token ?? FALLBACK_TOKEN;
   const projectCodesSet = new Set<string>();
   const settingsCodes = clientSettings?.projectCodes ?? [];
   settingsCodes.forEach((code) => {
@@ -108,12 +108,12 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
     const normalized = clientSettings.projectCode.trim().toUpperCase();
     if (normalized) projectCodesSet.add(normalized);
   }
-  const projectCodes = Array.from(projectCodesSet);
+  const projectCodes = SUPABASE_MOCK ? [] : Array.from(projectCodesSet);
 
   const runs: RunPayload[] = [];
   const warnings: string[] = [];
 
-  if (token && projectCodes.length) {
+  if (token && projectCodes.length && !SUPABASE_MOCK) {
     const results = await Promise.all(
       projectCodes.map(async (projectCode) => ({ projectCode, result: await listQaseRuns(projectCode, token) })),
     );

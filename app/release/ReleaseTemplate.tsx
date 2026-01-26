@@ -16,6 +16,7 @@ import Image from "next/image";
 import { QualityGateHistory } from "./QualityGateHistory";
 import { readQualityGateHistory } from "@/lib/qualityGateHistory";
 import { calculateQualityScore } from "@/lib/qualityScore";
+import { getReleaseTimeline } from "@/lib/releaseTimeline";
 
 type AnyRelease = (Release & { name?: string }) | (ReleaseEntry & { name?: string });
 
@@ -141,6 +142,7 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
   const gate = evaluateQualityGate(total > 0 ? stats : null);
   const history = await readQualityGateHistory(companySlug || "griaule", releaseData.slug);
   const latestGate = history[0] ?? null;
+  const initialTimeline = await getReleaseTimeline(companySlug || "griaule", releaseData.slug);
   const inferredFailRate = total > 0 ? Math.round((stats.fail / total) * 100) : 0;
   const qualityScore = calculateQualityScore({
     gate_status: latestGate?.gate_status ?? gate.status,
@@ -223,7 +225,11 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
               )}
             </div>
             {/* Quality Gate History UI */}
-            <QualityGateHistory companySlug={companySlug || "griaule"} releaseSlug={releaseData.slug} />
+            <QualityGateHistory
+              companySlug={companySlug || "griaule"}
+              releaseSlug={releaseData.slug}
+              initialEvents={initialTimeline}
+            />
           </div>
         </div>
 

@@ -4,16 +4,17 @@ const LoginIdentifierSchema = z.string().trim().min(1).max(255);
 
 export const AuthLoginRequestSchema = z
   .object({
+    login: LoginIdentifierSchema.optional(),
     email: LoginIdentifierSchema.optional(),
     user: LoginIdentifierSchema.optional(),
     password: z.string().min(1).max(128),
   })
   .strip()
-  .refine((data) => Boolean(data.email || data.user), {
+  .refine((data) => Boolean(data.login || data.email || data.user), {
     message: "login identifier is required",
   })
   .transform((data) => ({
-    login: data.email ?? data.user ?? "",
+    login: data.login ?? data.email ?? data.user ?? "",
     password: data.password,
   }));
 

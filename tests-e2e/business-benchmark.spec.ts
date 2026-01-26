@@ -26,6 +26,8 @@ test("admin compara metricas entre empresas", async ({ page, context }) => {
   const griauleRun = "Run G Benchmark";
   const testingRun = "Run T Benchmark";
 
+
+  // Criação da run para Griaule
   await page.goto("/empresas/griaule/runs", { waitUntil: "networkidle" });
   await page.getByTestId("run-create").click();
   await page.getByTestId("run-title").fill(griauleRun);
@@ -36,6 +38,10 @@ test("admin compara metricas entre empresas", async ({ page, context }) => {
   await page.getByTestId("run-submit").click();
   await page.waitForURL(new RegExp(`/empresas/griaule/runs/${slugify(griauleRun)}`));
 
+  // Garante que a navegação terminou antes de prosseguir
+  await page.waitForLoadState("networkidle");
+
+  // Criação da run para Testing Company
   await page.goto("/empresas/testing-company/runs", { waitUntil: "networkidle" });
   await page.getByTestId("run-create").click();
   await page.getByTestId("run-title").fill(testingRun);
@@ -45,6 +51,9 @@ test("admin compara metricas entre empresas", async ({ page, context }) => {
   await page.getByTestId("run-stat-not-run").fill("0");
   await page.getByTestId("run-submit").click();
   await page.waitForURL(new RegExp(`/empresas/testing-company/runs/${slugify(testingRun)}`));
+
+  // Garante que a navegação terminou antes de prosseguir
+  await page.waitForLoadState("networkidle");
 
   await page.goto("/admin/home", { waitUntil: "networkidle" });
 

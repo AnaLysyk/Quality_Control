@@ -277,7 +277,7 @@ export type ReleaseWhereInput = {
   AND?: Prisma.ReleaseWhereInput | Prisma.ReleaseWhereInput[]
   OR?: Prisma.ReleaseWhereInput[]
   NOT?: Prisma.ReleaseWhereInput | Prisma.ReleaseWhereInput[]
-  id?: Prisma.StringFilter<"Release"> | string
+  id?: Prisma.UuidFilter<"Release"> | string
   slug?: Prisma.StringFilter<"Release"> | string
   title?: Prisma.StringFilter<"Release"> | string
   summary?: Prisma.StringNullableFilter<"Release"> | string | null
@@ -290,7 +290,7 @@ export type ReleaseWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Release"> | Date | string
   status?: Prisma.StringFilter<"Release"> | string
   source?: Prisma.StringNullableFilter<"Release"> | string | null
-  clientId?: Prisma.StringNullableFilter<"Release"> | string | null
+  clientId?: Prisma.UuidNullableFilter<"Release"> | string | null
   clientName?: Prisma.StringNullableFilter<"Release"> | string | null
 }
 
@@ -329,7 +329,7 @@ export type ReleaseWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Release"> | Date | string
   status?: Prisma.StringFilter<"Release"> | string
   source?: Prisma.StringNullableFilter<"Release"> | string | null
-  clientId?: Prisma.StringNullableFilter<"Release"> | string | null
+  clientId?: Prisma.UuidNullableFilter<"Release"> | string | null
   clientName?: Prisma.StringNullableFilter<"Release"> | string | null
 }, "id" | "slug">
 
@@ -360,7 +360,7 @@ export type ReleaseScalarWhereWithAggregatesInput = {
   AND?: Prisma.ReleaseScalarWhereWithAggregatesInput | Prisma.ReleaseScalarWhereWithAggregatesInput[]
   OR?: Prisma.ReleaseScalarWhereWithAggregatesInput[]
   NOT?: Prisma.ReleaseScalarWhereWithAggregatesInput | Prisma.ReleaseScalarWhereWithAggregatesInput[]
-  id?: Prisma.StringWithAggregatesFilter<"Release"> | string
+  id?: Prisma.UuidWithAggregatesFilter<"Release"> | string
   slug?: Prisma.StringWithAggregatesFilter<"Release"> | string
   title?: Prisma.StringWithAggregatesFilter<"Release"> | string
   summary?: Prisma.StringNullableWithAggregatesFilter<"Release"> | string | null
@@ -373,7 +373,7 @@ export type ReleaseScalarWhereWithAggregatesInput = {
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Release"> | Date | string
   status?: Prisma.StringWithAggregatesFilter<"Release"> | string
   source?: Prisma.StringNullableWithAggregatesFilter<"Release"> | string | null
-  clientId?: Prisma.StringNullableWithAggregatesFilter<"Release"> | string | null
+  clientId?: Prisma.UuidNullableWithAggregatesFilter<"Release"> | string | null
   clientName?: Prisma.StringNullableWithAggregatesFilter<"Release"> | string | null
 }
 

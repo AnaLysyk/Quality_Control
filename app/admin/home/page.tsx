@@ -8,6 +8,7 @@ import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import type { CompanyRow, Stats } from "@/lib/quality";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 import Badge from "@/components/Badge";
+import { CompanySelector } from "@/components/CompanySelector";
 import styles from "./page.module.css";
 
 type QualityOverviewResponse = {
@@ -355,6 +356,15 @@ export default function AdminHomePage() {
                 })}
               </div>
             </div>
+          </section>
+
+          <section className="rounded-4xl bg-white p-6 shadow-sm">
+            <CompanySelector
+              title="Acessar empresa"
+              description="Abra o contexto da empresa selecionada para navegar no painel."
+              buildHref={(company) => `/empresas/${encodeURIComponent(company.clientSlug)}/home`}
+              ctaLabel="Abrir"
+            />
           </section>
 
           <section className="rounded-4xl bg-linear-to-br from-white to-[#fef0ef] p-6 md:p-8 shadow-xl">

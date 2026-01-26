@@ -70,8 +70,13 @@ function readCookieValue(cookieHeader: string | null, name: string): string | nu
 }
 
 // Validacao real no banco
-async function validateUser(email: string, password: string, cookieHeader: string | null = null) {
-  if (SUPABASE_MOCK) {
+async function validateUser(
+  email: string,
+  password: string,
+  cookieHeader: string | null = null,
+  useMock = SUPABASE_MOCK,
+) {
+  if (useMock) {
     const normalizedEmail = (email ?? "").trim().toLowerCase();
     if (!normalizedEmail || !MOCK_EMAILS.has(normalizedEmail)) {
       return null;
@@ -140,17 +145,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email e senha obrigatorios" }, { status: 400 });
   }
 
-  if (!SUPABASE_MOCK && !isPrismaConfigured()) {
+  const cookieHeader = req.headers.get("cookie") ?? null;
+  const hasMockCookie = !!(cookieHeader && readCookieValue(cookieHeader, "mock_role"));
+  const allowMock = SUPABASE_MOCK || (process.env.NODE_ENV !== "production" && hasMockCookie);
+
+  if (!allowMock && !isPrismaConfigured()) {
     return NextResponse.json(
       { error: "Banco nao configurado (defina DATABASE_URL, POSTGRES_URL ou POSTGRES_PRISMA_URL)" },
       { status: 503 },
     );
   }
 
-  const cookieHeader = req.headers.get("cookie") ?? null;
   let user = null;
   try {
-    user = await validateUser(email, password, cookieHeader);
+    user = await validateUser(email, password, cookieHeader, allowMock);
   } catch (err) {
     if (isPrismaConfigError(err) || isPrismaDbError(err)) {
       const message = isPrismaSchemaError(err)

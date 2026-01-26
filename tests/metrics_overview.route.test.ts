@@ -3,6 +3,7 @@ jest.mock("@/lib/redis", () => ({
 }));
 
 jest.mock("@/lib/prisma", () => ({
+  isPrismaConfigured: jest.fn(() => true),
   prisma: {
     user: {
       count: jest.fn(),

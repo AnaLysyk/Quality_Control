@@ -88,6 +88,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
         ? { ...current.stats, ...(patch.stats ?? {}) }
         : current.stats;
 
+    const gate = evaluateQualityGate(nextStats);
+    if (isFinalStatus(patch.status) && gate.status === "failed") {
+      return NextResponse.json({ message: "Quality gate bloqueado" }, { status: 403 });
+    }
+
     // --- Run link/unlink logic ---
     let runSlugToSave = current.runSlug;
     let runNameToSave = current.runName;

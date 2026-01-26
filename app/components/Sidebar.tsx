@@ -142,6 +142,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
           <Link
             key={item.label}
             href={item.href}
+            prefetch={false}
             {...extraProps}
             className={`group/link relative flex items-center h-11 w-full rounded-xl text-sm font-semibold transition-all duration-200 overflow-hidden min-w-0 ${
               isMobile
@@ -183,6 +184,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
       <div className="flex items-center px-2 py-3 border-b border-slate-200/70 dark:border-white/5 relative">
         <Link
           href={logoHref}
+          prefetch={false}
           className="flex items-center gap-3 transition-all duration-200 justify-start w-full px-2"
         >
           <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 backdrop-blur dark:border-white/10 dark:bg-white/5">
@@ -231,7 +233,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center gap-3 p-4 border-b border-slate-200 dark:border-white/10 relative">
-            <Link href={logoHref} className="flex items-center gap-3" onClick={onClose}>
+            <Link href={logoHref} prefetch={false} className="flex items-center gap-3" onClick={onClose}>
               <div className="flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-white/5">
                 <Image
                   src={logoSrc}

@@ -163,8 +163,8 @@ export type UserCompanyWhereInput = {
   AND?: Prisma.UserCompanyWhereInput | Prisma.UserCompanyWhereInput[]
   OR?: Prisma.UserCompanyWhereInput[]
   NOT?: Prisma.UserCompanyWhereInput | Prisma.UserCompanyWhereInput[]
-  user_id?: Prisma.StringFilter<"UserCompany"> | string
-  company_id?: Prisma.StringFilter<"UserCompany"> | string
+  user_id?: Prisma.UuidFilter<"UserCompany"> | string
+  company_id?: Prisma.UuidFilter<"UserCompany"> | string
   role?: Prisma.StringFilter<"UserCompany"> | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   company?: Prisma.XOR<Prisma.CompanyScalarRelationFilter, Prisma.CompanyWhereInput>
@@ -183,8 +183,8 @@ export type UserCompanyWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.UserCompanyWhereInput | Prisma.UserCompanyWhereInput[]
   OR?: Prisma.UserCompanyWhereInput[]
   NOT?: Prisma.UserCompanyWhereInput | Prisma.UserCompanyWhereInput[]
-  user_id?: Prisma.StringFilter<"UserCompany"> | string
-  company_id?: Prisma.StringFilter<"UserCompany"> | string
+  user_id?: Prisma.UuidFilter<"UserCompany"> | string
+  company_id?: Prisma.UuidFilter<"UserCompany"> | string
   role?: Prisma.StringFilter<"UserCompany"> | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   company?: Prisma.XOR<Prisma.CompanyScalarRelationFilter, Prisma.CompanyWhereInput>
@@ -203,8 +203,8 @@ export type UserCompanyScalarWhereWithAggregatesInput = {
   AND?: Prisma.UserCompanyScalarWhereWithAggregatesInput | Prisma.UserCompanyScalarWhereWithAggregatesInput[]
   OR?: Prisma.UserCompanyScalarWhereWithAggregatesInput[]
   NOT?: Prisma.UserCompanyScalarWhereWithAggregatesInput | Prisma.UserCompanyScalarWhereWithAggregatesInput[]
-  user_id?: Prisma.StringWithAggregatesFilter<"UserCompany"> | string
-  company_id?: Prisma.StringWithAggregatesFilter<"UserCompany"> | string
+  user_id?: Prisma.UuidWithAggregatesFilter<"UserCompany"> | string
+  company_id?: Prisma.UuidWithAggregatesFilter<"UserCompany"> | string
   role?: Prisma.StringWithAggregatesFilter<"UserCompany"> | string
 }
 
@@ -405,8 +405,8 @@ export type UserCompanyScalarWhereInput = {
   AND?: Prisma.UserCompanyScalarWhereInput | Prisma.UserCompanyScalarWhereInput[]
   OR?: Prisma.UserCompanyScalarWhereInput[]
   NOT?: Prisma.UserCompanyScalarWhereInput | Prisma.UserCompanyScalarWhereInput[]
-  user_id?: Prisma.StringFilter<"UserCompany"> | string
-  company_id?: Prisma.StringFilter<"UserCompany"> | string
+  user_id?: Prisma.UuidFilter<"UserCompany"> | string
+  company_id?: Prisma.UuidFilter<"UserCompany"> | string
   role?: Prisma.StringFilter<"UserCompany"> | string
 }
 

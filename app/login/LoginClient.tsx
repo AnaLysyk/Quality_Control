@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import styles from "./LoginClient.module.css";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -43,7 +44,7 @@ export default function LoginClient() {
   }
 
   return (
-    <div className="min-h-[100svh] flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-10 sm:px-6 md:px-10">
+    <div className={styles.loginContainer + " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-10 sm:px-6 md:px-10"}>
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-6 left-6 w-32 h-32 bg-[#011848] rounded-full opacity-20 blur-2xl animate-ping"></div>
         <div className="absolute bottom-6 right-6 w-28 h-28 bg-[#ef0001] rounded-full opacity-20 blur-2xl animate-pulse"></div>

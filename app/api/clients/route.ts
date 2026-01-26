@@ -77,13 +77,25 @@ const mockSeed: ClienteRow[] = [
 
 let mockMemoryStore: ClienteRow[] = [...mockSeed];
 
+function mergeSeedClients(rows: ClienteRow[]) {
+  const byId = new Set(rows.map((row) => row.id));
+  const bySlug = new Set(rows.map((row) => (row.slug ?? "").toLowerCase()));
+  const merged = [...rows];
+  mockSeed.forEach((seed) => {
+    const slugKey = (seed.slug ?? "").toLowerCase();
+    if (byId.has(seed.id) || (slugKey && bySlug.has(slugKey))) return;
+    merged.push(seed);
+  });
+  return merged;
+}
+
 async function readMockClients(): Promise<ClienteRow[]> {
-  if (IS_TEST_ENV) return mockMemoryStore;
+  if (IS_TEST_ENV) return mergeSeedClients(mockMemoryStore);
 
   try {
     const raw = await fs.readFile(MOCK_CLIENTS_FILE, "utf8");
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed as ClienteRow[];
+    if (Array.isArray(parsed)) return mergeSeedClients(parsed as ClienteRow[]);
   } catch {
     // ignore
   }
@@ -95,7 +107,7 @@ async function readMockClients(): Promise<ClienteRow[]> {
     // ignore
   }
 
-  return [...mockSeed];
+  return mergeSeedClients([...mockSeed]);
 }
 
 async function writeMockClients(clients: ClienteRow[]) {

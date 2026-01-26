@@ -163,7 +163,7 @@ export type TestRunWhereInput = {
   AND?: Prisma.TestRunWhereInput | Prisma.TestRunWhereInput[]
   OR?: Prisma.TestRunWhereInput[]
   NOT?: Prisma.TestRunWhereInput | Prisma.TestRunWhereInput[]
-  id?: Prisma.StringFilter<"TestRun"> | string
+  id?: Prisma.UuidFilter<"TestRun"> | string
   status?: Prisma.StringFilter<"TestRun"> | string
   created_at?: Prisma.DateTimeFilter<"TestRun"> | Date | string
 }
@@ -196,7 +196,7 @@ export type TestRunScalarWhereWithAggregatesInput = {
   AND?: Prisma.TestRunScalarWhereWithAggregatesInput | Prisma.TestRunScalarWhereWithAggregatesInput[]
   OR?: Prisma.TestRunScalarWhereWithAggregatesInput[]
   NOT?: Prisma.TestRunScalarWhereWithAggregatesInput | Prisma.TestRunScalarWhereWithAggregatesInput[]
-  id?: Prisma.StringWithAggregatesFilter<"TestRun"> | string
+  id?: Prisma.UuidWithAggregatesFilter<"TestRun"> | string
   status?: Prisma.StringWithAggregatesFilter<"TestRun"> | string
   created_at?: Prisma.DateTimeWithAggregatesFilter<"TestRun"> | Date | string
 }

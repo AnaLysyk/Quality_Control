@@ -3,6 +3,9 @@ import path from "path";
 
 const STATUS_STORE = path.join(process.cwd(), "data", "quality_goal_status.json");
 const ALERT_STORE = path.join(process.cwd(), "data", "quality_goal_alerts.json");
+const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+let memoryStatus: GoalStatusRecord[] = [];
+let memoryAlerts: GoalAlert[] = [];
 
 export type GoalStatusRecord = {
   company_slug: string;
@@ -30,6 +33,7 @@ async function ensureFile(filePath: string, initial: string) {
 }
 
 export async function readGoalStatusStore(): Promise<GoalStatusRecord[]> {
+  if (SUPABASE_MOCK) return memoryStatus;
   await ensureFile(STATUS_STORE, "[]");
   try {
     const raw = await fs.readFile(STATUS_STORE, "utf8");
@@ -41,11 +45,19 @@ export async function readGoalStatusStore(): Promise<GoalStatusRecord[]> {
 }
 
 export async function writeGoalStatusStore(data: GoalStatusRecord[]) {
+  if (SUPABASE_MOCK) {
+    memoryStatus = data;
+    return;
+  }
   await ensureFile(STATUS_STORE, "[]");
   await fs.writeFile(STATUS_STORE, JSON.stringify(data, null, 2), "utf8");
 }
 
 export async function appendGoalAlert(alert: GoalAlert) {
+  if (SUPABASE_MOCK) {
+    memoryAlerts = [...memoryAlerts, alert];
+    return;
+  }
   await ensureFile(ALERT_STORE, "[]");
   let arr: GoalAlert[] = [];
   try {
@@ -60,6 +72,13 @@ export async function appendGoalAlert(alert: GoalAlert) {
 }
 
 export async function readGoalAlerts(companySlug?: string): Promise<GoalAlert[]> {
+  if (SUPABASE_MOCK) {
+    let arr = [...memoryAlerts];
+    if (companySlug) {
+      arr = arr.filter((a) => a.company_slug === companySlug);
+    }
+    return arr.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  }
   await ensureFile(ALERT_STORE, "[]");
   try {
     const raw = await fs.readFile(ALERT_STORE, "utf8");

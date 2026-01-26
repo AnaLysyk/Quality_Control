@@ -1,94 +1,6 @@
 [
   {
-    "id": "feff8eaa-1e08-4f2f-b83f-fe9baa8fcfea",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:38.212Z"
-  },
-  {
-    "id": "9aaf9006-44e9-47e7-bd0c-cb8b6be49326",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:38.297Z"
-  },
-  {
-    "id": "b5713b5b-0802-4f6c-94c4-d7f172f2ace4",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:38.445Z"
-  },
-  {
-    "id": "9d7b77e8-cbf8-4da7-8042-e320c5effa8d",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:38.504Z"
-  },
-  {
-    "id": "602d6174-d795-43dc-99a3-82847ba48b0d",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s12",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:38.530Z"
-  },
-  {
-    "id": "d2a70ab7-8d44-4239-9644-65aa9643a5aa",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:38.542Z"
-  },
-  {
-    "id": "ccbca3a2-2a75-4ae1-8305-39b6dcd916b2",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:38.556Z"
-  },
-  {
-    "id": "70f4b5fa-44f0-4442-b2f0-c15ef8dffcbe",
-    "company_slug": "griaule",
-    "release_slug": "print_v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:38.566Z"
-  },
-  {
-    "id": "dd32fbd9-922f-41b8-a240-602178cfe85d",
+    "id": "01dc70c1-05bc-4cfa-b366-7bf3f18c6fdf",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -96,32 +8,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:38.580Z"
+    "evaluated_at": "2026-01-25T20:29:06.761Z"
   },
   {
-    "id": "1ae68abf-6b56-4926-851a-9b47b47318ea",
-    "company_slug": "griaule",
-    "release_slug": "release_1_9_0_aceitacao",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:38.593Z"
-  },
-  {
-    "id": "30f9d9e7-c77b-499f-846f-1af90af8212d",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:38.788Z"
-  },
-  {
-    "id": "fc60120f-8447-4e4d-8f77-aa586576e26c",
+    "id": "c26c4178-3fa6-4c1d-a5ce-96a84ce7a8b3",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
@@ -129,10 +19,21 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:39.008Z"
+    "evaluated_at": "2026-01-25T20:29:06.800Z"
   },
   {
-    "id": "6024b0c6-629d-49ef-a576-ad0c652b1081",
+    "id": "4237fb7c-f7e2-4468-9e10-e9bac16c8bb9",
+    "company_slug": "griaule",
+    "release_slug": "release_1_9_0_aceitacao",
+    "gate_status": "approved",
+    "mttr_hours": 24,
+    "open_defects": 0,
+    "fail_rate": 0,
+    "reasons": [],
+    "evaluated_at": "2026-01-25T20:29:06.810Z"
+  },
+  {
+    "id": "a752e329-fbf6-457f-88e0-d4b65ef43f3c",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
@@ -140,10 +41,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:39.312Z"
+    "evaluated_at": "2026-01-25T20:29:06.844Z"
   },
   {
-    "id": "096b919a-5147-4d71-980b-172720dc3eb7",
+    "id": "b9ead854-1433-4f1a-a4c8-f6d708221315",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
@@ -151,10 +52,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:39.612Z"
+    "evaluated_at": "2026-01-25T20:29:06.906Z"
   },
   {
-    "id": "3c1fe4f9-0af7-4b69-a104-60fa34ae322f",
+    "id": "55c12dd6-594f-4793-a62b-0f160c148c4d",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
@@ -162,10 +63,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:39.775Z"
+    "evaluated_at": "2026-01-25T20:29:06.932Z"
   },
   {
-    "id": "d9cd5489-e4b2-4bca-a786-b1c824632593",
+    "id": "c5f4c378-7627-4711-bfad-07e7339c7983",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
@@ -173,10 +74,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:39.839Z"
+    "evaluated_at": "2026-01-25T20:29:06.993Z"
   },
   {
-    "id": "a0007d46-b251-4ca8-82a5-983e1f161dd0",
+    "id": "dd196aa7-22e2-4056-b18f-3f81d6a44eaf",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
@@ -184,10 +85,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:39.893Z"
+    "evaluated_at": "2026-01-25T20:29:07.087Z"
   },
   {
-    "id": "2546b907-3868-4812-87e6-69bd2d32657c",
+    "id": "21ee3733-45f3-4b1d-b8f3-86f5d1a2212e",
     "company_slug": "griaule",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
@@ -195,10 +96,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:40.640Z"
+    "evaluated_at": "2026-01-25T20:29:07.178Z"
   },
   {
-    "id": "90ec79e3-2444-48ce-a9a0-d1233c161f19",
+    "id": "36748feb-4a4e-4db6-af95-a415f2389b23",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -206,10 +107,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:41.073Z"
+    "evaluated_at": "2026-01-25T20:29:07.269Z"
   },
   {
-    "id": "4d61fadb-97d0-444b-9ede-56a14c0964ee",
+    "id": "cb998af2-f4b5-4cf2-a84c-42002e454b55",
     "company_slug": "griaule",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
@@ -217,10 +118,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:42:41.131Z"
+    "evaluated_at": "2026-01-25T20:29:07.335Z"
   },
   {
-    "id": "3f0ff519-ff5e-4a2b-b0f6-c1d9fc3b51f3",
+    "id": "f7822b4d-3830-4a69-87fd-44be0d5f4b13",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
@@ -228,10 +129,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:15.652Z"
+    "evaluated_at": "2026-01-25T20:29:31.009Z"
   },
   {
-    "id": "b778dab3-9a2f-4e67-8881-ba672d49638d",
+    "id": "fb5ed0ab-78b8-41ff-9a1b-3da79c5d5813",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
@@ -239,10 +140,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:15.698Z"
+    "evaluated_at": "2026-01-25T20:29:31.066Z"
   },
   {
-    "id": "fafde32c-0fb1-4826-9fb2-6b09a96b8862",
+    "id": "6f0cc22b-c223-46a3-bb3b-6aff9548eca8",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
@@ -250,10 +151,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:15.746Z"
+    "evaluated_at": "2026-01-25T20:29:31.132Z"
   },
   {
-    "id": "9a3732de-dd3a-4ecb-8665-09c387eb5a0f",
+    "id": "7c81b365-d983-4bb3-a8e0-2e651bd930bb",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
@@ -261,10 +162,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:15.753Z"
+    "evaluated_at": "2026-01-25T20:29:31.188Z"
   },
   {
-    "id": "08423f53-af2a-4f1f-a074-1f7a014251e2",
+    "id": "c7662146-bc94-469f-9aa5-52a61d197b38",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
@@ -272,10 +173,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:15.765Z"
+    "evaluated_at": "2026-01-25T20:29:31.246Z"
   },
   {
-    "id": "34b667d5-4825-4480-9495-962f6ce061f3",
+    "id": "439c0c86-bd35-4d07-a7c0-cd7eaf75f7fa",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
@@ -283,10 +184,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:15.772Z"
+    "evaluated_at": "2026-01-25T20:29:31.309Z"
   },
   {
-    "id": "b16b9dc4-ad08-4bf8-92de-f79c4cf0ce2a",
+    "id": "45632f79-ce0d-462c-b83b-7d0d68e3f3ba",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
@@ -294,10 +195,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:15.782Z"
+    "evaluated_at": "2026-01-25T20:29:31.407Z"
   },
   {
-    "id": "ba35f172-4206-4b4a-b03b-16db6e0b4c90",
+    "id": "7a74dfe3-7ad2-4bda-bfd5-4d57d3809b1a",
     "company_slug": "griaule",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
@@ -305,10 +206,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:15.792Z"
+    "evaluated_at": "2026-01-25T20:29:31.514Z"
   },
   {
-    "id": "b96a3325-29aa-4794-b1d3-9e9078a5e9ba",
+    "id": "0b666aea-f919-4bbe-b5c4-d5c2018993de",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -316,10 +217,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:15.816Z"
+    "evaluated_at": "2026-01-25T20:29:31.636Z"
   },
   {
-    "id": "183128ee-f3fa-457c-94c7-a5e12bc104b3",
+    "id": "9e08be80-c7ba-47d5-9abe-4fb2bcf7a6c3",
     "company_slug": "griaule",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
@@ -327,10 +228,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:15.831Z"
+    "evaluated_at": "2026-01-25T20:29:31.715Z"
   },
   {
-    "id": "360f9796-2068-41ce-ad09-91e5fbf5e3e0",
+    "id": "420f02e2-945e-49e9-bf6d-4d123f3d1d92",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
@@ -338,10 +239,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:15.962Z"
+    "evaluated_at": "2026-01-25T20:29:42.054Z"
   },
   {
-    "id": "2bcc9fc9-6f44-45fa-aff7-9ef840fa9c69",
+    "id": "a09f31e3-4ac4-4869-a397-a659dee85e4e",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
@@ -349,10 +250,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:15.977Z"
+    "evaluated_at": "2026-01-25T20:29:42.637Z"
   },
   {
-    "id": "20d6c6be-e09b-43a3-aa3c-a85e2ef52abb",
+    "id": "529cd2bb-7541-4df7-8497-447e332e481f",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
@@ -360,10 +261,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:15.994Z"
+    "evaluated_at": "2026-01-25T20:29:46.447Z"
   },
   {
-    "id": "746676ab-0ff0-49a7-a976-982e290723ce",
+    "id": "5a703336-2995-4d3a-bf73-fbfc86c7b483",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
@@ -371,10 +272,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:16.001Z"
+    "evaluated_at": "2026-01-25T20:29:48.174Z"
   },
   {
-    "id": "8315266c-19de-4f19-8155-401aec5bece5",
+    "id": "b804a2a3-3d4b-4d65-bbbc-158b91f83dac",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
@@ -382,10 +283,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:16.016Z"
+    "evaluated_at": "2026-01-25T20:29:48.529Z"
   },
   {
-    "id": "242b0852-0d78-4669-a8ca-19564afc3bfe",
+    "id": "7bc6119c-cbbe-4b40-ac1d-2e1c6b774c99",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
@@ -393,10 +294,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:16.036Z"
+    "evaluated_at": "2026-01-25T20:29:48.761Z"
   },
   {
-    "id": "18b9db0f-7dea-40f0-9a21-8477813d0050",
+    "id": "3cb7e685-0133-4511-aacc-525f1a2725b6",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
@@ -404,10 +305,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:16.045Z"
+    "evaluated_at": "2026-01-25T20:29:49.206Z"
   },
   {
-    "id": "694435a6-079d-4126-899e-306fb6814715",
+    "id": "a54a50cc-beb9-498a-98fb-7b122dbbad1d",
     "company_slug": "griaule",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
@@ -415,10 +316,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:16.051Z"
+    "evaluated_at": "2026-01-25T20:29:49.537Z"
   },
   {
-    "id": "edeba777-7a4d-455a-90ae-c0cab1d0e35e",
+    "id": "d4acb7d3-8c54-4e88-8033-42fac21df08e",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -426,10 +327,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:16.064Z"
+    "evaluated_at": "2026-01-25T20:29:49.822Z"
   },
   {
-    "id": "a335c123-4745-4af3-b3f3-094d4addd530",
+    "id": "dd46c50f-c65e-4299-9cfd-606e4a9772b0",
     "company_slug": "griaule",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
@@ -437,10 +338,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:44:16.154Z"
+    "evaluated_at": "2026-01-25T20:29:50.367Z"
   },
   {
-    "id": "3ab59818-330e-4658-b942-959faca77aae",
+    "id": "97791080-4820-48e7-b196-4b1105113461",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
@@ -448,10 +349,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:53.928Z"
+    "evaluated_at": "2026-01-25T20:29:52.185Z"
   },
   {
-    "id": "dd245aae-838c-414a-bc60-2d2b08a27e4e",
+    "id": "67c6b68c-2ef3-48c2-95ff-41e367524cb0",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
@@ -459,10 +360,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:53.940Z"
+    "evaluated_at": "2026-01-25T20:29:52.203Z"
   },
   {
-    "id": "6de4d562-1b8f-4808-ae6f-3c38e345b09b",
+    "id": "7aa42a7e-5acd-44e4-9cd7-c30f44f172d8",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
@@ -470,10 +371,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:54.025Z"
+    "evaluated_at": "2026-01-25T20:29:52.569Z"
   },
   {
-    "id": "3d3a0c95-259a-49b7-950e-ff9816947360",
+    "id": "16dc3f2a-ab01-49be-b4c8-42ed8c232e25",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
@@ -481,10 +382,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:54.035Z"
+    "evaluated_at": "2026-01-25T20:29:53.773Z"
   },
   {
-    "id": "aedd74e8-cb7c-4238-92bf-7e1729219752",
+    "id": "932a2ff6-aebb-4062-b141-8e86f00b8926",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
@@ -492,10 +393,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:54.042Z"
+    "evaluated_at": "2026-01-25T20:29:54.734Z"
   },
   {
-    "id": "073f6019-dccd-434e-8d6b-8c9ae81ad540",
+    "id": "80ac81de-efb0-4e17-868a-9c917874690f",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
@@ -503,10 +404,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:54.056Z"
+    "evaluated_at": "2026-01-25T20:29:55.207Z"
   },
   {
-    "id": "7ce3991d-f56f-4d30-b93d-872f6cf1d71e",
+    "id": "71afc067-964d-47d0-8aa5-44c36e41efe4",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
@@ -514,10 +415,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:54.068Z"
+    "evaluated_at": "2026-01-25T20:29:55.579Z"
   },
   {
-    "id": "de1d0a71-76b3-44f4-a775-cc09e01c966c",
+    "id": "efb61e86-526c-4f08-8af5-bf74d36bd3d0",
     "company_slug": "griaule",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
@@ -525,10 +426,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:54.079Z"
+    "evaluated_at": "2026-01-25T20:29:56.705Z"
   },
   {
-    "id": "95d98364-31c7-4583-b4af-05f26add3983",
+    "id": "b21a8af0-d03e-4926-8937-892bd3831f60",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -536,10 +437,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:54.091Z"
+    "evaluated_at": "2026-01-25T20:29:57.672Z"
   },
   {
-    "id": "c63743c9-cfb8-45c2-b713-cbe2e4e4cd0e",
+    "id": "5f27a007-ee55-43a9-be12-a9d3ad0b994a",
     "company_slug": "griaule",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
@@ -547,10 +448,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:54.114Z"
+    "evaluated_at": "2026-01-25T20:29:58.333Z"
   },
   {
-    "id": "1b83ddb7-3648-4f48-b23f-551088abbeed",
+    "id": "4eea8404-a6a1-4b4d-87f8-8b7c820b1798",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
@@ -558,10 +459,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:54.176Z"
+    "evaluated_at": "2026-01-25T20:31:16.037Z"
   },
   {
-    "id": "e93a7e90-1cb3-4d3f-bfb1-d0e0a394ebcd",
+    "id": "58702ccf-5db7-4643-9eb5-d5ff124147d8",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
@@ -569,10 +470,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:54.211Z"
+    "evaluated_at": "2026-01-25T20:31:18.570Z"
   },
   {
-    "id": "01703c20-0e3f-4b97-9c2f-a3b2072c658d",
+    "id": "16cc5669-398c-46d8-8672-74908172c98b",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
@@ -580,10 +481,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:54.242Z"
+    "evaluated_at": "2026-01-25T20:31:18.856Z"
   },
   {
-    "id": "f87e8550-7afc-4831-a79a-e4379f414baa",
+    "id": "64e42414-5cba-4779-a4e2-b2fe0549f680",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
@@ -591,10 +492,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:54.261Z"
+    "evaluated_at": "2026-01-25T20:31:19.103Z"
   },
   {
-    "id": "9624e4ab-b489-43f0-8d3d-fb427df284a1",
+    "id": "8550e0a4-41b6-43aa-9851-b90a861eae82",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
@@ -602,10 +503,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:54.310Z"
+    "evaluated_at": "2026-01-25T20:31:19.271Z"
   },
   {
-    "id": "0e8947f3-470c-4c84-a52e-72b500cb4427",
+    "id": "99b73f21-cf27-4f0f-8e32-f455627ff2d7",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
@@ -613,10 +514,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:54.717Z"
+    "evaluated_at": "2026-01-25T20:31:19.460Z"
   },
   {
-    "id": "1eaa59c1-3f16-49a2-be52-ad12f0fcef3c",
+    "id": "fc7d9650-9eb7-43c6-bbcf-33955e44dc11",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
@@ -624,10 +525,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:54.995Z"
+    "evaluated_at": "2026-01-25T20:31:19.595Z"
   },
   {
-    "id": "977f755e-7576-4d5a-8a2e-0a7bb7073c55",
+    "id": "b0563b9e-3b3a-4aa2-b4d2-d8ae523511a7",
     "company_slug": "griaule",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
@@ -635,10 +536,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:55.422Z"
+    "evaluated_at": "2026-01-25T20:31:19.732Z"
   },
   {
-    "id": "ece3d63f-57d2-45e1-b3c3-3c7d118728f4",
+    "id": "9a644fd4-cf55-4051-a095-f02764ce259e",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -646,10 +547,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:55.678Z"
+    "evaluated_at": "2026-01-25T20:31:19.911Z"
   },
   {
-    "id": "7be0134f-f1b6-4f66-940c-657edbff9b45",
+    "id": "4cd13a8a-86e4-4e61-aa9e-bd9515a3ea56",
     "company_slug": "griaule",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
@@ -657,10 +558,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:45:56.118Z"
+    "evaluated_at": "2026-01-25T20:31:20.062Z"
   },
   {
-    "id": "055b1df7-c316-4c14-86f5-fe57efdc5a41",
+    "id": "7ed3702d-d03f-44a3-bb74-cc048ee20574",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
@@ -668,10 +569,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.495Z"
+    "evaluated_at": "2026-01-25T20:31:20.797Z"
   },
   {
-    "id": "855fae9b-42e3-4713-98c1-9f5953f154bc",
+    "id": "9fb8e320-d4b7-4850-9407-83636c5672d2",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
@@ -679,10 +580,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.550Z"
+    "evaluated_at": "2026-01-25T20:31:20.910Z"
   },
   {
-    "id": "1f8d5342-1338-4ac8-9b9a-01f19efb2c19",
+    "id": "cc4497bd-a5c9-4e05-af58-925349280f79",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
@@ -690,10 +591,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.616Z"
+    "evaluated_at": "2026-01-25T20:31:21.136Z"
   },
   {
-    "id": "f3dc52c6-2541-412e-a1b3-bef5e6e275f3",
+    "id": "fc52c801-c3fe-483b-86f4-f9d27d32da52",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
@@ -701,10 +602,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.630Z"
+    "evaluated_at": "2026-01-25T20:31:21.226Z"
   },
   {
-    "id": "bf666070-fd01-491b-a2bb-ac430c082f29",
+    "id": "bd264abf-0655-4c3e-b63d-cb8a8e3ef8cd",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
@@ -712,10 +613,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.648Z"
+    "evaluated_at": "2026-01-25T20:31:21.659Z"
   },
   {
-    "id": "5fb63276-fc00-4389-af9e-9d20c4020406",
+    "id": "cda58244-3cc8-4a0c-a093-d76f98237c2d",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
@@ -723,10 +624,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.661Z"
+    "evaluated_at": "2026-01-25T20:31:21.691Z"
   },
   {
-    "id": "1e187082-ab03-4906-924d-42883da5ac75",
+    "id": "56cc9260-fa4a-4515-9c8a-f5d30326fd77",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
@@ -734,10 +635,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.675Z"
+    "evaluated_at": "2026-01-25T20:31:21.743Z"
   },
   {
-    "id": "ea20de46-ed25-41b7-9373-fa077bd4a136",
+    "id": "8cd5f338-acc8-40d0-99a7-68e611ab3157",
     "company_slug": "griaule",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
@@ -745,10 +646,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.696Z"
+    "evaluated_at": "2026-01-25T20:31:21.817Z"
   },
   {
-    "id": "ae48e1b3-c875-4b08-a529-294f9755e78a",
+    "id": "c90c46bb-ad4a-42c1-94ed-d51cad083f7c",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -756,10 +657,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.712Z"
+    "evaluated_at": "2026-01-25T20:31:21.884Z"
   },
   {
-    "id": "73cd730b-f22c-43cc-a6cb-599717101e23",
+    "id": "92a7140a-e191-424c-89a2-e2a210691afa",
     "company_slug": "griaule",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
@@ -767,10 +668,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.725Z"
+    "evaluated_at": "2026-01-25T20:31:21.947Z"
   },
   {
-    "id": "5f581a51-3188-476b-8417-d4ecbcd16bb5",
+    "id": "046ade59-6a43-4b0a-9a95-93bb3a3be479",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
@@ -778,10 +679,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.772Z"
+    "evaluated_at": "2026-01-25T20:32:21.264Z"
   },
   {
-    "id": "b8f430e1-2093-47c3-87ed-b38960615faa",
+    "id": "c74a9f00-bf6a-4efd-b60c-4ce2a75657bd",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
@@ -789,10 +690,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.782Z"
+    "evaluated_at": "2026-01-25T20:32:26.794Z"
   },
   {
-    "id": "3def944c-bd02-410b-a446-74b2f130f575",
+    "id": "af047fee-2415-46bd-8f4a-7d39845ed6bc",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
@@ -800,10 +701,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.800Z"
+    "evaluated_at": "2026-01-25T20:32:37.076Z"
   },
   {
-    "id": "0c196279-8c05-4b10-abcf-a8ac8a2fda27",
+    "id": "89a2e70c-1a1e-46ad-9773-71010664fd83",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
@@ -811,10 +712,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.810Z"
+    "evaluated_at": "2026-01-25T20:32:48.856Z"
   },
   {
-    "id": "d0a76f63-286d-4625-a842-5d451b67df68",
+    "id": "f8ce0319-24fc-4dd1-a0b1-66a306eaa8e2",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
@@ -822,10 +723,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.820Z"
+    "evaluated_at": "2026-01-25T20:32:49.044Z"
   },
   {
-    "id": "95c24fbf-318d-4c68-b607-cb78e29076b4",
+    "id": "63900ad8-ce65-4328-b0a2-4e0a56083e14",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
@@ -833,10 +734,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.828Z"
+    "evaluated_at": "2026-01-25T20:32:49.145Z"
   },
   {
-    "id": "7670bb3f-04f1-4039-91b6-60f49811bbcd",
+    "id": "a19c88d1-6ccf-4e87-a5b5-cc1fd17c5fe3",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
@@ -844,10 +745,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.844Z"
+    "evaluated_at": "2026-01-25T20:32:49.218Z"
   },
   {
-    "id": "27ae2033-94ac-4ee5-9eda-234adc747daf",
+    "id": "56c97bb7-a861-48ba-a6ce-89c9fdb97b50",
     "company_slug": "griaule",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
@@ -855,10 +756,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.861Z"
+    "evaluated_at": "2026-01-25T20:32:49.527Z"
   },
   {
-    "id": "3314932b-8b22-4bce-a414-8eee8d960228",
+    "id": "774370ab-b8e6-4e04-9c30-b470fff954cb",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -866,10 +767,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.875Z"
+    "evaluated_at": "2026-01-25T20:32:49.583Z"
   },
   {
-    "id": "9a3703da-b113-4c1f-96d9-1dd903a7d8a4",
+    "id": "37d39a40-8277-4f24-9c87-02511cd8fe0c",
     "company_slug": "griaule",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
@@ -877,10 +778,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:47:25.889Z"
+    "evaluated_at": "2026-01-25T20:32:49.625Z"
   },
   {
-    "id": "0d63c974-cf28-444d-a1b4-5ad07f69c5d9",
+    "id": "76730dd2-8598-48cb-b037-0ac863e4fa86",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
@@ -888,10 +789,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:48:59.749Z"
+    "evaluated_at": "2026-01-25T20:34:10.541Z"
   },
   {
-    "id": "4a301780-eaac-4215-9825-5b264a43fd3e",
+    "id": "6ed22070-2a8a-4f02-9234-9ebe4014c438",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
@@ -899,10 +800,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:48:59.855Z"
+    "evaluated_at": "2026-01-25T20:34:11.478Z"
   },
   {
-    "id": "cd1fd182-c972-444c-9ce8-542226398b1e",
+    "id": "0a5e7331-cc70-4609-bae1-192fb3501260",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
@@ -910,10 +811,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:48:59.902Z"
+    "evaluated_at": "2026-01-25T20:34:16.507Z"
   },
   {
-    "id": "edb5133e-030e-4fe6-9029-b4a0beb08f98",
+    "id": "e4f08262-1158-47a5-a5d9-62846e22485f",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
@@ -921,10 +822,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:00.170Z"
+    "evaluated_at": "2026-01-25T20:34:16.982Z"
   },
   {
-    "id": "081fcb5d-e55c-4082-bea6-3811b6b72cfd",
+    "id": "f8b4823d-2051-457c-9c00-f705a0b329c3",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
@@ -932,10 +833,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:01.408Z"
+    "evaluated_at": "2026-01-25T20:34:17.458Z"
   },
   {
-    "id": "835d2889-311a-43ca-9da3-d5fda20c3382",
+    "id": "c6b01d02-82f7-473e-803e-5002cd65e424",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
@@ -943,10 +844,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:01.865Z"
+    "evaluated_at": "2026-01-25T20:34:18.181Z"
   },
   {
-    "id": "91530be7-5ff6-4012-a631-5df248bc427f",
+    "id": "2226a270-0f5c-4517-9664-d57a4a0ae91f",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
@@ -954,10 +855,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:02.198Z"
+    "evaluated_at": "2026-01-25T20:34:18.455Z"
   },
   {
-    "id": "1616c5a7-e192-4a5f-8982-2e9c46383330",
+    "id": "f8a8fa8b-2c2c-4c44-beb4-d75459ac6b7b",
     "company_slug": "griaule",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
@@ -965,10 +866,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:02.641Z"
+    "evaluated_at": "2026-01-25T20:34:18.663Z"
   },
   {
-    "id": "d8480fd9-1321-4c86-bc50-7386751e8480",
+    "id": "26d3f317-e301-47eb-b7f2-0caebd66e0f3",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -976,10 +877,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:03.003Z"
+    "evaluated_at": "2026-01-25T20:34:18.916Z"
   },
   {
-    "id": "f2ebd779-e533-4f75-8811-2e0d579fb274",
+    "id": "d3acd896-1409-4de8-9d1b-c0981f3e6045",
     "company_slug": "griaule",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
@@ -987,10 +888,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:03.468Z"
+    "evaluated_at": "2026-01-25T20:34:19.194Z"
   },
   {
-    "id": "405413fe-b268-485d-be42-5a8f3a895bfe",
+    "id": "8719efb3-8f5e-4358-aa7e-7dcd1a05fe41",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
@@ -998,10 +899,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:04.001Z"
+    "evaluated_at": "2026-01-25T20:34:20.231Z"
   },
   {
-    "id": "6994632f-a61e-49dc-9464-5028aed2f811",
+    "id": "4d187432-5e30-41da-b9c4-76f946b0e039",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
@@ -1009,10 +910,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:04.100Z"
+    "evaluated_at": "2026-01-25T20:34:20.258Z"
   },
   {
-    "id": "e84a2ed9-6295-4f8a-8866-e60078102718",
+    "id": "2f8068a8-2e14-4865-b7f5-4d4c4829d3c3",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
@@ -1020,10 +921,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:04.256Z"
+    "evaluated_at": "2026-01-25T20:34:20.407Z"
   },
   {
-    "id": "4bd708ca-928a-4982-9589-5b9ce6d58385",
+    "id": "41b900f2-1ee5-4592-9b7b-f5a2dbd612d4",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
@@ -1031,10 +932,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:04.599Z"
+    "evaluated_at": "2026-01-25T20:34:20.580Z"
   },
   {
-    "id": "c63f40ca-d355-401b-a05e-480a5d666551",
+    "id": "3ae7e954-6358-4ca2-9327-c1cef8f12733",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
@@ -1042,10 +943,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:04.875Z"
+    "evaluated_at": "2026-01-25T20:34:20.773Z"
   },
   {
-    "id": "5af508c0-dbb1-4d50-a3c8-df8bad30d831",
+    "id": "0260bd97-2288-40a4-8b55-238a9e4d2714",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
@@ -1053,10 +954,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:05.263Z"
+    "evaluated_at": "2026-01-25T20:34:20.998Z"
   },
   {
-    "id": "6c4c6d8e-ae18-4e59-a6e1-66177ae78f61",
+    "id": "57dc0f36-f432-4b1a-869c-c291e197d371",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
@@ -1064,10 +965,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:05.403Z"
+    "evaluated_at": "2026-01-25T20:34:21.531Z"
   },
   {
-    "id": "7ceca836-22ac-4bbd-932d-7698ba9eedbd",
+    "id": "570234d0-fe8c-4ab3-9791-40073cfef498",
     "company_slug": "griaule",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
@@ -1075,10 +976,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:05.541Z"
+    "evaluated_at": "2026-01-25T20:34:21.801Z"
   },
   {
-    "id": "b1092a58-b1de-4fc5-8bbb-d573038e33b8",
+    "id": "538b55ff-4763-41e5-8605-892d60e9be3c",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -1086,10 +987,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:05.599Z"
+    "evaluated_at": "2026-01-25T20:34:22.085Z"
   },
   {
-    "id": "5c926d7f-2735-46bd-ba0b-f2c9190d0047",
+    "id": "f730ea25-0e34-4597-8da6-1fc5463597c4",
     "company_slug": "griaule",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
@@ -1097,10 +998,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:49:05.689Z"
+    "evaluated_at": "2026-01-25T20:34:22.286Z"
   },
   {
-    "id": "63bdd540-ba9f-413d-a78a-c47a2aea2c2a",
+    "id": "30344887-a5d3-4d03-9a64-3783a8123a09",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
@@ -1108,10 +1009,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:15.695Z"
+    "evaluated_at": "2026-01-25T20:34:58.077Z"
   },
   {
-    "id": "1bc1738d-e111-436e-8a06-61e2415823b0",
+    "id": "67875200-dc93-4ee9-9e28-a21f5e7a8900",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
@@ -1119,10 +1020,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:15.714Z"
+    "evaluated_at": "2026-01-25T20:34:58.747Z"
   },
   {
-    "id": "9e7ce925-6320-47fb-949f-845b80d84011",
+    "id": "97b8bd78-41e7-4585-b7b8-84ad266d6c22",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
@@ -1130,10 +1031,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:15.730Z"
+    "evaluated_at": "2026-01-25T20:34:59.459Z"
   },
   {
-    "id": "171a8a88-6f21-454d-b112-69999c65fddf",
+    "id": "237ef83d-4b4a-4e0d-bf11-7754dc3c3b15",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
@@ -1141,10 +1042,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:15.777Z"
+    "evaluated_at": "2026-01-25T20:34:59.788Z"
   },
   {
-    "id": "2d48f211-df21-49d2-8111-e8a0901af30e",
+    "id": "a5369835-bbd2-4b04-9163-dda61fb0baf6",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
@@ -1152,10 +1053,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:15.813Z"
+    "evaluated_at": "2026-01-25T20:34:59.987Z"
   },
   {
-    "id": "b0e280f1-5e59-49a9-99f1-96bbd3aae178",
+    "id": "812f3488-6f90-4d40-91e2-7dbf168c16d5",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
@@ -1163,10 +1064,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:15.825Z"
+    "evaluated_at": "2026-01-25T20:35:00.478Z"
   },
   {
-    "id": "cd95979f-01f0-40f8-b212-6864b918d9f4",
+    "id": "2057d350-c9c9-41cb-99b6-9f76f3b28a58",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
@@ -1174,10 +1075,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:15.839Z"
+    "evaluated_at": "2026-01-25T20:35:00.610Z"
   },
   {
-    "id": "2ae7d5d0-5164-464f-9db3-dc941a69b3ff",
+    "id": "9d3ba608-9a49-4d5b-a76f-f0608b8dbc9a",
     "company_slug": "griaule",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
@@ -1185,10 +1086,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:15.848Z"
+    "evaluated_at": "2026-01-25T20:35:00.782Z"
   },
   {
-    "id": "9d44e301-1c1a-46d8-b1ff-cf56efec4f95",
+    "id": "54bf84ca-d40f-44d2-a792-16af85397f19",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -1196,10 +1097,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:15.858Z"
+    "evaluated_at": "2026-01-25T20:35:00.959Z"
   },
   {
-    "id": "468bc4ab-836d-40b3-b4a7-70dde6029d84",
+    "id": "26e674b8-61e3-443b-aa9c-8723f1397d14",
     "company_slug": "griaule",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
@@ -1207,10 +1108,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:15.869Z"
+    "evaluated_at": "2026-01-25T20:35:01.120Z"
   },
   {
-    "id": "5b42277d-493d-4e2e-aff6-bca0db036a8b",
+    "id": "97b1ccdc-c930-449b-9800-fed4b698e095",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
@@ -1218,10 +1119,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:15.946Z"
+    "evaluated_at": "2026-01-25T20:35:01.606Z"
   },
   {
-    "id": "1ebe214b-366c-4f59-ad23-ca6bce34fee0",
+    "id": "512bd3dc-333b-4061-9f0e-4f5b82c03cc1",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
@@ -1229,10 +1130,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:15.961Z"
+    "evaluated_at": "2026-01-25T20:35:01.640Z"
   },
   {
-    "id": "93714a9c-36f1-44fd-98d5-518b833ffa90",
+    "id": "1fd273e6-2c32-4e79-a6a9-0711168c7f05",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
@@ -1240,10 +1141,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:15.989Z"
+    "evaluated_at": "2026-01-25T20:35:01.775Z"
   },
   {
-    "id": "45bb5fa5-6f94-4b13-a240-3ba5d6bc9a2a",
+    "id": "c211a408-9e44-4b00-9894-1fc13e9a1c0a",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
@@ -1251,10 +1152,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:15.997Z"
+    "evaluated_at": "2026-01-25T20:35:02.240Z"
   },
   {
-    "id": "3160986a-d90d-45d1-b4ed-dc679dd6bac1",
+    "id": "9d17107d-710b-4e73-8837-0c62f98d11fa",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
@@ -1262,10 +1163,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:16.015Z"
+    "evaluated_at": "2026-01-25T20:35:02.315Z"
   },
   {
-    "id": "443c7894-c629-4a10-bdbc-69b34bc90f02",
+    "id": "c10260e1-3f75-48f5-b3d3-fb1359315609",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
@@ -1273,10 +1174,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:16.047Z"
+    "evaluated_at": "2026-01-25T20:35:02.418Z"
   },
   {
-    "id": "65739a8e-2d13-4b53-9a40-fa34e738917a",
+    "id": "79aad9d5-7316-4d7b-b060-0019979eb729",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
@@ -1284,10 +1185,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:16.078Z"
+    "evaluated_at": "2026-01-25T20:35:02.500Z"
   },
   {
-    "id": "8c2bf955-d1b5-4c4d-bd81-8342dec4770c",
+    "id": "7ba97ca7-d323-4898-a48b-a2a74b248755",
     "company_slug": "griaule",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
@@ -1295,10 +1196,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:16.096Z"
+    "evaluated_at": "2026-01-25T20:35:02.561Z"
   },
   {
-    "id": "16318596-cd10-4854-9646-6acd4676e762",
+    "id": "27c432e6-1e68-47e7-8fa7-797491e3c7f4",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -1306,10 +1207,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:16.115Z"
+    "evaluated_at": "2026-01-25T20:35:02.736Z"
   },
   {
-    "id": "34648ab1-71ca-4007-8ec6-a32d4c05fa50",
+    "id": "cd61e646-c1ea-4799-9e80-cd3344cb06db",
     "company_slug": "griaule",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
@@ -1317,10 +1218,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:51:16.249Z"
+    "evaluated_at": "2026-01-25T20:35:02.858Z"
   },
   {
-    "id": "e1e19af8-5551-4d1b-9744-93053392b46d",
+    "id": "4f765e8a-e6a8-4a64-9d75-60b644188407",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
@@ -1328,10 +1229,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.130Z"
+    "evaluated_at": "2026-01-25T20:35:08.660Z"
   },
   {
-    "id": "964264c2-130b-4055-abca-6eba3e4e2caf",
+    "id": "b20b8954-7d8d-4a3a-aa8f-fa0ce1a12a34",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
@@ -1339,10 +1240,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.140Z"
+    "evaluated_at": "2026-01-25T20:35:09.286Z"
   },
   {
-    "id": "ac612566-b3c0-4ef8-93e4-20ab8cb5cad6",
+    "id": "a1d4f819-859b-42be-be46-429ff83006d3",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
@@ -1350,10 +1251,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.171Z"
+    "evaluated_at": "2026-01-25T20:35:09.640Z"
   },
   {
-    "id": "1f25a8f8-faa0-4abb-92da-6d87bcc3731a",
+    "id": "490a0cfe-b51a-4ac3-a73e-d8baf8b30241",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
@@ -1361,10 +1262,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.195Z"
+    "evaluated_at": "2026-01-25T20:35:10.036Z"
   },
   {
-    "id": "406ec0d1-fa23-4427-b0f7-176e2ab9bb12",
+    "id": "c3d95b16-1f85-40c2-bdb9-4f2668b87b85",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
@@ -1372,10 +1273,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.203Z"
+    "evaluated_at": "2026-01-25T20:35:10.236Z"
   },
   {
-    "id": "3305599e-f978-4b56-b707-92f563d9c349",
+    "id": "8bd15e0e-9175-4e4c-a52d-b5b76b248eeb",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
@@ -1383,10 +1284,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.215Z"
+    "evaluated_at": "2026-01-25T20:35:10.367Z"
   },
   {
-    "id": "03ebf2b2-a77e-40ea-92ee-85a8d9f4877e",
+    "id": "29bb4550-46b9-4e95-b104-7acd5b09148f",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
@@ -1394,10 +1295,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.228Z"
+    "evaluated_at": "2026-01-25T20:35:10.468Z"
   },
   {
-    "id": "e5d59032-94b4-4510-b876-900af6428af7",
+    "id": "02aa689b-af7e-495b-998d-bbb5842e92a0",
     "company_slug": "griaule",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
@@ -1405,10 +1306,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.236Z"
+    "evaluated_at": "2026-01-25T20:35:10.831Z"
   },
   {
-    "id": "06e5aa8b-728b-4888-b2da-8049c6c46b88",
+    "id": "ea37fe2b-e49e-477f-8233-b5fb5c59604c",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -1416,10 +1317,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.246Z"
+    "evaluated_at": "2026-01-25T20:35:10.976Z"
   },
   {
-    "id": "35a6c0b5-6c94-426a-b2f6-924c0a5bbb49",
+    "id": "01a6ff8f-514f-43a9-be52-9ca89025f3a7",
     "company_slug": "griaule",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
@@ -1427,10 +1328,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.255Z"
+    "evaluated_at": "2026-01-25T20:35:11.151Z"
   },
   {
-    "id": "89feb888-e7b7-496a-b422-d8826e3f7ec6",
+    "id": "2212c288-8b20-4055-bfba-f9871efd391e",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
@@ -1438,10 +1339,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.328Z"
+    "evaluated_at": "2026-01-25T20:35:11.754Z"
   },
   {
-    "id": "ff9d1cd6-d675-4d0d-b732-05fd03aa0f0d",
+    "id": "178964aa-f4cb-4a0d-ba8f-7f42dc26de5b",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
@@ -1449,10 +1350,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.338Z"
+    "evaluated_at": "2026-01-25T20:35:11.779Z"
   },
   {
-    "id": "1b0904fd-8de9-44a6-8a7f-5007ec48baf3",
+    "id": "5e17e7f2-3f93-41e0-a648-e71f8c234f90",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
@@ -1460,10 +1361,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.351Z"
+    "evaluated_at": "2026-01-25T20:35:11.888Z"
   },
   {
-    "id": "f0a6b777-772b-44fc-a3e9-2dd3bb60cb1a",
+    "id": "ff6628af-0074-45dd-8a7f-6c5038840f2f",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
@@ -1471,10 +1372,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.363Z"
+    "evaluated_at": "2026-01-25T20:35:12.037Z"
   },
   {
-    "id": "424bcdf1-9f5e-47d0-b16b-eb6eb02a2e7d",
+    "id": "41ddd153-deed-4de3-9bb8-fc1e76f93081",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
@@ -1482,10 +1383,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.372Z"
+    "evaluated_at": "2026-01-25T20:35:12.199Z"
   },
   {
-    "id": "1d1b7fe9-bbf9-4664-97e7-6e7bbd8bc993",
+    "id": "dbd47ca7-28a9-4f15-9dbb-18e7eee79337",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
@@ -1493,10 +1394,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.383Z"
+    "evaluated_at": "2026-01-25T20:35:12.315Z"
   },
   {
-    "id": "116b15d1-f9e9-4e5f-9d14-437b472a19f7",
+    "id": "303561a5-58b0-4678-b055-ad2feecc6dff",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
@@ -1504,10 +1405,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.395Z"
+    "evaluated_at": "2026-01-25T20:35:12.653Z"
   },
   {
-    "id": "5480cfd4-4d8d-49e0-9454-762d3196579f",
+    "id": "80f7fe1d-47ae-43d6-9eb8-ffb9a740b980",
     "company_slug": "griaule",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
@@ -1515,10 +1416,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.448Z"
+    "evaluated_at": "2026-01-25T20:35:12.711Z"
   },
   {
-    "id": "3edceeec-9c7e-43cb-ac33-f24571ca7f08",
+    "id": "e8a7fb4c-195e-4a2e-a88a-2d1353f2faeb",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -1526,10 +1427,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.477Z"
+    "evaluated_at": "2026-01-25T20:35:12.842Z"
   },
   {
-    "id": "bfbbd41d-f7c8-45f8-a022-b3eb965b4023",
+    "id": "bba65dab-c6cb-47bc-aedf-cf38012e2682",
     "company_slug": "griaule",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
@@ -1537,10 +1438,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:52:53.499Z"
+    "evaluated_at": "2026-01-25T20:35:13.006Z"
   },
   {
-    "id": "e668593b-6700-43cc-957d-5bef841fed04",
+    "id": "520fecbc-87cb-4a77-a5a8-939645630d89",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
@@ -1548,10 +1449,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.489Z"
+    "evaluated_at": "2026-01-25T20:49:17.512Z"
   },
   {
-    "id": "48e27c40-eb7b-4f6e-aa7a-e7d5c2cfea9a",
+    "id": "cb3ef04d-f638-4b37-b204-389fa0cf9a16",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
@@ -1559,10 +1460,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.499Z"
+    "evaluated_at": "2026-01-25T20:49:18.098Z"
   },
   {
-    "id": "b120f003-676e-4bde-9f24-eaf041736f38",
+    "id": "c37dba17-35b6-47da-97e3-0ce656b54f3f",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
@@ -1570,10 +1471,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.511Z"
+    "evaluated_at": "2026-01-25T20:49:19.491Z"
   },
   {
-    "id": "9fa2a14f-da63-46c8-b9bf-0c3e9de42260",
+    "id": "de6264fb-32ef-4524-9eb7-2521e1293050",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
@@ -1581,10 +1482,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.550Z"
+    "evaluated_at": "2026-01-25T20:49:20.014Z"
   },
   {
-    "id": "14d5cee7-3c6b-4517-8d1c-344bed94bfdc",
+    "id": "fbceebf3-5e2e-4649-a139-463e49d9b1fd",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
@@ -1592,10 +1493,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.573Z"
+    "evaluated_at": "2026-01-25T20:49:22.751Z"
   },
   {
-    "id": "110059a1-f6ee-43b4-9a1d-d5a8811b20a7",
+    "id": "eb1efc5e-64c0-4956-bbe4-758a828ce81c",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
@@ -1603,10 +1504,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.581Z"
+    "evaluated_at": "2026-01-25T20:49:23.133Z"
   },
   {
-    "id": "8516a83f-0372-41a5-987d-e72f3ae9f559",
+    "id": "f00c47c0-c277-453a-b1c5-4ffa9402dfc1",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
@@ -1614,10 +1515,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.591Z"
+    "evaluated_at": "2026-01-25T20:49:23.544Z"
   },
   {
-    "id": "63b3a6fe-fa1e-4d9f-9614-c3c3a578a6e5",
+    "id": "b87a5551-9496-44b1-8d97-6946e9aae244",
     "company_slug": "griaule",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
@@ -1625,10 +1526,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.599Z"
+    "evaluated_at": "2026-01-25T20:49:23.791Z"
   },
   {
-    "id": "d459f01e-4601-429b-82bf-ebc124ddd514",
+    "id": "1a17bd00-2551-435c-91a1-b8813057759f",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -1636,10 +1537,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.609Z"
+    "evaluated_at": "2026-01-25T20:49:24.461Z"
   },
   {
-    "id": "de881899-da15-4ead-985b-4f83bbd452ad",
+    "id": "2044ded7-e003-42bd-b015-ace1ae6b8de9",
     "company_slug": "griaule",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
@@ -1647,10 +1548,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.617Z"
+    "evaluated_at": "2026-01-25T20:49:25.082Z"
   },
   {
-    "id": "2d7c73f7-75de-442a-adcd-88312c72f2e0",
+    "id": "7d1072a9-c415-43a6-ac2c-f9215a852159",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
@@ -1658,10 +1559,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.676Z"
+    "evaluated_at": "2026-01-25T20:50:11.818Z"
   },
   {
-    "id": "f3f7dcbb-f13d-4933-b035-83f97c12d9ed",
+    "id": "be68e2a9-4281-4bed-a6f0-5d381dc939f4",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
@@ -1669,10 +1570,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.684Z"
+    "evaluated_at": "2026-01-25T20:50:13.602Z"
   },
   {
-    "id": "cdd0a006-57a7-482b-8e76-ac4c5e0d5154",
+    "id": "b932c768-ed4e-4989-8176-08d5f4e92098",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
@@ -1680,10 +1581,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.701Z"
+    "evaluated_at": "2026-01-25T20:50:13.688Z"
   },
   {
-    "id": "0985e3a8-5ea5-4cc0-8264-c3f341ce4f1e",
+    "id": "3c186165-b122-4f47-9a4e-bec9639b6b66",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
@@ -1691,10 +1592,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.726Z"
+    "evaluated_at": "2026-01-25T20:50:13.827Z"
   },
   {
-    "id": "2398bd71-f88a-4c75-8d2c-143320b78753",
+    "id": "dfcb37b5-535d-4ccf-9436-3a787aebc334",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
@@ -1702,10 +1603,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.747Z"
+    "evaluated_at": "2026-01-25T20:50:13.907Z"
   },
   {
-    "id": "1e7dfee4-1b28-430d-954b-488fcee39a97",
+    "id": "ae713cc0-42a4-4e9e-97a5-8a252627ee05",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
@@ -1713,10 +1614,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.765Z"
+    "evaluated_at": "2026-01-25T20:50:13.988Z"
   },
   {
-    "id": "72c13dbb-5127-4ac9-b177-b43f563444e4",
+    "id": "e236f0f2-144f-45c6-9131-6526f7d2cf19",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
@@ -1724,10 +1625,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.776Z"
+    "evaluated_at": "2026-01-25T20:50:14.086Z"
   },
   {
-    "id": "80786464-7f45-4a94-9c20-eac9f55ccde0",
+    "id": "4114d02d-cce4-4b9b-8d70-99ce024a6507",
     "company_slug": "griaule",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
@@ -1735,10 +1636,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.782Z"
+    "evaluated_at": "2026-01-25T20:50:14.187Z"
   },
   {
-    "id": "8b94d2e7-bd07-4a9b-a6d1-49b088e619a4",
+    "id": "a77e47f4-7f43-429c-aab4-422e1923415c",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -1746,10 +1647,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.794Z"
+    "evaluated_at": "2026-01-25T20:50:14.294Z"
   },
   {
-    "id": "93d2db21-e8c5-4d45-ad85-69ed3c575904",
+    "id": "409680ae-b46e-461d-b79c-e40e2c19eac4",
     "company_slug": "griaule",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
@@ -1757,10 +1658,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T03:55:47.802Z"
+    "evaluated_at": "2026-01-25T20:50:14.440Z"
   },
   {
-    "id": "31d45ed7-41a5-47d3-babf-5aff017952cc",
+    "id": "1720e337-d0b3-438c-ae55-bd1ac510fb67",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
@@ -1768,10 +1669,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.409Z"
+    "evaluated_at": "2026-01-25T20:56:28.731Z"
   },
   {
-    "id": "c7f6b597-c816-4970-a32d-108aaeb71adb",
+    "id": "1b886d1a-05c2-4f25-a58f-ace083eecc66",
     "company_slug": "griaule",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
@@ -1779,10 +1680,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.438Z"
+    "evaluated_at": "2026-01-25T20:56:29.375Z"
   },
   {
-    "id": "16217676-16d2-4789-ad99-b87cb34abb66",
+    "id": "af81d67c-7147-457b-a7d5-4bb511b0970a",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
@@ -1790,10 +1691,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.498Z"
+    "evaluated_at": "2026-01-25T20:56:29.712Z"
   },
   {
-    "id": "90a4c228-cac0-4cfa-9125-777ac31f0ebd",
+    "id": "785df467-6dbc-4b05-94c6-bb26fbf1a80d",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
@@ -1801,10 +1702,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.530Z"
+    "evaluated_at": "2026-01-25T20:56:29.928Z"
   },
   {
-    "id": "afdb8ac7-979f-448a-b5b7-16f8b9db4030",
+    "id": "7a357bf0-9b01-4b9a-bacc-f9cf4446ea1e",
     "company_slug": "griaule",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
@@ -1812,10 +1713,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.553Z"
+    "evaluated_at": "2026-01-25T20:56:29.938Z"
   },
   {
-    "id": "7b123290-2b2c-4b80-8d19-457f7bc22fd6",
+    "id": "6b45e881-1deb-4eb6-b38a-588f101fa661",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
@@ -1823,10 +1724,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.573Z"
+    "evaluated_at": "2026-01-25T20:56:29.942Z"
   },
   {
-    "id": "32b75cff-28fd-4e59-b39e-d6df7d6ecbfa",
+    "id": "0e2e3e53-2d32-4d79-892a-5f652023548a",
     "company_slug": "griaule",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
@@ -1834,10 +1735,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.589Z"
+    "evaluated_at": "2026-01-25T20:56:29.946Z"
   },
   {
-    "id": "3acc6616-7184-4b43-a496-3dc36c5ddbc2",
+    "id": "30e356aa-d897-460c-b92a-de96191c3fdc",
     "company_slug": "griaule",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
@@ -1845,10 +1746,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.605Z"
+    "evaluated_at": "2026-01-25T20:56:29.954Z"
   },
   {
-    "id": "4ac645e9-2c03-4cc9-973d-7ab57f06704a",
+    "id": "2565fa7c-1da1-46ef-8af2-c6f19f38be7d",
     "company_slug": "griaule",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
@@ -1856,10 +1757,10 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.623Z"
+    "evaluated_at": "2026-01-25T20:56:29.958Z"
   },
   {
-    "id": "1e9fee4c-f908-48fd-ad71-7d0d3299d6c9",
+    "id": "c287c0e1-4672-473c-907e-1faa6288ec04",
     "company_slug": "griaule",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
@@ -1867,1700 +1768,6 @@
     "open_defects": 0,
     "fail_rate": 0,
     "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.639Z"
-  },
-  {
-    "id": "6edc7e91-51de-488c-ae34-9310ad739358",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.859Z"
-  },
-  {
-    "id": "6c86bbf4-fec7-4185-be6e-97232454f179",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.876Z"
-  },
-  {
-    "id": "c849b1ee-d4a6-4f78-85cf-527ecbcc8754",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.901Z"
-  },
-  {
-    "id": "c11adfa7-3b06-4d64-8034-6e4579b0fe05",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.922Z"
-  },
-  {
-    "id": "52bbf58b-bd0a-48e8-a4a2-de5ddb4c0358",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s12",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.941Z"
-  },
-  {
-    "id": "5b8e82b3-04f4-415b-83dd-c0cde48593b9",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.959Z"
-  },
-  {
-    "id": "9ca6277c-4b0a-4ab6-8c8c-8a211a3437e3",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:44.989Z"
-  },
-  {
-    "id": "5bec7aa7-11db-47d8-b233-b591047c4c1b",
-    "company_slug": "griaule",
-    "release_slug": "print_v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:45.007Z"
-  },
-  {
-    "id": "c2708474-6342-4d7d-a626-fc990858b582",
-    "company_slug": "griaule",
-    "release_slug": "release_1_teste_painel_qa_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:45.023Z"
-  },
-  {
-    "id": "85ead033-16f4-4e1c-beb4-24e699dd5497",
-    "company_slug": "griaule",
-    "release_slug": "release_1_9_0_aceitacao",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T11:56:45.040Z"
-  },
-  {
-    "id": "1eec5ddc-834d-4e58-a26d-6c10f0fea839",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:10.583Z"
-  },
-  {
-    "id": "1877ca53-0416-4ad1-baaa-95d2d4241d04",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:10.767Z"
-  },
-  {
-    "id": "c5a5d442-769b-4b10-8f6c-ab413a3e6ca7",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:10.967Z"
-  },
-  {
-    "id": "21929075-9bbf-45f2-b654-4828f4cdf0f8",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:11.098Z"
-  },
-  {
-    "id": "66778953-f064-462d-9ee9-aafd278ba3e3",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s12",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:11.185Z"
-  },
-  {
-    "id": "6402de16-7fd1-4568-9261-1c2f9a9626ae",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:11.298Z"
-  },
-  {
-    "id": "a84f96d1-df5c-4615-913d-85c27e612726",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:11.430Z"
-  },
-  {
-    "id": "3a047e1f-7699-469c-9aa1-275e300a0da3",
-    "company_slug": "griaule",
-    "release_slug": "print_v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:11.536Z"
-  },
-  {
-    "id": "7accce46-78eb-4db5-a401-8483377e0b7b",
-    "company_slug": "griaule",
-    "release_slug": "release_1_teste_painel_qa_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:11.652Z"
-  },
-  {
-    "id": "daaacd83-d99f-49b7-92b5-b35dcec611bd",
-    "company_slug": "griaule",
-    "release_slug": "release_1_9_0_aceitacao",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:11.759Z"
-  },
-  {
-    "id": "b2ac5055-67dd-4500-8066-c4342735f1a5",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:12.115Z"
-  },
-  {
-    "id": "ab55857e-30a8-4059-8fb8-b31767915d9f",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:12.202Z"
-  },
-  {
-    "id": "3478f174-6c93-4978-b12e-408b4e9f5836",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:12.294Z"
-  },
-  {
-    "id": "fb4e0978-a770-41be-99da-cb7047ff7ccf",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:12.514Z"
-  },
-  {
-    "id": "47238fcf-789b-46c5-ba0b-09e689b23614",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s12",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:12.776Z"
-  },
-  {
-    "id": "892c149e-5a8a-4260-b0f4-297eb4b96637",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:12.909Z"
-  },
-  {
-    "id": "d335e1b2-209a-476f-bacb-0f830b043bbf",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:13.319Z"
-  },
-  {
-    "id": "83da295c-1cfa-4084-9528-6a8045b1190f",
-    "company_slug": "griaule",
-    "release_slug": "print_v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:13.834Z"
-  },
-  {
-    "id": "c3693ec2-09c1-43f5-ac9b-dcc0d727c128",
-    "company_slug": "griaule",
-    "release_slug": "release_1_teste_painel_qa_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:13.914Z"
-  },
-  {
-    "id": "ac7106df-e151-48c8-9ce7-09f0f3d12672",
-    "company_slug": "griaule",
-    "release_slug": "release_1_9_0_aceitacao",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:49:14.015Z"
-  },
-  {
-    "id": "4f61d1e9-22d7-4f86-9cf3-a74aa602434f",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:07.214Z"
-  },
-  {
-    "id": "628b4ac7-b6e2-403b-ade0-b55ebbb14cb2",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:07.529Z"
-  },
-  {
-    "id": "89687c4c-8e16-41d0-97f3-f92d52429d57",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:07.760Z"
-  },
-  {
-    "id": "8a6a132b-48ac-4f18-9858-f43301ecee9e",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:07.818Z"
-  },
-  {
-    "id": "77ec5dcd-afb9-497e-8da7-9036b26ffe15",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s12",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:07.875Z"
-  },
-  {
-    "id": "cb153ed1-094b-45cc-9618-09e19a87e378",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:07.923Z"
-  },
-  {
-    "id": "64cc8486-8fa8-4120-8be9-3f5e0660ced4",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:07.967Z"
-  },
-  {
-    "id": "625f893a-b729-48b4-a138-2d96913ff12f",
-    "company_slug": "griaule",
-    "release_slug": "print_v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:08.024Z"
-  },
-  {
-    "id": "f670d8de-b102-4b57-a9d5-74719bd2d5df",
-    "company_slug": "griaule",
-    "release_slug": "release_1_teste_painel_qa_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:08.103Z"
-  },
-  {
-    "id": "d8c75427-b35e-490b-9268-bd12958ff569",
-    "company_slug": "griaule",
-    "release_slug": "release_1_9_0_aceitacao",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:08.156Z"
-  },
-  {
-    "id": "4b300345-0578-4700-bbcc-ef0ce7f708d4",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:08.380Z"
-  },
-  {
-    "id": "d83400f6-0498-497b-9765-1d9f96ad3e2a",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:08.399Z"
-  },
-  {
-    "id": "1119b36f-125c-4e0f-851e-85146c35ce3d",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:08.441Z"
-  },
-  {
-    "id": "a435d557-8bf5-481b-bb72-12fb47d9dbe5",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:08.522Z"
-  },
-  {
-    "id": "05cde507-6679-40cf-bcc5-b444ac458e02",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s12",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:08.568Z"
-  },
-  {
-    "id": "e87dd81d-7182-40e8-9649-037ee1ccfcb2",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:08.622Z"
-  },
-  {
-    "id": "2a8392c3-2df9-4784-9649-cd9e8d8f2219",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:08.681Z"
-  },
-  {
-    "id": "2687f63e-934a-44d0-b1bf-76f9e5fb6b82",
-    "company_slug": "griaule",
-    "release_slug": "print_v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:08.735Z"
-  },
-  {
-    "id": "440a6cab-802a-4167-935e-84263c792d5d",
-    "company_slug": "griaule",
-    "release_slug": "release_1_teste_painel_qa_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:08.792Z"
-  },
-  {
-    "id": "020416c1-4fa2-4f96-9f9f-0c4ee917f15c",
-    "company_slug": "griaule",
-    "release_slug": "release_1_9_0_aceitacao",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:55:08.854Z"
-  },
-  {
-    "id": "b67bcb7b-e2b9-4e99-b681-29b9096dc162",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:07.711Z"
-  },
-  {
-    "id": "f531aaf5-b4b6-4240-98a0-9c728c3c6986",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:07.980Z"
-  },
-  {
-    "id": "cd6f9f22-1e47-4642-8a43-d4a9f335af1e",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:08.207Z"
-  },
-  {
-    "id": "7dd9403e-2ac5-4bcb-a7ff-d72f5129c05f",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:08.291Z"
-  },
-  {
-    "id": "b13923f2-b162-47ca-b659-55e9db93ea9f",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s12",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:08.359Z"
-  },
-  {
-    "id": "1c7fd05f-dbf2-4b21-aa9c-7a9d679c3b3e",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:08.415Z"
-  },
-  {
-    "id": "58e17d94-9041-4f5d-977b-1ba0ccd3c891",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:08.463Z"
-  },
-  {
-    "id": "f02a95f0-6e89-41a3-8ab4-f836939d60c2",
-    "company_slug": "griaule",
-    "release_slug": "print_v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:08.517Z"
-  },
-  {
-    "id": "f73c8625-3a92-46b7-9e4b-cf77e61e68b6",
-    "company_slug": "griaule",
-    "release_slug": "release_1_teste_painel_qa_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:08.625Z"
-  },
-  {
-    "id": "f1ba4a04-b06f-42e5-ab00-4a4cbed1e9a0",
-    "company_slug": "griaule",
-    "release_slug": "release_1_9_0_aceitacao",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:08.724Z"
-  },
-  {
-    "id": "4bb68d26-6fcd-4e4a-a1cf-356d8e3453cb",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:08.988Z"
-  },
-  {
-    "id": "4155e808-edb5-4f63-ac3d-38663f8d41ba",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:09.009Z"
-  },
-  {
-    "id": "3b59cd04-7f24-441f-9e2e-26786cb6753f",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:09.073Z"
-  },
-  {
-    "id": "dd09b78d-e491-4496-adb2-9b3c3687022c",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:09.150Z"
-  },
-  {
-    "id": "77b6d92e-ad79-4056-b92a-a2278e4dce72",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s12",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:09.209Z"
-  },
-  {
-    "id": "9de94c3d-fba1-4833-baaa-8490e694c624",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:09.259Z"
-  },
-  {
-    "id": "b56caa56-a12b-48dc-8ec6-5353e3d4d845",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:09.316Z"
-  },
-  {
-    "id": "14ffba8f-6e7b-47d9-9dbb-6e3bca257a56",
-    "company_slug": "griaule",
-    "release_slug": "print_v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:09.363Z"
-  },
-  {
-    "id": "d39fc819-be1a-4258-900f-33f33fd781b9",
-    "company_slug": "griaule",
-    "release_slug": "release_1_teste_painel_qa_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:09.401Z"
-  },
-  {
-    "id": "293a4adc-6862-45a0-b7a6-84c39169f328",
-    "company_slug": "griaule",
-    "release_slug": "release_1_9_0_aceitacao",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-18T12:59:09.440Z"
-  },
-  {
-    "id": "64d40d87-35a7-47b0-be12-40e9b69e786b",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:42.925Z"
-  },
-  {
-    "id": "289fa08c-5a07-4a4a-92c8-6c516d8a9b0a",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:43.051Z"
-  },
-  {
-    "id": "0ca6536c-030d-473d-8bc9-27d635a88eae",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:43.167Z"
-  },
-  {
-    "id": "2c40efa1-955b-4acd-8a95-1fb6d5695c46",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:43.212Z"
-  },
-  {
-    "id": "0b616e5f-7cbc-4db5-9960-22fbbe5ed583",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s12",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:43.271Z"
-  },
-  {
-    "id": "96e19179-8ac6-4fba-b1b1-c8708ce2b29a",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:43.347Z"
-  },
-  {
-    "id": "dabc7f9c-47a5-4a66-b8b3-398f9ea16cf8",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:43.440Z"
-  },
-  {
-    "id": "18c3196f-0737-4db2-901d-b89e1e250d4c",
-    "company_slug": "griaule",
-    "release_slug": "print_v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:43.570Z"
-  },
-  {
-    "id": "dacc203c-e546-415e-a953-29369af0366c",
-    "company_slug": "griaule",
-    "release_slug": "release_1_teste_painel_qa_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:43.672Z"
-  },
-  {
-    "id": "c2057887-3fa3-427e-996e-188d4a8dc214",
-    "company_slug": "griaule",
-    "release_slug": "release_1_9_0_aceitacao",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:43.776Z"
-  },
-  {
-    "id": "778bcc5e-d556-47a9-8aef-4e3bc408e32d",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:50.709Z"
-  },
-  {
-    "id": "42459cbb-1009-4647-b312-6203757745da",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:51.260Z"
-  },
-  {
-    "id": "31268958-602a-4f10-bd1f-0636f98306d1",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:52.121Z"
-  },
-  {
-    "id": "8cd3e183-9a4a-4761-b922-cfb400e7c82d",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:52.608Z"
-  },
-  {
-    "id": "abf1ed07-e41d-49f9-a97b-5b91af6e634d",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s12",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:53.069Z"
-  },
-  {
-    "id": "de212cd3-624b-4486-bb19-2d874df095d0",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:53.201Z"
-  },
-  {
-    "id": "db00c716-23a0-4996-9f14-be85e52082ef",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:53.373Z"
-  },
-  {
-    "id": "612533b3-e32e-4c84-9f3c-436d4dfda162",
-    "company_slug": "griaule",
-    "release_slug": "print_v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:53.489Z"
-  },
-  {
-    "id": "396cc3f1-f0c8-457c-94a2-2ae924ba5327",
-    "company_slug": "griaule",
-    "release_slug": "release_1_teste_painel_qa_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:53.659Z"
-  },
-  {
-    "id": "f449d004-4a41-4ce2-9f58-255c16282839",
-    "company_slug": "griaule",
-    "release_slug": "release_1_9_0_aceitacao",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:53.758Z"
-  },
-  {
-    "id": "6f56cf2c-a270-40ff-b147-5e4642870727",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:54.491Z"
-  },
-  {
-    "id": "36c1bbb2-8f82-4105-aea4-cc530223ea90",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:55.023Z"
-  },
-  {
-    "id": "b771d8cf-c2ce-4cbc-955b-821a7236b8b5",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:55.042Z"
-  },
-  {
-    "id": "ca8d5725-e3aa-4318-91c3-185ce4a16150",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:55.085Z"
-  },
-  {
-    "id": "16f00c9b-dd84-4f83-b1f7-945ae665548b",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s12",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:55.296Z"
-  },
-  {
-    "id": "e321b27d-dcbd-4ecb-ba50-b47d010de0eb",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:55.428Z"
-  },
-  {
-    "id": "3304edc0-fa52-4c98-af1c-b3820bbd58e3",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:55.573Z"
-  },
-  {
-    "id": "e47a228a-ae82-499a-9981-e8588c071922",
-    "company_slug": "griaule",
-    "release_slug": "print_v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:55.735Z"
-  },
-  {
-    "id": "1c99217d-654d-445c-996e-a50e983e9cb8",
-    "company_slug": "griaule",
-    "release_slug": "release_1_teste_painel_qa_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:55.902Z"
-  },
-  {
-    "id": "3461c670-bfcf-4c1f-a891-eaa061f83505",
-    "company_slug": "griaule",
-    "release_slug": "release_1_9_0_aceitacao",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:20:55.968Z"
-  },
-  {
-    "id": "fe0c77ee-028c-4c3c-8cac-968194399297",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:21:42.448Z"
-  },
-  {
-    "id": "60ff8f78-889d-48ed-9906-2215ecbeb938",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:21:42.854Z"
-  },
-  {
-    "id": "88942993-2889-424a-a940-c174a1874d1f",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:21:43.629Z"
-  },
-  {
-    "id": "5475dfd7-1272-4605-8554-bea0d93e3c5f",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:21:44.813Z"
-  },
-  {
-    "id": "0e7e96db-1d67-4c62-9edc-216530fbddf4",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s12",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:21:45.190Z"
-  },
-  {
-    "id": "ba1e805e-4780-4afa-a3f2-2c55c06b9342",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:21:45.616Z"
-  },
-  {
-    "id": "ced027fc-b8c0-4431-aa17-44215d524e2c",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:21:46.959Z"
-  },
-  {
-    "id": "4cb86fa8-9167-4ada-a162-3376732b141a",
-    "company_slug": "griaule",
-    "release_slug": "print_v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:21:47.678Z"
-  },
-  {
-    "id": "92a98dd7-2819-4c44-b131-877aaf7336e9",
-    "company_slug": "griaule",
-    "release_slug": "release_1_teste_painel_qa_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:21:48.467Z"
-  },
-  {
-    "id": "294bb822-068a-406e-bd12-b199f1cd4651",
-    "company_slug": "griaule",
-    "release_slug": "release_1_9_0_aceitacao",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:21:49.959Z"
-  },
-  {
-    "id": "5de20756-a1e2-41bb-b6e8-c83dad767805",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:22:01.457Z"
-  },
-  {
-    "id": "83ca8006-f31c-45d0-8f43-45e484367ae6",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:22:01.760Z"
-  },
-  {
-    "id": "c74e5062-b169-44d1-8be1-104bb1226aef",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:22:02.540Z"
-  },
-  {
-    "id": "df1bbb64-db3b-4279-bae7-9b4bb3d168c7",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:22:02.830Z"
-  },
-  {
-    "id": "61d61102-22a8-481e-9f75-0edb3395b994",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s12",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:22:03.254Z"
-  },
-  {
-    "id": "5b989aa2-ca52-4346-877f-945738a692c8",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:22:03.462Z"
-  },
-  {
-    "id": "03d7c8d2-5baf-422f-a972-347354b75dd9",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:22:04.032Z"
-  },
-  {
-    "id": "af6e8384-47db-42be-9757-5674da5db631",
-    "company_slug": "griaule",
-    "release_slug": "print_v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:22:04.242Z"
-  },
-  {
-    "id": "22d678da-5702-4b28-bed6-c1d7796f93f9",
-    "company_slug": "griaule",
-    "release_slug": "release_1_teste_painel_qa_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:22:04.429Z"
-  },
-  {
-    "id": "99d0aba2-af7c-4ba2-b314-858a55396d60",
-    "company_slug": "griaule",
-    "release_slug": "release_1_9_0_aceitacao",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:22:04.577Z"
-  },
-  {
-    "id": "ed6b96e6-f878-426c-9ec4-628d7270bd7f",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:23.606Z"
-  },
-  {
-    "id": "210b9cf8-d346-4bd6-be10-13e8bcc3c391",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:24.107Z"
-  },
-  {
-    "id": "8c167847-1fd8-4796-abcc-6db84aa264e1",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:24.935Z"
-  },
-  {
-    "id": "b0fe62f4-aab7-4591-9bb3-e99c56d5a5a9",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:25.255Z"
-  },
-  {
-    "id": "261860d0-6ef4-45c1-ad04-253bd6e57b38",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s12",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:25.455Z"
-  },
-  {
-    "id": "2262f0fc-df19-46ec-beca-b9c22bf81027",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:25.606Z"
-  },
-  {
-    "id": "6b999f06-7dcb-43b9-8d40-ea6a81ee3799",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:25.811Z"
-  },
-  {
-    "id": "9578c9f7-aa16-4b20-8fab-3395c64629ec",
-    "company_slug": "griaule",
-    "release_slug": "print_v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:25.991Z"
-  },
-  {
-    "id": "57ff67c8-2785-4148-957e-721839349ba3",
-    "company_slug": "griaule",
-    "release_slug": "release_1_teste_painel_qa_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:26.123Z"
-  },
-  {
-    "id": "fcac1cce-1657-4140-b210-500eba12da08",
-    "company_slug": "griaule",
-    "release_slug": "release_1_9_0_aceitacao",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:26.242Z"
-  },
-  {
-    "id": "147079d2-2578-4baf-8918-0bd52ded698a",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:26.938Z"
-  },
-  {
-    "id": "830f910d-f077-4fd9-b713-c16d9f5fe31f",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:26.981Z"
-  },
-  {
-    "id": "10219c89-d454-42b4-8490-98cb4cbd2a25",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:27.224Z"
-  },
-  {
-    "id": "98001927-9738-405c-b3c2-5e43d5972b2a",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:27.469Z"
-  },
-  {
-    "id": "37c0b6b3-26b3-4f8a-87a7-c1e50b7e898d",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s12",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:27.683Z"
-  },
-  {
-    "id": "45a1f691-8b09-456f-b23e-f8a614ad4f47",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:27.805Z"
-  },
-  {
-    "id": "e40148ab-ede6-4f7f-ab3b-dbdbc846ccb7",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:27.951Z"
-  },
-  {
-    "id": "0851f700-e0ab-424f-b08f-4826f99843a2",
-    "company_slug": "griaule",
-    "release_slug": "print_v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:28.108Z"
-  },
-  {
-    "id": "af2f8327-592e-4c25-9ff1-06134dd0c4ec",
-    "company_slug": "griaule",
-    "release_slug": "release_1_teste_painel_qa_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:28.258Z"
-  },
-  {
-    "id": "3ff2f994-79c8-4f45-b53c-b29a27f55656",
-    "company_slug": "griaule",
-    "release_slug": "release_1_9_0_aceitacao",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:28.422Z"
-  },
-  {
-    "id": "bdcf3232-383c-4516-be50-f69e2dcdff20",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:40.232Z"
-  },
-  {
-    "id": "9666eab3-4c0b-4ede-91b5-a6b4ad61aade",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:40.543Z"
-  },
-  {
-    "id": "15de4c8e-7c52-4a9a-89a3-7f69f9ccfa89",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:41.594Z"
-  },
-  {
-    "id": "fe6f0f20-d5fa-4381-8af2-0d2dfeb6efd2",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:42.505Z"
-  },
-  {
-    "id": "4e39c296-1953-489f-9b2b-70e22263cd2f",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:46.401Z"
-  },
-  {
-    "id": "7486c3c6-dc63-4505-bf03-15dd862cc056",
-    "company_slug": "griaule",
-    "release_slug": "v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:46.558Z"
-  },
-  {
-    "id": "72a91302-6454-4fe9-a4ca-fa766f899a04",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:46.721Z"
-  },
-  {
-    "id": "c4816a20-ab1c-4a61-8363-18233e517412",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s3",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:46.974Z"
-  },
-  {
-    "id": "29aa2b30-0d3e-4e8c-b4f9-910b3bef08ea",
-    "company_slug": "griaule",
-    "release_slug": "v1_7_0_ace_s12",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:47.141Z"
-  },
-  {
-    "id": "94a93f2a-ee8f-4c58-b61f-b0f30812e86d",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_reg",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:47.310Z"
-  },
-  {
-    "id": "db3a26a2-15bf-4595-a641-dc4e42da8a4d",
-    "company_slug": "griaule",
-    "release_slug": "v1_6_2_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:47.435Z"
-  },
-  {
-    "id": "5cf3a379-1d1a-4c7c-8de4-bf435e321ef4",
-    "company_slug": "griaule",
-    "release_slug": "print_v1_8_0_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:47.704Z"
-  },
-  {
-    "id": "b6a2b741-5ec7-4637-8623-fc5d218b1876",
-    "company_slug": "griaule",
-    "release_slug": "release_1_teste_painel_qa_ace",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:47.969Z"
-  },
-  {
-    "id": "3a1182ea-2266-4865-b986-f48f1db0ac4f",
-    "company_slug": "griaule",
-    "release_slug": "release_1_9_0_aceitacao",
-    "gate_status": "approved",
-    "mttr_hours": 24,
-    "open_defects": 0,
-    "fail_rate": 0,
-    "reasons": [],
-    "evaluated_at": "2026-01-22T13:24:48.193Z"
+    "evaluated_at": "2026-01-25T20:56:29.962Z"
   }
 ]

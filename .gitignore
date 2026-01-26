@@ -58,3 +58,5 @@ blob-report/
 
 
 /generated/prisma
+
+.env*.local

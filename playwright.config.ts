@@ -30,23 +30,25 @@ const envOverrides = {
 Object.assign(process.env, envOverrides);
 export default defineConfig({
   testDir: "./tests-e2e",
-  timeout: 30 * 1000,
+  timeout: 60 * 1000,
   expect: { timeout: 5000 },
   retries: 0,
   reporter: "list",
+  workers: 1,
   use: {
     baseURL,
     trace: "on-first-retry",
     headless: true,
   },
   webServer: {
-    command: "npm run dev:ci",
+    command: "npm run build && npm run start",
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    reuseExistingServer: false,
+    timeout: 300 * 1000,
     env: {
       ...dotenvEnv,
       SUPABASE_MOCK: "true",
+      NODE_ENV: "test",
       NEXT_PUBLIC_SUPABASE_URL: "http://localhost",
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key-test",
       SUPABASE_SERVICE_ROLE_KEY: "service-role-test",

@@ -3,6 +3,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import ExecutiveDashboard from "./ExecutiveDashboard";
 import { ExportQualityButton } from "./ExportQualityButton";
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
+import MttrSummary from "./MttrSummary";
 
 export default async function EmpresaDashboardPage({
   params,
@@ -52,6 +53,9 @@ export default async function EmpresaDashboardPage({
         {/* Bloco executivo */}
         <div className="mb-8">
           <ExecutiveDashboard slug={slug} />
+        </div>
+        <div className="mb-8">
+          <MttrSummary slug={slug} />
         </div>
       </div>
     </div>

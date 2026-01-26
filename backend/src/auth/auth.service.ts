@@ -1,3 +1,7 @@
+// --- Pool de conexão Postgres para uso com secure_insert_user ---
+import { Pool } from 'pg';
+// Ajuste a string de conexão conforme seu ambiente (DATABASE_URL é padrão em muitos setups)
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 import { Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { Request } from "express";
 import { createClient } from "@supabase/supabase-js";
@@ -37,6 +41,44 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private readonly supabaseAnon: SupabaseClientLike;
   private readonly jwtSecret: string | null;
+  /**
+   * Cria um usuário via RPC secure_insert_user, garantindo auditoria e unicidade.
+   * Usa transação e trata duplicidade (SQLSTATE 23505).
+   * @param actorUserId - UUID do usuário autenticado (quem está criando)
+   * @param actorEmail - Email do usuário autenticado
+   * @param email - Email do novo usuário
+   * @param nome - Nome do novo usuário
+   * @returns id do usuário criado
+   * @throws Error se email já existe ou erro de banco
+   */
+  public async createUser(
+    actorUserId: string,
+    actorEmail: string,
+    email: string,
+    nome: string
+  ): Promise<string> {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      // Chama a função RPC secure_insert_user; ajuste se sua função retorna mais campos
+      const res = await client.query(
+        'SELECT id FROM secure_insert_user($1, $2, $3, $4);',
+        [actorUserId, actorEmail, email, nome]
+      );
+      await client.query('COMMIT');
+      // Retorna o id do usuário criado
+      return res.rows[0]?.id;
+    } catch (err: any) {
+      await client.query('ROLLBACK').catch(() => {});
+      // Trata duplicidade de email
+      if (err && err.code === '23505') {
+        throw new Error('User with this email already exists');
+      }
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
 
   constructor(
     private readonly env: EnvironmentService,

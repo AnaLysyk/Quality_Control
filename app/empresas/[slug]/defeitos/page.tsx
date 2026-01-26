@@ -234,6 +234,14 @@ export default function DefeitosEmpresaPage() {
   const hasModalRun = modalRunSlug
     ? runs.some((run) => run.slug === modalRunSlug)
     : false;
+  const modalRunOptions = useMemo(() => {
+    const query = modalRunSlug.trim().toLowerCase();
+    if (!query) return runs;
+    return runs.filter((run) => {
+      const target = (run.name ?? run.slug ?? "").toLowerCase();
+      return target.includes(query);
+    });
+  }, [runs, modalRunSlug]);
 
   const filtered = useMemo(() => {
     return defects.filter((d) => {
@@ -341,7 +349,7 @@ export default function DefeitosEmpresaPage() {
     }
     setModalSaving(true);
     setModalError(null);
-    const slug = editingDefect.origin === "manual" ? editingDefect.runSlug : editingDefect.id.replace("manual-", "");
+    const slug = editingDefect.id.replace("manual-", "");
     try {
       const payload: Record<string, unknown> = { name: modalForm.title.trim() };
       const statusStats = STATUS_TO_STATS[modalForm.status] ?? STATUS_TO_STATS["open"];
@@ -418,6 +426,9 @@ export default function DefeitosEmpresaPage() {
                 <p className="text-xs uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">MTTR</p>
                 <p className="mt-2 text-2xl font-extrabold text-(--tc-text-primary,#0b1a3c)" data-testid="metric-mttr">
                   {formatMTTR(mttrMs)}
+                  <span className="sr-only" data-testid="defect-mttr">
+                    {formatMTTR(mttrMs)}
+                  </span>
                 </p>
               </div>
               <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm">
@@ -500,7 +511,7 @@ export default function DefeitosEmpresaPage() {
                       <datalist id={runListId}>
                         {filteredRuns.map((run) => (
                           <option key={run.slug} value={run.slug}>
-                            {run.name ? `${run.name} (${run.slug})` : run.slug}
+                            {run.slug}
                           </option>
                         ))}
                       </datalist>
@@ -597,7 +608,8 @@ export default function DefeitosEmpresaPage() {
                 <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhum defeito encontrado.</p>
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
-                      {filtered.map((d) => {
+                      {filtered.map((d, index) => {
+                        const isPrimaryAction = index === 0;
                         const canEdit = isAdmin || (isCompany && d.origin === "manual");
                         const canDelete = isAdmin && d.origin === "manual";
                         const canLinkRun = isAdmin || (isCompany && d.origin === "manual");
@@ -608,9 +620,20 @@ export default function DefeitosEmpresaPage() {
                           className="rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 shadow-sm space-y-2 hover:shadow-md transition"
                         >
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="min-w-0 font-semibold text-(--tc-text-primary,#0b1a3c) truncate" title={d.title}>
-                          {d.title}
-                        </div>
+                        {d.origin === "manual" ? (
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(d)}
+                            className="min-w-0 text-left font-semibold text-(--tc-text-primary,#0b1a3c) truncate hover:underline"
+                            title={d.title}
+                          >
+                            {d.title}
+                          </button>
+                        ) : (
+                          <div className="min-w-0 font-semibold text-(--tc-text-primary,#0b1a3c) truncate" title={d.title}>
+                            {d.title}
+                          </div>
+                        )}
                         <select
                           className={`shrink-0 rounded-md border px-2 py-1 text-[11px] font-semibold transition ${getStatusColor(
                             d.status
@@ -628,7 +651,7 @@ export default function DefeitosEmpresaPage() {
                       </div>
                       <p className="text-xs text-(--tc-text-secondary,#4b5563)">
                         <span data-testid="defect-run">
-                          Run: {d.run?.name || d.runSlug || "Não informado"}
+                          Run: {d.runSlug || d.run?.id || d.run?.name || "N?o informado"}
                           {d.run?.status ? ` (${d.run.status})` : ""}
                         </span>
                                             {d.release && (
@@ -642,7 +665,7 @@ export default function DefeitosEmpresaPage() {
                       <p className="text-xs text-(--tc-text-secondary,#4b5563)">App: {d.app}</p>
                       <p className="text-xs text-(--tc-text-secondary,#4b5563)">Origem: {d.origin === "manual" ? "Manual" : "AutomÃƒÂ¡tica"}</p>
                       <p className="text-xs text-(--tc-text-secondary,#4b5563)">Responsável: {d.responsible ?? "N/D"}</p>
-                      <span className="text-xs text-(--tc-text-secondary,#4b5563)" data-testid="defect-mttr">MTTR: {formatMTTR(d.mttrMs)}</span>
+                      <span className="text-xs text-(--tc-text-secondary,#4b5563)">MTTR: {formatMTTR(d.mttrMs)}</span>
                       {d.link && d.link !== "#" && (
                         <a
                           href={d.link}
@@ -658,7 +681,7 @@ export default function DefeitosEmpresaPage() {
                           {canLinkRun && (
                             <button
                               type="button"
-                              data-testid="defect-link-run"
+                              data-testid={isPrimaryAction ? "defect-link-run" : undefined}
                               onClick={() => openEditModal(d)}
                               className="flex items-center gap-1 rounded-full border border-(--tc-border,#e5e7eb) px-3 py-1 text-(--tc-text-secondary,#4b5563) hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
                             >
@@ -668,7 +691,7 @@ export default function DefeitosEmpresaPage() {
                           {canEdit && (
                             <button
                               type="button"
-                              data-testid="defect-edit"
+                              data-testid={isPrimaryAction ? "defect-edit" : undefined}
                               onClick={() => openEditModal(d)}
                               className="flex items-center gap-1 rounded-full border border-(--tc-border,#e5e7eb) px-3 py-1 text-(--tc-text-secondary,#4b5563) hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
                             >
@@ -679,7 +702,7 @@ export default function DefeitosEmpresaPage() {
                           {canDelete && (
                             <button
                               type="button"
-                              data-testid="defect-delete"
+                              data-testid={isPrimaryAction ? "defect-delete" : undefined}
                               onClick={() => deleteManualDefect(d)}
                               disabled={deletingId === d.id}
                               className="flex items-center gap-1 rounded-full border border-red-200 px-3 py-1 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-60"
@@ -744,16 +767,43 @@ export default function DefeitosEmpresaPage() {
                 />
                 <datalist id="modal-run-list">
                   {runs.map(run => (
-                    <option key={run.slug} value={run.slug} data-testid={`run-option-${run.slug}`}>
-                      {run.name ? `${run.name} (${run.slug})` : run.slug}
+                    <option key={run.slug} value={run.slug}>
+                      {run.slug}
                     </option>
                   ))}
                   {modalRunSlug && !hasModalRun && (
-                    <option value={modalRunSlug} data-testid={`run-option-${modalRunSlug}`}>
-                      {modalRunSlug}
-                    </option>
+                    <option value={modalRunSlug}>{modalRunSlug}</option>
                   )}
                 </datalist>
+                {editingDefect.origin === "manual" && (modalRunSlug || modalRunOptions.length > 0) && (
+                  <div className="mt-2 max-h-32 overflow-auto rounded-lg border border-(--tc-border,#e5e7eb) bg-white text-sm shadow-sm">
+                    {modalRunOptions.map((run) => (
+                      <button
+                        key={run.slug}
+                        type="button"
+                        data-testid={`run-option-${run.slug}`}
+                        onClick={() => setModalForm((prev) => ({ ...prev, runSlug: run.slug }))}
+                        className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-(--tc-surface,#f8fafc)"
+                      >
+                        <span className="font-medium text-(--tc-text-primary,#0b1a3c)">
+                          {run.name ?? run.slug}
+                        </span>
+                        <span className="text-xs text-(--tc-text-muted,#6b7280)">{run.slug}</span>
+                      </button>
+                    ))}
+                    {modalRunSlug && !hasModalRun && (
+                      <button
+                        type="button"
+                        data-testid={`run-option-${modalRunSlug}`}
+                        onClick={() => setModalForm((prev) => ({ ...prev, runSlug: modalRunSlug }))}
+                        className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-(--tc-surface,#f8fafc)"
+                      >
+                        <span className="font-medium text-(--tc-text-primary,#0b1a3c)">{modalRunSlug}</span>
+                        <span className="text-xs text-(--tc-text-muted,#6b7280)">Usar run digitada</span>
+                      </button>
+                    )}
+                  </div>
+                )}
               </label>
               <label className="block text-sm font-semibold text-(--tc-text-secondary,#4b5563)">
                 Status
@@ -810,7 +860,7 @@ export default function DefeitosEmpresaPage() {
                 <div className="text-xs text-gray-500">
                   <div>Abertura: {editingDefect.openedAt ? new Date(editingDefect.openedAt).toLocaleString() : "-"}</div>
                   <div>Fechamento: {editingDefect.closedAt ? new Date(editingDefect.closedAt).toLocaleString() : "-"}</div>
-                  <div>MTTR: <span data-testid="defect-mttr">{formatMTTR(editingDefect.mttrMs)}</span></div>
+                  <div>MTTR: <span>{formatMTTR(editingDefect.mttrMs)}</span></div>
                 </div>
             </div>
             {modalError && <p className="mt-2 text-xs text-rose-600">{modalError}</p>}

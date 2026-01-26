@@ -2,6 +2,8 @@ import fs from "fs";
 import path from "path";
 
 const ALERTS_STORE = path.join(process.cwd(), "data", "quality_alerts.json");
+const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+let memoryAlerts: QualityAlert[] = [];
 const ALERT_TYPES = [
   "quality_score",
   "sla",
@@ -25,6 +27,7 @@ export type QualityAlert = {
 };
 
 export async function readAlertsStore(): Promise<any[]> {
+  if (SUPABASE_MOCK) return memoryAlerts;
   try {
     const raw = await fs.promises.readFile(ALERTS_STORE, "utf8");
     return JSON.parse(raw);
@@ -34,6 +37,10 @@ export async function readAlertsStore(): Promise<any[]> {
 }
 
 export async function writeAlertsStore(alerts: any[]) {
+  if (SUPABASE_MOCK) {
+    memoryAlerts = alerts as QualityAlert[];
+    return;
+  }
   await fs.promises.mkdir(path.dirname(ALERTS_STORE), { recursive: true });
   await fs.promises.writeFile(ALERTS_STORE, JSON.stringify(alerts, null, 2), "utf8");
 }

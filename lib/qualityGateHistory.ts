@@ -3,6 +3,8 @@ import fs from "fs/promises";
 import path from "path";
 
 const STORE_PATH = path.join(process.cwd(), "data", "quality_gate_history.json");
+const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+let memoryStore: QualityGateHistoryEntry[] = [];
 export type QualityGateHistoryEntry = {
   id: string;
   company_slug: string;
@@ -23,6 +25,7 @@ export type QualityGateHistoryEntry = {
 };
 
 async function ensureStore() {
+  if (SUPABASE_MOCK) return;
   await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
   try {
     await fs.access(STORE_PATH);
@@ -32,6 +35,10 @@ async function ensureStore() {
 }
 
 export async function appendQualityGateHistory(entry: QualityGateHistoryEntry) {
+  if (SUPABASE_MOCK) {
+    memoryStore = [...memoryStore, entry];
+    return;
+  }
   try {
     await ensureStore();
     const raw = await fs.readFile(STORE_PATH, "utf8");
@@ -48,6 +55,17 @@ export async function appendQualityGateHistory(entry: QualityGateHistoryEntry) {
 }
 
 export async function readQualityGateHistory(companySlug?: string, releaseSlug?: string): Promise<QualityGateHistoryEntry[]> {
+  if (SUPABASE_MOCK) {
+    let arr = [...memoryStore];
+    if (companySlug) {
+      arr = arr.filter((item) => item.company_slug === companySlug);
+    }
+    if (releaseSlug) {
+      arr = arr.filter((item) => item.release_slug === releaseSlug);
+    }
+    arr.sort((a, b) => String(b.evaluated_at).localeCompare(String(a.evaluated_at)));
+    return arr;
+  }
   try {
     await ensureStore();
   } catch (err) {

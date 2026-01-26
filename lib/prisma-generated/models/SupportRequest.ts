@@ -198,13 +198,13 @@ export type SupportRequestWhereInput = {
   AND?: Prisma.SupportRequestWhereInput | Prisma.SupportRequestWhereInput[]
   OR?: Prisma.SupportRequestWhereInput[]
   NOT?: Prisma.SupportRequestWhereInput | Prisma.SupportRequestWhereInput[]
-  id?: Prisma.StringFilter<"SupportRequest"> | string
+  id?: Prisma.UuidFilter<"SupportRequest"> | string
   email?: Prisma.StringFilter<"SupportRequest"> | string
   message?: Prisma.StringFilter<"SupportRequest"> | string
   status?: Prisma.StringFilter<"SupportRequest"> | string
   ip_address?: Prisma.StringNullableFilter<"SupportRequest"> | string | null
   user_agent?: Prisma.StringNullableFilter<"SupportRequest"> | string | null
-  user_id?: Prisma.StringNullableFilter<"SupportRequest"> | string | null
+  user_id?: Prisma.UuidNullableFilter<"SupportRequest"> | string | null
   created_at?: Prisma.DateTimeFilter<"SupportRequest"> | Date | string
 }
 
@@ -229,7 +229,7 @@ export type SupportRequestWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.StringFilter<"SupportRequest"> | string
   ip_address?: Prisma.StringNullableFilter<"SupportRequest"> | string | null
   user_agent?: Prisma.StringNullableFilter<"SupportRequest"> | string | null
-  user_id?: Prisma.StringNullableFilter<"SupportRequest"> | string | null
+  user_id?: Prisma.UuidNullableFilter<"SupportRequest"> | string | null
   created_at?: Prisma.DateTimeFilter<"SupportRequest"> | Date | string
 }, "id">
 
@@ -251,13 +251,13 @@ export type SupportRequestScalarWhereWithAggregatesInput = {
   AND?: Prisma.SupportRequestScalarWhereWithAggregatesInput | Prisma.SupportRequestScalarWhereWithAggregatesInput[]
   OR?: Prisma.SupportRequestScalarWhereWithAggregatesInput[]
   NOT?: Prisma.SupportRequestScalarWhereWithAggregatesInput | Prisma.SupportRequestScalarWhereWithAggregatesInput[]
-  id?: Prisma.StringWithAggregatesFilter<"SupportRequest"> | string
+  id?: Prisma.UuidWithAggregatesFilter<"SupportRequest"> | string
   email?: Prisma.StringWithAggregatesFilter<"SupportRequest"> | string
   message?: Prisma.StringWithAggregatesFilter<"SupportRequest"> | string
   status?: Prisma.StringWithAggregatesFilter<"SupportRequest"> | string
   ip_address?: Prisma.StringNullableWithAggregatesFilter<"SupportRequest"> | string | null
   user_agent?: Prisma.StringNullableWithAggregatesFilter<"SupportRequest"> | string | null
-  user_id?: Prisma.StringNullableWithAggregatesFilter<"SupportRequest"> | string | null
+  user_id?: Prisma.UuidNullableWithAggregatesFilter<"SupportRequest"> | string | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"SupportRequest"> | Date | string
 }
 

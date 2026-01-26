@@ -49,10 +49,16 @@ export default async function proxy(req: NextRequest) {
 
   const cookieHeader = req.headers.get("cookie") ?? "";
   const mockRole = SUPABASE_MOCK ? (readCookieValue(cookieHeader, "mock_role") ?? "admin").trim().toLowerCase() : null;
+  const isAdminPath = pathname === "/admin" || pathname === "/admin/" || pathname.startsWith("/admin/");
+  const isAdminRedirectPath = pathname === "/admin" || pathname === "/admin/" || pathname === "/admin/home";
+  const nonAdminRedirectTarget = "/empresas";
   if (SUPABASE_MOCK && mockRole) {
     const userRole = mockRole === "admin" ? "admin" : "user";
-    if (pathname.startsWith('/admin/') && !hasPermission(userRole, 'view_admin')) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+    if (isAdminPath && !hasPermission(userRole, 'view_admin')) {
+      if (isAdminRedirectPath) {
+        return NextResponse.redirect(new URL(nonAdminRedirectTarget, req.url));
+      }
+      return NextResponse.next();
     }
     return NextResponse.next();
   }
@@ -73,8 +79,11 @@ export default async function proxy(req: NextRequest) {
     const session = typeof raw === "string" ? JSON.parse(raw) : raw;
     const userRole = getUserRoleFromSession(session);
 
-    if (pathname.startsWith('/admin/') && !hasPermission(userRole, 'view_admin')) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+    if (isAdminPath && !hasPermission(userRole, 'view_admin')) {
+      if (isAdminRedirectPath) {
+        return NextResponse.redirect(new URL(nonAdminRedirectTarget, req.url));
+      }
+      return NextResponse.next();
     }
 
     return NextResponse.next();

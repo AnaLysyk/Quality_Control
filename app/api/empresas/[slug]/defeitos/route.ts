@@ -44,6 +44,7 @@ type DefectResponse = {
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const FALLBACK_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
+const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object") return null;
@@ -133,6 +134,7 @@ function normalizeManualDefects(releases: any[]): Defect[] {
     const status = normalizeDefectStatus(r.status);
     const openedAt = resolveOpenedAt((r as any).openedAt ?? r.createdAt);
     const closedAt = resolveClosedAt(status, r.closedAt ?? null, r.updatedAt ?? null);
+    const runSlug = (r as any).runSlug ?? r.slug ?? (r.runId ? String(r.runId) : undefined);
     return {
       id: r.slug ?? r.id ?? `manual-${idx}`,
       title: r.name ?? r.title ?? "Defeito manual",
@@ -141,7 +143,8 @@ function normalizeManualDefects(releases: any[]): Defect[] {
       closedAt,
       mttrMs: calcMTTR(openedAt, closedAt),
       origin: "manual",
-      runSlug: (r as any).runSlug ? String((r as any).runSlug) : r.runId ? String(r.runId) : undefined,
+      runSlug: runSlug ? String(runSlug) : undefined,
+      app: r.app ?? undefined,
     };
   });
 }
@@ -150,8 +153,8 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   const { slug } = await context.params;
   const url = new URL(req.url);
   const runFilter = url.searchParams.get("run");
-  const clientSettings = await getClientQaseSettings(slug);
-  const token = clientSettings?.token ?? FALLBACK_TOKEN;
+  const clientSettings = SUPABASE_MOCK ? null : await getClientQaseSettings(slug);
+  const token = SUPABASE_MOCK ? "" : clientSettings?.token ?? FALLBACK_TOKEN;
   const projectCodesSet = new Set<string>();
   const settingsCodes = clientSettings?.projectCodes ?? [];
   settingsCodes.forEach((code) => {
@@ -162,60 +165,58 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
     const normalized = clientSettings.projectCode.trim().toUpperCase();
     if (normalized) projectCodesSet.add(normalized);
   }
-  const projectCodes = Array.from(projectCodesSet);
+  const projectCodes = SUPABASE_MOCK ? [] : Array.from(projectCodesSet);
+
+  const manualReleases = await readManualReleaseStore();
+  const scopedManualReleases = manualReleases.filter(
+    (release) => !release.clientSlug || release.clientSlug === slug,
+  );
+  const manualDefects = normalizeManualDefects(scopedManualReleases);
+
+  const warnings: string[] = [];
+  let errorMessage: string | null = null;
 
   if (!slug || !projectCodes.length) {
-    return NextResponse.json(
-      { defects: [], total: 0, byStatus: {}, byApplication: [], error: "Projeto Qase nao configurado para esta empresa." },
-      { status: 200 }
-    );
-  }
-
-  if (!token) {
-    return NextResponse.json(
-      { defects: [], total: 0, byStatus: {}, byApplication: [], error: "QASE_TOKEN ausente." },
-      { status: 200 }
-    );
+    errorMessage = "Projeto Qase nao configurado para esta empresa.";
+  } else if (!token) {
+    errorMessage = "QASE_TOKEN ausente.";
   }
 
   // Qase defects
   const allQaseDefects: QaseDefect[] = [];
   const allQaseRuns: any[] = [];
-  const warnings: string[] = [];
-  for (const code of projectCodes) {
-    const runsResult = await listQaseRuns(code, token);
-    if (runsResult.ok) {
-      runsResult.data.forEach((run) => {
-        const key = `${code}:${String(run.id)}`;
-        allQaseRuns.push({
-          id: key,
-          name: run.name ?? run.slug ?? `Run ${run.id}`,
-          status: run.status ?? "",
-          createdAt: run.createdAt,
+  if (token && projectCodes.length && !SUPABASE_MOCK) {
+    for (const code of projectCodes) {
+      const runsResult = await listQaseRuns(code, token);
+      if (runsResult.ok) {
+        runsResult.data.forEach((run) => {
+          const key = `${code}:${String(run.id)}`;
+          allQaseRuns.push({
+            id: key,
+            name: run.name ?? run.slug ?? `Run ${run.id}`,
+            status: run.status ?? "",
+            createdAt: run.createdAt,
+          });
         });
-      });
-    } else if (runsResult.warning) {
-      warnings.push(`[${code}] ${runsResult.warning}`);
-    }
+      } else if (runsResult.warning) {
+        warnings.push(`[${code}] ${runsResult.warning}`);
+      }
 
-    const defectsResult = await fetchAllDefects(code, token);
-    if (defectsResult.ok) {
-      defectsResult.data.forEach((d) => {
-        d.projectCode = code;
-      });
-      defectsResult.data.forEach((d) => {
-        if (d.run_id == null) return;
-        (d as any).run_id = `${code}:${String(d.run_id)}`;
-      });
-      allQaseDefects.push(...defectsResult.data);
-    } else if (defectsResult.warning) {
-      warnings.push(`[${code}] ${defectsResult.warning}`);
+      const defectsResult = await fetchAllDefects(code, token);
+      if (defectsResult.ok) {
+        defectsResult.data.forEach((d) => {
+          d.projectCode = code;
+        });
+        defectsResult.data.forEach((d) => {
+          if (d.run_id == null) return;
+          (d as any).run_id = `${code}:${String(d.run_id)}`;
+        });
+        allQaseDefects.push(...defectsResult.data);
+      } else if (defectsResult.warning) {
+        warnings.push(`[${code}] ${defectsResult.warning}`);
+      }
     }
   }
-
-  // Manual defects
-  const manualReleases = await readManualReleaseStore();
-  const manualDefects = normalizeManualDefects(manualReleases);
 
   // Releases
   const { getAllReleases } = await import("@/release/data");
@@ -275,6 +276,7 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
 
   const responseBody: Record<string, unknown> = { total: items.length, items, avgMttrMs };
   if (warnings.length) responseBody.warnings = warnings;
+  if (errorMessage) responseBody.error = errorMessage;
 
   return NextResponse.json(responseBody, { status: 200 });
 }

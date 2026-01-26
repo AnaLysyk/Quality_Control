@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { rateLimit } from "@/lib/rateLimit";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { getMockRole } from "@/lib/rbac/defects";
 import { getCompanyQualitySummary, getCompanyDefects } from "@/lib/quality";
 import { format } from "date-fns";
 
@@ -10,10 +11,16 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slug: s
   const rate = await rateLimit(req, `empresas-export:${ip}`);
   if (rate.limited) return rate.response;
   const { slug } = await context.params;
+  const mockRole = await getMockRole();
   const user = await authenticateRequest(req);
-  if (!user) return new Response("Unauthorized", { status: 401 });
-  // Only allow global admin for now (backend AuthUser only has isGlobalAdmin)
-  if (!user.isGlobalAdmin) return new Response("Forbidden", { status: 403 });
+  if (process.env.SUPABASE_MOCK === "true") {
+    if (!mockRole) return new Response("Unauthorized", { status: 401 });
+    if (mockRole !== "admin" && mockRole !== "company") return new Response("Forbidden", { status: 403 });
+  } else {
+    if (!user) return new Response("Unauthorized", { status: 401 });
+    // Only allow global admin for now (backend AuthUser only has isGlobalAdmin)
+    if (!user.isGlobalAdmin) return new Response("Forbidden", { status: 403 });
+  }
   const searchParams = req.nextUrl.searchParams;
   const period = searchParams.get("period") || "30d";
   const formatType = searchParams.get("format") || "csv";
@@ -26,7 +33,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slug: s
   // Cabeçalho
   const company = summary.companyName || slug;
   const now = format(new Date(), "yyyy-MM-dd HH:mm:ss");
-  const userLabel = user.email || "admin";
+  const userLabel = user?.email || mockRole || "admin";
 
   let csv = `company,period,quality_score,total_defects,open_defects,closed_defects,mttr_avg,sla_overdue,generated_at,user\n`;
   csv += `${company},${period},${summary.qualityScore},${summary.totalDefects},${summary.openDefects},${summary.closedDefects},${summary.mttrAvg},${summary.slaOverdue},${now},${userLabel}\n\n`;

@@ -1,20 +1,18 @@
 [
   {
     "company_slug": "griaule",
-    "goal_id": "goal-score-85",
-    "status": "met",
-    "updated_at": "2026-01-22T15:22:46.070Z"
+    "goal": "coverage",
+    "status": "violated",
+    "value": 60,
+    "target": 80,
+    "evaluated_at": "2026-01-26T02:13:19.416Z"
   },
   {
     "company_slug": "griaule",
-    "goal_id": "goal-mttr-72h",
-    "status": "met",
-    "updated_at": "2026-01-22T15:22:46.070Z"
-  },
-  {
-    "company_slug": "griaule",
-    "goal_id": "goal-gate-no-fail",
-    "status": "met",
-    "updated_at": "2026-01-22T15:22:46.070Z"
+    "goal": "mttr",
+    "status": "at_risk",
+    "value": 3,
+    "target": 2,
+    "evaluated_at": "2026-01-26T02:13:19.417Z"
   }
 ]

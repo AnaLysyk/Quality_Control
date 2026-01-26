@@ -31,7 +31,7 @@ let cachedClient: SupabaseClient | null = null;
 
 // Server-only client (service role). Do not expose in the browser.
 export function getSupabaseServer() {
-  if (SUPABASE_MOCK && IS_PROD) {
+  if (SUPABASE_MOCK && IS_PROD && !IS_TEST) {
     throw new Error("SUPABASE_MOCK is enabled in production");
   }
 

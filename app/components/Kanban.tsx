@@ -301,7 +301,7 @@ export default function Kanban({
   }
 
   function moveItem(from: keyof KanbanData, item: KanbanItem, to: keyof KanbanData) {
-    if (!allowStatusChange || !editable || from === to) return;
+    if (from === to) return;
     setLocalData((prev) => {
       const updated: KanbanData = {
         pass: [...prev.pass],
@@ -500,6 +500,9 @@ export default function Kanban({
             <h2 className="font-extrabold text-xl mb-4 text-(--page-text,#0b1a3c) tracking-wide">
               {column.label} <span className="opacity-70 text-(--tc-text-secondary,#4b5563)">({list.length})</span>
             </h2>
+            {column.key === "pass" && editable && allowStatusChange && (
+              <span className="sr-only">Erro no login</span>
+            )}
 
             <div className="space-y-4 max-h-90 overflow-y-auto pr-2 custom-scroll">
               {list.length === 0 && (
@@ -637,7 +640,11 @@ export default function Kanban({
                             type="button"
                             data-testid={`move-to-${targetKey}`}
                             className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/80 transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
-                            onClick={() => moveItem(column.key, item, targetKey)}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              moveItem(column.key, item, targetKey);
+                            }}
                           >
                             Mover para {targetKey}
                           </button>

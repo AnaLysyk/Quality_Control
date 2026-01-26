@@ -194,7 +194,6 @@ const handler = async (req: Request) => {
 };
 
 export default handler;
-}
 
 // PATCH não suportado neste modelo minimalista
 export async function PATCH() {

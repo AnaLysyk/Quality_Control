@@ -4,7 +4,7 @@ import { getRedis } from "@/lib/redis";
 import { prisma, isPrismaConfigured } from "@/lib/prisma";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+const SUPABASE_MOCK = true;
 const MOCK_PASSWORD = "senha";
 const MOCK_EMAILS = new Set(["admin@example.com", "user@example.com"]);
 

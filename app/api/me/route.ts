@@ -268,10 +268,7 @@ export async function GET(req: Request) {
 
 
   if (!userRecord) {
-    return NextResponse.json(
-      { user: null, companies: [], error: { code: "INVALID_SESSION" } },
-      { status: 401 }
-    );
+    return NextResponse.json({ user: null, companies: [], error: { code: "INVALID_SESSION" } }, { status: 401 });
   }
 
   const linkedCompanies = userRecord.userCompanies

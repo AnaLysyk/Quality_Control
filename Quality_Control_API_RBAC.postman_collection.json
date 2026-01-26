@@ -14,6 +14,14 @@
       "value": ""
     },
     {
+      "key": "login",
+      "value": "EMAIL_AQUI"
+    },
+    {
+      "key": "password",
+      "value": "SENHA_AQUI"
+    },
+    {
       "key": "companyId",
       "value": ""
     },
@@ -76,7 +84,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"EMAIL_AQUI\",\n  \"password\": \"SENHA_AQUI\"\n}"
+              "raw": "{\n  \"login\": \"{{login}}\",\n  \"password\": \"{{password}}\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/login",

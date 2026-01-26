@@ -4,19 +4,18 @@
 - Environments: .env.development.local, .env.local
 
 ✓ Starting...
-✓ Ready in 3.5s
- GET /login 200 in 5.1s (compile: 3.2s, proxy.ts: 723ms, render: 1193ms)
- GET /login 200 in 134ms (compile: 10ms, proxy.ts: 8ms, render: 117ms)
- POST /api/auth/login 200 in 1565ms (compile: 642ms, proxy.ts: 8ms, render: 915ms)
- POST /api/auth/bootstrap 403 in 1647ms (compile: 219ms, proxy.ts: 18ms, render: 1411ms)
- GET / 307 in 2.7s (compile: 1426ms, proxy.ts: 85ms, render: 1210ms)
- GET /login 200 in 451ms (compile: 69ms, proxy.ts: 48ms, render: 334ms)
- GET / 307 in 2.2s (compile: 123ms, proxy.ts: 440ms, render: 1633ms)
- GET /login 200 in 682ms (compile: 43ms, proxy.ts: 60ms, render: 579ms)
- GET / 200 in 1199ms (compile: 43ms, proxy.ts: 62ms, render: 1094ms)
- POST /api/auth/login 200 in 1265ms (compile: 141ms, proxy.ts: 105ms, render: 1019ms)
-[api] /api/auth/bootstrap 200 requestId=67d56da2-b04e-45b3-8328-6bb3639ecbeb
- POST /api/auth/bootstrap 200 in 3.1s (compile: 1403ms, proxy.ts: 13ms, render: 1703ms)
-  Reload env: .env.development.local
-  Reload env: .env.local
- GET /login 200 in 574ms (compile: 220ms, proxy.ts: 174ms, render: 180ms)
+✓ Ready in 4.6s
+○ Compiling /login ...
+ GET /login 200 in 7.7s (compile: 6.6s, proxy.ts: 405ms, render: 720ms)
+ GET /login 200 in 138ms (compile: 10ms, proxy.ts: 8ms, render: 119ms)
+ POST /api/auth/login 200 in 2.0s (compile: 1203ms, proxy.ts: 38ms, render: 787ms)
+[api] /api/auth/bootstrap 200 requestId=6b7cebba-75f8-47d4-9142-43a24e4aa2bf
+ POST /api/auth/bootstrap 200 in 2.8s (compile: 495ms, proxy.ts: 430ms, render: 1880ms)
+ POST /api/auth/login 200 in 1252ms (compile: 106ms, proxy.ts: 145ms, render: 1000ms)
+ GET /api/me 500 in 1110ms (compile: 160ms, proxy.ts: 77ms, render: 873ms)
+○ Compiling /dashboard ...
+ GET /dashboard 200 in 4.9s (compile: 4.5s, proxy.ts: 31ms, render: 406ms)
+ GET /api/metrics/overview 500 in 4.7s (compile: 2.6s, proxy.ts: 149ms, render: 1968ms)
+ GET /api/metrics/overview 500 in 646ms (compile: 31ms, proxy.ts: 46ms, render: 569ms)
+ GET /empresas 200 in 2.4s (compile: 1888ms, proxy.ts: 47ms, render: 440ms)
+ GET /brand-identity 200 in 2.4s (compile: 1857ms, proxy.ts: 9ms, render: 528ms)

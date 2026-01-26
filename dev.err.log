@@ -1,1 +1,26 @@
-[api] /api/auth/bootstrap 403 requestId=9cd57488-2d95-4a25-affb-e62b96d980b0 code=NO_COMPANY_LINK 
+Error fetching metrics: Error [PrismaClientConstructorValidationError]: "adapter" property can only be provided to PrismaClient constructor when "driverAdapters" preview feature is enabled.
+Read more at https://pris.ly/d/client-constructor
+    at buildClient (lib\prisma.ts:50:18)
+    at getClient (lib\prisma.ts:56:30)
+    at Object.get (lib\prisma.ts:66:22)
+    at GET (app\api\metrics\overview\route.ts:58:14)
+  48 |
+  49 |   const adapter = new PrismaPg(pool);
+> 50 |   const client = new (PrismaClient as any)({ adapter }) as PrismaClient;
+     |                  ^
+  51 |   return client;
+  52 | }
+  53 |
+Error fetching metrics: Error [PrismaClientConstructorValidationError]: "adapter" property can only be provided to PrismaClient constructor when "driverAdapters" preview feature is enabled.
+Read more at https://pris.ly/d/client-constructor
+    at buildClient (lib\prisma.ts:50:18)
+    at getClient (lib\prisma.ts:56:30)
+    at Object.get (lib\prisma.ts:66:22)
+    at GET (app\api\metrics\overview\route.ts:58:14)
+  48 |
+  49 |   const adapter = new PrismaPg(pool);
+> 50 |   const client = new (PrismaClient as any)({ adapter }) as PrismaClient;
+     |                  ^
+  51 |   return client;
+  52 | }
+  53 |

@@ -4,8 +4,8 @@ import path from "path";
 import { getSupabaseServer } from "@/lib/supabaseServer";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
 type ClienteRow = {
   id: string;

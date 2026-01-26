@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabaseServer";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 export const runtime = "nodejs";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
 function sanitize(value: unknown, max = 1000): string {
   if (typeof value !== "string") return "";

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma, isPrismaConfigured } from "@/lib/prisma";
 import { getRedis } from "@/lib/redis";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 const HAS_DATABASE = isPrismaConfigured();
 
 interface TestStatusCount {

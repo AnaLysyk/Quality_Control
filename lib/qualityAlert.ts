@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 const ALERTS_STORE = path.join(process.cwd(), "data", "quality_alerts.json");
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 let memoryAlerts: QualityAlert[] = [];
 const ALERT_TYPES = [
   "quality_score",

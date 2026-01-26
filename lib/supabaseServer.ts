@@ -1,7 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { IS_PROD, SUPABASE_MOCK, SUPABASE_MOCK_RAW } from "@/lib/supabaseMock";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
-const IS_PROD = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
 const IS_TEST = process.env.NODE_ENV === "test" || !!process.env.JEST_WORKER_ID;
 
 // Allow SUPABASE_MOCK only for local/dev/test environments.
@@ -31,7 +30,7 @@ let cachedClient: SupabaseClient | null = null;
 
 // Server-only client (service role). Do not expose in the browser.
 export function getSupabaseServer() {
-  if (SUPABASE_MOCK && IS_PROD && !IS_TEST) {
+  if (SUPABASE_MOCK_RAW && IS_PROD && !IS_TEST) {
     throw new Error("SUPABASE_MOCK is enabled in production");
   }
 

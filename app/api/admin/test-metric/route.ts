@@ -2,8 +2,8 @@ import { NextRequest } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { apiFail, apiOk } from "@/lib/apiResponse";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
 function extractToken(req: NextRequest): string | null {
   const auth = req.headers.get("authorization");

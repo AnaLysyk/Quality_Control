@@ -4,8 +4,8 @@ import Papa from "papaparse";
 import { getSupabaseServer } from "@/lib/supabaseServer";
 import store, { nextId } from "../store";
 import type { Status } from "../types";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
 type Access = {
   userId: string;

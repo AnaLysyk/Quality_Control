@@ -2,8 +2,8 @@ import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { readManualReleaseStore } from "@/data/manualData";
 import { calcMTTR } from "@/lib/mttr";
 import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 // Resumo de qualidade para exportação executiva
 export async function getCompanyQualitySummary(slug: string, period: string = "30d") {
   // Manual defects
@@ -185,7 +185,6 @@ export async function getCompanyDefects(slug: string, period: string = "30d") {
   }));
 }
 import { ReleaseEntry } from "@/release/data";
-
 export type Stats = { pass: number; fail: number; blocked: number; notRun: number };
 
 export type ReleaseWithStats = ReleaseEntry & {

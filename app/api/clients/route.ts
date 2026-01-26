@@ -8,10 +8,10 @@ import { ClientCreateRequestSchema, ClientListResponseSchema, ClientSchema } fro
 import { ErrorResponseSchema } from "@/contracts/errors";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { apiFail, apiOk } from "@/lib/apiResponse";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 export const runtime = "nodejs";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
 const jsonError = (message: string, status: number) =>
   NextResponse.json(ErrorResponseSchema.parse({ error: message }), { status });

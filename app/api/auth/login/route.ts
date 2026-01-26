@@ -3,16 +3,24 @@ import { randomUUID } from "crypto";
 import { getRedis } from "@/lib/redis";
 import { prisma, isPrismaConfigured } from "@/lib/prisma";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { IS_PROD, SUPABASE_MOCK, SUPABASE_MOCK_RAW } from "@/lib/supabaseMock";
+import { isSupabaseDisabled } from "@/lib/envFlags";
+import { createClient } from "@supabase/supabase-js";
 
-const IS_PROD =
-  process.env.NODE_ENV === "production" ||
-  process.env.VERCEL === "1" ||
-  typeof process.env.VERCEL_ENV === "string";
-
-const SUPABASE_MOCK_RAW = process.env.SUPABASE_MOCK === "true";
-const SUPABASE_MOCK = SUPABASE_MOCK_RAW && !IS_PROD;
 const MOCK_PASSWORD = "senha";
 const MOCK_EMAILS = new Set(["admin@example.com", "user@example.com"]);
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
+const SUPABASE_AVAILABLE = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY) && !isSupabaseDisabled();
+const AUTH_COOKIE_NAME = (process.env.AUTH_COOKIE_NAME ?? "auth_token").trim() || "auth_token";
+
+const supabaseAnon =
+  SUPABASE_AVAILABLE
+    ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      })
+    : null;
 
 function isPrismaConfigError(err: unknown): boolean {
   return err instanceof Error && err.message.includes("PRISMA_NOT_CONFIGURED");
@@ -73,6 +81,21 @@ function readCookieValue(cookieHeader: string | null, name: string): string | nu
     }
   }
   return null;
+}
+
+function setAuthCookies(res: NextResponse, token: string, maxAgeSeconds: number) {
+  const names = new Set<string>([AUTH_COOKIE_NAME, "sb-access-token", "access_token"]);
+  const options = {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: maxAgeSeconds,
+  };
+
+  for (const name of names) {
+    res.cookies.set(name, token, options);
+  }
 }
 
 // Validacao real no banco
@@ -158,6 +181,22 @@ export async function POST(req: Request) {
   const cookieHeader = req.headers.get("cookie") ?? null;
   const hasMockCookie = !!(cookieHeader && readCookieValue(cookieHeader, "mock_role"));
   const allowMock = SUPABASE_MOCK || (!IS_PROD && hasMockCookie);
+
+  if (!allowMock && SUPABASE_AVAILABLE && supabaseAnon) {
+    try {
+      const { data, error } = await supabaseAnon.auth.signInWithPassword({ email, password });
+      if (error || !data?.session?.access_token) {
+        return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
+      }
+
+      const res = NextResponse.json({ ok: true });
+      setAuthCookies(res, data.session.access_token, data.session.expires_in);
+      return res;
+    } catch (err) {
+      console.error("Erro ao autenticar com Supabase:", err);
+      return NextResponse.json({ error: "Erro interno ao autenticar" }, { status: 500 });
+    }
+  }
 
   if (!allowMock && !isPrismaConfigured()) {
     return NextResponse.json(

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { slugifyRelease } from "@/lib/slugifyRelease";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object") return null;
@@ -31,6 +31,8 @@ function extractToken(req: Request): string | null {
   return (
     readCookieValue(cookieHeader, "sb-access-token") ||
     readCookieValue(cookieHeader, "auth_token") ||
+    readCookieValue(cookieHeader, "access_token") ||
+    (process.env.AUTH_COOKIE_NAME ? readCookieValue(cookieHeader, process.env.AUTH_COOKIE_NAME) : null) ||
     null
   );
 }
@@ -125,18 +127,32 @@ export async function GET(request: Request) {
     .limit(1)
     .maybeSingle();
 
-  const { data: userRow } = await supabase
+  let userRowResult = await supabase
     .from("users")
-    .select("role,client_id,is_global_admin,active")
+    .select("id, role, client_id, is_global_admin, active")
     .eq("auth_user_id", authUserId)
-    .eq("active", true)
     .maybeSingle();
+
+  if (userRowResult.error && String(userRowResult.error?.message || "").toLowerCase().includes("column \"active\"")) {
+    userRowResult = await supabase
+      .from("users")
+      .select("id, role, client_id, is_global_admin, ativo")
+      .eq("auth_user_id", authUserId)
+      .maybeSingle();
+  }
+
+  const userRow = userRowResult.data as Record<string, unknown> | null;
+  const userActive = userRow?.active === true || (userRow as { ativo?: unknown } | null)?.ativo === true;
 
   const { data: profileRow } = await supabase
     .from("profiles")
     .select("is_global_admin,role")
     .eq("id", authUserId)
     .maybeSingle();
+
+  if (userRow && !userActive) {
+    return NextResponse.json({ items: [] }, { status: 200 });
+  }
 
   const rawRole = typeof (userRow as { role?: unknown } | null)?.role === "string" ? ((userRow as any).role as string) : null;
   const role = rawRole ? rawRole.toLowerCase() : null;

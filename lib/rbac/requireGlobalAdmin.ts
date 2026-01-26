@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 
 import { getSupabaseServer } from "@/lib/supabaseServer";
 import { isAuthUserGlobalAdmin } from "@/lib/rbac/globalAdmin";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 type AdminSession = {
   id: string;
@@ -14,7 +15,6 @@ type AdminSession = {
 };
 
 async function shouldUseInternalMock(): Promise<boolean> {
-  const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
   if (!SUPABASE_MOCK) return false;
 
   // Some tests provide their own jest mock for `@/lib/supabaseServer`.

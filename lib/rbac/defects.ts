@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 export type Role = "admin" | "company" | "user";
 
@@ -8,10 +9,8 @@ type AuthUser = {
   isGlobalAdmin: boolean;
 };
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
-
 export async function getMockRole(): Promise<Role | null> {
-  if (process.env.SUPABASE_MOCK !== "true") return null;
+  if (!SUPABASE_MOCK) return null;
   const cookieStore = await cookies();
   const mockRole = cookieStore.get("mock_role")?.value?.toLowerCase();
   if (mockRole === "admin" || mockRole === "company" || mockRole === "user") {

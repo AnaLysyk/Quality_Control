@@ -1,11 +1,37 @@
+
 import fs from "fs";
 import path from "path";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+
+const s3 = new S3Client({
+  region: process.env.S3_REGION,
+  endpoint: process.env.S3_ENDPOINT,
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
+  },
+  forcePathStyle: true,
+});
+
+const S3_BUCKET = process.env.S3_BUCKET!;
+
 
 export async function seedRunsForSearch() {
-  const file = path.join(process.cwd(), "data", "releases-manual.json");
+  // Nome do arquivo no bucket S3
+  const s3Key = "releases-manual.json";
   let releases: any[] = [];
+  // Tenta baixar o arquivo existente do S3
   try {
-    releases = JSON.parse(await fs.promises.readFile(file, "utf8"));
+    const getObj = await s3.send(new GetObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: s3Key,
+    }));
+    const stream = getObj.Body as NodeJS.ReadableStream;
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+      chunks.push(Buffer.from(chunk));
+    }
+    releases = JSON.parse(Buffer.concat(chunks).toString("utf8"));
   } catch {}
   const runs = [
     {
@@ -43,7 +69,13 @@ export async function seedRunsForSearch() {
     releases = releases.filter((r: any) => r.slug !== run.slug);
     releases.push(run);
   }
-  await fs.promises.writeFile(file, JSON.stringify(releases, null, 2), "utf8");
+  // Salva o arquivo atualizado no S3
+  await s3.send(new PutObjectCommand({
+    Bucket: S3_BUCKET,
+    Key: s3Key,
+    Body: JSON.stringify(releases, null, 2),
+    ContentType: "application/json",
+  }));
 }
 
 export async function seedRunsWithQuality() {

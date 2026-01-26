@@ -2,8 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
 type CompanyDocumentKind = "file" | "link";
 

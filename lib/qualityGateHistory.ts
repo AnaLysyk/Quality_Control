@@ -1,9 +1,9 @@
 // Utilitário para registrar snapshot do quality gate
 import fs from "fs/promises";
 import path from "path";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 const STORE_PATH = path.join(process.cwd(), "data", "quality_gate_history.json");
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 let memoryStore: QualityGateHistoryEntry[] = [];
 export type QualityGateHistoryEntry = {
   id: string;

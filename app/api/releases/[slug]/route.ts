@@ -4,10 +4,10 @@ import { getSupabaseServer } from "@/lib/supabaseServer";
 import { getAllReleases, upsertRelease, type ReleaseEntry } from "@/release/data";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { canEditRun } from "@/lib/rbac/runs";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 export const runtime = "nodejs";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
 function normalizeAccessRole(value: unknown): "admin" | "company" | "user" {
   const raw = typeof value === "string" ? value.toLowerCase() : "";

@@ -5,6 +5,7 @@ import { readManualReleaseStore } from "@/data/manualData";
 import { calcMTTR } from "@/lib/mttr";
 import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
 import { externalFailure, externalSuccess, type ExternalServiceResult } from "@/lib/external";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 type QaseDefect = {
   id: string;
@@ -44,7 +45,6 @@ type DefectResponse = {
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const FALLBACK_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object") return null;

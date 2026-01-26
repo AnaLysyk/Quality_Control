@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Private</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 48px 16px;
+        background: #121212;
+        color: #f5f5f5;
+        text-align: center;
+      }
+      button {
+        margin-top: 16px;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 8px;
+        background: #2a8f5a;
+        color: #fff;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #247a4c;
+      }
+      a {
+        color: #6bd18b;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Private Area</h1>
+    <p id="status">Loading user...</p>
+    <button id="logoutBtn" type="button">Logout</button>
+
+    <script>
+      async function loadUser() {
+        try {
+          const res = await fetch("/me", { credentials: "include" });
+          if (!res.ok) {
+            document.getElementById("status").innerHTML =
+              'Not authenticated. <a href="/">Go back</a>';
+            return;
+          }
+          const data = await res.json();
+          const email = data?.user?.email || "unknown";
+          document.getElementById("status").textContent = `Logged in as ${email}`;
+        } catch (err) {
+          document.getElementById("status").textContent = "Failed to load user.";
+        }
+      }
+
+      document.getElementById("logoutBtn").addEventListener("click", async () => {
+        await fetch("/logout", { method: "POST" });
+        window.location.href = "/";
+      });
+
+      loadUser();
+    </script>
+  </body>
+</html>

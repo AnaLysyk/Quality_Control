@@ -1,10 +1,16 @@
-▲ Next.js 16.1.1 (Turbopack)
+▲ Next.js 16.1.4 (Turbopack)
 - Local:         http://localhost:3000
-- Network:       http://172.17.128.1:3000
-- Environments: .env.local
+- Network:       http://172.16.19.60:3000
+- Environments: .env.development.local, .env.local
 
 ✓ Starting...
-✓ Ready in 4.5s
-○ Compiling /login/forgot-password ...
- GET /login/forgot-password 200 in 6.9s (compile: 5.3s, proxy.ts: 316ms, render: 1296ms)
- GET /api/me 401 in 257ms (compile: 213ms, proxy.ts: 8ms, render: 36ms)
+✓ Ready in 3.5s
+ GET /login 200 in 5.1s (compile: 3.2s, proxy.ts: 723ms, render: 1193ms)
+ GET /login 200 in 134ms (compile: 10ms, proxy.ts: 8ms, render: 117ms)
+ POST /api/auth/login 200 in 1565ms (compile: 642ms, proxy.ts: 8ms, render: 915ms)
+ POST /api/auth/bootstrap 403 in 1647ms (compile: 219ms, proxy.ts: 18ms, render: 1411ms)
+ GET / 307 in 2.7s (compile: 1426ms, proxy.ts: 85ms, render: 1210ms)
+ GET /login 200 in 451ms (compile: 69ms, proxy.ts: 48ms, render: 334ms)
+ GET / 307 in 2.2s (compile: 123ms, proxy.ts: 440ms, render: 1633ms)
+ GET /login 200 in 682ms (compile: 43ms, proxy.ts: 60ms, render: 579ms)
+ GET / 200 in 1199ms (compile: 43ms, proxy.ts: 62ms, render: 1094ms)

@@ -1,23 +1,72 @@
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { apiFail, apiOk } from "@/lib/apiResponse";
-
-const IS_PROD =
-  process.env.NODE_ENV === "production" ||
-  process.env.VERCEL === "1" ||
-  typeof process.env.VERCEL_ENV === "string";
-
-const SUPABASE_MOCK_RAW = process.env.SUPABASE_MOCK === "true";
-const SUPABASE_MOCK = SUPABASE_MOCK_RAW && !IS_PROD;
+import { IS_PROD, SUPABASE_MOCK, SUPABASE_MOCK_RAW } from "@/lib/supabaseMock";
 
 type SupabaseServerClient = ReturnType<typeof import("@/lib/supabaseServer").getSupabaseServer>;
+
+function readCookieValue(cookieHeader: string, name: string): string | null {
+  if (!cookieHeader) return null;
+  const parts = cookieHeader.split(";").map((part) => part.trim());
+  for (const part of parts) {
+    if (!part) continue;
+    const [key, ...rest] = part.split("=");
+    if (key === name) {
+      const value = rest.join("=");
+      return value ? decodeURIComponent(value) : "";
+    }
+  }
+  return null;
+}
+
+function getSupabaseErrorMessage(error: unknown): string {
+  if (error && typeof error === "object" && "message" in error) {
+    return String((error as { message?: unknown }).message ?? "");
+  }
+  return String(error ?? "");
+}
+
+function isMissingColumn(error: unknown, column: string): boolean {
+  const message = getSupabaseErrorMessage(error).toLowerCase();
+  const col = column.toLowerCase();
+  if (message.includes(`column \"${col}\"`) && message.includes("does not exist")) return true;
+  if (message.includes(`column ${col} does not exist`)) return true;
+  if (message.includes(`column users.${col} does not exist`)) return true;
+  if (message.includes(`'${col}' column`) && message.includes("schema cache")) return true;
+  return false;
+}
+
+function isMissingTable(error: unknown, table: string): boolean {
+  const message = getSupabaseErrorMessage(error).toLowerCase();
+  const tableName = table.toLowerCase();
+  if (
+    (message.includes(`relation \"${tableName}\"`) ||
+      message.includes(`relation \"public.${tableName}\"`)) &&
+    message.includes("does not exist")
+  ) {
+    return true;
+  }
+  if (message.includes("schema cache") && message.includes(`'public.${tableName}'`)) {
+    return true;
+  }
+  if (message.includes("schema cache") && message.includes(`'${tableName}'`)) {
+    return true;
+  }
+  return false;
+}
 
 function extractToken(req: Request): string | null {
   const authHeader = req.headers.get("authorization");
   if (authHeader?.toLowerCase().startsWith("bearer ")) return authHeader.slice(7);
 
   const cookieHeader = req.headers.get("cookie") ?? "";
-  const match = cookieHeader.match(/auth_token=([^;]+)/);
-  if (match?.[1]) return decodeURIComponent(match[1]);
+  const names = new Set<string>(["auth_token", "sb-access-token", "access_token"]);
+  const customName = (process.env.AUTH_COOKIE_NAME ?? "").trim();
+  if (customName) names.add(customName);
+
+  for (const name of names) {
+    const value = readCookieValue(cookieHeader, name);
+    if (value) return value;
+  }
   return null;
 }
 
@@ -110,24 +159,45 @@ export async function POST(req: Request) {
 
   // Prefer auth_user_id lookup (matches RLS helpers); fall back to id lookup for legacy schemas.
   let existingProfile: Record<string, unknown> | null = null;
-  const { data: profileByAuth } = await supabaseAdmin
+  let profilesAvailable = true;
+  const { data: profileByAuth, error: profileByAuthError } = await supabaseAdmin
     .from("profiles")
     .select(profileSelect)
     .eq("auth_user_id", authUser.id)
     .limit(1)
     .maybeSingle();
+  if (profileByAuthError) {
+    if (isMissingTable(profileByAuthError, "profiles")) {
+      profilesAvailable = false;
+    } else if (!isMissingColumn(profileByAuthError, "auth_user_id")) {
+      return apiFail(req, "Erro ao buscar perfil", {
+        status: 500,
+        code: "PROFILE_LOOKUP_FAILED",
+        details: getSupabaseErrorMessage(profileByAuthError),
+        extra: { error: "Erro ao buscar perfil" },
+      });
+    }
+  }
   existingProfile = (profileByAuth ?? null) as Record<string, unknown> | null;
-  if (!existingProfile) {
-    const { data: profileById } = await supabaseAdmin
+  if (profilesAvailable && !existingProfile) {
+    const { data: profileById, error: profileByIdError } = await supabaseAdmin
       .from("profiles")
       .select(profileSelect)
       .eq("id", authUser.id)
       .limit(1)
       .maybeSingle();
+    if (profileByIdError && !isMissingTable(profileByIdError, "profiles")) {
+      return apiFail(req, "Erro ao buscar perfil", {
+        status: 500,
+        code: "PROFILE_LOOKUP_FAILED",
+        details: getSupabaseErrorMessage(profileByIdError),
+        extra: { error: "Erro ao buscar perfil" },
+      });
+    }
     existingProfile = (profileById ?? null) as Record<string, unknown> | null;
   }
 
-  if (!existingProfile) {
+  if (profilesAvailable && !existingProfile) {
     // Default role is intentionally non-admin.
     const attempt = await supabaseAdmin.from("profiles").insert({
       auth_user_id: authUser.id,
@@ -146,7 +216,7 @@ export async function POST(req: Request) {
         });
       }
     }
-  } else {
+  } else if (profilesAvailable) {
     const fullName = typeof existingProfile.full_name === "string" ? existingProfile.full_name.trim() : "";
     if (!fullName && displayName) {
       const updateAttempt = await supabaseAdmin
@@ -167,12 +237,38 @@ export async function POST(req: Request) {
   // 2) RULE-MÃE: do NOT auto-create application users.
   // Users must be created + linked to a company by a Global Admin.
   // We only normalize/repair existing rows.
-  const { data: existingUser } = await supabaseAdmin
+  const baseUserSelect = "id, email, role, client_id, is_global_admin, auth_user_id";
+  let existingUserResult = await supabaseAdmin
     .from("users")
-    .select("id, name, email, role, client_id, is_global_admin, auth_user_id, active")
+    .select(`${baseUserSelect}, name, active`)
     .eq("auth_user_id", authUser.id)
     .limit(1)
     .maybeSingle();
+
+  if (existingUserResult.error && (isMissingColumn(existingUserResult.error, "name") || isMissingColumn(existingUserResult.error, "active"))) {
+    existingUserResult = await supabaseAdmin
+      .from("users")
+      .select(`${baseUserSelect}, nome, ativo`)
+      .eq("auth_user_id", authUser.id)
+      .limit(1)
+      .maybeSingle();
+  }
+
+  const existingUser = existingUserResult.data as Record<string, unknown> | null;
+  const existingUserError = existingUserResult.error;
+  if (existingUserError) {
+    const missingAuthColumn = isMissingColumn(existingUserError, "auth_user_id");
+    return apiFail(req, "Erro ao buscar usuario", {
+      status: 500,
+      code: "USER_LOOKUP_FAILED",
+      details: getSupabaseErrorMessage(existingUserError),
+      extra: {
+        error: missingAuthColumn
+          ? "Schema invalido: falta coluna auth_user_id em public.users"
+          : "Erro ao buscar usuario",
+      },
+    });
+  }
 
   if (!existingUser) {
     return apiFail(
@@ -188,12 +284,22 @@ export async function POST(req: Request) {
     );
   } else {
     const updates: Record<string, unknown> = {};
-    const existingName = typeof existingUser.name === "string" ? existingUser.name.trim() : "";
-    const existingEmail = typeof existingUser.email === "string" ? existingUser.email.trim() : "";
+    const existingName =
+      typeof (existingUser as { name?: unknown }).name === "string"
+        ? String((existingUser as { name?: unknown }).name).trim()
+        : typeof (existingUser as { nome?: unknown }).nome === "string"
+          ? String((existingUser as { nome?: unknown }).nome).trim()
+          : "";
+    const existingEmail = typeof (existingUser as { email?: unknown }).email === "string" ? String((existingUser as { email?: unknown }).email).trim() : "";
+    const isActive =
+      (existingUser as { active?: unknown }).active === true ||
+      (existingUser as { ativo?: unknown }).ativo === true;
+    const nameKey = "name" in existingUser ? "name" : "nome";
+    const activeKey = "active" in existingUser ? "active" : "ativo";
 
-    if (!existingName && displayName) updates.name = displayName;
+    if (!existingName && displayName) updates[nameKey] = displayName;
     if (!existingEmail && authUser.email) updates.email = authUser.email;
-    if (existingUser.active !== true) updates.active = true;
+    if (!isActive) updates[activeKey] = true;
 
     if (Object.keys(updates).length > 0) {
       updates.updated_at = new Date().toISOString();
@@ -203,6 +309,7 @@ export async function POST(req: Request) {
         .eq("auth_user_id", authUser.id);
 
       if (updateError) {
+        console.warn("/api/auth/bootstrap: user update failed", getSupabaseErrorMessage(updateError));
         // Retry without updated_at/active if the schema doesn't have those columns.
         const minimal: Record<string, unknown> = {};
         if (typeof updates.name === "string") minimal.name = updates.name;
@@ -216,41 +323,81 @@ export async function POST(req: Request) {
 
   // 3) Return resolved access context for the frontend redirect.
   // Re-read the current rows (they may have been inserted above).
-  const { data: userRow } = await supabaseAdmin
+  const { data: userRow, error: userRowError } = await supabaseAdmin
     .from("users")
     .select("role, client_id, is_global_admin")
     .eq("auth_user_id", authUser.id)
     .limit(1)
     .maybeSingle();
+  if (userRowError) {
+    return apiFail(req, "Erro ao buscar usuario", {
+      status: 500,
+      code: "USER_LOOKUP_FAILED",
+      details: getSupabaseErrorMessage(userRowError),
+      extra: { error: "Erro ao buscar usuario" },
+    });
+  }
 
   const userRecord = (userRow ?? null) as Record<string, unknown> | null;
 
   let profileRow: Record<string, unknown> | null = null;
-  const { data: profileRowByAuth } = await supabaseAdmin
-    .from("profiles")
-    .select("role, is_global_admin, full_name")
-    .eq("auth_user_id", authUser.id)
-    .limit(1)
-    .maybeSingle();
-  profileRow = (profileRowByAuth ?? null) as Record<string, unknown> | null;
-  if (!profileRow) {
-    const { data: profileRowById } = await supabaseAdmin
+  if (profilesAvailable) {
+    const { data: profileRowByAuth, error: profileRowByAuthError } = await supabaseAdmin
       .from("profiles")
       .select("role, is_global_admin, full_name")
-      .eq("id", authUser.id)
+      .eq("auth_user_id", authUser.id)
       .limit(1)
       .maybeSingle();
-    profileRow = (profileRowById ?? null) as Record<string, unknown> | null;
+    if (profileRowByAuthError) {
+      if (!isMissingColumn(profileRowByAuthError, "auth_user_id") && !isMissingTable(profileRowByAuthError, "profiles")) {
+        return apiFail(req, "Erro ao buscar perfil", {
+          status: 500,
+          code: "PROFILE_LOOKUP_FAILED",
+          details: getSupabaseErrorMessage(profileRowByAuthError),
+          extra: { error: "Erro ao buscar perfil" },
+        });
+      }
+    } else {
+      profileRow = (profileRowByAuth ?? null) as Record<string, unknown> | null;
+    }
+
+    if (!profileRow) {
+      const { data: profileRowById, error: profileRowByIdError } = await supabaseAdmin
+        .from("profiles")
+        .select("role, is_global_admin, full_name")
+        .eq("id", authUser.id)
+        .limit(1)
+        .maybeSingle();
+      if (profileRowByIdError && !isMissingTable(profileRowByIdError, "profiles")) {
+        return apiFail(req, "Erro ao buscar perfil", {
+          status: 500,
+          code: "PROFILE_LOOKUP_FAILED",
+          details: getSupabaseErrorMessage(profileRowByIdError),
+          extra: { error: "Erro ao buscar perfil" },
+        });
+      }
+      profileRow = (profileRowById ?? null) as Record<string, unknown> | null;
+    }
   }
 
   const clientId = typeof userRecord?.client_id === "string" ? userRecord.client_id : null;
 
-  const { data: globalAdminLink } = await supabaseAdmin
+  let globalAdminLink: { user_id?: unknown } | null = null;
+  const { data: globalAdminData, error: globalAdminError } = await supabaseAdmin
     .from("global_admins")
     .select("user_id")
     .eq("user_id", authUser.id)
     .limit(1)
     .maybeSingle();
+  if (globalAdminError && !isMissingTable(globalAdminError, "global_admins")) {
+    return apiFail(req, "Erro ao validar admin global", {
+      status: 500,
+      code: "GLOBAL_ADMIN_LOOKUP_FAILED",
+      details: getSupabaseErrorMessage(globalAdminError),
+      extra: { error: "Erro ao validar admin global" },
+    });
+  }
+  globalAdminLink = (globalAdminData ?? null) as { user_id?: unknown } | null;
 
   const isGlobalAdmin =
     Boolean((globalAdminLink as { user_id?: unknown } | null)?.user_id) ||

@@ -5,8 +5,9 @@ import { HealthModule } from "./health/health.module";
 import { EnvironmentModule } from "./config/environment.module";
 import { SupabaseModule } from "./supabase/supabase.module";
 import { TenancyModule } from "./tenancy/tenancy.module";
+import { S3Module } from "./s3/s3.module";
 
 @Module({
-  imports: [EnvironmentModule, SupabaseModule, TenancyModule, AuthModule, QaseModule, HealthModule],
+  imports: [EnvironmentModule, SupabaseModule, S3Module, TenancyModule, AuthModule, QaseModule, HealthModule],
 })
 export class AppModule {}

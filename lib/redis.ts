@@ -1,4 +1,5 @@
 import { Redis } from "@upstash/redis";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 type RedisValue = {
   value: string;
@@ -62,8 +63,6 @@ class InMemoryRedis {
     });
   }
 }
-
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
 function patternToRegex(pattern: string): RegExp {
   const parts = pattern.split("*").map((segment) => escapeRegex(segment));

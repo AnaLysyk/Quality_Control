@@ -1,6 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 function normalizeSupabaseUrl(value: string | undefined) {
   const raw = (value ?? "").trim();

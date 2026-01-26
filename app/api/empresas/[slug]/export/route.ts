@@ -3,6 +3,7 @@ import { rateLimit } from "@/lib/rateLimit";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getMockRole } from "@/lib/rbac/defects";
 import { getCompanyQualitySummary, getCompanyDefects } from "@/lib/quality";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 import { format } from "date-fns";
 
 export async function GET(req: NextRequest, context: { params: Promise<{ slug: string }> }) {
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slug: s
   const { slug } = await context.params;
   const mockRole = await getMockRole();
   const user = await authenticateRequest(req);
-  if (process.env.SUPABASE_MOCK === "true") {
+  if (SUPABASE_MOCK) {
     if (!mockRole) return new Response("Unauthorized", { status: 401 });
     if (mockRole !== "admin" && mockRole !== "company") return new Response("Forbidden", { status: 403 });
   } else {

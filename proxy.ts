@@ -48,6 +48,14 @@ export default async function proxy(req: NextRequest) {
   }
 
   const cookieHeader = req.headers.get("cookie") ?? "";
+  const authHeader = req.headers.get("authorization") ?? "";
+  const bearerToken = authHeader.toLowerCase().startsWith("bearer ") ? authHeader.slice("bearer ".length).trim() : "";
+  const authCookieName = (process.env.AUTH_COOKIE_NAME ?? "auth_token").trim() || "auth_token";
+  const authToken =
+    readCookieValue(cookieHeader, "sb-access-token") ||
+    readCookieValue(cookieHeader, "access_token") ||
+    readCookieValue(cookieHeader, "auth_token") ||
+    (authCookieName ? readCookieValue(cookieHeader, authCookieName) : null);
   const mockRole = SUPABASE_MOCK ? (readCookieValue(cookieHeader, "mock_role") ?? "admin").trim().toLowerCase() : null;
   const isAdminPath = pathname === "/admin" || pathname === "/admin/" || pathname.startsWith("/admin/");
   const isAdminRedirectPath = pathname === "/admin" || pathname === "/admin/" || pathname === "/admin/home";
@@ -60,6 +68,10 @@ export default async function proxy(req: NextRequest) {
       }
       return NextResponse.next();
     }
+    return NextResponse.next();
+  }
+
+  if (bearerToken || authToken) {
     return NextResponse.next();
   }
 

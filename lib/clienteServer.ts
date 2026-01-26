@@ -2,6 +2,7 @@ import "server-only";
 
 import { getSupabaseServer } from "@/lib/supabaseServer";
 import mockClients from "@/data/mock-clients.json";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 export type ClienteSummary = {
   id: string;
@@ -14,7 +15,7 @@ export async function getClienteBySlug(slug: string): Promise<ClienteSummary | n
   if (!normalized) return null;
 
   // Mock fallback para ambiente de teste/dev
-  if (process.env.SUPABASE_MOCK === "true") {
+  if (SUPABASE_MOCK) {
     const client = (mockClients as any[]).find((c) => c.slug === normalized);
     if (!client) return null;
     return {

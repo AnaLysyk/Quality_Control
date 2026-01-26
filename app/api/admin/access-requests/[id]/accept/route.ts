@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServer } from "@/lib/supabaseServer";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 export const runtime = "nodejs";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
 type AccessType = "user" | "admin" | "company";
 

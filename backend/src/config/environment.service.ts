@@ -94,4 +94,24 @@ export class EnvironmentService {
       .map((entry) => entry.trim())
       .filter((entry) => entry.length > 0);
   }
+
+  getS3Endpoint(): string {
+    return this.getRequired("S3_ENDPOINT", "Missing S3_ENDPOINT");
+  }
+
+  getS3Region(): string {
+    return this.getRequired("S3_REGION", "Missing S3_REGION");
+  }
+
+  getS3AccessKeyId(): string {
+    return this.getRequired("S3_ACCESS_KEY_ID", "Missing S3_ACCESS_KEY_ID");
+  }
+
+  getS3SecretAccessKey(): string {
+    return this.getRequired("S3_SECRET_ACCESS_KEY", "Missing S3_SECRET_ACCESS_KEY");
+  }
+
+  getS3Bucket(): string {
+    return this.getRequired("S3_BUCKET", "Missing S3_BUCKET");
+  }
 }

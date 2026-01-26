@@ -1,9 +1,9 @@
 import fs from "fs/promises";
 import path from "path";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 const STATUS_STORE = path.join(process.cwd(), "data", "quality_goal_status.json");
 const ALERT_STORE = path.join(process.cwd(), "data", "quality_goal_alerts.json");
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 let memoryStatus: GoalStatusRecord[] = [];
 let memoryAlerts: GoalAlert[] = [];
 

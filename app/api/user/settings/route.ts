@@ -3,8 +3,8 @@ import fs from "fs/promises";
 import path from "path";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 const STORE_PATH = path.join(process.cwd(), "data", "user-settings.json");
 
 type Theme = "light" | "dark" | "system";

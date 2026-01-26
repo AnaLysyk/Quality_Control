@@ -6,6 +6,7 @@ import { listQaseRuns } from "@/lib/qaseRuns";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { getAllReleases } from "@/release/data";
 import { getAllManualReleases } from "@/release/manualData";
+import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 type RunPayload = {
   slug: string;
@@ -19,7 +20,6 @@ type RunPayload = {
 
 const FALLBACK_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
 
 type Access = {
   userId: string;

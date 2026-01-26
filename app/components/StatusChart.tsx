@@ -96,7 +96,10 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
               </Pie>
               {hasValidData && (
                 <Tooltip
-                  formatter={(value: number, name: string) => [`${value} casos (${pct(value)}%)`, name]}
+                  formatter={(value, name, item, index, payload) => {
+                    const numValue = typeof value === "number" ? value : Number(value) || 0;
+                    return [`${numValue} casos (${pct(numValue)}%)`, name ?? ""];
+                  }}
                   wrapperStyle={{ backgroundColor: "transparent", zIndex: 40 }}
                   contentStyle={{
                     backgroundColor: "var(--tc-primary-dark)",

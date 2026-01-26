@@ -268,42 +268,42 @@ export async function GET(req: Request) {
 
 
 
+  let response;
   if (!userRecord) {
-    return NextResponse.json({
+    response = NextResponse.json({
       user: null,
       companies: [],
       error: { code: "INVALID_SESSION" }
     }, { status: 401 });
+  } else {
+    const linkedCompanies = userRecord.userCompanies
+      .map((link: { company: { id: string; slug: string; name: string } | null; role?: string | null }) => {
+        const company = link.company;
+        if (!company) return null;
+        return {
+          id: company.id,
+          slug: company.slug,
+          name: company.name,
+          role: (link.role ?? "user").toUpperCase(),
+          active: true,
+        };
+      })
+      .filter((value: AuthCompany | null): value is AuthCompany => Boolean(value));
+
+    const companies = dedupeCompanies(linkedCompanies);
+    const landingRole = decideLandingRole(companies, sessionUser.role ?? null);
+    const user = buildUserPayload(userRecord, companies, landingRole);
+
+    await redis.expire(`session:${sessionId}`, 60 * 60 * 8);
+
+    response = NextResponse.json({ user, companies });
+    response.cookies.set("session_id", sessionId, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 8,
+    });
   }
-
-  const linkedCompanies = userRecord.userCompanies
-    .map((link: { company: { id: string; slug: string; name: string } | null; role?: string | null }) => {
-      const company = link.company;
-      if (!company) return null;
-      return {
-        id: company.id,
-        slug: company.slug,
-        name: company.name,
-        role: (link.role ?? "user").toUpperCase(),
-        active: true,
-      };
-    })
-    .filter((value: AuthCompany | null): value is AuthCompany => Boolean(value));
-
-  const companies = dedupeCompanies(linkedCompanies);
-  const landingRole = decideLandingRole(companies, sessionUser.role ?? null);
-  const user = buildUserPayload(userRecord, companies, landingRole);
-
-  await redis.expire(`session:${sessionId}`, 60 * 60 * 8);
-
-  const res = NextResponse.json({ user, companies });
-  res.cookies.set("session_id", sessionId, {
-    httpOnly: true,
-    sameSite: "lax",
-    maxAge: 60 * 60 * 8,
-  });
-
-  return res;
+  return response;
 }
 
 // PATCH não suportado neste modelo minimalista

@@ -4,7 +4,13 @@ import { getRedis } from "@/lib/redis";
 import { prisma, isPrismaConfigured } from "@/lib/prisma";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 
-const SUPABASE_MOCK = true;
+const IS_PROD =
+  process.env.NODE_ENV === "production" ||
+  process.env.VERCEL === "1" ||
+  typeof process.env.VERCEL_ENV === "string";
+
+const SUPABASE_MOCK_RAW = process.env.SUPABASE_MOCK === "true";
+const SUPABASE_MOCK = SUPABASE_MOCK_RAW && !IS_PROD;
 const MOCK_PASSWORD = "senha";
 const MOCK_EMAILS = new Set(["admin@example.com", "user@example.com"]);
 
@@ -138,6 +144,10 @@ async function validateUser(
 }
 
 export async function POST(req: Request) {
+  if (SUPABASE_MOCK_RAW && IS_PROD) {
+    console.warn("/api/auth/login: SUPABASE_MOCK ignored in production/Vercel");
+  }
+
   const body = await req.json().catch(() => null);
   const { email, password } = body ?? {};
 
@@ -147,7 +157,7 @@ export async function POST(req: Request) {
 
   const cookieHeader = req.headers.get("cookie") ?? null;
   const hasMockCookie = !!(cookieHeader && readCookieValue(cookieHeader, "mock_role"));
-  const allowMock = SUPABASE_MOCK || (process.env.NODE_ENV !== "production" && hasMockCookie);
+  const allowMock = SUPABASE_MOCK || (!IS_PROD && hasMockCookie);
 
   if (!allowMock && !isPrismaConfigured()) {
     return NextResponse.json(

@@ -14,3 +14,9 @@
  GET / 307 in 2.2s (compile: 123ms, proxy.ts: 440ms, render: 1633ms)
  GET /login 200 in 682ms (compile: 43ms, proxy.ts: 60ms, render: 579ms)
  GET / 200 in 1199ms (compile: 43ms, proxy.ts: 62ms, render: 1094ms)
+ POST /api/auth/login 200 in 1265ms (compile: 141ms, proxy.ts: 105ms, render: 1019ms)
+[api] /api/auth/bootstrap 200 requestId=67d56da2-b04e-45b3-8328-6bb3639ecbeb
+ POST /api/auth/bootstrap 200 in 3.1s (compile: 1403ms, proxy.ts: 13ms, render: 1703ms)
+  Reload env: .env.development.local
+  Reload env: .env.local
+ GET /login 200 in 574ms (compile: 220ms, proxy.ts: 174ms, render: 180ms)

@@ -6,8 +6,17 @@ const IS_TEST = process.env.NODE_ENV === "test" || !!process.env.JEST_WORKER_ID;
 // Allow SUPABASE_MOCK only for local/dev/test environments.
 const ALLOW_MOCK_FALLBACKS = (SUPABASE_MOCK && !IS_PROD) || IS_TEST;
 
+function sanitizeEnvValue(value: string | undefined) {
+  if (!value) return "";
+  let raw = value.trim();
+  if ((raw.startsWith("\"") && raw.endsWith("\"")) || (raw.startsWith("'") && raw.endsWith("'"))) {
+    raw = raw.slice(1, -1).trim();
+  }
+  return raw;
+}
+
 function normalizeSupabaseUrl(value: string | undefined) {
-  const raw = (value ?? "").trim();
+  const raw = sanitizeEnvValue(value);
   if (!raw) return undefined;
   let url = raw.replace(/\.supabase\.com\b/i, ".supabase.co");
   if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
@@ -19,12 +28,13 @@ const supabaseUrl =
   normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL) ||
   normalizeSupabaseUrl(process.env.SUPABASE_URL) ||
   (ALLOW_MOCK_FALLBACKS ? "http://localhost" : undefined);
-const serviceRoleKey =
+const serviceRoleKeyRaw =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_SERVICE_KEY ||
   process.env.SUPABASE_SERVICE_ROLE ||
   process.env.SUPABASE_SERVICE_ROLE_SECRET ||
   (ALLOW_MOCK_FALLBACKS ? "service-role-test" : undefined);
+const serviceRoleKey = sanitizeEnvValue(serviceRoleKeyRaw) || (ALLOW_MOCK_FALLBACKS ? "service-role-test" : undefined);
 
 let cachedClient: SupabaseClient | null = null;
 

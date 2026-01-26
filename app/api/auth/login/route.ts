@@ -10,8 +10,19 @@ import { createClient } from "@supabase/supabase-js";
 const MOCK_PASSWORD = "senha";
 const MOCK_EMAILS = new Set(["admin@example.com", "user@example.com"]);
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
+function sanitizeEnvValue(value: string | undefined) {
+  if (!value) return "";
+  let raw = value.trim();
+  if ((raw.startsWith("\"") && raw.endsWith("\"")) || (raw.startsWith("'") && raw.endsWith("'"))) {
+    raw = raw.slice(1, -1).trim();
+  }
+  return raw;
+}
+
+const SUPABASE_URL = sanitizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL);
+const SUPABASE_ANON_KEY = sanitizeEnvValue(
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+);
 const SUPABASE_AVAILABLE = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY) && !isSupabaseDisabled();
 const AUTH_COOKIE_NAME = (process.env.AUTH_COOKIE_NAME ?? "auth_token").trim() || "auth_token";
 

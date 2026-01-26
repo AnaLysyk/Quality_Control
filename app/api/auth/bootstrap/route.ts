@@ -216,7 +216,7 @@ export async function POST(req: Request) {
         });
       }
     }
-  } else if (profilesAvailable) {
+  } else if (profilesAvailable && existingProfile) {
     const fullName = typeof existingProfile.full_name === "string" ? existingProfile.full_name.trim() : "";
     if (!fullName && displayName) {
       const updateAttempt = await supabaseAdmin

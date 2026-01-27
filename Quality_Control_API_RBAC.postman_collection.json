@@ -151,41 +151,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "POST Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/auth/logout",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "logout"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Logout - status 200 ou 201', () => {\n  pm.expect([200,201]).to.include(pm.response.code);\n});",
-                  "pm.environment.unset('auth_token');",
-                  "pm.environment.unset('companyId');"
-                ]
-              }
-            }
-          ]
         }
       ]
     },
@@ -298,6 +263,46 @@
               ]
             }
           }
+        }
+      ]
+    },
+    {
+      "name": "Auth Cleanup",
+      "item": [
+        {
+          "name": "POST Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Logout - status 200 ou 201', () => {\n  pm.expect([200,201]).to.include(pm.response.code);\n});",
+                  "pm.environment.unset('auth_token');",
+                  "pm.environment.unset('companyId');"
+                ]
+              }
+            }
+          ]
         }
       ]
     }

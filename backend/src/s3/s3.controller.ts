@@ -16,6 +16,12 @@ import type { Response } from "express";
 import { basename } from "path";
 import { S3Service } from "./s3.service";
 
+type UploadedFilePayload = {
+  originalname: string;
+  buffer: Buffer;
+  mimetype?: string;
+};
+
 @Controller("s3")
 export class S3Controller {
   constructor(private readonly s3: S3Service) {}
@@ -46,7 +52,7 @@ export class S3Controller {
 
   @Post("upload")
   @UseInterceptors(FileInterceptor("file", { limits: { fileSize: 20 * 1024 * 1024 } }))
-  async uploadFile(@UploadedFile() file: Express.Multer.File, @Body("key") key?: string) {
+  async uploadFile(@UploadedFile() file: UploadedFilePayload, @Body("key") key?: string) {
     if (!file) {
       throw new BadRequestException("Missing file");
     }

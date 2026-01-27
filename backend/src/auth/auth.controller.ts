@@ -91,7 +91,8 @@ export class AuthController {
       (userMetadata.is_global_admin as boolean | undefined) ||
       (appMetadata.isGlobalAdmin as boolean | undefined) ||
       (userMetadata.isGlobalAdmin as boolean | undefined) ||
-      undefined;
+      (ctx.isGlobalAdmin === true ? true : undefined);
+    const clientId = ctx.clientId ?? ctx.companyId ?? null;
 
     return AuthMeResponseSchema.parse({
       user: {
@@ -100,7 +101,7 @@ export class AuthController {
         name,
         avatarUrl,
         role: ctx.role ?? null,
-        clientId: ctx.clientId ?? null,
+        clientId,
         isGlobalAdmin,
       },
       companies: [],

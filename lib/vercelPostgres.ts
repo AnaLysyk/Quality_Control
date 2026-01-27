@@ -5,13 +5,11 @@ import { createClient } from "@vercel/postgres";
 type SqlTag = ReturnType<typeof createClient>["sql"];
 
 const CONNECTION_KEYS = [
-  "POSTGRES_URL",
   "DATABASE_URL",
+  "POSTGRES_URL",
+  "POSTGRES_PRISMA_URL",
   "POSTGRES_URL_NON_POOLING",
   "DATABASE_URL_UNPOOLED",
-  "painelQa_POSTGRES_URL",
-  "painelQa_POSTGRES_PRISMA_URL",
-  "painelQa_POSTGRES_URL_NON_POOLING",
 ];
 
 function readEnv(key: string): string | null {

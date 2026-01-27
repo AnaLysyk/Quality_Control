@@ -11,13 +11,12 @@ const globalForPrisma = globalThis as unknown as GlobalPrisma;
 
 const CONNECTION_KEYS = [
   "DATABASE_URL",
-  "POSTGRES_URL",
+  // Compatibilidade: este repo padroniza DATABASE_URL como fonte única.
+  // Mantemos estes aliases apenas para ambientes antigos, mas NÃO aceitamos `painelQa_*`.
   "POSTGRES_PRISMA_URL",
+  "POSTGRES_URL",
   "POSTGRES_URL_NON_POOLING",
   "DATABASE_URL_UNPOOLED",
-  "painelQa_POSTGRES_PRISMA_URL",
-  "painelQa_POSTGRES_URL",
-  "painelQa_POSTGRES_URL_NON_POOLING",
 ];
 
 function readEnv(key: string): string | null {

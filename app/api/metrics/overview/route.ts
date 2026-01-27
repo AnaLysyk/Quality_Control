@@ -20,30 +20,7 @@ interface ReleaseStatusCount {
 }
 
 export async function GET() {
-  if (SUPABASE_MOCK || !HAS_DATABASE) {
-    return NextResponse.json({
-      overview: {
-        totalUsers: 0,
-        totalCompanies: 0,
-        totalReleases: 0,
-        totalTestRuns: 0,
-        activeSessions: 0,
-      },
-      testStats: {
-        total: 0,
-        passed: 0,
-        failed: 0,
-        blocked: 0,
-        skipped: 0,
-      },
-      releaseStats: {
-        draft: 0,
-        published: 0,
-        archived: 0,
-      },
-      lastUpdated: new Date().toISOString(),
-    });
-  }
+  // Mock removido: sempre tenta acessar o banco real
 
   try {
     // Métricas básicas do sistema

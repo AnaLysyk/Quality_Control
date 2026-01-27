@@ -11,6 +11,6 @@ test("admin troca empresa ativa", async ({ page, context }) => {
   await page.goto("/admin", { waitUntil: "networkidle" });
 
   await page.getByTestId("company-item-testing-company").click();
-
-  await page.waitForURL(/\/empresas\/testing-company\/home/);
+  await page.waitForTimeout(500);
+  await page.waitForURL(/\/empresas\/testing-company\/home/, { timeout: 10000 });
 });

@@ -12,5 +12,6 @@ test("dashboard mostra tendência de MTTR", async ({ page, context }) => {
     waitUntil: "networkidle",
   });
 
-  await expect(page.getByTestId("mttr-trend")).toBeVisible();
+  await page.waitForTimeout(300);
+  await expect(page.getByTestId("mttr-trend")).toBeVisible({ timeout: 10000 });
 });

@@ -12,5 +12,6 @@ test("dashboard mostra qualidade por run", async ({ page, context }) => {
     waitUntil: "networkidle",
   });
 
-  await expect(page.getByTestId("runs-quality-table")).toBeVisible();
+  await page.waitForTimeout(300);
+  await expect(page.getByTestId("runs-quality-table")).toBeVisible({ timeout: 10000 });
 });

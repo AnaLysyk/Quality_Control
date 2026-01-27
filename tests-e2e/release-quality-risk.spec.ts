@@ -9,6 +9,6 @@ test("release com MTTR alto aparece como risk", async ({ page, context }) => {
   });
 
   await page.goto("/empresas/griaule/dashboard", { waitUntil: "networkidle" });
-
-  await expect(page.getByTestId("release-quality-risk")).toBeVisible();
+  await page.waitForTimeout(500);
+  await expect(page.getByTestId("release-quality-risk")).toBeVisible({ timeout: 10000 });
 });

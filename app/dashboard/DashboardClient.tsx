@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { hasPermission, getUserRoleFromSession } from "@/lib/permissions";
@@ -10,6 +11,12 @@ export default function DashboardClient() {
   const { user, loading: userLoading } = useAuthUser();
   const router = useRouter();
   const { metrics, loading: metricsLoading } = useSystemMetrics();
+
+  useEffect(() => {
+    if (!userLoading && !user) {
+      router.replace("/login");
+    }
+  }, [userLoading, user, router]);
 
   const handleLogout = async () => {
     try {
@@ -34,25 +41,9 @@ export default function DashboardClient() {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  // Permitir renderização em modo mock
   if (!user) {
-    // Dados de usuário mock
-    const mockUser = {
-      userId: "mock-admin-griaule",
-      email: "admin@example.com",
-      name: "Mock Admin",
-      companyId: "mock-company-griaule",
-      companySlug: "griaule",
-      role: "admin",
-    };
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <div className="mb-4">Modo mock: usuário de teste</div>
-        <div>Email: {mockUser.email}</div>
-        <div>Nome: {mockUser.name}</div>
-        <div>Empresa: {mockUser.companySlug}</div>
-        <div>Role: {mockUser.role}</div>
-      </div>
+      <div className="min-h-screen flex items-center justify-center">Redirecionando...</div>
     );
   }
 

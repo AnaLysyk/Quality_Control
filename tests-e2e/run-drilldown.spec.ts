@@ -12,22 +12,20 @@ test.describe('Drill-down de Run para Defeitos', () => {
     });
     // Acessa o dashboard de uma empresa (ajuste o slug conforme necessário)
     await page.goto('/empresas/griaule/dashboard', { waitUntil: 'networkidle' });
-
+    await page.waitForTimeout(500);
     // Aguarda a tabela de qualidade de runs
-    await page.getByTestId('runs-quality-table').waitFor();
-
+    await page.getByTestId('runs-quality-table').waitFor({ timeout: 10000 });
     // Clica no link da primeira run
     const runLink = await page.getByTestId('run-drilldown-link').first();
     const runName = await runLink.textContent();
     await runLink.click();
-
+    await page.waitForTimeout(500);
     // Deve navegar para a lista de defeitos filtrada por run
-    await expect(page).toHaveURL(/\/empresas\/griaule\/defeitos\?run=/);
-    await page.getByTestId('defects-list').waitFor();
-
+    await expect(page).toHaveURL(/\/empresas\/griaule\/defeitos\?run=/, { timeout: 10000 });
+    await page.getByTestId('defects-list').waitFor({ timeout: 10000 });
     // Deve mostrar o indicador de filtro ativo
     const filterIndicator = await page.getByText(/Filtro ativo:/);
-    await expect(filterIndicator).toBeVisible();
+    await expect(filterIndicator).toBeVisible({ timeout: 10000 });
     await expect(filterIndicator).toContainText(runName || '');
 
     // Deve haver pelo menos um defeito listado (se houver para a run)

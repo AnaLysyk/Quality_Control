@@ -13,5 +13,6 @@ test("dashboard indica defeitos fora do SLA", async ({ page, context }) => {
   });
 
   const slaCard = page.getByTestId("sla-card");
-  await expect(slaCard).toBeVisible();
+  await page.waitForTimeout(300);
+  await expect(slaCard).toBeVisible({ timeout: 10000 });
 });

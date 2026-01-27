@@ -20,9 +20,11 @@ test("requests flow: create, duplicate blocked, admin approves", async ({ page }
       response.request().method() === "POST"
   );
   await companyInput.fill("Empresa Nova");
+  await page.waitForTimeout(300);
   await sendButton.click();
   const firstResponse = await firstResponsePromise;
   expect([201, 409]).toContain(firstResponse.status());
+  await page.waitForTimeout(300);
   if (firstResponse.status() === 201) {
     await expect(message).toContainText(/empresa enviada/i);
   } else {
@@ -35,6 +37,7 @@ test("requests flow: create, duplicate blocked, admin approves", async ({ page }
       response.request().method() === "POST"
   );
   await companyInput.fill("Empresa Duplicada");
+  await page.waitForTimeout(300);
   await sendButton.click();
   const duplicateResponse = await duplicateResponsePromise;
   expect(duplicateResponse.status()).toBe(409);

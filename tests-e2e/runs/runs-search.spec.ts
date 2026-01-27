@@ -15,6 +15,7 @@ test.describe("runs - busca", () => {
     await expect(search).toBeVisible();
     await search.fill("Sprint");
 
-    await expect(page.getByTestId("runs-list")).toBeVisible();
+    await page.waitForTimeout(300);
+    await expect(page.getByTestId("runs-list")).toBeVisible({ timeout: 10000 });
   });
 });

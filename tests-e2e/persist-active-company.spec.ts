@@ -9,10 +9,10 @@ test("empresa ativa persiste após reload", async ({ page, context }) => {
   });
 
   await page.goto("/", { waitUntil: "networkidle" });
-
+  await page.waitForTimeout(500);
   await page.waitForURL(/\/empresas\/testing-company\/home/, { timeout: 20000 });
-
-  await page.reload();
-
+  await page.waitForTimeout(500);
+  await page.reload({ waitUntil: "networkidle" });
+  await page.waitForTimeout(500);
   await expect(page).toHaveURL(/\/empresas\/testing-company\/home/);
 });

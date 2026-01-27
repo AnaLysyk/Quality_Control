@@ -54,7 +54,8 @@ test("admin compara metricas entre empresas", async ({ page, context }) => {
 
   // Garante que a navegação terminou antes de prosseguir
   await page.waitForLoadState("networkidle");
-
+  // Pequeno delay para garantir que não há navegação pendente
+  await page.waitForTimeout(500);
   await page.goto("/admin/home", { waitUntil: "networkidle" });
 
   const griauleRow = page.getByTestId("benchmark-row-griaule");

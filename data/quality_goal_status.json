@@ -5,7 +5,7 @@
     "status": "violated",
     "value": 60,
     "target": 80,
-    "evaluated_at": "2026-01-26T02:13:19.416Z"
+    "evaluated_at": "2026-01-27T15:39:54.142Z"
   },
   {
     "company_slug": "griaule",
@@ -13,6 +13,6 @@
     "status": "at_risk",
     "value": 3,
     "target": 2,
-    "evaluated_at": "2026-01-26T02:13:19.417Z"
+    "evaluated_at": "2026-01-27T15:39:54.144Z"
   }
 ]

@@ -207,11 +207,17 @@ export async function GET(req: Request) {
     || readCookieValue(req.headers.get("cookie") ?? "", "sb-access-token")
     || readCookieValue(req.headers.get("cookie") ?? "", "auth_token")
     || readCookieValue(req.headers.get("cookie") ?? "", "access_token");
-  if (!token) return errorResponse(401, "NO_TOKEN", "Nao autorizado");
+  if (!token) {
+    console.error("[api/me] NO_TOKEN", { cookies: req.headers.get("cookie") });
+    return errorResponse(401, "NO_TOKEN", "Nao autorizado");
+  }
 
   // Busca usuário autenticado no Supabase Auth
   const { data: authData, error: authError } = await supabase.auth.getUser(token);
-  if (authError || !authData?.user) return errorResponse(401, "INVALID_TOKEN", "Nao autorizado");
+  if (authError || !authData?.user) {
+    console.error("[api/me] INVALID_TOKEN", { authError, authData });
+    return errorResponse(401, "INVALID_TOKEN", "Nao autorizado");
+  }
   const authUserId = authData.user.id;
   const authEmail = authData.user.email ?? null;
 
@@ -221,7 +227,10 @@ export async function GET(req: Request) {
     .select("id, email")
     .eq("id", authUserId)
     .maybeSingle();
-  if (userError || !userRow) return errorResponse(401, "USER_LOOKUP_FAILED", "Usuario nao provisionado");
+  if (userError || !userRow) {
+    console.error("[api/me] USER_LOOKUP_FAILED", { userError, authUserId });
+    return errorResponse(401, "USER_LOOKUP_FAILED", "Usuario nao provisionado");
+  }
 
   // Busca vínculos ativos em user_clients
   const { data: links, error: linksError } = await supabase
@@ -229,8 +238,14 @@ export async function GET(req: Request) {
     .select("client_id, ativo, is_default")
     .eq("user_id", authUserId)
     .eq("ativo", true);
-  if (linksError) return errorResponse(500, "COMPANY_LINK_FAILED", "Erro ao buscar vínculos");
-  if (!links || links.length === 0) return errorResponse(403, "NO_COMPANY_LINK", "Sem empresa vinculada");
+  if (linksError) {
+    console.error("[api/me] COMPANY_LINK_FAILED", { linksError, authUserId });
+    return errorResponse(500, "COMPANY_LINK_FAILED", "Erro ao buscar vínculos");
+  }
+  if (!links || links.length === 0) {
+    console.error("[api/me] NO_COMPANY_LINK", { authUserId });
+    return errorResponse(403, "NO_COMPANY_LINK", "Sem empresa vinculada");
+  }
 
   // Busca dados das empresas vinculadas
   const clientIds = links.map((l: { client_id: string }) => l.client_id);
@@ -238,7 +253,10 @@ export async function GET(req: Request) {
     .from("clients")
     .select("id, slug, company_name")
     .in("id", clientIds);
-  if (companiesError) return errorResponse(500, "COMPANY_FETCH_FAILED", "Erro ao buscar empresas");
+  if (companiesError) {
+    console.error("[api/me] COMPANY_FETCH_FAILED", { companiesError, clientIds });
+    return errorResponse(500, "COMPANY_FETCH_FAILED", "Erro ao buscar empresas");
+  }
 
   // Monta lista de empresas para o frontend
   const companiesOut = companies.map((company: { id: string; slug: string; company_name: string }) => {

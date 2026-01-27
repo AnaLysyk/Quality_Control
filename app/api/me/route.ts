@@ -249,11 +249,15 @@ export async function GET(req: Request) {
 
 
   // Busca dados das empresas vinculadas
-  const clientIds = links.map((l: { client_id: string }) => l.client_id);
+  const clientIds = links.map((l: { client_id: string }) => l.client_id).filter(Boolean);
   console.log("[api/me] clientIds para consulta em clients:", clientIds);
+  if (!clientIds.length) {
+    console.error("[api/me] NO_VALID_CLIENT_IDS", { clientIds, links });
+    return errorResponse(403, "NO_COMPANY_LINK", "Sem empresa vinculada");
+  }
   const { data: companies, error: companiesError } = await supabase
     .from("clients")
-    .select("id, slug, company_name")
+    .select("id, slug, name")
     .in("id", clientIds);
   console.log("[api/me] resultado consulta clients:", { companies, companiesError });
   if (companiesError) {
@@ -262,11 +266,11 @@ export async function GET(req: Request) {
   }
 
   // Monta lista de empresas para o frontend
-  const companiesOut = companies.map((company: { id: string; slug: string; company_name: string }) => {
+  const companiesOut = companies.map((company: { id: string; slug: string; name: string }) => {
     const link = links.find((l: { client_id: string; is_default?: boolean }) => l.client_id === company.id);
     return {
       id: company.id,
-      name: company.company_name,
+      name: company.name,
       slug: company.slug,
       is_default: link?.is_default === true,
     };

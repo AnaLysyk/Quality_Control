@@ -1,8 +1,4 @@
 
-// Workaround: ignora erro de certificado self-signed do Supabase pooler em produção
-if (process.env.NODE_ENV === 'production') {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-}
 
 import { NextRequest, NextResponse } from "next/server";
 

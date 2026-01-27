@@ -1,21 +1,32 @@
-import HomeContent from "./home/HomeContent";
-import { redirect } from "next/navigation";
 
-async function hasSession() {
-  try {
-    const { cookies }: typeof import("next/headers") = await import("next/headers");
-    const store = await cookies();
-    return Boolean(store.get("session_id")?.value);
-  } catch {
-    return false;
-  }
-}
+"use client";
+import { useState, useEffect } from "react";
+import { supabase } from "../utils/supabase";
 
-export default async function Page() {
-  const session = await hasSession();
-  if (!session) {
-    redirect("/login");
-  }
+export default function Page() {
+  const [todos, setTodos] = useState([]);
 
-  return <HomeContent />;
+  useEffect(() => {
+    async function getTodos() {
+      const { data: todos, error } = await supabase.from("todos").select();
+      if (error) {
+        console.error("Erro ao buscar todos:", error);
+        return;
+      }
+      if (todos && todos.length > 0) {
+        setTodos(todos);
+      }
+    }
+    getTodos();
+  }, []);
+
+  return (
+    <div>
+      <ul>
+        {todos.map((todo) => (
+          <li key={todo.id || todo}>{todo.title || JSON.stringify(todo)}</li>
+        ))}
+      </ul>
+    </div>
+  );
 }

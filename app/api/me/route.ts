@@ -247,12 +247,15 @@ export async function GET(req: Request) {
     return errorResponse(403, "NO_COMPANY_LINK", "Sem empresa vinculada");
   }
 
+
   // Busca dados das empresas vinculadas
   const clientIds = links.map((l: { client_id: string }) => l.client_id);
+  console.log("[api/me] clientIds para consulta em clients:", clientIds);
   const { data: companies, error: companiesError } = await supabase
     .from("clients")
     .select("id, slug, company_name")
     .in("id", clientIds);
+  console.log("[api/me] resultado consulta clients:", { companies, companiesError });
   if (companiesError) {
     console.error("[api/me] COMPANY_FETCH_FAILED", { companiesError, clientIds });
     return errorResponse(500, "COMPANY_FETCH_FAILED", "Erro ao buscar empresas");

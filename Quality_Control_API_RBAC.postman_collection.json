@@ -32,6 +32,18 @@
     {
       "key": "companyIdNegative",
       "value": ""
+    },
+    {
+      "key": "s3_prefix",
+      "value": ""
+    },
+    {
+      "key": "s3_object_key",
+      "value": "uploads/teste.txt"
+    },
+    {
+      "key": "s3_upload_file_path",
+      "value": "tests-e2e/fixtures/s3-upload.txt"
     }
   ],
   "item": [
@@ -263,6 +275,245 @@
               ]
             }
           }
+        }
+      ]
+    },
+    {
+      "name": "S3",
+      "item": [
+        {
+          "name": "GET S3 Buckets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/s3/buckets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "s3",
+                "buckets"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('S3 Buckets - status 200', () => {\n  pm.response.to.have.status(200);\n});",
+                  "const json = pm.response.json();",
+                  "pm.test('S3 Buckets - ok true', () => {\n  pm.expect(json.ok).to.eql(true);\n});",
+                  "pm.test('S3 Buckets - array', () => {\n  pm.expect(json.buckets).to.be.an('array');\n});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET S3 Objects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/s3/objects?prefix={{s3_prefix}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "s3",
+                "objects"
+              ],
+              "query": [
+                {
+                  "key": "prefix",
+                  "value": "{{s3_prefix}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('S3 Objects - status 200', () => {\n  pm.response.to.have.status(200);\n});",
+                  "const json = pm.response.json();",
+                  "pm.test('S3 Objects - ok true', () => {\n  pm.expect(json.ok).to.eql(true);\n});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST S3 Upload",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "key",
+                  "value": "{{s3_object_key}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/s3/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "s3",
+                "upload"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const status = pm.response.code;",
+                  "const bodyText = pm.response.text() || '';",
+                  "const missingFile = status === 400 && /missing file/i.test(bodyText);",
+                  "pm.test('S3 Upload - status 200 (ou 400 se arquivo nao enviado)', () => {\n  pm.expect([200,201,400]).to.include(status);\n  if (status === 400) {\n    pm.expect(missingFile).to.eql(true);\n  }\n});",
+                  "if (![400].includes(status)) {",
+                  "  const json = pm.response.json();",
+                  "  pm.test('S3 Upload - ok true', () => {\n    pm.expect(json.ok).to.eql(true);\n  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST S3 Upload (Newman)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [
+                    "{{s3_upload_file_path}}"
+                  ]
+                },
+                {
+                  "key": "key",
+                  "value": "{{s3_object_key}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/s3/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "s3",
+                "upload"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('S3 Upload (Newman) - status 200 ou 201', () => {\n  pm.expect([200,201]).to.include(pm.response.code);\n});",
+                  "const json = pm.response.json();",
+                  "pm.test('S3 Upload (Newman) - ok true', () => {\n  pm.expect(json.ok).to.eql(true);\n});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET S3 Download",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/s3/download?key={{s3_object_key}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "s3",
+                "download"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{s3_object_key}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('S3 Download - status 200', () => {\n  pm.response.to.have.status(200);\n});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE S3 Object",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/s3/object?key={{s3_object_key}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "s3",
+                "object"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{s3_object_key}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('S3 Delete - status 200', () => {\n  pm.response.to.have.status(200);\n});",
+                  "const json = pm.response.json();",
+                  "pm.test('S3 Delete - ok true', () => {\n  pm.expect(json.ok).to.eql(true);\n});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },

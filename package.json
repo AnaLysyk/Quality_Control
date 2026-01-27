@@ -17,6 +17,8 @@
     "test:backend": "npm --prefix backend run test",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test --grep @smoke",
+    "test:e2e:prod": "playwright test -c playwright.prod.config.ts",
+    "test:api": "node scripts/run-newman.mjs",
     "dev:daemon": "node scripts/dev-daemon.js",
     "dev:stop": "node scripts/dev-stop.js",
     "create-admin": "npx tsx scripts/create-admin.ts",

@@ -1,5 +1,35 @@
-// Edge Function to create Auth users and insert profiles/company_users
-// Using Deno built-in serve
+/**
+ * Supabase Edge Function: Criação em lote de usuários de autenticação, perfis e vínculos company_users.
+ *
+ * Espera um POST com JSON:
+ * {
+ *   "company_id": "<uuid>",
+ *   "users": [
+ *     {
+ *       "email": "user@example.com",
+ *       "password": "SenhaForte!",
+ *       "full_name": "Nome Completo",
+ *       "role": "user|admin|...",
+ *       "company_role": "ADMIN|USER|..."
+ *     }, ...
+ *   ]
+ * }
+ *
+ * Para cada usuário:
+ * 1. Cria usuário no auth (admin API, email confirmado).
+ * 2. Insere profile em public.profiles (campos: id, full_name, role, created_at).
+ * 3. Insere vínculo em public.company_users (campos: user_id, company_id, role, created_at).
+ *
+ * Resposta: 200 OK com array "created" detalhando auth_user_id, profile e company_user inseridos.
+ *
+ * Erros: retorna 400 para payload inválido, 500 para falha em qualquer etapa.
+ *
+ * Segurança: requer SUPABASE_SERVICE_ROLE_KEY e SUPABASE_URL como variáveis de ambiente.
+ * NÃO exponha a service_role key no frontend.
+ *
+ * Exemplo de uso (curl):
+ * curl -X POST <function-url> -H "Content-Type: application/json" -d '{ "company_id": "...", "users": [ ... ] }'
+ */
 Deno.serve(async (req: Request) => {
   try {
     if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });

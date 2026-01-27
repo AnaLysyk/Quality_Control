@@ -74,6 +74,11 @@ export class EnvironmentService {
     return env.toLowerCase() === "production";
   }
 
+  private isTest(): boolean {
+    const env = this.getOptional("NODE_ENV", "development") ?? "development";
+    return env.toLowerCase() === "test";
+  }
+
   getAuthCookieName(): string {
     return this.getOptional("AUTH_COOKIE_NAME", "auth_token") ?? "auth_token";
   }
@@ -96,22 +101,37 @@ export class EnvironmentService {
   }
 
   getS3Endpoint(): string {
+    const value = this.getOptional("S3_ENDPOINT");
+    if (value) return value;
+    if (this.isTest()) return "http://localhost";
     return this.getRequired("S3_ENDPOINT", "Missing S3_ENDPOINT");
   }
 
   getS3Region(): string {
+    const value = this.getOptional("S3_REGION");
+    if (value) return value;
+    if (this.isTest()) return "us-east-1";
     return this.getRequired("S3_REGION", "Missing S3_REGION");
   }
 
   getS3AccessKeyId(): string {
+    const value = this.getOptional("S3_ACCESS_KEY_ID");
+    if (value) return value;
+    if (this.isTest()) return "test-access-key";
     return this.getRequired("S3_ACCESS_KEY_ID", "Missing S3_ACCESS_KEY_ID");
   }
 
   getS3SecretAccessKey(): string {
+    const value = this.getOptional("S3_SECRET_ACCESS_KEY");
+    if (value) return value;
+    if (this.isTest()) return "test-secret-key";
     return this.getRequired("S3_SECRET_ACCESS_KEY", "Missing S3_SECRET_ACCESS_KEY");
   }
 
   getS3Bucket(): string {
+    const value = this.getOptional("S3_BUCKET");
+    if (value) return value;
+    if (this.isTest()) return "test-bucket";
     return this.getRequired("S3_BUCKET", "Missing S3_BUCKET");
   }
 }

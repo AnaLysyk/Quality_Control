@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { fetchBackend } from "@/lib/backendProxy";
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
@@ -30,6 +31,39 @@ type Defect = {
   project_code?: string;
 };
 
+function normalizeDefectList(entities: unknown[], projectCode?: string): Defect[] {
+  return entities
+    .map((d) => {
+      const rec = asRecord(d) ?? {};
+      const idRaw = rec.id ?? rec.defect_id;
+      const id = Number(idRaw);
+      if (!Number.isFinite(id)) return null;
+
+      const project =
+        (typeof rec.project === "string" ? rec.project : null) ||
+        (typeof rec.project_code === "string" ? rec.project_code : null) ||
+        projectCode ||
+        undefined;
+
+      return {
+        id,
+        title:
+          (typeof rec.title === "string" ? rec.title : null) ||
+          (typeof rec.name === "string" ? rec.name : null) ||
+          `Defect ${id}`,
+        status: typeof rec.status === "string" ? rec.status : undefined,
+        severity:
+          (typeof rec.severity === "string" ? rec.severity : null) ??
+          (typeof rec.severity_name === "string" ? rec.severity_name : null) ??
+          undefined,
+        description: typeof rec.description === "string" ? rec.description : undefined,
+        project,
+        project_code: project,
+      } satisfies Defect;
+    })
+    .filter(Boolean) as Defect[];
+}
+
 async function fetchProjectDefects(projectCode: string): Promise<Defect[]> {
   const res = await fetch(`${QASE_BASE_URL}/v1/defect/${encodeURIComponent(projectCode)}?limit=100&offset=0`, {
     headers: { Token: QASE_TOKEN, Accept: "application/json" },
@@ -42,34 +76,32 @@ async function fetchProjectDefects(projectCode: string): Promise<Defect[]> {
   }
 
   const entities = (asRecord(asRecord(json)?.result)?.entities as unknown[]) || [];
-  return entities
-    .map((d) => {
-      const rec = asRecord(d) ?? {};
-      const idRaw = rec.id ?? rec.defect_id;
-      const id = Number(idRaw);
-      if (!Number.isFinite(id)) return null;
-
-      return {
-        id,
-        title:
-          (typeof rec.title === "string" ? rec.title : null) ||
-          (typeof rec.name === "string" ? rec.name : null) ||
-          `Defect ${id}`,
-        status: typeof rec.status === "string" ? rec.status : undefined,
-        severity: (typeof rec.severity === "string" ? rec.severity : null) ?? (typeof rec.severity_name === "string" ? rec.severity_name : null) ?? undefined,
-        description: typeof rec.description === "string" ? rec.description : undefined,
-        project: projectCode,
-        project_code: projectCode,
-      } satisfies Defect;
-    })
-    .filter(Boolean) as Defect[];
+  return normalizeDefectList(entities, projectCode);
 }
 
 export async function GET(request: Request) {
-  const auth = await authenticateRequest(request);
-  if (!auth) return NextResponse.json({ success: false, error: { message: "Não autorizado" } }, { status: 401 });
-
   const url = new URL(request.url);
+  const backendRes = await fetchBackend(request, `/defects${url.search}`);
+  if (backendRes) {
+    const json = (await backendRes.json().catch(() => null)) as unknown;
+    if (!backendRes.ok) {
+      const message =
+        (asRecord(asRecord(json)?.error)?.message as string) ||
+        (asRecord(json)?.message as string) ||
+        "Erro ao consultar backend";
+      return NextResponse.json({ success: false, error: { message } }, { status: backendRes.status });
+    }
+
+    const directList = Array.isArray(asRecord(json)?.data) ? (asRecord(json)?.data as unknown[]) : null;
+    const result = directList ? { entities: directList } : asRecord(json)?.result;
+    const entities = (asRecord(result)?.entities as unknown[]) || [];
+    const merged = normalizeDefectList(entities);
+    return NextResponse.json({ success: true, data: merged }, { status: 200 });
+  }
+
+  const auth = await authenticateRequest(request);
+  if (!auth) return NextResponse.json({ success: false, error: { message: "NÃ£o autorizado" } }, { status: 401 });
+
   const project = normalizeString(url.searchParams.get("project")) || "ALL";
 
   if (!QASE_TOKEN) {

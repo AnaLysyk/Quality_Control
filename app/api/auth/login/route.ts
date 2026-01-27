@@ -3,9 +3,15 @@ import { randomUUID } from "crypto";
 import { getRedis } from "@/lib/redis";
 import { prisma, isPrismaConfigured } from "@/lib/prisma";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { IS_PROD, SUPABASE_MOCK, SUPABASE_MOCK_RAW } from "@/lib/supabaseMock";
+import {
+  ALLOW_SUPABASE_MOCK_IN_PROD,
+  IS_PROD,
+  SUPABASE_MOCK,
+  SUPABASE_MOCK_RAW,
+} from "@/lib/supabaseMock";
 import { isSupabaseDisabled } from "@/lib/envFlags";
 import { createClient } from "@supabase/supabase-js";
+import { fetchBackend } from "@/lib/backendProxy";
 
 const MOCK_PASSWORD = "senha";
 const MOCK_EMAILS = new Set(["admin@example.com", "user@example.com"]);
@@ -25,6 +31,7 @@ const SUPABASE_ANON_KEY = sanitizeEnvValue(
 );
 const SUPABASE_AVAILABLE = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY) && !isSupabaseDisabled();
 const AUTH_COOKIE_NAME = (process.env.AUTH_COOKIE_NAME ?? "auth_token").trim() || "auth_token";
+const IS_TEST = process.env.NODE_ENV === "test";
 
 const supabaseAnon =
   SUPABASE_AVAILABLE
@@ -178,7 +185,7 @@ async function validateUser(
 }
 
 export async function POST(req: Request) {
-  if (SUPABASE_MOCK_RAW && IS_PROD) {
+  if (SUPABASE_MOCK_RAW && IS_PROD && !ALLOW_SUPABASE_MOCK_IN_PROD) {
     console.warn("/api/auth/login: SUPABASE_MOCK ignored in production/Vercel");
   }
 
@@ -189,11 +196,36 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email e senha obrigatorios" }, { status: 400 });
   }
 
+  if (!IS_TEST && !SUPABASE_MOCK && !SUPABASE_MOCK_RAW) {
+    const loginValue = (body?.login ?? body?.email ?? body?.user ?? email) as string;
+    const backendRes = await fetchBackend(req, "/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: loginValue, password }),
+    });
+
+    if (backendRes) {
+      const payload = (await backendRes.json().catch(() => null)) as Record<string, unknown> | null;
+      if (!backendRes.ok) {
+        const message =
+          (payload && typeof payload.error === "string" ? payload.error : null) ||
+          (payload && typeof (payload as any)?.message === "string" ? (payload as any).message : null) ||
+          "Erro ao autenticar";
+        return NextResponse.json({ error: message }, { status: backendRes.status });
+      }
+
+      const res = NextResponse.json({ ok: true });
+      const setCookie = backendRes.headers.get("set-cookie");
+      if (setCookie) res.headers.set("set-cookie", setCookie);
+      return res;
+    }
+  }
+
   const cookieHeader = req.headers.get("cookie") ?? null;
   const hasMockCookie = !!(cookieHeader && readCookieValue(cookieHeader, "mock_role"));
   const allowMock = SUPABASE_MOCK || (!IS_PROD && hasMockCookie);
 
-  if (!allowMock && SUPABASE_AVAILABLE && supabaseAnon) {
+  if (!IS_TEST && !allowMock && SUPABASE_AVAILABLE && supabaseAnon) {
     try {
       const { data, error } = await supabaseAnon.auth.signInWithPassword({ email, password });
       if (error || !data?.session?.access_token) {

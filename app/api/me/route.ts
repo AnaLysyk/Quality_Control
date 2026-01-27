@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { SUPABASE_MOCK } from "@/lib/supabaseMock";
+import { fetchBackend } from "@/lib/backendProxy";
+import { getRedis } from "@/lib/redis";
 
 type AuthCompany = {
   id: string;
@@ -42,6 +44,11 @@ function extractToken(req: Request): string | null {
     (process.env.AUTH_COOKIE_NAME ? readCookieValue(cookieHeader, process.env.AUTH_COOKIE_NAME) : null) ||
     null
   );
+}
+
+function extractSessionId(req: Request): string | null {
+  const cookieHeader = req.headers.get("cookie") ?? "";
+  return readCookieValue(cookieHeader, "session_id");
 }
 
 function toTitleCase(value: string) {
@@ -192,8 +199,46 @@ function errorResponse(status: number, code: string, message: string) {
 }
 
 export async function GET(req: Request) {
+  const sessionId = extractSessionId(req);
+  if (sessionId) {
+    try {
+      const redis = getRedis();
+      const raw = await redis.get(`session:${sessionId}`);
+      if (raw) {
+        const session = typeof raw === "string" ? JSON.parse(raw) : raw;
+        const user = {
+          id: session.userId ?? session.id ?? session.sub ?? "session-user",
+          email: session.email ?? null,
+          name: session.name ?? null,
+          role: session.role ?? "user",
+          clientId: session.companyId ?? session.clientId ?? null,
+          clientSlug: session.companySlug ?? session.clientSlug ?? null,
+          defaultClientSlug: session.companySlug ?? session.clientSlug ?? null,
+          clientSlugs: session.companySlug ? [session.companySlug] : session.clientSlug ? [session.clientSlug] : [],
+          isGlobalAdmin: session.isGlobalAdmin === true || session.role === "admin",
+        };
+        const res = NextResponse.json({ user, companies: [] });
+        res.cookies.set("session_id", sessionId, {
+          httpOnly: true,
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+          path: "/",
+          maxAge: 60 * 60 * 8,
+        });
+        await redis.expire(`session:${sessionId}`, 60 * 60 * 8);
+        return res;
+      }
+    } catch {
+      // ignore and continue auth flow
+    }
+  }
+
   if (SUPABASE_MOCK) {
     const cookieHeader = req.headers.get("cookie") ?? "";
+    const mockRole = readCookieValue(cookieHeader, "mock_role");
+    if (!mockRole) {
+      return errorResponse(401, "NO_TOKEN", "Nao autorizado");
+    }
     const baseMock = buildMockCompanies(cookieHeader);
     const landingRole = decideLandingRole(baseMock.companies, baseMock.user.role);
     const user = {
@@ -212,6 +257,26 @@ export async function GET(req: Request) {
 
   const token = extractToken(req);
   if (!token) return errorResponse(401, "NO_TOKEN", "Nao autorizado");
+
+  let backendUser: Record<string, unknown> | null = null;
+  const backendRes = await fetchBackend(req, "/auth/me");
+  if (backendRes) {
+    const payload = (await backendRes.json().catch(() => null)) as Record<string, unknown> | null;
+    if (!backendRes.ok) {
+      const message =
+        (payload?.error as Record<string, unknown> | undefined)?.message ||
+        (payload?.message as string | undefined) ||
+        "Nao autorizado";
+      return errorResponse(backendRes.status, "BACKEND_AUTH_FAILED", String(message));
+    }
+
+    const rawUser = payload?.user;
+    if (rawUser && typeof rawUser === "object") {
+      backendUser = rawUser as Record<string, unknown>;
+    } else {
+      return errorResponse(401, "INVALID_TOKEN", "Nao autorizado");
+    }
+  }
 
   const supabaseModule = require("@/lib/supabaseServer");
   const supabase = supabaseModule.getSupabaseServer();
@@ -275,6 +340,13 @@ export async function GET(req: Request) {
 
   const rawRole = typeof (userRow as { role?: unknown } | null)?.role === "string" ? String((userRow as { role?: unknown }).role) : null;
   const role = rawRole ? rawRole.toLowerCase() : null;
+  const backendRole = typeof backendUser?.role === "string" ? String(backendUser.role) : null;
+  const backendIsGlobalAdmin =
+    backendUser?.isGlobalAdmin === true ||
+    backendUser?.is_global_admin === true ||
+    (typeof backendRole === "string" && backendRole.toLowerCase() === "global_admin") ||
+    (typeof backendRole === "string" && backendRole.toLowerCase() === "admin");
+
   const isGlobalAdmin =
     Boolean((globalAdminLink as { user_id?: unknown } | null)?.user_id) ||
     (userRow as { is_global_admin?: unknown } | null)?.is_global_admin === true ||
@@ -288,7 +360,13 @@ export async function GET(req: Request) {
       return metaRole === "admin";
     })();
 
-  const clientId = typeof (userRow as { client_id?: unknown } | null)?.client_id === "string" ? (userRow as { client_id: string }).client_id : null;
+  const backendClientId =
+    typeof backendUser?.clientId === "string"
+      ? (backendUser.clientId as string)
+      : typeof backendUser?.client_id === "string"
+        ? (backendUser.client_id as string)
+        : null;
+  const clientId = backendClientId || (typeof (userRow as { client_id?: unknown } | null)?.client_id === "string" ? (userRow as { client_id: string }).client_id : null);
 
   if (!isGlobalAdmin && !clientId) {
     return errorResponse(403, "NO_COMPANY_LINK", "Sem empresa vinculada");
@@ -419,18 +497,23 @@ export async function GET(req: Request) {
 
   const companiesOut = dedupeCompanies(items);
 
-  const landingRole = decideLandingRole(companiesOut, role);
+  const landingRole = decideLandingRole(companiesOut, backendRole ?? role);
   const first = companiesOut[0];
   const user = {
-    id: typeof (userRow as { id?: unknown } | null)?.id === "string" ? (userRow as { id: string }).id : authUserId,
-    email: authEmail,
-    name: displayName || null,
+    id:
+      typeof backendUser?.id === "string"
+        ? (backendUser.id as string)
+        : typeof (userRow as { id?: unknown } | null)?.id === "string"
+          ? (userRow as { id: string }).id
+          : authUserId,
+    email: typeof backendUser?.email === "string" ? (backendUser.email as string) : authEmail,
+    name: typeof backendUser?.name === "string" ? (backendUser.name as string) : displayName || null,
     role: landingRole,
     clientId: first?.id ?? clientId ?? null,
     clientSlug: first?.slug ?? null,
     defaultClientSlug: first?.slug ?? null,
     clientSlugs: companiesOut.map((company) => company.slug),
-    isGlobalAdmin: isGlobalAdmin,
+    isGlobalAdmin: backendIsGlobalAdmin || isGlobalAdmin,
   };
 
   return NextResponse.json({ user, companies: companiesOut });

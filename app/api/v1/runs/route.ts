@@ -1,6 +1,7 @@
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 import { canCreateRun, getRunMockRole, resolveRunRole } from "@/lib/rbac/runs";
+import { fetchBackend } from "@/lib/backendProxy";
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
@@ -22,6 +23,30 @@ function normalizeString(value: unknown): string | null {
 }
 
 export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const backendRes = await fetchBackend(request, `/runs${url.search}`);
+  if (backendRes) {
+    const json = (await backendRes.json().catch(() => null)) as unknown;
+    if (!backendRes.ok) {
+      const message =
+        (asRecord(asRecord(json)?.error)?.message as string) ||
+        (asRecord(json)?.message as string) ||
+        "Erro ao consultar backend";
+      return apiFail(request, message, {
+        status: backendRes.status,
+        code: "UPSTREAM_ERROR",
+        details: json,
+        extra: { error: { message } },
+      });
+    }
+
+    const directList = Array.isArray(asRecord(json)?.data) ? (asRecord(json)?.data as unknown[]) : null;
+    const result = directList ? { entities: directList } : asRecord(json)?.result;
+    const entities = (asRecord(result)?.entities as unknown[]) || [];
+    const out = { data: entities };
+    return apiOk(request, out, "OK", { extra: out });
+  }
+
   const auth = await authenticateRequest(request);
   const mockRole = await getRunMockRole();
   if (!auth && !mockRole) {
@@ -32,7 +57,6 @@ export async function GET(request: Request) {
     });
   }
 
-  const url = new URL(request.url);
   const project = normalizeString(url.searchParams.get("project")) || DEFAULT_PROJECT;
   if (!project) {
     return apiFail(request, "Missing project", {
@@ -70,9 +94,37 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const url = new URL(request.url);
+  const body = (await request.json().catch(() => null)) as unknown;
+
+  const backendRes = await fetchBackend(request, `/runs${url.search}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body ?? {}),
+  });
+  if (backendRes) {
+    const json = (await backendRes.json().catch(() => null)) as unknown;
+    if (!backendRes.ok) {
+      const message =
+        (asRecord(asRecord(json)?.error)?.message as string) ||
+        (asRecord(json)?.message as string) ||
+        "Erro ao criar run";
+      return apiFail(request, message, {
+        status: backendRes.status,
+        code: "UPSTREAM_ERROR",
+        details: json,
+        extra: { error: { message } },
+      });
+    }
+
+    const out = { data: asRecord(json)?.result ?? null };
+    return apiOk(request, out, "OK", { extra: out });
+  }
+
   const auth = await authenticateRequest(request);
   const mockRole = await getRunMockRole();
-  const effectiveAuth = auth ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "admin" } : null);
+  const effectiveAuth =
+    auth ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "admin" } : null);
 
   if (!effectiveAuth) {
     return apiFail(request, "Nao autorizado", {
@@ -90,7 +142,6 @@ export async function POST(request: Request) {
     });
   }
 
-  const body = (await request.json().catch(() => null)) as unknown;
   const rec = asRecord(body) ?? {};
   const project = normalizeString(rec.project) || DEFAULT_PROJECT;
   const title = normalizeString(rec.title);

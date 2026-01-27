@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabaseServer";
-import { IS_PROD, SUPABASE_MOCK, SUPABASE_MOCK_RAW } from "@/lib/supabaseMock";
+import {
+  ALLOW_SUPABASE_MOCK_IN_PROD,
+  IS_PROD,
+  SUPABASE_MOCK,
+  SUPABASE_MOCK_RAW,
+} from "@/lib/supabaseMock";
 
 export const runtime = "nodejs";
 
@@ -131,7 +136,7 @@ export async function GET() {
       return NextResponse.json({ items }, { status: 200 });
     }
 
-    if (SUPABASE_MOCK_RAW && IS_PROD) {
+    if (SUPABASE_MOCK_RAW && IS_PROD && !ALLOW_SUPABASE_MOCK_IN_PROD) {
       console.warn("/api/public/clients: SUPABASE_MOCK ignored in production/Vercel");
     }
 

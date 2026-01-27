@@ -1,6 +1,11 @@
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { apiFail, apiOk } from "@/lib/apiResponse";
-import { IS_PROD, SUPABASE_MOCK, SUPABASE_MOCK_RAW } from "@/lib/supabaseMock";
+import {
+  ALLOW_SUPABASE_MOCK_IN_PROD,
+  IS_PROD,
+  SUPABASE_MOCK,
+  SUPABASE_MOCK_RAW,
+} from "@/lib/supabaseMock";
 
 type SupabaseServerClient = ReturnType<typeof import("@/lib/supabaseServer").getSupabaseServer>;
 
@@ -88,7 +93,7 @@ function resolveDisplayName(authUser: MinimalAuthUser): string {
 }
 
 export async function POST(req: Request) {
-  if (SUPABASE_MOCK_RAW && IS_PROD) {
+  if (SUPABASE_MOCK_RAW && IS_PROD && !ALLOW_SUPABASE_MOCK_IN_PROD) {
     console.warn("/api/auth/bootstrap: SUPABASE_MOCK ignored in production/Vercel");
   }
 

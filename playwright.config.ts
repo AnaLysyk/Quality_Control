@@ -23,6 +23,7 @@ const dotenvEnv = loadDotenv(".env.local");
 Object.assign(process.env, dotenvEnv);
 const envOverrides = {
   SUPABASE_MOCK: "true",
+  PLAYWRIGHT_MOCK: "true",
   NEXT_PUBLIC_SUPABASE_URL: "http://localhost",
   NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key-test",
   SUPABASE_SERVICE_ROLE_KEY: "service-role-test",
@@ -48,6 +49,7 @@ export default defineConfig({
     env: {
       ...dotenvEnv,
       SUPABASE_MOCK: "true",
+      PLAYWRIGHT_MOCK: "true",
       NODE_ENV: "test",
       NEXT_PUBLIC_SUPABASE_URL: "http://localhost",
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key-test",

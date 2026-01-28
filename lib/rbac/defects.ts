@@ -53,7 +53,6 @@ export async function resolveDefectRole(authUser: AuthUser | null | undefined, c
   if (links.length === 1) return "company";
   return "user";
 }
-}
 
 export const canCreateManualDefect = (role: Role) =>
   role === "admin" || role === "company" || (SUPABASE_MOCK && role === "user");

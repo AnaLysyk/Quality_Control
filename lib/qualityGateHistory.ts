@@ -1,9 +1,14 @@
 // Utilitário para registrar snapshot do quality gate
-import fs from "fs/promises";
-import path from "path";
+// Importa fs e path só em ambiente Node/server
+let fs: typeof import("fs/promises") | undefined;
+let path: typeof import("path") | undefined;
+if (typeof process !== "undefined" && process.release?.name === "node") {
+  fs = require("fs/promises");
+  path = require("path");
+}
 import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
-const STORE_PATH = path.join(process.cwd(), "data", "quality_gate_history.json");
+const STORE_PATH = path && path.join(process.cwd(), "data", "quality_gate_history.json");
 let memoryStore: QualityGateHistoryEntry[] = [];
 export type QualityGateHistoryEntry = {
   id: string;
@@ -26,6 +31,7 @@ export type QualityGateHistoryEntry = {
 
 async function ensureStore() {
   if (SUPABASE_MOCK) return;
+  if (!fs || !path || !STORE_PATH) return;
   await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
   try {
     await fs.access(STORE_PATH);
@@ -39,6 +45,7 @@ export async function appendQualityGateHistory(entry: QualityGateHistoryEntry) {
     memoryStore = [...memoryStore, entry];
     return;
   }
+  if (!fs || !STORE_PATH) return;
   try {
     await ensureStore();
     const raw = await fs.readFile(STORE_PATH, "utf8");
@@ -66,6 +73,7 @@ export async function readQualityGateHistory(companySlug?: string, releaseSlug?:
     arr.sort((a, b) => String(b.evaluated_at).localeCompare(String(a.evaluated_at)));
     return arr;
   }
+  if (!fs || !STORE_PATH) return [];
   try {
     await ensureStore();
   } catch (err) {

@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
+// Importa fs e path só em ambiente Node/server
+let fs: typeof import("fs/promises") | undefined;
+let path: typeof import("path") | undefined;
+if (typeof process !== "undefined" && process.release?.name === "node") {
+  fs = require("fs/promises");
+  path = require("path");
+}
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
 import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
-const STORE_PATH = path.join(process.cwd(), "data", "user-settings.json");
+const STORE_PATH = path && path.join(process.cwd(), "data", "user-settings.json");
 
 type Theme = "light" | "dark" | "system";
 
@@ -29,6 +34,7 @@ const isValidLanguage = (value?: string | null): value is Locale =>
   Boolean(value) && LOCALES.includes(value as Locale);
 
 async function ensureStore() {
+  if (!fs || !path || !STORE_PATH) return;
   await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
   try {
     await fs.access(STORE_PATH);
@@ -38,6 +44,7 @@ async function ensureStore() {
 }
 
 async function readStore(): Promise<Record<string, StoredSettings>> {
+  if (!fs || !STORE_PATH) return {};
   await ensureStore();
   try {
     const raw = await fs.readFile(STORE_PATH, "utf8");
@@ -49,6 +56,7 @@ async function readStore(): Promise<Record<string, StoredSettings>> {
 }
 
 async function writeStore(data: Record<string, StoredSettings>) {
+  if (!fs || !STORE_PATH) return;
   await ensureStore();
   await fs.writeFile(STORE_PATH, JSON.stringify(data, null, 2), "utf8");
 }

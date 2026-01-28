@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { prisma } from "@/lib/prisma";
+
 import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 export type Role = "admin" | "company" | "user";
@@ -19,7 +19,11 @@ export async function getMockRole(): Promise<Role | null> {
   return null;
 }
 
-export async function resolveDefectRole(authUser: AuthUser | null, clientSlug?: string | null): Promise<Role> {
+  // Importa prisma só em ambiente Node/server
+  let prisma: typeof import("@/lib/prisma").prisma | undefined;
+  if (typeof process === "object" && process.env.NEXT_RUNTIME !== "edge") {
+    prisma = require("@/lib/prisma").prisma;
+  }
   if (!authUser) return "user";
 
   const mockRole = await getMockRole();
@@ -27,10 +31,13 @@ export async function resolveDefectRole(authUser: AuthUser | null, clientSlug?: 
 
   if (authUser.isGlobalAdmin) return "admin";
 
-  const links = await prisma.userCompany.findMany({
-    where: { user_id: authUser.id },
-    include: { company: true },
-  });
+  let links: any[] = [];
+  if (prisma) {
+    links = await prisma.userCompany.findMany({
+      where: { user_id: authUser.id },
+      include: { company: true },
+    });
+  }
   type Link = { role?: string | null; company?: { slug?: string | null } | null };
 
   if (!links.length) return "user";

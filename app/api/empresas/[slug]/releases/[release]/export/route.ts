@@ -2,13 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getMockRole } from "@/lib/rbac/defects";
 import { getReleaseTimeline } from "@/lib/releaseTimeline";
-import path from "path";
-import fs from "fs/promises";
+// Importa fs e path só em ambiente Node/server
+let fs: typeof import("fs/promises") | undefined;
+let path: typeof import("path") | undefined;
+if (typeof process !== "undefined" && process.release?.name === "node") {
+  fs = require("fs/promises");
+  path = require("path");
+}
 import { format } from "date-fns";
 
-const GATE_STORE = path.join(process.cwd(), "data", "quality_gate_history.json");
+const GATE_STORE = path && path.join(process.cwd(), "data", "quality_gate_history.json");
 
 async function ensureGateStore() {
+  if (!fs || !path || !GATE_STORE) return;
   await fs.mkdir(path.dirname(GATE_STORE), { recursive: true });
   try {
     await fs.access(GATE_STORE);
@@ -18,6 +24,7 @@ async function ensureGateStore() {
 }
 
 async function readGateHistory() {
+  if (!fs || !GATE_STORE) return [];
   await ensureGateStore();
   const raw = await fs.readFile(GATE_STORE, "utf8");
   try {

@@ -6,5 +6,6 @@ services:
       dockerfile: ./Dockerfile
     environment:
       NODE_ENV: production
+      DATABASE_URL: "postgres://postgres.glzoowczvjykxjxctjsq:qYvcoq1VXzuhrOMn@aws-1-us-east-1.pooler.supabase.com:6543/postgres?sslmode=disable&pgbouncer=true"
     ports:
       - 3000:3000

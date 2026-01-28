@@ -1,5 +1,10 @@
-import fs from "node:fs/promises";
-import path from "node:path";
+// Importa fs e path só em ambiente Node/server
+let fs: typeof import("fs/promises") | undefined;
+let path: typeof import("path") | undefined;
+if (typeof process !== "undefined" && process.release?.name === "node") {
+  fs = require("fs/promises");
+  path = require("path");
+}
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { notFound } from "next/navigation";
@@ -47,7 +52,7 @@ const DOC_FILES: Record<string, { title: string; filePath: string; kind: "markdo
 
 async function readDoc(slug: string) {
   const entry = DOC_FILES[slug];
-  if (!entry) return null;
+  if (!entry || !fs || !path) return null;
   const absolute = path.join(process.cwd(), entry.filePath);
   const content = await fs.readFile(absolute, "utf8");
   return { ...entry, content };

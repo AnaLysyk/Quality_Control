@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
+// Importa fs e path só em ambiente Node/server
+let fs: typeof import("fs/promises") | undefined;
+let path: typeof import("path") | undefined;
+if (typeof process !== "undefined" && process.release?.name === "node") {
+  fs = require("fs/promises");
+  path = require("path");
+}
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { evaluateQualityGate } from "@/lib/quality";
 import { canDeleteManualDefect, canEditManualDefect, getMockRole, resolveDefectRole } from "@/lib/rbac/defects";
 import type { Release } from "@/types/release";
 import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalization";
 
-const STORE_PATH = path.join(process.cwd(), "data", "releases-manual.json");
+const STORE_PATH = path && path.join(process.cwd(), "data", "releases-manual.json");
 
 async function ensureStore() {
+  if (!fs || !path || !STORE_PATH) return;
   await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
   try {
     await fs.access(STORE_PATH);
@@ -19,6 +25,7 @@ async function ensureStore() {
 }
 
 async function readStore(): Promise<Release[]> {
+  if (!fs || !STORE_PATH) return [];
   await ensureStore();
   const raw = await fs.readFile(STORE_PATH, "utf8");
   try {
@@ -30,6 +37,7 @@ async function readStore(): Promise<Release[]> {
 }
 
 async function writeStore(releases: Release[]) {
+  if (!fs || !STORE_PATH) return;
   await ensureStore();
   await fs.writeFile(STORE_PATH, JSON.stringify(releases, null, 2), "utf8");
 }

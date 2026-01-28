@@ -19,6 +19,7 @@ export async function getMockRole(): Promise<Role | null> {
   return null;
 }
 
+export async function resolveDefectRole(authUser: AuthUser | null | undefined, clientSlug?: string | null): Promise<Role> {
   // Importa prisma só em ambiente Node/server
   let prisma: typeof import("@/lib/prisma").prisma | undefined;
   if (typeof process === "object" && process.env.NEXT_RUNTIME !== "edge") {
@@ -51,6 +52,7 @@ export async function getMockRole(): Promise<Role | null> {
   if (hasAdminLink) return "admin";
   if (links.length === 1) return "company";
   return "user";
+}
 }
 
 export const canCreateManualDefect = (role: Role) =>

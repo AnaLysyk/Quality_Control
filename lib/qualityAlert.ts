@@ -27,6 +27,10 @@ export type QualityAlert = {
 };
 
 export async function readAlertsStore(): Promise<any[]> {
+  // Impede execução em edge/build/ambiente sem fs
+  if (typeof process !== "object" || process.env.NEXT_RUNTIME === "edge") {
+    throw new Error("File system access not supported in this environment");
+  }
   if (SUPABASE_MOCK) return memoryAlerts;
   try {
     const raw = await fs.promises.readFile(ALERTS_STORE, "utf8");

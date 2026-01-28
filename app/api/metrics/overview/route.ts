@@ -1,3 +1,10 @@
+
+// LOG TEMPORÁRIO PARA DEBUG DE AMBIENTE
+console.log(
+  "[DATABASE_URL HOST]",
+  process.env.DATABASE_URL?.split("@")[1]?.split("/")[0]
+);
+
 import { NextResponse } from "next/server";
 import { prisma, isPrismaConfigured } from "@/lib/prisma";
 import { getRedis } from "@/lib/redis";

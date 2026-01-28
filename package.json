@@ -8,7 +8,7 @@
     "dev": "cross-env NEXT_DISABLE_TURBOPACK=1 next dev",
     "dev:backend": "npm --prefix backend run start:dev",
     "dev:ci": "next dev",
-    "build": "next build && npx prisma generate",
+    "build": "npx prisma generate && next build",
     "build:backend": "npm --prefix backend run build",
     "start": "next start",
     "start:backend": "npm --prefix backend run start",

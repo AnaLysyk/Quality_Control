@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
+// Importa fs e path só em ambiente Node/server
+let fs: typeof import("fs/promises") | undefined;
+let path: typeof import("path") | undefined;
+if (typeof process !== "undefined" && process.release?.name === "node") {
+  fs = require("fs/promises");
+  path = require("path");
+}
 
-const filePath = path.join(process.cwd(), "data", "releases-store.json");
+const filePath = path && path.join(process.cwd(), "data", "releases-store.json");
 
 type ReleaseRecord = {
   slug: string;
@@ -24,6 +29,9 @@ export async function PUT(req: Request, ctx: { params: Promise<{ slug: string }>
       return NextResponse.json({ error: "Campo 'order' inválido" }, { status: 400 });
     }
 
+    if (!fs || !filePath) {
+      return NextResponse.json({ error: "Ambiente não suporta fs/path" }, { status: 500 });
+    }
     const data = await fs.readFile(filePath, "utf-8");
     const parsed = JSON.parse(data) as unknown;
     if (!Array.isArray(parsed)) {

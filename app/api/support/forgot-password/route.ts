@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+// Importa prisma só em ambiente Node/server
+let prisma: typeof import("@/lib/prisma").prisma | undefined;
+if (typeof process !== "undefined" && process.release?.name === "node") {
+  prisma = require("@/lib/prisma").prisma;
+}
 import { authenticateRequest } from "@/lib/jwtAuth";
 
 type Payload = {
@@ -39,17 +43,20 @@ export async function POST(req: Request) {
   const ip_address = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
   const user_agent = req.headers.get("user-agent") || null;
 
+
   try {
-    await prisma.supportRequest.create({
-      data: {
-        email,
-        message,
-        status: "open",
-        ip_address,
-        user_agent,
-        user_id: userId,
-      },
-    });
+    if (prisma) {
+      await prisma.supportRequest.create({
+        data: {
+          email,
+          message,
+          status: "open",
+          ip_address,
+          user_agent,
+          user_id: userId,
+        },
+      });
+    }
   } catch (err) {
     // Não vaza detalhes; apenas loga no servidor
     console.error("Erro ao registrar support_request:", err);

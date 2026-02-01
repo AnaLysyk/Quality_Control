@@ -1,4 +1,6 @@
-import { prisma } from "../lib/prismaClient";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 async function main() {
   // Buscar uma empresa existente para associar releases manuais

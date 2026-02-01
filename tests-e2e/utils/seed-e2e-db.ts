@@ -2,7 +2,7 @@ import "../../scripts/loadEnv";
 import { PrismaClient } from '@prisma/client';
 
 // Prisma 7+ uses config from prisma.config.ts, so no options needed
-const prisma = new PrismaClient({});
+const prisma = new PrismaClient();
 
 async function main() {
   // Companies

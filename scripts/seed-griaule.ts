@@ -1,5 +1,7 @@
 import "./loadEnv";
-import { prisma } from "../lib/prismaClient";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 import { hashPasswordSha256 } from "../lib/passwordHash";
 
 const COMPANY = {

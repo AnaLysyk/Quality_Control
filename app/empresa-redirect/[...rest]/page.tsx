@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-export default function LegacyEmpresaRedirect() {
+export default function EmpresaRedirect() {
   const params = useParams();
   const router = useRouter();
   useEffect(() => {

@@ -1,3 +1,27 @@
+model Defect {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  description String?
+  status      String   @default("open")
+  createdAt   DateTime @default(now())
+  companyId   String   @db.Uuid
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  releaseManualId String? @db.Uuid
+  releaseManual   ReleaseManual? @relation(fields: [releaseManualId], references: [id], onDelete: SetNull)
+}
+generator client {
+  provider = "prisma-client-js"
+}
+model ReleaseManual {
+    defects Defect[]
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  status      String   @default("draft")
+  companyId   String   @db.Uuid
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
 datasource db {
   provider = "postgresql"
 }
@@ -17,6 +41,8 @@ model Company {
   name String
   slug String @unique
   userCompanies UserCompany[]
+  releaseManuals ReleaseManual[]
+  defects Defect[]
 }
 
 model UserCompany {

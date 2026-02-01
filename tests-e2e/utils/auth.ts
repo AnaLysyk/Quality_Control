@@ -2,50 +2,66 @@ import type { Page } from "@playwright/test";
 
 const rawBaseURL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
 const baseURL = /^https?:\/\//i.test(rawBaseURL) ? rawBaseURL : `http://${rawBaseURL}`;
-const adminUser = process.env.ADMIN_USER || "admin";
+
+const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || "admin@griaule.test";
+const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "Griaule@123";
+const USER_EMAIL = process.env.E2E_USER_EMAIL || "user@griaule.test";
+const USER_PASSWORD = process.env.E2E_USER_PASSWORD || "Griaule@123";
 
 type MockRole = "admin" | "client" | "user";
 
+let lastRole: MockRole | null = null;
+let lastClientSlug: string | null = null;
+
+function resolveCredentials(inputEmail: string, inputPassword: string) {
+  const email = inputEmail.toLowerCase();
+  if (lastRole === "admin" || email.includes("admin")) {
+    return { email: ADMIN_EMAIL, password: ADMIN_PASSWORD, role: "admin" as const };
+  }
+  if (lastRole === "user" || email.includes("user")) {
+    return { email: USER_EMAIL, password: USER_PASSWORD, role: "user" as const };
+  }
+  return { email: inputEmail, password: inputPassword, role: "user" as const };
+}
+
+function parseCookie(setCookie: string | string[] | undefined, name: string): string | null {
+  if (!setCookie) return null;
+  const raw = Array.isArray(setCookie) ? setCookie.join(";") : setCookie;
+  const match = raw.match(new RegExp(`${name}=([^;]+)`));
+  return match?.[1] ?? null;
+}
+
 export async function setMockUser(page: Page, role: MockRole, clientSlug?: string | null) {
-  const cookies: Array<{ name: string; value: string; url: string }> = [
-    { name: "mock_role", value: role, url: baseURL },
-  ];
+  lastRole = role;
+  lastClientSlug = clientSlug ?? null;
+  const creds = resolveCredentials(role === "admin" ? "admin" : "user", "");
 
-  if (role === "admin") {
-    cookies.push({ name: "auth", value: adminUser, url: baseURL });
-  } else {
-    cookies.push({ name: "auth", value: "", url: baseURL });
-  }
-
-  if (typeof clientSlug !== "undefined") {
-    cookies.push({
-      name: "mock_client_slug",
-      value: clientSlug ?? "",
-      url: baseURL,
-    });
-  }
-
-  await page.context().addCookies(cookies);
-
-  const loginEmail = role === "admin" ? "admin@example.com" : "user@example.com";
   const loginUrl = new URL("/api/auth/login", baseURL).toString();
   const response = await page.context().request.post(loginUrl, {
     data: {
-      email: loginEmail,
-      password: "senha",
+      email: creds.email,
+      password: creds.password,
     },
   });
 
   if (!response.ok()) {
-    throw new Error(`setMockUser login failed: ${response.status()} ${response.statusText()}`);
+    const text = await response.text();
+    throw new Error(`setMockUser login failed: ${response.status()} ${response.statusText()} ${text}`);
   }
 
   const setCookie = response.headers()["set-cookie"];
-  const match = typeof setCookie === "string" ? setCookie.match(/session_id=([^;]+)/) : null;
-  if (!match?.[1]) {
+  const sessionId = parseCookie(setCookie, "session_id");
+  const authToken = parseCookie(setCookie, "auth_token");
+  if (!sessionId) {
     throw new Error("setMockUser login failed: missing session_id cookie");
   }
-  await page.context().addCookies([{ name: "session_id", value: match[1], url: baseURL }]);
+  const cookies: Array<{ name: string; value: string; url: string }> = [
+    { name: "session_id", value: sessionId, url: baseURL },
+  ];
+  if (authToken) {
+    cookies.push({ name: "auth_token", value: authToken, url: baseURL });
+  }
+  await page.context().addCookies(cookies);
 }
 
 async function getMockCookie(page: Page, cookieName: string) {
@@ -56,32 +72,37 @@ async function getMockCookie(page: Page, cookieName: string) {
 
 export async function login(page: Page, email: string, password: string) {
   const sessionId = await getMockCookie(page, "session_id");
+  const creds = resolveCredentials(email, password);
   if (!sessionId) {
     const loginUrl = new URL("/api/auth/login", baseURL).toString();
     const response = await page.context().request.post(loginUrl, {
       data: {
-        email,
-        password,
+        email: creds.email,
+        password: creds.password,
       },
     });
     if (!response.ok()) {
-      throw new Error(`login failed: ${response.status()} ${response.statusText()}`);
+      const text = await response.text();
+      throw new Error(`login failed: ${response.status()} ${response.statusText()} ${text}`);
     }
 
     const setCookie = response.headers()["set-cookie"];
-    const match = typeof setCookie === "string" ? setCookie.match(/session_id=([^;]+)/) : null;
-    if (!match?.[1]) {
+    const newSessionId = parseCookie(setCookie, "session_id");
+    const authToken = parseCookie(setCookie, "auth_token");
+    if (!newSessionId) {
       throw new Error("login failed: missing session_id cookie");
     }
-    await page.context().addCookies([{ name: "session_id", value: match[1], url: baseURL }]);
+    const cookies: Array<{ name: string; value: string; url: string }> = [
+      { name: "session_id", value: newSessionId, url: baseURL },
+    ];
+    if (authToken) {
+      cookies.push({ name: "auth_token", value: authToken, url: baseURL });
+    }
+    await page.context().addCookies(cookies);
   }
 
-  const role = (await getMockCookie(page, "mock_role")) ?? "admin";
-  const slug = (await getMockCookie(page, "mock_client_slug")) ?? "griaule";
-  const companySlug = slug || "griaule";
-  const defaultPath =
-    role === "admin"
-      ? "/admin/clients"
-      : `/empresas/${companySlug}/dashboard`;
+  const role = (lastRole ?? creds.role) === "admin" ? "admin" : "user";
+  const companySlug = lastClientSlug || "griaule";
+  const defaultPath = role === "admin" ? "/admin/clients" : `/empresas/${companySlug}/dashboard`;
   await page.goto(defaultPath, { timeout: 120000, waitUntil: "networkidle" });
 }

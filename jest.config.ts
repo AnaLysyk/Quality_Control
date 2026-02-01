@@ -10,8 +10,8 @@ const config: JestConfigWithTsJest = {
     "^@/(.*)$": "<rootDir>/app/$1",
     "^server-only$": "<rootDir>/tests/mocks/server-only.js",
   },
-  reporters: ["default", "<rootDir>/tests/reporters/relatorioPortugues.js"],
-  setupFiles: ["<rootDir>/tests/jest.setup.ts"],
+  reporters: ["default"],
+  // setupFiles removido pois o arquivo não existe mais
   transform: {
     "^.+\\.(ts|tsx)$": [
       "ts-jest",

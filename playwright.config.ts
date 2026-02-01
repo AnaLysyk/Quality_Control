@@ -27,6 +27,7 @@ const envOverrides = {
 Object.assign(process.env, envOverrides);
 export default defineConfig({
   testDir: "./tests-e2e",
+  globalSetup: "./tests-e2e/global-setup.ts",
   timeout: 60 * 1000,
   expect: { timeout: 5000 },
   retries: 0,

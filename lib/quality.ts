@@ -1,11 +1,10 @@
-import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { readManualReleaseStore } from "@/data/manualData";
 import { calcMTTR } from "@/lib/mttr";
 import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
 
 // Resumo de qualidade para exportação executiva
 export async function getCompanyQualitySummary(slug: string, period: string = "30d") {
-  // Manual defects
+  // Apenas defeitos manuais disponíveis (Qase removido)
   const manualReleases = await readManualReleaseStore();
   const manualDefects = manualReleases.map((r: any) => {
     const status = normalizeDefectStatus(r.status);
@@ -24,54 +23,7 @@ export async function getCompanyQualitySummary(slug: string, period: string = "3
     };
   });
 
-  // Qase defects
-  const clientSettings = await getClientQaseSettings(slug);
-  const token = clientSettings?.token || process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
-  const projectCodesSet = new Set<string>();
-  const settingsCodes = clientSettings?.projectCodes ?? [];
-  settingsCodes.forEach((code) => {
-    const normalized = typeof code === "string" ? code.trim().toUpperCase() : "";
-    if (normalized) projectCodesSet.add(normalized);
-  });
-  if (!projectCodesSet.size && clientSettings?.projectCode) {
-    const normalized = clientSettings.projectCode.trim().toUpperCase();
-    if (normalized) projectCodesSet.add(normalized);
-  }
-  const projectCodes = Array.from(projectCodesSet);
-
-  let qaseDefects: any[] = [];
-  if (token && projectCodes.length) {
-    for (const code of projectCodes) {
-      const defects = await fetch(`https://api.qase.io/v1/defect/${code}?limit=1000`, {
-        headers: { Token: token, Accept: "application/json" },
-        cache: "no-store",
-      })
-        .then((res) => res.json())
-        .then((json) => Array.isArray(json?.result?.entities) ? json.result.entities : [])
-        .catch(() => []);
-      qaseDefects.push(
-        ...defects.map((d: any) => {
-          const status = normalizeDefectStatus(d.status ?? "open");
-          const openedAt = resolveOpenedAt(d.created_at ?? d.updated_at);
-          const closedAt = resolveClosedAt(status, d.closed_at ?? null, d.updated_at ?? null);
-          return {
-            id: d.id ?? d.defect_id ?? "",
-            title: d.title ?? d.name ?? "Defeito Qase",
-            status,
-            openedAt,
-            closedAt,
-            mttrMs: calcMTTR(openedAt, closedAt),
-            origin: "qase",
-            runSlug: d.run_id ? String(d.run_id) : undefined,
-            severity: d.severity ?? d.severity_name ?? null,
-          };
-        })
-      );
-    }
-  }
-
-  // Unify
-  const all = [...manualDefects, ...qaseDefects].filter((d) => d.openedAt);
+  const all = manualDefects.filter((d) => d.openedAt);
   const openDefects = all.filter((d) => d.status !== "done");
   const closedDefects = all.filter((d) => d.status === "done");
   const totalDefects = all.length;
@@ -93,7 +45,7 @@ export async function getCompanyQualitySummary(slug: string, period: string = "3
   qualityScore = Math.max(0, Math.min(qualityScore, 100));
 
   return {
-    companyName: clientSettings?.company_name || clientSettings?.name || slug,
+    companyName: slug,
     qualityScore,
     totalDefects,
     openDefects: openDefects.length,
@@ -125,52 +77,8 @@ export async function getCompanyDefects(slug: string, period: string = "30d") {
       severity: r.severity ?? null,
     };
   });
-  const clientSettings = await getClientQaseSettings(slug);
-  const token = clientSettings?.token || process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
-  const projectCodesSet = new Set<string>();
-  const settingsCodes = clientSettings?.projectCodes ?? [];
-  settingsCodes.forEach((code) => {
-    const normalized = typeof code === "string" ? code.trim().toUpperCase() : "";
-    if (normalized) projectCodesSet.add(normalized);
-  });
-  if (!projectCodesSet.size && clientSettings?.projectCode) {
-    const normalized = clientSettings.projectCode.trim().toUpperCase();
-    if (normalized) projectCodesSet.add(normalized);
-  }
-  const projectCodes = Array.from(projectCodesSet);
-  let qaseDefects: any[] = [];
-  if (token && projectCodes.length) {
-    for (const code of projectCodes) {
-      const defects = await fetch(`https://api.qase.io/v1/defect/${code}?limit=1000`, {
-        headers: { Token: token, Accept: "application/json" },
-        cache: "no-store",
-      })
-        .then((res) => res.json())
-        .then((json) => Array.isArray(json?.result?.entities) ? json.result.entities : [])
-        .catch(() => []);
-      qaseDefects.push(
-        ...defects.map((d: any) => {
-          const status = normalizeDefectStatus(d.status ?? "open");
-          const openedAt = resolveOpenedAt(d.created_at ?? d.updated_at);
-          const closedAt = resolveClosedAt(status, d.closed_at ?? null, d.updated_at ?? null);
-          return {
-            id: d.id ?? d.defect_id ?? "",
-            title: d.title ?? d.name ?? "Defeito Qase",
-            status,
-            openedAt,
-            closedAt,
-            mttrMs: calcMTTR(openedAt, closedAt),
-            origin: "qase",
-            runSlug: d.run_id ? String(d.run_id) : undefined,
-            severity: d.severity ?? d.severity_name ?? null,
-          };
-        })
-      );
-    }
-  }
-  // Unify
-  const all = [...manualDefects, ...qaseDefects].filter((d) => d.openedAt);
   // Flat payload para export
+  const all = manualDefects.filter((d) => d.openedAt);
   return all.map((d) => ({
     id: d.id,
     title: d.title,

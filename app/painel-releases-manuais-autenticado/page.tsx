@@ -1,15 +1,26 @@
 "use client";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useClientContext } from "@/context/ClientContext";
 import ReleaseManualList from "../components/ReleaseManualList";
 import DefectList from "../components/DefectList";
 
 export default function PainelReleasesManuaisAutenticado() {
-  const { user } = useAuthUser();
-  // companyId do usuário autenticado (assumindo que user.companyId existe)
-  const companyId = user?.companyId;
+  const { user, loading: authLoading } = useAuthUser();
+  const { activeClientId, loading: clientsLoading } = useClientContext();
+  const isLoading = authLoading || clientsLoading;
 
-  if (!companyId) {
-    return <div className="p-6 text-red-600">Você precisa estar autenticado e vinculado a uma empresa para acessar este painel.</div>;
+  const companyId = activeClientId;
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (!user || !companyId) {
+    return (
+      <div className="p-6 text-red-600">
+        Você precisa estar autenticado e vinculado a uma empresa para acessar este painel.
+      </div>
+    );
   }
 
   return (

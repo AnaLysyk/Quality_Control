@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import Breadcrumb from "@/components/Breadcrumb";
 import { getClienteBySlug } from "@/lib/clienteServer";
 import CompanyProfileClient from "./profileClient";
@@ -7,7 +7,9 @@ export default async function EmpresaHomePage({ params }: { params: Promise<{ sl
   const { slug } = await params;
 
   const client = await getClienteBySlug(slug);
-  if (!client) notFound();
+  if (!client) {
+    redirect("/empresas");
+  }
 
   return (
     <div className="min-h-screen bg-(--tc-bg) text-(--tc-text-inverse)">

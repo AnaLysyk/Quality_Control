@@ -1,0 +1,17 @@
+{
+  "items": [
+    {
+      "id": "57f7ef51-2119-4549-a411-76cb15acaf5a",
+      "companySlug": "griaule",
+      "kind": "file",
+      "title": "facInterno (3).pdf",
+      "description": null,
+      "fileName": "facInterno (3).pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 103249,
+      "storagePath": "local:griaule/57f7ef51-2119-4549-a411-76cb15acaf5a-facInterno (3).pdf",
+      "createdAt": "2026-02-01T09:31:18.820Z",
+      "createdBy": "1ea42bf6-015a-4cba-865a-e19071ff9ac5"
+    }
+  ]
+}

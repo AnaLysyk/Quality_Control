@@ -76,14 +76,8 @@ const COMP_MAP: Record<string, GovernanceCompany> = {
   },
 };
 
-export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }): Promise<Response>;
-export async function GET(_request: Request, context: { params: { id: string } }): Promise<Response>;
-export async function GET(
-  _request: NextRequest | Request,
-  context: { params: Promise<{ id: string }> } | { params: { id: string } }
-): Promise<Response> {
-  const resolvedParams = await Promise.resolve((context as { params: unknown }).params) as { id: string };
-  const { id } = resolvedParams;
+export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }): Promise<Response> {
+  const { id } = await context.params;
   const key = (id ?? "").toString().trim().toUpperCase();
   const company = COMP_MAP[key];
 

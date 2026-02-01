@@ -12,13 +12,13 @@ function normalizeRole(accessType?: string | null) {
   return "user";
 }
 
-export async function POST(req: NextRequest, context: { params: { id: string } }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
     return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
   }
 
-  const id = context.params.id;
+  const { id } = await context.params;
   const body = await req.json().catch(() => null);
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
   const name = typeof body?.name === "string" ? body.name.trim() : "";

@@ -11,13 +11,13 @@ function appendAdminNotes(message: string, notes: string | null) {
   return lines.join("\n");
 }
 
-export async function POST(req: NextRequest, context: { params: { id: string } }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
     return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
   }
 
-  const id = context.params.id;
+  const { id } = await context.params;
   const body = await req.json().catch(() => null);
   const reason = typeof body?.reason === "string" ? body.reason : null;
 

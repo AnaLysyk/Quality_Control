@@ -80,7 +80,7 @@ function mapLink(link: { user: { id: string; email: string; name: string; active
   };
 }
 
-export async function GET(req: NextRequest, context: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const session = await resolveSession(req);
   if (!session?.userId && !session?.id) {
     return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
@@ -94,7 +94,7 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
     return NextResponse.json({ message: "Sem permissao" }, { status: 403 });
   }
 
-  const companyId = context.params.id;
+  const { id: companyId } = await context.params;
   const where = requestAll && isAdmin
     ? { company_id: companyId }
     : { company_id: companyId, user_id: userId };
@@ -107,7 +107,7 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
   return NextResponse.json({ items: links.map(mapLink) }, { status: 200 });
 }
 
-export async function POST(req: NextRequest, context: { params: { id: string } }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
     return NextResponse.json({ message: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
@@ -120,7 +120,7 @@ export async function POST(req: NextRequest, context: { params: { id: string } }
     return NextResponse.json({ message: "Email obrigatorio" }, { status: 400 });
   }
 
-  const companyId = context.params.id;
+  const { id: companyId } = await context.params;
   const existing = await prisma.userCompany.findFirst({
     where: { company_id: companyId, user: { email } },
     include: { user: true },
@@ -153,7 +153,7 @@ export async function POST(req: NextRequest, context: { params: { id: string } }
   return NextResponse.json({ ok: true }, { status: 201 });
 }
 
-export async function PATCH(req: NextRequest, context: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
     return NextResponse.json({ message: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
@@ -165,7 +165,7 @@ export async function PATCH(req: NextRequest, context: { params: { id: string } 
     return NextResponse.json({ message: "userId obrigatorio" }, { status: 400 });
   }
 
-  const companyId = context.params.id;
+  const { id: companyId } = await context.params;
   const role = typeof body?.role === "string" ? body.role.toUpperCase() : null;
   const active = typeof body?.active === "boolean" ? body.active : null;
 

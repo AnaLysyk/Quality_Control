@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { hashPasswordSha256 } from "@/lib/passwordHash";
 
 // POST: Cria um novo usuário e vincula a uma empresa
 export async function POST(req: NextRequest) {
@@ -10,14 +10,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Campos obrigatórios ausentes" }, { status: 400 });
   }
   try {
-    const hash = await bcrypt.hash(password, 10);
+    const hash = hashPasswordSha256(password);
     const user = await prisma.user.create({
       data: {
         email,
         name,
         password_hash: hash,
         userCompanies: {
-          create: { companyId, role: "user" },
+          create: {
+            role: "user",
+            company: { connect: { id: String(companyId) } },
+          },
         },
       },
       include: { userCompanies: true },

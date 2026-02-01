@@ -11,12 +11,7 @@ const globalForPrisma = globalThis as unknown as GlobalPrisma;
 
 const CONNECTION_KEYS = [
   "DATABASE_URL",
-  // Compatibilidade: este repo padroniza DATABASE_URL como fonte única.
-  // Mantemos estes aliases apenas para ambientes antigos, mas NÃO aceitamos `painelQa_*`.
-  "POSTGRES_PRISMA_URL",
-  "POSTGRES_URL",
-  "POSTGRES_URL_NON_POOLING",
-  "DATABASE_URL_UNPOOLED",
+  // Este repo padroniza DATABASE_URL como fonte única. Aliases removidos.
 ];
 
 function readEnv(key: string): string | null {
@@ -38,7 +33,7 @@ function buildClient(): PrismaClient {
   const connectionString = getConnectionString();
   if (!connectionString) {
     throw new Error(
-      "PRISMA_NOT_CONFIGURED: defina DATABASE_URL, POSTGRES_URL ou POSTGRES_PRISMA_URL para usar o Postgres.",
+      "PRISMA_NOT_CONFIGURED: defina DATABASE_URL para usar o Postgres.",
     );
   }
 

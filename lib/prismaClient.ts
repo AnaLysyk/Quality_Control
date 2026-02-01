@@ -13,6 +13,11 @@ const connectionString =
   process.env.DATABASE_URL ?? process.env.POSTGRES_PRISMA_URL ?? process.env.POSTGRES_URL;
 
 function getAdapter(): PrismaPg {
+  if (!connectionString) {
+    throw new Error(
+      "Database URL not configured. Set DATABASE_URL, POSTGRES_PRISMA_URL, or POSTGRES_URL in the environment."
+    );
+  }
   if (!globalForPrisma.prismaPool) {
     globalForPrisma.prismaPool = new Pool(
       connectionString ? { connectionString } : undefined

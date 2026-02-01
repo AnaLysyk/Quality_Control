@@ -1,4 +1,4 @@
-﻿# Arquitetura – API (app/api)
+# Arquitetura – API (app/api)
 
 ## Estrutura das rotas de API
 No App Router, todas as APIs vivem em `app/api/**/route.ts`.
@@ -12,13 +12,13 @@ Alguns exemplos presentes no projeto:
 ## Autenticação
 Padrão adotado:
 
-- O cookie `auth_token` identifica o usuário em cada requisição.
-- Em modo mock (`SUPABASE_MOCK=true`), algumas rotas aceitam os cookies `mock_role` e `mock_client_slug`.
+- Sessões armazenadas via Redis (`session_id`).
+- JWT opcional via cookie `auth_token`.
 
-Boas práticas recomendadas:
+Boas práticas:
 
 - Nunca expor tokens ou chaves no cliente.
-- Validar o acesso por empresa (verificando se ela pertence ao usuário) e liberar o bypass apenas para administradores globais.
+- Validar o acesso por empresa e liberar bypass apenas para administradores globais.
 
 ## Contrato de respostas
 Sugestão de resposta consistente para o front:
@@ -33,14 +33,9 @@ Sugestão de resposta consistente para o front:
 
 Quando nada aparece, os motivos mais comuns são:
 
-- Empresa sem `projectCode` cadastrado
+- Empresa sem `projectCode` configurado
 - Token ausente ou inválido
 - Mapeamento incorreto entre empresa e projeto Qase
-
-## Integração com Supabase
-
-- O acesso é feito pelo servidor via `lib/supabaseServer.ts`.
-- Para Storage, use um bucket dedicado (ex.: `company-documents`) e URLs assinadas para downloads.
 
 ## Documentos por empresa (privacidade)
 A rota `/api/company-documents` oferece:

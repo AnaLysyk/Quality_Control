@@ -2,9 +2,6 @@ import { NextRequest } from "next/server";
 import { AUDIT_LOG_RETENTION_DAYS, isAuditLogStorageConfigured, listAuditLogs } from "@/data/auditLogRepository";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { apiFail, apiOk } from "@/lib/apiResponse";
-import { SUPABASE_MOCK } from "@/lib/supabaseMock";
-
-
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
@@ -22,10 +19,8 @@ export async function GET(req: NextRequest) {
   const action = searchParams.get("action");
 
   const storageReady = isAuditLogStorageConfigured();
-  if (SUPABASE_MOCK || !storageReady) {
-    const warning = SUPABASE_MOCK
-      ? "Audit logs desativado em SUPABASE_MOCK."
-      : "Audit logs desativado neste ambiente: configure DATABASE_URL, POSTGRES_URL ou POSTGRES_PRISMA_URL.";
+  if (!storageReady) {
+    const warning = "Audit logs desativado neste ambiente: configure armazenamento proprio.";
     const payload = {
       items: [],
       retentionDays: AUDIT_LOG_RETENTION_DAYS,

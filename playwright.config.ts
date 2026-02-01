@@ -22,11 +22,7 @@ function loadDotenv(path: string): Record<string, string> {
 const dotenvEnv = loadDotenv(".env.local");
 Object.assign(process.env, dotenvEnv);
 const envOverrides = {
-  SUPABASE_MOCK: "true",
   PLAYWRIGHT_MOCK: "true",
-  NEXT_PUBLIC_SUPABASE_URL: "http://localhost",
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key-test",
-  SUPABASE_SERVICE_ROLE_KEY: "service-role-test",
 };
 Object.assign(process.env, envOverrides);
 export default defineConfig({
@@ -48,12 +44,8 @@ export default defineConfig({
     timeout: 300 * 1000,
     env: {
       ...dotenvEnv,
-      SUPABASE_MOCK: "true",
       PLAYWRIGHT_MOCK: "true",
       NODE_ENV: "test",
-      NEXT_PUBLIC_SUPABASE_URL: "http://localhost",
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key-test",
-      SUPABASE_SERVICE_ROLE_KEY: "service-role-test",
     },
   },
   projects: [

@@ -1,42 +1,14 @@
-# Kanban Manual — Banco + Importação/Exportação
+# Kanban Manual — Importação/Exportação
 
 ## Objetivo
-O Kanban manual permite registrar o status dos casos (PASS/FAIL/BLOCKED/NOT_RUN), com campos opcionais (bug/link), **persistindo no banco** (Supabase Postgres) e com suporte a **importação** e **exportação**.
+O Kanban manual permite registrar o status dos casos (PASS/FAIL/BLOCKED/NOT_RUN), com campos opcionais (bug/link), e suporta **importação** e **exportação**.
 
-## Tabela no banco (Supabase)
-A migration está em:
-
-- `scripts/11_kanban_manual.sql`
-
-Ela cria a tabela:
-
-- `public.kanban_cards`
-
-Campos principais:
-
-- `client_slug` (empresa)
-- `project` (ex.: `SFQ`)
-- `run_id` (inteiro)
-- `case_id` (inteiro opcional)
-- `title` (título do card)
-- `status` (`PASS|FAIL|BLOCKED|NOT_RUN`)
-- `bug`, `link` (opcionais)
-- `created_at`, `created_by`
-
-### Como aplicar
-No Supabase (SQL Editor), execute o conteúdo de `scripts/11_kanban_manual.sql`.
-
-> Em produção, sempre prefira criar as tabelas antes de habilitar o uso nas telas.
+> Observação: atualmente os cards são armazenados em memória durante o processo (dev/local). Se precisar de persistência, crie uma tabela dedicada no Postgres e atualize as rotas.
 
 ## Autenticação e segurança
-As rotas do Kanban exigem autenticação.
+As rotas do Kanban exigem autenticação via cookies (`session_id` / `auth_token`) e validam o acesso por empresa.
 
-- Header: `Authorization: Bearer <token>`
-- Ou cookies: `sb-access-token` / `auth_token`
-
-A API usa o client server-side (`getSupabaseServer()`), então o controle de acesso é aplicado **na própria API**:
-
-- Usuário **não-admin** só acessa a empresa vinculada (`users.cliente`).
+- Usuário não-admin só acessa a empresa vinculada.
 - Admin global pode filtrar por `slug` ou consultar sem `slug`.
 
 ## Endpoints
@@ -91,6 +63,7 @@ CSV inclui header:
 - `id,client_slug,project,run_id,case_id,title,status,bug,link,created_at`
 
 ## Importação
+
 ### Importar via JSON
 `POST /api/kanban/import?project=SFQ&runId=99&slug=minha-empresa`
 

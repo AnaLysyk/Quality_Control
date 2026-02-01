@@ -1,5 +1,4 @@
 import { Redis } from "@upstash/redis";
-import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 type RedisValue = {
   value: string;
@@ -89,7 +88,7 @@ export function getRedis() {
     // Graceful degrade: never block auth/public APIs; use in-memory (non-persistent).
     mockRedis = mockRedis ?? new InMemoryRedis();
     redis = mockRedis;
-    if (!warnedRedisMissing && !SUPABASE_MOCK) {
+    if (!warnedRedisMissing) {
       warnedRedisMissing = true;
       console.warn("[REDIS] UPSTASH_REDIS_REST_URL/TOKEN ausentes; usando fallback em memoria (nao persistente).");
     }
@@ -106,5 +105,5 @@ export { redis };
 export function isRedisConfigured(): boolean {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  return Boolean(url && token) || SUPABASE_MOCK;
+  return Boolean(url && token);
 }

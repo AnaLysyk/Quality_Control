@@ -11,9 +11,19 @@
 !.yarn/versions
 
 # testing
+# Next.js build output
+/.next
+
+# Build and dist folders
+/build
+/dist
+
 /coverage
 
 # next.js
+# TypeScript build info
+*.tsbuildinfo
+
 /.next/
 /out/
 
@@ -23,6 +33,15 @@
 # misc
 .DS_Store
 *.pem
+# Logs
+*.log
+*.out.log
+*.err.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
 
 # debug
 npm-debug.log*
@@ -60,3 +79,7 @@ blob-report/
 /generated/prisma
 
 .env*.local
+
+# internal docs not meant for public repo
+docs/security/
+docs/adr/

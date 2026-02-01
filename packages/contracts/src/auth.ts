@@ -21,16 +21,6 @@ export const AuthLoginRequestSchema = z
 export type AuthLoginRequestInput = z.input<typeof AuthLoginRequestSchema>;
 export type AuthLoginRequest = z.infer<typeof AuthLoginRequestSchema>;
 
-export const AuthSessionSchema = z
-  .object({
-    access_token: z.string().min(1),
-    token_type: z.string().min(1),
-    expires_in: z.number().int().min(1),
-  })
-  .strip();
-
-export type AuthSession = z.infer<typeof AuthSessionSchema>;
-
 export const AuthSessionUserSchema = z
   .object({
     id: z.string().min(1),
@@ -40,33 +30,6 @@ export const AuthSessionUserSchema = z
   .strip();
 
 export type AuthSessionUser = z.infer<typeof AuthSessionUserSchema>;
-
-export const AuthUserMetadataSchema = z
-  .object({
-    full_name: z.string().optional().nullable(),
-  })
-  .passthrough();
-
-export type AuthUserMetadata = z.infer<typeof AuthUserMetadataSchema>;
-
-export const AuthSupabaseUserSchema = z
-  .object({
-    id: z.string().min(1),
-    email: z.string().optional().nullable(),
-    user_metadata: AuthUserMetadataSchema.optional().nullable(),
-  })
-  .passthrough();
-
-export type AuthSupabaseUser = z.infer<typeof AuthSupabaseUserSchema>;
-
-export const AuthLoginResponseSchema = z
-  .object({
-    user: AuthSupabaseUserSchema,
-    session: AuthSessionSchema,
-  })
-  .strip();
-
-export type AuthLoginResponse = z.infer<typeof AuthLoginResponseSchema>;
 
 export const AuthCookieLoginResponseSchema = z
   .object({

@@ -8,7 +8,6 @@ console.log(
 import { NextResponse } from "next/server";
 import { prisma, isPrismaConfigured } from "@/lib/prisma";
 import { getRedis } from "@/lib/redis";
-import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 const HAS_DATABASE = isPrismaConfigured();
 

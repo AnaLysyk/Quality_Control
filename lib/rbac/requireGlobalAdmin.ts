@@ -1,12 +1,10 @@
 import "server-only";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NextRequest } from "next/server";
 import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
 
-import { getSupabaseServer } from "@/lib/supabaseServer";
-import { isAuthUserGlobalAdmin } from "@/lib/rbac/globalAdmin";
-import { SUPABASE_MOCK } from "@/lib/supabaseMock";
+import { getRedis } from "@/lib/redis";
 
 type AdminSession = {
   id: string;
@@ -14,18 +12,13 @@ type AdminSession = {
   token: string;
 };
 
-async function shouldUseInternalMock(): Promise<boolean> {
-  if (!SUPABASE_MOCK) return false;
-
-  // Some tests provide their own jest mock for `@/lib/supabaseServer`.
-  // In that case, avoid short-circuiting to internal mock users.
-  try {
-    const mod = await import("@/lib/supabaseServer");
-    return !("supabaseServer" in mod);
-  } catch {
-    return true;
-  }
-}
+type SessionUser = {
+  userId?: string;
+  id?: string;
+  email?: string;
+  role?: string;
+  isGlobalAdmin?: boolean;
+};
 
 export async function extractAccessToken(req: NextRequest): Promise<string | null> {
   const auth = req.headers.get("authorization");
@@ -35,132 +28,81 @@ export async function extractAccessToken(req: NextRequest): Promise<string | nul
   }
 
   const store = await cookies();
-  return store.get("sb-access-token")?.value || store.get("auth_token")?.value || null;
+  return store.get("auth_token")?.value || null;
+}
+
+async function readSessionUser(req: NextRequest): Promise<SessionUser | null> {
+  const store = await cookies();
+  const sessionId = store.get("session_id")?.value;
+  if (sessionId) {
+    const redis = getRedis();
+    const raw = await redis.get<string>(`session:${sessionId}`);
+    if (raw) {
+      try {
+        const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+        return parsed as SessionUser;
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  const token = await extractAccessToken(req);
+  if (!token) return null;
+  const secret = process.env.JWT_SECRET;
+  if (!secret) return null;
+
+  try {
+    const payload = jwt.verify(token, secret) as jwt.JwtPayload & {
+      sub?: string;
+      email?: string;
+      role?: string;
+      isGlobalAdmin?: boolean;
+    };
+    return {
+      userId: typeof payload.sub === "string" ? payload.sub : undefined,
+      email: typeof payload.email === "string" ? payload.email : undefined,
+      role: typeof payload.role === "string" ? payload.role : undefined,
+      isGlobalAdmin: payload.isGlobalAdmin === true,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function isAdminRole(role?: string | null) {
+  const normalized = (role ?? "").toLowerCase();
+  return normalized === "admin" || normalized === "super-admin" || normalized === "global_admin";
 }
 
 export async function requireGlobalAdmin(
   req: NextRequest,
-  opts?: {
-    token?: string | null;
-    supabaseAdmin?: SupabaseClient;
-    supabaseAuth?: SupabaseClient;
-    mockAdmin?: AdminSession;
-  },
+  opts?: { token?: string | null },
 ): Promise<AdminSession | null> {
-  const useMock = await shouldUseInternalMock();
-  if (useMock) {
-    return (
-      opts?.mockAdmin ?? {
-        id: "mock-admin",
-        email: "admin@example.com",
-        token: "mock-token",
-      }
-    );
-  }
+  const session = await readSessionUser(req);
+  if (!session) return null;
 
-  const token = opts?.token ?? (await extractAccessToken(req));
-  if (!token) return null;
-
-  let supabaseAdmin: SupabaseClient | null = opts?.supabaseAdmin ?? null;
-  try {
-    supabaseAdmin = supabaseAdmin ?? getSupabaseServer();
-  } catch {
-    supabaseAdmin = null;
-  }
-
-  const supabaseAuth: SupabaseClient | null = opts?.supabaseAuth ?? supabaseAdmin;
-  if (!supabaseAuth || !supabaseAdmin) return null;
-
-  const { data: authData, error } = await supabaseAuth.auth.getUser(token);
-  if (error || !authData?.user) return null;
-
-  const metadata = authData.user.app_metadata;
-  const metadataRole =
-    metadata && typeof metadata === "object" && "role" in metadata ? (metadata as Record<string, unknown>).role : null;
-
-  let userRow: Record<string, unknown> | null = null;
-  try {
-    const { data } = await supabaseAdmin
-      .from("users")
-      .select("is_global_admin,role")
-      .eq("auth_user_id", authData.user.id)
-      .eq("active", true)
-      .maybeSingle();
-    userRow = (data as Record<string, unknown> | null) ?? null;
-  } catch {
-    userRow = null;
-  }
-
-  let profileRow: Record<string, unknown> | null = null;
-  try {
-    const primary = await supabaseAdmin
-      .from("profiles")
-      .select("is_global_admin,role")
-      .eq("id", authData.user.id)
-      .maybeSingle();
-    profileRow = (primary.data as Record<string, unknown> | null) ?? null;
-
-    if (!profileRow) {
-      const fallback = await supabaseAdmin
-        .from("profiles")
-        .select("is_global_admin,role")
-        .eq("auth_user_id", authData.user.id)
-        .maybeSingle();
-      profileRow = (fallback.data as Record<string, unknown> | null) ?? null;
-    }
-  } catch {
-    profileRow = null;
-  }
-
-  const isAdmin = await isAuthUserGlobalAdmin(supabaseAdmin, authData.user.id, {
-    metadataRole,
-    userRow,
-    profileRow,
-  });
-
-  if (!isAdmin) return null;
+  const role = session.role ?? null;
+  const isGlobalAdmin = session.isGlobalAdmin === true;
+  if (!isGlobalAdmin && !isAdminRole(role)) return null;
 
   return {
-    id: authData.user.id,
-    email: authData.user.email ?? "",
-    token,
+    id: session.userId ?? session.id ?? "",
+    email: session.email ?? "",
+    token: opts?.token ?? "",
   };
 }
 
 export async function requireGlobalAdminWithStatus(
   req: NextRequest,
-  opts?: {
-    token?: string | null;
-    supabaseAdmin?: SupabaseClient;
-    supabaseAuth?: SupabaseClient;
-    mockAdmin?: AdminSession;
-  },
+  opts?: { token?: string | null },
 ): Promise<{ admin: AdminSession | null; status: 200 | 401 | 403 }>
 {
   const admin = await requireGlobalAdmin(req, opts);
   if (admin) return { admin, status: 200 };
 
-  const token = opts?.token ?? (await extractAccessToken(req));
-  if (!token) return { admin: null, status: 401 };
-
-  let supabaseAuth: SupabaseClient | null = opts?.supabaseAuth ?? opts?.supabaseAdmin ?? null;
-  if (!supabaseAuth) {
-    try {
-      supabaseAuth = getSupabaseServer();
-    } catch {
-      supabaseAuth = null;
-    }
-  }
-
-  if (!supabaseAuth) return { admin: null, status: 401 };
-
-  try {
-    const { data, error } = await supabaseAuth.auth.getUser(token);
-    if (error || !data?.user) return { admin: null, status: 401 };
-  } catch {
-    return { admin: null, status: 401 };
-  }
-
+  const session = await readSessionUser(req);
+  if (!session) return { admin: null, status: 401 };
   return { admin: null, status: 403 };
 }
 

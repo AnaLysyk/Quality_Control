@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { fetchBackend } from "@/lib/backendProxy";
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
@@ -81,26 +80,9 @@ async function fetchProjectDefects(projectCode: string): Promise<Defect[]> {
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const backendRes = await fetchBackend(request, `/defects${url.search}`);
-  if (backendRes) {
-    const json = (await backendRes.json().catch(() => null)) as unknown;
-    if (!backendRes.ok) {
-      const message =
-        (asRecord(asRecord(json)?.error)?.message as string) ||
-        (asRecord(json)?.message as string) ||
-        "Erro ao consultar backend";
-      return NextResponse.json({ success: false, error: { message } }, { status: backendRes.status });
-    }
-
-    const directList = Array.isArray(asRecord(json)?.data) ? (asRecord(json)?.data as unknown[]) : null;
-    const result = directList ? { entities: directList } : asRecord(json)?.result;
-    const entities = (asRecord(result)?.entities as unknown[]) || [];
-    const merged = normalizeDefectList(entities);
-    return NextResponse.json({ success: true, data: merged }, { status: 200 });
-  }
 
   const auth = await authenticateRequest(request);
-  if (!auth) return NextResponse.json({ success: false, error: { message: "NÃ£o autorizado" } }, { status: 401 });
+  if (!auth) return NextResponse.json({ success: false, error: { message: "Nao autorizado" } }, { status: 401 });
 
   const project = normalizeString(url.searchParams.get("project")) || "ALL";
 

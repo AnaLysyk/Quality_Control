@@ -1,8 +1,5 @@
 import "server-only";
 
-import { getSupabaseServer } from "@/lib/supabaseServer";
-
-const CLIENT_TABLES = ["cliente", "clients"] as const;
 const cache = new Map<string, Promise<ClientQaseSettings | null>>();
 
 const normalizeString = (value: unknown) => {
@@ -143,55 +140,13 @@ export async function getClientQaseSettings(slug?: string) {
   }
 
   const envProjectCodes = getEnvProjectCodesForSlug(normalized);
+  const envToken = normalizeEnvString(process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "") || null;
 
   const promise = (async () => {
-    try {
-      const supabase = getSupabaseServer();
-      for (const table of CLIENT_TABLES) {
-        const { data, error } = await supabase.from(table).select("*").eq("slug", normalized).maybeSingle();
-        if (error || !data) continue;
-
-        const row = data as Record<string, unknown>;
-        const token =
-          normalizeString(row.qase_token ?? row.token ?? row.api_token ?? row.qaseToken ?? null) ?? null;
-        const singleProject =
-          normalizeString(
-            row.qase_project_code ??
-              row.qase_project ??
-              row.project_code ??
-              row.project ??
-              row.projectCode ??
-              row.projectKey ??
-              null
-          ) ?? null;
-        const multiProjects = parseProjectCodes(row.qase_project_codes ?? row.project_codes ?? row.projects ?? null);
-        const companyName = normalizeString(row.company_name ?? row.name ?? row.company ?? null);
-
-        const combined = Array.from(
-          new Set([
-            ...(singleProject ? [singleProject.toUpperCase()] : []),
-            ...multiProjects,
-            ...envProjectCodes,
-          ]),
-        );
-
-        return {
-          slug: normalized,
-          token,
-          projectCode: combined[0] ?? null,
-          projectCodes: combined,
-          name: companyName,
-          company_name: companyName,
-        };
-      }
-    } catch (error) {
-      console.error(`[QASE][CONFIG] Unable to read settings for slug "${normalized}"`, error);
-    }
-
-    if (envProjectCodes.length) {
+    if (envProjectCodes.length || envToken) {
       return {
         slug: normalized,
-        token: null,
+        token: envToken,
         projectCode: envProjectCodes[0] ?? null,
         projectCodes: envProjectCodes,
         name: null,

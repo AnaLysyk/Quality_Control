@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { getSupabaseServer } from "@/lib/supabaseServer";
 
 import { listQaseRuns } from "@/lib/qaseRuns";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { getAllReleases } from "@/release/data";
 import { getAllManualReleases } from "@/release/manualData";
-import { SUPABASE_MOCK } from "@/lib/supabaseMock";
+import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 
 type RunPayload = {
   slug: string;
@@ -20,84 +18,40 @@ type RunPayload = {
 
 const FALLBACK_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
 
-
-type Access = {
-  userId: string;
-  isGlobalAdmin: boolean;
-  clientSlug: string | null;
-};
-
 function jsonError(message: string, status: number) {
   return NextResponse.json({ message }, { status });
 }
 
-async function extractToken(req: Request): Promise<string | null> {
-  const auth = req.headers.get("authorization");
-  if (auth?.toLowerCase().startsWith("bearer ")) {
-    const token = auth.slice("bearer ".length).trim();
-    if (token) return token;
-  }
-  const store = await cookies();
-  return store.get("sb-access-token")?.value || store.get("auth_token")?.value || null;
+function normalizeRole(role?: string | null) {
+  return (role ?? "").trim().toLowerCase();
 }
 
-async function requireAccess(req: Request): Promise<Access | null> {
-  if (SUPABASE_MOCK) {
-    return { userId: "mock-uid", isGlobalAdmin: true, clientSlug: "mock-client" };
-  }
+function isAdmin(user: AuthUser) {
+  if (user.isGlobalAdmin) return true;
+  const role = normalizeRole(user.role);
+  return role === "admin" || role === "global_admin";
+}
 
-  const token = await extractToken(req);
-  if (!token) return null;
-
-  const supabase = getSupabaseServer();
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data?.user) return null;
-
-  const userId = data.user.id;
-
-  const { data: userRow } = await supabase
-    .from("users")
-    .select("client_id,is_global_admin,role")
-    .eq("auth_user_id", userId)
-    .eq("active", true)
-    .maybeSingle();
-
-  const { data: profileRow } = await supabase
-    .from("profiles")
-    .select("is_global_admin,role")
-    .eq("id", userId)
-    .maybeSingle();
-
-  const isGlobalAdmin =
-    (userRow as { is_global_admin?: unknown } | null)?.is_global_admin === true ||
-    (userRow as { role?: unknown } | null)?.role === "global_admin" ||
-    (userRow as { role?: unknown } | null)?.role === "admin" ||
-    profileRow?.is_global_admin === true ||
-    profileRow?.role === "global_admin";
-
-  let clientSlug: string | null = null;
-  const clientId = (userRow as { client_id?: unknown } | null)?.client_id;
-  if (typeof clientId === "string" && clientId.trim()) {
-    const { data: clientRow } = await supabase.from("cliente").select("slug").eq("id", clientId).maybeSingle();
-    const slug = (clientRow as { slug?: unknown } | null)?.slug;
-    if (typeof slug === "string" && slug.trim()) clientSlug = slug.trim();
-  }
-
-  return { userId, isGlobalAdmin, clientSlug };
+function resolveAllowedSlugs(user: AuthUser): string[] {
+  if (Array.isArray(user.companySlugs) && user.companySlugs.length) return user.companySlugs;
+  if (user.companySlug) return [user.companySlug];
+  return [];
 }
 
 export async function GET(req: Request, context: { params: Promise<{ slug: string }> }) {
   const { slug: requestedSlug } = await context.params;
 
-  const access = await requireAccess(req);
-  if (!access) return jsonError("Não autorizado", 401);
+  const user = await authenticateRequest(req);
+  if (!user) return jsonError("Nao autorizado", 401);
 
-  const effectiveSlug = access.isGlobalAdmin ? requestedSlug : access.clientSlug;
-  if (!effectiveSlug) return jsonError("Usuário sem empresa vinculada", 403);
-  if (!access.isGlobalAdmin && requestedSlug !== effectiveSlug) return jsonError("Acesso proibido", 403);
+  const admin = isAdmin(user);
+  const allowed = resolveAllowedSlugs(user);
+  const effectiveSlug = admin ? requestedSlug : user.companySlug ?? allowed[0] ?? null;
+  if (!effectiveSlug) return jsonError("Usuario sem empresa vinculada", 403);
+  if (!admin && requestedSlug && !allowed.includes(requestedSlug)) return jsonError("Acesso proibido", 403);
 
-  const clientSettings = SUPABASE_MOCK ? null : await getClientQaseSettings(effectiveSlug);
-  const token = SUPABASE_MOCK ? "" : clientSettings?.token ?? FALLBACK_TOKEN;
+  const clientSettings = await getClientQaseSettings(effectiveSlug);
+  const token = clientSettings?.token ?? FALLBACK_TOKEN;
   const projectCodesSet = new Set<string>();
   const settingsCodes = clientSettings?.projectCodes ?? [];
   settingsCodes.forEach((code) => {
@@ -108,12 +62,12 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
     const normalized = clientSettings.projectCode.trim().toUpperCase();
     if (normalized) projectCodesSet.add(normalized);
   }
-  const projectCodes = SUPABASE_MOCK ? [] : Array.from(projectCodesSet);
+  const projectCodes = Array.from(projectCodesSet);
 
   const runs: RunPayload[] = [];
   const warnings: string[] = [];
 
-  if (token && projectCodes.length && !SUPABASE_MOCK) {
+  if (token && projectCodes.length) {
     const results = await Promise.all(
       projectCodes.map(async (projectCode) => ({ projectCode, result: await listQaseRuns(projectCode, token) })),
     );
@@ -142,7 +96,6 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   const [persistedRuns, manualReleases] = await Promise.all([getAllReleases(), getAllManualReleases()]);
 
   const merged = new Map<string, RunPayload>();
-
   runs.forEach((r) => merged.set(r.slug, r));
 
   persistedRuns

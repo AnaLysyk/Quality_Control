@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
-import { SUPABASE_MOCK } from "@/lib/supabaseMock";
+const USE_MEMORY_ALERTS =
+  process.env.QUALITY_ALERTS_IN_MEMORY === "true" || process.env.NODE_ENV === "test";
 
 const STATUS_STORE = path.join(process.cwd(), "data", "quality_goal_status.json");
 const ALERT_STORE = path.join(process.cwd(), "data", "quality_goal_alerts.json");
@@ -33,7 +34,7 @@ async function ensureFile(filePath: string, initial: string) {
 }
 
 export async function readGoalStatusStore(): Promise<GoalStatusRecord[]> {
-  if (SUPABASE_MOCK) return memoryStatus;
+  if (USE_MEMORY_ALERTS) return memoryStatus;
   await ensureFile(STATUS_STORE, "[]");
   try {
     const raw = await fs.readFile(STATUS_STORE, "utf8");
@@ -45,7 +46,7 @@ export async function readGoalStatusStore(): Promise<GoalStatusRecord[]> {
 }
 
 export async function writeGoalStatusStore(data: GoalStatusRecord[]) {
-  if (SUPABASE_MOCK) {
+  if (USE_MEMORY_ALERTS) {
     memoryStatus = data;
     return;
   }
@@ -54,7 +55,7 @@ export async function writeGoalStatusStore(data: GoalStatusRecord[]) {
 }
 
 export async function appendGoalAlert(alert: GoalAlert) {
-  if (SUPABASE_MOCK) {
+  if (USE_MEMORY_ALERTS) {
     memoryAlerts = [...memoryAlerts, alert];
     return;
   }
@@ -72,7 +73,7 @@ export async function appendGoalAlert(alert: GoalAlert) {
 }
 
 export async function readGoalAlerts(companySlug?: string): Promise<GoalAlert[]> {
-  if (SUPABASE_MOCK) {
+  if (USE_MEMORY_ALERTS) {
     let arr = [...memoryAlerts];
     if (companySlug) {
       arr = arr.filter((a) => a.company_slug === companySlug);

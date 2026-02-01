@@ -1,50 +1,61 @@
 import { NextResponse } from "next/server";
-import { createHash } from "crypto";
-import { createClient } from "@supabase/supabase-js";
-import { SUPABASE_MOCK } from "@/lib/supabaseMock";
+import jwt from "jsonwebtoken";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+import { prisma } from "@/lib/prisma";
+import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { getRedis } from "@/lib/redis";
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 128;
 
-function extractToken(req: Request): string | null {
-  const authHeader = req.headers.get("authorization");
-  if (authHeader?.toLowerCase().startsWith("bearer ")) {
-    const token = authHeader.slice("bearer ".length).trim();
-    if (token) return token;
+function readCookieValue(cookieHeader: string, name: string): string | null {
+  const cookies = cookieHeader.split(";");
+  for (const cookie of cookies) {
+    const [key, ...rest] = cookie.trim().split("=");
+    if (key === name) {
+      return rest.join("=").trim();
+    }
   }
+  return null;
+}
+
+async function resolveUserId(req: Request): Promise<string | null> {
   const cookieHeader = req.headers.get("cookie") ?? "";
-  const match = cookieHeader.match(/(?:^|;\s*)(sb-access-token|auth_token)=([^;]+)/i);
-  return match?.[2] ? decodeURIComponent(match[2]) : null;
+  const sessionId = readCookieValue(cookieHeader, "session_id");
+  if (sessionId) {
+    const redis = getRedis();
+    const raw = await redis.get<string>(`session:${sessionId}`);
+    if (raw) {
+      try {
+        const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+        const id = (parsed as { userId?: string; id?: string }).userId ?? (parsed as { id?: string }).id;
+        if (id) return id;
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  const authHeader = req.headers.get("authorization");
+  const bearer = authHeader?.toLowerCase().startsWith("bearer ") ? authHeader.slice("bearer ".length).trim() : "";
+  const cookieToken = readCookieValue(cookieHeader, "auth_token");
+  const token = bearer || cookieToken;
+  if (!token) return null;
+
+  const secret = process.env.JWT_SECRET;
+  if (!secret) return null;
+  try {
+    const payload = jwt.verify(token, secret) as jwt.JwtPayload & { sub?: string };
+    return typeof payload.sub === "string" ? payload.sub : null;
+  } catch {
+    return null;
+  }
 }
 
 function sanitizePassword(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
-  if (!trimmed) return null;
-  return trimmed;
-}
-
-function createSupabaseUserClient(token: string) {
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
-}
-
-function createSupabaseAnonClient() {
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
-
-function createSupabaseAdminClient() {
-  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  return trimmed ? trimmed : null;
 }
 
 export async function PATCH(req: Request) {
@@ -66,65 +77,26 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Nova senha deve ser diferente da atual" }, { status: 400 });
   }
 
-  if (SUPABASE_MOCK) {
-    return NextResponse.json({ ok: true }, { status: 200 });
-  }
-
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ error: "Configuracao do Supabase incompleta" }, { status: 500 });
-  }
-
-  const token = extractToken(req);
-  if (!token) {
+  const userId = await resolveUserId(req);
+  if (!userId) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  const userClient = createSupabaseUserClient(token);
-  const { data: authData, error: authError } = await userClient.auth.getUser(token);
-  if (authError || !authData?.user) {
-    return NextResponse.json({ error: "Sessao invalida" }, { status: 401 });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
   }
 
-  const authUser = authData.user;
-  const email = authUser.email;
-  if (!email) {
-    return NextResponse.json({ error: "Conta sem email associado" }, { status: 400 });
-  }
-
-  const anonClient = createSupabaseAnonClient();
-  const { error: passwordCheckError } = await anonClient.auth.signInWithPassword({ email, password: currentPassword });
-  if (passwordCheckError) {
+  const currentHash = hashPasswordSha256(currentPassword);
+  if (currentHash !== user.password_hash) {
     return NextResponse.json({ error: "Senha atual incorreta" }, { status: 400 });
   }
 
-  const adminClient = createSupabaseAdminClient();
-  const { error: updateError } = await adminClient.auth.admin.updateUserById(authUser.id, { password: newPassword });
-  if (updateError) {
-    return NextResponse.json({ error: "Nao foi possivel atualizar a senha" }, { status: 500 });
-  }
-
-  try {
-    const passwordHash = createHash("sha256").update(newPassword).digest("hex");
-    const { error: updateUserRowError } = await adminClient
-      .from("users")
-      .update({ password_hash: passwordHash, updated_at: new Date().toISOString() })
-      .eq("auth_user_id", authUser.id);
-
-    if (updateUserRowError) {
-      const { error: legacyKeyError } = await adminClient
-        .from("users")
-        .update({ password_hash: passwordHash })
-        .eq("auth_user_id", authUser.id);
-      if (legacyKeyError) {
-        await adminClient
-          .from("users")
-          .update({ password_hash: passwordHash })
-          .eq("id", authUser.id);
-      }
-    }
-  } catch {
-    /* ignore sync issues */
-  }
+  const newHash = hashPasswordSha256(newPassword);
+  await prisma.user.update({
+    where: { id: userId },
+    data: { password_hash: newHash },
+  });
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }

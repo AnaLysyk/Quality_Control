@@ -6,6 +6,21 @@ services:
       dockerfile: ./Dockerfile
     environment:
       NODE_ENV: production
-      DATABASE_URL: "postgres://postgres.glzoowczvjykxjxctjsq:qYvcoq1VXzuhrOMn@aws-1-us-east-1.pooler.supabase.com:6543/postgres?sslmode=disable&pgbouncer=true"
+      DATABASE_URL: "postgres://docker2:docker2@postgres:5432/inorbit2"
     ports:
       - 3000:3000
+
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: inorbit2
+      POSTGRES_USER: docker2
+      POSTGRES_PASSWORD: docker2
+    ports:
+      - 5433:5432
+    volumes:
+      - pgdata_inorbit2:/var/lib/postgresql/data
+
+volumes:
+  pgdata_inorbit2:

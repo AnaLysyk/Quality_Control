@@ -3,8 +3,6 @@ import type { NextRequest } from "next/server";
 import { getRedis } from "@/lib/redis";
 import { hasPermission, getUserRoleFromSession } from "@/lib/permissions";
 
-const SUPABASE_MOCK = process.env.SUPABASE_MOCK === "true";
-
 function readCookieValue(cookieHeader: string, name: string): string | null {
   const cookies = cookieHeader.split(";");
   for (const cookie of cookies) {
@@ -52,24 +50,11 @@ export default async function proxy(req: NextRequest) {
   const bearerToken = authHeader.toLowerCase().startsWith("bearer ") ? authHeader.slice("bearer ".length).trim() : "";
   const authCookieName = (process.env.AUTH_COOKIE_NAME ?? "auth_token").trim() || "auth_token";
   const authToken =
-    readCookieValue(cookieHeader, "sb-access-token") ||
-    readCookieValue(cookieHeader, "access_token") ||
     readCookieValue(cookieHeader, "auth_token") ||
     (authCookieName ? readCookieValue(cookieHeader, authCookieName) : null);
-  const mockRole = SUPABASE_MOCK ? (readCookieValue(cookieHeader, "mock_role") ?? "admin").trim().toLowerCase() : null;
   const isAdminPath = pathname === "/admin" || pathname === "/admin/" || pathname.startsWith("/admin/");
   const isAdminRedirectPath = pathname === "/admin" || pathname === "/admin/" || pathname === "/admin/home";
   const nonAdminRedirectTarget = "/empresas";
-  if (SUPABASE_MOCK && mockRole) {
-    const userRole = mockRole === "admin" ? "admin" : "user";
-    if (isAdminPath && !hasPermission(userRole, 'view_admin')) {
-      if (isAdminRedirectPath) {
-        return NextResponse.redirect(new URL(nonAdminRedirectTarget, req.url));
-      }
-      return NextResponse.next();
-    }
-    return NextResponse.next();
-  }
 
   if (bearerToken || authToken) {
     return NextResponse.next();

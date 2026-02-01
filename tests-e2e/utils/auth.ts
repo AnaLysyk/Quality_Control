@@ -57,15 +57,11 @@ async function getMockCookie(page: Page, cookieName: string) {
 export async function login(page: Page, email: string, password: string) {
   const sessionId = await getMockCookie(page, "session_id");
   if (!sessionId) {
-    const role = (await getMockCookie(page, "mock_role")) ?? "admin";
-    const useMock = process.env.SUPABASE_MOCK === "true";
-    const loginEmail = useMock ? (role === "admin" ? "admin@example.com" : "user@example.com") : email;
-    const loginPassword = useMock ? "senha" : password;
     const loginUrl = new URL("/api/auth/login", baseURL).toString();
     const response = await page.context().request.post(loginUrl, {
       data: {
-        email: loginEmail,
-        password: loginPassword,
+        email,
+        password,
       },
     });
     if (!response.ok()) {

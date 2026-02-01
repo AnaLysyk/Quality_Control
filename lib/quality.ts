@@ -2,7 +2,6 @@ import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { readManualReleaseStore } from "@/data/manualData";
 import { calcMTTR } from "@/lib/mttr";
 import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
-import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 // Resumo de qualidade para exportação executiva
 export async function getCompanyQualitySummary(slug: string, period: string = "30d") {
@@ -26,8 +25,8 @@ export async function getCompanyQualitySummary(slug: string, period: string = "3
   });
 
   // Qase defects
-  const clientSettings = SUPABASE_MOCK ? null : await getClientQaseSettings(slug);
-  const token = SUPABASE_MOCK ? "" : clientSettings?.token || process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
+  const clientSettings = await getClientQaseSettings(slug);
+  const token = clientSettings?.token || process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
   const projectCodesSet = new Set<string>();
   const settingsCodes = clientSettings?.projectCodes ?? [];
   settingsCodes.forEach((code) => {
@@ -41,7 +40,7 @@ export async function getCompanyQualitySummary(slug: string, period: string = "3
   const projectCodes = Array.from(projectCodesSet);
 
   let qaseDefects: any[] = [];
-  if (token && projectCodes.length && !SUPABASE_MOCK) {
+  if (token && projectCodes.length) {
     for (const code of projectCodes) {
       const defects = await fetch(`https://api.qase.io/v1/defect/${code}?limit=1000`, {
         headers: { Token: token, Accept: "application/json" },
@@ -126,8 +125,8 @@ export async function getCompanyDefects(slug: string, period: string = "30d") {
       severity: r.severity ?? null,
     };
   });
-  const clientSettings = SUPABASE_MOCK ? null : await getClientQaseSettings(slug);
-  const token = SUPABASE_MOCK ? "" : clientSettings?.token || process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
+  const clientSettings = await getClientQaseSettings(slug);
+  const token = clientSettings?.token || process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
   const projectCodesSet = new Set<string>();
   const settingsCodes = clientSettings?.projectCodes ?? [];
   settingsCodes.forEach((code) => {
@@ -140,7 +139,7 @@ export async function getCompanyDefects(slug: string, period: string = "30d") {
   }
   const projectCodes = Array.from(projectCodesSet);
   let qaseDefects: any[] = [];
-  if (token && projectCodes.length && !SUPABASE_MOCK) {
+  if (token && projectCodes.length) {
     for (const code of projectCodes) {
       const defects = await fetch(`https://api.qase.io/v1/defect/${code}?limit=1000`, {
         headers: { Token: token, Accept: "application/json" },

@@ -6,7 +6,8 @@ if (typeof process !== "undefined" && process.release?.name === "node") {
   fs = require("fs/promises");
   path = require("path");
 }
-import { SUPABASE_MOCK } from "@/lib/supabaseMock";
+const USE_MEMORY_ALERTS =
+  process.env.QUALITY_ALERTS_IN_MEMORY === "true" || process.env.NODE_ENV === "test";
 
 const STORE_PATH = path && path.join(process.cwd(), "data", "quality_gate_history.json");
 let memoryStore: QualityGateHistoryEntry[] = [];
@@ -30,7 +31,7 @@ export type QualityGateHistoryEntry = {
 };
 
 async function ensureStore() {
-  if (SUPABASE_MOCK) return;
+  if (USE_MEMORY_ALERTS) return;
   if (!fs || !path || !STORE_PATH) return;
   await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
   try {
@@ -41,7 +42,7 @@ async function ensureStore() {
 }
 
 export async function appendQualityGateHistory(entry: QualityGateHistoryEntry) {
-  if (SUPABASE_MOCK) {
+  if (USE_MEMORY_ALERTS) {
     memoryStore = [...memoryStore, entry];
     return;
   }
@@ -62,7 +63,7 @@ export async function appendQualityGateHistory(entry: QualityGateHistoryEntry) {
 }
 
 export async function readQualityGateHistory(companySlug?: string, releaseSlug?: string): Promise<QualityGateHistoryEntry[]> {
-  if (SUPABASE_MOCK) {
+  if (USE_MEMORY_ALERTS) {
     let arr = [...memoryStore];
     if (companySlug) {
       arr = arr.filter((item) => item.company_slug === companySlug);

@@ -1,4 +1,4 @@
--- Qase ETL (Postgres / Supabase)
+-- Qase ETL (Postgres)
 -- Raw -> Kanban -> Metrics
 -- Assumes ingestion is done by backend; this script defines storage and transforms.
 

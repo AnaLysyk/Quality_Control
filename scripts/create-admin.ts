@@ -1,3 +1,4 @@
+import "./loadEnv";
 import { prisma } from '../lib/prisma';
 import { hashPasswordSha256 } from '../lib/passwordHash';
 

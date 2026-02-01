@@ -1,33 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseServer } from "@/lib/supabaseServer";
+import { prisma } from "@/lib/prisma";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export const runtime = "nodejs";
 
+function extractAdminNotes(message: string): string | null {
+  const line = message.split("\n").find((l) => l.startsWith("ADMIN_NOTES:"));
+  if (!line) return null;
+  const notes = line.slice("ADMIN_NOTES:".length).trim();
+  return notes || null;
+}
+
 export async function GET(req: NextRequest) {
-  try {
-    const { admin, status } = await requireGlobalAdminWithStatus(req);
-    if (!admin) return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
-
-    let service;
-    try {
-      service = getSupabaseServer();
-    } catch {
-      return NextResponse.json({ error: "Supabase não configurado no ambiente" }, { status: 500 });
-    }
-
-    const { data, error } = await service
-      .from("support_requests")
-      .select("id,email,message,status,created_at,admin_notes")
-      .or("message.ilike.ACCESS_REQUEST_V1%,message.ilike.Solicitacao de acesso%")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      return NextResponse.json({ error: "Erro ao listar solicitações" }, { status: 500 });
-    }
-
-    return NextResponse.json({ items: data ?? [] }, { status: 200 });
-  } catch {
-    return NextResponse.json({ items: [] }, { status: 200 });
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
   }
+
+  const items = await prisma.supportRequest.findMany({
+    orderBy: { created_at: "desc" },
+  });
+
+  const mapped = items.map((item) => ({
+    id: item.id,
+    email: item.email,
+    message: item.message,
+    status: item.status,
+    created_at: item.created_at.toISOString(),
+    admin_notes: extractAdminNotes(item.message),
+  }));
+
+  return NextResponse.json({ items: mapped }, { status: 200 });
 }

@@ -4,38 +4,33 @@ import Breadcrumb from "@/components/Breadcrumb";
 const DOCS = [
   {
     slug: "arquitetura_front",
-    title: "Arquitetura — Frontend (Next.js)",
-    description: "Como o App Router, componentes e estilos estão organizados.",
+    title: "Arquitetura ??? Frontend (Next.js)",
+    description: "Como o App Router, componentes e estilos est??o organizados.",
   },
   {
     slug: "arquitetura_api",
-    title: "Arquitetura — API (app/api)",
-    description: "Padrões de rotas, autenticação e integrações (Qase, Supabase).",
-  },
-  {
-    slug: "arquitetura_backend",
-    title: "Arquitetura — Backend (pasta backend/)",
-    description: "Estrutura do backend separado e como ele se relaciona com o front.",
+    title: "Arquitetura ??? API (app/api)",
+    description: "Padr??es de rotas, autentica????o e integra????es (Qase, Postgres).",
   },
   {
     slug: "banco_de_dados",
-    title: "Banco de Dados — Tabelas e fluxos",
-    description: "Tabelas principais (users/cliente/...) e práticas de migração/segurança.",
+    title: "Banco de Dados ??? Tabelas e fluxos",
+    description: "Tabelas principais (User/Company/UserCompany) e pr??ticas de migra????o/seguran??a.",
   },
   {
     slug: "qase_mapa_mae",
-    title: "Qase — Mapa Mãe",
-    description: "Guia/visão geral do mapeamento e fluxo Qase.",
+    title: "Qase ??? Mapa M??e",
+    description: "Guia/vis??o geral do mapeamento e fluxo Qase.",
   },
   {
     slug: "qase_etl",
-    title: "Qase — ETL (SQL)",
+    title: "Qase ??? ETL (SQL)",
     description: "Scripts SQL relacionados ao ETL do Qase.",
   },
   {
     slug: "kanban_import_export",
-    title: "Kanban Manual — Importação/Exportação",
-    description: "Como persistir no banco, importar CSV/JSON e exportar CSV/JSON.",
+    title: "Kanban Manual ??? Importa????o/Exporta????o",
+    description: "Como importar/exportar cart??es do Kanban manual.",
   },
 ] as const;
 

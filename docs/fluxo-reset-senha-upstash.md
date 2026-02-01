@@ -1,7 +1,7 @@
 ﻿# Fluxo de redefinição de senha com Upstash Redis
 
 ## Visão geral
-O endpoint `/api/auth/reset-via-token` permite que o usuário redefina a senha usando um token temporário armazenado no Upstash Redis. O fluxo é seguro, rápido e não depende exclusivamente do Supabase.
+O endpoint `/api/auth/reset-via-token` permite que o usuário redefina a senha usando um token temporário armazenado no Upstash Redis. O fluxo é seguro, rápido e não depende de provedores externos de autenticação.
 
 ## Passo a passo
 1. Recebe um POST com `{ token, newPassword }`.

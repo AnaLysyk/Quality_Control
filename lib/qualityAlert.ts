@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { SUPABASE_MOCK } from "@/lib/supabaseMock";
+const USE_MEMORY_ALERTS =
+  process.env.QUALITY_ALERTS_IN_MEMORY === "true" || process.env.NODE_ENV === "test";
 
 const ALERTS_STORE = path.join(process.cwd(), "data", "quality_alerts.json");
 let memoryAlerts: QualityAlert[] = [];
@@ -31,7 +32,7 @@ export async function readAlertsStore(): Promise<any[]> {
   if (typeof process !== "object" || process.env.NEXT_RUNTIME === "edge") {
     throw new Error("File system access not supported in this environment");
   }
-  if (SUPABASE_MOCK) return memoryAlerts;
+  if (USE_MEMORY_ALERTS) return memoryAlerts;
   try {
     const raw = await fs.promises.readFile(ALERTS_STORE, "utf8");
     return JSON.parse(raw);
@@ -41,7 +42,7 @@ export async function readAlertsStore(): Promise<any[]> {
 }
 
 export async function writeAlertsStore(alerts: any[]) {
-  if (SUPABASE_MOCK) {
+  if (USE_MEMORY_ALERTS) {
     memoryAlerts = alerts as QualityAlert[];
     return;
   }

@@ -1,46 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseServer } from "@/lib/supabaseServer";
+import { prisma } from "@/lib/prisma";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
-import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 export const runtime = "nodejs";
 
-
-function sanitize(value: unknown, max = 1000): string {
-  if (typeof value !== "string") return "";
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-  return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
+function appendAdminNotes(message: string, notes: string | null) {
+  if (!notes || !notes.trim()) return message;
+  const lines = message.split("\n").filter((line) => !line.startsWith("ADMIN_NOTES:"));
+  lines.push(`ADMIN_NOTES: ${notes.trim()}`);
+  return lines.join("\n");
 }
 
-
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const { id } = await params;
-    const { admin, status } = await requireGlobalAdminWithStatus(req);
-    if (!admin) return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
-
-    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-    const reason = sanitize(body.reason ?? body.admin_notes, 800);
-
-    if (SUPABASE_MOCK) {
-      return NextResponse.json({ ok: true, closed: true }, { status: 200 });
-    }
-
-    const service = getSupabaseServer();
-    const adminNotes = reason ? `Recusado: ${reason}` : "Recusado";
-
-    const { error } = await service
-      .from("support_requests")
-      .update({ status: "closed", admin_notes: adminNotes })
-      .eq("id", id);
-
-    if (error) {
-      return NextResponse.json({ error: "Falha ao recusar solicitacao" }, { status: 500 });
-    }
-
-    return NextResponse.json({ ok: true, closed: true }, { status: 200 });
-  } catch {
-    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+export async function POST(req: NextRequest, context: { params: { id: string } }) {
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
   }
+
+  const id = context.params.id;
+  const body = await req.json().catch(() => null);
+  const reason = typeof body?.reason === "string" ? body.reason : null;
+
+  const existing = await prisma.supportRequest.findUnique({ where: { id } });
+  if (!existing) {
+    return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+  }
+
+  const updatedMessage = appendAdminNotes(existing.message, reason);
+
+  await prisma.supportRequest.update({
+    where: { id },
+    data: { status: "rejected", message: updatedMessage },
+  });
+
+  return NextResponse.json({ ok: true }, { status: 200 });
 }

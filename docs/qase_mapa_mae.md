@@ -1,4 +1,4 @@
-﻿# Qase API – mapa mestre (v1 + extras)
+# Qase API – mapa mestre (v1 + extras)
 
 Referência única para produto e integração. Este documento segue o modo como o repositório consome a Qase.
 
@@ -12,13 +12,12 @@ Referência única para produto e integração. Este documento segue o modo como
 
 Notas do repositório:
 - SDK interno: `lib/qaseSdk.ts` (envia o header `Token` por padrão).
-- Integração de servidor: `app/services/qase.ts` (server-only).
-- Backend Nest: `backend/src/qase/`.
+- Integração de servidor: rotas `app/api/*` e utilitários em `lib/qaseConfig.ts` e `lib/qaseRuns.ts`.
 
 ## Arquitetura do produto (camadas)
 
-1. Camada proxy do backend
-   - O front chama funções server ou rotas `/api/*`.
+1. Camada BFF (app/api)
+   - O front chama rotas `/api/*`.
    - O backend se comunica com a Qase, normaliza payloads, trata cache, retry e rate limit.
 2. Modelo de dados (raw vs derivado)
    - Raw: `qase_projects`, `qase_suites`, `qase_cases_raw`, `qase_runs`, `qase_run_cases_raw`, `qase_results_raw`.

@@ -1,23 +1,11 @@
 import { cookies } from "next/headers";
 
-import { SUPABASE_MOCK } from "@/lib/supabaseMock";
-
 export type Role = "admin" | "company" | "user";
 
 type AuthUser = {
   id: string;
   isGlobalAdmin: boolean;
 };
-
-export async function getMockRole(): Promise<Role | null> {
-  if (!SUPABASE_MOCK) return null;
-  const cookieStore = await cookies();
-  const mockRole = cookieStore.get("mock_role")?.value?.toLowerCase();
-  if (mockRole === "admin" || mockRole === "company" || mockRole === "user") {
-    return mockRole;
-  }
-  return null;
-}
 
 export async function resolveDefectRole(authUser: AuthUser | null | undefined, clientSlug?: string | null): Promise<Role> {
   // Importa prisma só em ambiente Node/server
@@ -26,9 +14,6 @@ export async function resolveDefectRole(authUser: AuthUser | null | undefined, c
     prisma = require("@/lib/prisma").prisma;
   }
   if (!authUser) return "user";
-
-  const mockRole = await getMockRole();
-  if (mockRole) return mockRole;
 
   if (authUser.isGlobalAdmin) return "admin";
 
@@ -54,8 +39,14 @@ export async function resolveDefectRole(authUser: AuthUser | null | undefined, c
   return "user";
 }
 
-export const canCreateManualDefect = (role: Role) =>
-  role === "admin" || role === "company" || (SUPABASE_MOCK && role === "user");
+export const canCreateManualDefect = (role: Role) => role === "admin" || role === "company";
 export const canEditManualDefect = (role: Role) => role === "admin" || role === "company";
 export const canLinkRun = (role: Role) => role === "admin" || role === "company";
 export const canDeleteManualDefect = (role: Role) => role === "admin";
+
+export async function getMockRole(): Promise<Role | null> {
+  const store = await cookies();
+  const raw = store.get("mock_role")?.value?.toLowerCase();
+  if (raw === "admin" || raw === "company" || raw === "user") return raw as Role;
+  return null;
+}

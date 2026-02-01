@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
-// Importa fs e path só em ambiente Node/server
+import { authenticateRequest } from "@/lib/jwtAuth";
+import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
+
 let fs: typeof import("fs/promises") | undefined;
 let path: typeof import("path") | undefined;
 if (typeof process !== "undefined" && process.release?.name === "node") {
   fs = require("fs/promises");
   path = require("path");
 }
-import { getSupabaseAdmin } from "@/lib/supabase/server";
-import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
-import { SUPABASE_MOCK } from "@/lib/supabaseMock";
 
 const STORE_PATH = path && path.join(process.cwd(), "data", "user-settings.json");
 
@@ -68,53 +67,9 @@ function normalizeSettings(input?: Partial<StoredSettings> | null): Omit<StoredS
   };
 }
 
-function readCookieValue(cookieHeader: string, name: string): string | null {
-  if (!cookieHeader) return null;
-  const parts = cookieHeader.split(";").map((part) => part.trim());
-  for (const part of parts) {
-    const [key, ...rest] = part.split("=");
-    if (key === name) {
-      const value = rest.join("=");
-      return value ? decodeURIComponent(value) : "";
-    }
-  }
-  return null;
-}
-
-function extractToken(req: Request): string | null {
-  const authHeader = req.headers.get("authorization");
-  if (authHeader?.toLowerCase().startsWith("bearer ")) {
-    return authHeader.slice(7);
-  }
-  const cookieHeader = req.headers.get("cookie") ?? "";
-  const match = cookieHeader.match(/auth_token=([^;]+)/);
-  if (match?.[1]) return decodeURIComponent(match[1]);
-  return null;
-}
-
 async function resolveUserId(req: Request): Promise<string | null> {
-  if (SUPABASE_MOCK) {
-    const cookieHeader = req.headers.get("cookie") ?? "";
-    const roleCookie = (readCookieValue(cookieHeader, "mock_role") ?? "admin").trim().toLowerCase();
-    const isAdmin = roleCookie === "admin";
-    return isAdmin ? "mock-admin" : "mock-user";
-  }
-
-  const token = extractToken(req);
-  if (!token) return null;
-  const supabaseAdmin = getSupabaseAdmin();
-  const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
-  if (authError || !authData?.user) return null;
-
-  const { data: userRow } = await supabaseAdmin
-    .from("users")
-    .select("id")
-    .eq("auth_user_id", authData.user.id)
-    .eq("active", true)
-    .limit(1)
-    .maybeSingle();
-
-  return userRow?.id ?? null;
+  const user = await authenticateRequest(req);
+  return user?.id ?? null;
 }
 
 async function fetchSettingsFromStore(userId: string): Promise<StoredSettings> {
@@ -145,25 +100,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  if (!SUPABASE_MOCK) {
-    try {
-      const supabaseAdmin = getSupabaseAdmin();
-      const { data, error } = await supabaseAdmin
-        .from("user_settings")
-        .select("language, theme")
-        .eq("user_id", userId)
-        .limit(1)
-        .maybeSingle();
-
-      if (!error) {
-        const normalized = normalizeSettings(data ?? null);
-        return NextResponse.json({ settings: normalized }, { status: 200 });
-      }
-    } catch {
-      /* fallback to file store */
-    }
-  }
-
   const stored = await fetchSettingsFromStore(userId);
   return NextResponse.json({ settings: normalizeSettings(stored) }, { status: 200 });
 }
@@ -189,28 +125,6 @@ export async function PATCH(req: Request) {
     language: rawLanguage as Locale | undefined,
     theme: rawTheme as Theme | undefined,
   });
-
-  if (!SUPABASE_MOCK) {
-    try {
-      const supabaseAdmin = getSupabaseAdmin();
-      const { error } = await supabaseAdmin
-        .from("user_settings")
-        .upsert(
-          {
-            user_id: userId,
-            language: normalized.language,
-            theme: normalized.theme,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id" }
-        );
-      if (!error) {
-        return NextResponse.json({ settings: normalized }, { status: 200 });
-      }
-    } catch {
-      /* fallback to file store */
-    }
-  }
 
   const saved = await saveSettingsToStore(userId, normalized);
   return NextResponse.json({ settings: normalizeSettings(saved) }, { status: 200 });

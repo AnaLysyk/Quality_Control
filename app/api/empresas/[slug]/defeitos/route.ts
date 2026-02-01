@@ -5,7 +5,7 @@ import { readManualReleaseStore } from "@/data/manualData";
 import { calcMTTR } from "@/lib/mttr";
 import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
 import { externalFailure, externalSuccess, type ExternalServiceResult } from "@/lib/external";
-import { SUPABASE_MOCK } from "@/lib/supabaseMock";
+import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 
 type QaseDefect = {
   id: string;
@@ -20,7 +20,7 @@ type QaseDefect = {
   projectCode?: string;
 };
 
-// Contrato único de Defect
+// Contrato unico de Defect
 export type Defect = {
   id: string;
   title: string;
@@ -49,6 +49,22 @@ const FALLBACK_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object") return null;
   return value as Record<string, unknown>;
+}
+
+function normalizeRole(role?: string | null) {
+  return (role ?? "").trim().toLowerCase();
+}
+
+function isAdmin(user: AuthUser) {
+  if (user.isGlobalAdmin) return true;
+  const role = normalizeRole(user.role);
+  return role === "admin" || role === "global_admin";
+}
+
+function resolveAllowedSlugs(user: AuthUser): string[] {
+  if (Array.isArray(user.companySlugs) && user.companySlugs.length) return user.companySlugs;
+  if (user.companySlug) return [user.companySlug];
+  return [];
 }
 
 function normalizeQaseStatus(status: string): "open" | "in_progress" | "done" {
@@ -151,10 +167,20 @@ function normalizeManualDefects(releases: any[]): Defect[] {
 
 export async function GET(req: Request, context: { params: Promise<{ slug: string }> }) {
   const { slug } = await context.params;
+
+  const user = await authenticateRequest(req);
+  if (!user) return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
+
+  const admin = isAdmin(user);
+  const allowed = resolveAllowedSlugs(user);
+  if (!admin && (!allowed.length || !allowed.includes(slug))) {
+    return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
+  }
+
   const url = new URL(req.url);
   const runFilter = url.searchParams.get("run");
-  const clientSettings = SUPABASE_MOCK ? null : await getClientQaseSettings(slug);
-  const token = SUPABASE_MOCK ? "" : clientSettings?.token ?? FALLBACK_TOKEN;
+  const clientSettings = await getClientQaseSettings(slug);
+  const token = clientSettings?.token ?? FALLBACK_TOKEN;
   const projectCodesSet = new Set<string>();
   const settingsCodes = clientSettings?.projectCodes ?? [];
   settingsCodes.forEach((code) => {
@@ -165,7 +191,7 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
     const normalized = clientSettings.projectCode.trim().toUpperCase();
     if (normalized) projectCodesSet.add(normalized);
   }
-  const projectCodes = SUPABASE_MOCK ? [] : Array.from(projectCodesSet);
+  const projectCodes = Array.from(projectCodesSet);
 
   const manualReleases = await readManualReleaseStore();
   const scopedManualReleases = manualReleases.filter(
@@ -182,10 +208,9 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
     errorMessage = "QASE_TOKEN ausente.";
   }
 
-  // Qase defects
   const allQaseDefects: QaseDefect[] = [];
   const allQaseRuns: any[] = [];
-  if (token && projectCodes.length && !SUPABASE_MOCK) {
+  if (token && projectCodes.length) {
     for (const code of projectCodes) {
       const runsResult = await listQaseRuns(code, token);
       if (runsResult.ok) {
@@ -218,25 +243,24 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
     }
   }
 
-  // Releases
   const { getAllReleases } = await import("@/release/data");
   const allReleases = await getAllReleases();
 
-  // Unify
   let allDefects: Defect[] = [
     ...manualDefects,
     ...normalizeQaseDefects(allQaseDefects),
   ];
-  allDefects = allDefects.filter((d) => d.openedAt).sort((a, b) => String(b.openedAt).localeCompare(String(a.openedAt)));
+  allDefects = allDefects
+    .filter((d) => d.openedAt)
+    .sort((a, b) => String(b.openedAt).localeCompare(String(a.openedAt)));
   if (runFilter) {
     allDefects = allDefects.filter((d) => d.runSlug === runFilter);
   }
+
   const closed = allDefects.filter((d) => d.mttrMs != null);
   const avgMttrMs = closed.length ? closed.reduce((acc, d) => acc + (d.mttrMs || 0), 0) / closed.length : null;
 
-  // Enriquecer cada defeito com run e release
   const items = allDefects.map((defect) => {
-    // Run
     let run = undefined;
     if (defect.runSlug) {
       run =
@@ -255,7 +279,7 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
         };
       }
     }
-    // Release
+
     let release = undefined;
     if (defect.runSlug) {
       release = allReleases.find((rel) => String(rel.runId) === defect.runSlug);
@@ -274,7 +298,7 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
     };
   });
 
-  const responseBody: Record<string, unknown> = { total: items.length, items, avgMttrMs };
+  const responseBody: Record<string, unknown> = { total: items.length, items, avgMttrMs } as DefectResponse;
   if (warnings.length) responseBody.warnings = warnings;
   if (errorMessage) responseBody.error = errorMessage;
 

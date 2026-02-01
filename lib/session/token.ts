@@ -1,4 +1,4 @@
-const TOKEN_COOKIE_NAMES = ["auth_token", "sb-access-token", "access_token"];
+const TOKEN_COOKIE_NAMES = ["auth_token"];
 
 function readCookieValue(name: string): string | null {
   if (typeof document === "undefined") return null;

@@ -1,4 +1,10 @@
-import "server-only";
+try {
+  // "server-only" exists in Next.js runtime; ignore when running scripts.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require("server-only");
+} catch {
+  // no-op
+}
 
 import { createHash, timingSafeEqual } from "crypto";
 

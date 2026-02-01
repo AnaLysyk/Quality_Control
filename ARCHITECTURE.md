@@ -8,41 +8,32 @@
 ## System map
 - Next.js app (app/): UI and BFF.
 - app/api: BFF endpoints used by the UI.
-- backend/ (Nest): domain API and integrations.
-- Supabase: auth and data (mockable).
+- PostgreSQL + Prisma: data source and schema of record.
+- Redis (optional): sessions and lightweight caches.
+- Qase: external test management data.
 
-## Boundaries (current -> target)
+## Boundaries
 app/api (BFF):
 - UI-facing API, cookies/session, SSR helpers.
 - Compose and shape data for screens.
-- Do not own domain rules or persistence.
+- Owns auth/session and tenant resolution.
 
-backend/ (Nest):
-- Source of truth for domain data and rules.
-- Authorization and audit.
-- Integrations (Qase, etc).
+Database (Postgres/Prisma):
+- Source of truth for users, companies and relationships.
+- Prisma is the only schema authority.
 
-## Auth flow (current)
-1. UI -> POST /api/auth/login (app/api) -> Supabase auth (or mock).
-2. UI -> GET /api/me to resolve current user.
-3. Protected pages use RequireAuth.
-
-## Auth flow (target)
-- UI -> app/api -> backend auth.
-- Backend issues token; app/api sets cookie and returns session data.
+## Auth flow
+1. UI -> POST /api/auth/login -> Prisma validates credentials.
+2. Session stored in Redis + JWT cookie issued.
+3. UI -> GET /api/me to resolve current user + companies.
 
 ## Contract strategy
-- Short term: shared types via packages/contracts (Zod + TS).
-- Long term: OpenAPI on Nest + generated client in Next.
+- Shared types via packages/contracts (Zod + TS).
+- API contracts documented in the docs folder.
 
 ## Testing strategy
-- Smoke E2E in CI (login + clientes list).
+- Smoke E2E in CI (login + core pages).
 - Full E2E locally when needed.
 
 ## Run modes
-- SUPABASE_MOCK=true bypasses external services for local/CI.
-
-## Backend tooling and docs
-- The Nest backend lives in `backend/` with `tsconfig.json` configured for strict checks, incremental builds, and `forceConsistentCasingInFileNames` so Windows/Linux layouts stay in sync.
-- The app API folder (`app/api/`) now includes BFF routes such as `/api/empresas/[slug]/defeitos` and `/api/empresas/[slug]/runs`, which fetch Qase defects and run metadata via `lib/qaseConfig` + `lib/qaseRuns.ts` before merging manual records.
-- Keep the README/Architecture docs updated whenever new backends APIs or tokens are required; the current flow relies on `QASE_TOKEN`/`QASE_PROJECT` as fallbacks for quick local testing.
+- Prisma + JWT only.

@@ -1,280 +1,191 @@
-import { NextResponse } from "next/server";
-import { SUPABASE_MOCK } from "@/lib/supabaseMock";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
+import { prisma } from "@/lib/prisma";
+import { getRedis } from "@/lib/redis";
+import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== "object") return null;
-  return value as Record<string, unknown>;
-}
+type SessionUser = {
+  userId?: string;
+  id?: string;
+  role?: string;
+  isGlobalAdmin?: boolean;
+};
 
 function readCookieValue(cookieHeader: string, name: string): string | null {
-  if (!cookieHeader) return null;
-  const parts = cookieHeader.split(";").map((part) => part.trim());
-  for (const part of parts) {
-    const [key, ...rest] = part.split("=");
+  const cookies = cookieHeader.split(";");
+  for (const cookie of cookies) {
+    const [key, ...rest] = cookie.trim().split("=");
     if (key === name) {
-      const value = rest.join("=");
-      return value ? decodeURIComponent(value) : "";
+      return rest.join("=").trim();
     }
   }
   return null;
 }
 
-function extractToken(req: Request): string | null {
-  const authHeader = req.headers.get("authorization");
-  if (authHeader?.toLowerCase().startsWith("bearer ")) {
-    const token = authHeader.slice("bearer ".length).trim();
-    return token.length ? token : null;
-  }
+async function resolveSession(req: NextRequest): Promise<SessionUser | null> {
   const cookieHeader = req.headers.get("cookie") ?? "";
-  return (
-    readCookieValue(cookieHeader, "sb-access-token") ||
-    readCookieValue(cookieHeader, "auth_token") ||
-    null
-  );
-}
-
-type AccessContext = {
-  authUserId: string;
-  email: string;
-  isGlobalAdmin: boolean;
-  clientId: string | null;
-  userRole: string | null;
-};
-
-async function requireAccess(req: Request): Promise<AccessContext | null> {
-  if (SUPABASE_MOCK) {
-    const cookieHeader = req.headers.get("cookie") ?? "";
-    const roleCookie = (readCookieValue(cookieHeader, "mock_role") ?? "admin").trim().toLowerCase();
-    const slugCookie = (readCookieValue(cookieHeader, "mock_client_slug") ?? "").trim();
-    const isAdmin = roleCookie === "admin";
-    return {
-      authUserId: isAdmin ? "mock-admin" : "mock-user",
-      email: isAdmin ? "admin@example.com" : "user@example.com",
-      isGlobalAdmin: isAdmin,
-      clientId: isAdmin ? null : slugCookie || null,
-      userRole: isAdmin ? "global_admin" : "client_user",
-    };
+  const sessionId = readCookieValue(cookieHeader, "session_id");
+  if (sessionId) {
+    const redis = getRedis();
+    const raw = await redis.get<string>(`session:${sessionId}`);
+    if (raw) {
+      try {
+        const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+        return parsed as SessionUser;
+      } catch {
+        return null;
+      }
+    }
   }
 
-  const token = extractToken(req);
+  const authHeader = req.headers.get("authorization");
+  const bearer = authHeader?.toLowerCase().startsWith("bearer ") ? authHeader.slice("bearer ".length).trim() : "";
+  const cookieToken = readCookieValue(cookieHeader, "auth_token");
+  const token = bearer || cookieToken;
   if (!token) return null;
 
-  // Use require so Jest's module mocking is honored.
-  const supabaseModule = require("@/lib/supabaseServer");
-  const supabase = supabaseModule.getSupabaseServer();
-
-  const { data: authData, error: authError } = await supabase.auth.getUser(token);
-  if (authError || !authData?.user) return null;
-
-  const authUserId = authData.user.id;
-  const email = authData.user.email ?? "";
-
-  const { data: userRow } = await supabase
-    .from("users")
-    .select("id,role,client_id,is_global_admin,active")
-    .eq("auth_user_id", authUserId)
-    .eq("active", true)
-    .maybeSingle();
-
-  const { data: globalAdminLink } = await supabase
-    .from("global_admins")
-    .select("user_id")
-    .eq("user_id", authUserId)
-    .limit(1)
-    .maybeSingle();
-
-  const { data: profileRow } = await supabase
-    .from("profiles")
-    .select("is_global_admin,role")
-    .eq("id", authUserId)
-    .maybeSingle();
-
-  const role = typeof (userRow as { role?: unknown } | null)?.role === "string" ? ((userRow as any).role as string) : null;
-  const clientId = typeof (userRow as { client_id?: unknown } | null)?.client_id === "string" ? ((userRow as any).client_id as string) : null;
-
-  const isGlobalAdmin =
-    Boolean((globalAdminLink as { user_id?: unknown } | null)?.user_id) ||
-    (userRow as { is_global_admin?: unknown } | null)?.is_global_admin === true ||
-    role === "global_admin" ||
-    role === "admin" ||
-    profileRow?.is_global_admin === true ||
-    profileRow?.role === "global_admin" ||
-    (() => {
-      const metadata = asRecord(authData.user.app_metadata);
-      return metadata?.role === "admin";
-    })();
-
-  return { authUserId, email, isGlobalAdmin, clientId, userRole: role };
+  const secret = process.env.JWT_SECRET;
+  if (!secret) return null;
+  try {
+    const payload = jwt.verify(token, secret) as jwt.JwtPayload & {
+      sub?: string;
+      role?: string;
+      isGlobalAdmin?: boolean;
+    };
+    return {
+      userId: typeof payload.sub === "string" ? payload.sub : undefined,
+      role: typeof payload.role === "string" ? payload.role : undefined,
+      isGlobalAdmin: payload.isGlobalAdmin === true,
+    };
+  } catch {
+    return null;
+  }
 }
 
-function normalizeClientRole(input: unknown): "client_admin" | "client_user" | null {
-  if (input === "ADMIN") return "client_admin";
-  if (input === "USER") return "client_user";
-  return null;
+function isAdminRole(role?: string | null, isGlobal?: boolean) {
+  if (isGlobal) return true;
+  const normalized = (role ?? "").toLowerCase();
+  return normalized === "admin" || normalized === "global_admin" || normalized === "super-admin";
 }
 
-function roleToUi(role: unknown): "ADMIN" | "USER" {
-  if (typeof role !== "string") return "USER";
-  const r = role.toLowerCase();
-  if (r === "global_admin" || r === "admin" || r === "client_admin" || r === "client_owner" || r === "client_manager") {
-    return "ADMIN";
-  }
-  return "USER";
+function mapLink(link: { user: { id: string; email: string; name: string; active: boolean }; role: string }) {
+  return {
+    id: link.user.id,
+    role: (link.role ?? "user").toLowerCase() === "admin" ? "ADMIN" : "USER",
+    active: link.user.active === true,
+    name: link.user.name ?? "",
+    email: link.user.email,
+  };
 }
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const access = await requireAccess(request);
-  if (!access) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-
-  const clientId = id;
-  if (!clientId) return NextResponse.json({ message: "Cliente não encontrado" }, { status: 404 });
-
-  const supabaseModule = require("@/lib/supabaseServer");
-  const supabase = supabaseModule.getSupabaseServer();
-
-  const { data: client } = await supabase.from("cliente").select("id").eq("id", clientId).maybeSingle();
-  if (!client) return NextResponse.json({ message: "Cliente não encontrado" }, { status: 404 });
-
-  const url = new URL(request.url);
-  const all = url.searchParams.get("all") === "true";
-
-  // empresa user can list only its own company; admin can list any.
-  if (!access.isGlobalAdmin && access.clientId !== clientId) {
-    return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
+export async function GET(req: NextRequest, context: { params: { id: string } }) {
+  const session = await resolveSession(req);
+  if (!session?.userId && !session?.id) {
+    return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
   }
 
-  if (all && !access.isGlobalAdmin) {
-    return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
+  const userId = session.userId ?? session.id!;
+  const isAdmin = isAdminRole(session.role, session.isGlobalAdmin);
+  const { searchParams } = new URL(req.url);
+  const requestAll = searchParams.get("all") === "true";
+  if (requestAll && !isAdmin) {
+    return NextResponse.json({ message: "Sem permissao" }, { status: 403 });
   }
 
-  const query = supabase
-    .from("users")
-    .select("id,name,email,role,active,client_id")
-    .eq("client_id", clientId)
-    .order("active", { ascending: false })
-    .order("role", { ascending: true })
-    .order("name", { ascending: true });
+  const companyId = context.params.id;
+  const where = requestAll && isAdmin
+    ? { company_id: companyId }
+    : { company_id: companyId, user_id: userId };
 
-  const { data, error } = all ? await query : await query.eq("active", true);
-  if (error) {
-    console.error("GET /api/clients/[id]/users error", error);
-    return NextResponse.json({ message: "Erro ao carregar equipe" }, { status: 500 });
-  }
-
-  const items = (Array.isArray(data) ? data : []).map((row) => ({
-    id: (row as any).id,
-    name: (row as any).name ?? "",
-    email: (row as any).email ?? "",
-    role: roleToUi((row as any).role),
-    active: (row as any).active === true,
-  }));
-
-  return NextResponse.json({ items });
-}
-
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const access = await requireAccess(request);
-  if (!access) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-  if (!access.isGlobalAdmin) return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
-
-  const clientId = id;
-  if (!clientId) return NextResponse.json({ message: "Cliente não encontrado" }, { status: 404 });
-
-  const supabaseModule = require("@/lib/supabaseServer");
-  const supabase = supabaseModule.getSupabaseServer();
-
-  const { data: client } = await supabase.from("cliente").select("id").eq("id", clientId).maybeSingle();
-  if (!client) return NextResponse.json({ message: "Cliente não encontrado" }, { status: 404 });
-
-  const body = await request.json().catch(() => ({}));
-  const rawEmail = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
-  const role = normalizeClientRole(body?.role);
-  if (!rawEmail || !role) return NextResponse.json({ message: "email e role são obrigatórios" }, { status: 400 });
-
-  const { data: target } = await supabase
-    .from("users")
-    .select("id,email,client_id,active,role,is_global_admin")
-    .ilike("email", rawEmail)
-    .maybeSingle();
-
-  if (!target) return NextResponse.json({ message: "Usuário não encontrado" }, { status: 404 });
-
-  if ((target as any).is_global_admin === true || (target as any).role === "global_admin") {
-    return NextResponse.json({ message: "Não é permitido vincular/alterar global admin nesta tela" }, { status: 400 });
-  }
-
-  if ((target as any).client_id === clientId && (target as any).active === true) {
-    return NextResponse.json({ message: "Usuário já vinculado a este cliente" }, { status: 409 });
-  }
-
-  const { data: updated, error: updateError } = await supabase
-    .from("users")
-    .update({ client_id: clientId, role, active: true })
-    .eq("id", (target as any).id)
-    .select("id,name,email,role,active")
-    .maybeSingle();
-
-  if (updateError || !updated) {
-    console.error("POST /api/clients/[id]/users error", updateError);
-    return NextResponse.json({ message: "Erro ao vincular usuário" }, { status: 500 });
-  }
-
-  return NextResponse.json(
-    {
-      id: (updated as any).id,
-      name: (updated as any).name ?? "",
-      email: (updated as any).email ?? "",
-      role: roleToUi((updated as any).role),
-      active: (updated as any).active === true,
-    },
-    { status: 200 }
-  );
-}
-
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const access = await requireAccess(request);
-  if (!access) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-  if (!access.isGlobalAdmin) return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
-
-  const clientId = id;
-  if (!clientId) return NextResponse.json({ message: "Cliente não encontrado" }, { status: 404 });
-
-  const supabaseModule = require("@/lib/supabaseServer");
-  const supabase = supabaseModule.getSupabaseServer();
-
-  const { data: client } = await supabase.from("cliente").select("id").eq("id", clientId).maybeSingle();
-  if (!client) return NextResponse.json({ message: "Cliente não encontrado" }, { status: 404 });
-
-  const body = await request.json().catch(() => ({}));
-  const userId = typeof body?.userId === "string" ? body.userId : undefined;
-  const role = body?.role !== undefined ? normalizeClientRole(body.role) : null;
-  const active = body?.active as boolean | undefined;
-
-  if (!userId) return NextResponse.json({ message: "userId é obrigatório" }, { status: 400 });
-  if (body?.role !== undefined && !role) return NextResponse.json({ message: "role inválido" }, { status: 400 });
-  if (active !== undefined && typeof active !== "boolean") {
-    return NextResponse.json({ message: "active inválido" }, { status: 400 });
-  }
-
-  const { data: updated, error: updateError } = await supabase
-    .from("users")
-    .update({ ...(role ? { role } : {}), ...(active !== undefined ? { active } : {}) })
-    .eq("id", userId)
-    .eq("client_id", clientId)
-    .select("id,name,email,role,active")
-    .maybeSingle();
-
-  if (updateError || !updated) return NextResponse.json({ message: "Vínculo não encontrado" }, { status: 404 });
-
-  return NextResponse.json({
-    id: (updated as any).id,
-    name: (updated as any).name ?? "",
-    email: (updated as any).email ?? "",
-    role: roleToUi((updated as any).role),
-    active: (updated as any).active === true,
+  const links = await prisma.userCompany.findMany({
+    where,
+    include: { user: true },
   });
+
+  return NextResponse.json({ items: links.map(mapLink) }, { status: 200 });
+}
+
+export async function POST(req: NextRequest, context: { params: { id: string } }) {
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ message: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+  }
+
+  const body = await req.json().catch(() => null);
+  const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+  const role = typeof body?.role === "string" && body.role.toUpperCase() === "ADMIN" ? "admin" : "user";
+  if (!email) {
+    return NextResponse.json({ message: "Email obrigatorio" }, { status: 400 });
+  }
+
+  const companyId = context.params.id;
+  const existing = await prisma.userCompany.findFirst({
+    where: { company_id: companyId, user: { email } },
+    include: { user: true },
+  });
+  if (existing) {
+    return NextResponse.json({ message: "Usuario ja vinculado" }, { status: 409 });
+  }
+
+  let user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    const tempPassword = hashPasswordSha256(`${Date.now()}-${email}`);
+    user = await prisma.user.create({
+      data: {
+        email,
+        name: "",
+        password_hash: tempPassword,
+        active: true,
+      },
+    });
+  }
+
+  await prisma.userCompany.create({
+    data: {
+      user_id: user.id,
+      company_id: companyId,
+      role,
+    },
+  });
+
+  return NextResponse.json({ ok: true }, { status: 201 });
+}
+
+export async function PATCH(req: NextRequest, context: { params: { id: string } }) {
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ message: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+  }
+
+  const body = await req.json().catch(() => null);
+  const userId = typeof body?.userId === "string" ? body.userId : "";
+  if (!userId) {
+    return NextResponse.json({ message: "userId obrigatorio" }, { status: 400 });
+  }
+
+  const companyId = context.params.id;
+  const role = typeof body?.role === "string" ? body.role.toUpperCase() : null;
+  const active = typeof body?.active === "boolean" ? body.active : null;
+
+  if (active === false) {
+    await prisma.userCompany.delete({
+      where: { user_id_company_id: { user_id: userId, company_id: companyId } },
+    }).catch(() => null);
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
+  const data: { role?: string } = {};
+  if (role) {
+    data.role = role === "ADMIN" ? "admin" : "user";
+  }
+
+  const updated = await prisma.userCompany.upsert({
+    where: { user_id_company_id: { user_id: userId, company_id: companyId } },
+    update: data,
+    create: { user_id: userId, company_id: companyId, role: data.role ?? "user" },
+  });
+
+  return NextResponse.json({ ok: true, role: updated.role }, { status: 200 });
 }

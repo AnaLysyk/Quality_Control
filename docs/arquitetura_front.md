@@ -9,7 +9,7 @@ Este projeto usa **Next.js (App Router)** com **TypeScript**.
 - Utilitários reutilizáveis: `lib/`.
 - Dados de apoio (mock e fixtures): `data/`.
 
-> Regra importante: módulos de `lib/` marcados como server-only (ex.: `lib/supabaseServer.ts`) devem ser importados apenas por **Server Components** ou rotas de API.
+> Regra importante: módulos de `lib/` marcados como server-only devem ser importados apenas por **Server Components** ou rotas de API.
 
 ## Estrutura do App Router
 Padrões convencionados:
@@ -36,6 +36,6 @@ O tema é controlado com classe (`.dark`) e variáveis CSS.
 - As preferências ficam em `localStorage` com chave por usuário (ex.: `tc-settings:<userId>`) e há uma chave auxiliar para lembrar o último usuário logado.
 
 ## Autenticação (resumo)
-- O login gera o cookie `auth_token`.
+- O login gera `session_id` e, quando configurado, `auth_token`.
 - As telas do cliente consomem os dados do usuário via `/api/me`.
 - Os componentes acessam configurações e permissões pelo contexto `UserContext`.

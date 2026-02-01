@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import { getSupabaseServer } from "@/lib/supabaseServer";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 
@@ -30,8 +29,6 @@ type Aggregated = {
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
 
-// Supabase is accessed via server-only client `getSupabaseServer()`.
-
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object") return null;
   return value as Record<string, unknown>;
@@ -46,7 +43,6 @@ function normalizeString(value: unknown): string | null {
 function normalizeEnvString(value: unknown): string {
   const raw = typeof value === "string" ? value.trim() : "";
   if (!raw) return "";
-  // Vercel env import sometimes wraps values in quotes.
   const unquoted =
     (raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))
       ? raw.slice(1, -1).trim()
@@ -58,8 +54,6 @@ function normalizeSlug(value: unknown): string | null {
   const s = normalizeString(value);
   return s ? s.toLowerCase() : null;
 }
-
-// Admin access is enforced via `requireGlobalAdmin(req)`.
 
 type ProjectEntry = { slug: string; projectCode: string };
 
@@ -85,7 +79,6 @@ function parseProjectMapFromEnv(): ProjectEntry[] {
   const trimmed = raw;
   if (!trimmed) return [];
 
-  // Option A: JSON array of {slug, projectCode}
   if (trimmed.startsWith("[")) {
     try {
       const parsed = JSON.parse(trimmed) as unknown;
@@ -103,7 +96,6 @@ function parseProjectMapFromEnv(): ProjectEntry[] {
     }
   }
 
-  // Option B: JSON object map {"slug": "CODE", "slug2": "CODE2"}
   if (trimmed.startsWith("{")) {
     try {
       const parsed = JSON.parse(trimmed) as unknown;
@@ -121,7 +113,6 @@ function parseProjectMapFromEnv(): ProjectEntry[] {
     }
   }
 
-  // Option C: "slug:CODE,slug2:CODE2"
   const out: ProjectEntry[] = [];
   const parts = trimmed.split(",").map((p) => p.trim()).filter(Boolean);
   for (const part of parts) {
@@ -131,77 +122,6 @@ function parseProjectMapFromEnv(): ProjectEntry[] {
     if (slug && projectCode) out.push({ slug, projectCode });
   }
   return out;
-}
-
-function extractProjectCodeFromRow(row: Record<string, unknown>): string | null {
-  return (
-    normalizeString(row.qase_project_code ?? null) ||
-    normalizeString(row.qase_project ?? null) ||
-    normalizeString(row.project_code ?? null) ||
-    normalizeString(row.project ?? null) ||
-    normalizeString(row.projectCode ?? null) ||
-    normalizeString(row.projectKey ?? null)
-  );
-}
-
-function parseProjectCodes(value: unknown): string[] {
-  const normalize = (code: string) => code.trim().toUpperCase();
-  if (Array.isArray(value)) {
-    return value
-      .filter((item): item is string => typeof item === "string")
-      .map(normalize)
-      .filter(Boolean);
-  }
-  if (typeof value === "string") {
-    return value
-      .split(/[\s,;|]+/g)
-      .map(normalize)
-      .filter(Boolean);
-  }
-  return [];
-}
-
-function extractProjectCodesFromRow(row: Record<string, unknown>): string[] {
-  const single = extractProjectCodeFromRow(row);
-  const multi = parseProjectCodes(row.qase_project_codes ?? row.project_codes ?? row.projects ?? null);
-  return Array.from(new Set([...(single ? [single.toUpperCase()] : []), ...multi]));
-}
-
-async function loadProjectMapFromSupabase(): Promise<{ entries: ProjectEntry[]; error: unknown | null }> {
-  let service: ReturnType<typeof getSupabaseServer>;
-  try {
-    service = getSupabaseServer();
-  } catch (err) {
-    return { entries: [], error: err };
-  }
-
-  const out: ProjectEntry[] = [];
-  const tableErrors: Record<string, unknown> = {};
-
-  for (const table of ["cliente", "clients"] as const) {
-    try {
-      const { data, error } = await service.from(table).select("*").limit(500);
-      if (error) {
-        tableErrors[table] = error;
-        continue;
-      }
-      if (!Array.isArray(data)) continue;
-      for (const rowAny of data) {
-        const row = asRecord(rowAny);
-        if (!row) continue;
-        const slug = normalizeSlug(row.slug);
-        const projectCodes = extractProjectCodesFromRow(row);
-        if (slug && projectCodes.length) {
-          projectCodes.forEach((projectCode) => out.push({ slug, projectCode }));
-        }
-      }
-    } catch (err) {
-      tableErrors[table] = err;
-    }
-  }
-
-  const hadErrors = Object.keys(tableErrors).length > 0;
-  return { entries: out, error: hadErrors ? tableErrors : null };
 }
 
 async function fetchAllDefects(projectCode: string): Promise<QaseDefect[]> {
@@ -261,7 +181,7 @@ function aggregate(defects: QaseDefect[], projectCodeToSlug: Map<string, string>
   const timeline = new Map<string, number>();
 
   defects.forEach((d) => {
-    const app = d.projectCode || d.tags?.[0] || "Sem aplicação";
+    const app = d.projectCode || d.tags?.[0] || "Sem aplicacao";
     byApplication.set(app, (byApplication.get(app) ?? 0) + 1);
 
     const runKey = d.run_id ? String(d.run_id) : "sem-run";
@@ -303,8 +223,7 @@ export async function GET(req: NextRequest) {
 
   if (!QASE_TOKEN) {
     const payload = {
-      error:
-        "QASE_TOKEN ausente. Configure QASE_TOKEN (e QASE_PROJECT_MAP ou cadastre qase_project_code nas empresas).",
+      error: "QASE_TOKEN ausente. Configure QASE_TOKEN e o mapeamento de projetos.",
       total: 0,
       byApplication: [],
       byRun: [],
@@ -323,16 +242,8 @@ export async function GET(req: NextRequest) {
   const hadRawMap = !!rawMap;
   const legacyCode = normalizeString(process.env.QASE_PROJECT_CODE || process.env.QASE_PROJECT || "");
   const legacy = legacyCode ? ([{ slug: "griaule", projectCode: legacyCode }] satisfies ProjectEntry[]) : [];
-  const combined = [...envMap, ...legacy];
+  const projectMap = [...envMap, ...legacy];
   const envProjectCodes = parseProjectCodesFromEnv();
-
-  let projectMap: ProjectEntry[] = combined;
-  let supabaseMapError: unknown | null = null;
-  if (!projectMap.length) {
-    const fromDb = await loadProjectMapFromSupabase();
-    projectMap = fromDb.entries;
-    supabaseMapError = fromDb.error;
-  }
 
   const url = new URL(req.url);
   const companyFilter = normalizeSlug(url.searchParams.get("company") ?? url.searchParams.get("empresa"));
@@ -363,32 +274,9 @@ export async function GET(req: NextRequest) {
   }
 
   if (!uniqueProjects.length) {
-    if (companyFilter) {
-      const payload = {
-        error: `Nenhum projeto Qase configurado para a empresa '${companyFilter}'. Configure qase_project_code/qase_project_codes no cliente (Supabase) ou ajuste QASE_PROJECT_MAP.`,
-        total: 0,
-        byApplication: [],
-        byRun: [],
-        byCompany: [],
-        byStatus: [],
-        timeline: [],
-        items: [],
-      };
-      return apiOk(req, payload, "OK", { extra: payload });
-    }
-
-    const baseHint =
-      "Configure QASE_PROJECT_MAP (ex: griaule:GRIAULE,acme:ACME) ou preencha qase_project_code/qase_project_codes nas empresas (Supabase).";
-
-    const altHint = "Alternativa: configure QASE_PROJECT_CODES (ex: GRIAULE,CDS,GMT,BOOKING) para listar defeitos por projeto.";
-
-    const mapParseHint = hadRawMap && !envMap.length
-      ? "Obs: QASE_PROJECT_MAP parece definido, mas nao foi possivel interpretar. Formatos aceitos: 'slug:CODE,slug2:CODE2' ou JSON {\"slug\":\"CODE\"}."
-      : "";
-
-    const error = supabaseMapError
-      ? "Integração Supabase não configurada para ler projetos Qase. Verifique NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (e confirme que SUPABASE_MOCK não está ativo em produção)."
-      : `Nenhum projeto Qase configurado. ${baseHint} ${altHint} ${mapParseHint}`;
+    const error = hadRawMap && !envMap.length
+      ? "QASE_PROJECT_MAP definido, mas nao foi possivel interpretar. Use slug:CODE ou JSON."
+      : "Nenhum projeto Qase configurado. Defina QASE_PROJECT_MAP ou QASE_PROJECT_CODES.";
 
     const payload = {
       error,
@@ -401,11 +289,6 @@ export async function GET(req: NextRequest) {
           parsedProjectCodes: envProjectCodes.length,
           hasLegacyProjectCode: !!legacyCode,
         },
-        sources: {
-          usedSupabase: !combined.length,
-          supabaseError: !!supabaseMapError,
-          supabaseEntries: projectMap.length,
-        },
       },
       total: 0,
       byApplication: [],
@@ -415,9 +298,6 @@ export async function GET(req: NextRequest) {
       timeline: [],
       items: [],
     };
-    if (supabaseMapError) {
-      console.error("/api/admin/defeitos: failed to load Qase project map from Supabase", supabaseMapError);
-    }
     return apiOk(req, payload, "OK", { extra: payload });
   }
 

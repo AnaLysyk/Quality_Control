@@ -10,8 +10,8 @@ import remarkGfm from "remark-gfm";
 import { notFound } from "next/navigation";
 import Breadcrumb from "@/components/Breadcrumb";
 
-const DOC_FILES: Record<string, { title: string; filePath: string; kind: "markdown" | "code"; language?: string }>
-  = {
+const DOC_FILES: Record<string, { title: string; filePath: string; kind: "markdown" | "code"; language?: string }> =
+  {
     arquitetura_front: {
       title: "Arquitetura — Frontend (Next.js)",
       filePath: "docs/arquitetura_front.md",
@@ -20,11 +20,6 @@ const DOC_FILES: Record<string, { title: string; filePath: string; kind: "markdo
     arquitetura_api: {
       title: "Arquitetura — API (app/api)",
       filePath: "docs/arquitetura_api.md",
-      kind: "markdown",
-    },
-    arquitetura_backend: {
-      title: "Arquitetura — Backend (pasta backend/)",
-      filePath: "docs/arquitetura_backend.md",
       kind: "markdown",
     },
     banco_de_dados: {
@@ -44,7 +39,7 @@ const DOC_FILES: Record<string, { title: string; filePath: string; kind: "markdo
       language: "sql",
     },
     kanban_import_export: {
-      title: "Kanban Manual — Banco + Importação/Exportação",
+      title: "Kanban Manual — Importação/Exportação",
       filePath: "docs/kanban_import_export.md",
       kind: "markdown",
     },

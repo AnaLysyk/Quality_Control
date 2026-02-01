@@ -21,12 +21,7 @@ async function getServerAccessToken() {
   try {
     const { cookies }: typeof import("next/headers") = await import("next/headers");
     const store = await cookies();
-    return (
-      store.get("sb-access-token")?.value ||
-      store.get("access_token")?.value ||
-      store.get("auth_token")?.value ||
-      null
-    );
+    return store.get("auth_token")?.value || null;
   } catch {
     return null;
   }

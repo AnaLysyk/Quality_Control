@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "../../../lib/prismaClient";
 
 // POST: Cria um novo release manual para uma empresa
 export async function POST(req: NextRequest) {

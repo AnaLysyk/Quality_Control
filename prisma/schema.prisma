@@ -1,56 +1,60 @@
-model Defect {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title       String
-  description String?
-  status      String   @default("open")
-  createdAt   DateTime @default(now())
-  companyId   String   @db.Uuid
-  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  releaseManualId String? @db.Uuid
-  releaseManual   ReleaseManual? @relation(fields: [releaseManualId], references: [id], onDelete: SetNull)
-}
 generator client {
   provider = "prisma-client-js"
 }
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Defect {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title           String
+  description     String?
+  status          String         @default("open")
+  createdAt       DateTime       @default(now())
+  companyId       String         @db.Uuid
+  releaseManualId String?        @db.Uuid
+  company         Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  releaseManual   ReleaseManual? @relation(fields: [releaseManualId], references: [id])
+}
+
 model ReleaseManual {
-    defects Defect[]
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title       String
   description String?
   createdAt   DateTime @default(now())
   status      String   @default("draft")
   companyId   String   @db.Uuid
+  defects     Defect[]
   company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-}
-datasource db {
-  provider = "postgresql"
 }
 
 model User {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email         String   @unique
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String        @unique
   password_hash String
-  name          String   @default("")
-  active        Boolean  @default(true)
-  created_at    DateTime @default(now())
+  name          String        @default("")
+  active        Boolean       @default(true)
+  created_at    DateTime      @default(now())
   userCompanies UserCompany[]
 }
 
 model Company {
-  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name String
-  slug String @unique
-  userCompanies UserCompany[]
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  slug           String          @unique
+  defects        Defect[]
   releaseManuals ReleaseManual[]
-  defects Defect[]
+  userCompanies  UserCompany[]
 }
 
 model UserCompany {
-  user_id    String   @db.Uuid
-  company_id String   @db.Uuid
-  role       String @default("user")
-  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  user_id    String  @db.Uuid
+  company_id String  @db.Uuid
+  role       String  @default("user")
+  company    Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  user       User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
   @@id([user_id, company_id])
 }
 
@@ -75,9 +79,9 @@ model Release {
   app         String?
   qaseProject String?
   radis       String?
-  order       String[] // JSON array
+  order       String[]
   createdAt   DateTime @default(now())
-  status      String   @default("draft") // draft, published, archived
+  status      String   @default("draft")
   source      String?
   clientId    String?  @db.Uuid
   clientName  String?
@@ -85,7 +89,6 @@ model Release {
 
 model TestRun {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  status     String // passed, failed, blocked, skipped
+  status     String
   created_at DateTime @default(now())
-  // Add other fields as needed
 }

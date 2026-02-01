@@ -2,9 +2,10 @@ import { test, expect } from "./fixtures/test";
 import { ClientListResponseSchema } from "../packages/contracts/src/client";
 import { login, setMockUser } from "./utils/auth";
 
+
 test("@smoke login and load clientes", async ({ page }) => {
   await setMockUser(page, "admin");
-  await login(page, "admin@test.com", "123456");
+  await login(page, "admin@griaule.test", "Griaule@123");
 
   await expect(page).toHaveURL(/\/admin\/clients/);
   await expect(page.getByRole("heading", { name: /Empresas/i })).toBeVisible();

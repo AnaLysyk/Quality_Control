@@ -1,7 +1,7 @@
 import "server-only";
 import jwt from "jsonwebtoken";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prismaClient";
 import { getRedis } from "@/lib/redis";
 
 export type SessionPayload = {

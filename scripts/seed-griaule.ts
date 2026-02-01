@@ -1,5 +1,5 @@
 import "./loadEnv";
-import { prisma } from "../lib/prisma";
+import { prisma } from "../lib/prismaClient";
 import { hashPasswordSha256 } from "../lib/passwordHash";
 
 const COMPANY = {

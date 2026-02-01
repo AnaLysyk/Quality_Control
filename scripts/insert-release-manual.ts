@@ -1,4 +1,4 @@
-import { prisma } from "../lib/prisma";
+import { prisma } from "../lib/prismaClient";
 
 async function main() {
   // Buscar uma empresa existente para associar releases manuais

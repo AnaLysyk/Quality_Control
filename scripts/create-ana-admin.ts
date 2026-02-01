@@ -1,6 +1,6 @@
 import "./loadEnv";
 import { hashPasswordSha256 } from "../lib/passwordHash";
-import { prisma } from "../lib/prisma";
+import { prisma } from "../lib/prismaClient";
 
 async function createAnaAdmin() {
   const email = "ana.testing.company@gmail.com";

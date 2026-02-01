@@ -1,6 +1,6 @@
 import "../../scripts/loadEnv";
 import { writeAlertsStore } from "../../lib/qualityAlert";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prismaClient";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 
 export async function seedQualityAlert(alert: { companySlug?: string; type?: string; severity?: string; message?: string; metadata?: any }) {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRedis } from "@/lib/redis";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prismaClient";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 
 export async function POST(req: Request) {

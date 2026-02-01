@@ -3,7 +3,7 @@ import "server-only";
 
 import { getAccessContext } from "@/lib/auth/session";
 import { findUserByEmailOrId } from "@/lib/simpleAuth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prismaClient";
 
 export type AuthUser = {
   id: string;

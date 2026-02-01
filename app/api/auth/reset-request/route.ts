@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { getRedis } from "@/lib/redis";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prismaClient";
 import { emailService } from "@/lib/email";
 
 export async function POST(req: Request) {

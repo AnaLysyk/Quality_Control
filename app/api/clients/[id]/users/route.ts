@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prismaClient";
 import { getRedis } from "@/lib/redis";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";

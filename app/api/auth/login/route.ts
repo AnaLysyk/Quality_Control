@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
 
-import { prisma, isPrismaConfigured } from "@/lib/prisma";
+import { prisma, isPrismaConfigured } from "@/lib/prismaClient";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { getRedis } from "@/lib/redis";
 

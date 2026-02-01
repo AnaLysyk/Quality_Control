@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prismaClient";
 
 /**
  * Checks if a user exists in the database by email or id.

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prismaClient";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 
 // POST: Cria um novo usuário e vincula a uma empresa

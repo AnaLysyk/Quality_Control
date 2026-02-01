@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import jwt from "jsonwebtoken";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prismaClient";
 import { getRedis } from "@/lib/redis";
 
 type CompanyDocumentKind = "file" | "link";

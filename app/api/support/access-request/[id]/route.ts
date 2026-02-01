@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prismaClient";
 import { authenticateRequest } from "@/lib/jwtAuth";
 
 function normalizeRole(role?: string | null) {

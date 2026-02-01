@@ -6,7 +6,7 @@ console.log(
 );
 
 import { NextResponse } from "next/server";
-import { prisma, isPrismaConfigured } from "@/lib/prisma";
+import { prisma, isPrismaConfigured } from "@/lib/prismaClient";
 import { getRedis } from "@/lib/redis";
 
 const HAS_DATABASE = isPrismaConfigured();

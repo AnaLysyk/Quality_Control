@@ -67,6 +67,16 @@ export class QaseClient {
     const json = (await res.json().catch(() => ({}))) as T;
     return { data: json, status: res.status };
   }
+
+  async listPlans(
+    projectCode: string,
+    params?: Record<string, string | number | undefined>,
+  ): Promise<{ result?: { entities?: unknown[] } }> {
+    const { data } = await this.getWithStatus<{ result?: { entities?: unknown[] } }>(`/plan/${projectCode}`, {
+      params,
+    });
+    return data;
+  }
 }
 
 export function createQaseClient(options: QaseClientOptions) {

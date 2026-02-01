@@ -9,24 +9,14 @@ type GlobalPrisma = {
 
 const globalForPrisma = globalThis as unknown as GlobalPrisma;
 
-const CONNECTION_KEYS = [
-  "DATABASE_URL",
-  // Este repo padroniza DATABASE_URL como fonte única. Aliases removidos.
-];
 
-function readEnv(key: string): string | null {
-  const value = process.env[key];
+
+
+function getConnectionString(): string | null {
+  const value = process.env.DATABASE_URL;
   if (!value) return null;
   const trimmed = value.trim();
   return trimmed ? trimmed : null;
-}
-
-function getConnectionString(): string | null {
-  for (const key of CONNECTION_KEYS) {
-    const value = readEnv(key);
-    if (value) return value;
-  }
-  return null;
 }
 
 function buildClient(): PrismaClient {
@@ -52,7 +42,7 @@ function getClient(): PrismaClient {
   return globalForPrisma.prisma;
 }
 
-// Proxy evita inicialização imediata (lazy). Só conecta ao acessar um método.
+// Proxy: inicialização lazy, só conecta ao acessar um método.
 export const prisma = new Proxy(
   {},
   {

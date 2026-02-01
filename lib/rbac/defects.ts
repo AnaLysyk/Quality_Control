@@ -9,9 +9,9 @@ type AuthUser = {
 
 export async function resolveDefectRole(authUser: AuthUser | null | undefined, clientSlug?: string | null): Promise<Role> {
   // Importa prisma só em ambiente Node/server
-  let prisma: typeof import("@/lib/prisma").prisma | undefined;
+  let prisma: typeof import("@/lib/prismaClient").prisma | undefined;
   if (typeof process === "object" && process.env.NEXT_RUNTIME !== "edge") {
-    prisma = require("@/lib/prisma").prisma;
+    prisma = require("@/lib/prismaClient").prisma;
   }
   if (!authUser) return "user";
 

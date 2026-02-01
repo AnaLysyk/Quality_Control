@@ -10,11 +10,11 @@ if [ ! -f .env.local ]; then
 fi
 
 if [ "$1" = "local" ]; then
-  sed -i.bak 's|^DATABASE_URL=.*|DATABASE_URL=postgres://docker2:docker2@127.0.0.1:5433/inorbit2|' .env.local
-  echo "DATABASE_URL ajustado para uso local (127.0.0.1:5433)"
+  sed -i.bak 's|^DATABASE_URL=.*|DATABASE_URL=postgres://docker2:docker2@127.0.0.1:5433/inorbit2?schema=public|' .env.local
+  echo "DATABASE_URL ajustado para uso local (127.0.0.1:5433, schema=public)"
 elif [ "$1" = "docker" ]; then
-  sed -i.bak 's|^DATABASE_URL=.*|DATABASE_URL=postgres://docker2:docker2@postgres:5432/inorbit2|' .env.local
-  echo "DATABASE_URL ajustado para uso no Docker (postgres:5432)"
+  sed -i.bak 's|^DATABASE_URL=.*|DATABASE_URL=postgres://docker2:docker2@postgres:5432/inorbit2?schema=public|' .env.local
+  echo "DATABASE_URL ajustado para uso no Docker (postgres:5432, schema=public)"
 else
   echo "Uso: $0 local|docker"
   exit 1

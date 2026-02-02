@@ -93,8 +93,9 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slug: s
 
   const user = await authenticateRequest(req);
   const mockRole = await getMockRole();
-  const isAdmin = user?.isGlobalAdmin || mockRole === "admin";
-  const isCompany = mockRole === "company";
+  const normalizedRole = typeof user?.role === "string" ? user.role.toLowerCase() : "";
+  const isAdmin = user?.isGlobalAdmin || normalizedRole === "admin" || mockRole === "admin";
+  const isCompany = normalizedRole === "company" || mockRole === "company";
   if (!isAdmin && !isCompany) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

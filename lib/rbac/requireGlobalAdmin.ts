@@ -18,6 +18,7 @@ type SessionUser = {
   email?: string;
   role?: string;
   isGlobalAdmin?: boolean;
+  globalRole?: string | null;
 };
 
 export async function extractAccessToken(req: NextRequest): Promise<string | null> {
@@ -58,12 +59,14 @@ async function readSessionUser(req: NextRequest): Promise<SessionUser | null> {
       email?: string;
       role?: string;
       isGlobalAdmin?: boolean;
+      globalRole?: string | null;
     };
     return {
       userId: typeof payload.sub === "string" ? payload.sub : undefined,
       email: typeof payload.email === "string" ? payload.email : undefined,
       role: typeof payload.role === "string" ? payload.role : undefined,
       isGlobalAdmin: payload.isGlobalAdmin === true,
+      globalRole: typeof payload.globalRole === "string" ? payload.globalRole : null,
     };
   } catch {
     return null;
@@ -83,7 +86,8 @@ export async function requireGlobalAdmin(
   if (!session) return null;
 
   const role = session.role ?? null;
-  const isGlobalAdmin = session.isGlobalAdmin === true;
+  const isGlobalAdmin =
+    session.isGlobalAdmin === true || (session.globalRole ?? "").toLowerCase() === "global_admin";
   if (!isGlobalAdmin && !isAdminRole(role)) return null;
 
   return {

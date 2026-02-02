@@ -4,8 +4,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import jwt from "jsonwebtoken";
 
-import { prisma } from "@/lib/prismaClient";
 import { getRedis } from "@/lib/redis";
+import { listLocalCompanies, listLocalLinksForUser } from "@/lib/auth/localStore";
 
 type CompanyDocumentKind = "file" | "link";
 
@@ -91,11 +91,15 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
         const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
         const userId = (parsed as { userId?: string; id?: string }).userId ?? (parsed as { id?: string }).id;
         if (!userId) return null;
-        const links = await prisma.userCompany.findMany({
-          where: { user_id: userId },
-          include: { company: true },
-        });
-        return { userId, companySlugs: links.map((l) => l.company.slug) };
+        const isGlobalAdmin = (parsed as { isGlobalAdmin?: boolean }).isGlobalAdmin === true;
+        const [links, companies] = await Promise.all([
+          listLocalLinksForUser(userId),
+          listLocalCompanies(),
+        ]);
+        const allowed = isGlobalAdmin
+          ? companies
+          : companies.filter((company) => links.some((link) => link.companyId === company.id));
+        return { userId, companySlugs: allowed.map((c) => c.slug) };
       } catch {
         return null;
       }
@@ -111,14 +115,18 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
   const secret = process.env.JWT_SECRET;
   if (!secret) return null;
   try {
-    const payload = jwt.verify(token, secret) as jwt.JwtPayload & { sub?: string };
+    const payload = jwt.verify(token, secret) as jwt.JwtPayload & { sub?: string; isGlobalAdmin?: boolean };
     const userId = typeof payload.sub === "string" ? payload.sub : null;
     if (!userId) return null;
-    const links = await prisma.userCompany.findMany({
-      where: { user_id: userId },
-      include: { company: true },
-    });
-    return { userId, companySlugs: links.map((l) => l.company.slug) };
+    const isGlobalAdmin = payload.isGlobalAdmin === true;
+    const [links, companies] = await Promise.all([
+      listLocalLinksForUser(userId),
+      listLocalCompanies(),
+    ]);
+    const allowed = isGlobalAdmin
+      ? companies
+      : companies.filter((company) => links.some((link) => link.companyId === company.id));
+    return { userId, companySlugs: allowed.map((c) => c.slug) };
   } catch {
     return null;
   }

@@ -1,0 +1,118 @@
+{
+  "users": [
+    {
+      "id": "usr_admin_ana",
+      "name": "Ana Lysyk",
+      "email": "AnaLysyk",
+      "password_hash": "9d14308202a4b4c06c30f482c0612cfb82987815c86b24cb0644e40b4433fb43",
+      "globalRole": "global_admin",
+      "status": "active",
+      "active": true,
+      "default_company_slug": "griaule",
+      "createdAt": "2026-02-02T00:00:00.000Z"
+    },
+    {
+      "id": "usr_ana",
+      "name": "Ana",
+      "email": "ana",
+      "password_hash": "e82827b00b2ca8620beb37f879778c082b292a52270390cff35b6fe3157f4e8b",
+      "globalRole": null,
+      "status": "active",
+      "active": true,
+      "default_company_slug": "griaule",
+      "createdAt": "2026-02-02T00:00:00.000Z"
+    },
+    {
+      "id": "usr_e2e_admin",
+      "name": "E2E Admin",
+      "email": "admin@griaule.test",
+      "password_hash": "b6c2a07c100217bd484cdd0940fb19c05e6ac2c425f32c35ac88b19f78be92d4",
+      "globalRole": "global_admin",
+      "status": "active",
+      "active": true,
+      "default_company_slug": "griaule",
+      "createdAt": "2026-02-02T00:00:00.000Z"
+    },
+    {
+      "id": "usr_e2e_user",
+      "name": "E2E User",
+      "email": "user@griaule.test",
+      "password_hash": "b6c2a07c100217bd484cdd0940fb19c05e6ac2c425f32c35ac88b19f78be92d4",
+      "globalRole": null,
+      "status": "active",
+      "active": true,
+      "default_company_slug": "griaule",
+      "createdAt": "2026-02-02T00:00:00.000Z"
+    }
+  ],
+  "companies": [
+    {
+      "id": "griaule",
+      "name": "Griaule",
+      "company_name": "Griaule",
+      "slug": "griaule",
+      "integration_mode": "manual",
+      "integration_type": "manual",
+      "status": "active",
+      "active": true,
+      "createdAt": "2026-02-02T00:00:00.000Z",
+      "created_by": "seed"
+    },
+    {
+      "id": "testing-company",
+      "name": "Testing Company",
+      "company_name": "Testing Company",
+      "slug": "testing-company",
+      "integration_mode": "manual",
+      "integration_type": "manual",
+      "status": "active",
+      "active": true,
+      "createdAt": "2026-02-02T00:00:00.000Z",
+      "created_by": "seed"
+    }
+  ],
+  "memberships": [
+    {
+      "id": "mbr_ana_admin_griaule",
+      "userId": "usr_admin_ana",
+      "companyId": "griaule",
+      "role": "company_admin",
+      "createdAt": "2026-02-02T00:00:00.000Z"
+    },
+    {
+      "id": "mbr_ana_admin_testing",
+      "userId": "usr_admin_ana",
+      "companyId": "testing-company",
+      "role": "company_admin",
+      "createdAt": "2026-02-02T00:00:00.000Z"
+    },
+    {
+      "id": "mbr_ana_griaule",
+      "userId": "usr_ana",
+      "companyId": "griaule",
+      "role": "user",
+      "createdAt": "2026-02-02T00:00:00.000Z"
+    },
+    {
+      "id": "mbr_ana_testing",
+      "userId": "usr_ana",
+      "companyId": "testing-company",
+      "role": "user",
+      "createdAt": "2026-02-02T00:00:00.000Z"
+    },
+    {
+      "id": "mbr_e2e_admin_griaule",
+      "userId": "usr_e2e_admin",
+      "companyId": "griaule",
+      "role": "company_admin",
+      "createdAt": "2026-02-02T00:00:00.000Z"
+    },
+    {
+      "id": "mbr_e2e_user_griaule",
+      "userId": "usr_e2e_user",
+      "companyId": "griaule",
+      "role": "user",
+      "createdAt": "2026-02-02T00:00:00.000Z"
+    }
+  ]
+}

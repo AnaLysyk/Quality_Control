@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prismaClient";
+import { listLocalCompanies } from "@/lib/auth/localStore";
 
 type ClientEntry = {
   slug: string;
@@ -6,13 +6,6 @@ type ClientEntry = {
 };
 
 export async function listClients(): Promise<ClientEntry[]> {
-  try {
-    const companies = await prisma.company.findMany({
-      select: { slug: true, name: true },
-      orderBy: { name: "asc" },
-    });
-    return companies.map((company) => ({ slug: company.slug, name: company.name }));
-  } catch {
-    return [];
-  }
+  const companies = await listLocalCompanies();
+  return companies.map((company) => ({ slug: company.slug, name: company.name ?? company.company_name ?? "Empresa" }));
 }

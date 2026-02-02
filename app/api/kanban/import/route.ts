@@ -24,7 +24,7 @@ function normalizeRole(role?: string | null) {
 function isAdmin(user: AuthUser) {
   if (user.isGlobalAdmin) return true;
   const role = normalizeRole(user.role);
-  return role === "admin" || role === "global_admin";
+  return role === "admin" || role === "global_admin" || role === "company" || role === "company_admin";
 }
 
 function resolveAllowedSlugs(user: AuthUser): string[] {

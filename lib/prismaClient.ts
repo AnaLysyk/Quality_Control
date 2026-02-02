@@ -1,4 +1,10 @@
-import "server-only";
+try {
+  // "server-only" exists in Next.js runtime; ignore when running scripts/tests.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require("server-only");
+} catch {
+  // no-op
+}
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";

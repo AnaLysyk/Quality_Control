@@ -46,6 +46,9 @@ export const AuthUserSchema = z
     name: z.string().optional().nullable(),
     avatarUrl: z.string().optional().nullable(),
     role: z.string().optional().nullable(),
+    globalRole: z.string().optional().nullable(),
+    companyRole: z.string().optional().nullable(),
+    capabilities: z.array(z.string().min(1)).optional(),
     clientId: z.string().optional().nullable(),
     clientSlug: z.string().optional().nullable(),
     defaultClientSlug: z.string().optional().nullable(),
@@ -64,6 +67,8 @@ export const AuthCompanySchema = z
     slug: z.string().min(1),
     role: z.string().min(1),
     active: z.boolean().optional(),
+    companyRole: z.string().optional().nullable(),
+    capabilities: z.array(z.string().min(1)).optional(),
   })
   .strip();
 

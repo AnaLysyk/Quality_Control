@@ -8,7 +8,7 @@ if (typeof process !== "undefined" && process.release?.name === "node") {
 }
 import crypto from "crypto";
 import { slugifyRelease } from "@/lib/slugifyRelease";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { canCreateManualDefect, getMockRole, resolveDefectRole } from "@/lib/rbac/defects";
 import type { Release, Stats } from "@/types/release";
 import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalization";
@@ -50,11 +50,36 @@ function shouldCloseFromStats(stats: Partial<Stats>) {
   return fail === 0 && blocked === 0 && notRun === 0;
 }
 
+function resolveAllowedSlugs(user: AuthUser): string[] {
+  if (Array.isArray(user.companySlugs) && user.companySlugs.length) return user.companySlugs;
+  if (user.companySlug) return [user.companySlug];
+  return [];
+}
+
 export async function GET(req: Request) {
+  const authUser = await authenticateRequest(req);
+  const mockRole = await getMockRole();
+  const effectiveAuthUser =
+    authUser ?? (mockRole ? { id: "mock-user", isGlobalAdmin: mockRole === "admin" } : null);
+  if (!effectiveAuthUser) {
+    return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
+  }
+
   const releases = await readStore();
   const url = new URL(req.url);
   const clientSlug = url.searchParams.get("clientSlug")?.trim() || null;
-  const filtered = clientSlug ? releases.filter((r) => (r.clientSlug ?? null) === clientSlug) : releases;
+  if (!effectiveAuthUser.isGlobalAdmin) {
+    const allowed = resolveAllowedSlugs(effectiveAuthUser as AuthUser);
+    if (clientSlug && !allowed.includes(clientSlug)) {
+      return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
+    }
+  }
+
+  const filtered = clientSlug
+    ? releases.filter((r) => (r.clientSlug ?? null) === clientSlug)
+    : effectiveAuthUser.isGlobalAdmin
+      ? releases
+      : releases.filter((r) => !r.clientSlug || resolveAllowedSlugs(effectiveAuthUser as AuthUser).includes(r.clientSlug));
   const normalized = filtered.map((r) => ({
     ...r,
     id: r.slug ?? r.id,

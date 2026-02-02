@@ -3,12 +3,17 @@
 import { useEffect, useState } from "react";
 
 export interface AuthUser {
-  userId: string;
-  email: string;
-  name: string;
-  companyId: string;
-  companySlug: string;
-  role: string;
+  id?: string;
+  userId?: string;
+  email?: string;
+  name?: string;
+  companyId?: string;
+  companySlug?: string;
+  role?: string;
+  globalRole?: string | null;
+  companyRole?: string | null;
+  capabilities?: string[];
+  isGlobalAdmin?: boolean;
 }
 
 export function useAuthUser() {

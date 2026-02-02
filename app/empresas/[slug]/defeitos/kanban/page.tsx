@@ -7,10 +7,10 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import type { KanbanData } from "@/types/kanban";
 
 const baseKanban: KanbanData = {
-  pass: [{ id: "k1", title: "Login ok" }],
-  fail: [{ id: "k2", title: "Erro no login" }],
-  blocked: [{ id: "k3", title: "Dependencia externa" }],
-  notRun: [{ id: "k4", title: "Caso nao executado" }],
+  pass: [{ id: "k1", title: "Login ok", bug: null }],
+  fail: [{ id: "k2", title: "Erro no login", bug: null }],
+  blocked: [{ id: "k3", title: "Dependencia externa", bug: null }],
+  notRun: [{ id: "k4", title: "Caso nao executado", bug: null }],
 };
 
 function isKanbanData(value: unknown): value is KanbanData {

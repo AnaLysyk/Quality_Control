@@ -1,56 +1,11 @@
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
 
-import { prisma } from "@/lib/prismaClient";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { getRedis } from "@/lib/redis";
+import { getAccessContext } from "@/lib/auth/session";
+import { getLocalUserById, updateLocalUser } from "@/lib/auth/localStore";
+import { hashPasswordSha256, safeEqualHex } from "@/lib/passwordHash";
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 128;
-
-function readCookieValue(cookieHeader: string, name: string): string | null {
-  const cookies = cookieHeader.split(";");
-  for (const cookie of cookies) {
-    const [key, ...rest] = cookie.trim().split("=");
-    if (key === name) {
-      return rest.join("=").trim();
-    }
-  }
-  return null;
-}
-
-async function resolveUserId(req: Request): Promise<string | null> {
-  const cookieHeader = req.headers.get("cookie") ?? "";
-  const sessionId = readCookieValue(cookieHeader, "session_id");
-  if (sessionId) {
-    const redis = getRedis();
-    const raw = await redis.get<string>(`session:${sessionId}`);
-    if (raw) {
-      try {
-        const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-        const id = (parsed as { userId?: string; id?: string }).userId ?? (parsed as { id?: string }).id;
-        if (id) return id;
-      } catch {
-        return null;
-      }
-    }
-  }
-
-  const authHeader = req.headers.get("authorization");
-  const bearer = authHeader?.toLowerCase().startsWith("bearer ") ? authHeader.slice("bearer ".length).trim() : "";
-  const cookieToken = readCookieValue(cookieHeader, "auth_token");
-  const token = bearer || cookieToken;
-  if (!token) return null;
-
-  const secret = process.env.JWT_SECRET;
-  if (!secret) return null;
-  try {
-    const payload = jwt.verify(token, secret) as jwt.JwtPayload & { sub?: string };
-    return typeof payload.sub === "string" ? payload.sub : null;
-  } catch {
-    return null;
-  }
-}
 
 function sanitizePassword(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -77,26 +32,23 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Nova senha deve ser diferente da atual" }, { status: 400 });
   }
 
-  const userId = await resolveUserId(req);
-  if (!userId) {
+  const access = await getAccessContext(req);
+  if (!access) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await getLocalUserById(access.userId);
   if (!user) {
     return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
   }
 
   const currentHash = hashPasswordSha256(currentPassword);
-  if (currentHash !== user.password_hash) {
+  if (!safeEqualHex(currentHash, user.password_hash)) {
     return NextResponse.json({ error: "Senha atual incorreta" }, { status: 400 });
   }
 
   const newHash = hashPasswordSha256(newPassword);
-  await prisma.user.update({
-    where: { id: userId },
-    data: { password_hash: newHash },
-  });
+  await updateLocalUser(user.id, { password_hash: newHash });
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }

@@ -1,77 +1,37 @@
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
 
-import { prisma } from "@/lib/prismaClient";
-import { getRedis } from "@/lib/redis";
-
-type SessionUser = {
-  userId?: string;
-  id?: string;
-};
-
-function readCookieValue(cookieHeader: string, name: string): string | null {
-  const cookies = cookieHeader.split(";");
-  for (const cookie of cookies) {
-    const [key, ...rest] = cookie.trim().split("=");
-    if (key === name) {
-      return rest.join("=").trim();
-    }
-  }
-  return null;
-}
-
-async function resolveUserId(req: Request): Promise<string | null> {
-  const cookieHeader = req.headers.get("cookie") ?? "";
-  const sessionId = readCookieValue(cookieHeader, "session_id");
-  if (sessionId) {
-    const redis = getRedis();
-    const raw = await redis.get<string>(`session:${sessionId}`);
-    if (raw) {
-      try {
-        const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-        const session = parsed as SessionUser;
-        return session.userId ?? session.id ?? null;
-      } catch {
-        return null;
-      }
-    }
-  }
-
-  const authHeader = req.headers.get("authorization");
-  const bearer = authHeader?.toLowerCase().startsWith("bearer ") ? authHeader.slice("bearer ".length).trim() : "";
-  const cookieToken = readCookieValue(cookieHeader, "auth_token");
-  const token = bearer || cookieToken;
-  if (!token) return null;
-
-  const secret = process.env.JWT_SECRET;
-  if (!secret) return null;
-  try {
-    const payload = jwt.verify(token, secret) as jwt.JwtPayload & { sub?: string };
-    return typeof payload.sub === "string" ? payload.sub : null;
-  } catch {
-    return null;
-  }
-}
+import { getAccessContext } from "@/lib/auth/session";
+import { listLocalCompanies, listLocalLinksForUser, normalizeLocalRole } from "@/lib/auth/localStore";
 
 export async function GET(req: Request) {
-  const userId = await resolveUserId(req);
-  if (!userId) {
+  const access = await getAccessContext(req);
+  if (!access) {
     return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
   }
 
-  const links = await prisma.userCompany.findMany({
-    where: { user_id: userId },
-    include: { company: true },
-  });
+  const [links, companies] = await Promise.all([
+    listLocalLinksForUser(access.userId),
+    listLocalCompanies(),
+  ]);
+  const isGlobalAdmin = access.isGlobalAdmin === true;
+  const allowedCompanies = isGlobalAdmin
+    ? companies
+    : companies.filter((company) => links.some((link) => link.companyId === company.id));
 
-  const items = links.map((link) => ({
-    client_id: link.company.id,
-    client_name: link.company.name,
-    client_slug: link.company.slug,
-    client_active: true,
-    role: (link.role ?? "user").toUpperCase() === "ADMIN" ? "ADMIN" : "USER",
-    link_active: true,
-  }));
+  const items = allowedCompanies.map((company) => {
+    const link = links.find((item) => item.companyId === company.id);
+    const normalized = normalizeLocalRole(link?.role ?? null);
+    return {
+      client_id: company.id,
+      client_name: company.name ?? company.company_name ?? "Empresa",
+      client_slug: company.slug,
+      client_active: company.active ?? true,
+      role: isGlobalAdmin || normalized === "company_admin" ? "ADMIN" : "USER",
+      link_active: true,
+      companyRole: normalized ?? null,
+      capabilities: link?.capabilities ?? undefined,
+    };
+  });
 
   return NextResponse.json({ items });
 }

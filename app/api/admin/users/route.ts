@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 
-import { prisma } from "@/lib/prismaClient";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
+import { getAccessContext } from "@/lib/auth/session";
+import {
+  createLocalUser,
+  listLocalLinksForCompany,
+  listLocalLinksForUser,
+  listLocalUsers,
+  normalizeLocalRole,
+  updateLocalUser,
+  upsertLocalLink,
+} from "@/lib/auth/localStore";
 
 export const runtime = "nodejs";
 
@@ -20,15 +29,18 @@ type UserItem = {
   avatar_url?: string | null;
 };
 
-function mapUser(user: { id: string; name: string; email: string; active: boolean }, link?: { role?: string; company_id?: string | null }) {
-  const role = (link?.role ?? "user").toLowerCase();
+function mapUser(
+  user: { id: string; name: string; email: string; active?: boolean },
+  link?: { role?: string | null; companyId?: string | null },
+) {
+  const role = normalizeLocalRole(link?.role ?? "user");
   return {
     id: user.id,
     name: user.name ?? "",
     email: user.email,
-    role: role === "admin" ? "client_admin" : "client_user",
-    client_id: link?.company_id ?? null,
-    active: user.active === true,
+    role: role === "company_admin" ? "client_admin" : "client_user",
+    client_id: link?.companyId ?? null,
+    active: user.active !== false,
     job_title: null,
     linkedin_url: null,
     avatar_url: null,
@@ -37,55 +49,46 @@ function mapUser(user: { id: string; name: string; email: string; active: boolea
 
 function normalizeRole(input?: string | null) {
   const value = (input ?? "").toLowerCase();
-  if (value === "client_admin" || value === "admin" || value === "global_admin") return "admin";
+  if (value === "client_admin" || value === "admin" || value === "global_admin" || value === "company_admin") return "company_admin";
+  if (value === "viewer" || value === "client_viewer") return "viewer";
   return "user";
 }
 
 export async function GET(req: NextRequest) {
-  // Extrai sessão do request (ajuste conforme seu middleware/session)
-  const session = (req as any).session || {};
-  const userEmail = session.email;
-  const userRole = session.role;
-  const userCompanyId = session.companyId;
+  const access = await getAccessContext(req);
+  if (!access) {
+    return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+  }
 
-  // Se for admin (role admin/super-admin ou email da admin global), pode ver todos
-  const isGlobalAdmin = userRole === 'admin' || userRole === 'super-admin' || userEmail === 'ana.testing.company@gmail.com';
-
+  const isGlobalAdmin = access.isGlobalAdmin === true || (access.role ?? "").toLowerCase() === "admin";
   const { searchParams } = new URL(req.url);
   const clientId = searchParams.get("client_id");
 
   if (!isGlobalAdmin) {
-    // Usuário comum só pode ver usuários da própria empresa
-    if (!userCompanyId) {
+    if (!access.companyId) {
       return NextResponse.json({ error: "Sem empresa vinculada" }, { status: 403 });
     }
-    const links = await prisma.userCompany.findMany({
-      where: { company_id: userCompanyId },
-      include: { user: true },
-    });
-    const items: UserItem[] = links.map((link) => mapUser(link.user, { role: link.role, company_id: link.company_id }));
+    const links = await listLocalLinksForCompany(access.companyId);
+    const users = await listLocalUsers();
+    const byId = new Map(users.map((user) => [user.id, user]));
+    const items: UserItem[] = links.map((link) => mapUser(byId.get(link.userId) ?? { id: link.userId, name: "", email: "", active: true }, { role: link.role, companyId: link.companyId }));
     return NextResponse.json({ items }, { status: 200 });
   }
 
-  // Admin pode filtrar por empresa ou ver todos
   if (clientId) {
-    const links = await prisma.userCompany.findMany({
-      where: { company_id: clientId },
-      include: { user: true },
-    });
-    const items: UserItem[] = links.map((link) => mapUser(link.user, { role: link.role, company_id: link.company_id }));
+    const links = await listLocalLinksForCompany(clientId);
+    const users = await listLocalUsers();
+    const byId = new Map(users.map((user) => [user.id, user]));
+    const items: UserItem[] = links.map((link) => mapUser(byId.get(link.userId) ?? { id: link.userId, name: "", email: "", active: true }, { role: link.role, companyId: link.companyId }));
     return NextResponse.json({ items }, { status: 200 });
   }
 
-  const users = await prisma.user.findMany({
-    include: { userCompanies: true },
-    orderBy: { created_at: "desc" },
-  });
-
-  const items: UserItem[] = users.map((user) => {
-    const link = user.userCompanies[0];
-    return mapUser(user, link ? { role: link.role, company_id: link.company_id } : undefined);
-  });
+  const users = await listLocalUsers();
+  const items: UserItem[] = [];
+  for (const user of users) {
+    const link = (await listLocalLinksForUser(user.id))[0];
+    items.push(mapUser(user, link ? { role: link.role, companyId: link.companyId } : undefined));
+  }
 
   return NextResponse.json({ items }, { status: 200 });
 }
@@ -101,6 +104,9 @@ export async function POST(req: NextRequest) {
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
   const clientId = typeof body?.client_id === "string" ? body.client_id : null;
   const role = normalizeRole(body?.role);
+  const capabilities = Array.isArray(body?.capabilities)
+    ? body.capabilities.filter((item: unknown) => typeof item === "string")
+    : null;
 
   if (!name || !email) {
     return NextResponse.json({ error: "Nome e email sao obrigatorios" }, { status: 400 });
@@ -109,29 +115,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Empresa obrigatoria para este perfil" }, { status: 400 });
   }
 
-  let user = await prisma.user.findUnique({ where: { email } });
-  if (!user) {
-    const tempPassword = hashPasswordSha256(`${Date.now()}-${randomUUID()}`);
-    user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password_hash: tempPassword,
-        active: true,
-      },
-    });
-  }
-
-  const existing = await prisma.userCompany.findUnique({
-    where: { user_id_company_id: { user_id: user.id, company_id: clientId } },
+  const tempPassword = hashPasswordSha256(`${Date.now()}-${randomUUID()}`);
+  const user = await createLocalUser({
+    name,
+    email,
+    password_hash: tempPassword,
+    active: true,
+    role: "user",
   });
-  if (existing) {
-    return NextResponse.json({ error: "Usuario ja vinculado" }, { status: 409 });
-  }
 
-  await prisma.userCompany.create({
-    data: { user_id: user.id, company_id: clientId, role },
-  });
+  await upsertLocalLink({ userId: user.id, companyId: clientId, role, capabilities });
 
   await addAuditLogSafe({
     actorUserId: admin.id,
@@ -163,26 +156,22 @@ export async function PATCH(req: NextRequest) {
   const active = typeof body?.active === "boolean" ? body.active : null;
   const clientId = typeof body?.client_id === "string" ? body.client_id : null;
   const role = normalizeRole(body?.role);
+  const capabilities = Array.isArray(body?.capabilities)
+    ? body.capabilities.filter((item: unknown) => typeof item === "string")
+    : null;
 
-  const updated = await prisma.user.update({
-    where: { id: userId },
-    data: {
-      ...(name ? { name } : {}),
-      ...(email ? { email } : {}),
-      ...(active !== null ? { active } : {}),
-    },
-  }).catch(() => null);
+  const updated = await updateLocalUser(userId, {
+    ...(name ? { name } : {}),
+    ...(email ? { email } : {}),
+    ...(active !== null ? { active } : {}),
+  });
 
   if (!updated) {
     return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
   }
 
   if (clientId) {
-    await prisma.userCompany.upsert({
-      where: { user_id_company_id: { user_id: userId, company_id: clientId } },
-      update: { role },
-      create: { user_id: userId, company_id: clientId, role },
-    });
+    await upsertLocalLink({ userId, companyId: clientId, role, capabilities });
   }
 
   await addAuditLogSafe({

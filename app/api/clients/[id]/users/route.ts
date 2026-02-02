@@ -1,110 +1,65 @@
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
 
-import { prisma } from "@/lib/prismaClient";
-import { getRedis } from "@/lib/redis";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { getAccessContext } from "@/lib/auth/session";
+import {
+  createLocalUser,
+  listLocalLinksForCompany,
+  listLocalLinksForUser,
+  listLocalUsers,
+  normalizeLocalRole,
+  removeLocalLink,
+  upsertLocalLink,
+} from "@/lib/auth/localStore";
 
-type SessionUser = {
-  userId?: string;
-  id?: string;
-  role?: string;
-  isGlobalAdmin?: boolean;
+type UserItem = {
+  id: string;
+  role: "ADMIN" | "USER";
+  active: boolean;
+  name: string;
+  email: string;
 };
 
-function readCookieValue(cookieHeader: string, name: string): string | null {
-  const cookies = cookieHeader.split(";");
-  for (const cookie of cookies) {
-    const [key, ...rest] = cookie.trim().split("=");
-    if (key === name) {
-      return rest.join("=").trim();
-    }
-  }
-  return null;
-}
-
-async function resolveSession(req: NextRequest): Promise<SessionUser | null> {
-  const cookieHeader = req.headers.get("cookie") ?? "";
-  const sessionId = readCookieValue(cookieHeader, "session_id");
-  if (sessionId) {
-    const redis = getRedis();
-    const raw = await redis.get<string>(`session:${sessionId}`);
-    if (raw) {
-      try {
-        const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-        return parsed as SessionUser;
-      } catch {
-        return null;
-      }
-    }
-  }
-
-  const authHeader = req.headers.get("authorization");
-  const bearer = authHeader?.toLowerCase().startsWith("bearer ") ? authHeader.slice("bearer ".length).trim() : "";
-  const cookieToken = readCookieValue(cookieHeader, "auth_token");
-  const token = bearer || cookieToken;
-  if (!token) return null;
-
-  const secret = process.env.JWT_SECRET;
-  if (!secret) return null;
-  try {
-    const payload = jwt.verify(token, secret) as jwt.JwtPayload & {
-      sub?: string;
-      role?: string;
-      isGlobalAdmin?: boolean;
-    };
-    return {
-      userId: typeof payload.sub === "string" ? payload.sub : undefined,
-      role: typeof payload.role === "string" ? payload.role : undefined,
-      isGlobalAdmin: payload.isGlobalAdmin === true,
-    };
-  } catch {
-    return null;
-  }
-}
-
-function isAdminRole(role?: string | null, isGlobal?: boolean) {
-  if (isGlobal) return true;
-  const normalized = (role ?? "").toLowerCase();
-  return normalized === "admin" || normalized === "global_admin" || normalized === "super-admin";
-}
-
-function mapLink(link: { user: { id: string; email: string; name: string; active: boolean }; role: string }) {
-  return {
-    id: link.user.id,
-    role: (link.role ?? "user").toLowerCase() === "admin" ? "ADMIN" : "USER",
-    active: link.user.active === true,
-    name: link.user.name ?? "",
-    email: link.user.email,
-  };
+function isAdminAccess(access: Awaited<ReturnType<typeof getAccessContext>> | null) {
+  if (!access) return false;
+  if (access.isGlobalAdmin) return true;
+  return (access.role ?? "").toLowerCase() === "admin";
 }
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
-  const session = await resolveSession(req);
-  if (!session?.userId && !session?.id) {
+  const access = await getAccessContext(req);
+  if (!access) {
     return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
   }
 
-  const userId = session.userId ?? session.id!;
-  const isAdmin = isAdminRole(session.role, session.isGlobalAdmin);
   const { searchParams } = new URL(req.url);
   const requestAll = searchParams.get("all") === "true";
-  if (requestAll && !isAdmin) {
+  if (requestAll && !isAdminAccess(access)) {
     return NextResponse.json({ message: "Sem permissao" }, { status: 403 });
   }
 
   const { id: companyId } = await context.params;
-  const where = requestAll && isAdmin
-    ? { company_id: companyId }
-    : { company_id: companyId, user_id: userId };
+  const links = requestAll
+    ? await listLocalLinksForCompany(companyId)
+    : (await listLocalLinksForUser(access.userId)).filter((link) => link.companyId === companyId);
 
-  const links = await prisma.userCompany.findMany({
-    where,
-    include: { user: true },
+  const users = await listLocalUsers();
+  const userById = new Map(users.map((user) => [user.id, user]));
+
+  const items: UserItem[] = links.map((link) => {
+    const user = userById.get(link.userId);
+    const role = normalizeLocalRole(link.role ?? null) === "company_admin" ? "ADMIN" : "USER";
+    return {
+      id: link.userId,
+      role,
+      active: user?.active !== false,
+      name: user?.name ?? "",
+      email: user?.email ?? "",
+    };
   });
 
-  return NextResponse.json({ items: links.map(mapLink) }, { status: 200 });
+  return NextResponse.json({ items }, { status: 200 });
 }
 
 export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -115,40 +70,23 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
 
   const body = await req.json().catch(() => null);
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
-  const role = typeof body?.role === "string" && body.role.toUpperCase() === "ADMIN" ? "admin" : "user";
+  const role = (() => {
+    const raw = typeof body?.role === "string" ? body.role.toUpperCase() : "";
+    if (raw === "ADMIN") return "company_admin";
+    if (raw === "VIEWER") return "viewer";
+    return "user";
+  })();
+  const capabilities = Array.isArray(body?.capabilities)
+    ? body.capabilities.filter((item: unknown) => typeof item === "string")
+    : null;
   if (!email) {
     return NextResponse.json({ message: "Email obrigatorio" }, { status: 400 });
   }
 
   const { id: companyId } = await context.params;
-  const existing = await prisma.userCompany.findFirst({
-    where: { company_id: companyId, user: { email } },
-    include: { user: true },
-  });
-  if (existing) {
-    return NextResponse.json({ message: "Usuario ja vinculado" }, { status: 409 });
-  }
-
-  let user = await prisma.user.findUnique({ where: { email } });
-  if (!user) {
-    const tempPassword = hashPasswordSha256(`${Date.now()}-${email}`);
-    user = await prisma.user.create({
-      data: {
-        email,
-        name: "",
-        password_hash: tempPassword,
-        active: true,
-      },
-    });
-  }
-
-  await prisma.userCompany.create({
-    data: {
-      user_id: user.id,
-      company_id: companyId,
-      role,
-    },
-  });
+  const tempPassword = hashPasswordSha256(`${Date.now()}-${email}`);
+  const user = await createLocalUser({ name: email, email, password_hash: tempPassword, active: true });
+  await upsertLocalLink({ userId: user.id, companyId, role, capabilities });
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }
@@ -167,25 +105,18 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
 
   const { id: companyId } = await context.params;
   const role = typeof body?.role === "string" ? body.role.toUpperCase() : null;
+  const capabilities = Array.isArray(body?.capabilities)
+    ? body.capabilities.filter((item: unknown) => typeof item === "string")
+    : null;
   const active = typeof body?.active === "boolean" ? body.active : null;
 
   if (active === false) {
-    await prisma.userCompany.delete({
-      where: { user_id_company_id: { user_id: userId, company_id: companyId } },
-    }).catch(() => null);
+    await removeLocalLink(userId, companyId);
     return NextResponse.json({ ok: true }, { status: 200 });
   }
 
-  const data: { role?: string } = {};
-  if (role) {
-    data.role = role === "ADMIN" ? "admin" : "user";
-  }
+  const normalizedRole = role === "ADMIN" ? "company_admin" : role === "VIEWER" ? "viewer" : "user";
+  const updatedRole = await upsertLocalLink({ userId, companyId, role: normalizedRole, capabilities });
 
-  const updated = await prisma.userCompany.upsert({
-    where: { user_id_company_id: { user_id: userId, company_id: companyId } },
-    update: data,
-    create: { user_id: userId, company_id: companyId, role: data.role ?? "user" },
-  });
-
-  return NextResponse.json({ ok: true, role: updated.role }, { status: 200 });
+  return NextResponse.json({ ok: true, role: updatedRole }, { status: 200 });
 }

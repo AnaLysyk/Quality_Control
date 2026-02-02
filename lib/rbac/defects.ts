@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { listLocalCompanies, listLocalLinksForUser, normalizeLocalRole } from "@/lib/auth/localStore";
 
 export type Role = "admin" | "company" | "user";
 
@@ -8,29 +9,21 @@ type AuthUser = {
 };
 
 export async function resolveDefectRole(authUser: AuthUser | null | undefined, clientSlug?: string | null): Promise<Role> {
-  // Importa prisma só em ambiente Node/server
-  let prisma: typeof import("@/lib/prismaClient").prisma | undefined;
-  if (typeof process === "object" && process.env.NEXT_RUNTIME !== "edge") {
-    prisma = require("@/lib/prismaClient").prisma;
-  }
   if (!authUser) return "user";
 
   if (authUser.isGlobalAdmin) return "admin";
 
-  let links: any[] = [];
-  if (prisma) {
-    links = await prisma.userCompany.findMany({
-      where: { user_id: authUser.id },
-      include: { company: true },
-    });
-  }
-  type Link = { role?: string | null; company?: { slug?: string | null } | null };
+  const [links, companies] = await Promise.all([
+    listLocalLinksForUser(authUser.id),
+    listLocalCompanies(),
+  ]);
 
   if (!links.length) return "user";
 
-  const hasAdminLink = links.some((link: Link) => (link.role ?? "").toLowerCase() === "admin");
+  const companyById = new Map(companies.map((company) => [company.id, company]));
+  const hasAdminLink = links.some((link) => normalizeLocalRole(link.role ?? null) === "company_admin");
   if (clientSlug) {
-    const hasClient = links.some((link: Link) => link.company?.slug === clientSlug);
+    const hasClient = links.some((link) => companyById.get(link.companyId)?.slug === clientSlug);
     if (!hasClient) return "user";
   }
 

@@ -4,7 +4,7 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { hasPermission, getUserRoleFromSession } from "@/lib/permissions";
+import { hasCapability, type Capability } from "@/lib/permissions";
 import { useSystemMetrics } from "@/hooks/useSystemMetrics";
 
 export default function DashboardClient() {
@@ -48,7 +48,8 @@ export default function DashboardClient() {
   }
 
   const safeUser = user as any;
-  const userRole = getUserRoleFromSession({ role: safeUser.role });
+  const capabilities = (Array.isArray(safeUser.capabilities) ? safeUser.capabilities : []) as Capability[];
+  const isGlobalAdmin = safeUser?.isGlobalAdmin === true || safeUser?.globalRole === "global_admin";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -89,7 +90,7 @@ export default function DashboardClient() {
             </div>
 
             {/* System Metrics */}
-            {hasPermission(userRole, 'view_admin') && (
+            {isGlobalAdmin && (
               <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
                 <div className="px-4 py-5 sm:p-6">
                   <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
@@ -253,7 +254,7 @@ export default function DashboardClient() {
               </div>
 
               {/* Admin Panel - Only for admin+ */}
-              {hasPermission(userRole, 'view_admin') && (
+              {isGlobalAdmin && (
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                   <div className="p-5">
                     <div className="flex items-center">
@@ -288,7 +289,7 @@ export default function DashboardClient() {
               )}
 
               {/* Companies - Only for admin+ */}
-              {hasPermission(userRole, 'manage_companies') && (
+              {isGlobalAdmin || hasCapability(capabilities, "company:write") ? (
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                   <div className="p-5">
                     <div className="flex items-center">
@@ -319,7 +320,7 @@ export default function DashboardClient() {
                     </div>
                   </div>
                 </div>
-              )}
+              ) : null}
 
               {/* Profile - For all users */}
               <div className="bg-white overflow-hidden shadow rounded-lg">

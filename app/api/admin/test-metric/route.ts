@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
-import { prisma } from "@/lib/prismaClient";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { apiFail, apiOk } from "@/lib/apiResponse";
+import { listLocalCompanies } from "@/lib/auth/localStore";
 
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
@@ -14,10 +14,10 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const companies = await prisma.company.findMany({ orderBy: { name: "asc" } });
+  const companies = await listLocalCompanies();
   const mapped = companies.map((company) => ({
     id: company.id,
-    name: company.name,
+    name: company.name ?? company.company_name ?? "Empresa",
     slug: company.slug,
     status: "ativo",
     releases: null,

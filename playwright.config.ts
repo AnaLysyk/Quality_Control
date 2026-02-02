@@ -25,6 +25,7 @@ const envOverrides = {
   PLAYWRIGHT_MOCK: "true",
 };
 Object.assign(process.env, envOverrides);
+const useExistingServer = process.env.PLAYWRIGHT_USE_EXISTING === "1" || process.env.PLAYWRIGHT_USE_EXISTING === "true";
 export default defineConfig({
   testDir: "./tests-e2e",
   globalSetup: "./tests-e2e/global-setup.ts",
@@ -38,17 +39,20 @@ export default defineConfig({
     trace: "on-first-retry",
     headless: true,
   },
-  webServer: {
-    command: "npm run build && npm run start",
-    url: baseURL,
-    reuseExistingServer: true,
-    timeout: 300 * 1000,
-    env: {
-      ...dotenvEnv,
-      PLAYWRIGHT_MOCK: "true",
-      NODE_ENV: "test",
-    },
-  },
+  webServer: useExistingServer
+    ? undefined
+    : {
+        command: "npm run dev",
+        url: baseURL,
+        reuseExistingServer: true,
+        timeout: 300 * 1000,
+        env: {
+          ...dotenvEnv,
+          PLAYWRIGHT_MOCK: "true",
+          E2E_USE_JSON: "1",
+          NODE_ENV: "test",
+        },
+      },
   projects: [
     {
       name: "chromium",

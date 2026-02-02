@@ -83,3 +83,7 @@ blob-report/
 # internal docs not meant for public repo
 docs/security/
 docs/adr/
+
+# local auth data (keep sample file tracked)
+data/local-auth-store.json
+data/release-manual-store.json

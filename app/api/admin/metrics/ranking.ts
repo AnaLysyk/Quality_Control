@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { listClients } from "@/data/clientsRepository";
+import { getAccessContext } from "@/lib/auth/session";
 
 const MOCK_CLIENTS = [
   { slug: "griaule", name: "Griaule" },
@@ -20,8 +21,10 @@ async function fetchSummary(slug: string) {
 
 export async function GET(req: Request) {
   // RBAC: only admin
-  const user = (req as any).user || (globalThis as any).user;
-  if (!user || user.role !== "admin") {
+  const access = await getAccessContext(req);
+  const role = typeof access?.role === "string" ? access.role.toLowerCase() : "";
+  const isAdmin = Boolean(access?.isGlobalAdmin || role === "admin");
+  if (!isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

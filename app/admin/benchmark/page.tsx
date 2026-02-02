@@ -12,7 +12,12 @@ export default function AdminBenchmarkPage() {
   const [period, setPeriod] = useState("30d");
 
   useEffect(() => {
-    if (userLoading || !user || user.role !== "admin") return;
+    const isAdmin = Boolean(
+      user?.isGlobalAdmin ||
+        user?.globalRole === "global_admin" ||
+        (typeof user?.role === "string" && user.role.toLowerCase() === "admin"),
+    );
+    if (userLoading || !user || !isAdmin) return;
     let canceled = false;
     setLoading(true);
     fetch(`/api/admin/benchmark?period=${period}`)
@@ -35,7 +40,12 @@ export default function AdminBenchmarkPage() {
   if (userLoading || !user) {
     return <div className="p-8 text-center text-lg">Carregando...</div>;
   }
-  if (user.role !== "admin") {
+  const isAdmin = Boolean(
+    user?.isGlobalAdmin ||
+      user?.globalRole === "global_admin" ||
+      (typeof user?.role === "string" && user.role.toLowerCase() === "admin"),
+  );
+  if (!isAdmin) {
     return <div className="p-8 text-center text-lg">Acesso restrito ao admin.</div>;
   }
 

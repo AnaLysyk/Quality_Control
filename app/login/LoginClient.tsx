@@ -72,7 +72,7 @@ export default function LoginClient() {
           <div className="space-y-4">
             <div>
               <label htmlFor="login" className="block text-sm font-medium text-[#011848] mb-1">
-                Login
+                Usuário ou email
               </label>
               <input
                 id="login"
@@ -80,7 +80,7 @@ export default function LoginClient() {
                 type="text"
                 required
                 className="w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white/80"
-                placeholder="usuario"
+                placeholder="usuario ou email"
                 autoComplete="username"
                 value={login}
                 onChange={(e) => setLogin(e.target.value)}

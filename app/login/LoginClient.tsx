@@ -11,7 +11,7 @@ export default function LoginClient() {
   const router = useRouter();
   const { refreshUser } = useAuthUser();
 
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +26,7 @@ export default function LoginClient() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ login, password }),
       });
 
       if (res.ok) {
@@ -71,18 +71,19 @@ export default function LoginClient() {
         >
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#011848] mb-1">
-                Email
+              <label htmlFor="login" className="block text-sm font-medium text-[#011848] mb-1">
+                Login
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
+                id="login"
+                name="login"
+                type="text"
                 required
                 className="w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white/80"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="usuario"
+                autoComplete="username"
+                value={login}
+                onChange={(e) => setLogin(e.target.value)}
               />
             </div>
 

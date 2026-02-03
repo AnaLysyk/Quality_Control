@@ -138,19 +138,30 @@ input[type="password"]::-ms-clear {
 html {
   min-height: 100%;
   height: auto;
+  width: 100%;
+  max-width: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 body {
   position: relative;
   isolation: isolate;
   min-height: 100%;
+  width: 100%;
+  max-width: 100%;
   margin: 0;
   background: var(--page-bg);
   color: var(--page-text);
   font-family: var(--font-sans);
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: auto;
+}
+
+#__next {
+  min-height: 100%;
+  width: 100%;
+  max-width: 100%;
 }
 
 body::before {
@@ -174,6 +185,11 @@ img,
 video {
   max-width: 100%;
   height: auto;
+}
+
+/* Evita overflow em layouts flex no zoom */
+:where(.flex, .inline-flex) > * {
+  min-width: 0;
 }
 
 .theme-light body,

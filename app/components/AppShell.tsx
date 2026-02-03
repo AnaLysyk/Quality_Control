@@ -53,7 +53,7 @@ export default function AppShell({ children }: AppShellProps) {
       </div>
 
       <div className="flex flex-col min-h-screen lg:ml-65">
-        <div className="flex-1 min-h-screen overflow-auto">
+        <div className="flex-1 min-h-screen overflow-y-auto overflow-x-hidden">
           <MainWrapper>{children}</MainWrapper>
         </div>
       </div>

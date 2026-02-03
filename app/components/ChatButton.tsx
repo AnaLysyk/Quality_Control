@@ -63,13 +63,13 @@ export default function ChatButton() {
       <div className="fixed bottom-6 right-6 z-50">
         <div className="flex items-end">
           {open && (
-            <div className="mr-3 w-[22rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_20px_45px_rgba(15,23,42,0.2)]">
+            <div className="mr-3 w-88 max-w-[calc(100vw-2rem)] rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_20px_45px_rgba(15,23,42,0.2)]">
               <div className="flex items-center justify-between gap-3 border-b border-(--tc-border,#e5e7eb) px-4 py-3">
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Assistente</p>
                   <p className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Chat de IA</p>
                 </div>
-                <button type="button" onClick={() => setOpen(false)} className="rounded-full p-1">
+                <button type="button" onClick={() => setOpen(false)} aria-label="Fechar chat" title="Fechar chat" className="rounded-full p-1">
                   <FiX />
                 </button>
               </div>
@@ -98,6 +98,8 @@ export default function ChatButton() {
                     type="button"
                     onClick={sendMessage}
                     disabled={sending}
+                    aria-label="Enviar mensagem"
+                    title="Enviar mensagem"
                     className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
                   >
                     <FiSend />

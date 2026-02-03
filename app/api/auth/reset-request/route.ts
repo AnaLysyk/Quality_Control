@@ -28,6 +28,8 @@ export async function POST(req: Request) {
     (links.length > 0 ? companyById.get(links[0].companyId) ?? null : null);
 
   let requestRecord = null;
+  const preferredCompanyName =
+    preferredCompany?.name ?? preferredCompany?.company_name ?? undefined;
   try {
     requestRecord = addRequest(
       {
@@ -35,7 +37,7 @@ export async function POST(req: Request) {
         name: user.name,
         email: user.email,
         companyId: preferredCompany?.id,
-        companyName: preferredCompany?.name ?? preferredCompany?.company_name,
+        companyName: preferredCompanyName,
       },
       "PASSWORD_RESET",
       { reason: "forgot_password" },

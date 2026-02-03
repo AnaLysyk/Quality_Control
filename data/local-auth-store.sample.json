@@ -1,172 +1,185 @@
 {
-    "users":  [
-                  {
-                      "id":  "usr_company_griaule",
-                      "name":  "Empresa Griaule",
-                      "email":  "griaule",
-                      "user":  "griaule",
-                      "password_hash":  "25d47285ed99bf5cdc04b4b7288323219fcb20cfba498a7a9cc7ff9d96a66121",
-                      "globalRole":  null,
-                      "status":  "active",
-                      "active":  true,
-                      "default_company_slug":  "griaule",
-                      "createdAt":  "2026-02-03T00:00:00.000Z"
-                  },
-                  {
-                      "id":  "usr_anapaula",
-                      "name":  "Ana Paula",
-                      "email":  "anapaula",
-                      "user":  "anapaula",
-                      "password_hash":  "e82827b00b2ca8620beb37f879778c082b292a52270390cff35b6fe3157f4e8b",
-                      "globalRole":  null,
-                      "status":  "active",
-                      "active":  true,
-                      "default_company_slug":  "griaule",
-                      "createdAt":  "2026-02-03T00:00:00.000Z"
-                  },
-                  {
-                      "id":  "usr_admin_ana1",
-                      "name":  "Ana 1",
-                      "email":  "ana1",
-                      "user":  "ana1",
-                      "password_hash":  "d63b28a0d327f7965cdeb951ece1d516dc98e8ba9d570c6517e1e4555de5ee93",
-                      "globalRole":  "global_admin",
-                      "status":  "active",
-                      "active":  true,
-                      "default_company_slug":  "griaule",
-                      "createdAt":  "2026-02-03T00:00:00.000Z"
-                  },
-                  {
-                      "id":  "usr_admin_griaule_test",
-                      "name":  "Admin Griaule",
-                      "email":  "admin@griaule.test",
-                      "user":  "admin@griaule.test",
-                      "password_hash":  "b6c2a07c100217bd484cdd0940fb19c05e6ac2c425f32c35ac88b19f78be92d4",
-                      "globalRole":  "global_admin",
-                      "status":  "active",
-                      "active":  true,
-                      "default_company_slug":  "griaule",
-                      "createdAt":  "2026-02-03T00:00:00.000Z"
-                  },
-                  {
-                      "id":  "usr_user_griaule_test",
-                      "name":  "Usuario Griaule",
-                      "email":  "user@griaule.test",
-                      "user":  "user@griaule.test",
-                      "password_hash":  "b6c2a07c100217bd484cdd0940fb19c05e6ac2c425f32c35ac88b19f78be92d4",
-                      "globalRole":  null,
-                      "status":  "active",
-                      "active":  true,
-                      "default_company_slug":  "griaule",
-                      "createdAt":  "2026-02-03T00:00:00.000Z"
-                  },
-                  {
-                      "id":  "usr_company_griaule_test",
-                      "name":  "Company Griaule",
-                      "email":  "company@griaule.test",
-                      "user":  "company@griaule.test",
-                      "password_hash":  "b6c2a07c100217bd484cdd0940fb19c05e6ac2c425f32c35ac88b19f78be92d4",
-                      "globalRole":  null,
-                      "status":  "active",
-                      "active":  true,
-                      "default_company_slug":  "griaule",
-                      "createdAt":  "2026-02-03T00:00:00.000Z"
-                  },
-                  {
-                      "id":  "usr_user_nocompany_test",
-                      "name":  "Usuario Sem Empresa",
-                      "email":  "nocompany@griaule.test",
-                      "user":  "nocompany@griaule.test",
-                      "password_hash":  "b6c2a07c100217bd484cdd0940fb19c05e6ac2c425f32c35ac88b19f78be92d4",
-                      "globalRole":  null,
-                      "status":  "active",
-                      "active":  true,
-                      "default_company_slug":  null,
-                      "createdAt":  "2026-02-03T00:00:00.000Z"
-                  }
-              ],
-    "companies":  [
-                      {
-                          "id":  "griaule",
-                          "name":  "Griaule",
-                          "company_name":  "Griaule",
-                          "slug":  "griaule",
-                          "integration_mode":  "manual",
-                          "integration_type":  "manual",
-                          "status":  "active",
-                          "active":  true,
-                          "createdAt":  "2026-02-03T00:00:00.000Z",
-                          "created_by":  "seed"
-                      },
-                      {
-                          "id":  "testing-company",
-                          "name":  "Testing Company",
-                          "company_name":  "Testing Company",
-                          "slug":  "testing-company",
-                          "integration_mode":  "manual",
-                          "integration_type":  "manual",
-                          "status":  "active",
-                          "active":  true,
-                          "createdAt":  "2026-02-03T00:00:00.000Z",
-                          "created_by":  "seed"
-                      }
-                  ],
-    "memberships":  [
-                        {
-                            "id":  "mbr_company_griaule",
-                            "userId":  "usr_company_griaule",
-                            "companyId":  "griaule",
-                            "role":  "company_admin",
-                            "createdAt":  "2026-02-03T00:00:00.000Z"
-                        },
-                        {
-                            "id":  "mbr_anapaula_griaule",
-                            "userId":  "usr_anapaula",
-                            "companyId":  "griaule",
-                            "role":  "user",
-                            "createdAt":  "2026-02-03T00:00:00.000Z"
-                        },
-                        {
-                            "id":  "mbr_admin_ana1_griaule",
-                            "userId":  "usr_admin_ana1",
-                            "companyId":  "griaule",
-                            "role":  "company_admin",
-                            "createdAt":  "2026-02-03T00:00:00.000Z"
-                        },
-                        {
-                            "id":  "mbr_admin_griaule_test",
-                            "userId":  "usr_admin_griaule_test",
-                            "companyId":  "griaule",
-                            "role":  "company_admin",
-                            "createdAt":  "2026-02-03T00:00:00.000Z"
-                        },
-                        {
-                            "id":  "mbr_user_griaule_test",
-                            "userId":  "usr_user_griaule_test",
-                            "companyId":  "griaule",
-                            "role":  "user",
-                            "createdAt":  "2026-02-03T00:00:00.000Z"
-                        },
-                        {
-                            "id":  "mbr_usr_user_griaule_test_testing-company",
-                            "userId":  "usr_user_griaule_test",
-                            "companyId":  "testing-company",
-                            "role":  "user",
-                            "createdAt":  "2026-02-03T00:00:00.000Z"
-                        },
-                        {
-                            "id":  "mbr_usr_company_griaule_test_griaule",
-                            "userId":  "usr_company_griaule_test",
-                            "companyId":  "griaule",
-                            "role":  "company_admin",
-                            "createdAt":  "2026-02-03T00:00:00.000Z"
-                        },
-                        {
-                            "id":  "mbr_usr_admin_griaule_test_testing-company",
-                            "userId":  "usr_admin_griaule_test",
-                            "companyId":  "testing-company",
-                            "role":  "company_admin",
-                            "createdAt":  "2026-02-03T00:00:00.000Z"
-                        }
-                    ]
+  "users": [
+    {
+      "id": "usr_company_griaule",
+      "name": "Empresa Griaule",
+      "email": "griaule",
+      "user": "griaule",
+      "password_hash": "25d47285ed99bf5cdc04b4b7288323219fcb20cfba498a7a9cc7ff9d96a66121",
+      "globalRole": null,
+      "status": "active",
+      "active": true,
+      "default_company_slug": "griaule",
+      "createdAt": "2026-02-03T00:00:00.000Z"
+    },
+    {
+      "id": "usr_anapaula",
+      "name": "Ana Paula",
+      "email": "anapaula",
+      "user": "anapaula",
+      "password_hash": "e82827b00b2ca8620beb37f879778c082b292a52270390cff35b6fe3157f4e8b",
+      "globalRole": null,
+      "status": "active",
+      "active": true,
+      "default_company_slug": "griaule",
+      "createdAt": "2026-02-03T00:00:00.000Z"
+    },
+    {
+      "id": "usr_admin_ana1",
+      "name": "Ana 1",
+      "email": "ana1",
+      "user": "ana1",
+      "password_hash": "d63b28a0d327f7965cdeb951ece1d516dc98e8ba9d570c6517e1e4555de5ee93",
+      "globalRole": "global_admin",
+      "status": "active",
+      "active": true,
+      "default_company_slug": "griaule",
+      "createdAt": "2026-02-03T00:00:00.000Z"
+    },
+    {
+      "id": "usr_admin_griaule_test",
+      "name": "Admin Griaule",
+      "email": "admin@griaule.test",
+      "user": "admin@griaule.test",
+      "password_hash": "b6c2a07c100217bd484cdd0940fb19c05e6ac2c425f32c35ac88b19f78be92d4",
+      "globalRole": "global_admin",
+      "status": "active",
+      "active": true,
+      "default_company_slug": "griaule",
+      "createdAt": "2026-02-03T00:00:00.000Z"
+    },
+    {
+      "id": "usr_user_griaule_test",
+      "name": "Usuario Griaule",
+      "email": "user@griaule.test",
+      "user": "user@griaule.test",
+      "password_hash": "b6c2a07c100217bd484cdd0940fb19c05e6ac2c425f32c35ac88b19f78be92d4",
+      "globalRole": null,
+      "status": "active",
+      "active": true,
+      "default_company_slug": "griaule",
+      "createdAt": "2026-02-03T00:00:00.000Z"
+    },
+    {
+      "id": "usr_company_griaule_test",
+      "name": "Company Griaule",
+      "email": "company@griaule.test",
+      "user": "company@griaule.test",
+      "password_hash": "b6c2a07c100217bd484cdd0940fb19c05e6ac2c425f32c35ac88b19f78be92d4",
+      "globalRole": null,
+      "status": "active",
+      "active": true,
+      "default_company_slug": "griaule",
+      "createdAt": "2026-02-03T00:00:00.000Z"
+    },
+    {
+      "id": "usr_user_nocompany_test",
+      "name": "Usuario Sem Empresa",
+      "email": "nocompany@griaule.test",
+      "user": "nocompany@griaule.test",
+      "password_hash": "b6c2a07c100217bd484cdd0940fb19c05e6ac2c425f32c35ac88b19f78be92d4",
+      "globalRole": null,
+      "status": "active",
+      "active": true,
+      "default_company_slug": null,
+      "createdAt": "2026-02-03T00:00:00.000Z"
+    },
+    {
+      "id": "usr_dev",
+      "name": "Dev",
+      "email": "dev",
+      "user": "dev",
+      "password_hash": "ef260e9aa3c673af240d17a2660480361a8e081d1ffeca2a5ed0e3219fc18567",
+      "globalRole": "global_admin",
+      "status": "active",
+      "active": true,
+      "is_global_admin": true,
+      "default_company_slug": "griaule",
+      "createdAt": "2026-02-03T00:00:00Z"
+    }
+  ],
+  "companies": [
+    {
+      "id": "griaule",
+      "name": "Griaule",
+      "company_name": "Griaule",
+      "slug": "griaule",
+      "integration_mode": "manual",
+      "integration_type": "manual",
+      "status": "active",
+      "active": true,
+      "createdAt": "2026-02-03T00:00:00.000Z",
+      "created_by": "seed"
+    },
+    {
+      "id": "testing-company",
+      "name": "Testing Company",
+      "company_name": "Testing Company",
+      "slug": "testing-company",
+      "integration_mode": "manual",
+      "integration_type": "manual",
+      "status": "active",
+      "active": true,
+      "createdAt": "2026-02-03T00:00:00.000Z",
+      "created_by": "seed"
+    }
+  ],
+  "memberships": [
+    {
+      "id": "mbr_company_griaule",
+      "userId": "usr_company_griaule",
+      "companyId": "griaule",
+      "role": "company_admin",
+      "createdAt": "2026-02-03T00:00:00.000Z"
+    },
+    {
+      "id": "mbr_anapaula_griaule",
+      "userId": "usr_anapaula",
+      "companyId": "griaule",
+      "role": "user",
+      "createdAt": "2026-02-03T00:00:00.000Z"
+    },
+    {
+      "id": "mbr_admin_ana1_griaule",
+      "userId": "usr_admin_ana1",
+      "companyId": "griaule",
+      "role": "company_admin",
+      "createdAt": "2026-02-03T00:00:00.000Z"
+    },
+    {
+      "id": "mbr_admin_griaule_test",
+      "userId": "usr_admin_griaule_test",
+      "companyId": "griaule",
+      "role": "company_admin",
+      "createdAt": "2026-02-03T00:00:00.000Z"
+    },
+    {
+      "id": "mbr_user_griaule_test",
+      "userId": "usr_user_griaule_test",
+      "companyId": "griaule",
+      "role": "user",
+      "createdAt": "2026-02-03T00:00:00.000Z"
+    },
+    {
+      "id": "mbr_usr_user_griaule_test_testing-company",
+      "userId": "usr_user_griaule_test",
+      "companyId": "testing-company",
+      "role": "user",
+      "createdAt": "2026-02-03T00:00:00.000Z"
+    },
+    {
+      "id": "mbr_usr_company_griaule_test_griaule",
+      "userId": "usr_company_griaule_test",
+      "companyId": "griaule",
+      "role": "company_admin",
+      "createdAt": "2026-02-03T00:00:00.000Z"
+    },
+    {
+      "id": "mbr_usr_admin_griaule_test_testing-company",
+      "userId": "usr_admin_griaule_test",
+      "companyId": "testing-company",
+      "role": "company_admin",
+      "createdAt": "2026-02-03T00:00:00.000Z"
+    }
+  ]
 }

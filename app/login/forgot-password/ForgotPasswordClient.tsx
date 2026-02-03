@@ -42,9 +42,7 @@ export default function ForgotPasswordClient() {
       if (!response.ok) {
         throw new Error(data.error || "Erro ao solicitar reset");
       }
-
-      setSuccess("Se o e-mail existir em nossa base, enviamos instruções para redefinir sua senha. Verifique sua caixa de entrada (e spam).");
-
+      setSuccess("Solicita??o enviada. Um administrador vai revisar o pedido e, se aprovado, voc? receber? as instru??es por e-mail.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro desconhecido");
     } finally {

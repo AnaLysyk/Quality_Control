@@ -274,11 +274,12 @@ function AdminClientsPage() {
         data.integrationMode === "qase"
           ? (data.qaseProjectCode || normalizedCodes?.[0])
           : undefined;
+      const address = [data.zip, data.address ?? data.description].filter(Boolean).join(" | ");
       const payload = {
         name: data.name,
         company_name: data.name,
         tax_id: data.taxId,
-        address: [data.zip, data.address ?? data.description].filter(Boolean).join(" | "),
+        address: address || undefined,
         phone: data.phone,
         website: data.website,
         logo_url: data.logoUrl,

@@ -6,6 +6,7 @@ import { FiMenu } from "react-icons/fi";
 import MainWrapper from "./MainWrapper";
 import SidebarVisibility from "./SidebarVisibility";
 import ProfileButton from "./ProfileButton";
+import NotesButton from "./NotesButton";
 
 interface AppShellProps {
   children: ReactNode;
@@ -42,7 +43,8 @@ export default function AppShell({ children }: AppShellProps) {
         <FiMenu size={20} />
       </button>
 
-      <div className="fixed top-4 right-4 z-40">
+      <div className="fixed top-4 right-4 z-40 flex items-center gap-2">
+        <NotesButton />
         <ProfileButton />
       </div>
 

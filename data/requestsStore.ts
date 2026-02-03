@@ -8,7 +8,7 @@ export type RequestUser = {
   companyName?: string;
 };
 
-export type RequestType = "EMAIL_CHANGE" | "COMPANY_CHANGE";
+export type RequestType = "EMAIL_CHANGE" | "COMPANY_CHANGE" | "PASSWORD_RESET";
 export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export type RequestRecord = {
@@ -67,6 +67,10 @@ export function listAllRequests(filters?: {
     results.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
   return results;
+}
+
+export function getRequestById(id: string) {
+  return REQUESTS.find((req) => req.id === id) ?? null;
 }
 
 export function addRequest(user: RequestUser, type: RequestType, payload: Record<string, unknown>) {

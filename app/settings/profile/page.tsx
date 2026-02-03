@@ -40,7 +40,7 @@ function normalizeCompanies(payload: unknown): LinkedCompany[] {
 }
 
 export default function ProfilePage() {
-  const { user, loading } = useAuthUser();
+  const { user, loading, refreshUser } = useAuthUser();
   const [companies, setCompanies] = useState<LinkedCompany[]>([]);
   const [companiesError, setCompaniesError] = useState<string | null>(null);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -49,9 +49,16 @@ export default function ProfilePage() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profileEmail, setProfileEmail] = useState("");
+  const [profilePhone, setProfilePhone] = useState("");
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   const name = (typeof asRecord(user)?.name === "string" ? String(asRecord(user)?.name) : "") || "Usuário";
   const email = (typeof asRecord(user)?.email === "string" ? String(asRecord(user)?.email) : "") || "";
+  const phone = (typeof asRecord(user)?.phone === "string" ? String(asRecord(user)?.phone) : "") || "";
   const role = (typeof asRecord(user)?.role === "string" ? String(asRecord(user)?.role) : "") || "";
   const currentClientSlug = (typeof asRecord(user)?.clientSlug === "string" ? String(asRecord(user)?.clientSlug) : null) ?? null;
 
@@ -87,6 +94,54 @@ export default function ProfilePage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    setProfileName(name || "");
+    setProfileEmail(email || "");
+    setProfilePhone(phone || "");
+  }, [name, email, phone]);
+
+  async function handleProfileSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setProfileError(null);
+    setProfileSuccess(null);
+
+    const nextName = profileName.trim();
+    const nextEmail = profileEmail.trim();
+    const nextPhone = profilePhone.trim();
+
+    if (!nextName || !nextEmail) {
+      setProfileError("Informe nome e email");
+      return;
+    }
+
+    setProfileLoading(true);
+    try {
+      const res = await fetch("/api/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: nextName,
+          email: nextEmail,
+          phone: nextPhone,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const message = typeof json?.error === "string" ? json.error : "NÃ£o foi possÃ­vel atualizar os dados.";
+        setProfileError(message);
+        return;
+      }
+      await refreshUser();
+      setProfileSuccess("Dados atualizados com sucesso.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "NÃ£o foi possÃ­vel atualizar os dados.";
+      setProfileError(message);
+    } finally {
+      setProfileLoading(false);
+    }
+  }
 
   async function handlePasswordSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -148,33 +203,75 @@ export default function ProfilePage() {
         </div>
 
         <div className="rounded-2xl bg-(--tc-surface) shadow-[0_10px_26px_rgba(0,0,0,0.06)] border border-(--tc-border) p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <p className="text-sm text-(--tc-text-muted)">Nome</p>
-              <p className="text-base font-semibold text-(--tc-text)">{loading ? "Carregando..." : name}</p>
+          <form className="space-y-4" onSubmit={handleProfileSubmit}>
+            <div>
+              <h2 className="text-lg font-semibold text-(--tc-text)">Dados do perfil</h2>
+              <p className="text-sm text-(--tc-text-secondary)">Atualize nome, email e telefone.</p>
             </div>
-            <div className="space-y-1">
-              <p className="text-sm text-(--tc-text-muted)">Email</p>
-              <p className="text-base font-semibold text-(--tc-text)">{loading ? "Carregando..." : email || "-"}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className="text-sm text-(--tc-text) flex flex-col gap-1">
+                Nome
+                <input
+                  className="w-full rounded-lg border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
+                  disabled={profileLoading || loading}
+                  required
+                />
+              </label>
+              <label className="text-sm text-(--tc-text) flex flex-col gap-1">
+                Email
+                <input
+                  type="email"
+                  className="w-full rounded-lg border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                  value={profileEmail}
+                  onChange={(e) => setProfileEmail(e.target.value)}
+                  disabled={profileLoading || loading}
+                  required
+                />
+              </label>
+              <label className="text-sm text-(--tc-text) flex flex-col gap-1">
+                Telefone
+                <input
+                  className="w-full rounded-lg border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                  value={profilePhone}
+                  onChange={(e) => setProfilePhone(e.target.value)}
+                  disabled={profileLoading || loading}
+                  placeholder="+55 11 99999-9999"
+                />
+              </label>
+              <div className="space-y-1">
+                <p className="text-sm text-(--tc-text-muted)">Role</p>
+                <p className="text-base font-semibold text-(--tc-text)">{loading ? "Carregando..." : role || "-"}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-(--tc-text-muted)">Empresa atual</p>
+                {currentClientSlug ? (
+                  <Link
+                    href={`/empresas/${encodeURIComponent(currentClientSlug)}/home`}
+                    className="text-base font-semibold text-(--tc-accent) hover:brightness-110 transition"
+                  >
+                    {currentClientSlug}
+                  </Link>
+                ) : (
+                  <p className="text-base font-semibold text-(--tc-text)">-</p>
+                )}
+              </div>
             </div>
-            <div className="space-y-1">
-              <p className="text-sm text-(--tc-text-muted)">Role</p>
-              <p className="text-base font-semibold text-(--tc-text)">{loading ? "Carregando..." : role || "-"}</p>
+
+            {profileError && <p className="text-sm text-red-600">{profileError}</p>}
+            {profileSuccess && <p className="text-sm text-green-600">{profileSuccess}</p>}
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="rounded bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                disabled={profileLoading || loading}
+              >
+                {profileLoading ? "Salvando..." : "Salvar dados"}
+              </button>
             </div>
-            <div className="space-y-1">
-              <p className="text-sm text-(--tc-text-muted)">Empresa atual</p>
-              {currentClientSlug ? (
-                <Link
-                  href={`/empresas/${encodeURIComponent(currentClientSlug)}/home`}
-                  className="text-base font-semibold text-(--tc-accent) hover:brightness-110 transition"
-                >
-                  {currentClientSlug}
-                </Link>
-              ) : (
-                <p className="text-base font-semibold text-(--tc-text)">-</p>
-              )}
-            </div>
-          </div>
+          </form>
         </div>
 
         <div className="rounded-2xl bg-(--tc-surface) shadow-[0_10px_26px_rgba(0,0,0,0.06)] border border-(--tc-border) p-6 space-y-4">

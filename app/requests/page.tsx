@@ -7,7 +7,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 
 type RequestRecord = {
   id: string;
-  type: "EMAIL_CHANGE" | "COMPANY_CHANGE";
+  type: "EMAIL_CHANGE" | "COMPANY_CHANGE" | "PASSWORD_RESET";
   status: "PENDING" | "APPROVED" | "REJECTED";
   payload: Record<string, unknown>;
   createdAt: string;
@@ -190,7 +190,11 @@ export default function RequestsPage() {
               >
                 <div>
                   <p className="font-semibold text-(--tc-text-primary,#0b1a3c)">
-                    {req.type === "EMAIL_CHANGE" ? "Troca de email" : "Troca de empresa"}
+                    {req.type === "EMAIL_CHANGE"
+                      ? "Troca de email"
+                      : req.type === "COMPANY_CHANGE"
+                        ? "Troca de empresa"
+                        : "Reset de senha"}
                   </p>
                   <p className="text-sm text-(--tc-text-muted,#6b7280)">Criado em {new Date(req.createdAt).toLocaleString()}</p>
                   {req.reviewNote && <p className="text-sm text-(--tc-text-muted,#6b7280)">Nota: {req.reviewNote}</p>}

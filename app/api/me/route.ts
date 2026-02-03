@@ -3,10 +3,12 @@ import { NextResponse } from "next/server";
 import type { AuthCompany } from "@/../packages/contracts/src/auth";
 import { getAccessContext } from "@/lib/auth/session";
 import {
+  findLocalUserByEmailOrId,
   getLocalUserById,
   listLocalCompanies,
   listLocalLinksForUser,
   normalizeLocalRole,
+  updateLocalUser,
 } from "@/lib/auth/localStore";
 
 function errorResponse(status: number, code: string, message: string) {
@@ -64,6 +66,7 @@ export async function GET(req: Request) {
       id: user.id,
       email: user.email,
       name: user.name,
+      phone: user.phone ?? null,
       role: access.role ?? null,
       globalRole: access.globalRole ?? null,
       companyRole: access.companyRole ?? null,
@@ -78,6 +81,83 @@ export async function GET(req: Request) {
   });
 }
 
-export async function PATCH() {
-  return NextResponse.json({ error: "Not implemented" }, { status: 405 });
+function sanitizeText(value: unknown, max = 255): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
+}
+
+function normalizeEmail(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) return null;
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmed)) return null;
+  return trimmed;
+}
+
+export async function PATCH(req: Request) {
+  const access = await getAccessContext(req);
+  if (!access) {
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+  }
+
+  const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+  const hasName = typeof body?.name === "string";
+  const hasEmail = typeof body?.email === "string";
+  const hasPhone = typeof body?.phone === "string";
+
+  const name = hasName ? sanitizeText(body?.name, 120) : null;
+  const email = hasEmail ? normalizeEmail(body?.email) : null;
+  const phone = (() => {
+    if (!hasPhone) return null;
+    const trimmed = String(body?.phone ?? "").trim();
+    return trimmed ? trimmed : null;
+  })();
+
+  if (hasName && !name) {
+    return NextResponse.json({ error: "Nome invalido" }, { status: 400 });
+  }
+  if (hasEmail && !email) {
+    return NextResponse.json({ error: "E-mail invalido" }, { status: 400 });
+  }
+
+  if (!name && !email && !hasPhone) {
+    return NextResponse.json({ error: "Nenhuma alteracao informada" }, { status: 400 });
+  }
+
+  const user = await getLocalUserById(access.userId);
+  if (!user) {
+    return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+  }
+
+  if (email && email !== user.email) {
+    const existing = await findLocalUserByEmailOrId(email);
+    if (existing && existing.id !== user.id) {
+      return NextResponse.json({ error: "E-mail ja em uso" }, { status: 409 });
+    }
+  }
+
+  const updated = await updateLocalUser(user.id, {
+    ...(name ? { name } : {}),
+    ...(email ? { email } : {}),
+    ...(hasPhone ? { phone } : {}),
+  });
+
+  if (!updated) {
+    return NextResponse.json({ error: "Nao foi possivel atualizar" }, { status: 500 });
+  }
+
+  return NextResponse.json(
+    {
+      ok: true,
+      user: {
+        id: updated.id,
+        email: updated.email,
+        name: updated.name,
+        phone: updated.phone ?? null,
+      },
+    },
+    { status: 200 },
+  );
 }

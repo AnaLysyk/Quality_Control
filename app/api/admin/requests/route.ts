@@ -7,7 +7,7 @@ function isRequestStatus(value: string | null): value is RequestStatus {
 }
 
 function isRequestType(value: string | null): value is RequestType {
-  return value === "EMAIL_CHANGE" || value === "COMPANY_CHANGE";
+  return value === "EMAIL_CHANGE" || value === "COMPANY_CHANGE" || value === "PASSWORD_RESET";
 }
 
 function isSort(value: string | null): value is "createdAt_desc" | "createdAt_asc" {

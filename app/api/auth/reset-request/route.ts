@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { randomUUID } from "crypto";
-import { getRedis } from "@/lib/redis";
-import { emailService } from "@/lib/email";
-import { findLocalUserByEmailOrId } from "@/lib/auth/localStore";
+import { addRequest } from "@/data/requestsStore";
+import { findLocalUserByEmailOrId, listLocalCompanies, listLocalLinksForUser } from "@/lib/auth/localStore";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -17,13 +15,34 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const token = randomUUID();
-  const redis = getRedis();
-  await redis.set(`reset:${token}`, user.id, { ex: 15 * 60 });
+  const [links, companies] = await Promise.all([
+    listLocalLinksForUser(user.id),
+    listLocalCompanies(),
+  ]);
+  const companyById = new Map(companies.map((company) => [company.id, company]));
+  const preferredCompany =
+    (user.default_company_slug
+      ? companies.find((company) => company.slug === user.default_company_slug)
+      : null) ??
+    (links.length > 0 ? companyById.get(links[0].companyId) ?? null : null);
 
-  const emailSent = await emailService.sendPasswordResetEmail(email, token);
-  if (!emailSent) {
-    console.error("Failed to send reset email to:", email);
+  try {
+    addRequest(
+      {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        companyId: preferredCompany?.id,
+        companyName: preferredCompany?.name ?? preferredCompany?.company_name,
+      },
+      "PASSWORD_RESET",
+      { reason: "forgot_password" },
+    );
+  } catch (err) {
+    const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
+    if (code !== "DUPLICATE") {
+      return NextResponse.json({ error: "Erro ao registrar solicitacao" }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ ok: true });

@@ -10,7 +10,7 @@ type RequestRecord = {
   userName: string;
   userEmail: string;
   companyName: string;
-  type: "EMAIL_CHANGE" | "COMPANY_CHANGE";
+  type: "EMAIL_CHANGE" | "COMPANY_CHANGE" | "PASSWORD_RESET";
   status: "PENDING" | "APPROVED" | "REJECTED";
   payload: Record<string, unknown>;
   createdAt: string;
@@ -159,6 +159,7 @@ export default function AdminRequestsPage() {
             <option value="">Tipo (todos)</option>
             <option value="EMAIL_CHANGE">Email</option>
             <option value="COMPANY_CHANGE">Empresa</option>
+            <option value="PASSWORD_RESET">Reset de senha</option>
           </select>
         </div>
 
@@ -191,6 +192,7 @@ export default function AdminRequestsPage() {
               <div className="text-sm text-(--tc-text-secondary,#4b5563)">
                 {req.type === "EMAIL_CHANGE" && <div>Solicitou email: {payloadString(req.payload, "newEmail")}</div>}
                 {req.type === "COMPANY_CHANGE" && <div>Solicitou empresa: {payloadString(req.payload, "newCompanyName")}</div>}
+                {req.type === "PASSWORD_RESET" && <div>Solicitou reset de senha</div>}
                 <div>Criado em {new Date(req.createdAt).toLocaleString()}</div>
                 {req.reviewNote && <div>Nota: {req.reviewNote}</div>}
               </div>

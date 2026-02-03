@@ -16,6 +16,7 @@ export type LocalAuthUser = {
   active?: boolean;
   is_global_admin?: boolean;
   avatar_url?: string | null;
+  phone?: string | null;
   default_company_slug?: string | null;
   createdAt?: string | null;
   lastLoginAt?: string | null;
@@ -346,6 +347,7 @@ export async function updateLocalUser(
     ...(typeof patch.status === "string" ? { status: patch.status } : {}),
     ...(typeof patch.active === "boolean" ? { active: patch.active } : {}),
     ...(typeof patch.is_global_admin === "boolean" ? { is_global_admin: patch.is_global_admin } : {}),
+    ...(patch.phone !== undefined ? { phone: patch.phone ?? null } : {}),
     ...(patch.password_hash ? { password_hash: patch.password_hash } : {}),
   };
   store.users[idx] = next;

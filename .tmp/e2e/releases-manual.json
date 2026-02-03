@@ -1,107 +1,6 @@
 [
   {
-    "id": "93ebe688-55f8-4ee2-a4dc-88a3d25d9dbc",
-    "slug": "run_falha",
-    "name": "run-falha",
-    "app": "SMART",
-    "kind": "run",
-    "environments": [],
-    "clientSlug": "griaule",
-    "source": "MANUAL",
-    "status": "open",
-    "stats": {
-      "pass": 0,
-      "fail": 1,
-      "blocked": 0,
-      "notRun": 0
-    },
-    "closedAt": null,
-    "createdAt": "2026-02-03T14:23:23.201Z",
-    "updatedAt": "2026-02-03T14:23:23.201Z"
-  },
-  {
-    "id": "06be418d-98d1-497e-85e9-b084cc011352",
-    "slug": "defeito_mttr",
-    "name": "Defeito MTTR",
-    "app": "SMART",
-    "kind": "defect",
-    "environments": [],
-    "clientSlug": "griaule",
-    "source": "MANUAL",
-    "status": "open",
-    "stats": {
-      "pass": 0,
-      "fail": 1,
-      "blocked": 0,
-      "notRun": 0
-    },
-    "closedAt": null,
-    "createdAt": "2026-02-03T14:22:06.041Z",
-    "updatedAt": "2026-02-03T14:22:06.041Z"
-  },
-  {
-    "id": "90a5764a-b676-4467-9f4b-1cf74d6e2291",
-    "slug": "defeito_manual_company",
-    "name": "Defeito manual - company",
-    "app": "SMART",
-    "kind": "defect",
-    "environments": [],
-    "clientSlug": "griaule",
-    "source": "MANUAL",
-    "status": "open",
-    "stats": {
-      "pass": 0,
-      "fail": 1,
-      "blocked": 0,
-      "notRun": 0
-    },
-    "closedAt": null,
-    "createdAt": "2026-02-03T14:21:30.552Z",
-    "updatedAt": "2026-02-03T14:21:30.552Z"
-  },
-  {
-    "id": "e28e5bf6-2363-41fc-8fa3-7f78d9c9d8bc",
-    "slug": "defeito_proibido",
-    "name": "Defeito proibido",
-    "app": "SMART",
-    "kind": "defect",
-    "environments": [],
-    "clientSlug": "griaule",
-    "source": "MANUAL",
-    "status": "open",
-    "stats": {
-      "pass": 0,
-      "fail": 1,
-      "blocked": 0,
-      "notRun": 0
-    },
-    "closedAt": null,
-    "createdAt": "2026-02-03T14:21:18.407Z",
-    "updatedAt": "2026-02-03T14:21:18.407Z"
-  },
-  {
-    "id": "cf81422a-a3ca-4e1f-a59f-46d066f3261b",
-    "slug": "defeito_com_run",
-    "name": "Defeito com run",
-    "app": "SMART",
-    "kind": "defect",
-    "environments": [],
-    "clientSlug": "griaule",
-    "source": "MANUAL",
-    "status": "open",
-    "stats": {
-      "pass": 0,
-      "fail": 1,
-      "blocked": 0,
-      "notRun": 0
-    },
-    "closedAt": null,
-    "createdAt": "2026-02-03T14:20:26.845Z",
-    "updatedAt": "2026-02-03T14:20:27.201Z",
-    "runSlug": "run-001"
-  },
-  {
-    "id": "03de1830-7b74-47e9-9a91-f8143f780f37",
+    "id": "55832412-7f5d-4a6c-88f5-8898d912966a",
     "slug": "defeito_encontrado_na_run",
     "name": "Defeito encontrado na run",
     "app": "SMART",
@@ -118,11 +17,11 @@
       "notRun": 0
     },
     "closedAt": null,
-    "createdAt": "2026-02-03T14:20:04.579Z",
-    "updatedAt": "2026-02-03T14:20:04.579Z"
+    "createdAt": "2026-02-03T15:22:54.342Z",
+    "updatedAt": "2026-02-03T15:22:54.342Z"
   },
   {
-    "id": "e7b9313e-cb82-4613-8879-ece0bcff14b4",
+    "id": "004f5dac-f7bb-4406-99bd-54a3a2aaa8c1",
     "slug": "run_e2e_negocio",
     "name": "Run E2E Negocio",
     "app": "SMART",
@@ -137,12 +36,133 @@
       "blocked": 0,
       "notRun": 0
     },
-    "closedAt": "2026-02-03T14:19:51.935Z",
-    "createdAt": "2026-02-03T14:19:51.935Z",
-    "updatedAt": "2026-02-03T14:19:51.935Z"
+    "closedAt": "2026-02-03T15:22:33.543Z",
+    "createdAt": "2026-02-03T15:22:33.543Z",
+    "updatedAt": "2026-02-03T15:22:33.543Z"
   },
   {
-    "id": "d5a8d0ec-3b39-4edd-9f13-dc030294b19e",
+    "id": "0abd77eb-da31-4eef-a49c-15aff1930577",
+    "slug": "erro_no_login",
+    "name": "Erro no login",
+    "app": "SMART",
+    "kind": "defect",
+    "environments": [],
+    "clientSlug": "griaule",
+    "source": "MANUAL",
+    "status": "open",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": null,
+    "createdAt": "2026-02-03T15:02:23.629Z",
+    "updatedAt": "2026-02-03T15:02:23.629Z"
+  },
+  {
+    "id": "675feb00-c3af-4dc2-b48b-9ccae5cc869e",
+    "slug": "run_falha",
+    "name": "run-falha",
+    "app": "SMART",
+    "kind": "run",
+    "environments": [],
+    "clientSlug": "griaule",
+    "source": "MANUAL",
+    "status": "open",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": null,
+    "createdAt": "2026-02-03T14:43:38.437Z",
+    "updatedAt": "2026-02-03T14:43:38.437Z"
+  },
+  {
+    "id": "e40ae372-5ac2-4d25-9695-ce252d77ec1c",
+    "slug": "defeito_mttr",
+    "name": "Defeito MTTR",
+    "app": "SMART",
+    "kind": "defect",
+    "environments": [],
+    "clientSlug": "griaule",
+    "source": "MANUAL",
+    "status": "done",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": "2026-02-03T14:42:17.485Z",
+    "createdAt": "2026-02-03T14:42:13.251Z",
+    "updatedAt": "2026-02-03T14:42:17.485Z"
+  },
+  {
+    "id": "13049e1c-020c-4920-b2fc-bf9976b7b73d",
+    "slug": "defeito_manual_company",
+    "name": "Defeito manual - company",
+    "app": "SMART",
+    "kind": "defect",
+    "environments": [],
+    "clientSlug": "griaule",
+    "source": "MANUAL",
+    "status": "open",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": null,
+    "createdAt": "2026-02-03T14:40:54.698Z",
+    "updatedAt": "2026-02-03T14:40:54.698Z"
+  },
+  {
+    "id": "f1554edc-794f-4554-a20f-c78ab0f9929c",
+    "slug": "defeito_proibido",
+    "name": "Defeito proibido",
+    "app": "SMART",
+    "kind": "defect",
+    "environments": [],
+    "clientSlug": "griaule",
+    "source": "MANUAL",
+    "status": "open",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": null,
+    "createdAt": "2026-02-03T14:40:36.547Z",
+    "updatedAt": "2026-02-03T14:40:36.547Z"
+  },
+  {
+    "id": "06cb0b6a-a844-4068-abe8-e9e8353fa6d1",
+    "slug": "defeito_com_run",
+    "name": "Defeito com run",
+    "app": "SMART",
+    "kind": "defect",
+    "environments": [],
+    "clientSlug": "griaule",
+    "source": "MANUAL",
+    "status": "open",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": null,
+    "createdAt": "2026-02-03T14:38:17.918Z",
+    "updatedAt": "2026-02-03T14:38:19.030Z",
+    "runSlug": "run-001"
+  },
+  {
+    "id": "a2413e59-f82b-4579-8569-96b392dd10e3",
     "slug": "run_gate_e2e",
     "name": "Run Gate E2E",
     "app": "SMART",
@@ -158,11 +178,11 @@
       "notRun": 0
     },
     "closedAt": null,
-    "createdAt": "2026-02-03T14:19:38.107Z",
-    "updatedAt": "2026-02-03T14:19:38.107Z"
+    "createdAt": "2026-02-03T14:36:32.962Z",
+    "updatedAt": "2026-02-03T14:36:32.962Z"
   },
   {
-    "id": "c35e979e-ce4c-45fd-86b2-d04beed5dda1",
+    "id": "1e3b8f5e-17d1-4210-913e-0f823f708030",
     "slug": "run_bloqueada",
     "name": "Run Bloqueada",
     "app": "SMART",
@@ -178,11 +198,11 @@
       "notRun": 0
     },
     "closedAt": null,
-    "createdAt": "2026-02-03T14:19:10.781Z",
-    "updatedAt": "2026-02-03T14:19:10.781Z"
+    "createdAt": "2026-02-03T14:36:05.467Z",
+    "updatedAt": "2026-02-03T14:36:05.467Z"
   },
   {
-    "id": "eb57e2d7-4fb6-4717-ac4f-e06f5471cf1a",
+    "id": "a9720bd8-b68a-4971-bb80-928013905d03",
     "slug": "run_pdf_export",
     "name": "Run PDF Export",
     "app": "SMART",
@@ -198,11 +218,11 @@
       "notRun": 0
     },
     "closedAt": null,
-    "createdAt": "2026-02-03T14:18:55.967Z",
-    "updatedAt": "2026-02-03T14:18:55.967Z"
+    "createdAt": "2026-02-03T14:35:54.859Z",
+    "updatedAt": "2026-02-03T14:35:54.859Z"
   },
   {
-    "id": "0f8b1143-cb63-49c8-9dc8-4367be22092e",
+    "id": "28f9a410-eac5-4b5f-8a41-d5337167703b",
     "slug": "run_t_benchmark",
     "name": "Run T Benchmark",
     "app": "SMART",
@@ -217,12 +237,12 @@
       "blocked": 0,
       "notRun": 0
     },
-    "closedAt": "2026-02-03T14:18:41.638Z",
-    "createdAt": "2026-02-03T14:18:41.638Z",
-    "updatedAt": "2026-02-03T14:18:41.638Z"
+    "closedAt": "2026-02-03T14:35:33.534Z",
+    "createdAt": "2026-02-03T14:35:33.534Z",
+    "updatedAt": "2026-02-03T14:35:33.534Z"
   },
   {
-    "id": "f31344af-78f3-4973-b2b8-e63ada46a36e",
+    "id": "3ac7d64d-94eb-4577-9b20-e61ef4fd1797",
     "slug": "run_g_benchmark",
     "name": "Run G Benchmark",
     "app": "SMART",
@@ -237,9 +257,9 @@
       "blocked": 0,
       "notRun": 0
     },
-    "closedAt": "2026-02-03T14:18:41.582Z",
-    "createdAt": "2026-02-03T14:18:41.582Z",
-    "updatedAt": "2026-02-03T14:18:41.582Z"
+    "closedAt": "2026-02-03T14:35:33.130Z",
+    "createdAt": "2026-02-03T14:35:33.130Z",
+    "updatedAt": "2026-02-03T14:35:33.130Z"
   },
   {
     "id": "523bd956-49c0-4b9d-8464-90faad18c7f2",
@@ -262,26 +282,6 @@
     "updatedAt": "2026-02-03T13:38:29.411Z"
   },
   {
-    "id": "599d5f6a-7caa-4c22-ac51-0db9cc76dc3e",
-    "slug": "erro_no_login",
-    "name": "Erro no login",
-    "app": "SMART",
-    "kind": "defect",
-    "environments": [],
-    "clientSlug": "griaule",
-    "source": "MANUAL",
-    "status": "open",
-    "stats": {
-      "pass": 0,
-      "fail": 1,
-      "blocked": 0,
-      "notRun": 0
-    },
-    "closedAt": null,
-    "createdAt": "2026-02-03T10:43:26.477Z",
-    "updatedAt": "2026-02-03T10:43:26.477Z"
-  },
-  {
     "id": "mttr-test-1",
     "slug": "mttr-test-1",
     "name": "Release MTTR Dashboard",
@@ -296,9 +296,9 @@
       "blocked": 0,
       "notRun": 0
     },
-    "closedAt": "2026-02-03T14:21:51.610Z",
-    "createdAt": "2026-02-02T14:21:51.610Z",
-    "updatedAt": "2026-02-03T14:21:51.610Z",
+    "closedAt": "2026-02-03T14:41:51.641Z",
+    "createdAt": "2026-02-02T14:41:51.641Z",
+    "updatedAt": "2026-02-03T14:41:51.641Z",
     "runSlug": "mttr-test-1",
     "runName": "Release MTTR Dashboard"
   },
@@ -317,9 +317,9 @@
       "blocked": 0,
       "notRun": 0
     },
-    "closedAt": "2026-02-03T14:21:51.610Z",
-    "createdAt": "2026-02-03T02:21:51.610Z",
-    "updatedAt": "2026-02-03T14:21:51.610Z",
+    "closedAt": "2026-02-03T14:41:51.641Z",
+    "createdAt": "2026-02-03T02:41:51.641Z",
+    "updatedAt": "2026-02-03T14:41:51.641Z",
     "runSlug": "mttr-manual-unique",
     "runName": "Release MTTR Manual Unique"
   }

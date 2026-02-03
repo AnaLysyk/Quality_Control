@@ -69,7 +69,7 @@ function MenuItem(props: {
 export default function ProfileButton() {
   const router = useRouter();
   const { user, logout } = useAuthUser();
-  const { activeClient } = useClientContext();
+  const { activeClient, clients } = useClientContext();
 
   const legacyUser = (user ?? null) as
     | {
@@ -143,6 +143,20 @@ export default function ProfileButton() {
     return undefined;
   })();
   const companyResources = Array.isArray(legacyUser?.companyResources) ? legacyUser.companyResources : [];
+  const companyCount =
+    (Array.isArray(clients) ? clients.length : 0) ||
+    (Array.isArray(companyResources) ? companyResources.length : 0);
+  const hasCompanies = companyCount > 0;
+  const docsRoute = hasCompanies
+    ? companyCount > 1 || !companySlug
+      ? "/documentos"
+      : `/empresas/${companySlug}/documentos`
+    : "/docs";
+  const docsLabel = hasCompanies
+    ? companyCount > 1
+      ? `Documentacoes (${companyCount} empresas)`
+      : "Documentacoes da empresa"
+    : "Abrir documentacoes";
 
   const avatarKey: AvatarKey = useMemo(() => {
     if (avatarOverrideKey) return avatarOverrideKey;
@@ -393,12 +407,12 @@ export default function ProfileButton() {
                   className="flex w-full items-center gap-2 rounded-lg border border-(--tc-primary,#4e8df5)/22 bg-(--tc-primary,#4e8df5)/8 px-3 py-2 text-sm text-(--tc-text,#0f172a) transition-colors hover:bg-(--tc-primary,#4e8df5)/12 dark:text-(--tc-text-inverse,#fff) dark:border-(--tc-primary,#4e8df5)/20 dark:bg-(--tc-primary,#4e8df5)/10 dark:hover:bg-(--tc-primary,#4e8df5)/14"
                   onClick={() => {
                     setOpen(false);
-                    router.push(companySlug ? `/empresas/${companySlug}/documentos` : "/docs");
+                    router.push(docsRoute);
                   }}
                 >
                   <FiFolder aria-hidden />
                   <span className="truncate">
-                    {companyResources.length ? `${companyResources.length} documentações` : "Abrir documentações"}
+                    {docsLabel}
                   </span>
                 </button>
               </li>

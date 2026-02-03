@@ -15,7 +15,7 @@ class EmailService {
       this.transporter = nodemailer.createTransport({
         host: process.env.EMAIL_SMTP_HOST,
         port: parseInt(process.env.EMAIL_SMTP_PORT || '587'),
-        secure: false, // true for 465, false for other ports
+        secure: false, // true para 465, false para outras portas
         auth: {
           user: process.env.EMAIL_SMTP_USER,
           pass: process.env.EMAIL_SMTP_PASS,
@@ -27,9 +27,9 @@ class EmailService {
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
-      // Avoid network calls in dev/test environments.
+      // Evita chamadas de rede em ambientes de dev/teste.
       if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
-        console.log('📧 [DEV MODE] Email would be sent:');
+        console.log('[DEV MODE] Email would be sent:');
         console.log(`To: ${options.to}`);
         console.log(`Subject: ${options.subject}`);
         console.log(`HTML: ${options.html.substring(0, 200)}...`);
@@ -39,7 +39,7 @@ class EmailService {
       const transporter = this.getTransporter();
 
       const mailOptions = {
-        from: process.env.EMAIL_FROM || 'noreply@painel-qa.com',
+        from: process.env.EMAIL_FROM || 'noreply@quality-control.com',
         to: options.to,
         subject: options.subject,
         html: options.html,
@@ -47,10 +47,10 @@ class EmailService {
       };
 
       const result = await transporter.sendMail(mailOptions);
-      console.log('Email sent successfully:', result.messageId);
+      console.log('Email enviado com sucesso:', result.messageId);
       return true;
     } catch (error) {
-      console.error('Failed to send email:', error);
+      console.error('Falha ao enviar email:', error);
       return false;
     }
   }
@@ -63,7 +63,7 @@ class EmailService {
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Redefinir Senha - Painel QA</title>
+          <title>Redefinir Senha - Quality Control</title>
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -76,24 +76,24 @@ class EmailService {
         <body>
           <div class="container">
             <div class="header">
-              <h1>Painel QA</h1>
-              <p>Redefinição de Senha</p>
+              <h1>Quality Control</h1>
+              <p>Redefinicao de senha</p>
             </div>
             <div class="content">
-              <h2>Olá!</h2>
-              <p>Recebemos uma solicitação para redefinir sua senha. Clique no botão abaixo para criar uma nova senha:</p>
+              <h2>Ola!</h2>
+              <p>Recebemos uma solicitacao para redefinir sua senha. Clique no botao abaixo para criar uma nova senha:</p>
 
               <a href="${resetUrl}" class="button">Redefinir Senha</a>
 
               <p><strong>Link direto:</strong> ${resetUrl}</p>
 
-              <p><em>Este link é válido por 15 minutos.</em></p>
+              <p><em>Este link e valido por 15 minutos.</em></p>
 
-              <p>Se você não solicitou esta redefinição, ignore este email. Sua senha permanecerá a mesma.</p>
+              <p>Se voce nao solicitou esta redefinicao, ignore este email. Sua senha permanecera a mesma.</p>
             </div>
             <div class="footer">
-              <p>Este é um email automático. Por favor, não responda.</p>
-              <p>&copy; 2026 Painel QA. Todos os direitos reservados.</p>
+              <p>Este e um email automatico. Por favor, nao responda.</p>
+              <p>&copy; 2026 Quality Control. Todos os direitos reservados.</p>
             </div>
           </div>
         </body>
@@ -101,26 +101,26 @@ class EmailService {
     `;
 
     const text = `
-      Painel QA - Redefinição de Senha
+      Quality Control - Redefinicao de senha
 
-      Olá!
+      Ola!
 
-      Recebemos uma solicitação para redefinir sua senha.
+      Recebemos uma solicitacao para redefinir sua senha.
 
       Clique no link abaixo para criar uma nova senha:
       ${resetUrl}
 
-      Este link é válido por 15 minutos.
+      Este link e valido por 15 minutos.
 
-      Se você não solicitou esta redefinição, ignore este email.
+      Se voce nao solicitou esta redefinicao, ignore este email.
 
       Atenciosamente,
-      Equipe Painel QA
+      Equipe Quality Control
     `;
 
     return this.sendEmail({
       to: email,
-      subject: 'Redefinir Senha - Painel QA',
+      subject: 'Redefinir Senha - Quality Control',
       html,
       text,
     });

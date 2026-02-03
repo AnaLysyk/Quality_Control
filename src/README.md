@@ -1,4 +1,4 @@
-# Painel QA - Estrutura recomendada
+# Quality Control - Estrutura recomendada
 
-Este diretório é a base da nova organização. Nenhuma lógica foi movida ainda.
-Use esta estrutura para migração gradual (core/services/stores/types/utils).
+Este diretorio e a base da nova organizacao. Nenhuma logica foi movida ainda.
+Use esta estrutura para migracao gradual (core/services/stores/types/utils).

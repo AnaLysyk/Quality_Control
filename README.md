@@ -1,25 +1,39 @@
-# painel-qa
+# Quality Control
 
-Next.js (App Router) + TypeScript. Front-end em `app/`, utilitários restritos ao servidor em `lib/`, dados auxiliares em `data/` e testes em `tests-e2e/`.
+Next.js (App Router) + TypeScript. Front-end em `app/`, utilitarios restritos ao servidor em `lib/`, dados auxiliares em `data/` e testes em `tests-e2e/`.
 
-## Executar localmente (Windows)
+Sem Docker: use um PostgreSQL local ou remoto e aponte o `DATABASE_URL`.
 
-1) Instalar dependências:
+## Fluxo de desenvolvimento (Windows)
+
+1. Instale dependencias:
 
 ```bash
 npm install
 ```
 
-2) Criar e ajustar variáveis de ambiente:
+2. Configure variaveis de ambiente:
 
 - Copie `.env.local.example` para `.env.local`.
 - Preencha:
-  - `DATABASE_URL`
+  - `DATABASE_URL` (PostgreSQL local ou remoto)
   - `JWT_SECRET`
   - (opcional) tokens do Qase (`QASE_API_TOKEN`, `QASE_PROJECT_MAP`)
   - (opcional) Redis Upstash (`UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`)
 
-3) Subir o servidor:
+3. Valide o ambiente:
+
+```bash
+npm run env:check
+```
+
+4. Prepare o banco (PostgreSQL):
+
+```bash
+npx prisma migrate dev
+```
+
+5. Suba o servidor:
 
 ```bash
 npm run dev
@@ -27,7 +41,7 @@ npm run dev
 
 Abra http://localhost:3000 no navegador.
 
-## Verificações recomendadas
+## Verificacoes recomendadas
 
 ```bash
 npm run lint
@@ -37,5 +51,5 @@ npm run test:e2e:smoke
 
 ## Notas sobre Qase
 
-- A integração envia o header `Token: <API_TOKEN>` (conforme a documentação da Qase).
+- A integracao envia o header `Token: <API_TOKEN>` (conforme a documentacao da Qase).
 - Sem o token, as telas/rotas dependentes da Qase retornam dados vazios, mas o app continua operacional.

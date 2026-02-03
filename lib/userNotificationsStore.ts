@@ -178,9 +178,9 @@ export async function updateNotificationStatus(
 
 export async function closeNotificationsByDedupeKey(userId: string, dedupeKey: string) {
   const store = await readStore();
-  const items = Array.isArray(store[userId]) ? store[userId] : [];
+  const items = (Array.isArray(store[userId]) ? store[userId] : []) as UserNotification[];
   let changed = false;
-  const nextItems = items.map((item) => {
+  const nextItems = items.map<UserNotification>((item) => {
     if (item.dedupeKey === dedupeKey && item.status !== "closed") {
       changed = true;
       return { ...item, status: "closed", updatedAt: new Date().toISOString() };
@@ -188,8 +188,8 @@ export async function closeNotificationsByDedupeKey(userId: string, dedupeKey: s
     return item;
   });
   if (changed) {
-    store[userId] = nextItems;
-    await writeStore(store);
+    const nextStore: NotificationsStore = { ...store, [userId]: nextItems };
+    await writeStore(nextStore);
   }
   return changed;
 }

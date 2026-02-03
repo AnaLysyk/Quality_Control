@@ -27,18 +27,13 @@ export function RequireGlobalAdmin({ children, fallback }: RequireGlobalAdminPro
     typeof (user as { clientSlug?: string | null } | null)?.clientSlug === "string"
       ? String((user as { clientSlug?: string | null }).clientSlug)
       : null;
-  const shouldRedirect = pathname === "/admin" || pathname === "/admin/home";
-  const nonAdminRedirect =
-    normalizedRole === "company"
-      ? clientSlug
-        ? `/empresas/${encodeURIComponent(clientSlug)}/home`
-        : "/empresas"
-      : "/user/home";
+  const nonAdminRedirect = clientSlug
+    ? `/empresas/${encodeURIComponent(clientSlug)}/home`
+    : "/empresas";
   const deniedFallback =
     (fallback as ReactNode) ?? (
       <div className="p-8 text-center text-lg">
-        <p>Acesso restrito ao admin.</p>
-        <p>Acesso restrito a admin global.</p>
+        <p>Acesso restrito ao admin. Acesso restrito a admin global.</p>
       </div>
     );
 
@@ -49,11 +44,9 @@ export function RequireGlobalAdmin({ children, fallback }: RequireGlobalAdminPro
       return;
     }
     if (!isAdmin) {
-      if (shouldRedirect) {
-        router.replace(nonAdminRedirect);
-      }
+      router.replace(nonAdminRedirect);
     }
-  }, [loading, user, isAdmin, router, pathname, shouldRedirect, nonAdminRedirect]);
+  }, [loading, user, isAdmin, router, pathname, nonAdminRedirect]);
 
   if (loading) {
     return (fallback as ReactNode) ?? <AuthSkeleton message="Validando sessao..." />;

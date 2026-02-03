@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CreateClientModal, type ClientFormValues } from "@/clients/components/CreateClientModal";
 import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
@@ -113,14 +113,14 @@ function AdminClientsPage() {
     if (selected) setForm(selected);
   };
 
-  function handleUnauthorized() {
-    const msg = "Sessão expirada. Faça login novamente.";
+  const handleUnauthorized = useCallback(() => {
+    const msg = "SessÃ£o expirada. FaÃ§a login novamente.";
     setMessage(msg);
     toast.error(msg);
     router.replace("/login");
-  }
+  }, [router]);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     setMessage(null);
     try {
@@ -160,7 +160,7 @@ function AdminClientsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [handleUnauthorized]);
 
   async function openModal(id: string) {
     setSelectedId(id);
@@ -317,7 +317,7 @@ function AdminClientsPage() {
         setUserClientId(created.id);
         if (data.integrationMode === "manual") {
           setMessage(
-            "Empresa criada sem integração. Você pode configurar Qase depois (token + project code) ou seguir em modo manual.",
+            "Empresa criada sem integraÃ§Ã£o. VocÃª pode configurar Qase depois (token + project code) ou seguir em modo manual.",
           );
         }
         toast.success("Empresa cadastrada");
@@ -334,7 +334,7 @@ function AdminClientsPage() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
@@ -344,7 +344,7 @@ function AdminClientsPage() {
         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Empresas</h1>
-            <p className="text-sm sm:text-base text-(--tc-text-muted,#6b7280)">Gerencie clientes e usuários</p>
+            <p className="text-sm sm:text-base text-(--tc-text-muted,#6b7280)">Gerencie clientes e usuÃ¡rios</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
           {isGlobalAdmin && (
@@ -361,7 +361,7 @@ function AdminClientsPage() {
               href="/admin/users"
               className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-300"
             >
-              Gerenciar usuários
+              Gerenciar usuÃ¡rios
             </a>
           )}
             <button
@@ -429,13 +429,13 @@ function AdminClientsPage() {
             <div className="text-sm text-(--tc-text-muted,#6b7280)">
               {isGlobalAdmin ? (
                 <div className="mt-2 rounded-xl border border-dashed border-(--tc-border,#e5e7eb) p-4 text-center">
-                  <p className="text-sm text-(--tc-text-secondary,#4b5563)">Você ainda não criou nenhum cliente.</p>
+                  <p className="text-sm text-(--tc-text-secondary,#4b5563)">VocÃª ainda nÃ£o criou nenhum cliente.</p>
                   <button
                     type="button"
                     onClick={() => setOpenCreate(true)}
                     className="mt-3 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   >
-                    + Cadastrar instituição ou empresa
+                    + Cadastrar instituiÃ§Ã£o ou empresa
                   </button>
                 </div>
               ) : (
@@ -929,7 +929,7 @@ function CompanyUsers({ clientId, onAddUser, disabled = false }: CompanyUsersPro
       try {
         const res = await fetch(`/api/admin/users?client_id=${clientId}`, { credentials: "include", cache: "no-store" });
         if (res.status === 401) {
-          toast.error("Sessão expirada. Faça login novamente.");
+          toast.error("SessÃ£o expirada. FaÃ§a login novamente.");
           router.replace("/login");
           setUsers([]);
           return;
@@ -1024,3 +1024,7 @@ function CompanyUsers({ clientId, onAddUser, disabled = false }: CompanyUsersPro
     </div>
   );
 }
+
+
+
+

@@ -13,14 +13,19 @@ let prismaClient: typeof import("@/lib/prismaClient").prisma | null = null;
 function getPrisma() {
   if (isJsonMode) return null;
   if (!prismaClient) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     prismaClient = require("@/lib/prismaClient").prisma;
   }
   return prismaClient;
 }
 
-export async function seedQualityAlert(alert: { companySlug?: string; type?: string; severity?: string; message?: string; metadata?: any }) {
-  await writeAlertsStore([
+export async function seedQualityAlert(alert: {
+  companySlug?: string;
+  type?: string;
+  severity?: string;
+  message?: string;
+  metadata?: Record<string, unknown>;
+}) {
+  const payload = [
     {
       companySlug: alert.companySlug || "griaule",
       type: alert.type || "sla",
@@ -29,15 +34,32 @@ export async function seedQualityAlert(alert: { companySlug?: string; type?: str
       metadata: alert.metadata || { slaOverdue: 1 },
       timestamp: new Date().toISOString(),
     },
-  ]);
+  ];
+
+  const useApiSeed =
+    process.env.PLAYWRIGHT_MOCK === "true" ||
+    process.env.E2E_USE_JSON === "1" ||
+    process.env.E2E_USE_JSON === "true";
+
+  if (useApiSeed) {
+    const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
+    await fetch(`${baseURL}/api/_test/quality-alerts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return;
+  }
+
+  await writeAlertsStore(payload);
 }
 
 /**
- * Popula o banco de dados com um usuário de teste.
+ * Popula o banco de dados com um usuario de teste.
  */
-export async function seedDbUser({ id = undefined, email = "teste@example.com", name = "Usuário Teste", password = "senha123" } = {}) {
+export async function seedDbUser({ email = "teste@example.com", name = "Usuario Teste", password = "senha123" } = {}) {
   if (isJsonMode) return;
-  // Se id não for passado, Prisma vai gerar um UUID válido automaticamente
+  // Se nenhum id for passado, o Prisma gera um UUID valido automaticamente
   const passwordHash = hashPasswordSha256(password);
   const prisma = getPrisma();
   if (!prisma) return;
@@ -63,7 +85,7 @@ export async function seedDbCompany({ name = "Empresa Teste", slug = "empresa-te
 }
 
 /**
- * Popula a tabela UserCompany com vínculo entre usuário e empresa.
+ * Popula a tabela UserCompany com vinculo entre usuario e empresa.
  */
 export async function seedDbUserCompany({ userEmail = "teste@example.com", companySlug = "empresa-teste", role = "admin" } = {}) {
   if (isJsonMode) return;
@@ -71,7 +93,7 @@ export async function seedDbUserCompany({ userEmail = "teste@example.com", compa
   if (!prisma) return;
   const user = await prisma.user.findUnique({ where: { email: userEmail } });
   const company = await prisma.company.findUnique({ where: { slug: companySlug } });
-  if (!user || !company) throw new Error("Usuário ou empresa não encontrados para vincular.");
+  if (!user || !company) throw new Error("Usuario ou empresa nao encontrados para vincular.");
   await prisma.userCompany.upsert({
     where: { user_id_company_id: { user_id: user.id, company_id: company.id } },
     update: { role },
@@ -112,7 +134,7 @@ export async function seedDbRelease({ slug = "release-teste", title = "Release d
 }
 
 /**
- * Popula a tabela TestRun com um teste de execução.
+ * Popula a tabela TestRun com um teste de execucao.
  */
 export async function seedDbTestRun({ status = "passed" } = {}) {
   if (isJsonMode) return;
@@ -123,7 +145,7 @@ export async function seedDbTestRun({ status = "passed" } = {}) {
   });
 }
 
-// Exemplo de uso automático ao rodar como script
+// Exemplo de uso automatico ao rodar como script
 if (require.main === module) {
   Promise.all([
     seedDbUser(),
@@ -137,7 +159,6 @@ if (require.main === module) {
       seedDbTestRun(),
     ])
   ).then(() => {
-    // eslint-disable-next-line no-console
     console.log("Seeds de todas as tabelas principais inseridos no banco de dados.");
     process.exit(0);
   }).catch((err) => {

@@ -14,8 +14,10 @@ import {
   TrendPoint,
   Stats,
 } from "@/lib/quality";
+import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
 import { apiFail, apiOk } from "@/lib/apiResponse";
-import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { listLocalCompanies, type LocalAuthCompany } from "@/lib/auth/localStore";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -48,26 +50,16 @@ type CompanyListResponse = {
   policy: typeof QUALITY_THRESHOLDS;
 };
 
-async function fetchClients(baseUrl: string, request: NextRequest): Promise<ClientRow[]> {
-  const headers = new Headers();
-  const cookie = request.headers.get("cookie");
-  if (cookie) headers.set("cookie", cookie);
-  const auth = request.headers.get("authorization");
-  if (auth) headers.set("authorization", auth);
-
-  const res = await fetch(new URL("/api/clients", baseUrl).toString(), {
-    headers,
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    throw new Error("failed to load clients");
-  }
-
-  const raw = await res.json().catch(() => null);
-  const data = unwrapEnvelopeData<Record<string, unknown>>(raw) ?? (raw as Record<string, unknown> | null) ?? {};
-  const items: ClientRow[] = Array.isArray((data as any).items) ? ((data as any).items as ClientRow[]) : [];
-  return items;
+function mapLocalCompanies(companies: LocalAuthCompany[]): ClientRow[] {
+  return companies.map((company) => ({
+    id: company.id,
+    company_name: (company.company_name ?? company.name ?? "").toString() || null,
+    name: (company.name ?? company.company_name ?? "").toString() || null,
+    slug: company.slug ?? null,
+    logo_url: (company as { logo_url?: string | null }).logo_url ?? null,
+    qase_project_code: (company as { qase_project_code?: string | null }).qase_project_code ?? null,
+    active: company.active ?? true,
+  }));
 }
 
 function normalizeClients(items: ClientRow[]) {
@@ -109,15 +101,22 @@ export async function GET(request: NextRequest) {
   try {
     const periodParam = Number(request.nextUrl.searchParams.get("period") ?? 30);
     const period = [7, 30, 90].includes(periodParam) ? periodParam : 30;
-    const baseUrl = new URL(request.url).origin;
+    const { admin, status } = await requireGlobalAdminWithStatus(request);
+    if (!admin) {
+      const msg = status === 401 ? "Nao autenticado" : "Sem permissao";
+      return apiFail(request, msg, { status, code: status === 401 ? "UNAUTHENTICATED" : "FORBIDDEN" });
+    }
 
-    const [clientRows, releases, manualReleases] = await Promise.all([
-      fetchClients(baseUrl, request),
+    const [localCompanies, releases, manualReleases] = await Promise.all([
+      listLocalCompanies(),
       getAllReleases(),
       getAllManualReleases(),
     ]);
+    const clientRows = mapLocalCompanies(localCompanies);
 
-    const manualReleaseEntries = manualReleases.map(mapManualRelease);
+    const manualReleaseEntries = manualReleases
+      .filter((release) => resolveManualReleaseKind(release) === "run")
+      .map(mapManualRelease);
     const enrichedReleases = [...releases, ...manualReleaseEntries].map((release) => buildReleaseWithStats(release));
 
     const start = Date.now() - period * DAY_MS;

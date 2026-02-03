@@ -1,11 +1,11 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import ReleaseManualList from "../app/components/ReleaseManualList";
 import DefectList from "../app/components/DefectList";
 
 jest.mock("../app/components/ReleaseManualList");
 jest.mock("../app/components/DefectList");
 
-// Exemplo de teste de renderização e isolamento multi-tenant
+// Exemplo de teste de renderizacao e isolamento multi-tenant
 
 describe("ReleaseManualList e DefectList", () => {
   it("Renderiza lista de releases manuais para a empresa correta", async () => {

@@ -17,6 +17,7 @@ import { QualityGateHistory } from "./QualityGateHistory";
 import { readQualityGateHistory } from "@/lib/qualityGateHistory";
 import { calculateQualityScore } from "@/lib/qualityScore";
 import { getReleaseTimeline } from "@/lib/releaseTimeline";
+import { cookies, headers } from "next/headers";
 
 type AnyRelease = (Release & { name?: string }) | (ReleaseEntry & { name?: string });
 
@@ -66,8 +67,22 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
   let apiRelease: ReleaseEntry | null = null;
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-    const res = await fetch(`${baseUrl}/api/releases-manual/${normalizedSlug}`, { cache: "no-store" });
+    const headerStore = await headers();
+    const host = headerStore.get("host");
+    const proto = headerStore.get("x-forwarded-proto") ?? "http";
+    const baseUrl =
+      (host ? `${proto}://${host}` : null) ??
+      process.env.NEXT_PUBLIC_SITE_URL ??
+      "http://localhost:3000";
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore
+      .getAll()
+      .map((item) => `${item.name}=${item.value}`)
+      .join("; ");
+    const res = await fetch(`${baseUrl}/api/releases-manual/${normalizedSlug}`, {
+      cache: "no-store",
+      headers: cookieHeader ? { cookie: cookieHeader } : undefined,
+    });
     if (res.ok) {
       manualRelease = (await res.json()) as Release;
     }
@@ -165,7 +180,10 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
           <div className="space-y-1">
             <p className="text-xs uppercase tracking-[0.28em] text-(--tc-accent)">Run</p>
             <h1 className="text-3xl md:text-4xl font-extrabold text-[#0b1a3c]">
-              {(releaseData as ReleaseEntry).title ?? releaseData.slug ?? "Run"}
+              {(releaseData as { name?: string }).name ??
+                (releaseData as ReleaseEntry).title ??
+                releaseData.slug ??
+                "Run"}
             </h1>
             {(releaseData as ReleaseEntry).summary && (
               <p className="text-(--tc-text-secondary)">{(releaseData as ReleaseEntry).summary}</p>
@@ -277,9 +295,7 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
                   <Image src="/images/tc.png" alt="Testing Company" width={44} height={44} className="h-11 w-auto" />
                   <div className="space-y-1 leading-tight">
                     <p className="text-xs uppercase tracking-[0.28em] text-[#6b7280]">Run</p>
-                    <h1 className="text-2xl font-extrabold leading-tight text-[#0b1a3c]">
-                      {releaseData.name ?? (releaseData as ReleaseEntry).title ?? "Run"}
-                    </h1>
+                    <h1 className="text-2xl font-extrabold leading-tight text-[#0b1a3c]">Resumo da Run</h1>
                   </div>
                 </div>
                 <div className="text-left sm:text-right text-sm text-[#0b1a3c] space-y-1 min-w-0 sm:min-w-40">

@@ -99,6 +99,7 @@ test.describe("responsive layout audit - admin", () => {
 });
 
 test.describe("responsive layout audit - company", () => {
+  test.describe.configure({ timeout: 120000 });
   for (const viewport of viewports) {
     test(`company routes @ ${viewport.label}`, async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });

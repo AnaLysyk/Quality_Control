@@ -55,7 +55,6 @@ async function main() {
   await upsertLink(adminUser.id, company.id, USERS.admin.role);
   await upsertLink(normalUser.id, company.id, USERS.user.role);
 
-  // eslint-disable-next-line no-console
   console.log("Seed Griaule ok:", {
     company: COMPANY.slug,
     admin: USERS.admin.email,
@@ -65,7 +64,6 @@ async function main() {
 
 main()
   .catch((err) => {
-    // eslint-disable-next-line no-console
     console.error("Seed Griaule failed:", err);
     process.exit(1);
   })

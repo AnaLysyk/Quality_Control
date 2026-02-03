@@ -1,6 +1,5 @@
 try {
   // "server-only" exists in Next.js runtime; ignore when running scripts/tests.
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   require("server-only");
 } catch {
   // no-op

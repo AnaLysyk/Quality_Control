@@ -13,6 +13,7 @@ export type CompanySelectorItem = {
   clientActive: boolean;
   role: "ADMIN" | "USER";
   linkActive: boolean;
+  createdAt?: string | null;
 };
 
 type CompanySelectorProps = {
@@ -46,6 +47,7 @@ export function CompanySelector({
         clientActive: client.active,
         role: client.role,
         linkActive: client.linkActive,
+        createdAt: client.createdAt ?? null,
       })),
     [clients]
   );
@@ -100,6 +102,10 @@ export function CompanySelector({
           {companies.map((company) => {
             const isActive = company.clientSlug === activeClientSlug;
             const isDisabled = !company.linkActive;
+            const createdAtLabel =
+              company.createdAt && !Number.isNaN(Date.parse(company.createdAt))
+                ? new Date(company.createdAt).toLocaleDateString("pt-BR")
+                : null;
 
             return (
             <Link
@@ -129,7 +135,7 @@ export function CompanySelector({
                 )}
                 <div className="space-y-2">
                   <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted)">
-                    {company.role === "ADMIN" ? "Admin" : "Usuário"}
+                    {company.role === "ADMIN" ? "Admin" : "Usuario"}
                     {!company.clientActive && (
                       <span className="rounded-full bg-(--tc-surface,#f1f5f9) px-2 py-0.5 text-[10px] font-semibold text-(--tc-text-muted)">
                         Inativo
@@ -143,6 +149,11 @@ export function CompanySelector({
                   </span>
                   <h2 className="text-lg font-semibold text-(--page-text,#0b1a3c)">{company.clientName}</h2>
                   <p className="text-xs text-(--tc-text-secondary,#4b5563)">/{company.clientSlug}</p>
+                  {createdAtLabel && (
+                    <p className="text-xs text-(--tc-text-secondary,#4b5563)">
+                      Inicio do projeto: {createdAtLabel}
+                    </p>
+                  )}
                 </div>
 
                 <span

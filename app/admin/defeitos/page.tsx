@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiAlertTriangle, FiTrendingDown, FiZap } from "react-icons/fi";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
@@ -105,13 +105,13 @@ export default function AdminDefeitosPage() {
   const [authBlocked, setAuthBlocked] = useState(false);
   const allowFallback = typeof window !== "undefined" && window.location.hostname === "localhost";
 
-  function handleUnauthorized() {
+  const handleUnauthorized = useCallback(() => {
     const msg = "Sessão expirada. Faça login novamente.";
     setAuthBlocked(true);
     setError(msg);
     toast.error(msg);
     router.push("/login");
-  }
+  }, [router]);
 
   useEffect(() => {
     const load = async () => {
@@ -152,7 +152,7 @@ export default function AdminDefeitosPage() {
           return;
         }
 
-        const apiError = typeof (data as any)?.error === "string" ? String((data as any).error) : null;
+        const apiError = typeof (data as { error?: unknown } | null)?.error === "string" ? String((data as { error?: unknown }).error) : null;
         if (apiError) setError(apiError);
         setPayload(data);
       } catch (err) {
@@ -162,7 +162,7 @@ export default function AdminDefeitosPage() {
       }
     };
     load();
-  }, []);
+  }, [handleUnauthorized]);
 
   const defects = useMemo(() => {
     if (authBlocked) return [];

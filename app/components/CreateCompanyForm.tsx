@@ -24,7 +24,7 @@ export default function CreateCompanyForm({ onCreated }: { onCreated?: () => voi
       setSlug("");
       setSuccess(true);
       if (onCreated) onCreated();
-    } catch (e) {
+    } catch {
       setError("Erro ao criar empresa");
     } finally {
       setLoading(false);

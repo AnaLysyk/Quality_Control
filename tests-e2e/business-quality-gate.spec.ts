@@ -36,7 +36,11 @@ test("quality gate reprova run com falhas", async ({ page, context }) => {
   const runGate = page.getByTestId("quality-gate-status");
   await expect(runGate).toHaveAttribute("data-status", "failed");
 
-  await page.goto("/admin/test-metric", { waitUntil: "networkidle" });
+  await page.goto("/admin/test-metric", { waitUntil: "domcontentloaded" });
+  const authLoading = page.getByText(/Validando sessao/i);
+  if (await authLoading.isVisible().catch(() => false)) {
+    await authLoading.waitFor({ state: "hidden", timeout: 20000 }).catch(() => {});
+  }
 
   const companyGate = page.getByTestId("company-quality-status").first();
   await expect(companyGate).toHaveAttribute("data-status", "failed");

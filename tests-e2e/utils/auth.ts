@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-const rawBaseURL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
+const rawBaseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
 const baseURL = /^https?:\/\//i.test(rawBaseURL) ? rawBaseURL : `http://${rawBaseURL}`;
 
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || "admin@griaule.test";
@@ -39,8 +39,9 @@ export async function setMockUser(page: Page, role: MockRole, clientSlug?: strin
   const loginUrl = new URL("/api/auth/login", baseURL).toString();
   const response = await page.context().request.post(loginUrl, {
     data: {
-      email: creds.email,
+      user: creds.email,
       password: creds.password,
+      ...(lastClientSlug ? { clientSlug: lastClientSlug } : {}),
     },
   });
 
@@ -52,6 +53,7 @@ export async function setMockUser(page: Page, role: MockRole, clientSlug?: strin
   const setCookie = response.headers()["set-cookie"];
   const sessionId = parseCookie(setCookie, "session_id");
   const authToken = parseCookie(setCookie, "auth_token");
+  const activeCompany = parseCookie(setCookie, "active_company_slug");
   if (!sessionId) {
     throw new Error("setMockUser login failed: missing session_id cookie");
   }
@@ -60,6 +62,9 @@ export async function setMockUser(page: Page, role: MockRole, clientSlug?: strin
   ];
   if (authToken) {
     cookies.push({ name: "auth_token", value: authToken, url: baseURL });
+  }
+  if (activeCompany) {
+    cookies.push({ name: "active_company_slug", value: activeCompany, url: baseURL });
   }
   await page.context().addCookies(cookies);
 }
@@ -77,8 +82,9 @@ export async function login(page: Page, email: string, password: string) {
     const loginUrl = new URL("/api/auth/login", baseURL).toString();
     const response = await page.context().request.post(loginUrl, {
       data: {
-        email: creds.email,
+        user: creds.email,
         password: creds.password,
+        ...(lastClientSlug ? { clientSlug: lastClientSlug } : {}),
       },
     });
     if (!response.ok()) {
@@ -89,6 +95,7 @@ export async function login(page: Page, email: string, password: string) {
     const setCookie = response.headers()["set-cookie"];
     const newSessionId = parseCookie(setCookie, "session_id");
     const authToken = parseCookie(setCookie, "auth_token");
+    const activeCompany = parseCookie(setCookie, "active_company_slug");
     if (!newSessionId) {
       throw new Error("login failed: missing session_id cookie");
     }
@@ -98,11 +105,18 @@ export async function login(page: Page, email: string, password: string) {
     if (authToken) {
       cookies.push({ name: "auth_token", value: authToken, url: baseURL });
     }
+    if (activeCompany) {
+      cookies.push({ name: "active_company_slug", value: activeCompany, url: baseURL });
+    }
     await page.context().addCookies(cookies);
   }
 
   const role = (lastRole ?? creds.role) === "admin" ? "admin" : "user";
   const companySlug = lastClientSlug || "griaule";
   const defaultPath = role === "admin" ? "/admin/clients" : `/empresas/${companySlug}/dashboard`;
-  await page.goto(defaultPath, { timeout: 120000, waitUntil: "networkidle" });
+  await page.goto(defaultPath, { timeout: 120000, waitUntil: "domcontentloaded" });
+  const authLoading = page.getByText(/Validando sessao/i);
+  if (await authLoading.isVisible().catch(() => false)) {
+    await authLoading.waitFor({ state: "hidden", timeout: 15000 }).catch(() => {});
+  }
 }

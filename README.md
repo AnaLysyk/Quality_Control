@@ -49,6 +49,13 @@ npm run build
 npm run test:e2e:smoke
 ```
 
+## Credenciais de teste (E2E)
+
+Quando `E2E_USE_JSON=1`, o login usa o arquivo `data/local-auth-store.json` (ou `data/local-auth-store.sample.json` como fallback).
+
+- Admin: `admin@griaule.test` / senha `Griaule@123`
+- Usuario: `user@griaule.test` / senha `Griaule@123`
+
 ## Notas sobre Qase
 
 - A integracao envia o header `Token: <API_TOKEN>` (conforme a documentacao da Qase).

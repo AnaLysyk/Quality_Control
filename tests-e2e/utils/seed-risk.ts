@@ -1,9 +1,13 @@
 import fs from "fs";
-import path from "path";
+import { resolveSeedPath } from "./seed-paths";
+
+type ManualRelease = {
+  slug?: string | null;
+} & Record<string, unknown>;
 
 export async function seedReleaseWithHighMTTR() {
-  const file = path.join(process.cwd(), "data", "releases-manual.json");
-  let releases: any[] = [];
+  const file = resolveSeedPath("releases-manual.json");
+  let releases: ManualRelease[] = [];
   try {
     releases = JSON.parse(await fs.promises.readFile(file, "utf8"));
   } catch {}
@@ -12,6 +16,7 @@ export async function seedReleaseWithHighMTTR() {
     slug: "mttr-risk-1",
     name: "Release MTTR Alto",
     app: "GRIAULE",
+    kind: "defect",
     clientSlug: "griaule",
     source: "MANUAL",
     status: "closed",
@@ -22,14 +27,14 @@ export async function seedReleaseWithHighMTTR() {
     runSlug: "mttr-risk-1",
     runName: "Release MTTR Alto"
   };
-  releases = releases.filter((r: any) => r.slug !== mttrRisk.slug);
+  releases = releases.filter((r) => r.slug !== mttrRisk.slug);
   releases.push(mttrRisk);
   await fs.promises.writeFile(file, JSON.stringify(releases, null, 2), "utf8");
 }
 
 export async function seedReleaseWithFailedRun() {
-  const file = path.join(process.cwd(), "data", "releases-manual.json");
-  let releases: any[] = [];
+  const file = resolveSeedPath("releases-manual.json");
+  let releases: ManualRelease[] = [];
   try {
     releases = JSON.parse(await fs.promises.readFile(file, "utf8"));
   } catch {}
@@ -38,6 +43,7 @@ export async function seedReleaseWithFailedRun() {
     slug: "run-risk-1",
     name: "Release com Run Falha",
     app: "GRIAULE",
+    kind: "run",
     clientSlug: "griaule",
     source: "MANUAL",
     status: "closed",
@@ -48,7 +54,7 @@ export async function seedReleaseWithFailedRun() {
     runSlug: "run-risk-1",
     runName: "Release com Run Falha"
   };
-  releases = releases.filter((r: any) => r.slug !== runRisk.slug);
+  releases = releases.filter((r) => r.slug !== runRisk.slug);
   releases.push(runRisk);
   await fs.promises.writeFile(file, JSON.stringify(releases, null, 2), "utf8");
 }

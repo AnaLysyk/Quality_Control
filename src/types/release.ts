@@ -21,6 +21,8 @@ export type Release = {
   slug: string;
   name: string;
   app: string;
+  category?: string;
+  kind?: "run" | "defect";
   runSlug?: string;
   runName?: string;
   clientSlug?: string | null;

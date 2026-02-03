@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
-import { hasCapability } from "@/lib/permissions";
+import { hasCapability, type Capability } from "@/lib/permissions";
 
 type ManualRelease = {
   id: string;
@@ -28,7 +28,7 @@ function hasRole(user: AuthUser, roles: string[]) {
 function canRead(user: AuthUser) {
   return (
     user.isGlobalAdmin ||
-    hasCapability(user.capabilities as any, "release:read") ||
+    hasCapability((user.capabilities ?? []) as Capability[], "release:read") ||
     hasRole(user, ["admin", "company", "user", "viewer"])
   );
 }
@@ -36,7 +36,7 @@ function canRead(user: AuthUser) {
 function canWrite(user: AuthUser) {
   return (
     user.isGlobalAdmin ||
-    hasCapability(user.capabilities as any, "release:write") ||
+    hasCapability((user.capabilities ?? []) as Capability[], "release:write") ||
     hasRole(user, ["admin", "company"])
   );
 }

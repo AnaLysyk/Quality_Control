@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
-const USE_MEMORY_ALERTS =
-  process.env.QUALITY_ALERTS_IN_MEMORY === "true" || process.env.NODE_ENV === "test";
+const USE_MEMORY_ALERTS = process.env.QUALITY_ALERTS_IN_MEMORY === "true";
 
 const ALERTS_STORE = path.join(process.cwd(), "data", "quality_alerts.json");
 let memoryAlerts: QualityAlert[] = [];
@@ -23,11 +22,11 @@ export type QualityAlert = {
   type: QualityAlertType;
   severity: "critical" | "warning";
   message: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   timestamp: string;
 };
 
-export async function readAlertsStore(): Promise<any[]> {
+export async function readAlertsStore(): Promise<QualityAlert[]> {
   // Impede execução em edge/build/ambiente sem fs
   if (typeof process !== "object" || process.env.NEXT_RUNTIME === "edge") {
     throw new Error("File system access not supported in this environment");
@@ -35,13 +34,14 @@ export async function readAlertsStore(): Promise<any[]> {
   if (USE_MEMORY_ALERTS) return memoryAlerts;
   try {
     const raw = await fs.promises.readFile(ALERTS_STORE, "utf8");
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw) as QualityAlert[];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
 }
 
-export async function writeAlertsStore(alerts: any[]) {
+export async function writeAlertsStore(alerts: QualityAlert[]) {
   if (USE_MEMORY_ALERTS) {
     memoryAlerts = alerts as QualityAlert[];
     return;
@@ -52,6 +52,9 @@ export async function writeAlertsStore(alerts: any[]) {
 
 export async function sendQualityAlert({ companySlug, type, severity, message, metadata }: QualityAlert) {
   const now = new Date().toISOString();
+  if (!ALERT_TYPES.includes(type)) {
+    throw new Error(`Tipo de alerta invalido: ${type}`);
+  }
   const alerts = await readAlertsStore();
   const last = alerts.find((a) => a.companySlug === companySlug && a.type === type);
   // Anti-spam: 24h
@@ -63,7 +66,7 @@ export async function sendQualityAlert({ companySlug, type, severity, message, m
   alerts.push(alert);
   await writeAlertsStore(alerts);
   // Webhook (mock)
-  const webhookUrl = metadata?.webhookUrl;
+  const webhookUrl = metadata && typeof metadata.webhookUrl === "string" ? metadata.webhookUrl : null;
   if (webhookUrl) {
     await fetch(webhookUrl, {
       method: "POST",

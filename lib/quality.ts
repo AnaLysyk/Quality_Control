@@ -1,35 +1,57 @@
 import { readManualReleaseStore } from "@/data/manualData";
 import { calcMTTR } from "@/lib/mttr";
 import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
+import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
 
-// Resumo de qualidade para exportação executiva
-export async function getCompanyQualitySummary(slug: string, period: string = "30d") {
-  // Apenas defeitos manuais disponíveis (Qase removido)
+type ManualReleaseRecord = {
+  status?: string | null;
+  openedAt?: string | null;
+  createdAt?: string | null;
+  closedAt?: string | null;
+  updatedAt?: string | null;
+  slug?: string | null;
+  id?: string | null;
+  name?: string | null;
+  title?: string | null;
+  runId?: string | number | null;
+  runSlug?: string | null;
+  severity?: string | null;
+};
+
+// Resumo de qualidade para exportacao executiva
+export async function getCompanyQualitySummary(slug: string, _period: string = "30d") {
+  void _period;
+  // Apenas defeitos manuais disponiveis (Qase removido)
   const manualReleases = await readManualReleaseStore();
-  const manualDefects = manualReleases.map((r: any) => {
-    const status = normalizeDefectStatus(r.status);
-    const openedAt = resolveOpenedAt((r as any).openedAt ?? r.createdAt);
-    const closedAt = resolveClosedAt(status, r.closedAt ?? null, r.updatedAt ?? null);
+  const manualDefects = manualReleases.map((r) => {
+    const rec = r as ManualReleaseRecord;
+    const kind = resolveManualReleaseKind(r);
+    if (kind !== "defect") return null;
+    const companySlug = typeof (r as { clientSlug?: string | null }).clientSlug === "string" ? (r as { clientSlug?: string | null }).clientSlug : null;
+    if (slug && companySlug && companySlug !== slug) return null;
+    const status = normalizeDefectStatus(rec.status);
+    const openedAt = resolveOpenedAt(rec.openedAt ?? rec.createdAt);
+    const closedAt = resolveClosedAt(status, rec.closedAt ?? null, rec.updatedAt ?? null);
     return {
-      id: r.slug ?? r.id ?? "",
-      title: r.name ?? r.title ?? "Defeito manual",
+      id: rec.slug ?? rec.id ?? "",
+      title: rec.name ?? rec.title ?? "Defeito manual",
       status,
       openedAt,
       closedAt,
       mttrMs: calcMTTR(openedAt, closedAt),
       origin: "manual",
-      runSlug: r.runId ? String(r.runId) : undefined,
-      severity: r.severity ?? null,
+      runSlug: rec.runSlug ?? (rec.runId ? String(rec.runId) : undefined),
+      severity: rec.severity ?? null,
     };
   });
 
-  const all = manualDefects.filter((d) => d.openedAt);
+  const all = manualDefects.filter((d): d is NonNullable<typeof d> => Boolean(d && d.openedAt));
   const openDefects = all.filter((d) => d.status !== "done");
   const closedDefects = all.filter((d) => d.status === "done");
   const totalDefects = all.length;
   const mttrClosed = closedDefects.filter((d) => d.mttrMs != null);
   const mttrAvg = mttrClosed.length ? Math.round((mttrClosed.reduce((acc, d) => acc + (d.mttrMs || 0), 0) / mttrClosed.length) / 360000) / 10 : null;
-  // SLA: abertos há mais de 48h
+  // SLA: abertos ha mais de 48h
   const SLA_MS = 172800000;
   const now = Date.now();
   const slaOverdue = openDefects.filter((d) => {
@@ -40,7 +62,7 @@ export async function getCompanyQualitySummary(slug: string, period: string = "3
   // Quality Score: usar lógica do summary (pode ser ajustado)
   let qualityScore = 100;
   if (slaOverdue > 0) qualityScore -= slaOverdue * 10;
-  // Penalidade extra se MTTR médio > 48h
+  // Penalidade extra se MTTR medio > 48h
   if (mttrAvg != null && mttrAvg > 48) qualityScore -= 5;
   qualityScore = Math.max(0, Math.min(qualityScore, 100));
 
@@ -55,30 +77,35 @@ export async function getCompanyQualitySummary(slug: string, period: string = "3
   };
 }
 
-// Lista de defeitos flat para exportação
-export async function getCompanyDefects(slug: string, period: string = "30d") {
+// Lista de defeitos flat para exportacao
+export async function getCompanyDefects(slug: string, _period: string = "30d") {
+  void _period;
   // Reutiliza a mesma lógica do summary
-  const summary = await getCompanyQualitySummary(slug, period);
   // Manual + Qase
   const manualReleases = await readManualReleaseStore();
-  const manualDefects = manualReleases.map((r: any) => {
-    const status = normalizeDefectStatus(r.status);
-    const openedAt = resolveOpenedAt((r as any).openedAt ?? r.createdAt);
-    const closedAt = resolveClosedAt(status, r.closedAt ?? null, r.updatedAt ?? null);
+  const manualDefects = manualReleases.map((r) => {
+    const rec = r as ManualReleaseRecord;
+    const kind = resolveManualReleaseKind(r);
+    if (kind !== "defect") return null;
+    const companySlug = typeof (r as { clientSlug?: string | null }).clientSlug === "string" ? (r as { clientSlug?: string | null }).clientSlug : null;
+    if (slug && companySlug && companySlug !== slug) return null;
+    const status = normalizeDefectStatus(rec.status);
+    const openedAt = resolveOpenedAt(rec.openedAt ?? rec.createdAt);
+    const closedAt = resolveClosedAt(status, rec.closedAt ?? null, rec.updatedAt ?? null);
     return {
-      id: r.slug ?? r.id ?? "",
-      title: r.name ?? r.title ?? "Defeito manual",
+      id: rec.slug ?? rec.id ?? "",
+      title: rec.name ?? rec.title ?? "Defeito manual",
       status,
       openedAt,
       closedAt,
       mttrMs: calcMTTR(openedAt, closedAt),
       origin: "manual",
-      runSlug: r.runId ? String(r.runId) : undefined,
-      severity: r.severity ?? null,
+      runSlug: rec.runSlug ?? (rec.runId ? String(rec.runId) : undefined),
+      severity: rec.severity ?? null,
     };
   });
   // Flat payload para export
-  const all = manualDefects.filter((d) => d.openedAt);
+  const all = manualDefects.filter((d): d is NonNullable<typeof d> => Boolean(d && d.openedAt));
   return all.map((d) => ({
     id: d.id,
     title: d.title,

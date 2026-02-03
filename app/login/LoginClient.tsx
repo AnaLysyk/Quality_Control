@@ -1,14 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import styles from "./LoginClient.module.css";
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
+type AuthUserShape = {
+  role?: string | null;
+  globalRole?: string | null;
+  isGlobalAdmin?: boolean;
+  clientSlug?: string | null;
+  companySlug?: string | null;
+};
+
 export default function LoginClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { refreshUser } = useAuthUser();
 
   const [user, setUser] = useState("");
@@ -16,6 +26,25 @@ export default function LoginClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  function resolvePostLoginRedirect(nextParam: string | null, authUser: AuthUserShape | null) {
+    const safeNext = typeof nextParam === "string" && nextParam.startsWith("/") ? nextParam : "";
+    if (safeNext) return safeNext;
+    const normalizedRole = typeof authUser?.role === "string" ? authUser.role.toLowerCase() : "";
+    const isAdmin =
+      authUser?.isGlobalAdmin === true ||
+      authUser?.globalRole === "global_admin" ||
+      normalizedRole === "admin";
+    const clientSlug =
+      typeof authUser?.clientSlug === "string"
+        ? authUser.clientSlug
+        : typeof authUser?.companySlug === "string"
+          ? authUser.companySlug
+          : null;
+    if (isAdmin) return "/admin/home";
+    if (clientSlug) return `/empresas/${encodeURIComponent(clientSlug)}/home`;
+    return "/empresas";
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -30,13 +59,18 @@ export default function LoginClient() {
       });
 
       if (res.ok) {
+        const meRes = await fetch("/api/me");
+        const meJson = await meRes.json().catch(() => null);
+        const authUser = meJson?.user ?? null;
         await refreshUser();
-        router.push("/dashboard");
+        const nextParam = searchParams?.get("next") ?? null;
+        const redirectTo = resolvePostLoginRedirect(nextParam, authUser);
+        router.push(redirectTo);
       } else {
         const data = await res.json().catch(() => null);
         setError((data?.error as string) || "Erro ao autenticar");
       }
-    } catch (err) {
+    } catch {
       setError("Erro de rede");
     } finally {
       setLoading(false);
@@ -44,7 +78,12 @@ export default function LoginClient() {
   }
 
   return (
-    <div className={styles.loginContainer + " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-10 sm:px-6 md:px-10"}>
+    <div
+      className={
+        styles.loginContainer +
+        " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-10 sm:px-6 md:px-10"
+      }
+    >
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-6 left-6 w-32 h-32 bg-[#011848] rounded-full opacity-20 blur-2xl animate-ping"></div>
         <div className="absolute bottom-6 right-6 w-28 h-28 bg-[#ef0001] rounded-full opacity-20 blur-2xl animate-pulse"></div>
@@ -59,14 +98,21 @@ export default function LoginClient() {
       <div className="max-w-lg w-full space-y-8 relative z-10 sm:max-w-xl md:max-w-2xl">
         <div className="text-center">
           <div className="mx-auto w-20 h-20 sm:w-24 sm:h-24 bg-linear-to-r from-[#011848] to-[#ef0001] rounded-full flex items-center justify-center mb-6 shadow-lg">
-            <img src="/images/tc.png" alt="Logo Quality Control" className="w-12 h-12 sm:w-16 sm:h-16 animate-spin-slower select-none pointer-events-none" />
+            <Image
+              src="/images/tc.png"
+              alt="Logo Quality Control"
+              width={64}
+              height={64}
+              priority
+              className="w-12 h-12 sm:w-16 sm:h-16 animate-spin-slower select-none pointer-events-none"
+            />
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold text-[#011848] mb-2 leading-tight">Quality Control</h2>
           <p className="text-[#4b5563]">Bem-vindo, entre na sua conta</p>
         </div>
 
         <form
-          className="bg-white/90 backdrop-blur-sm p-6 sm:p-8 rounded-2xl shadow-2xl border border-[#011848]/10 w-full max-w-md sm:max-w-lg mx-auto min-w-0"
+          className="bg-white/90 backdrop-blur-sm p-5 sm:p-8 rounded-2xl shadow-2xl border border-[#011848]/10 w-full max-w-sm sm:max-w-md mx-auto min-w-0"
           onSubmit={handleSubmit}
         >
           <div className="space-y-4">
@@ -79,7 +125,7 @@ export default function LoginClient() {
                 name="user"
                 type="text"
                 required
-                className="w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white/80"
+                className="w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white/90 text-[#0b1a3c] placeholder:text-[#9aa3b2] caret-[#ef0001]"
                 placeholder="usuario"
                 autoComplete="username"
                 value={user}
@@ -97,7 +143,7 @@ export default function LoginClient() {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   required
-                  className="w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white/80 pr-11"
+                  className="w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white/90 pr-11 text-[#0b1a3c] placeholder:text-[#9aa3b2] caret-[#ef0001]"
                   placeholder="********"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

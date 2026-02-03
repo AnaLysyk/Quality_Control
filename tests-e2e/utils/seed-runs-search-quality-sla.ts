@@ -1,7 +1,16 @@
 
 import fs from "fs";
-import path from "path";
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { resolveSeedPath } from "./seed-paths";
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+
+type ManualRelease = {
+  slug?: string | null;
+} & Record<string, unknown>;
+
+type QualityAlert = {
+  companySlug: string;
+  type: string;
+} & Record<string, unknown>;
 
 const s3 = new S3Client({
   region: process.env.S3_REGION,
@@ -19,7 +28,7 @@ const S3_BUCKET = process.env.S3_BUCKET!;
 export async function seedRunsForSearch() {
   // Nome do arquivo no bucket S3
   const s3Key = "releases-manual.json";
-  let releases: any[] = [];
+  let releases: ManualRelease[] = [];
   // Tenta baixar o arquivo existente do S3
   try {
     const getObj = await s3.send(new GetObjectCommand({
@@ -31,7 +40,7 @@ export async function seedRunsForSearch() {
     for await (const chunk of stream) {
       chunks.push(Buffer.from(chunk));
     }
-    releases = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    releases = JSON.parse(Buffer.concat(chunks).toString("utf8")) as ManualRelease[];
   } catch {}
   const runs = [
     {
@@ -39,6 +48,7 @@ export async function seedRunsForSearch() {
       slug: "run-busca-1",
       name: "Run Busca Alpha",
       app: "GRIAULE",
+      kind: "run",
       clientSlug: "griaule",
       source: "MANUAL",
       status: "closed",
@@ -54,6 +64,7 @@ export async function seedRunsForSearch() {
       slug: "run-busca-2",
       name: "Run Busca Beta",
       app: "GRIAULE",
+      kind: "run",
       clientSlug: "griaule",
       source: "MANUAL",
       status: "closed",
@@ -66,7 +77,7 @@ export async function seedRunsForSearch() {
     }
   ];
   for (const run of runs) {
-    releases = releases.filter((r: any) => r.slug !== run.slug);
+    releases = releases.filter((r) => r.slug !== run.slug);
     releases.push(run);
   }
   // Salva o arquivo atualizado no S3
@@ -79,10 +90,10 @@ export async function seedRunsForSearch() {
 }
 
 export async function seedRunsWithQuality() {
-  const file = path.join(process.cwd(), "data", "releases-manual.json");
-  let releases: any[] = [];
+  const file = resolveSeedPath("releases-manual.json");
+  let releases: ManualRelease[] = [];
   try {
-    releases = JSON.parse(await fs.promises.readFile(file, "utf8"));
+    releases = JSON.parse(await fs.promises.readFile(file, "utf8")) as ManualRelease[];
   } catch {}
   const runs = [
     {
@@ -90,6 +101,7 @@ export async function seedRunsWithQuality() {
       slug: "run-quality-1",
       name: "Run Qualidade Alta",
       app: "GRIAULE",
+      kind: "run",
       clientSlug: "griaule",
       source: "MANUAL",
       status: "closed",
@@ -102,7 +114,7 @@ export async function seedRunsWithQuality() {
     }
   ];
   for (const run of runs) {
-    releases = releases.filter((r: any) => r.slug !== run.slug);
+    releases = releases.filter((r) => r.slug !== run.slug);
     releases.push(run);
   }
   await fs.promises.writeFile(file, JSON.stringify(releases, null, 2), "utf8");
@@ -110,9 +122,9 @@ export async function seedRunsWithQuality() {
 
 export async function seedDefectsOutOfSLA() {
   const file = path.join(process.cwd(), "data", "quality_alerts.json");
-  let alerts: any[] = [];
+  let alerts: QualityAlert[] = [];
   try {
-    alerts = JSON.parse(await fs.promises.readFile(file, "utf8"));
+    alerts = JSON.parse(await fs.promises.readFile(file, "utf8")) as QualityAlert[];
   } catch {}
   const newAlert = {
     companySlug: "griaule",
@@ -122,7 +134,7 @@ export async function seedDefectsOutOfSLA() {
     metadata: { slaOverdue: 2 },
     timestamp: new Date().toISOString()
   };
-  alerts = alerts.filter((a: any) => !(a.companySlug === newAlert.companySlug && a.type === newAlert.type));
+  alerts = alerts.filter((a) => !(a.companySlug === newAlert.companySlug && a.type === newAlert.type));
   alerts.push(newAlert);
   await fs.promises.writeFile(file, JSON.stringify(alerts, null, 2), "utf8");
 }

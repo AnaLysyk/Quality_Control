@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import Breadcrumb from "@/components/Breadcrumb";
 
@@ -22,14 +22,14 @@ export default function RequestsPage() {
   const [company, setCompany] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
-  function handleUnauthorized() {
-    const msg = "Sessão expirada. Faça login novamente.";
+  const handleUnauthorized = useCallback(() => {
+    const msg = "Sessao expirada. Faca login novamente.";
     setMessage(msg);
     toast.error(msg);
     router.push("/login");
-  }
+  }, [router]);
 
-  async function loadRequests() {
+  const loadRequests = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/requests/me", {
@@ -50,11 +50,11 @@ export default function RequestsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [handleUnauthorized]);
 
   useEffect(() => {
     loadRequests();
-  }, []);
+  }, [loadRequests]);
 
   async function submitEmail() {
     setMessage(null);
@@ -73,14 +73,14 @@ export default function RequestsPage() {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      const msg = err.message || "Erro ao enviar solicitação";
+      const msg = err.message || "Erro ao enviar solicitacao";
       setMessage(msg);
       toast.error(msg);
       return;
     }
     setEmail("");
-    setMessage("Solicitação de email enviada");
-    toast.success("Solicitação de email enviada");
+    setMessage("Solicitacao de email enviada");
+    toast.success("Solicitacao de email enviada");
     loadRequests();
   }
 
@@ -101,27 +101,27 @@ export default function RequestsPage() {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      const msg = err.message || "Erro ao enviar solicitação";
+      const msg = err.message || "Erro ao enviar solicitacao";
       setMessage(msg);
       toast.error(msg);
       return;
     }
     setCompany("");
-    setMessage("Solicitação de empresa enviada");
-    toast.success("Solicitação de empresa enviada");
+    setMessage("Solicitacao de empresa enviada");
+    toast.success("Solicitacao de empresa enviada");
     loadRequests();
   }
 
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
       <div className="mx-auto w-full max-w-5xl px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-10 space-y-6">
-        <Breadcrumb items={[{ label: "Conta", href: "/settings" }, { label: "Solicitações" }]} />
+        <Breadcrumb items={[{ label: "Conta", href: "/settings" }, { label: "Solicitacoes" }]} />
 
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Minhas solicitações</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Minhas solicitacoes</h1>
 
         <div className="grid gap-4 md:grid-cols-2">
           <section className="rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 space-y-3">
-            <h2 className="text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">Solicitar alteração de email</h2>
+            <h2 className="text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">Solicitar alteracao de email</h2>
             <label className="block text-sm text-(--tc-text-muted,#6b7280)" htmlFor="request-email">
               Novo email
             </label>
@@ -146,7 +146,7 @@ export default function RequestsPage() {
           </section>
 
           <section className="rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 space-y-3">
-            <h2 className="text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">Solicitar alteração de empresa</h2>
+            <h2 className="text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">Solicitar alteracao de empresa</h2>
             <label className="block text-sm text-(--tc-text-muted,#6b7280)" htmlFor="request-company">
               Novo nome da empresa
             </label>
@@ -181,7 +181,7 @@ export default function RequestsPage() {
             <h2 className="text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">Status</h2>
             {loading && <span className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</span>}
           </div>
-          {items.length === 0 && <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma solicitação.</p>}
+          {items.length === 0 && <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma solicitacao.</p>}
           <ul className="space-y-2" role="list" aria-busy={loading}>
             {items.map((req) => (
               <li

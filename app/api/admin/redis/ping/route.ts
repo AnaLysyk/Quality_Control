@@ -4,17 +4,6 @@ import { apiFail, apiOk } from "@/lib/apiResponse";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
-function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.REDIS_PING_SECRET;
-  if (!secret) return false;
-
-  const url = new URL(req.url);
-  const q = url.searchParams.get("secret") ?? "";
-  const header = req.headers.get("x-redis-ping-secret") ?? "";
-
-  return q === secret || header === secret;
-}
-
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {

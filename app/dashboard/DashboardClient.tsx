@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useAuthUser } from "@/hooks/useAuthUser";
+import { useAuthUser, type AuthUser } from "@/hooks/useAuthUser";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -47,7 +47,7 @@ export default function DashboardClient() {
     );
   }
 
-  const safeUser = user as any;
+  const safeUser: AuthUser = user ?? {};
   const capabilities = (Array.isArray(safeUser.capabilities) ? safeUser.capabilities : []) as Capability[];
   const isGlobalAdmin = safeUser?.isGlobalAdmin === true || safeUser?.globalRole === "global_admin";
 

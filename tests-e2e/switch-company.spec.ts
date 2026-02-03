@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
 test("admin troca empresa ativa", async ({ page, context }) => {

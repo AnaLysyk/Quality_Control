@@ -20,6 +20,30 @@ export type TimelineEvent = {
   meta?: Record<string, unknown>;
 };
 
+type ReleaseData = {
+  title?: string | null;
+  name?: string | null;
+  slug?: string | null;
+  createdAt?: string | null;
+  created_at?: string | null;
+  updatedAt?: string | null;
+  status?: string | null;
+};
+
+type GateEntry = {
+  id?: string;
+  company_slug?: string;
+  release_slug?: string;
+  decision?: string;
+  override?: { at?: string; reason?: string; by?: string };
+  evaluated_at?: string;
+  gate_status?: string;
+  mttr_hours?: number;
+  open_defects?: number;
+  fail_rate?: number;
+  reasons?: unknown;
+};
+
 const GATE_STORE = path.join(process.cwd(), "data", "quality_gate_history.json");
 
 async function ensureGateStore() {
@@ -31,11 +55,11 @@ async function ensureGateStore() {
   }
 }
 
-async function readGateHistory() {
+async function readGateHistory(): Promise<GateEntry[]> {
   await ensureGateStore();
   const raw = await fs.readFile(GATE_STORE, "utf8");
   try {
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(raw) as GateEntry[];
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
@@ -53,16 +77,17 @@ export async function getReleaseTimeline(companySlug: string, releaseSlug: strin
   const manual = (await readManualReleaseStore()).find((r) => r.slug === releaseSlug) ?? null;
   const apiRelease = manual ? null : (await getReleaseBySlug(releaseSlug).catch(() => null));
   const releaseData = manual || apiRelease;
+  const releaseRecord = releaseData as ReleaseData | null;
   const releaseTitle =
-    (releaseData as any)?.title ||
-    (releaseData as any)?.name ||
-    (releaseData as any)?.slug ||
+    releaseRecord?.title ||
+    releaseRecord?.name ||
+    releaseRecord?.slug ||
     releaseSlug;
 
   // Release created
   const createdAt =
-    (releaseData as any)?.createdAt ||
-    (releaseData as any)?.created_at ||
+    releaseRecord?.createdAt ||
+    releaseRecord?.created_at ||
     null;
   if (createdAt) {
     events.push({
@@ -75,19 +100,19 @@ export async function getReleaseTimeline(companySlug: string, releaseSlug: strin
 
   // Run created / failed
   if (releaseData) {
-    const runCreatedAt = createdAt || (releaseData as any)?.updatedAt || new Date().toISOString();
+    const runCreatedAt = createdAt || releaseRecord?.updatedAt || new Date().toISOString();
     events.push({
       id: `run_created:${releaseSlug}`,
       type: "run_created",
       label: `Run ${releaseTitle} criada`,
       occurred_at: runCreatedAt,
     });
-    if (statusIsFail((releaseData as any)?.status)) {
+    if (statusIsFail(releaseRecord?.status ?? null)) {
       events.push({
         id: `run_failed:${releaseSlug}`,
         type: "run_failed",
         label: `Run ${releaseTitle} falhou`,
-        occurred_at: (releaseData as any)?.updatedAt || runCreatedAt,
+        occurred_at: releaseRecord?.updatedAt || runCreatedAt,
       });
     }
   }
@@ -96,11 +121,11 @@ export async function getReleaseTimeline(companySlug: string, releaseSlug: strin
   const gateHistory = await readGateHistory();
   gateHistory
     .filter(
-      (entry: any) =>
+      (entry) =>
         entry.company_slug === companySlug &&
         entry.release_slug === releaseSlug
     )
-    .forEach((entry: any) => {
+    .forEach((entry) => {
       const isOverride = entry.decision === "approved_with_override";
       const occurredAt = isOverride && entry.override?.at ? entry.override.at : entry.evaluated_at;
       const label = isOverride

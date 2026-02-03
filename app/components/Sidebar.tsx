@@ -15,7 +15,6 @@ import {
   FiHome,
   FiLayers,
   FiList,
-  FiPlusCircle,
   FiShield,
   FiUserPlus,
   FiUsers,
@@ -83,7 +82,6 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
       { label: t("nav.home"), icon: FiHome, href: "/" },
       { label: t("nav.companies"), icon: FiUsers, href: "/empresas" },
       { label: "Identidade Visual", icon: FiCompass, href: "/brand-identity" },
-      { label: t("nav.newRun"), icon: FiPlusCircle, href: "/admin/runs", roles: ["admin", "client", "user"] },
     ],
     [t]
   );
@@ -113,7 +111,6 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             { label: t("nav.testPlans"), icon: FiClipboard, href: `/empresas/${companySlug}/planos-de-teste` },
             { label: t("nav.runs"), icon: FiList, href: `/empresas/${companySlug}/runs` },
             { label: t("nav.defects"), icon: FiAlertTriangle, href: `/empresas/${companySlug}/defeitos` },
-            { label: t("nav.runsManagement"), icon: FiLayers, href: "/admin/runs", roles: ["admin", "client", "user"] },
           ]
         : [],
     [companySlug, t]

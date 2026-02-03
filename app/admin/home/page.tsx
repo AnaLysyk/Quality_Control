@@ -65,6 +65,17 @@ const RISK_TONE: Record<string, string> = {
   no_data: "border-slate-200 bg-slate-50 text-slate-500",
 };
 
+function slugifyTestId(value?: string | null) {
+  const raw = (value ?? "").toString();
+  if (!raw) return "";
+  return raw
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function formatDate(value?: string) {
   if (!value) return "--";
   const date = new Date(value);
@@ -122,7 +133,7 @@ export default function AdminHomePage() {
     return () => {
       canceled = true;
     };
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     let canceled = false;
@@ -152,7 +163,7 @@ export default function AdminHomePage() {
     return () => {
       canceled = true;
     };
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     let canceled = false;
@@ -182,7 +193,7 @@ export default function AdminHomePage() {
     return () => {
       canceled = true;
     };
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     let canceled = false;
@@ -210,7 +221,7 @@ export default function AdminHomePage() {
     return () => { canceled = true; };
   }, [router]);
 
-  const companies = overview?.companies ?? [];
+  const companies = useMemo(() => overview?.companies ?? [], [overview]);
   const selectedCompany = useMemo(() => {
     if (!companies.length) return null;
     if (!selectedCompanySlug) return null;
@@ -324,12 +335,13 @@ export default function AdminHomePage() {
                 {companyCards.map((company) => {
                   const tone = RISK_TONE[company.risk] ?? RISK_TONE.no_data;
                   const isSelected = company.slug === selectedCompanySlug;
+                  const testSlug = slugifyTestId(company.slug ?? company.name ?? company.id);
                   return (
                     <button
                       key={company.id}
                       type="button"
                       onClick={() => setSelectedCompanySlug(company.slug)}
-                      data-testid={`benchmark-row-${company.slug}`}
+                      data-testid={testSlug ? `benchmark-row-${testSlug}` : "benchmark-row"}
                       className={`flex min-w-56 flex-col gap-2 rounded-2xl border p-4 shadow-sm transition ${tone} ${
                         isSelected ? "ring-2 ring-offset-2 ring-(--tc-border,#e5e7eb)" : "opacity-80 hover:opacity-100"
                       }`}

@@ -31,9 +31,6 @@ export function QualityGateHistory({
 
   useEffect(() => {
     if (!open) return;
-    if (initialEvents.length) {
-      setEvents((prev) => (prev.length ? prev : initialEvents));
-    }
     let active = true;
     fetch(`/api/empresas/${encodeURIComponent(companySlug)}/releases/${encodeURIComponent(releaseSlug)}/timeline`)
       .then((res) => res.json())

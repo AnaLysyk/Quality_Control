@@ -58,6 +58,12 @@ export type LocalAuthStore = {
 
 const STORE_PATH = path.join(process.cwd(), "data", "local-auth-store.json");
 const SAMPLE_PATH = path.join(process.cwd(), "data", "local-auth-store.sample.json");
+const USE_MEMORY_STORE = process.env.LOCAL_AUTH_IN_MEMORY === "true";
+
+type GlobalAuthStore = {
+  __qcLocalAuthStore?: LocalAuthStore;
+  __qcLocalAuthStoreInit?: boolean;
+};
 
 function normalizeLogin(value: string) {
   return value.trim().toLowerCase();
@@ -156,6 +162,32 @@ async function readJson(filePath: string): Promise<LocalAuthStore | null> {
   }
 }
 
+function cloneStore(store: LocalAuthStore): LocalAuthStore {
+  if (typeof structuredClone === "function") return structuredClone(store);
+  return JSON.parse(JSON.stringify(store)) as LocalAuthStore;
+}
+
+function getMemoryStore(): { store: LocalAuthStore; initialized: boolean } {
+  const globalStore = globalThis as GlobalAuthStore;
+  return {
+    store: globalStore.__qcLocalAuthStore ?? { users: [], companies: [], memberships: [], links: [] },
+    initialized: globalStore.__qcLocalAuthStoreInit === true,
+  };
+}
+
+function setMemoryStore(store: LocalAuthStore) {
+  const globalStore = globalThis as GlobalAuthStore;
+  globalStore.__qcLocalAuthStore = store;
+  globalStore.__qcLocalAuthStoreInit = true;
+}
+
+async function readStoreFromDisk(): Promise<LocalAuthStore> {
+  const store = (await readJson(STORE_PATH)) ?? (await readJson(SAMPLE_PATH));
+  const normalized = store ?? { users: [], companies: [], memberships: [], links: [] };
+  normalized.memberships = normalizeMemberships(normalized);
+  return normalized;
+}
+
 async function storeExists() {
   try {
     await fs.access(STORE_PATH);
@@ -166,28 +198,40 @@ async function storeExists() {
 }
 
 export async function readLocalAuthStore(): Promise<LocalAuthStore> {
-  const store = (await readJson(STORE_PATH)) ?? (await readJson(SAMPLE_PATH));
-  const normalized = store ?? { users: [], companies: [], memberships: [], links: [] };
-  normalized.memberships = normalizeMemberships(normalized);
-  return normalized;
+  if (!USE_MEMORY_STORE) {
+    return readStoreFromDisk();
+  }
+  const memory = getMemoryStore();
+  if (!memory.initialized) {
+    const seeded = await readStoreFromDisk();
+    setMemoryStore(seeded);
+    return cloneStore(seeded);
+  }
+  return cloneStore(memory.store);
 }
 
 export async function writeLocalAuthStore(store: LocalAuthStore): Promise<void> {
-  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
   const payload: LocalAuthStore = {
     users: store.users ?? [],
     companies: store.companies ?? [],
     memberships: store.memberships ?? normalizeMemberships(store),
     links: store.links ?? [],
   };
+  if (USE_MEMORY_STORE) {
+    setMemoryStore(cloneStore(payload));
+    return;
+  }
+  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
   await fs.writeFile(STORE_PATH, JSON.stringify(payload, null, 2), "utf8");
 }
 
 async function loadStoreForWrite(): Promise<LocalAuthStore> {
   const store = await readLocalAuthStore();
-  const exists = await storeExists();
-  if (!exists) {
-    await writeLocalAuthStore(store);
+  if (!USE_MEMORY_STORE) {
+    const exists = await storeExists();
+    if (!exists) {
+      await writeLocalAuthStore(store);
+    }
   }
   return store;
 }
@@ -316,7 +360,7 @@ export async function createLocalCompany(input: Partial<LocalAuthCompany> & { na
   if (store.companies.some((company) => normalizeSlug(company.slug ?? "") === finalSlug)) {
     finalSlug = `${finalSlug}-${randomUUID().slice(0, 4)}`;
   }
-  const { name, slug: _slug, ...rest } = input;
+  const { name, ...rest } = input;
   const company: LocalAuthCompany = {
     id: input.id ?? `cmp_${randomUUID().slice(0, 8)}`,
     name: name.trim() || finalSlug,

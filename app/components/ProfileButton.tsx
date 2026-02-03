@@ -91,7 +91,7 @@ export default function ProfileButton() {
     return null;
   });
   const [avatarError, setAvatarError] = useState(false);
-  const [hasMounted, setHasMounted] = useState(false);
+  const hasMounted = typeof window !== "undefined";
 
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -187,9 +187,6 @@ export default function ProfileButton() {
       ? avatarIcon
       : "\u{1F680}";
 
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
 
   function showToast(kind: "success" | "error", message: string) {
     setToast({ kind, message });

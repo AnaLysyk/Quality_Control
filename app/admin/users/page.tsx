@@ -18,6 +18,12 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value as Record<string, unknown>;
 }
 
+function getItemsFromEnvelope<T>(value: unknown): T[] {
+  if (!value || typeof value !== "object") return [];
+  const items = (value as { items?: unknown }).items;
+  return Array.isArray(items) ? (items as T[]) : [];
+}
+
 function AdminUsersPage() {
   const router = useRouter();
   const { user } = useAuthUser();
@@ -65,7 +71,7 @@ function AdminUsersPage() {
         }
 
         const clientsData = unwrapEnvelopeData<Record<string, unknown>>(clientsRaw) ?? (clientsRaw as Record<string, unknown> | null) ?? {};
-        const clientItems = Array.isArray((clientsData as any).items) ? ((clientsData as any).items as unknown[]) : [];
+        const clientItems = getItemsFromEnvelope<unknown>(clientsData);
         const mappedClients: ClientOption[] = clientItems
           .map((c) => {
             const rec = asRecord(c) ?? {};
@@ -93,7 +99,7 @@ function AdminUsersPage() {
           throw new Error(formatMessageWithRequestId(msg, requestId));
         }
         const usersData = unwrapEnvelopeData<Record<string, unknown>>(usersRaw) ?? (usersRaw as Record<string, unknown> | null) ?? {};
-        setUsers(Array.isArray((usersData as any).items) ? (usersData as any).items : []);
+        setUsers(getItemsFromEnvelope<UserItem>(usersData));
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Erro ao carregar dados";
         setMessage(msg);
@@ -198,7 +204,7 @@ function AdminUsersPage() {
             return;
           }
           const usersData = unwrapEnvelopeData<Record<string, unknown>>(usersRaw) ?? (usersRaw as Record<string, unknown> | null) ?? {};
-          setUsers(Array.isArray((usersData as any).items) ? (usersData as any).items : []);
+          setUsers(getItemsFromEnvelope<UserItem>(usersData));
         }}
       />
 

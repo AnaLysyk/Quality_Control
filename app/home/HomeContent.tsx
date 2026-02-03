@@ -37,11 +37,11 @@ function decideLandingRoute(user: AuthUser | null, clients: ClientAccess[], acti
   if (!user) return null;
   const role = (user.role ?? "").toLowerCase();
   if (role === "admin") return "/admin";
-  if (role === "company") {
+  if (role === "company" || role === "user" || role === "viewer") {
     const slug = resolveCompanySlug(user, clients, activeClientSlug);
     return slug ? `/empresas/${encodeURIComponent(slug)}/home` : "/empresas";
   }
-  return "/user/home";
+  return "/empresas";
 }
 
 export default function HomeContent() {

@@ -6,8 +6,8 @@ import {
   getLocalUserById,
   listLocalCompanies,
   listLocalLinksForUser,
-  normalizeLocalRole,
   normalizeGlobalRole,
+  normalizeLocalRole,
   toLegacyRole,
 } from "@/lib/auth/localStore";
 import { resolveCapabilities } from "@/lib/permissions";
@@ -38,6 +38,9 @@ export type AccessContext = {
   companySlugs: string[];
 };
 
+const SESSION_COOKIE = "session_id";
+const AUTH_COOKIE = "auth_token";
+
 function readCookieValue(cookieHeader: string, name: string): string | null {
   if (!cookieHeader) return null;
   const cookies = cookieHeader.split(";").map((cookie) => cookie.trim());
@@ -60,43 +63,27 @@ function extractBearerToken(req: Request): string | null {
   return null;
 }
 
-export async function getSessionPayload(req: Request): Promise<SessionPayload | null> {
-  const cookieHeader = req.headers.get("cookie") ?? "";
-  const sessionId = readCookieValue(cookieHeader, "session_id");
-  if (sessionId) {
-    try {
-      const redis = getRedis();
-      const raw = await redis.get<string>(`session:${sessionId}`);
-      if (raw) {
-        const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-        return parsed as SessionPayload;
-      }
-    } catch {
-      return null;
-    }
-  }
-
-  const bearer = extractBearerToken(req);
-  const cookieToken = readCookieValue(cookieHeader, "auth_token");
-  const token = bearer || cookieToken;
-  if (!token) return null;
-
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    // Fallback: allow bearer token to be a session_id when JWT is not configured.
-    try {
-      const redis = getRedis();
-      const raw = await redis.get<string>(`session:${token}`);
-      if (raw) {
-        const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-        return parsed as SessionPayload;
-      }
-    } catch {
-      return null;
-    }
+function safeJsonParse<T>(raw: unknown): T | null {
+  try {
+    if (typeof raw === "string") return JSON.parse(raw) as T;
+    return (raw as T) ?? null;
+  } catch {
     return null;
   }
+}
 
+async function readSessionFromRedis(sessionId: string): Promise<SessionPayload | null> {
+  if (!sessionId) return null;
+  try {
+    const redis = getRedis();
+    const raw = await redis.get<string>(`session:${sessionId}`);
+    return safeJsonParse<SessionPayload>(raw);
+  } catch {
+    return null;
+  }
+}
+
+function parseJwtSession(token: string, secret: string): SessionPayload | null {
   try {
     const payload = jwt.verify(token, secret) as jwt.JwtPayload & {
       sub?: string;
@@ -128,31 +115,66 @@ export async function getSessionPayload(req: Request): Promise<SessionPayload | 
   }
 }
 
+export async function getSessionPayload(req: Request): Promise<SessionPayload | null> {
+  // 1) Primeiro tenta a sessao salva no Redis via cookie de sessao.
+  const cookieHeader = req.headers.get("cookie") ?? "";
+  const sessionId = readCookieValue(cookieHeader, SESSION_COOKIE);
+  if (sessionId) {
+    const fromRedis = await readSessionFromRedis(sessionId);
+    if (fromRedis) return fromRedis;
+  }
+
+  // 2) Se nao houver sessao, tenta o token (Bearer ou cookie auth_token).
+  const bearer = extractBearerToken(req);
+  const cookieToken = readCookieValue(cookieHeader, AUTH_COOKIE);
+  const token = bearer || cookieToken;
+  if (!token) return null;
+
+  // 3) Se JWT_SECRET nao existir, tratamos o token como session_id (fallback local).
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    return await readSessionFromRedis(token);
+  }
+
+  // 4) Se tiver JWT_SECRET, decodifica o JWT e normaliza o payload.
+  return parseJwtSession(token, secret);
+}
+
 export async function getAccessContext(req: Request): Promise<AccessContext | null> {
+  // 1) Resgata o payload da sessao.
   const session = await getSessionPayload(req);
   if (!session) return null;
 
+  // 2) Resolve o userId (pode vir em userId ou sub).
   const userId = session.userId ?? session.id;
   if (!userId) return null;
 
+  // 3) Carrega usuario, vinculos e empresas locais em paralelo.
   const [user, links, companies] = await Promise.all([
     getLocalUserById(userId),
     listLocalLinksForUser(userId),
     listLocalCompanies(),
   ]);
+
+  // 4) Regras de bloqueio basicas.
   if (!user || user.active === false || user.status === "blocked") return null;
 
+  // 5) Resolve papel global e se e admin global.
   const resolvedGlobalRole = normalizeGlobalRole(user.globalRole ?? session.globalRole ?? null);
   const isGlobalAdmin =
     resolvedGlobalRole === "global_admin" || user.is_global_admin === true || session.isGlobalAdmin === true;
+
+  // 6) Lista de empresas permitidas (todas para admin global, ou apenas as vinculadas).
   const allowedCompanies = isGlobalAdmin
     ? companies
     : companies.filter((company) => links.some((link) => link.companyId === company.id));
-  if (!isGlobalAdmin && allowedCompanies.length === 0) return null;
+  // Importante: usuarios sem empresa ainda podem entrar para solicitar acesso.
+
   const companySlugs = allowedCompanies
     .map((company) => company.slug)
     .filter((slug): slug is string => typeof slug === "string" && slug.length > 0);
 
+  // 7) Define empresa primaria com fallback inteligente.
   const primaryCompany =
     allowedCompanies.find((company) => company.id === session.companyId) ??
     allowedCompanies.find((company) => company.slug === session.companySlug) ??
@@ -160,9 +182,9 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     allowedCompanies[0] ??
     null;
 
-  const primaryLink =
-    primaryCompany ? links.find((link) => link.companyId === primaryCompany.id) ?? null : null;
+  const primaryLink = primaryCompany ? links.find((link) => link.companyId === primaryCompany.id) ?? null : null;
 
+  // 8) Resolve papel de empresa e capacidades efetivas.
   const rawRole = session.companyRole ?? primaryLink?.role ?? user.role ?? null;
   const companyRole = normalizeLocalRole(rawRole);
   const capabilities = resolveCapabilities({
@@ -172,6 +194,7 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
   });
   const effectiveRole = toLegacyRole(companyRole, isGlobalAdmin);
 
+  // 9) Retorna o contexto final consumido pelo restante do app.
   return {
     userId: user.id,
     email: user.email,

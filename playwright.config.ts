@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 import { readFileSync } from "node:fs";
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
 
 function loadDotenv(path: string): Record<string, string> {
   try {
@@ -23,6 +23,8 @@ const dotenvEnv = loadDotenv(".env.local");
 Object.assign(process.env, dotenvEnv);
 const envOverrides = {
   PLAYWRIGHT_MOCK: "true",
+  JWT_SECRET: "quality-control-e2e-secret",
+  E2E_USE_JSON: process.env.E2E_USE_JSON || "1",
 };
 Object.assign(process.env, envOverrides);
 const useExistingServer = process.env.PLAYWRIGHT_USE_EXISTING === "1" || process.env.PLAYWRIGHT_USE_EXISTING === "true";
@@ -49,8 +51,13 @@ export default defineConfig({
         env: {
           ...dotenvEnv,
           PLAYWRIGHT_MOCK: "true",
-          E2E_USE_JSON: "1",
+          E2E_USE_JSON: envOverrides.E2E_USE_JSON,
           NODE_ENV: "test",
+          JWT_SECRET: envOverrides.JWT_SECRET,
+          PORT: "3100",
+          HOSTNAME: "127.0.0.1",
+          NEXT_PUBLIC_SITE_URL: baseURL,
+          NEXT_PUBLIC_BASE_URL: baseURL,
         },
       },
   projects: [

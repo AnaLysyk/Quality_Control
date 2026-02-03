@@ -1,18 +1,25 @@
 import fs from "fs";
-import path from "path";
+import { resolveSeedPath } from "./seed-paths";
+
+type ManualRelease = {
+  slug?: string | null;
+} & Record<string, unknown>;
+
+type ManualCase = Record<string, unknown>;
 
 export async function seedRunWithDefects() {
   // Seed para releases-manual.json (run)
-  const releasesFile = path.join(process.cwd(), "data", "releases-manual.json");
-  let releases: any[] = [];
+  const releasesFile = resolveSeedPath("releases-manual.json");
+  let releases: ManualRelease[] = [];
   try {
     releases = JSON.parse(await fs.promises.readFile(releasesFile, "utf8"));
   } catch {}
   const defectRun = {
     id: "run-defeito-1",
     slug: "run-defeito-1",
-    name: "Run com Defeitos Único",
+    name: "Run com Defeitos Unico",
     app: "GRIAULE",
+    kind: "run",
     clientSlug: "griaule",
     source: "MANUAL",
     status: "closed",
@@ -21,15 +28,15 @@ export async function seedRunWithDefects() {
     createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     updatedAt: new Date().toISOString(),
     runSlug: "run-defeito-1",
-    runName: "Run com Defeitos Único"
+    runName: "Run com Defeitos Unico"
   };
-  releases = releases.filter((r: any) => r.slug !== defectRun.slug);
+  releases = releases.filter((r) => r.slug !== defectRun.slug);
   releases.push(defectRun);
   await fs.promises.writeFile(releasesFile, JSON.stringify(releases, null, 2), "utf8");
 
   // Seed para releases-manual-cases.json (defeitos filtrados)
-  const casesFile = path.join(process.cwd(), "data", "releases-manual-cases.json");
-  let cases: { [key: string]: any[] } = {};
+  const casesFile = resolveSeedPath("releases-manual-cases.json");
+  let cases: Record<string, ManualCase[]> = {};
   try {
     cases = JSON.parse(await fs.promises.readFile(casesFile, "utf8"));
   } catch {}
@@ -55,7 +62,7 @@ export async function seedRunWithDefects() {
     // Add 'Defeito proibido' for RBAC test
     {
       id: "defeito_proibido",
-      title: "Defeito proibido Único",
+      title: "Defeito proibido Unico",
       bug: null,
       dbId: null,
       link: "",

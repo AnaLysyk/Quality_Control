@@ -1,28 +1,36 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-export default function DefectList({ companyId, releaseManualId }: { companyId: string, releaseManualId?: string }) {
-  const [defects, setDefects] = useState<any[]>([]);
+type Defect = {
+  id: string;
+  title?: string | null;
+  description?: string | null;
+  status?: string | null;
+  createdAt?: string | null;
+};
+
+export default function DefectList({ companyId, releaseManualId }: { companyId: string; releaseManualId?: string }) {
+  const [defects, setDefects] = useState<Defect[]>([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function fetchDefects() {
+  const fetchDefects = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       let url = `/api/defect?companyId=${companyId}`;
       if (releaseManualId) url += `&releaseManualId=${releaseManualId}`;
       const res = await fetch(url);
-      const data = await res.json();
-      setDefects(data);
-    } catch (e) {
+      const data = (await res.json()) as Defect[];
+      setDefects(Array.isArray(data) ? data : []);
+    } catch {
       setError("Erro ao buscar defeitos");
     } finally {
       setLoading(false);
     }
-  }
+  }, [companyId, releaseManualId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,7 +46,7 @@ export default function DefectList({ companyId, releaseManualId }: { companyId: 
       setTitle("");
       setDescription("");
       await fetchDefects();
-    } catch (e) {
+    } catch {
       setError("Erro ao criar defeito");
     } finally {
       setLoading(false);
@@ -47,8 +55,7 @@ export default function DefectList({ companyId, releaseManualId }: { companyId: 
 
   useEffect(() => {
     fetchDefects();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyId, releaseManualId]);
+  }, [fetchDefects]);
 
   return (
     <div className="max-w-xl mx-auto p-4">
@@ -56,16 +63,16 @@ export default function DefectList({ companyId, releaseManualId }: { companyId: 
       <form onSubmit={handleSubmit} className="mb-6 space-y-2">
         <input
           className="border rounded px-2 py-1 w-full"
-          placeholder="Título"
+          placeholder="Titulo"
           value={title}
-          onChange={e => setTitle(e.target.value)}
+          onChange={(e) => setTitle(e.target.value)}
           required
         />
         <textarea
           className="border rounded px-2 py-1 w-full"
-          placeholder="Descrição"
+          placeholder="Descricao"
           value={description}
-          onChange={e => setDescription(e.target.value)}
+          onChange={(e) => setDescription(e.target.value)}
         />
         <button
           type="submit"
@@ -77,11 +84,13 @@ export default function DefectList({ companyId, releaseManualId }: { companyId: 
       </form>
       {error && <div className="text-red-600 mb-2">{error}</div>}
       <ul className="space-y-2">
-        {defects.map(d => (
+        {defects.map((d) => (
           <li key={d.id} className="border rounded p-2">
-            <div className="font-semibold">{d.title}</div>
-            <div className="text-sm text-gray-600">{d.description}</div>
-            <div className="text-xs text-gray-400">Status: {d.status} | Criado em: {new Date(d.createdAt).toLocaleString()}</div>
+            <div className="font-semibold">{d.title ?? "Sem titulo"}</div>
+            <div className="text-sm text-gray-600">{d.description ?? ""}</div>
+            <div className="text-xs text-gray-400">
+              Status: {d.status ?? "N/A"} | Criado em: {d.createdAt ? new Date(d.createdAt).toLocaleString() : "-"}
+            </div>
           </li>
         ))}
       </ul>

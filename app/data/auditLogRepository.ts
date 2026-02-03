@@ -29,7 +29,7 @@ export type AuditLogRow = {
 
 export const AUDIT_LOG_RETENTION_DAYS = 60;
 
-export async function addAuditLog(input: {
+export async function addAuditLog(_input: {
   actorUserId?: string | null;
   actorEmail?: string | null;
   action: AuditAction;
@@ -38,11 +38,13 @@ export async function addAuditLog(input: {
   entityLabel?: string | null;
   metadata?: unknown;
 }): Promise<void> {
+  void _input;
   // Audit logs desativados sem storage dedicado.
   return;
 }
 
-export async function listAuditLogs(params?: { limit?: number; offset?: number; action?: string | null }) {
+export async function listAuditLogs(_params?: { limit?: number; offset?: number; action?: string | null }) {
+  void _params;
   throw new Error("AUDIT_LOG_STORAGE_DISABLED");
 }
 

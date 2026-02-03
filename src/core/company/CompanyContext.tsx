@@ -65,6 +65,7 @@ export type ClientAccess = {
   active: boolean;
   role: "ADMIN" | "USER";
   linkActive: boolean;
+  createdAt?: string | null;
 };
 
 type ClientContextValue = {
@@ -100,6 +101,9 @@ export function ClientProvider({ children }: { children: ReactNode }) {
         active: company.active ?? true,
         role: ((company.role ?? "").toUpperCase() === "ADMIN" ? "ADMIN" : "USER") as ClientAccess["role"],
         linkActive: true,
+        createdAt: typeof (company as { createdAt?: string | null }).createdAt === "string"
+          ? (company as { createdAt?: string | null }).createdAt
+          : null,
       })),
     [companies]
   );

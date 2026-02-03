@@ -3,8 +3,12 @@ import type { DataSource, AuthLoginInput, AuthLoginResult, AuthMeResult, Company
 async function json<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
   const res = await fetch(input, init);
   if (!res.ok) {
-    const err = await res.json().catch(() => null);
-    throw new Error((err?.error as string) || (err?.message as string) || "Request failed");
+    const err = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+    const message =
+      (typeof err?.error === "string" && err.error) ||
+      (typeof err?.message === "string" && err.message) ||
+      "Request failed";
+    throw new Error(message);
   }
   return res.json();
 }
@@ -24,7 +28,7 @@ export const JsonDataSource: DataSource = {
   },
   companies: {
     list: async () => {
-      const payload = await json<{ items: any[] }>("/api/clients");
+      const payload = await json<{ items: Array<Record<string, unknown>> }>("/api/clients");
       return payload.items ?? [];
     },
     create: async (input: CompanyCreateInput) =>
@@ -37,7 +41,7 @@ export const JsonDataSource: DataSource = {
   users: {
     list: async (clientId?: string | null) => {
       const url = clientId ? `/api/admin/users?client_id=${encodeURIComponent(clientId)}` : "/api/admin/users";
-      const payload = await json<{ items: any[] }>(url);
+      const payload = await json<{ items: Array<Record<string, unknown>> }>(url);
       return payload.items ?? [];
     },
   },

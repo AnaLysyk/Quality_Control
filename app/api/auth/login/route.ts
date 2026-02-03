@@ -61,11 +61,17 @@ export async function POST(req: Request) {
     const allowedCompanies = isGlobalAdmin
       ? companies
       : companies.filter((company) => links.some((link) => link.companyId === company.id));
-    if (!allowedCompanies.length && !isGlobalAdmin) {
-      return NextResponse.json({ error: "Usuario sem empresa vinculada" }, { status: 403 });
-    }
-
+    const requestedSlug =
+      (typeof body?.clientSlug === "string" && body.clientSlug.trim()) ||
+      (typeof body?.companySlug === "string" && body.companySlug.trim()) ||
+      "";
+    // Prioriza a empresa solicitada (quando permitida) para manter o contexto ativo do usuario.
+    const requestedCompany =
+      requestedSlug && allowedCompanies.length
+        ? allowedCompanies.find((company) => company.slug === requestedSlug) ?? null
+        : null;
     const activeCompany =
+      requestedCompany ??
       allowedCompanies.find((company) => company.slug === user.default_company_slug) ??
       allowedCompanies[0] ??
       null;
@@ -119,13 +125,20 @@ export async function POST(req: Request) {
       },
     });
     setCookie(res, "session_id", sessionId, SESSION_TTL_SECONDS);
-    if (authToken) {
-      setCookie(res, "auth_token", authToken, SESSION_TTL_SECONDS);
+    // Sempre expõe um token para manter compatibilidade no middleware.
+    setCookie(res, "auth_token", tokenToExpose, SESSION_TTL_SECONDS);
+    if (requestedCompany?.slug) {
+      // Mantem o contexto de empresa escolhido (admin ou company) apos login.
+      setCookie(res, "active_company_slug", requestedCompany.slug, SESSION_TTL_SECONDS);
+    } else {
+      // Limpa o contexto salvo quando o login nao especifica empresa.
+      res.cookies.set("active_company_slug", "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
     }
 
     return res;
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
     console.error("[LOGIN ERROR]", err);
-    return NextResponse.json({ error: "Erro interno: " + (err?.message || err) }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno: " + message }, { status: 500 });
   }
 }

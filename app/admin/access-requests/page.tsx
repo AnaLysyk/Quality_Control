@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import { getAccessToken } from "@/lib/api";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
@@ -104,6 +104,12 @@ function toAcceptAccessType(label: AccessTypeLabel): "admin" | "company" | "user
   return "user";
 }
 
+function getItemsFromEnvelope<T>(value: unknown): T[] {
+  if (!value || typeof value !== "object") return [];
+  const items = (value as { items?: unknown }).items;
+  return Array.isArray(items) ? (items as T[]) : [];
+}
+
 function AccessRequestsPage() {
   const [items, setItems] = useState<AccessRequestItem[]>([]);
   const [clients, setClients] = useState<ClientOption[]>([]);
@@ -124,7 +130,7 @@ function AccessRequestsPage() {
     return computeDirty(selected, draft);
   }, [selected, draft]);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -144,7 +150,7 @@ function AccessRequestsPage() {
       }
 
       const reqData = unwrapEnvelopeData<Record<string, unknown>>(reqRaw) ?? (reqRaw as Record<string, unknown> | null) ?? {};
-      const rawItems = Array.isArray((reqData as any).items) ? ((reqData as any).items as RawSupportRequest[]) : [];
+      const rawItems = getItemsFromEnvelope<RawSupportRequest>(reqData);
 
       const parsed: AccessRequestItem[] = rawItems.map((r) => {
         const parsedMsg = parseFromMessage(String(r.message ?? ""), String(r.email ?? ""));
@@ -156,7 +162,7 @@ function AccessRequestsPage() {
           name: String(parsedMsg.name ?? ""),
           jobRole: String(parsedMsg.jobRole ?? ""),
           accessType: (parsedMsg.accessType as AccessTypeLabel) ?? "Usuário da empresa",
-          clientId: (parsedMsg.clientId as string | null) ?? null,
+          clientId: parsedMsg.clientId ?? null,
           company: String(parsedMsg.company ?? ""),
           notes: String(parsedMsg.notes ?? ""),
           rawMessage: String(r.message ?? ""),
@@ -174,7 +180,7 @@ function AccessRequestsPage() {
       }
 
       const cData = unwrapEnvelopeData<Record<string, unknown>>(cRaw) ?? (cRaw as Record<string, unknown> | null) ?? {};
-      const cItems = Array.isArray((cData as any).items) ? ((cData as any).items as unknown[]) : [];
+      const cItems = getItemsFromEnvelope<unknown>(cData);
       const mappedClients = cItems
         .map((c) => {
           const rec = (c ?? null) as Record<string, unknown> | null;
@@ -195,11 +201,11 @@ function AccessRequestsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   useEffect(() => {
     if (!selected) {
@@ -207,7 +213,7 @@ function AccessRequestsPage() {
       return;
     }
     setDraft({ ...selected });
-  }, [selectedId]);
+  }, [selected]);
 
   async function copy(text: string) {
     try {

@@ -40,12 +40,20 @@ export async function GET(req: Request) {
     const link = links.find((item) => item.companyId === company.id);
     const rawRole = normalizeLocalRole(link?.role ?? null);
     const role = isGlobalAdmin || rawRole === "company_admin" ? "ADMIN" : "USER";
+    const createdAt =
+      (typeof (company as { createdAt?: string | null }).createdAt === "string"
+        ? (company as { createdAt?: string | null }).createdAt
+        : null) ??
+      (typeof (company as { created_at?: string | null }).created_at === "string"
+        ? (company as { created_at?: string | null }).created_at
+        : null);
     return {
       id: company.id,
       name: company.name ?? company.company_name ?? "Empresa",
       slug: company.slug,
       role,
       active: company.active ?? true,
+      createdAt,
       companyRole: rawRole ?? null,
       capabilities: link?.capabilities ?? undefined,
     };

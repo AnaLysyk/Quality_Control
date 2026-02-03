@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
@@ -120,22 +120,22 @@ function normalizeAppLabel(value: string) {
 }
 
 function formatDate(iso?: string) {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const time = Date.parse(iso);
-  if (!Number.isFinite(time)) return "—";
+  if (!Number.isFinite(time)) return "-";
   return new Date(time).toLocaleDateString("pt-BR");
 }
 
 function formatDateTime(iso?: string) {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const time = Date.parse(iso);
-  if (!Number.isFinite(time)) return "—";
+  if (!Number.isFinite(time)) return "-";
   return new Date(time).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 }
 
 function gateLabel(status: GateStatus) {
-  if (status === "approved") return "Estável";
-  if (status === "warning") return "Atenção";
+  if (status === "approved") return "Estavel";
+  if (status === "warning") return "Atencao";
   if (status === "failed") return "Risco";
   return "Sem dados";
 }
@@ -160,8 +160,8 @@ function actionLabel(action: string) {
   if (a === "client.deleted") return "Empresa removida";
   if (a === "run.created") return "Nova run executada";
   if (a === "run.deleted") return "Run removida";
-  if (a === "user.created") return "Usuário criado";
-  if (a === "user.updated") return "Usuário atualizado";
+  if (a === "user.created") return "Usuario criado";
+  if (a === "user.updated") return "Usuario atualizado";
   return a;
 }
 
@@ -208,10 +208,10 @@ export default function TestMetricPage() {
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<7 | 30 | 90>(30);
 
-  const handleUnauthorized = () => {
-    setError("Sessão expirada. Faça login novamente.");
+  const handleUnauthorized = useCallback(() => {
+    setError("Sessao expirada. Faca login novamente.");
     router.replace("/login");
-  };
+  }, [router]);
 
   const [search, setSearch] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -243,21 +243,21 @@ export default function TestMetricPage() {
         const raw = await res.json().catch(() => null);
         const json = unwrapEnvelopeData<OverviewResponse>(raw);
         if (!res.ok || !json) {
-          const message = extractMessageFromJson(raw) || `Erro ao carregar métricas (${res.status})`;
+          const message = extractMessageFromJson(raw) || `Erro ao carregar metricas (${res.status})`;
           const requestId = extractRequestIdFromJson(raw) || res.headers.get("x-request-id") || null;
           throw new Error(formatMessageWithRequestId(message, requestId));
         }
         setOverview(json);
         setActiveIndex(0);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro ao carregar métricas");
+        setError(err instanceof Error ? err.message : "Erro ao carregar metricas");
         setOverview(null);
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [period]);
+  }, [period, handleUnauthorized]);
 
   useEffect(() => {
     let cancelled = false;
@@ -274,11 +274,11 @@ export default function TestMetricPage() {
           if (!cancelled) setGlobalDefects({ loaded: true, criticalOpen: null, error: "Defeitos indisponíveis no momento" });
           return;
         }
-        if ((json as any)?.error) {
+        if (typeof json.error === "string" && json.error) {
           if (!cancelled) setGlobalDefects({ loaded: true, criticalOpen: 0, error: "Integração de defeitos indisponível neste ambiente" });
           return;
         }
-        const items = Array.isArray((json as any).items) ? ((json as any).items as AdminDefectItem[]) : [];
+        const items = Array.isArray(json.items) ? json.items : [];
         const criticalOpen = items.filter((d) => isCriticalSeverity(d.severity) && isDefectOpen(d.status)).length;
         if (!cancelled) setGlobalDefects({ loaded: true, criticalOpen, error: null });
       } catch {
@@ -289,7 +289,7 @@ export default function TestMetricPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [handleUnauthorized]);
 
   useEffect(() => {
     let cancelled = false;
@@ -306,8 +306,8 @@ export default function TestMetricPage() {
           if (!cancelled) setAudit({ loaded: true, items: [], warning: "Movimento recente indisponível" });
           return;
         }
-        const items = Array.isArray((json as any).items) ? ((json as any).items as AuditLogRow[]) : [];
-        const rawWarning = (json as any).warning ?? null;
+        const items = Array.isArray(json.items) ? json.items : [];
+        const rawWarning = json.warning ?? null;
         const warning = rawWarning ? "Movimento recente limitado (logs não configurados neste ambiente)" : null;
         if (!cancelled) setAudit({ loaded: true, items, warning });
       } catch {
@@ -318,7 +318,7 @@ export default function TestMetricPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [handleUnauthorized]);
 
   const companies = useMemo(() => {
     const list = overview?.companies ?? [];
@@ -379,13 +379,7 @@ export default function TestMetricPage() {
   }, [companies]);
 
   const activeCompany = companies[activeIndex] ?? null;
-  const activeCompanyId = activeCompany?.id ?? null;
   const activeCompanySlug = activeCompany?.slug ?? null;
-
-  const activeApp = useMemo(() => {
-    if (!activeCompanyId) return null;
-    return activeAppByCompany[activeCompanyId] ?? null;
-  }, [activeCompanyId, activeAppByCompany]);
 
   useEffect(() => {
     const slug = typeof activeCompanySlug === "string" ? activeCompanySlug : null;
@@ -413,7 +407,7 @@ export default function TestMetricPage() {
         const json = (await res.json().catch(() => null)) as CompanyDefectsResponse | null;
         if (!res.ok || !json || json.error) return;
 
-        const items = Array.isArray((json as any).defects) ? ((json as any).defects as CompanyDefectItem[]) : [];
+        const items = Array.isArray(json.defects) ? json.defects : [];
         const openByApp: Record<string, number> = {};
         const appSet = new Set<string>();
         let openTotal = 0;
@@ -449,14 +443,14 @@ export default function TestMetricPage() {
     return () => {
       cancelled = true;
     };
-  }, [activeCompanySlug]);
+  }, [activeCompanySlug, handleUnauthorized]);
 
-  const focusCompany = (index: number) => {
+  const focusCompany = useCallback((index: number) => {
     const clamped = Math.max(0, Math.min(companies.length - 1, index));
     setActiveIndex(clamped);
     const el = carouselRef.current?.querySelector<HTMLDivElement>(`[data-carousel-index="${clamped}"]`);
     el?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-  };
+  }, [companies.length]);
 
   const searchResult = useMemo(() => {
     const q = normalizeQuery(search);
@@ -469,10 +463,10 @@ export default function TestMetricPage() {
 
       const releases = Array.isArray(c.releases) ? c.releases : [];
       for (const r of releases) {
-        const title = normalizeQuery(String((r as any)?.title ?? ""));
-        const slug = normalizeQuery(String((r as any)?.slug ?? ""));
+        const title = normalizeQuery(String(r.title ?? ""));
+        const slug = normalizeQuery(String(r.slug ?? ""));
         if (title.includes(q) || slug.includes(q)) return { index: i, app: null as string | null };
-        const order = Array.isArray((r as any)?.order) ? ((r as any).order as unknown[]) : [];
+        const order = Array.isArray(r.order) ? r.order : [];
         for (const o of order) {
           const app = normalizeQuery(String(o ?? ""));
           if (app && app.includes(q)) {
@@ -502,8 +496,7 @@ export default function TestMetricPage() {
     if (searchResult.app && company?.id) {
       setActiveAppByCompany((prev) => ({ ...prev, [company.id]: searchResult.app }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchResult]);
+  }, [searchResult, focusCompany, companies]);
 
   return (
     <RequireGlobalAdmin>
@@ -669,7 +662,7 @@ export default function TestMetricPage() {
                         onFocus={() => setActiveIndex(index)}
                       >
                         <CompanyMetricsCard
-                          company={company as any}
+                          company={company}
                           periodDays={period}
                           defects={defects}
                           focused={index === activeIndex}

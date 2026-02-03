@@ -31,7 +31,7 @@ test("empresa cria run e defeito com vinculo basico", async ({ page, context }) 
   await page.waitForURL(new RegExp(`/empresas/griaule/runs/${runSlug}`));
   await expect(page.getByText(runTitle)).toBeVisible();
 
-  await page.goto("/empresas/griaule/defeitos", { waitUntil: "networkidle" });
+  await page.goto("/empresas/griaule/defeitos", { waitUntil: "domcontentloaded" });
 
   await page.getByTestId("defect-title").fill(defectTitle);
   await page.getByTestId("defect-run-select").fill(runSlug);

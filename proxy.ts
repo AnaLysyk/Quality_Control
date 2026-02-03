@@ -37,9 +37,10 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Protected routes
-  const protectedPaths = ['/dashboard', '/admin', '/empresas', '/me', '/settings', '/api/me', '/api/user'];
-  const isProtected = protectedPaths.some(path => pathname.startsWith(path));
+  // Rotas protegidas (UI + APIs que exigem sessão)
+  const protectedPaths = ["/dashboard", "/admin", "/empresas", "/me", "/settings", "/api/me", "/api/user"];
+  const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
+  const isApiRequest = pathname.startsWith("/api/");
 
   if (!isProtected) {
     return NextResponse.next();
@@ -63,6 +64,12 @@ export default async function proxy(req: NextRequest) {
   // Session verification
   const sessionId = req.cookies.get("session_id")?.value;
   if (!sessionId) {
+    if (isApiRequest) {
+      return NextResponse.json(
+        { error: { code: "NO_SESSION", message: "Sessão não encontrada." } },
+        { status: 401 }
+      );
+    }
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
@@ -70,6 +77,12 @@ export default async function proxy(req: NextRequest) {
     const redis = getRedis();
     const raw = await redis.get(`session:${sessionId}`);
     if (!raw) {
+      if (isApiRequest) {
+        return NextResponse.json(
+          { error: { code: "NO_SESSION", message: "Sessão inválida." } },
+          { status: 401 }
+        );
+      }
       return NextResponse.redirect(new URL("/login", req.url));
     }
 
@@ -85,7 +98,13 @@ export default async function proxy(req: NextRequest) {
 
     return NextResponse.next();
   } catch (error) {
-    console.error('Proxy session validation error:', error);
+    console.error("Proxy session validation error:", error);
+    if (isApiRequest) {
+      return NextResponse.json(
+        { error: { code: "NO_SESSION", message: "Falha ao validar sessão." } },
+        { status: 401 }
+      );
+    }
     return NextResponse.redirect(new URL("/login", req.url));
   }
 }

@@ -55,8 +55,8 @@ export function requirePermission(userRole: UserRole, permission: Permission): v
   }
 }
 
-export function getUserRoleFromSession(session: any): UserRole {
-  const role = session?.role;
+export function getUserRoleFromSession(session: unknown): UserRole {
+  const role = (session as { role?: unknown } | null)?.role;
   if (role === "admin" || role === "super-admin") return role;
   return "user";
 }

@@ -21,6 +21,13 @@ export async function GET(req: Request) {
   const items = allowedCompanies.map((company) => {
     const link = links.find((item) => item.companyId === company.id);
     const normalized = normalizeLocalRole(link?.role ?? null);
+    const createdAt =
+      (typeof (company as { createdAt?: string | null }).createdAt === "string"
+        ? (company as { createdAt?: string | null }).createdAt
+        : null) ??
+      (typeof (company as { created_at?: string | null }).created_at === "string"
+        ? (company as { created_at?: string | null }).created_at
+        : null);
     return {
       client_id: company.id,
       client_name: company.name ?? company.company_name ?? "Empresa",
@@ -28,6 +35,7 @@ export async function GET(req: Request) {
       client_active: company.active ?? true,
       role: isGlobalAdmin || normalized === "company_admin" ? "ADMIN" : "USER",
       link_active: true,
+      created_at: createdAt,
       companyRole: normalized ?? null,
       capabilities: link?.capabilities ?? undefined,
     };

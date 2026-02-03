@@ -21,18 +21,19 @@ export async function resolveDefectRole(authUser: AuthUser | null | undefined, c
   if (!links.length) return "user";
 
   const companyById = new Map(companies.map((company) => [company.id, company]));
-  const hasAdminLink = links.some((link) => normalizeLocalRole(link.role ?? null) === "company_admin");
+  const hasCompanyAdminLink = links.some((link) => normalizeLocalRole(link.role ?? null) === "company_admin");
   if (clientSlug) {
     const hasClient = links.some((link) => companyById.get(link.companyId)?.slug === clientSlug);
     if (!hasClient) return "user";
   }
 
-  if (hasAdminLink) return "admin";
+  if (hasCompanyAdminLink) return "company";
   if (links.length === 1) return "company";
   return "user";
 }
 
-export const canCreateManualDefect = (role: Role) => role === "admin" || role === "company";
+// Usuario final tambem pode criar defeitos manuais (sem editar/deletar).
+export const canCreateManualDefect = (role: Role) => role === "admin" || role === "company" || role === "user";
 export const canEditManualDefect = (role: Role) => role === "admin" || role === "company";
 export const canLinkRun = (role: Role) => role === "admin" || role === "company";
 export const canDeleteManualDefect = (role: Role) => role === "admin";

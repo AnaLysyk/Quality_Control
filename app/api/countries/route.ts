@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { hasCapability } from "@/lib/permissions";
+import { hasCapability, type Capability } from "@/lib/permissions";
 
 type Country = {
   id: string;
@@ -18,7 +18,7 @@ function normalizeRole(role?: string | null) {
 function canCreateCountry(user: Awaited<ReturnType<typeof authenticateRequest>>) {
   if (!user) return false;
   if (user.isGlobalAdmin) return true;
-  if (hasCapability(user.capabilities as any, "company:write")) return true;
+  if (hasCapability((user.capabilities ?? []) as Capability[], "company:write")) return true;
   const role = normalizeRole(user.role);
   return role === "admin" || role === "company" || role === "company_admin";
 }

@@ -1,26 +1,34 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+type ManualRelease = {
+  id: string;
+  title?: string | null;
+  description?: string | null;
+  status?: string | null;
+  createdAt?: string | null;
+};
 
 export default function ReleaseManualList({ companyId }: { companyId: string }) {
-  const [releases, setReleases] = useState<any[]>([]);
+  const [releases, setReleases] = useState<ManualRelease[]>([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function fetchReleases() {
+  const fetchReleases = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await fetch(`/api/release-manual?companyId=${companyId}`);
-      const data = await res.json();
-      setReleases(data);
-    } catch (e) {
+      const data = (await res.json()) as ManualRelease[];
+      setReleases(Array.isArray(data) ? data : []);
+    } catch {
       setError("Erro ao buscar releases");
     } finally {
       setLoading(false);
     }
-  }
+  }, [companyId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,7 +44,7 @@ export default function ReleaseManualList({ companyId }: { companyId: string }) 
       setTitle("");
       setDescription("");
       await fetchReleases();
-    } catch (e) {
+    } catch {
       setError("Erro ao criar release");
     } finally {
       setLoading(false);
@@ -45,8 +53,7 @@ export default function ReleaseManualList({ companyId }: { companyId: string }) 
 
   useEffect(() => {
     fetchReleases();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyId]);
+  }, [fetchReleases]);
 
   return (
     <div className="max-w-xl mx-auto p-4">
@@ -54,16 +61,16 @@ export default function ReleaseManualList({ companyId }: { companyId: string }) 
       <form onSubmit={handleSubmit} className="mb-6 space-y-2">
         <input
           className="border rounded px-2 py-1 w-full"
-          placeholder="Título"
+          placeholder="Titulo"
           value={title}
-          onChange={e => setTitle(e.target.value)}
+          onChange={(e) => setTitle(e.target.value)}
           required
         />
         <textarea
           className="border rounded px-2 py-1 w-full"
-          placeholder="Descrição"
+          placeholder="Descricao"
           value={description}
-          onChange={e => setDescription(e.target.value)}
+          onChange={(e) => setDescription(e.target.value)}
         />
         <button
           type="submit"
@@ -75,11 +82,13 @@ export default function ReleaseManualList({ companyId }: { companyId: string }) 
       </form>
       {error && <div className="text-red-600 mb-2">{error}</div>}
       <ul className="space-y-2">
-        {releases.map(r => (
+        {releases.map((r) => (
           <li key={r.id} className="border rounded p-2">
-            <div className="font-semibold">{r.title}</div>
-            <div className="text-sm text-gray-600">{r.description}</div>
-            <div className="text-xs text-gray-400">Status: {r.status} | Criado em: {new Date(r.createdAt).toLocaleString()}</div>
+            <div className="font-semibold">{r.title ?? "Sem titulo"}</div>
+            <div className="text-sm text-gray-600">{r.description ?? ""}</div>
+            <div className="text-xs text-gray-400">
+              Status: {r.status ?? "N/A"} | Criado em: {r.createdAt ? new Date(r.createdAt).toLocaleString() : "-"}
+            </div>
           </li>
         ))}
       </ul>

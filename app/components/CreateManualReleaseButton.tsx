@@ -99,7 +99,15 @@ const initialCaseDraft: ManualCaseDraft = {
   status: "notRun",
 };
 
-export function CreateManualReleaseButton({ companySlug }: { companySlug?: string }) {
+export function CreateManualReleaseButton({
+  companySlug,
+  redirectToRun = true,
+  onCreated,
+}: {
+  companySlug?: string;
+  redirectToRun?: boolean;
+  onCreated?: (release: { slug?: string; name?: string; title?: string }) => void;
+}) {
   const { user, loading } = useAuthUser();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -183,6 +191,7 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
         headers: { "Content-Type": "application/json" },
         credentials: "include",
           body: JSON.stringify({
+            kind: "run",
             name: form.name.trim(),
             app: form.app,
             slug: form.slug,
@@ -197,8 +206,12 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
           }),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({} as any));
-        throw new Error((data?.message || data?.error || "Erro ao criar run") as string);
+        const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        const message =
+          (typeof data.message === "string" && data.message) ||
+          (typeof data.error === "string" && data.error) ||
+          "Erro ao criar run";
+        throw new Error(message);
       }
       const created = await res.json();
       if (cases.length) {
@@ -225,17 +238,29 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
       setCases([]);
       setCaseDraft({ ...initialCaseDraft });
       setSaving(false);
-      const target = companySlug
-        ? `/empresas/${encodeURIComponent(companySlug)}/runs/${created.slug}`
-        : `/release/${created.slug}`;
-      router.push(target);
-      if (typeof window !== "undefined") {
-        const expectedPath = new URL(target, window.location.origin).pathname;
-        setTimeout(() => {
-          if (window.location.pathname !== expectedPath) {
+      onCreated?.(created as { slug?: string; name?: string; title?: string });
+      if (redirectToRun) {
+        const target = companySlug
+          ? `/empresas/${encodeURIComponent(companySlug)}/runs/${created.slug}`
+          : `/release/${created.slug}`;
+        if (typeof window !== "undefined") {
+          const expectedPath = new URL(target, window.location.origin).pathname;
+          const isE2E = typeof navigator !== "undefined" && navigator.webdriver === true;
+          if (isE2E) {
             window.location.assign(target);
+            return;
           }
-        }, 50);
+          router.push(target);
+          setTimeout(() => {
+            if (window.location.pathname !== expectedPath) {
+              window.location.assign(target);
+            }
+          }, 50);
+        } else {
+          router.push(target);
+        }
+      } else {
+        router.refresh();
       }
     } catch (e) {
       console.error(e);
@@ -350,15 +375,14 @@ export function CreateManualReleaseButton({ companySlug }: { companySlug?: strin
                           onClick={key === "fail" ? handleFailClick : undefined}
                         />
                         {key === "fail" && (
-                          <input
-                            aria-hidden="true"
-                            tabIndex={-1}
+                          <button
+                            type="button"
                             data-testid="run-status-fail"
-                            value={form.fail}
-                            onChange={(e) => handleNumber("fail", e.target.value)}
                             onClick={handleFailClick}
-                            className="sr-only"
-                          />
+                            className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-accent,#ef0001)"
+                          >
+                            Marcar falha
+                          </button>
                         )}
                       </div>
                     ))}

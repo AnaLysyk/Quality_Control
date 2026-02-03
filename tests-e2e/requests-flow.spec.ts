@@ -12,7 +12,7 @@ test("requests flow: create, duplicate blocked, admin approves", async ({ page }
   const companyInput = page.getByPlaceholder("Novo nome da empresa");
   const companyCard = page.getByRole("heading", { name: /empresa/i }).locator("..");
   const sendButton = companyCard.getByRole("button", { name: /Enviar/i });
-  const message = page.locator("main > div > p").first();
+  const message = page.getByRole("status").first();
 
   const firstResponsePromise = page.waitForResponse(
     (response) =>
@@ -48,5 +48,6 @@ test("requests flow: create, duplicate blocked, admin approves", async ({ page }
 
   await page.goto("/admin/requests");
   await page.getByRole("button", { name: /Aprovar/i }).first().click();
-  await expect(page.getByText(/Aprovado/i)).toBeVisible();
+  const approvedBadge = page.locator('ul[role="list"] li').getByText(/Aprovado/i).first();
+  await expect(approvedBadge).toBeVisible();
 });

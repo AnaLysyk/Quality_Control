@@ -30,8 +30,11 @@ export async function GET(req: Request, context: { params: Promise<{ slug?: stri
   // --- Original logic ---
   const summary = await getCompanyQualitySummary(slug);
   const defects = await getCompanyDefects(slug);
-  const open = defects.filter((d: any) => d.status !== "done").length;
-  const overSla = defects.filter((d: any) => {
+  const defectItems = Array.isArray(defects)
+    ? (defects as Array<{ status?: string; openedAt?: string }>)
+    : [];
+  const open = defectItems.filter((d) => d.status !== "done").length;
+  const overSla = defectItems.filter((d) => {
     if (d.status === "done") return false;
     const opened = new Date(d.openedAt).getTime();
     return Number.isFinite(opened) && Date.now() - opened > 172800000;

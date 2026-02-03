@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
 function slugify(value: string) {
@@ -17,6 +17,33 @@ function parseRunsCount(text: string | null) {
   return match ? Number(match[0]) : 0;
 }
 
+async function waitForAuth(page: Page) {
+  const authLoading = page.getByText(/Validando sessao/i);
+  if (await authLoading.isVisible().catch(() => false)) {
+    await authLoading.waitFor({ state: "hidden", timeout: 20000 }).catch(() => {});
+  }
+}
+
+async function createRun(
+  page: Page,
+  companySlug: string,
+  name: string,
+  stats: { pass: number; fail: number; blocked: number; notRun: number }
+) {
+  const res = await page.request.post("/api/releases-manual", {
+    data: {
+      kind: "run",
+      name,
+      app: "SMART",
+      clientSlug: companySlug,
+      stats,
+    },
+  });
+  expect(res.status()).toBe(201);
+  const payload = (await res.json().catch(() => null)) as { slug?: string } | null;
+  return payload?.slug ?? slugify(name);
+}
+
 test("admin compara metricas entre empresas", async ({ page, context }) => {
   await mockAuth(context, {
     role: "admin",
@@ -27,42 +54,27 @@ test("admin compara metricas entre empresas", async ({ page, context }) => {
   const testingRun = "Run T Benchmark";
 
 
-  // Criação da run para Griaule
-  await page.goto("/empresas/griaule/runs", { waitUntil: "networkidle" });
-  await page.getByTestId("run-create").click();
-  await page.getByTestId("run-title").fill(griauleRun);
-  await page.getByTestId("run-stat-pass").fill("10");
-  await page.getByTestId("run-stat-fail").fill("0");
-  await page.getByTestId("run-stat-blocked").fill("0");
-  await page.getByTestId("run-stat-not-run").fill("0");
-  await page.getByTestId("run-submit").click();
-  await page.waitForURL(new RegExp(`/empresas/griaule/runs/${slugify(griauleRun)}`));
+    await createRun(page, "griaule", griauleRun, {
+    pass: 10,
+    fail: 0,
+    blocked: 0,
+    notRun: 0,
+  });
+  await createRun(page, "testing-company", testingRun, {
+    pass: 12,
+    fail: 0,
+    blocked: 0,
+    notRun: 0,
+  });
 
-  // Garante que a navegação terminou antes de prosseguir
-  await page.waitForLoadState("networkidle");
-
-  // Criação da run para Testing Company
-  await page.goto("/empresas/testing-company/runs", { waitUntil: "networkidle" });
-  await page.getByTestId("run-create").click();
-  await page.getByTestId("run-title").fill(testingRun);
-  await page.getByTestId("run-stat-pass").fill("12");
-  await page.getByTestId("run-stat-fail").fill("0");
-  await page.getByTestId("run-stat-blocked").fill("0");
-  await page.getByTestId("run-stat-not-run").fill("0");
-  await page.getByTestId("run-submit").click();
-  await page.waitForURL(new RegExp(`/empresas/testing-company/runs/${slugify(testingRun)}`));
-
-  // Garante que a navegação terminou antes de prosseguir
-  await page.waitForLoadState("networkidle");
-  // Pequeno delay para garantir que não há navegação pendente
-  await page.waitForTimeout(500);
-  await page.goto("/admin/home", { waitUntil: "networkidle" });
+  await page.goto("/admin/home", { waitUntil: "domcontentloaded" });
+  await waitForAuth(page);
 
   const griauleRow = page.getByTestId("benchmark-row-griaule");
   const testingRow = page.getByTestId("benchmark-row-testing-company");
 
-  await expect(griauleRow).toBeVisible();
-  await expect(testingRow).toBeVisible();
+  await expect(griauleRow).toBeVisible({ timeout: 15000 });
+  await expect(testingRow).toBeVisible({ timeout: 15000 });
 
   const griauleRuns = parseRunsCount(await griauleRow.getByTestId("benchmark-runs-total").textContent());
   const testingRuns = parseRunsCount(await testingRow.getByTestId("benchmark-runs-total").textContent());

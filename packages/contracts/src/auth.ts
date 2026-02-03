@@ -67,6 +67,7 @@ export const AuthCompanySchema = z
     slug: z.string().min(1),
     role: z.string().min(1),
     active: z.boolean().optional(),
+    createdAt: z.string().optional().nullable(),
     companyRole: z.string().optional().nullable(),
     capabilities: z.array(z.string().min(1)).optional(),
   })

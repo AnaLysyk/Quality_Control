@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
@@ -21,14 +21,14 @@ export default function AdminSupportPage() {
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  function handleUnauthorized() {
-    const msg = "Sessão expirada. Faça login novamente.";
+  const handleUnauthorized = useCallback(() => {
+    const msg = "Sessao expirada. Faca login novamente.";
     setError(msg);
     toast.error(msg);
     router.push("/login");
-  }
+  }, [router]);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -41,13 +41,13 @@ export default function AdminSupportPage() {
       }
       if (res.status === 403) {
         setItems([]);
-        setError("Sem permissão");
+        setError("Sem permissao");
         return;
       }
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        setError(body.message || "Erro ao carregar solicitações");
+        setError(body.message || "Erro ao carregar solicitacoes");
         return;
       }
       const body = await res.json();
@@ -57,7 +57,7 @@ export default function AdminSupportPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [handleUnauthorized]);
 
   async function updateStatus(id: string, status: "in_progress" | "closed") {
     setUpdatingId(id);
@@ -75,7 +75,7 @@ export default function AdminSupportPage() {
         return;
       }
       if (res.status === 403) {
-        setError("Sem permissão");
+        setError("Sem permissao");
         return;
       }
 
@@ -94,14 +94,14 @@ export default function AdminSupportPage() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   return (
     <RequireGlobalAdmin>
       <div className="p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold">Solicitações de Acesso/Suporte</h1>
+            <h1 className="text-2xl font-semibold">Solicitacoes de Acesso/Suporte</h1>
             <p className="text-sm text-gray-600">Apenas admins visualizam este painel.</p>
           </div>
           <button
@@ -120,14 +120,14 @@ export default function AdminSupportPage() {
         {loading ? (
           <div className="text-sm text-gray-600">Carregando...</div>
         ) : items.length === 0 ? (
-          <div className="text-sm text-gray-600">Nenhuma solicitação encontrada.</div>
+          <div className="text-sm text-gray-600">Nenhuma solicitacao encontrada.</div>
         ) : (
           <div className="space-y-3">
             {items.map((item) => (
               <div key={item.id} className="rounded-lg border p-3 shadow-sm">
                 <div className="flex items-center justify-between">
                   <div className="text-xs text-gray-500">
-                    {new Date(item.created_at).toLocaleString()} — {item.email}
+                    {new Date(item.created_at).toLocaleString()} - {item.email}
                   </div>
                   <span
                     className={`text-xs px-2 py-1 rounded ${

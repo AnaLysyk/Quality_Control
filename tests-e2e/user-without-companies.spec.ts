@@ -7,7 +7,7 @@ test("user sem empresas fica em /empresas", async ({ page, context }) => {
     companies: [],
   });
 
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
 
   await expect(page).toHaveURL(/\/empresas/);
 });

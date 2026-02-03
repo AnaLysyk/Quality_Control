@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import Breadcrumb from "@/components/Breadcrumb";
 
@@ -30,12 +30,12 @@ export default function AdminRequestsPage() {
   const [type, setType] = useState<string>("");
   const [message, setMessage] = useState<string | null>(null);
 
-  function handleUnauthorized() {
-    const msg = "Sessão expirada. Faça login novamente.";
+  const handleUnauthorized = useCallback(() => {
+    const msg = "SessÃ£o expirada. FaÃ§a login novamente.";
     setMessage(msg);
     toast.error(msg);
     router.push("/login");
-  }
+  }, [router]);
 
   const filtered = useMemo(() => {
     return items.filter(
@@ -45,7 +45,7 @@ export default function AdminRequestsPage() {
     );
   }, [items, status, type]);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     setMessage(null);
     try {
@@ -61,23 +61,23 @@ export default function AdminRequestsPage() {
       }
 
       if (res.status === 403) {
-        setMessage("Sem permissão (faça login como admin)");
+        setMessage("Sem permissÃ£o (faÃ§a login como admin)");
         setItems([]);
         return;
       }
       const json = await res.json();
       setItems(json.items ?? []);
     } catch {
-      setMessage("Erro ao carregar solicitações");
+      setMessage("Erro ao carregar solicitaÃ§Ãµes");
       setItems([]);
     } finally {
       setLoading(false);
     }
-  }
+  }, [handleUnauthorized]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   async function update(id: string, next: "APPROVED" | "REJECTED") {
     setMessage(null);
@@ -101,19 +101,25 @@ export default function AdminRequestsPage() {
       toast.error(msg);
       return;
     }
-    toast.success(next === "APPROVED" ? "Solicitação aprovada" : "Solicitação rejeitada");
+    const payload = (await res.json().catch(() => null)) as { item?: RequestRecord } | null;
+    if (payload?.item) {
+      setItems((prev) =>
+        prev.map((req) => (req.id === payload.item?.id ? { ...req, ...payload.item } : req)),
+      );
+    }
+    toast.success(next === "APPROVED" ? "SolicitaÃ§Ã£o aprovada" : "SolicitaÃ§Ã£o rejeitada");
     await load();
   }
 
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
       <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-10 space-y-4">
-        <Breadcrumb items={[{ label: "Admin", href: "/admin/home" }, { label: "Solicitações" }]} />
+        <Breadcrumb items={[{ label: "Admin", href: "/admin/home" }, { label: "SolicitaÃ§Ãµes" }]} />
 
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Solicitações</h1>
-            <p className="text-sm sm:text-base text-(--tc-text-muted,#6b7280)">Aprovar ou rejeitar pedidos de alteração</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">SolicitaÃ§Ãµes</h1>
+            <p className="text-sm sm:text-base text-(--tc-text-muted,#6b7280)">Aprovar ou rejeitar pedidos de alteraÃ§Ã£o</p>
           </div>
           <button
             type="button"
@@ -127,7 +133,7 @@ export default function AdminRequestsPage() {
 
         <div className="flex gap-3 flex-wrap" role="group" aria-label="Filtros">
           <label className="sr-only" htmlFor="requests-filter-status">
-            Filtrar solicitações por status
+            Filtrar solicitaÃ§Ãµes por status
           </label>
           <select
             id="requests-filter-status"
@@ -142,7 +148,7 @@ export default function AdminRequestsPage() {
           </select>
 
           <label className="sr-only" htmlFor="requests-filter-type">
-            Filtrar solicitações por tipo
+            Filtrar solicitaÃ§Ãµes por tipo
           </label>
           <select
             id="requests-filter-type"
@@ -164,7 +170,7 @@ export default function AdminRequestsPage() {
         {loading && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
 
         <ul className="space-y-2" role="list" aria-busy={loading}>
-          {filtered.length === 0 && !loading && <li className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma solicitação.</li>}
+          {filtered.length === 0 && !loading && <li className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma solicitaÃ§Ã£o.</li>}
           {filtered.map((req) => (
             <li key={req.id} className="rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-3 flex flex-col gap-2">
               <div className="flex flex-wrap justify-between gap-2">
@@ -213,3 +219,7 @@ export default function AdminRequestsPage() {
     </div>
   );
 }
+
+
+
+

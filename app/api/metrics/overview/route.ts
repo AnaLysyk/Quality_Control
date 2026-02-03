@@ -25,9 +25,10 @@ export async function GET() {
 
     const releaseBySlug = new Map<string, { status?: string }>();
     releases.forEach((release) => releaseBySlug.set(release.slug, { status: release.status }));
-    manualReleases.forEach((release: any) => {
-      const slug = typeof release.slug === "string" ? release.slug : "";
-      if (slug) releaseBySlug.set(slug, { status: release.status });
+    manualReleases.forEach((release) => {
+      const rec = release as { slug?: unknown; status?: unknown };
+      const slug = typeof rec.slug === "string" ? rec.slug : "";
+      if (slug) releaseBySlug.set(slug, { status: typeof rec.status === "string" ? rec.status : undefined });
     });
 
     const totalReleases = releaseBySlug.size;

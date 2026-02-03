@@ -1,9 +1,19 @@
 import fs from "fs";
 import path from "path";
+import { resolveSeedPath } from "./seed-paths";
+
+type ManualRelease = {
+  slug?: string | null;
+} & Record<string, unknown>;
+
+type QualityGoalMeta = {
+  company_slug: string;
+  goal: string;
+} & Record<string, unknown>;
 
 export async function seedMTTRDashboard() {
-  const file = path.join(process.cwd(), "data", "releases-manual.json");
-  let releases: any[] = [];
+  const file = resolveSeedPath("releases-manual.json");
+  let releases: ManualRelease[] = [];
   try {
     releases = JSON.parse(await fs.promises.readFile(file, "utf8"));
   } catch {}
@@ -13,6 +23,7 @@ export async function seedMTTRDashboard() {
       slug: "mttr-test-1",
       name: "Release MTTR Dashboard",
       app: "GRIAULE",
+      kind: "defect",
       clientSlug: "griaule",
       source: "MANUAL",
       status: "closed",
@@ -28,6 +39,7 @@ export async function seedMTTRDashboard() {
       slug: "mttr-manual-unique",
       name: "Release MTTR Manual Unique",
       app: "GRIAULE",
+      kind: "defect",
       clientSlug: "griaule",
       source: "MANUAL",
       status: "closed",
@@ -41,7 +53,7 @@ export async function seedMTTRDashboard() {
   ];
   // Remove any with same slug, then add/replace
   for (const mttr of mttrReleases) {
-    releases = releases.filter((r: any) => r.slug !== mttr.slug);
+    releases = releases.filter((r) => r.slug !== mttr.slug);
     releases.push(mttr);
   }
   await fs.promises.writeFile(file, JSON.stringify(releases, null, 2), "utf8");
@@ -49,7 +61,7 @@ export async function seedMTTRDashboard() {
 
 export async function seedQualityGoalStatus() {
   const file = path.join(process.cwd(), "data", "quality_goal_status.json");
-  let metas: any[] = [];
+  let metas: QualityGoalMeta[] = [];
   try {
     metas = JSON.parse(await fs.promises.readFile(file, "utf8"));
   } catch {}
@@ -72,7 +84,7 @@ export async function seedQualityGoalStatus() {
     }
   ];
   for (const meta of newMetas) {
-    metas = metas.filter((m: any) => !(m.company_slug === meta.company_slug && m.goal === meta.goal));
+    metas = metas.filter((m) => !(m.company_slug === meta.company_slug && m.goal === meta.goal));
     metas.push(meta);
   }
   await fs.promises.writeFile(file, JSON.stringify(metas, null, 2), "utf8");

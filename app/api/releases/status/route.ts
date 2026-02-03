@@ -19,17 +19,24 @@ async function getRunsForRelease(releaseSlug: string, clientKey?: string | null)
   return runs;
 }
 
-export async function GET(req: Request) {
+type RunLike = {
+  stats?: { fail?: number | string };
+  metrics?: { fail?: number | string };
+  status?: string | null;
+};
+
+export async function GET() {
   const releases = await getAllReleases();
   const result = [];
   for (const rel of releases) {
     const companyKey = rel.clientId ?? rel.clientName ?? null;
     const runs = await getRunsForRelease(rel.slug, companyKey);
-    const failedRuns = runs.filter((r: any) => {
-      const failCount = Number(r?.stats?.fail ?? r?.metrics?.fail ?? 0);
+    const failedRuns = runs.filter((r) => {
+      const item = r as RunLike;
+      const failCount = Number(item?.stats?.fail ?? item?.metrics?.fail ?? 0);
       if (Number.isFinite(failCount) && failCount > 0) return true;
-      if (!r.status) return false;
-      const s = String(r.status).toLowerCase();
+      if (!item.status) return false;
+      const s = String(item.status).toLowerCase();
       return s === "fail" || s === "falha" || s === "failed";
     });
     let status: "ok" | "risk" | "blocked" = "ok";

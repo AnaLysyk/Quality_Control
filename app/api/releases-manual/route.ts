@@ -1,47 +1,12 @@
 import { NextResponse } from "next/server";
-// Importa fs e path só em ambiente Node/server
-let fs: typeof import("fs/promises") | undefined;
-let path: typeof import("path") | undefined;
-if (typeof process !== "undefined" && process.release?.name === "node") {
-  fs = require("fs/promises");
-  path = require("path");
-}
 import crypto from "crypto";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { canCreateManualDefect, getMockRole, resolveDefectRole } from "@/lib/rbac/defects";
 import type { Release, Stats } from "@/types/release";
 import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalization";
-
-const STORE_PATH = path && path.join(process.cwd(), "data", "releases-manual.json");
-
-async function ensureStore() {
-  if (!fs || !path || !STORE_PATH) return;
-  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-  try {
-    await fs.access(STORE_PATH);
-  } catch {
-    await fs.writeFile(STORE_PATH, "[]", "utf8");
-  }
-}
-
-async function readStore(): Promise<Release[]> {
-  if (!fs || !STORE_PATH) return [];
-  await ensureStore();
-  const raw = await fs.readFile(STORE_PATH, "utf8");
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as Release[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-async function writeStore(releases: Release[]) {
-  if (!fs || !STORE_PATH) return;
-  await ensureStore();
-  await fs.writeFile(STORE_PATH, JSON.stringify(releases, null, 2), "utf8");
-}
+import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
+import { readManualReleases, writeManualReleases } from "@/lib/manualReleaseStore";
 
 function shouldCloseFromStats(stats: Partial<Stats>) {
   const fail = Math.max(0, Number(stats.fail ?? 0));
@@ -65,9 +30,11 @@ export async function GET(req: Request) {
     return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
   }
 
-  const releases = await readStore();
+  const releases = await readManualReleases();
   const url = new URL(req.url);
   const clientSlug = url.searchParams.get("clientSlug")?.trim() || null;
+  const kindParam = url.searchParams.get("kind")?.trim().toLowerCase() || null;
+  const kindFilter = kindParam === "defect" || kindParam === "run" ? kindParam : null;
   if (!effectiveAuthUser.isGlobalAdmin) {
     const allowed = resolveAllowedSlugs(effectiveAuthUser as AuthUser);
     if (clientSlug && !allowed.includes(clientSlug)) {
@@ -75,13 +42,17 @@ export async function GET(req: Request) {
     }
   }
 
-  const filtered = clientSlug
+  let filtered = clientSlug
     ? releases.filter((r) => (r.clientSlug ?? null) === clientSlug)
     : effectiveAuthUser.isGlobalAdmin
       ? releases
       : releases.filter((r) => !r.clientSlug || resolveAllowedSlugs(effectiveAuthUser as AuthUser).includes(r.clientSlug));
+  if (kindFilter) {
+    filtered = filtered.filter((r) => resolveManualReleaseKind(r) === kindFilter);
+  }
   const normalized = filtered.map((r) => ({
     ...r,
+    kind: resolveManualReleaseKind(r),
     id: r.slug ?? r.id,
     metrics: {
       pass: r.stats.pass,
@@ -114,6 +85,7 @@ export async function POST(req: Request) {
     if (!canCreateManualDefect(role)) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
+    const kind = body.kind === "defect" ? "defect" : "run";
     const stats = (body.stats ?? {}) as Partial<Stats>;
     const now = new Date().toISOString();
     const requestedClosedAt = typeof body.closedAt === "string" ? body.closedAt : null;
@@ -132,13 +104,17 @@ export async function POST(req: Request) {
       slug: body.slug ? slugifyRelease(body.slug) : slugifyRelease(name),
       name,
       app,
+      kind,
       environments,
       clientSlug: clientSlug && clientSlug.length > 0 ? clientSlug : null,
+      category: body.category ? String(body.category) : undefined,
+      runSlug: body.runSlug ? String(body.runSlug) : undefined,
+      runName: body.runName ? String(body.runName) : undefined,
       source: "MANUAL",
       status,
       stats: {
         pass: Math.max(0, Number(stats.pass ?? 0)),
-        fail: Math.max(0, Number(stats.fail ?? 0)),
+        fail: Math.max(0, Number(stats.fail ?? (kind === "defect" ? 1 : 0))),
         blocked: Math.max(0, Number(stats.blocked ?? 0)),
         notRun: Math.max(0, Number(stats.notRun ?? 0)),
       },
@@ -148,10 +124,10 @@ export async function POST(req: Request) {
       updatedAt: now,
     };
 
-    const releases = await readStore();
+    const releases = await readManualReleases();
     const filtered = releases.filter((r) => r.slug !== release.slug);
     filtered.unshift(release);
-    await writeStore(filtered);
+    await writeManualReleases(filtered);
 
     const total = release.stats.pass + release.stats.fail + release.stats.blocked + release.stats.notRun;
     const payload = {

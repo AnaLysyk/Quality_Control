@@ -2,8 +2,8 @@ export type AuthLoginInput = { user: string; password: string };
 export type AuthLoginResult = { ok: true };
 
 export type AuthMeResult = {
-  user: any;
-  companies: any[];
+  user: Record<string, unknown>;
+  companies: Array<Record<string, unknown>>;
 };
 
 export type CompanyCreateInput = {
@@ -19,10 +19,10 @@ export type DataSource = {
     logout: () => Promise<void>;
   };
   companies: {
-    list: () => Promise<any[]>;
-    create: (input: CompanyCreateInput) => Promise<any>;
+    list: () => Promise<Array<Record<string, unknown>>>;
+    create: (input: CompanyCreateInput) => Promise<Record<string, unknown>>;
   };
   users: {
-    list: (clientId?: string | null) => Promise<any[]>;
+    list: (clientId?: string | null) => Promise<Array<Record<string, unknown>>>;
   };
 };

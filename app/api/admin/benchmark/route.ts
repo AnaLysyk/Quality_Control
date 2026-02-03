@@ -6,6 +6,7 @@ import clients from "@/data/mock-clients.json";
 import { getAllReleases } from "@/release/data";
 import { getRedis } from "@/lib/redis";
 import { rateLimit } from "@/lib/rateLimit";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 // Helper to compute risk
 function computeRisk(score: number, failedReleases: number) {
@@ -15,6 +16,11 @@ function computeRisk(score: number, failedReleases: number) {
 }
 
 export async function GET(req: Request) {
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+  }
+
   // Rate limit: 30 req/min per IP
   const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0] || req.headers.get("x-real-ip") || "unknown";
   const rate = await rateLimit(req, `admin-bench:${ip}`);
@@ -39,10 +45,14 @@ export async function GET(req: Request) {
   }
 
   // --- Original logic ---
-  const companies = Array.isArray(clients) ? clients : [];
+  const companies = Array.isArray(clients) ? (clients as Array<Record<string, unknown>>) : [];
   const items = await Promise.all(
-    companies.map(async (c: any) => {
-      const slug = c.slug || c.company_name || c.name;
+    companies.map(async (c) => {
+      const slug =
+        (typeof c.slug === "string" && c.slug) ||
+        (typeof c.company_name === "string" && c.company_name) ||
+        (typeof c.name === "string" && c.name) ||
+        "";
       const summary = await getCompanyQualitySummary(slug, period);
       const allReleases = await getAllReleases();
       // Treat only "FINALIZADA" as failed (type-safe)

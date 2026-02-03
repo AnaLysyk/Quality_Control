@@ -179,6 +179,7 @@ export default function AdminChamadosPage() {
                 Filtro
               </label>
               <select
+                aria-label="Filtro de status"
                 className="rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as TicketStatus | "all")}
@@ -219,6 +220,7 @@ export default function AdminChamadosPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <select
+                      aria-label={`Status do chamado ${item.title}`}
                       className="rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
                       value={item.status}
                       onChange={(e) => updateStatus(item.id, e.target.value as TicketStatus)}

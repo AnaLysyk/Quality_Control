@@ -241,14 +241,14 @@ export default function NotesButton() {
                 </p>
                 <div className="mt-2 space-y-2">
                   <input
-                    className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                    className="form-control-user w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
                     placeholder="Titulo"
                     value={draft.title}
                     onChange={(e) => setDraft((prev) => (prev ? { ...prev, title: e.target.value } : prev))}
                   />
                   <textarea
                     rows={5}
-                    className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                    className="form-control-user w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
                     placeholder="Escreva sua nota..."
                     value={draft.content}
                     onChange={(e) => setDraft((prev) => (prev ? { ...prev, content: e.target.value } : prev))}
@@ -324,7 +324,7 @@ export default function NotesButton() {
                       {isEditing && localDraft ? (
                         <>
                           <input
-                            className="w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                              className="form-control-user w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
                             value={localDraft.title}
                             onChange={(e) =>
                               setDraft((prev) => (prev ? { ...prev, title: e.target.value } : prev))
@@ -332,7 +332,7 @@ export default function NotesButton() {
                           />
                           <textarea
                             rows={5}
-                            className="w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                              className="form-control-user w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
                             value={localDraft.content}
                             onChange={(e) =>
                               setDraft((prev) => (prev ? { ...prev, content: e.target.value } : prev))

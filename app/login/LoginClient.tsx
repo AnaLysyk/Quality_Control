@@ -127,7 +127,7 @@ export default function LoginClient() {
                 name="user"
                 type="text"
                 required
-                className="w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
+                className="form-control-user w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
                 placeholder="usuario"
                 autoComplete="username"
                 value={user}
@@ -145,7 +145,7 @@ export default function LoginClient() {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   required
-                  className="w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white pr-11 text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
+                  className="form-control-user w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white pr-11 text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
                   placeholder="********"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

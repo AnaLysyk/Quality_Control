@@ -225,14 +225,14 @@ export default function TicketsButton() {
                 </p>
                 <div className="mt-2 space-y-2">
                   <input
-                    className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                    className="form-control-user w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
                     placeholder="Titulo"
                     value={draft.title}
                     onChange={(e) => setDraft((prev) => (prev ? { ...prev, title: e.target.value } : prev))}
                   />
                   <textarea
-                    rows={4}
-                    className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                            rows={4}
+                            className="form-control-user w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
                     placeholder="Descreva o chamado..."
                     value={draft.description}
                     onChange={(e) => setDraft((prev) => (prev ? { ...prev, description: e.target.value } : prev))}

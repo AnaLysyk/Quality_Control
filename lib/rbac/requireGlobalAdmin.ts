@@ -1,6 +1,5 @@
 import "server-only";
 
-import type { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
@@ -21,7 +20,7 @@ type SessionUser = {
   globalRole?: string | null;
 };
 
-export async function extractAccessToken(req: NextRequest): Promise<string | null> {
+export async function extractAccessToken(req: Request): Promise<string | null> {
   const auth = req.headers.get("authorization");
   if (auth?.toLowerCase().startsWith("bearer ")) {
     const token = auth.slice("bearer ".length).trim();
@@ -32,7 +31,7 @@ export async function extractAccessToken(req: NextRequest): Promise<string | nul
   return store.get("auth_token")?.value || null;
 }
 
-async function readSessionUser(req: NextRequest): Promise<SessionUser | null> {
+async function readSessionUser(req: Request): Promise<SessionUser | null> {
   const store = await cookies();
   const sessionId = store.get("session_id")?.value;
   if (sessionId) {
@@ -79,7 +78,7 @@ function isAdminRole(role?: string | null) {
 }
 
 export async function requireGlobalAdmin(
-  req: NextRequest,
+  req: Request,
   opts?: { token?: string | null },
 ): Promise<AdminSession | null> {
   const session = await readSessionUser(req);
@@ -98,7 +97,7 @@ export async function requireGlobalAdmin(
 }
 
 export async function requireGlobalAdminWithStatus(
-  req: NextRequest,
+  req: Request,
   opts?: { token?: string | null },
 ): Promise<{ admin: AdminSession | null; status: 200 | 401 | 403 }>
 {

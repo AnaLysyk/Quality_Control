@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
-test("user sem empresas fica em /empresas", async ({ page, context }) => {
+test("user sem empresas vê seleção de empresas", async ({ page, context }) => {
   await mockAuth(context, {
     role: "user",
     companies: [],
@@ -9,5 +9,6 @@ test("user sem empresas fica em /empresas", async ({ page, context }) => {
 
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
-  await expect(page).toHaveURL(/\/empresas/);
+  await expect(page.getByText(/Selecione a empresa ativa/i)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(/Nenhuma empresa vinculada/i)).toBeVisible();
 });

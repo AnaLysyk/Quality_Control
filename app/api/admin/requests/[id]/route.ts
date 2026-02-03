@@ -5,6 +5,7 @@ import { getRequestById, updateRequestStatus, type RequestStatus } from "@/data/
 import { getRedis } from "@/lib/redis";
 import { emailService } from "@/lib/email";
 import { getLocalUserById } from "@/lib/auth/localStore";
+import { notifyPasswordResetStatus } from "@/lib/notificationService";
 
 function isFinalStatus(value: string | null): value is Exclude<RequestStatus, "PENDING"> {
   return value === "APPROVED" || value === "REJECTED";
@@ -57,5 +58,8 @@ export async function PATCH(
   }
 
   const updated = updateRequestStatus(id, nextStatus, { id: authUser.id }, body?.reviewNote);
+  if (updated && updated.type === "PASSWORD_RESET") {
+    await notifyPasswordResetStatus(updated, nextStatus);
+  }
   return NextResponse.json({ item: updated });
 }

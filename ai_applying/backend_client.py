@@ -1,3 +1,9 @@
+"""Cliente HTTP simples para chamadas ao backend de IA.
+
+Este módulo fornece uma classe `BackendClient` usada pelos utilitários
+do pacote `ai_applying` para chamar endpoints de IA de forma centralizada.
+"""
+
 import os
 from typing import Any, Dict, Optional
 
@@ -32,7 +38,7 @@ class BackendClient:
         context: Optional[Dict[str, Any]] = None,
     ) -> Any:
         if not self.base_url:
-            raise RuntimeError("AI_BACKEND_BASE_URL is not configured")
+            raise RuntimeError("AI_BACKEND_BASE_URL não está configurada")
 
         url = f"{self.base_url.rstrip('/')}/{path.lstrip('/') }"
         headers = self._headers(context or {})

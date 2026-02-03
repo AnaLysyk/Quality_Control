@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { addRequest } from "@/data/requestsStore";
 import { findLocalUserByEmailOrId, listLocalCompanies, listLocalLinksForUser } from "@/lib/auth/localStore";
+import { notifyPasswordResetRequest } from "@/lib/notificationService";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -26,8 +27,9 @@ export async function POST(req: Request) {
       : null) ??
     (links.length > 0 ? companyById.get(links[0].companyId) ?? null : null);
 
+  let requestRecord = null;
   try {
-    addRequest(
+    requestRecord = addRequest(
       {
         id: user.id,
         name: user.name,
@@ -43,6 +45,10 @@ export async function POST(req: Request) {
     if (code !== "DUPLICATE") {
       return NextResponse.json({ error: "Erro ao registrar solicitacao" }, { status: 500 });
     }
+  }
+
+  if (requestRecord) {
+    await notifyPasswordResetRequest(requestRecord);
   }
 
   return NextResponse.json({ ok: true });

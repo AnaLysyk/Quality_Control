@@ -105,11 +105,11 @@ export async function GET(request: NextRequest) {
   if (rate.limited) return rate.response;
 
   if (!project || runId === null) {
-    return jsonError("project e runId sao obrigatorios", 400);
+    return jsonError("Os parâmetros 'project' e 'runId' são obrigatórios", 400);
   }
 
   const user = await authenticateRequest(request);
-  if (!user) return jsonError("Nao autorizado", 401);
+  if (!user) return jsonError("Não autorizado", 401);
 
   let effectiveSlug: string | null = null;
   if (isAdmin(user)) {
@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (!effectiveSlug && !isAdmin(user)) {
-    return jsonError("slug e obrigatorio", 400);
+    return jsonError("O parâmetro 'slug' é obrigatório", 400);
   }
 
   const rows: ExportRow[] = store

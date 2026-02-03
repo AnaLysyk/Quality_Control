@@ -4,6 +4,14 @@ import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export const runtime = "nodejs";
 
+type SupportRequestRow = {
+  id: string;
+  email: string;
+  message: string;
+  status: string;
+  created_at: Date;
+};
+
 function extractAdminNotes(message: string): string | null {
   const line = message.split("\n").find((l) => l.startsWith("ADMIN_NOTES:"));
   if (!line) return null;
@@ -17,9 +25,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
   }
 
-  const items = await prisma.supportRequest.findMany({
+  const items = (await prisma.supportRequest.findMany({
     orderBy: { created_at: "desc" },
-  });
+  })) as SupportRequestRow[];
 
   const mapped = items.map((item) => ({
     id: item.id,

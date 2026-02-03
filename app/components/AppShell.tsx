@@ -9,6 +9,7 @@ import ProfileButton from "./ProfileButton";
 import NotesButton from "./NotesButton";
 import NotificationsButton from "./NotificationsButton";
 import TicketsButton from "./TicketsButton";
+import ChatButton from "./ChatButton";
 
 interface AppShellProps {
   children: ReactNode;
@@ -51,6 +52,8 @@ export default function AppShell({ children }: AppShellProps) {
         <NotesButton />
         <ProfileButton />
       </div>
+
+      <ChatButton />
 
       <div className="flex flex-col min-h-screen lg:ml-65">
         <div className="flex-1 min-h-screen overflow-y-auto overflow-x-hidden">

@@ -48,7 +48,11 @@ export async function POST(req: Request) {
   }
 
   if (requestRecord) {
-    await notifyPasswordResetRequest(requestRecord);
+    try {
+      await notifyPasswordResetRequest(requestRecord);
+    } catch (err) {
+      console.error("Falha ao notificar reset de senha", err);
+    }
   }
 
   return NextResponse.json({ ok: true });

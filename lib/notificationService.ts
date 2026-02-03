@@ -78,7 +78,9 @@ export async function notifyManualRunCreated(release: Release) {
   if (!recipients.length) return;
   const runSlug = release.slug ?? release.id ?? "run";
   const runName = release.name || runSlug;
-  const link = companySlug ? `/empresas/${companySlug}/runs/${encodeURIComponent(runSlug)}` : null;
+  const link = companySlug
+    ? `/empresas/${encodeURIComponent(companySlug)}/runs/${encodeURIComponent(runSlug)}`
+    : null;
   const dedupeKey = `run:${runSlug}:created`;
 
   await createNotificationsForUsers(recipients, {
@@ -90,15 +92,32 @@ export async function notifyManualRunCreated(release: Release) {
     dedupeKey,
   });
 
+  await notifyManualRunFailure(release, recipients, link);
+}
+
+export async function notifyManualRunFailure(
+  release: Release,
+  cachedRecipients?: string[],
+  cachedLink?: string | null,
+) {
   const failCount = Math.max(0, Number(release.stats?.fail ?? 0));
-  if (failCount > 0) {
-    await createNotificationsForUsers(recipients, {
-      type: "TEST_FAILED",
-      title: "Caso de teste falhou",
-      description: `${runName} teve ${failCount} falha(s) detectada(s).`,
-      companySlug,
-      link,
-      dedupeKey: `run:${runSlug}:fail`,
-    });
-  }
+  if (failCount <= 0) return;
+  const companySlug = release.clientSlug ?? null;
+  const recipients = cachedRecipients ?? (await resolveCompanyUserIds(companySlug));
+  if (!recipients.length) return;
+  const runSlug = release.slug ?? release.id ?? "run";
+  const runName = release.name || runSlug;
+  const link =
+    cachedLink ??
+    (companySlug
+      ? `/empresas/${encodeURIComponent(companySlug)}/runs/${encodeURIComponent(runSlug)}`
+      : null);
+  await createNotificationsForUsers(recipients, {
+    type: "TEST_FAILED",
+    title: "Caso de teste falhou",
+    description: `${runName} teve ${failCount} falha(s) detectada(s).`,
+    companySlug,
+    link,
+    dedupeKey: `run:${runSlug}:fail`,
+  });
 }

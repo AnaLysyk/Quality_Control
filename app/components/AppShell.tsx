@@ -8,6 +8,7 @@ import SidebarVisibility from "./SidebarVisibility";
 import ProfileButton from "./ProfileButton";
 import NotesButton from "./NotesButton";
 import NotificationsButton from "./NotificationsButton";
+import TicketsButton from "./TicketsButton";
 
 interface AppShellProps {
   children: ReactNode;
@@ -46,6 +47,7 @@ export default function AppShell({ children }: AppShellProps) {
 
       <div className="fixed top-4 right-4 z-40 flex items-center gap-2">
         <NotificationsButton />
+        <TicketsButton />
         <NotesButton />
         <ProfileButton />
       </div>

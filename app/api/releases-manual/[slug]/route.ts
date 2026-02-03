@@ -7,6 +7,7 @@ import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalizatio
 import { evaluateQualityGate } from "@/lib/quality";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
 import { readManualReleases, writeManualReleases } from "@/lib/manualReleaseStore";
+import { notifyManualRunFailure } from "@/lib/notificationService";
 
 function resolveAllowedSlugs(user: AuthUser): string[] {
   if (Array.isArray(user.companySlugs) && user.companySlugs.length) return user.companySlugs;
@@ -121,6 +122,13 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
 
   releases[index] = updated;
   await writeManualReleases(releases);
+  if (nextKind === "run") {
+    try {
+      await notifyManualRunFailure(updated);
+    } catch (err) {
+      console.error("Falha ao notificar falha de run", err);
+    }
+  }
   return NextResponse.json({ ...updated, kind: resolveManualReleaseKind(updated) });
 }
 

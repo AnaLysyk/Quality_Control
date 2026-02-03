@@ -59,7 +59,11 @@ export async function PATCH(
 
   const updated = updateRequestStatus(id, nextStatus, { id: authUser.id }, body?.reviewNote);
   if (updated && updated.type === "PASSWORD_RESET") {
-    await notifyPasswordResetStatus(updated, nextStatus);
+    try {
+      await notifyPasswordResetStatus(updated, nextStatus);
+    } catch (err) {
+      console.error("Falha ao notificar status de reset", err);
+    }
   }
   return NextResponse.json({ item: updated });
 }

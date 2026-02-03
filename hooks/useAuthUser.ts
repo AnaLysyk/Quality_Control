@@ -22,7 +22,7 @@ export function useAuthUser() {
 
   const refreshUser = async () => {
     try {
-      const res = await fetch('/api/me');
+      const res = await fetch('/api/me', { credentials: 'include' });
       if (res.ok) {
         const data: { user: AuthUser | null } = await res.json();
         setUser(data.user);

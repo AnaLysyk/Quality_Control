@@ -59,7 +59,7 @@ export default function LoginClient() {
       });
 
       if (res.ok) {
-        const meRes = await fetch("/api/me");
+        const meRes = await fetch("/api/me", { credentials: 'include' });
         const meJson = await meRes.json().catch(() => null);
         const authUser = meJson?.user ?? null;
         await refreshUser();

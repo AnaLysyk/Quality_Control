@@ -229,13 +229,7 @@ export default function NotesButton() {
 
           <div className="max-h-[70vh] overflow-auto px-4 py-3 space-y-3">
             {isCreating && draft && (
-              <div
-                className="rounded-xl border p-3"
-                style={{
-                  backgroundColor: resolveColor(draft.color).bg,
-                  borderColor: resolveColor(draft.color).border,
-                }}
-              >
+              <div className={`rounded-xl border p-3 note-color-${draft.color}`}>
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
                   Nova nota
                 </p>
@@ -262,8 +256,7 @@ export default function NotesButton() {
                         onClick={() =>
                           setDraft((prev) => (prev ? { ...prev, color: color.key } : prev))
                         }
-                        className={`h-7 w-7 rounded-full border ${draft.color === color.key ? "ring-2 ring-(--tc-accent,#ef0001)/40" : ""}`}
-                        style={{ backgroundColor: color.bg, borderColor: color.border }}
+                        className={`h-7 w-7 rounded-full border note-swatch-${color.key} ${draft.color === color.key ? "ring-2 ring-(--tc-accent,#ef0001)/40" : ""}`}
                       />
                     ))}
                   </div>
@@ -300,11 +293,7 @@ export default function NotesButton() {
               const localDraft = isEditing && draft ? draft : null;
 
               return (
-                <div
-                  key={note.id}
-                  className="rounded-xl border p-3 transition"
-                  style={{ backgroundColor: color.bg, borderColor: color.border, color: color.text }}
-                >
+                <div key={note.id} className={`rounded-xl border p-3 transition note-color-${note.color}`}>
                   <button
                     type="button"
                     onClick={() => setExpandedId((prev) => (prev === note.id ? null : note.id))}
@@ -324,7 +313,9 @@ export default function NotesButton() {
                       {isEditing && localDraft ? (
                         <>
                           <input
-                              className="form-control-user w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                            className="form-control-user w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                            placeholder="Titulo"
+                            aria-label="Editar titulo da nota"
                             value={localDraft.title}
                             onChange={(e) =>
                               setDraft((prev) => (prev ? { ...prev, title: e.target.value } : prev))
@@ -332,7 +323,9 @@ export default function NotesButton() {
                           />
                           <textarea
                             rows={5}
-                              className="form-control-user w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                            className="form-control-user w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                            placeholder="Escreva sua nota..."
+                            aria-label="Editar conteudo da nota"
                             value={localDraft.content}
                             onChange={(e) =>
                               setDraft((prev) => (prev ? { ...prev, content: e.target.value } : prev))
@@ -349,8 +342,8 @@ export default function NotesButton() {
                                     prev ? { ...prev, color: option.key } : prev
                                   )
                                 }
-                                className={`h-7 w-7 rounded-full border ${localDraft.color === option.key ? "ring-2 ring-(--tc-accent,#ef0001)/40" : ""}`}
-                                style={{ backgroundColor: option.bg, borderColor: option.border }}
+                                className={`h-7 w-7 rounded-full border note-swatch-${option.key} ${localDraft.color === option.key ? "ring-2 ring-(--tc-accent,#ef0001)/40" : ""}`}
+                                
                               />
                             ))}
                           </div>

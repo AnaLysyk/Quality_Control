@@ -295,6 +295,8 @@ export default function TicketsButton() {
                         <>
                           <input
                             className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                            placeholder="Titulo"
+                            aria-label="Editar titulo do chamado"
                             value={localDraft.title}
                             onChange={(e) =>
                               setDraft((prev) => (prev ? { ...prev, title: e.target.value } : prev))
@@ -303,6 +305,8 @@ export default function TicketsButton() {
                           <textarea
                             rows={4}
                             className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                            placeholder="Descreva o chamado..."
+                            aria-label="Editar descricao do chamado"
                             value={localDraft.description}
                             onChange={(e) =>
                               setDraft((prev) => (prev ? { ...prev, description: e.target.value } : prev))

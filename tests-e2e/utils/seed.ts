@@ -1,5 +1,5 @@
 import "../../scripts/loadEnv";
-import { writeAlertsStore } from "../../lib/qualityAlert";
+import { writeAlertsStore, type QualityAlert, type QualityAlertType } from "../../lib/qualityAlert";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
  
 const isJsonMode =
@@ -25,11 +25,11 @@ export async function seedQualityAlert(alert: {
   message?: string;
   metadata?: Record<string, unknown>;
 }) {
-  const payload = [
+  const payload: QualityAlert[] = [
     {
       companySlug: alert.companySlug || "griaule",
-      type: alert.type || "sla",
-      severity: alert.severity || "critical",
+      type: (alert.type as QualityAlertType) || "sla",
+      severity: (alert.severity as "critical" | "warning") || "critical",
       message: alert.message || "Defeitos fora do SLA: 1",
       metadata: alert.metadata || { slaOverdue: 1 },
       timestamp: new Date().toISOString(),

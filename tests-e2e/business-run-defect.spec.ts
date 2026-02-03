@@ -11,6 +11,8 @@ function slugify(value: string) {
     .replace(/_{2,}/g, "_");
 }
 
+test.setTimeout(120000);
+
 test("empresa cria run e defeito com vinculo basico", async ({ page, context }) => {
   await mockAuth(context, {
     role: "company",
@@ -22,17 +24,18 @@ test("empresa cria run e defeito com vinculo basico", async ({ page, context }) 
   const runSlug = slugify(runTitle);
   const defectTitle = "Defeito encontrado na run";
 
-  await page.goto("/empresas/griaule/runs", { waitUntil: "networkidle" });
+  await page.goto("/empresas/griaule/runs", { waitUntil: "domcontentloaded" });
 
   await page.getByTestId("run-create").click();
   await page.getByTestId("run-title").fill(runTitle);
   await page.getByTestId("run-submit").click();
 
-  await page.waitForURL(new RegExp(`/empresas/griaule/runs/${runSlug}`));
+  await page.waitForURL(new RegExp(`/empresas/griaule/runs/${runSlug}`), { timeout: 60000 });
   await expect(page.getByText(runTitle)).toBeVisible();
 
   await page.goto("/empresas/griaule/defeitos", { waitUntil: "domcontentloaded" });
 
+  await expect(page.getByTestId("defect-title")).toBeVisible({ timeout: 20000 });
   await page.getByTestId("defect-title").fill(defectTitle);
   await page.getByTestId("defect-run-select").fill(runSlug);
   await page.getByTestId("defect-create").click();

@@ -19,7 +19,8 @@ export async function PATCH(
   }
 
   const body = (await req.json().catch(() => null)) as { status?: string; reviewNote?: string } | null;
-  const nextStatus = isFinalStatus(body?.status ?? null) ? body?.status ?? null : null;
+  const rawStatus = body?.status ?? null;
+  const nextStatus: Exclude<RequestStatus, "PENDING"> | null = isFinalStatus(rawStatus) ? rawStatus : null;
   if (!nextStatus) {
     return NextResponse.json({ message: "Status invalido" }, { status: 400 });
   }

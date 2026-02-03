@@ -136,11 +136,12 @@ export default function DashboardClient({
             >
               Exportar CSV
             </a>
-            <CreateManualReleaseButton
+              <CreateManualReleaseButton
               companySlug={companySlug}
               redirectToRun={false}
               onCreated={(created) => {
                 if (!created?.slug) return;
+                const slugVal = created.slug as string;
                 const stats = (created as { stats?: ManualRun["stats"] }).stats ?? {
                   pass: 0,
                   fail: 0,
@@ -150,10 +151,11 @@ export default function DashboardClient({
                 const total = stats.pass + stats.fail + stats.blocked + stats.notRun;
                 const passRate = total > 0 ? Math.round((stats.pass / total) * 100) : null;
                 const gateStatus = computeGateStatus(stats);
+                const nameVal = (created as { name?: string; title?: string }).name ?? (created as { title?: string }).title ?? slugVal;
                 setLocalRuns((prev) => [
                   {
-                    slug: created.slug,
-                    name: created.name ?? created.title ?? created.slug,
+                    slug: slugVal,
+                    name: nameVal,
                     createdAt: new Date().toISOString(),
                     stats,
                     total,

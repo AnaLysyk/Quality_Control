@@ -47,7 +47,7 @@ export default function DashboardClient() {
     );
   }
 
-  const safeUser: AuthUser = user ?? {};
+  const safeUser: Partial<AuthUser> = user ?? {};
   const capabilities = (Array.isArray(safeUser.capabilities) ? safeUser.capabilities : []) as Capability[];
   const isGlobalAdmin = safeUser?.isGlobalAdmin === true || safeUser?.globalRole === "global_admin";
 
@@ -78,11 +78,11 @@ export default function DashboardClient() {
                     </div>
                     <div className="sm:col-span-1">
                       <dt className="text-sm font-medium text-gray-500">Empresa</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{safeUser.companySlug || 'N/A'}</dd>
+                      <dd className="mt-1 text-sm text-gray-900">{String(safeUser.companySlug ?? 'N/A')}</dd>
                     </div>
                     <div className="sm:col-span-1">
                       <dt className="text-sm font-medium text-gray-500">Role</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{safeUser.role || 'N/A'}</dd>
+                      <dd className="mt-1 text-sm text-gray-900">{String(safeUser.role ?? 'N/A')}</dd>
                     </div>
                   </dl>
                 </div>

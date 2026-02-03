@@ -36,7 +36,7 @@ export async function GET(req: Request, context: { params: Promise<{ slug?: stri
   const open = defectItems.filter((d) => d.status !== "done").length;
   const overSla = defectItems.filter((d) => {
     if (d.status === "done") return false;
-    const opened = new Date(d.openedAt).getTime();
+    const opened = d.openedAt ? new Date(d.openedAt).getTime() : NaN;
     return Number.isFinite(opened) && Date.now() - opened > 172800000;
   }).length;
   const allReleases = await getAllReleases();

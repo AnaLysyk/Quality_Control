@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { canDeleteManualDefect, canEditManualDefect, getMockRole, resolveDefectRole } from "@/lib/rbac/defects";
-import type { Release, Stats } from "@/types/release";
+import type { Release, Stats, ReleaseStatus } from "@/types/release";
 import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalization";
 import { evaluateQualityGate } from "@/lib/quality";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
@@ -86,8 +86,12 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
 
   const nextKind = body.kind === "defect" ? "defect" : body.kind === "run" ? "run" : resolveManualReleaseKind(current);
   const nextStatusRaw = typeof body.status === "string" ? body.status : null;
-  const nextStatus =
-    nextKind === "defect" && nextStatusRaw ? normalizeDefectStatus(nextStatusRaw) : nextStatusRaw ?? current.status;
+  let nextStatus: ReleaseStatus | null = null;
+  if (nextKind === "defect") {
+    nextStatus = nextStatusRaw ? normalizeDefectStatus(nextStatusRaw) : null;
+  } else {
+    nextStatus = (nextStatusRaw as ReleaseStatus) ?? null;
+  }
 
   if (isFinalizeRequest(nextStatusRaw)) {
     const gate = evaluateQualityGate(current.stats);

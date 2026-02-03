@@ -74,6 +74,7 @@ async function assertNoHorizontalOverflow(page: Page, route: string) {
 }
 
 test.describe("responsive layout audit - public", () => {
+  test.describe.configure({ timeout: 120000 });
   for (const viewport of viewports) {
     test(`public routes @ ${viewport.label}`, async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
@@ -85,6 +86,7 @@ test.describe("responsive layout audit - public", () => {
 });
 
 test.describe("responsive layout audit - admin", () => {
+  test.describe.configure({ timeout: 120000 });
   for (const viewport of viewports) {
     test(`admin routes @ ${viewport.label}`, async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });

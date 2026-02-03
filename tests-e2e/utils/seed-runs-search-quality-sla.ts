@@ -1,5 +1,6 @@
 
 import fs from "fs";
+import path from "path";
 import { resolveSeedPath } from "./seed-paths";
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 

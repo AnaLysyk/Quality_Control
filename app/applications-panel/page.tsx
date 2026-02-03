@@ -170,7 +170,7 @@ export default function HomePage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-10 py-8 md:py-10 space-y-8">
         <div className="space-y-4 text-center">
           <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent)">Griaule</p>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-(--page-text,#0b1a3c)">Painel QA Griaule</h1>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-(--page-text,#0b1a3c)">Quality Control Griaule</h1>
           <p className="text-(--tc-text-secondary,#4b5563) max-w-3xl mx-auto">
             Central de aplicacoes e runs do time Griaule. Busque por aplicacoes e releases e acompanhe as execucoes.
           </p>

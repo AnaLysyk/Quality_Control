@@ -10,7 +10,7 @@ import { randomUUID } from "crypto";
 async function getRunsForRelease(releaseSlug: string, clientKey?: string | null) {
   // Manual runs
   const manualRuns = await readManualReleaseStore();
-  const runs = manualRuns.filter(r => r.slug === releaseSlug);
+  const runs = manualRuns.filter((r) => r.slug === releaseSlug);
   if (runs.length) return runs;
   if (clientKey) {
     return manualRuns.filter((r) => (r.clientSlug ?? null) === clientKey);
@@ -37,22 +37,22 @@ export async function GET(req: Request) {
     // TODO: Add logic for "blocked" if needed
 
     // --- Quality Gate snapshot logic ---
-    // Exemplo de métricas: mttr_hours, open_defects, fail_rate
-    // (mock simples: valores fictícios, pois só temos runs)
-    const mttr_hours = 24; // TODO: calcular real se disponível
-    const open_defects = 0; // TODO: calcular real se disponível
+    // Exemplo de metricas: mttr_hours, open_defects, fail_rate
+    // (mock simples: valores ficticios, pois so temos runs)
+    const mttr_hours = 24; // TODO: calcular real se disponivel
+    const open_defects = 0; // TODO: calcular real se disponivel
     const totalRuns = runs.length;
     const fail_rate = totalRuns > 0 ? Math.round((failedRuns.length / totalRuns) * 100) : 0;
     let gate_status: "approved" | "warning" | "failed" = "approved";
-    let reasons: string[] = [];
+    const reasons: string[] = [];
     if (status === "risk") {
       gate_status = "failed";
       reasons.push("Run falhou");
     }
-    // Exemplo: warning se fail_rate > 0 mas não "risk"
+    // Exemplo: warning se fail_rate > 0 mas nao "risk"
     // (ajuste conforme regras reais)
 
-    // Salvar snapshot (imutável)
+    // Salvar snapshot (imutavel)
     const snapshot = {
       id: randomUUID(),
       company_slug: rel.clientId || "griaule", // fallback
@@ -66,7 +66,7 @@ export async function GET(req: Request) {
     };
     await appendQualityGateHistory(snapshot);
 
-    // Disparar alertas automáticos
+    // Disparar alertas automaticos
     const companySlug = rel.clientId || "griaule";
     if (gate_status === "failed") {
       await sendQualityAlert({

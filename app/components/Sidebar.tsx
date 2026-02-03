@@ -201,7 +201,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             />
           </div>
           <div className="flex flex-col leading-tight transition duration-200 whitespace-nowrap">
-            <span className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-white/55">Painel QA</span>
+            <span className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-white/55">Plataforma</span>
             <span className="text-base font-semibold tracking-wide text-slate-900 dark:text-white">Quality Control</span>
           </div>
         </Link>
@@ -244,7 +244,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/55">Painel QA</span>
+                <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/55">Plataforma</span>
                 <span className="text-sm font-semibold tracking-wide text-[#2563eb] dark:text-[#4e8df5]">Quality Control</span>
               </div>
             </Link>

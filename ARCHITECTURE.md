@@ -1,39 +1,39 @@
-# Architecture
+# Arquitetura
 
-## Goals
-- Keep UI fast and focused; keep domain rules in the backend.
-- Make boundaries explicit to avoid duplication as the team grows.
-- Make local dev and CI predictable.
+## Objetivos
+- Manter a UI rapida e focada; manter regras de dominio no backend.
+- Deixar limites explicitos para evitar duplicacao conforme o time cresce.
+- Tornar o desenvolvimento local e o CI previsiveis.
 
-## System map
-- Next.js app (app/): UI and BFF.
-- app/api: BFF endpoints used by the UI.
-- PostgreSQL + Prisma: data source and schema of record.
-- Redis (optional): sessions and lightweight caches.
-- Qase: external test management data.
+## Mapa do sistema
+- Next.js app (app/): UI e BFF.
+- app/api: endpoints usados pela UI.
+- PostgreSQL + Prisma: fonte de dados e schema oficial.
+- Redis (opcional): sessoes e caches leves.
+- Qase: dados externos de gestao de testes.
 
-## Boundaries
+## Limites
 app/api (BFF):
-- UI-facing API, cookies/session, SSR helpers.
-- Compose and shape data for screens.
-- Owns auth/session and tenant resolution.
+- API voltada para a UI, cookies/sessao, helpers de SSR.
+- Compor e preparar dados para as telas.
+- Responsavel por auth/sessao e resolucao de tenant.
 
-Database (Postgres/Prisma):
-- Source of truth for users, companies and relationships.
-- Prisma is the only schema authority.
+Banco (Postgres/Prisma):
+- Fonte de verdade para usuarios, empresas e relacionamentos.
+- Prisma e a unica autoridade de schema.
 
-## Auth flow
-1. UI -> POST /api/auth/login -> Prisma validates credentials.
-2. Session stored in Redis + JWT cookie issued.
-3. UI -> GET /api/me to resolve current user + companies.
+## Fluxo de autenticacao
+1. UI -> POST /api/auth/login -> Prisma valida credenciais.
+2. Sessao armazenada no Redis + cookie JWT emitido.
+3. UI -> GET /api/me para resolver usuario atual + empresas.
 
-## Contract strategy
-- Shared types via packages/contracts (Zod + TS).
-- API contracts documented in the docs folder.
+## Estrategia de contratos
+- Tipos compartilhados via packages/contracts (Zod + TS).
+- Contratos de API documentados na pasta docs.
 
-## Testing strategy
-- Smoke E2E in CI (login + core pages).
-- Full E2E locally when needed.
+## Estrategia de testes
+- E2E smoke no CI (login + paginas principais).
+- E2E completo local quando necessario.
 
-## Run modes
-- Prisma + JWT only.
+## Modos de execucao
+- Prisma + JWT apenas.

@@ -8,6 +8,7 @@ export type LocalAuthUser = {
   id: string;
   name: string;
   email: string;
+  user?: string;
   password_hash: string;
   globalRole?: "global_admin" | null;
   role?: string | null;
@@ -58,8 +59,8 @@ export type LocalAuthStore = {
 const STORE_PATH = path.join(process.cwd(), "data", "local-auth-store.json");
 const SAMPLE_PATH = path.join(process.cwd(), "data", "local-auth-store.sample.json");
 
-function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
+function normalizeLogin(value: string) {
+  return value.trim().toLowerCase();
 }
 
 function normalizeSlug(value: string) {
@@ -133,8 +134,18 @@ async function readJson(filePath: string): Promise<LocalAuthStore | null> {
     if (!parsed || typeof parsed !== "object") return null;
     const users = Array.isArray(parsed.users) ? (parsed.users as LocalAuthUser[]) : [];
     const companies = Array.isArray(parsed.companies) ? (parsed.companies as LocalAuthCompany[]) : [];
+    const normalizedUsers = users.map((user) => {
+      const rawUser = typeof user.user === "string" ? user.user.trim() : "";
+      const rawEmail = typeof user.email === "string" ? user.email.trim() : "";
+      const fallback = rawUser || rawEmail || "";
+      return {
+        ...user,
+        user: rawUser || fallback,
+        email: rawEmail || fallback,
+      } as LocalAuthUser;
+    });
     const store: LocalAuthStore = {
-      users,
+      users: normalizedUsers,
       companies,
       memberships: Array.isArray(parsed.memberships) ? (parsed.memberships as LocalAuthMembership[]) : [],
       links: Array.isArray(parsed.links) ? (parsed.links as LocalAuthLink[]) : [],
@@ -201,9 +212,11 @@ export async function listLocalLinks(): Promise<LocalAuthMembership[]> {
 }
 
 export async function findLocalUserByEmailOrId(identifier: string): Promise<LocalAuthUser | null> {
-  const normalized = normalizeEmail(identifier);
+  const normalized = normalizeLogin(identifier);
   const store = await readLocalAuthStore();
-  const byEmail = store.users.find((user) => normalizeEmail(user.email) === normalized);
+  const byLogin = store.users.find((user) => normalizeLogin(user.user ?? user.email ?? "") === normalized);
+  if (byLogin) return { ...byLogin };
+  const byEmail = store.users.find((user) => normalizeLogin(user.email ?? "") === normalized);
   if (byEmail) return { ...byEmail };
   const byId = store.users.find((user) => user.id === identifier);
   return byId ? { ...byId } : null;
@@ -249,8 +262,8 @@ export async function createLocalUser(input: {
   is_global_admin?: boolean;
 }): Promise<LocalAuthUser> {
   const store = await loadStoreForWrite();
-  const email = normalizeEmail(input.email);
-  const existing = store.users.find((user) => normalizeEmail(user.email) === email);
+  const email = normalizeLogin(input.email);
+  const existing = store.users.find((user) => normalizeLogin(user.email) === email);
   if (existing) {
     return { ...existing };
   }
@@ -258,6 +271,7 @@ export async function createLocalUser(input: {
     id: `usr_${randomUUID().slice(0, 8)}`,
     name: input.name.trim() || email,
     email,
+    user: email,
     password_hash: input.password_hash,
     role: input.role ?? "user",
     globalRole: input.globalRole ?? null,
@@ -282,7 +296,7 @@ export async function updateLocalUser(
   const next: LocalAuthUser = {
     ...current,
     ...(patch.name ? { name: patch.name } : {}),
-    ...(patch.email ? { email: normalizeEmail(patch.email) } : {}),
+    ...(patch.email ? { email: normalizeLogin(patch.email), user: normalizeLogin(patch.email) } : {}),
     ...(typeof patch.role === "string" ? { role: patch.role } : {}),
     ...(typeof patch.globalRole === "string" ? { globalRole: patch.globalRole } : {}),
     ...(typeof patch.status === "string" ? { status: patch.status } : {}),

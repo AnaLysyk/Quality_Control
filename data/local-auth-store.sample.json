@@ -1,48 +1,40 @@
 {
   "users": [
     {
-      "id": "usr_admin_ana",
-      "name": "Ana Lysyk",
-      "email": "AnaLysyk",
-      "password_hash": "9d14308202a4b4c06c30f482c0612cfb82987815c86b24cb0644e40b4433fb43",
-      "globalRole": "global_admin",
+      "id": "usr_company_griaule",
+      "name": "Empresa Griaule",
+      "email": "griaule",
+      "user": "griaule",
+      "password_hash": "25d47285ed99bf5cdc04b4b7288323219fcb20cfba498a7a9cc7ff9d96a66121",
+      "globalRole": null,
       "status": "active",
       "active": true,
       "default_company_slug": "griaule",
-      "createdAt": "2026-02-02T00:00:00.000Z"
+      "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
-      "id": "usr_ana",
-      "name": "Ana",
-      "email": "ana",
+      "id": "usr_anapaula",
+      "name": "Ana Paula",
+      "email": "anapaula",
+      "user": "anapaula",
       "password_hash": "e82827b00b2ca8620beb37f879778c082b292a52270390cff35b6fe3157f4e8b",
       "globalRole": null,
       "status": "active",
       "active": true,
       "default_company_slug": "griaule",
-      "createdAt": "2026-02-02T00:00:00.000Z"
+      "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
-      "id": "usr_e2e_admin",
-      "name": "E2E Admin",
-      "email": "admin@griaule.test",
-      "password_hash": "b6c2a07c100217bd484cdd0940fb19c05e6ac2c425f32c35ac88b19f78be92d4",
+      "id": "usr_admin_ana1",
+      "name": "Ana 1",
+      "email": "ana1",
+      "user": "ana1",
+      "password_hash": "d63b28a0d327f7965cdeb951ece1d516dc98e8ba9d570c6517e1e4555de5ee93",
       "globalRole": "global_admin",
       "status": "active",
       "active": true,
       "default_company_slug": "griaule",
-      "createdAt": "2026-02-02T00:00:00.000Z"
-    },
-    {
-      "id": "usr_e2e_user",
-      "name": "E2E User",
-      "email": "user@griaule.test",
-      "password_hash": "b6c2a07c100217bd484cdd0940fb19c05e6ac2c425f32c35ac88b19f78be92d4",
-      "globalRole": null,
-      "status": "active",
-      "active": true,
-      "default_company_slug": "griaule",
-      "createdAt": "2026-02-02T00:00:00.000Z"
+      "createdAt": "2026-02-03T00:00:00.000Z"
     }
   ],
   "companies": [
@@ -55,64 +47,31 @@
       "integration_type": "manual",
       "status": "active",
       "active": true,
-      "createdAt": "2026-02-02T00:00:00.000Z",
-      "created_by": "seed"
-    },
-    {
-      "id": "testing-company",
-      "name": "Testing Company",
-      "company_name": "Testing Company",
-      "slug": "testing-company",
-      "integration_mode": "manual",
-      "integration_type": "manual",
-      "status": "active",
-      "active": true,
-      "createdAt": "2026-02-02T00:00:00.000Z",
+      "createdAt": "2026-02-03T00:00:00.000Z",
       "created_by": "seed"
     }
   ],
   "memberships": [
     {
-      "id": "mbr_ana_admin_griaule",
-      "userId": "usr_admin_ana",
+      "id": "mbr_company_griaule",
+      "userId": "usr_company_griaule",
       "companyId": "griaule",
       "role": "company_admin",
-      "createdAt": "2026-02-02T00:00:00.000Z"
+      "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
-      "id": "mbr_ana_admin_testing",
-      "userId": "usr_admin_ana",
-      "companyId": "testing-company",
-      "role": "company_admin",
-      "createdAt": "2026-02-02T00:00:00.000Z"
-    },
-    {
-      "id": "mbr_ana_griaule",
-      "userId": "usr_ana",
+      "id": "mbr_anapaula_griaule",
+      "userId": "usr_anapaula",
       "companyId": "griaule",
       "role": "user",
-      "createdAt": "2026-02-02T00:00:00.000Z"
+      "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
-      "id": "mbr_ana_testing",
-      "userId": "usr_ana",
-      "companyId": "testing-company",
-      "role": "user",
-      "createdAt": "2026-02-02T00:00:00.000Z"
-    },
-    {
-      "id": "mbr_e2e_admin_griaule",
-      "userId": "usr_e2e_admin",
+      "id": "mbr_admin_ana1_griaule",
+      "userId": "usr_admin_ana1",
       "companyId": "griaule",
       "role": "company_admin",
-      "createdAt": "2026-02-02T00:00:00.000Z"
-    },
-    {
-      "id": "mbr_e2e_user_griaule",
-      "userId": "usr_e2e_user",
-      "companyId": "griaule",
-      "role": "user",
-      "createdAt": "2026-02-02T00:00:00.000Z"
+      "createdAt": "2026-02-03T00:00:00.000Z"
     }
   ]
 }

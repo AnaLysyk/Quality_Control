@@ -11,7 +11,7 @@ export default function LoginClient() {
   const router = useRouter();
   const { refreshUser } = useAuthUser();
 
-  const [login, setLogin] = useState("");
+  const [user, setUser] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +26,7 @@ export default function LoginClient() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ login, password }),
+        body: JSON.stringify({ user, password }),
       });
 
       if (res.ok) {
@@ -71,19 +71,19 @@ export default function LoginClient() {
         >
           <div className="space-y-4">
             <div>
-              <label htmlFor="login" className="block text-sm font-medium text-[#011848] mb-1">
-                Usuário ou email
+              <label htmlFor="user" className="block text-sm font-medium text-[#011848] mb-1">
+                Usuario
               </label>
               <input
-                id="login"
-                name="login"
+                id="user"
+                name="user"
                 type="text"
                 required
                 className="w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white/80"
-                placeholder="usuario ou email"
+                placeholder="usuario"
                 autoComplete="username"
-                value={login}
-                onChange={(e) => setLogin(e.target.value)}
+                value={user}
+                onChange={(e) => setUser(e.target.value)}
               />
             </div>
 
@@ -98,7 +98,7 @@ export default function LoginClient() {
                   type={showPassword ? "text" : "password"}
                   required
                   className="w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white/80 pr-11"
-                  placeholder="•••••••••"
+                  placeholder="********"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />

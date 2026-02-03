@@ -33,14 +33,14 @@ function buildAuthToken(payload: Record<string, unknown>) {
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => null);
-    const email = typeof body?.email === "string" ? body.email.trim() : "";
     const login = typeof body?.login === "string" ? body.login.trim() : "";
     const userInput = typeof body?.user === "string" ? body.user.trim() : "";
+    const usuarioInput = typeof body?.usuario === "string" ? body.usuario.trim() : "";
     const password = typeof body?.password === "string" ? body.password : "";
-    const identifier = login || email || userInput;
+    const identifier = userInput || usuarioInput || login;
 
     if (!identifier || !password) {
-      return NextResponse.json({ error: "Email e senha obrigatorios" }, { status: 400 });
+      return NextResponse.json({ error: "Usuario e senha obrigatorios" }, { status: 400 });
     }
 
     const user = await findLocalUserByEmailOrId(identifier);

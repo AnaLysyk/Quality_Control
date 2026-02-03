@@ -1,4 +1,4 @@
-export type AuthLoginInput = { login?: string; email?: string; user?: string; password: string };
+export type AuthLoginInput = { user: string; password: string };
 export type AuthLoginResult = { ok: true };
 
 export type AuthMeResult = {

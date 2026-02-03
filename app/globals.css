@@ -307,10 +307,28 @@ video {
 .form-control-user {
   border: 1px solid var(--tc-border);
   background-color: var(--tc-input-bg);
+  color: var(--tc-text);
+  caret-color: var(--tc-accent);
+}
+.form-control-user::placeholder {
+  color: var(--tc-text-muted);
+  opacity: 1;
 }
 .form-control-user:focus {
   border-color: var(--tc-accent);
   box-shadow: 0 0 0 0.2rem rgba(239, 0, 1, 0.15);
+}
+
+/* Dark-mode overrides (use variables so they follow theme) */
+:root.dark .form-control-user,
+.dark .form-control-user {
+  color: var(--tc-text);
+  background-color: var(--tc-input-bg);
+}
+:root.dark .form-control-user::placeholder,
+.dark .form-control-user::placeholder {
+  color: var(--tc-text-muted);
+  opacity: 0.9;
 }
 
 .tc-text-strong {

@@ -81,7 +81,7 @@ export default function LoginClient() {
     <div
       className={
         styles.loginContainer +
-        " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-10 sm:px-6 md:px-10"
+        " min-h-[100dvh] flex items-start sm:items-center justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-6 sm:py-10 sm:px-6 md:px-10"
       }
     >
       <div className="absolute inset-0 pointer-events-none">
@@ -95,7 +95,7 @@ export default function LoginClient() {
         <div className="absolute top-1/2 right-2 w-14 h-14 bg-[#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
       </div>
 
-      <div className="max-w-lg w-full space-y-8 relative z-10 sm:max-w-xl md:max-w-2xl">
+      <div className="max-w-lg w-full space-y-6 sm:space-y-8 relative z-10 sm:max-w-xl md:max-w-2xl">
         <div className="text-center">
           <div className="mx-auto w-20 h-20 sm:w-24 sm:h-24 bg-linear-to-r from-[#011848] to-[#ef0001] rounded-full flex items-center justify-center mb-6 shadow-lg">
             <Image
@@ -107,17 +107,19 @@ export default function LoginClient() {
               className="w-12 h-12 sm:w-16 sm:h-16 animate-spin-slower select-none pointer-events-none"
             />
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#011848] mb-2 leading-tight">Quality Control</h2>
-          <p className="text-[#4b5563]">Bem-vindo, entre na sua conta</p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#011848] dark:text-white mb-2 leading-tight">
+            Quality Control
+          </h2>
+          <p className="text-slate-700 dark:text-slate-200">Bem-vindo, entre na sua conta</p>
         </div>
 
         <form
-          className="bg-white/90 backdrop-blur-sm p-5 sm:p-8 rounded-2xl shadow-2xl border border-[#011848]/10 w-full max-w-sm sm:max-w-md mx-auto min-w-0"
+          className="bg-white p-5 sm:p-8 rounded-2xl shadow-2xl border border-[#011848]/10 w-full max-w-sm sm:max-w-md mx-auto min-w-0 text-slate-900 dark:bg-slate-900/90 dark:text-white dark:border-white/10"
           onSubmit={handleSubmit}
         >
           <div className="space-y-4">
             <div>
-              <label htmlFor="user" className="block text-sm font-medium text-[#011848] mb-1">
+              <label htmlFor="user" className="block text-sm font-medium text-[#011848] dark:text-white mb-1">
                 Usuario
               </label>
               <input
@@ -125,7 +127,7 @@ export default function LoginClient() {
                 name="user"
                 type="text"
                 required
-                className="w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white/90 text-[#0b1a3c] placeholder:text-[#9aa3b2] caret-[#ef0001]"
+                className="w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white text-slate-900 placeholder:text-slate-400 caret-[#ef0001] dark:bg-slate-950/80 dark:text-white dark:border-white/20"
                 placeholder="usuario"
                 autoComplete="username"
                 value={user}
@@ -134,7 +136,7 @@ export default function LoginClient() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[#011848] mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-[#011848] dark:text-white mb-1">
                 Senha
               </label>
               <div className="relative">
@@ -143,7 +145,7 @@ export default function LoginClient() {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   required
-                  className="w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white/90 pr-11 text-[#0b1a3c] placeholder:text-[#9aa3b2] caret-[#ef0001]"
+                  className="w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white pr-11 text-slate-900 placeholder:text-slate-400 caret-[#ef0001] dark:bg-slate-950/80 dark:text-white dark:border-white/20"
                   placeholder="********"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -151,7 +153,7 @@ export default function LoginClient() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute inset-y-0 right-3 flex items-center text-[#64748b] hover:text-[#011848]"
+                  className="absolute inset-y-0 right-3 flex items-center text-slate-500 hover:text-[#011848] dark:text-slate-300 dark:hover:text-white"
                   aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
                 >
                   {showPassword ? <FiEyeOff aria-hidden /> : <FiEye aria-hidden />}
@@ -188,9 +190,9 @@ export default function LoginClient() {
             )}
           </button>
 
-          <div className="mt-6 text-sm text-[#4b5563]">
+          <div className="mt-6 text-sm text-slate-600 dark:text-slate-200">
             <div className="flex flex-col items-center gap-2">
-              <Link href="/login/forgot-password" className="font-semibold text-[#011848]/90 hover:text-[#011848]">
+              <Link href="/login/forgot-password" className="font-semibold text-[#011848]/90 hover:text-[#011848] dark:text-white dark:hover:text-white">
                 Esqueci minha senha
               </Link>
               <div className="flex w-full items-center gap-3 text-xs uppercase tracking-[0.4em] text-[#c1c5d1]">

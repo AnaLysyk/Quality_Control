@@ -88,6 +88,32 @@ async function fetchMe(): Promise<MeResult> {
         return { user: null, companies: [] };
       }
     }
+
+    if (res.status === 401) {
+      try {
+        const refreshed = await fetch("/api/auth/refresh", {
+          method: "POST",
+          headers,
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (refreshed.ok) {
+          const retry = await fetch("/api/me", {
+            method: "GET",
+            headers,
+            credentials: "include",
+            cache: "no-store",
+          });
+          if (retry.ok) {
+            const retryPayload = await retry.json().catch(() => null);
+            const parsedRetry = parseMeResponse(retryPayload);
+            if (parsedRetry) return parsedRetry;
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    }
     return { user: null, companies: [] };
   }
 

@@ -9,7 +9,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  const pendingResets = listUserRequests(user.id, { status: "PENDING", type: "PASSWORD_RESET" });
+  const pendingResets = await listUserRequests(user.id, { status: "PENDING", type: "PASSWORD_RESET" });
   for (const request of pendingResets) {
     await createUserNotification(user.id, {
       type: "PASSWORD_RESET_PENDING",

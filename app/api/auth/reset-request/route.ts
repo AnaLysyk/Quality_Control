@@ -31,7 +31,7 @@ export async function POST(req: Request) {
   const preferredCompanyName =
     preferredCompany?.name ?? preferredCompany?.company_name ?? undefined;
   try {
-    requestRecord = addRequest(
+    requestRecord = await addRequest(
       {
         id: user.id,
         name: user.name,

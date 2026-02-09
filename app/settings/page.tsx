@@ -112,7 +112,7 @@ function SettingsPageInner({
               <label className="text-sm font-medium text-(--tc-text) flex flex-col gap-1">
                 {t("settings.fullName")}
                 <input
-                  className="w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg) px-3 py-2 text-sm text-(--tc-text) focus:border-(--tc-accent) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/25 transition"
+                  className="form-control-user w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg) px-3 py-2 text-sm text-(--tc-text) focus:border-(--tc-accent) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/25 transition"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder={t("settings.fullName")}
@@ -122,7 +122,7 @@ function SettingsPageInner({
                 {t("settings.email")}
                 <input
                   disabled
-                  className="w-full rounded-lg border border-(--tc-border) px-3 py-2 text-sm bg-(--tc-surface-2) text-(--tc-text-muted) cursor-not-allowed"
+                  className="form-control-user w-full rounded-lg border border-(--tc-border) px-3 py-2 text-sm bg-(--tc-surface-2) text-(--tc-text-muted) cursor-not-allowed"
                   value={initial.email}
                   onChange={() => {}}
                 />
@@ -131,7 +131,7 @@ function SettingsPageInner({
                 {t("settings.role")}
                 <input
                   disabled
-                  className="w-full rounded-lg border border-(--tc-border) px-3 py-2 text-sm bg-(--tc-surface-2) text-(--tc-text-muted) cursor-not-allowed"
+                  className="form-control-user w-full rounded-lg border border-(--tc-border) px-3 py-2 text-sm bg-(--tc-surface-2) text-(--tc-text-muted) cursor-not-allowed"
                   value={initial.role}
                   onChange={() => {}}
                   placeholder={t("settings.role")}
@@ -140,7 +140,7 @@ function SettingsPageInner({
               <label className="text-sm font-medium text-(--tc-text) flex flex-col gap-1">
                 {t("settings.phone")}
                 <input
-                  className="w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg) px-3 py-2 text-sm text-(--tc-text) focus:border-(--tc-accent) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/25 transition"
+                  className="form-control-user w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg) px-3 py-2 text-sm text-(--tc-text) focus:border-(--tc-accent) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/25 transition"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+55 11 99999-9999"
@@ -155,7 +155,7 @@ function SettingsPageInner({
               <label className="text-sm font-medium text-(--tc-text) flex flex-col gap-1">
                 {t("settings.theme")}
                 <select
-                  className="w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg) px-3 py-2 text-sm text-(--tc-text) focus:border-(--tc-accent) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/25 transition"
+                  className="form-control-user w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg) px-3 py-2 text-sm text-(--tc-text) focus:border-(--tc-accent) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/25 transition"
                   value={theme}
                   onChange={(e) => setTheme(e.target.value as Theme)}
                   disabled={settingsLoading}
@@ -168,7 +168,7 @@ function SettingsPageInner({
               <label className="text-sm font-medium text-(--tc-text) flex flex-col gap-1">
                 {t("settings.language")}
                 <select
-                  className="w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg) px-3 py-2 text-sm text-(--tc-text) focus:border-(--tc-accent) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/25 transition"
+                  className="form-control-user w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg) px-3 py-2 text-sm text-(--tc-text) focus:border-(--tc-accent) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/25 transition"
                   value={language}
                   onChange={(e) => setLanguage(e.target.value as Language)}
                   disabled={settingsLoading}

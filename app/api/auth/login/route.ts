@@ -3,16 +3,21 @@ import { randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
 
 import { hashPasswordSha256, safeEqualHex } from "@/lib/passwordHash";
+import { createRefreshToken, hashRefreshToken } from "@/lib/auth/refreshToken";
+import { buildLocalSessionForUser } from "@/lib/auth/sessionBuilder";
 import { getRedis } from "@/lib/redis";
-import {
-  findLocalUserByEmailOrId,
-  listLocalCompanies,
-  listLocalLinksForUser,
-  normalizeLocalRole,
-} from "@/lib/auth/localStore";
-import { resolveCapabilities } from "@/lib/permissions";
+import { findLocalUserByEmailOrId } from "@/lib/auth/localStore";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
+const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
+
+function readPositiveIntEnv(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return Math.floor(parsed);
+}
 
 function setCookie(res: NextResponse, name: string, value: string, maxAgeSeconds: number) {
   res.cookies.set(name, value, {
@@ -24,10 +29,10 @@ function setCookie(res: NextResponse, name: string, value: string, maxAgeSeconds
   });
 }
 
-function buildAuthToken(payload: Record<string, unknown>) {
+function buildAuthToken(payload: Record<string, unknown>, ttlSeconds: number) {
   const secret = process.env.JWT_SECRET;
   if (!secret) return null;
-  return jwt.sign(payload, secret, { expiresIn: `${SESSION_TTL_SECONDS}s` });
+  return jwt.sign(payload, secret, { expiresIn: `${ttlSeconds}s` });
 }
 
 export async function POST(req: Request) {
@@ -53,83 +58,61 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
     }
 
-    const [links, companies] = await Promise.all([
-      listLocalLinksForUser(user.id),
-      listLocalCompanies(),
-    ]);
-    const isGlobalAdmin = user.globalRole === "global_admin" || user.is_global_admin === true;
-    const allowedCompanies = isGlobalAdmin
-      ? companies
-      : companies.filter((company) => links.some((link) => link.companyId === company.id));
     const requestedSlug =
       (typeof body?.clientSlug === "string" && body.clientSlug.trim()) ||
       (typeof body?.companySlug === "string" && body.companySlug.trim()) ||
       "";
-    // Prioriza a empresa solicitada (quando permitida) para manter o contexto ativo do usuario.
-    const requestedCompany =
-      requestedSlug && allowedCompanies.length
-        ? allowedCompanies.find((company) => company.slug === requestedSlug) ?? null
-        : null;
-    const activeCompany =
-      requestedCompany ??
-      allowedCompanies.find((company) => company.slug === user.default_company_slug) ??
-      allowedCompanies[0] ??
-      null;
-    const activeLink = activeCompany
-      ? links.find((link) => link.companyId === activeCompany.id) ?? null
-      : null;
-    const normalizedRole = normalizeLocalRole(activeLink?.role ?? user.role ?? null);
-    const companyRole = normalizedRole ?? "user";
-    const capabilities = resolveCapabilities({
-      globalRole: isGlobalAdmin ? "global_admin" : null,
-      companyRole: companyRole === "company_admin" ? "company_admin" : companyRole === "viewer" ? "viewer" : "user",
-      membershipCapabilities: activeLink?.capabilities ?? null,
-    });
-    const effectiveRole = isGlobalAdmin ? "admin" : companyRole === "company_admin" ? "company" : "user";
 
-    const sessionPayload = {
-      userId: user.id,
-      email: user.email,
-      name: user.name,
-      companyId: activeCompany?.id ?? null,
-      companySlug: activeCompany?.slug ?? null,
-      role: effectiveRole,
-      globalRole: isGlobalAdmin ? "global_admin" : null,
-      companyRole,
-      capabilities,
-      isGlobalAdmin,
-    };
+    const built = await buildLocalSessionForUser(user.id, { requestedSlug });
+    if (!built) {
+      return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
+    }
+
+    const accessTtlSeconds = readPositiveIntEnv("ACCESS_TOKEN_TTL_SECONDS", SESSION_TTL_SECONDS);
+    const refreshTtlSeconds = readPositiveIntEnv("REFRESH_TOKEN_TTL_SECONDS", DEFAULT_REFRESH_TTL_SECONDS);
 
     const sessionId = randomUUID();
     const redis = getRedis();
-    await redis.set(`session:${sessionId}`, JSON.stringify(sessionPayload), { ex: SESSION_TTL_SECONDS });
+    await redis.set(`session:${sessionId}`, JSON.stringify(built.session), { ex: SESSION_TTL_SECONDS });
 
-    const authToken = buildAuthToken({
-      sub: user.id,
-      email: user.email,
-      role: effectiveRole,
-      globalRole: isGlobalAdmin ? "global_admin" : null,
-      companyRole,
-      capabilities,
-      companyId: activeCompany?.id ?? null,
-      companySlug: activeCompany?.slug ?? null,
-      isGlobalAdmin,
-    });
-    const tokenToExpose = authToken ?? sessionId;
+    const accessToken = buildAuthToken(built.jwt, accessTtlSeconds);
+    const tokenToExpose = accessToken ?? sessionId;
+
+    const refreshToken = accessToken ? createRefreshToken() : null;
+    if (refreshToken) {
+      const refreshHash = hashRefreshToken(refreshToken);
+      await redis.set(
+        `refresh:${refreshHash}`,
+        JSON.stringify({ v: 1, userId: user.id, createdAt: Date.now() }),
+        { ex: refreshTtlSeconds },
+      );
+    }
     const res = NextResponse.json({
       ok: true,
       session: {
         access_token: tokenToExpose,
         token_type: "Bearer",
-        expires_in: SESSION_TTL_SECONDS,
+        expires_in: accessTtlSeconds,
       },
     });
-    setCookie(res, "session_id", sessionId, SESSION_TTL_SECONDS);
+    setCookie(res, "session_id", sessionId, refreshToken ? accessTtlSeconds : SESSION_TTL_SECONDS);
     // Sempre expõe um token para manter compatibilidade no middleware.
-    setCookie(res, "auth_token", tokenToExpose, SESSION_TTL_SECONDS);
-    if (requestedCompany?.slug) {
+    setCookie(res, "access_token", tokenToExpose, accessTtlSeconds);
+    setCookie(res, "auth_token", tokenToExpose, accessTtlSeconds);
+    if (refreshToken) {
+      setCookie(res, "refresh_token", refreshToken, refreshTtlSeconds);
+    } else {
+      res.cookies.set("refresh_token", "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
+    }
+
+    if (built.requestedCompanySlug) {
       // Mantem o contexto de empresa escolhido (admin ou company) apos login.
-      setCookie(res, "active_company_slug", requestedCompany.slug, SESSION_TTL_SECONDS);
+      setCookie(
+        res,
+        "active_company_slug",
+        built.requestedCompanySlug,
+        refreshToken ? refreshTtlSeconds : SESSION_TTL_SECONDS,
+      );
     } else {
       // Limpa o contexto salvo quando o login nao especifica empresa.
       res.cookies.set("active_company_slug", "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });

@@ -1,6 +1,72 @@
 {
   "items": [
     {
+      "id": "229693a0-70b6-4211-b228-f7ee5ea4700a",
+      "companySlug": "testing-company",
+      "kind": "link",
+      "title": "Doc Testing Company",
+      "description": null,
+      "url": "https://example.com/testing",
+      "createdAt": "2026-02-03T22:12:11.888Z",
+      "createdBy": "usr_admin_griaule_test"
+    },
+    {
+      "id": "50958878-9210-47b9-a9a4-103d591597a2",
+      "companySlug": "griaule",
+      "kind": "link",
+      "title": "Checklist Deploy",
+      "description": "Link de referencia",
+      "url": "https://example.com/docs",
+      "createdAt": "2026-02-03T22:11:39.959Z",
+      "createdBy": "usr_company_griaule_test"
+    },
+    {
+      "id": "2c68c24a-7a6c-4fc9-90ec-8ed51d0c40d0",
+      "companySlug": "griaule",
+      "kind": "file",
+      "title": "Manual QA",
+      "description": "Documento de teste",
+      "fileName": "manual.txt",
+      "mimeType": "text/plain",
+      "sizeBytes": 21,
+      "storagePath": "local:griaule/2c68c24a-7a6c-4fc9-90ec-8ed51d0c40d0-manual.txt",
+      "createdAt": "2026-02-03T22:11:38.039Z",
+      "createdBy": "usr_company_griaule_test"
+    },
+    {
+      "id": "31c69ae6-e1fa-4720-9130-9b12f3dd52a9",
+      "companySlug": "testing-company",
+      "kind": "link",
+      "title": "Doc Testing Company",
+      "description": null,
+      "url": "https://example.com/testing",
+      "createdAt": "2026-02-03T21:53:54.476Z",
+      "createdBy": "usr_admin_griaule_test"
+    },
+    {
+      "id": "0afc4bda-9eca-45cc-812a-1b2a1bee7cd6",
+      "companySlug": "griaule",
+      "kind": "link",
+      "title": "Checklist Deploy",
+      "description": "Link de referencia",
+      "url": "https://example.com/docs",
+      "createdAt": "2026-02-03T21:53:44.777Z",
+      "createdBy": "usr_company_griaule_test"
+    },
+    {
+      "id": "58e236c6-7e9d-4c1c-ab8b-63cdd2760a1b",
+      "companySlug": "griaule",
+      "kind": "file",
+      "title": "Manual QA",
+      "description": "Documento de teste",
+      "fileName": "manual.txt",
+      "mimeType": "text/plain",
+      "sizeBytes": 21,
+      "storagePath": "local:griaule/58e236c6-7e9d-4c1c-ab8b-63cdd2760a1b-manual.txt",
+      "createdAt": "2026-02-03T21:53:42.945Z",
+      "createdBy": "usr_company_griaule_test"
+    },
+    {
       "id": "57f7ef51-2119-4549-a411-76cb15acaf5a",
       "companySlug": "griaule",
       "kind": "file",

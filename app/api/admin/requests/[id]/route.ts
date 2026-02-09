@@ -31,7 +31,7 @@ export async function PATCH(
   }
 
   const { id } = await context.params;
-  const requestRecord = getRequestById(id);
+  const requestRecord = await getRequestById(id);
   if (!requestRecord) {
     return NextResponse.json({ message: "Solicitacao nao encontrada" }, { status: 404 });
   }
@@ -57,7 +57,7 @@ export async function PATCH(
     }
   }
 
-  const updated = updateRequestStatus(id, nextStatus, { id: authUser.id }, body?.reviewNote);
+  const updated = await updateRequestStatus(id, nextStatus, { id: authUser.id }, body?.reviewNote);
   if (updated && updated.type === "PASSWORD_RESET") {
     try {
       await notifyPasswordResetStatus(updated, nextStatus);

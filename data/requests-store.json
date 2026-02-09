@@ -1,0 +1,34 @@
+{
+  "items": [
+    {
+      "id": "req_sample_email",
+      "userId": "usr_001",
+      "userName": "Usuario",
+      "userEmail": "user@example.com",
+      "companyId": "cmp_001",
+      "companyName": "Testing Company",
+      "type": "EMAIL_CHANGE",
+      "payload": {
+        "newEmail": "novo.email@example.com"
+      },
+      "status": "PENDING",
+      "createdAt": "2026-02-03T21:48:39.439Z"
+    },
+    {
+      "id": "0589be4e-89c2-4d49-b72d-5123f2ae4137",
+      "userId": "usr_user_griaule_test",
+      "userName": "user@griaule.test",
+      "userEmail": "user@griaule.test",
+      "companyId": "",
+      "companyName": "",
+      "type": "COMPANY_CHANGE",
+      "payload": {
+        "newCompanyName": "Empresa Nova"
+      },
+      "status": "APPROVED",
+      "createdAt": "2026-02-03T21:55:21.299Z",
+      "reviewedBy": "usr_admin_griaule_test",
+      "reviewedAt": "2026-02-03T22:13:26.310Z"
+    }
+  ]
+}

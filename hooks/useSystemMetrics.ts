@@ -33,7 +33,20 @@ export function useSystemMetrics() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/metrics/overview');
+      const fetchOverview = () =>
+        fetch('/api/metrics/overview', { credentials: 'include', cache: 'no-store' });
+
+      let response = await fetchOverview();
+      if (response.status === 401) {
+        const refreshed = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          credentials: 'include',
+          cache: 'no-store',
+        });
+        if (refreshed.ok) {
+          response = await fetchOverview();
+        }
+      }
       if (!response.ok) {
         throw new Error('Erro ao buscar métricas');
       }

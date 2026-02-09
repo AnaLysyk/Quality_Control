@@ -91,9 +91,7 @@ function sanitizeText(value: unknown, max = 255): string | null {
 function normalizeEmail(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim().toLowerCase();
-  if (!trimmed) return null;
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmed)) return null;
-  return trimmed;
+  return trimmed || null;
 }
 
 export async function PATCH(req: Request) {
@@ -118,10 +116,6 @@ export async function PATCH(req: Request) {
   if (hasName && !name) {
     return NextResponse.json({ error: "Nome invalido" }, { status: 400 });
   }
-  if (hasEmail && !email) {
-    return NextResponse.json({ error: "E-mail invalido" }, { status: 400 });
-  }
-
   if (!name && !email && !hasPhone) {
     return NextResponse.json({ error: "Nenhuma alteracao informada" }, { status: 400 });
   }

@@ -22,13 +22,28 @@ export function useAuthUser() {
 
   const refreshUser = async () => {
     try {
-      const res = await fetch('/api/me', { credentials: 'include' });
-      if (res.ok) {
-        const data: { user: AuthUser | null } = await res.json();
-        setUser(data.user);
-      } else {
-        setUser(null);
+      const fetchMe = () =>
+        fetch("/api/me", { credentials: "include", cache: "no-store" });
+
+      let res = await fetchMe();
+      if (res.status === 401) {
+        const refreshed = await fetch("/api/auth/refresh", {
+          method: "POST",
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (refreshed.ok) {
+          res = await fetchMe();
+        }
       }
+
+      if (!res.ok) {
+        setUser(null);
+        return;
+      }
+
+      const data: { user: AuthUser | null } = await res.json();
+      setUser(data.user);
     } catch (error) {
       console.error('Failed to fetch user:', error);
       setUser(null);

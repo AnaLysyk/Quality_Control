@@ -147,11 +147,16 @@ function readCookieValue(cookieHeader: string, name: string): string | null {
 
 async function getAuthContext(req: Request): Promise<AuthContext | null> {
   const cookieHeader = req.headers.get("cookie") ?? "";
-  const sessionId = readCookieValue(cookieHeader, "session_id");
-  if (sessionId) {
-    const redis = getRedis();
-    const raw = await redis.get<string>(`session:${sessionId}`);
-    if (raw) {
+  const authHeader = req.headers.get("authorization");
+  const bearer = authHeader?.toLowerCase().startsWith("bearer ") ? authHeader.slice(7) : "";
+  const cookieToken = readCookieValue(cookieHeader, "access_token") ?? readCookieValue(cookieHeader, "auth_token");
+  const token = bearer || cookieToken;
+  if (token) {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      const redis = getRedis();
+      const raw = await redis.get<string>(`session:${token}`);
+      if (!raw) return null;
       try {
         const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
         const userId = (parsed as { userId?: string; id?: string }).userId ?? (parsed as { id?: string }).id;
@@ -169,21 +174,37 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
         return null;
       }
     }
+    try {
+      const payload = jwt.verify(token, secret) as jwt.JwtPayload & { sub?: string; isGlobalAdmin?: boolean };
+      const userId = typeof payload.sub === "string" ? payload.sub : null;
+      if (!userId) return null;
+      const isGlobalAdmin = payload.isGlobalAdmin === true;
+      const [links, companies] = await Promise.all([
+        listLocalLinksForUser(userId),
+        listLocalCompanies(),
+      ]);
+      const allowed = isGlobalAdmin
+        ? companies
+        : companies.filter((company) => links.some((link) => link.companyId === company.id));
+      return { userId, companySlugs: allowed.map((c) => c.slug) };
+    } catch {
+      // Token exists but is invalid/expired: do not fall back to session_id.
+      return null;
+    }
   }
 
-  const authHeader = req.headers.get("authorization");
-  const bearer = authHeader?.toLowerCase().startsWith("bearer ") ? authHeader.slice(7) : "";
-  const cookieToken = readCookieValue(cookieHeader, "auth_token");
-  const token = bearer || cookieToken;
-  if (!token) return null;
+  const sessionId = readCookieValue(cookieHeader, "session_id");
+  if (!sessionId) return null;
 
-  const secret = process.env.JWT_SECRET;
-  if (!secret) return null;
+  const redis = getRedis();
+  const raw = await redis.get<string>(`session:${sessionId}`);
+  if (!raw) return null;
+
   try {
-    const payload = jwt.verify(token, secret) as jwt.JwtPayload & { sub?: string; isGlobalAdmin?: boolean };
-    const userId = typeof payload.sub === "string" ? payload.sub : null;
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const userId = (parsed as { userId?: string; id?: string }).userId ?? (parsed as { id?: string }).id;
     if (!userId) return null;
-    const isGlobalAdmin = payload.isGlobalAdmin === true;
+    const isGlobalAdmin = (parsed as { isGlobalAdmin?: boolean }).isGlobalAdmin === true;
     const [links, companies] = await Promise.all([
       listLocalLinksForUser(userId),
       listLocalCompanies(),

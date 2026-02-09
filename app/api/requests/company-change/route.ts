@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const record = addRequest(
+    const record = await addRequest(
       {
         id: authUser.id,
         email: authUser.email,

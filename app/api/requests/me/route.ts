@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   const status = isRequestStatus(statusParam) ? statusParam : undefined;
   const type = isRequestType(typeParam) ? typeParam : undefined;
 
-  const items = listUserRequests(authUser.id, {
+  const items = await listUserRequests(authUser.id, {
     status,
     type,
   });

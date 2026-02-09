@@ -1,5 +1,65 @@
 [
   {
+    "id": "39da8b3b-d504-4b40-a408-9ee1c5d6a866",
+    "slug": "run_pdf_export",
+    "name": "Run PDF Export",
+    "app": "SMART",
+    "kind": "run",
+    "environments": [],
+    "clientSlug": "griaule",
+    "source": "MANUAL",
+    "status": "open",
+    "stats": {
+      "pass": 80,
+      "fail": 10,
+      "blocked": 10,
+      "notRun": 0
+    },
+    "closedAt": null,
+    "createdAt": "2026-02-03T22:10:38.533Z",
+    "updatedAt": "2026-02-03T22:10:38.533Z"
+  },
+  {
+    "id": "2e1ce829-f059-4673-817b-d785d3206302",
+    "slug": "defeito_mttr",
+    "name": "Defeito MTTR",
+    "app": "SMART",
+    "kind": "defect",
+    "environments": [],
+    "clientSlug": "griaule",
+    "source": "MANUAL",
+    "status": "done",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": "2026-02-03T21:54:50.536Z",
+    "createdAt": "2026-02-03T21:54:40.300Z",
+    "updatedAt": "2026-02-03T21:54:50.536Z"
+  },
+  {
+    "id": "f8e9e552-c6f7-4901-90a8-33eef8e7d815",
+    "slug": "run_gate_e2e",
+    "name": "Run Gate E2E",
+    "app": "SMART",
+    "kind": "run",
+    "environments": [],
+    "clientSlug": "griaule",
+    "source": "MANUAL",
+    "status": "open",
+    "stats": {
+      "pass": 0,
+      "fail": 60,
+      "blocked": 40,
+      "notRun": 0
+    },
+    "closedAt": null,
+    "createdAt": "2026-02-03T21:52:43.006Z",
+    "updatedAt": "2026-02-03T21:52:43.006Z"
+  },
+  {
     "id": "811fc397-bd87-43cc-9c12-4e8480f02cac",
     "slug": "run_falha",
     "name": "run-falha",
@@ -18,26 +78,6 @@
     "closedAt": null,
     "createdAt": "2026-02-03T20:42:26.977Z",
     "updatedAt": "2026-02-03T20:42:26.977Z"
-  },
-  {
-    "id": "34b3c460-0613-4565-98e8-b94188beb051",
-    "slug": "defeito_mttr",
-    "name": "Defeito MTTR",
-    "app": "SMART",
-    "kind": "defect",
-    "environments": [],
-    "clientSlug": "griaule",
-    "source": "MANUAL",
-    "status": "done",
-    "stats": {
-      "pass": 0,
-      "fail": 1,
-      "blocked": 0,
-      "notRun": 0
-    },
-    "closedAt": "2026-02-03T20:38:56.793Z",
-    "createdAt": "2026-02-03T20:38:42.369Z",
-    "updatedAt": "2026-02-03T20:38:56.793Z"
   },
   {
     "id": "84e39a56-33a9-4437-ba59-89c0ae181667",
@@ -122,26 +162,6 @@
     "updatedAt": "2026-02-03T20:26:54.757Z"
   },
   {
-    "id": "209de720-c432-4977-a994-4c8a717a1cf1",
-    "slug": "run_gate_e2e",
-    "name": "Run Gate E2E",
-    "app": "SMART",
-    "kind": "run",
-    "environments": [],
-    "clientSlug": "griaule",
-    "source": "MANUAL",
-    "status": "open",
-    "stats": {
-      "pass": 0,
-      "fail": 60,
-      "blocked": 40,
-      "notRun": 0
-    },
-    "closedAt": null,
-    "createdAt": "2026-02-03T20:25:53.201Z",
-    "updatedAt": "2026-02-03T20:25:53.201Z"
-  },
-  {
     "id": "c75d838d-cf3b-438f-a678-fb0679533477",
     "slug": "run_bloqueada",
     "name": "Run Bloqueada",
@@ -160,26 +180,6 @@
     "closedAt": null,
     "createdAt": "2026-02-03T20:23:59.447Z",
     "updatedAt": "2026-02-03T20:23:59.447Z"
-  },
-  {
-    "id": "378d657f-337f-405d-9039-c06c57193816",
-    "slug": "run_pdf_export",
-    "name": "Run PDF Export",
-    "app": "SMART",
-    "kind": "run",
-    "environments": [],
-    "clientSlug": "griaule",
-    "source": "MANUAL",
-    "status": "open",
-    "stats": {
-      "pass": 80,
-      "fail": 10,
-      "blocked": 10,
-      "notRun": 0
-    },
-    "closedAt": null,
-    "createdAt": "2026-02-03T20:22:53.803Z",
-    "updatedAt": "2026-02-03T20:22:53.803Z"
   },
   {
     "id": "6d6f053d-3aa6-4fb1-a315-535aae26a4fb",

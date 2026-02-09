@@ -1,7 +1,30 @@
 import type { DataSource, AuthLoginInput, AuthLoginResult, AuthMeResult, CompanyCreateInput } from "./DataSource";
 
+function canAttemptRefresh(input: RequestInfo | URL): boolean {
+  if (typeof input !== "string") return false;
+  if (!input.startsWith("/api/")) return false;
+  if (input.startsWith("/api/auth/login")) return false;
+  if (input.startsWith("/api/auth/refresh")) return false;
+  if (input.startsWith("/api/auth/logout")) return false;
+  return true;
+}
+
 async function json<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
-  const res = await fetch(input, init);
+  let res = await fetch(input, init);
+  if (res.status === 401 && canAttemptRefresh(input)) {
+    try {
+      const refreshed = await fetch("/api/auth/refresh", {
+        method: "POST",
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (refreshed.ok) {
+        res = await fetch(input, init);
+      }
+    } catch {
+      /* ignore */
+    }
+  }
   if (!res.ok) {
     const err = (await res.json().catch(() => null)) as Record<string, unknown> | null;
     const message =

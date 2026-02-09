@@ -71,7 +71,7 @@ export function ManualStatsForm({ slug, initialStats }: ManualStatsFormProps) {
               aria-label={`Total ${key}`}
               value={stats[key]}
               onChange={(e) => update(key, e.target.value)}
-              className="w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg) px-3 py-2 text-sm text-(--tc-text) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/40"
+              className="form-control-user w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg) px-3 py-2 text-sm text-(--tc-text) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/40"
             />
           </div>
         ))}

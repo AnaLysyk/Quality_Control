@@ -48,7 +48,13 @@ export default function CompanyDocumentsPage() {
   const params = useParams();
   const slugParam = params?.slug;
   const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam || "";
-  const { clients } = useClientContext();
+  const { clients, loading: clientsLoading } = useClientContext();
+
+  const hasAccess = useMemo(() => {
+    if (!slug) return false;
+    if (clientsLoading) return true;
+    return clients.some((client) => client.slug === slug);
+  }, [clients, clientsLoading, slug]);
 
   const companyName = useMemo(() => {
     const found = clients.find((client) => client.slug === slug);
@@ -61,6 +67,7 @@ export default function CompanyDocumentsPage() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const [forbidden, setForbidden] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [tab, setTab] = useState<"file" | "link">("file");
   const [submitting, setSubmitting] = useState(false);
@@ -77,6 +84,7 @@ export default function CompanyDocumentsPage() {
     if (!slug) return;
     setLoading(true);
     setError(null);
+    setForbidden(false);
     try {
       const res = await fetch(`/api/company-documents?slug=${encodeURIComponent(slug)}`, {
         credentials: "include",
@@ -85,6 +93,9 @@ export default function CompanyDocumentsPage() {
       const json = (await res.json().catch(() => ({}))) as { items?: DocumentItem[]; error?: string };
       if (!res.ok) {
         setItems([]);
+        if (res.status === 401 || res.status === 403) {
+          setForbidden(true);
+        }
         setError(json?.error || "Erro ao carregar documentos");
         return;
       }
@@ -110,6 +121,9 @@ export default function CompanyDocumentsPage() {
       const json = (await res.json().catch(() => ({}))) as { history?: DocumentHistoryEvent[]; error?: string };
       if (!res.ok) {
         setHistoryItems([]);
+        if (res.status === 401 || res.status === 403) {
+          setForbidden(true);
+        }
         setHistoryError(json?.error || "Erro ao carregar historico");
         return;
       }
@@ -124,9 +138,19 @@ export default function CompanyDocumentsPage() {
   }, [slug]);
 
   useEffect(() => {
+    if (!clientsLoading && !hasAccess) {
+      setItems([]);
+      setHistoryItems([]);
+      setLoading(false);
+      setHistoryLoading(false);
+      setError("Acesso negado");
+      setHistoryError(null);
+      setForbidden(true);
+      return;
+    }
     load();
     loadHistory();
-  }, [load, loadHistory]);
+  }, [load, loadHistory, clientsLoading, hasAccess]);
 
   async function submitFile() {
     if (!slug) return;
@@ -237,6 +261,20 @@ export default function CompanyDocumentsPage() {
       const msg = err instanceof Error ? err.message : "Erro ao excluir documento";
       setError(msg);
     }
+  }
+
+  if (forbidden || (!clientsLoading && !hasAccess)) {
+    return (
+      <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c) flex items-center justify-center px-6">
+        <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-6 text-center shadow-sm max-w-md">
+          <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Documentos</p>
+          <h1 className="mt-2 text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Acesso negado</h1>
+          <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
+            Voce nao tem permissao para visualizar documentos desta empresa.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { addRequest } from "@/data/requestsStore";
 import { findLocalUserByEmailOrId, listLocalCompanies, listLocalLinksForUser } from "@/lib/auth/localStore";
+import { notifyPasswordResetRequest } from "@/lib/notificationService";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -26,14 +27,17 @@ export async function POST(req: Request) {
       : null) ??
     (links.length > 0 ? companyById.get(links[0].companyId) ?? null : null);
 
+  let requestRecord = null;
+  const preferredCompanyName =
+    preferredCompany?.name ?? preferredCompany?.company_name ?? undefined;
   try {
-    addRequest(
+    requestRecord = await addRequest(
       {
         id: user.id,
         name: user.name,
         email: user.email,
         companyId: preferredCompany?.id,
-        companyName: preferredCompany?.name ?? preferredCompany?.company_name,
+        companyName: preferredCompanyName,
       },
       "PASSWORD_RESET",
       { reason: "forgot_password" },
@@ -42,6 +46,14 @@ export async function POST(req: Request) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
     if (code !== "DUPLICATE") {
       return NextResponse.json({ error: "Erro ao registrar solicitacao" }, { status: 500 });
+    }
+  }
+
+  if (requestRecord) {
+    try {
+      await notifyPasswordResetRequest(requestRecord);
+    } catch (err) {
+      console.error("Falha ao notificar reset de senha", err);
     }
   }
 

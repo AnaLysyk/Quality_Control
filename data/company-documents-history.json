@@ -1,0 +1,82 @@
+{
+  "items": [
+    {
+      "id": "aea00e48-1232-4b70-aa14-ec415d5e9007",
+      "companySlug": "testing-company",
+      "documentId": "229693a0-70b6-4211-b228-f7ee5ea4700a",
+      "action": "created",
+      "kind": "link",
+      "title": "Doc Testing Company",
+      "description": null,
+      "url": "https://example.com/testing",
+      "fileName": null,
+      "createdAt": "2026-02-03T22:12:11.942Z",
+      "actorId": "usr_admin_griaule_test"
+    },
+    {
+      "id": "ccdb886d-1e22-4ed9-a935-0c22f19c84ea",
+      "companySlug": "griaule",
+      "documentId": "50958878-9210-47b9-a9a4-103d591597a2",
+      "action": "created",
+      "kind": "link",
+      "title": "Checklist Deploy",
+      "description": "Link de referencia",
+      "url": "https://example.com/docs",
+      "fileName": null,
+      "createdAt": "2026-02-03T22:11:39.981Z",
+      "actorId": "usr_company_griaule_test"
+    },
+    {
+      "id": "96029ada-1706-4b23-af60-79d8863d5c6d",
+      "companySlug": "griaule",
+      "documentId": "2c68c24a-7a6c-4fc9-90ec-8ed51d0c40d0",
+      "action": "created",
+      "kind": "file",
+      "title": "Manual QA",
+      "description": "Documento de teste",
+      "url": null,
+      "fileName": "manual.txt",
+      "createdAt": "2026-02-03T22:11:38.092Z",
+      "actorId": "usr_company_griaule_test"
+    },
+    {
+      "id": "d5d7e9c9-a4c0-43e5-953b-1c82f83e0c72",
+      "companySlug": "testing-company",
+      "documentId": "31c69ae6-e1fa-4720-9130-9b12f3dd52a9",
+      "action": "created",
+      "kind": "link",
+      "title": "Doc Testing Company",
+      "description": null,
+      "url": "https://example.com/testing",
+      "fileName": null,
+      "createdAt": "2026-02-03T21:53:54.762Z",
+      "actorId": "usr_admin_griaule_test"
+    },
+    {
+      "id": "188a4847-9f29-482c-a13d-43ea43d97b85",
+      "companySlug": "griaule",
+      "documentId": "0afc4bda-9eca-45cc-812a-1b2a1bee7cd6",
+      "action": "created",
+      "kind": "link",
+      "title": "Checklist Deploy",
+      "description": "Link de referencia",
+      "url": "https://example.com/docs",
+      "fileName": null,
+      "createdAt": "2026-02-03T21:53:44.788Z",
+      "actorId": "usr_company_griaule_test"
+    },
+    {
+      "id": "87ffa13f-c2c5-4841-ad78-4cf5e1bd5838",
+      "companySlug": "griaule",
+      "documentId": "58e236c6-7e9d-4c1c-ab8b-63cdd2760a1b",
+      "action": "created",
+      "kind": "file",
+      "title": "Manual QA",
+      "description": "Documento de teste",
+      "url": null,
+      "fileName": "manual.txt",
+      "createdAt": "2026-02-03T21:53:42.972Z",
+      "actorId": "usr_company_griaule_test"
+    }
+  ]
+}

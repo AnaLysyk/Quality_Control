@@ -21,7 +21,7 @@ export type AuthUser = {
 
 /**
  * Auth helper used by API routes.
- * - Prefer session_id / auth_token (JWT) cookies.
+ * - Prefer access_token (JWT) / session_id / auth_token (legacy) cookies.
  * - Fallback: Authorization Bearer <email|id> or ?user= for local tooling.
  */
 export async function authenticateRequest(req: Request): Promise<AuthUser | null> {

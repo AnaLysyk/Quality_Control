@@ -8,7 +8,7 @@
     "dev:clean": "node scripts/dev-clean.js",
     "dev": "cross-env NEXT_DISABLE_TURBOPACK=1 next dev",
     "dev:ci": "next dev",
-    "build": "npx prisma generate && next build",
+    "build": "node -e \"const fs=require('fs'); if (fs.existsSync('./prisma/schema.prisma')||fs.existsSync('./schema.prisma')){ console.log('prisma schema found, running prisma generate'); require('child_process').execSync('npx prisma generate',{stdio:'inherit'}); } else { console.log('no prisma schema, skipping prisma generate'); }\" && next build",
     "start": "next start",
     "lint": "eslint --max-warnings 9999",
     "test": "jest --config jest.config.ts --passWithNoTests --testMatch \"**/tests/**/*.test.ts?(x)\"",
@@ -28,7 +28,8 @@
     "seed:runs-search-quality-sla": "tsx tests-e2e/utils/seed-runs-search-quality-sla.ts",
     "seed:quality-alert": "tsx tests-e2e/utils/seed.ts",
     "seed:griaule": "npx tsx scripts/seed-griaule.ts",
-    "seed:all": "npm run seed:ana-admin && npm run seed:quality-alert && npm run seed:griaule"
+    "seed:all": "npm run seed:ana-admin && npm run seed:quality-alert && npm run seed:griaule",
+    "postinstall": "node scripts/fix-server-only.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.975.0",
@@ -90,5 +91,11 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
+    ,
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/user-event": "^14.5.0"
+    ,
+    "jest-environment-jsdom": "^29.7.0"
   }
 }

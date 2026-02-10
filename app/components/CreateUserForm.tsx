@@ -55,7 +55,7 @@ export default function CreateUserForm({
       <label className="block">
         <span className="text-sm">E-mail</span>
         <input
-          className="border rounded px-2 py-1 w-full mt-1"
+          className="form-control-user border rounded px-2 py-1 w-full mt-1"
           placeholder="E-mail"
           value={email}
           onChange={e => setEmail(e.target.value)}
@@ -67,7 +67,7 @@ export default function CreateUserForm({
       <label className="block">
         <span className="text-sm">Nome</span>
         <input
-          className="border rounded px-2 py-1 w-full mt-1"
+          className="form-control-user border rounded px-2 py-1 w-full mt-1"
           placeholder="Nome"
           value={name}
           onChange={e => setName(e.target.value)}
@@ -78,7 +78,7 @@ export default function CreateUserForm({
       <label className="block">
         <span className="text-sm">Senha</span>
         <input
-          className="border rounded px-2 py-1 w-full mt-1"
+          className="form-control-user border rounded px-2 py-1 w-full mt-1"
           placeholder="Senha"
           value={password}
           onChange={e => setPassword(e.target.value)}
@@ -90,7 +90,7 @@ export default function CreateUserForm({
       <label className="block">
         <span className="text-sm">Empresa</span>
         <select
-          className="border rounded px-2 py-1 w-full mt-1"
+          className="form-control-user border rounded px-2 py-1 w-full mt-1"
           value={companyId}
           onChange={e => setCompanyId(e.target.value)}
           required

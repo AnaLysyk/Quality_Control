@@ -138,19 +138,30 @@ input[type="password"]::-ms-clear {
 html {
   min-height: 100%;
   height: auto;
+  width: 100%;
+  max-width: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 body {
   position: relative;
   isolation: isolate;
   min-height: 100%;
+  width: 100%;
+  max-width: 100%;
   margin: 0;
   background: var(--page-bg);
   color: var(--page-text);
   font-family: var(--font-sans);
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: auto;
+}
+
+#__next {
+  min-height: 100%;
+  width: 100%;
+  max-width: 100%;
 }
 
 body::before {
@@ -174,6 +185,11 @@ img,
 video {
   max-width: 100%;
   height: auto;
+}
+
+/* Evita overflow em layouts flex no zoom */
+:where(.flex, .inline-flex) > * {
+  min-width: 0;
 }
 
 .theme-light body,
@@ -291,10 +307,28 @@ video {
 .form-control-user {
   border: 1px solid var(--tc-border);
   background-color: var(--tc-input-bg);
+  color: var(--tc-text);
+  caret-color: var(--tc-accent);
+}
+.form-control-user::placeholder {
+  color: var(--tc-text-muted);
+  opacity: 1;
 }
 .form-control-user:focus {
   border-color: var(--tc-accent);
   box-shadow: 0 0 0 0.2rem rgba(239, 0, 1, 0.15);
+}
+
+/* Dark-mode overrides (use variables so they follow theme) */
+:root.dark .form-control-user,
+.dark .form-control-user {
+  color: var(--tc-text);
+  background-color: var(--tc-input-bg);
+}
+:root.dark .form-control-user::placeholder,
+.dark .form-control-user::placeholder {
+  color: var(--tc-text-muted);
+  opacity: 0.9;
 }
 
 .tc-text-strong {
@@ -321,6 +355,22 @@ video {
   background-color: #e3e9f4 !important;
   color: #0b1220 !important;
 }
+
+/* Note color tokens and swatches for NotesButton */
+.note-color-amber { background-color: #FEF3C7; border-color: #FDE68A; color: #92400E; }
+.note-color-sky { background-color: #DBEAFE; border-color: #BFDBFE; color: #1E3A8A; }
+.note-color-emerald { background-color: #DCFCE7; border-color: #BBF7D0; color: #065F46; }
+.note-color-rose { background-color: #FCE7F3; border-color: #FBCFE8; color: #9D174D; }
+.note-color-violet { background-color: #EDE9FE; border-color: #DDD6FE; color: #5B21B6; }
+.note-color-orange { background-color: #FFEDD5; border-color: #FED7AA; color: #9A3412; }
+
+.note-swatch-amber { background-color: #FEF3C7; border-color: #FDE68A; }
+.note-swatch-sky { background-color: #DBEAFE; border-color: #BFDBFE; }
+.note-swatch-emerald { background-color: #DCFCE7; border-color: #BBF7D0; }
+.note-swatch-rose { background-color: #FCE7F3; border-color: #FBCFE8; }
+.note-swatch-violet { background-color: #EDE9FE; border-color: #DDD6FE; }
+.note-swatch-orange { background-color: #FFEDD5; border-color: #FED7AA; }
+
 
 /* Fundo com identidade visual Griaule */
 .griaule-wall {

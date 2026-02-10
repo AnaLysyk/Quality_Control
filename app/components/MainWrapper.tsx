@@ -8,7 +8,7 @@ interface MainWrapperProps {
 
 export default function MainWrapper({ children }: MainWrapperProps) {
   return (
-    <main className="flex-1 w-full min-h-full overflow-x-auto px-4 sm:px-6 lg:px-10 pb-10">
+    <main className="flex-1 w-full min-h-full min-w-0 overflow-x-hidden px-4 sm:px-6 lg:px-10 pb-10">
       {children}
     </main>
   );

@@ -56,7 +56,7 @@ export default function ProfilePage() {
   const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
 
-  const name = (typeof asRecord(user)?.name === "string" ? String(asRecord(user)?.name) : "") || "Usuário";
+  const name = (typeof asRecord(user)?.name === "string" ? String(asRecord(user)?.name) : "") || "usuario";
   const email = (typeof asRecord(user)?.email === "string" ? String(asRecord(user)?.email) : "") || "";
   const phone = (typeof asRecord(user)?.phone === "string" ? String(asRecord(user)?.phone) : "") || "";
   const role = (typeof asRecord(user)?.role === "string" ? String(asRecord(user)?.role) : "") || "";
@@ -110,8 +110,8 @@ export default function ProfilePage() {
     const nextEmail = profileEmail.trim();
     const nextPhone = profilePhone.trim();
 
-    if (!nextName || !nextEmail) {
-      setProfileError("Informe nome e email");
+    if (!nextName) {
+      setProfileError("Informe nome");
       return;
     }
 
@@ -194,25 +194,25 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-(--page-bg) text-(--page-text)">
       <div className="max-w-4xl mx-auto px-4 py-10 space-y-6">
-        <Breadcrumb items={[{ label: "Configurações", href: "/settings" }, { label: "Perfil" }]} />
+        <Breadcrumb items={[{ label: "Configuracoes", href: "/settings" }, { label: "Perfil" }]} />
 
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.35em] text-(--tc-text-muted)">Configurações</p>
-          <h1 className="text-3xl font-extrabold">Perfil do Usuário</h1>
-          <p className="text-sm text-(--tc-text-secondary)">Veja seu usuário e as empresas vinculadas.</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-(--tc-text-muted)">Configuracoes</p>
+          <h1 className="text-3xl font-extrabold">Perfil do usuario</h1>
+          <p className="text-sm text-(--tc-text-secondary)">Veja seu usuario e as empresas vinculadas.</p>
         </div>
 
         <div className="rounded-2xl bg-(--tc-surface) shadow-[0_10px_26px_rgba(0,0,0,0.06)] border border-(--tc-border) p-6 space-y-4">
           <form className="space-y-4" onSubmit={handleProfileSubmit}>
             <div>
               <h2 className="text-lg font-semibold text-(--tc-text)">Dados do perfil</h2>
-              <p className="text-sm text-(--tc-text-secondary)">Atualize nome, email e telefone.</p>
+              <p className="text-sm text-(--tc-text-secondary)">Atualize nome, usuario e telefone.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="text-sm text-(--tc-text) flex flex-col gap-1">
                 Nome
                 <input
-                  className="w-full rounded-lg border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                  className="form-control-user w-full rounded-lg border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                   value={profileName}
                   onChange={(e) => setProfileName(e.target.value)}
                   disabled={profileLoading || loading}
@@ -220,20 +220,18 @@ export default function ProfilePage() {
                 />
               </label>
               <label className="text-sm text-(--tc-text) flex flex-col gap-1">
-                Email
+                Usuario
                 <input
-                  type="email"
-                  className="w-full rounded-lg border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                  className="form-control-user w-full rounded-lg border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                   value={profileEmail}
                   onChange={(e) => setProfileEmail(e.target.value)}
                   disabled={profileLoading || loading}
-                  required
                 />
               </label>
               <label className="text-sm text-(--tc-text) flex flex-col gap-1">
                 Telefone
                 <input
-                  className="w-full rounded-lg border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                  className="form-control-user w-full rounded-lg border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                   value={profilePhone}
                   onChange={(e) => setProfilePhone(e.target.value)}
                   disabled={profileLoading || loading}
@@ -285,7 +283,7 @@ export default function ProfilePage() {
               Senha atual
               <input
                 type="password"
-                className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                className="form-control-user mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 autoComplete="current-password"
@@ -296,7 +294,7 @@ export default function ProfilePage() {
               Nova senha
               <input
                 type="password"
-                className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                className="form-control-user mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 autoComplete="new-password"
@@ -307,7 +305,7 @@ export default function ProfilePage() {
               Confirmar nova senha
               <input
                 type="password"
-                className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                className="form-control-user mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
@@ -333,7 +331,7 @@ export default function ProfilePage() {
         <div className="rounded-2xl bg-(--tc-surface) shadow-[0_10px_26px_rgba(0,0,0,0.06)] border border-(--tc-border) p-6 space-y-3">
           <div>
             <h2 className="text-lg font-semibold text-(--tc-text)">Empresas vinculadas</h2>
-            <p className="text-sm text-(--tc-text-secondary)">Vínculos do seu usuário (por role).</p>
+            <p className="text-sm text-(--tc-text-secondary)">Vinculos do seu usuario (por role).</p>
           </div>
 
           {companiesError && <p className="text-sm text-red-600">{companiesError}</p>}

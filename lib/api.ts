@@ -21,7 +21,7 @@ async function getServerAccessToken() {
   try {
     const { cookies }: typeof import("next/headers") = await import("next/headers");
     const store = await cookies();
-    return store.get("auth_token")?.value || null;
+    return store.get("access_token")?.value || store.get("auth_token")?.value || null;
   } catch {
     return null;
   }
@@ -38,10 +38,37 @@ export async function fetchApi(path: string, init: RequestInit = {}) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  return fetch(url, {
+  const doFetch = () =>
+    fetch(url, {
     ...init,
     headers,
     credentials: init.credentials ?? "include",
     cache: init.cache ?? "no-store",
-  });
+    });
+
+  let res = await doFetch();
+
+  // Client-side only: attempt a single refresh + retry for same-origin API calls.
+  if (
+    typeof window !== "undefined" &&
+    res.status === 401 &&
+    !API_BASE &&
+    path.startsWith("/api/") &&
+    !path.startsWith("/api/auth/")
+  ) {
+    try {
+      const refreshed = await fetch("/api/auth/refresh", {
+        method: "POST",
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (refreshed.ok) {
+        res = await doFetch();
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return res;
 }

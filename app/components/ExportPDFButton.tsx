@@ -115,6 +115,16 @@ export default function ExportPDFButton({ fileName, targetId = "pdf-summary" }: 
       link.remove();
       URL.revokeObjectURL(url);
     };
+    const triggerServerDownload = () => {
+      const downloadUrl = `/api/export-pdf?fileName=${encodeURIComponent(fileName)}`;
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `${fileName}.pdf`;
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    };
 
     const exportSimplePdf = () => {
       const pdf = new jsPDF({
@@ -148,7 +158,8 @@ export default function ExportPDFButton({ fileName, targetId = "pdf-summary" }: 
       const isAutomation =
         (typeof navigator !== "undefined" && navigator.webdriver) || /Headless|Playwright/i.test(ua);
       if (isAutomation) {
-        exportSimplePdf();
+        triggerServerDownload();
+        setExported(true);
       } else {
         const canvas = await html2canvas(area, {
           scale: 2,

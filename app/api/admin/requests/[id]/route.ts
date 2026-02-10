@@ -5,6 +5,7 @@ import { getRequestById, updateRequestStatus, type RequestStatus } from "@/data/
 import { getRedis } from "@/lib/redis";
 import { emailService } from "@/lib/email";
 import { getLocalUserById } from "@/lib/auth/localStore";
+import { notifyPasswordResetStatus } from "@/lib/notificationService";
 
 function isFinalStatus(value: string | null): value is Exclude<RequestStatus, "PENDING"> {
   return value === "APPROVED" || value === "REJECTED";
@@ -30,7 +31,7 @@ export async function PATCH(
   }
 
   const { id } = await context.params;
-  const requestRecord = getRequestById(id);
+  const requestRecord = await getRequestById(id);
   if (!requestRecord) {
     return NextResponse.json({ message: "Solicitacao nao encontrada" }, { status: 404 });
   }
@@ -56,6 +57,13 @@ export async function PATCH(
     }
   }
 
-  const updated = updateRequestStatus(id, nextStatus, { id: authUser.id }, body?.reviewNote);
+  const updated = await updateRequestStatus(id, nextStatus, { id: authUser.id }, body?.reviewNote);
+  if (updated && updated.type === "PASSWORD_RESET") {
+    try {
+      await notifyPasswordResetStatus(updated, nextStatus);
+    } catch (err) {
+      console.error("Falha ao notificar status de reset", err);
+    }
+  }
   return NextResponse.json({ item: updated });
 }

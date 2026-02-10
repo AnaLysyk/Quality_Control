@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { shouldUseJsonStore } from "@/lib/storeMode";
+import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
 
 type AccessType = "user" | "admin" | "company";
 
@@ -86,6 +88,49 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   }
 
   const { id } = await context.params;
+  if (shouldUseJsonStore()) {
+    const existing = await getAccessRequestById(id);
+    if (!existing) {
+      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+    }
+
+    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : existing.email;
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    const role = typeof body.role === "string" ? body.role.trim() : "";
+    const company = typeof body.company === "string" ? body.company.trim() : "";
+    const clientId =
+      typeof body.client_id === "string" && body.client_id.trim() ? body.client_id.trim() : null;
+    const accessType = normalizeAccessType(body.access_type) ?? "user";
+    const notes = typeof body.notes === "string" ? body.notes.trim() : "";
+    const adminNotes = typeof body.admin_notes === "string" ? body.admin_notes.trim() : null;
+
+    const message = composeAccessRequestMessage({
+      email,
+      name,
+      role,
+      company,
+      clientId,
+      accessType,
+      notes,
+      adminNotes,
+    });
+
+    const updated = await updateAccessRequest(id, { email, message });
+    if (!updated) {
+      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      item: {
+        id: updated.id,
+        email: updated.email,
+        message: updated.message,
+        status: updated.status,
+        created_at: updated.created_at,
+      },
+    });
+  }
+
   const existing = await prisma.supportRequest.findUnique({ where: { id } });
   if (!existing) {
     return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });

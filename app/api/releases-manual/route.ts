@@ -7,6 +7,7 @@ import type { Release, Stats } from "@/types/release";
 import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalization";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
 import { readManualReleases, writeManualReleases } from "@/lib/manualReleaseStore";
+import { notifyManualRunCreated } from "@/lib/notificationService";
 
 function shouldCloseFromStats(stats: Partial<Stats>) {
   const fail = Math.max(0, Number(stats.fail ?? 0));
@@ -128,6 +129,14 @@ export async function POST(req: Request) {
     const filtered = releases.filter((r) => r.slug !== release.slug);
     filtered.unshift(release);
     await writeManualReleases(filtered);
+
+    if (kind === "run") {
+      try {
+        await notifyManualRunCreated(release);
+      } catch (err) {
+        console.error("Falha ao enviar notificacoes de run", err);
+      }
+    }
 
     const total = release.stats.pass + release.stats.fail + release.stats.blocked + release.stats.notRun;
     const payload = {

@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   const sortParam = searchParams.get("sort");
   const sort = isSort(sortParam) ? sortParam : "createdAt_desc";
 
-  const items = listAllRequests({ status, type, companyId, sort });
+  const items = await listAllRequests({ status, type, companyId, sort });
 
   return NextResponse.json({ items, total: items.length });
 }

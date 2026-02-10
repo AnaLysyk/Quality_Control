@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { shouldUseJsonStore } from "@/lib/storeMode";
+import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
 
 function applyAdminNotes(message: string, notes: string | null) {
   if (!notes || !notes.trim()) return message;
@@ -19,6 +21,22 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   const reason = typeof body?.reason === "string" ? body.reason.trim() : "";
 
   const { id } = await context.params;
+  if (shouldUseJsonStore()) {
+    const existing = await getAccessRequestById(id);
+    if (!existing) {
+      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+    }
+    const updatedMessage = applyAdminNotes(existing.message, reason || null);
+    const updated = await updateAccessRequest(id, { status: "rejected", message: updatedMessage });
+    return NextResponse.json({
+      ok: true,
+      item: {
+        id: updated?.id ?? id,
+        status: updated?.status ?? "rejected",
+      },
+    });
+  }
+
   const existing = await prisma.supportRequest.findUnique({ where: { id } });
   if (!existing) {
     return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });

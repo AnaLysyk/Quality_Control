@@ -106,9 +106,12 @@ export default function AdminRequestsPage() {
       setItems((prev) =>
         prev.map((req) => (req.id === payload.item?.id ? { ...req, ...payload.item } : req)),
       );
+    } else {
+      setItems((prev) =>
+        prev.map((req) => (req.id === id ? { ...req, status: next } : req)),
+      );
     }
     toast.success(next === "APPROVED" ? "SolicitaÃ§Ã£o aprovada" : "SolicitaÃ§Ã£o rejeitada");
-    await load();
   }
 
   return (

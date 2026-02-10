@@ -32,7 +32,11 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [localClientId, setLocalClientId] = useState<string | null>(clientId);
+  const [localClientId, setLocalClientId] = useState<string | null>(() => {
+    if (clientId) return clientId;
+    if (clients && clients.length === 1) return clients[0].id;
+    return null;
+  });
 
   const requiresClient = role !== "global_admin";
   const canSubmit = useMemo(
@@ -41,13 +45,22 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
   );
 
   useEffect(() => {
-    setLocalClientId(clientId);
-  }, [clientId]);
+    if (clientId) {
+      setLocalClientId(clientId);
+      return;
+    }
+    if (clients && clients.length === 1) {
+      setLocalClientId(clients[0].id);
+      return;
+    }
+    setLocalClientId(null);
+  }, [clientId, clients]);
 
   useEffect(() => {
     if (!open) return;
     resetForm();
-    setLocalClientId(clientId);
+    if (clientId) setLocalClientId(clientId);
+    else if (clients && clients.length === 1) setLocalClientId(clients[0].id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -105,10 +118,10 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
       const okMsg = "Usuario criado. Convite enviado.";
       setMessage(okMsg);
       toast.success(okMsg);
+      resetForm();
+      onClose();
       try {
         await onCreated?.();
-        resetForm();
-        onClose();
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Erro ao atualizar lista de usuarios";
         setError(msg);
@@ -130,6 +143,8 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
     setLinkedin("");
     setAvatarUrl("");
     setRole("client_user");
+    if (clientId) setLocalClientId(clientId);
+    else if (clients && clients.length === 1) setLocalClientId(clients[0].id);
     setMessage(null);
     setError(null);
   }

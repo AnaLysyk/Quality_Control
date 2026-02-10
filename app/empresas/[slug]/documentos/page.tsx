@@ -19,6 +19,19 @@ type DocumentItem = {
   createdAt: string;
 };
 
+type DocumentHistoryEvent = {
+  id: string;
+  documentId: string;
+  action: "created" | "deleted";
+  kind: "file" | "link";
+  title: string;
+  description?: string | null;
+  url?: string | null;
+  fileName?: string | null;
+  createdAt: string;
+  actorId?: string | null;
+};
+
 function formatBytes(bytes?: number | null) {
   if (!bytes || bytes <= 0) return "0 KB";
   const units = ["B", "KB", "MB", "GB"];
@@ -35,7 +48,13 @@ export default function CompanyDocumentsPage() {
   const params = useParams();
   const slugParam = params?.slug;
   const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam || "";
-  const { clients } = useClientContext();
+  const { clients, loading: clientsLoading } = useClientContext();
+
+  const hasAccess = useMemo(() => {
+    if (!slug) return false;
+    if (clientsLoading) return true;
+    return clients.some((client) => client.slug === slug);
+  }, [clients, clientsLoading, slug]);
 
   const companyName = useMemo(() => {
     const found = clients.find((client) => client.slug === slug);
@@ -43,8 +62,12 @@ export default function CompanyDocumentsPage() {
   }, [clients, slug]);
 
   const [items, setItems] = useState<DocumentItem[]>([]);
+  const [historyItems, setHistoryItems] = useState<DocumentHistoryEvent[]>([]);
   const [loading, setLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [forbidden, setForbidden] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [tab, setTab] = useState<"file" | "link">("file");
   const [submitting, setSubmitting] = useState(false);
@@ -61,6 +84,7 @@ export default function CompanyDocumentsPage() {
     if (!slug) return;
     setLoading(true);
     setError(null);
+    setForbidden(false);
     try {
       const res = await fetch(`/api/company-documents?slug=${encodeURIComponent(slug)}`, {
         credentials: "include",
@@ -69,6 +93,9 @@ export default function CompanyDocumentsPage() {
       const json = (await res.json().catch(() => ({}))) as { items?: DocumentItem[]; error?: string };
       if (!res.ok) {
         setItems([]);
+        if (res.status === 401 || res.status === 403) {
+          setForbidden(true);
+        }
         setError(json?.error || "Erro ao carregar documentos");
         return;
       }
@@ -82,9 +109,48 @@ export default function CompanyDocumentsPage() {
     }
   }, [slug]);
 
+  const loadHistory = useCallback(async () => {
+    if (!slug) return;
+    setHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const res = await fetch(`/api/company-documents?slug=${encodeURIComponent(slug)}&history=1`, {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const json = (await res.json().catch(() => ({}))) as { history?: DocumentHistoryEvent[]; error?: string };
+      if (!res.ok) {
+        setHistoryItems([]);
+        if (res.status === 401 || res.status === 403) {
+          setForbidden(true);
+        }
+        setHistoryError(json?.error || "Erro ao carregar historico");
+        return;
+      }
+      setHistoryItems(Array.isArray(json.history) ? json.history : []);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao carregar historico";
+      setHistoryItems([]);
+      setHistoryError(msg);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [slug]);
+
   useEffect(() => {
+    if (!clientsLoading && !hasAccess) {
+      setItems([]);
+      setHistoryItems([]);
+      setLoading(false);
+      setHistoryLoading(false);
+      setError("Acesso negado");
+      setHistoryError(null);
+      setForbidden(true);
+      return;
+    }
     load();
-  }, [load]);
+    loadHistory();
+  }, [load, loadHistory, clientsLoading, hasAccess]);
 
   async function submitFile() {
     if (!slug) return;
@@ -119,6 +185,7 @@ export default function CompanyDocumentsPage() {
       setFileUpload(null);
       setMessage("Documento anexado com sucesso.");
       await load();
+      await loadHistory();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao anexar documento";
       setError(msg);
@@ -162,12 +229,52 @@ export default function CompanyDocumentsPage() {
       setLinkUrl("");
       setMessage("Link salvo com sucesso.");
       await load();
+      await loadHistory();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao salvar link";
       setError(msg);
     } finally {
       setSubmitting(false);
     }
+  }
+
+  async function deleteDocument(id: string) {
+    if (!slug) return;
+    const confirmed = window.confirm("Deseja realmente excluir este documento?");
+    if (!confirmed) return;
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/company-documents?slug=${encodeURIComponent(slug)}&id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(json?.error || "Erro ao excluir documento");
+        return;
+      }
+      setMessage("Documento excluido.");
+      await load();
+      await loadHistory();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao excluir documento";
+      setError(msg);
+    }
+  }
+
+  if (forbidden || (!clientsLoading && !hasAccess)) {
+    return (
+      <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c) flex items-center justify-center px-6">
+        <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-6 text-center shadow-sm max-w-md">
+          <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Documentos</p>
+          <h1 className="mt-2 text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Acesso negado</h1>
+          <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
+            Voce nao tem permissao para visualizar documentos desta empresa.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -197,6 +304,7 @@ export default function CompanyDocumentsPage() {
               <button
                 type="button"
                 onClick={() => setTab("file")}
+                data-testid="doc-tab-file"
                 className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
                   tab === "file"
                     ? "bg-(--tc-accent,#ef0001) text-(--tc-text-inverse,#ffffff)"
@@ -208,6 +316,7 @@ export default function CompanyDocumentsPage() {
               <button
                 type="button"
                 onClick={() => setTab("link")}
+                data-testid="doc-tab-link"
                 className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
                   tab === "link"
                     ? "bg-(--tc-accent,#ef0001) text-(--tc-text-inverse,#ffffff)"
@@ -228,6 +337,7 @@ export default function CompanyDocumentsPage() {
                   value={fileTitle}
                   onChange={(e) => setFileTitle(e.target.value)}
                   placeholder="Ex.: Manual de integracao"
+                  data-testid="doc-file-title"
                 />
               </label>
               <label className="text-sm text-(--tc-text) flex flex-col gap-1">
@@ -237,6 +347,7 @@ export default function CompanyDocumentsPage() {
                   value={fileDescription}
                   onChange={(e) => setFileDescription(e.target.value)}
                   placeholder="Resumo rapido do documento"
+                  data-testid="doc-file-description"
                 />
               </label>
               <label className="text-sm text-(--tc-text) flex flex-col gap-1 md:col-span-2">
@@ -245,6 +356,7 @@ export default function CompanyDocumentsPage() {
                   type="file"
                   className="rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) px-3 py-2 text-sm"
                   onChange={(e) => setFileUpload(e.target.files?.[0] ?? null)}
+                  data-testid="doc-file-input"
                 />
               </label>
               <div className="md:col-span-2 flex justify-end">
@@ -252,6 +364,7 @@ export default function CompanyDocumentsPage() {
                   type="button"
                   onClick={submitFile}
                   disabled={submitting}
+                  data-testid="doc-file-submit"
                   className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-(--tc-text-inverse,#ffffff) disabled:opacity-60"
                 >
                   <FiUpload aria-hidden />
@@ -268,6 +381,7 @@ export default function CompanyDocumentsPage() {
                   value={linkTitle}
                   onChange={(e) => setLinkTitle(e.target.value)}
                   placeholder="Ex.: Checklist de deploy"
+                  data-testid="doc-link-title"
                 />
               </label>
               <label className="text-sm text-(--tc-text) flex flex-col gap-1">
@@ -277,6 +391,7 @@ export default function CompanyDocumentsPage() {
                   value={linkDescription}
                   onChange={(e) => setLinkDescription(e.target.value)}
                   placeholder="Resumo do link"
+                  data-testid="doc-link-description"
                 />
               </label>
               <label className="text-sm text-(--tc-text) flex flex-col gap-1 md:col-span-2">
@@ -286,6 +401,7 @@ export default function CompanyDocumentsPage() {
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   placeholder="https://..."
+                  data-testid="doc-link-url"
                 />
               </label>
               <div className="md:col-span-2 flex justify-end">
@@ -293,6 +409,7 @@ export default function CompanyDocumentsPage() {
                   type="button"
                   onClick={submitLink}
                   disabled={submitting}
+                  data-testid="doc-link-submit"
                   className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-(--tc-text-inverse,#ffffff) disabled:opacity-60"
                 >
                   <FiLink2 aria-hidden />
@@ -327,7 +444,7 @@ export default function CompanyDocumentsPage() {
             <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhum documento anexado ainda.</p>
           )}
 
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2" data-testid="document-list">
             {items.map((item) => {
               const isFile = item.kind === "file";
               const icon = isFile ? <FiFileText aria-hidden /> : <FiLink2 aria-hidden />;
@@ -337,6 +454,7 @@ export default function CompanyDocumentsPage() {
                 <article
                   key={item.id}
                   className="rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 space-y-2"
+                  data-testid="document-item"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3">
@@ -348,16 +466,26 @@ export default function CompanyDocumentsPage() {
                         {meta && <p className="text-xs text-(--tc-text-muted,#6b7280) break-all">{meta}</p>}
                       </div>
                     </div>
-                    {item.url && (
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-sm font-semibold text-(--tc-accent,#ef0001) hover:underline"
+                    <div className="flex items-center gap-2">
+                      {item.url && (
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-sm font-semibold text-(--tc-accent,#ef0001) hover:underline"
+                        >
+                          Abrir <FiExternalLink size={14} />
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => deleteDocument(item.id)}
+                        className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted,#6b7280) hover:text-(--tc-accent,#ef0001)"
+                        data-testid="document-delete"
                       >
-                        Abrir <FiExternalLink size={14} />
-                      </a>
-                    )}
+                        Excluir
+                      </button>
+                    </div>
                   </div>
 
                   {item.description && (
@@ -370,6 +498,57 @@ export default function CompanyDocumentsPage() {
               );
             })}
           </div>
+        </section>
+
+        <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-5 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">Historico</h2>
+            <p className="text-sm text-(--tc-text-muted,#6b7280)">
+              Registro de criacoes e exclusoes.
+            </p>
+          </div>
+
+          {historyLoading && (
+            <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando historico...</p>
+          )}
+          {!historyLoading && historyItems.length === 0 && (
+            <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma atividade registrada.</p>
+          )}
+
+          <div className="grid gap-3" data-testid="document-history">
+            {historyItems.map((event) => {
+              const label = event.action === "deleted" ? "Excluido" : "Criado";
+              const kindLabel = event.kind === "file" ? "Arquivo" : "Link";
+              return (
+                <div
+                  key={event.id}
+                  className="rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">
+                        {label}: {event.title}
+                      </p>
+                      <p className="text-xs text-(--tc-text-muted,#6b7280)">
+                        {kindLabel} • {new Date(event.createdAt).toLocaleString("pt-BR")}
+                      </p>
+                    </div>
+                    <span className="text-[10px] uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">
+                      {event.action}
+                    </span>
+                  </div>
+                  {event.description && (
+                    <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">{event.description}</p>
+                  )}
+                  {event.actorId && (
+                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">Usuario: {event.actorId}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {historyError && <p className="text-sm text-red-600">{historyError}</p>}
         </section>
       </div>
     </div>

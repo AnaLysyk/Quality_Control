@@ -7,6 +7,9 @@ import MainWrapper from "./MainWrapper";
 import SidebarVisibility from "./SidebarVisibility";
 import ProfileButton from "./ProfileButton";
 import NotesButton from "./NotesButton";
+import NotificationsButton from "./NotificationsButton";
+import TicketsButton from "./TicketsButton";
+import ChatButton from "./ChatButton";
 
 interface AppShellProps {
   children: ReactNode;
@@ -44,12 +47,16 @@ export default function AppShell({ children }: AppShellProps) {
       </button>
 
       <div className="fixed top-4 right-4 z-40 flex items-center gap-2">
+        <NotificationsButton />
+        <TicketsButton />
         <NotesButton />
         <ProfileButton />
       </div>
 
+      <ChatButton />
+
       <div className="flex flex-col min-h-screen lg:ml-65">
-        <div className="flex-1 min-h-screen overflow-auto">
+        <div className="flex-1 min-h-screen overflow-y-auto overflow-x-hidden">
           <MainWrapper>{children}</MainWrapper>
         </div>
       </div>

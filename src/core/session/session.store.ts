@@ -39,7 +39,8 @@ export type AccessContext = {
 };
 
 const SESSION_COOKIE = "session_id";
-const AUTH_COOKIE = "auth_token";
+const ACCESS_COOKIE = "access_token";
+const LEGACY_AUTH_COOKIE = "auth_token";
 
 function readCookieValue(cookieHeader: string, name: string): string | null {
   if (!cookieHeader) return null;
@@ -116,28 +117,34 @@ function parseJwtSession(token: string, secret: string): SessionPayload | null {
 }
 
 export async function getSessionPayload(req: Request): Promise<SessionPayload | null> {
-  // 1) Primeiro tenta a sessao salva no Redis via cookie de sessao.
   const cookieHeader = req.headers.get("cookie") ?? "";
+
+  // 1) Preferimos um access token explicito (Bearer / cookie access_token).
+  // Importante: se o token existir mas for invalido/expirado, NAO fazemos fallback para session_id
+  // (isso evita burlar expiracao/refresh).
+  const bearer = extractBearerToken(req);
+  const accessCookie = readCookieValue(cookieHeader, ACCESS_COOKIE);
+  const legacyCookie = readCookieValue(cookieHeader, LEGACY_AUTH_COOKIE);
+  const token = bearer || accessCookie || legacyCookie;
+  if (token) {
+    // 2) Se JWT_SECRET nao existir, tratamos o token como session_id (fallback local).
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      return await readSessionFromRedis(token);
+    }
+
+    // 3) Se tiver JWT_SECRET, decodifica o JWT e normaliza o payload.
+    return parseJwtSession(token, secret);
+  }
+
+  // 4) Fallback para clientes legados: session_id no Redis.
   const sessionId = readCookieValue(cookieHeader, SESSION_COOKIE);
   if (sessionId) {
     const fromRedis = await readSessionFromRedis(sessionId);
     if (fromRedis) return fromRedis;
   }
 
-  // 2) Se nao houver sessao, tenta o token (Bearer ou cookie auth_token).
-  const bearer = extractBearerToken(req);
-  const cookieToken = readCookieValue(cookieHeader, AUTH_COOKIE);
-  const token = bearer || cookieToken;
-  if (!token) return null;
-
-  // 3) Se JWT_SECRET nao existir, tratamos o token como session_id (fallback local).
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    return await readSessionFromRedis(token);
-  }
-
-  // 4) Se tiver JWT_SECRET, decodifica o JWT e normaliza o payload.
-  return parseJwtSession(token, secret);
+  return null;
 }
 
 export async function getAccessContext(req: Request): Promise<AccessContext | null> {

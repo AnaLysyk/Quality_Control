@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { shouldUseJsonStore } from "@/lib/storeMode";
+import { createAccessRequest, listAccessRequests } from "@/data/accessRequestsStore";
 
 type Payload = {
   email?: string;
@@ -125,22 +127,45 @@ export async function POST(req: Request) {
     notes,
   });
 
-  try {
-    await prisma.supportRequest.create({
-      data: {
-        email,
-        message: composedMessage,
-        status: "open",
-        ip_address,
-        user_agent,
-        user_id: userId,
-      },
+  const useJson = shouldUseJsonStore();
+  if (useJson) {
+    await createAccessRequest({
+      email,
+      message: composedMessage,
+      status: "open",
+      ip_address,
+      user_agent,
+      user_id: userId,
     });
-  } catch (error) {
-    console.error("Erro ao registrar support_request:", error);
-    return NextResponse.json({ message: "Erro interno ao registrar solicitação" }, { status: 500 });
+  } else {
+    try {
+      await prisma.supportRequest.create({
+        data: {
+          email,
+          message: composedMessage,
+          status: "open",
+          ip_address,
+          user_agent,
+          user_id: userId,
+        },
+      });
+    } catch (error) {
+      console.error("Erro ao registrar support_request:", error);
+      try {
+        await createAccessRequest({
+          email,
+          message: composedMessage,
+          status: "open",
+          ip_address,
+          user_agent,
+          user_id: userId,
+        });
+      } catch (jsonError) {
+        console.error("Fallback JSON store falhou:", jsonError);
+        return NextResponse.json({ message: "Erro interno ao registrar solicitação" }, { status: 500 });
+      }
+    }
   }
-
   return NextResponse.json({
     ok: true,
     message: "Solicitação enviada. O administrador será notificado.",
@@ -156,6 +181,12 @@ export async function GET(req: Request) {
     return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
   }
 
+  const useJson = shouldUseJsonStore();
+  if (useJson) {
+    const items = await listAccessRequests();
+    return NextResponse.json({ items });
+  }
+
   try {
     const items = await prisma.supportRequest.findMany({
       orderBy: { created_at: "desc" },
@@ -163,6 +194,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ items });
   } catch (error) {
     console.error("Erro ao listar support_requests:", error);
-    return NextResponse.json({ message: "Erro interno" }, { status: 500 });
+    const items = await listAccessRequests();
+    return NextResponse.json({ items });
   }
 }
+
+

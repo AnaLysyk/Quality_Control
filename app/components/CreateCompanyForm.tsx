@@ -35,14 +35,14 @@ export default function CreateCompanyForm({ onCreated }: { onCreated?: () => voi
     <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 space-y-2">
       <h2 className="text-lg font-bold mb-2">Criar nova empresa</h2>
       <input
-        className="border rounded px-2 py-1 w-full"
+        className="form-control-user border rounded px-2 py-1 w-full"
         placeholder="Nome da empresa"
         value={name}
         onChange={e => setName(e.target.value)}
         required
       />
       <input
-        className="border rounded px-2 py-1 w-full"
+        className="form-control-user border rounded px-2 py-1 w-full"
         placeholder="Slug (identificador único)"
         value={slug}
         onChange={e => setSlug(e.target.value)}

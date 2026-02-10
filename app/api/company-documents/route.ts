@@ -8,6 +8,7 @@ import { getRedis } from "@/lib/redis";
 import { listLocalCompanies, listLocalLinksForUser } from "@/lib/auth/localStore";
 
 type CompanyDocumentKind = "file" | "link";
+type DocumentHistoryAction = "created" | "deleted";
 
 export type CompanyDocumentItem = {
   id: string;
@@ -24,12 +25,27 @@ export type CompanyDocumentItem = {
   createdBy?: string | null;
 };
 
+type DocumentHistoryEvent = {
+  id: string;
+  companySlug: string;
+  documentId: string;
+  action: DocumentHistoryAction;
+  kind: CompanyDocumentKind;
+  title: string;
+  description?: string | null;
+  url?: string | null;
+  fileName?: string | null;
+  createdAt: string;
+  actorId?: string | null;
+};
+
 type AuthContext = {
   userId: string;
   companySlugs: string[];
 };
 
 const STORE_PATH = path.join(process.cwd(), "data", "company-documents-store.json");
+const HISTORY_PATH = path.join(process.cwd(), "data", "company-documents-history.json");
 const LOCAL_UPLOAD_ROOT = path.join(process.cwd(), "data", "company-documents-files");
 
 function sanitizeSlug(raw: string) {
@@ -67,6 +83,55 @@ async function writeStore(next: { items: CompanyDocumentItem[] }) {
   await fs.writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
 }
 
+async function ensureHistoryStore() {
+  await fs.mkdir(path.dirname(HISTORY_PATH), { recursive: true });
+  try {
+    await fs.access(HISTORY_PATH);
+  } catch {
+    await fs.writeFile(HISTORY_PATH, JSON.stringify({ items: [] }, null, 2), "utf8");
+  }
+}
+
+async function readHistory(): Promise<{ items: DocumentHistoryEvent[] }> {
+  await ensureHistoryStore();
+  try {
+    const raw = await fs.readFile(HISTORY_PATH, "utf8");
+    const parsed = JSON.parse(raw) as { items?: unknown };
+    const items = Array.isArray(parsed?.items) ? (parsed.items as DocumentHistoryEvent[]) : [];
+    return { items };
+  } catch {
+    return { items: [] };
+  }
+}
+
+async function writeHistory(next: { items: DocumentHistoryEvent[] }) {
+  await ensureHistoryStore();
+  await fs.writeFile(HISTORY_PATH, JSON.stringify(next, null, 2), "utf8");
+}
+
+async function appendHistoryEvent(
+  action: DocumentHistoryAction,
+  item: CompanyDocumentItem,
+  actorId?: string | null,
+) {
+  const history = await readHistory();
+  const event: DocumentHistoryEvent = {
+    id: crypto.randomUUID(),
+    companySlug: item.companySlug,
+    documentId: item.id,
+    action,
+    kind: item.kind,
+    title: item.title,
+    description: item.description ?? null,
+    url: item.url ?? null,
+    fileName: item.fileName ?? null,
+    createdAt: new Date().toISOString(),
+    actorId: actorId ?? null,
+  };
+  history.items.unshift(event);
+  await writeHistory(history);
+}
+
 function readCookieValue(cookieHeader: string, name: string): string | null {
   if (!cookieHeader) return null;
   const parts = cookieHeader.split(";").map((part) => part.trim());
@@ -82,11 +147,16 @@ function readCookieValue(cookieHeader: string, name: string): string | null {
 
 async function getAuthContext(req: Request): Promise<AuthContext | null> {
   const cookieHeader = req.headers.get("cookie") ?? "";
-  const sessionId = readCookieValue(cookieHeader, "session_id");
-  if (sessionId) {
-    const redis = getRedis();
-    const raw = await redis.get<string>(`session:${sessionId}`);
-    if (raw) {
+  const authHeader = req.headers.get("authorization");
+  const bearer = authHeader?.toLowerCase().startsWith("bearer ") ? authHeader.slice(7) : "";
+  const cookieToken = readCookieValue(cookieHeader, "access_token") ?? readCookieValue(cookieHeader, "auth_token");
+  const token = bearer || cookieToken;
+  if (token) {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      const redis = getRedis();
+      const raw = await redis.get<string>(`session:${token}`);
+      if (!raw) return null;
       try {
         const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
         const userId = (parsed as { userId?: string; id?: string }).userId ?? (parsed as { id?: string }).id;
@@ -104,21 +174,37 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
         return null;
       }
     }
+    try {
+      const payload = jwt.verify(token, secret) as jwt.JwtPayload & { sub?: string; isGlobalAdmin?: boolean };
+      const userId = typeof payload.sub === "string" ? payload.sub : null;
+      if (!userId) return null;
+      const isGlobalAdmin = payload.isGlobalAdmin === true;
+      const [links, companies] = await Promise.all([
+        listLocalLinksForUser(userId),
+        listLocalCompanies(),
+      ]);
+      const allowed = isGlobalAdmin
+        ? companies
+        : companies.filter((company) => links.some((link) => link.companyId === company.id));
+      return { userId, companySlugs: allowed.map((c) => c.slug) };
+    } catch {
+      // Token exists but is invalid/expired: do not fall back to session_id.
+      return null;
+    }
   }
 
-  const authHeader = req.headers.get("authorization");
-  const bearer = authHeader?.toLowerCase().startsWith("bearer ") ? authHeader.slice(7) : "";
-  const cookieToken = readCookieValue(cookieHeader, "auth_token");
-  const token = bearer || cookieToken;
-  if (!token) return null;
+  const sessionId = readCookieValue(cookieHeader, "session_id");
+  if (!sessionId) return null;
 
-  const secret = process.env.JWT_SECRET;
-  if (!secret) return null;
+  const redis = getRedis();
+  const raw = await redis.get<string>(`session:${sessionId}`);
+  if (!raw) return null;
+
   try {
-    const payload = jwt.verify(token, secret) as jwt.JwtPayload & { sub?: string; isGlobalAdmin?: boolean };
-    const userId = typeof payload.sub === "string" ? payload.sub : null;
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const userId = (parsed as { userId?: string; id?: string }).userId ?? (parsed as { id?: string }).id;
     if (!userId) return null;
-    const isGlobalAdmin = payload.isGlobalAdmin === true;
+    const isGlobalAdmin = (parsed as { isGlobalAdmin?: boolean }).isGlobalAdmin === true;
     const [links, companies] = await Promise.all([
       listLocalLinksForUser(userId),
       listLocalCompanies(),
@@ -147,7 +233,15 @@ export async function GET(req: NextRequest) {
   if (!canAccessCompany(auth, companySlug)) return NextResponse.json({ error: "Acesso negado", items: [] }, { status: 403 });
 
   const download = url.searchParams.get("download") === "1";
+  const wantsHistory = url.searchParams.get("history") === "1";
   const downloadId = (url.searchParams.get("id") ?? "").trim();
+  if (wantsHistory) {
+    const history = await readHistory();
+    const items = history.items
+      .filter((event) => event.companySlug === companySlug)
+      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    return NextResponse.json({ history: items }, { status: 200 });
+  }
   if (download) {
     if (!downloadId) return NextResponse.json({ error: "id obrigatorio" }, { status: 400 });
     const store = await readStore();
@@ -231,6 +325,7 @@ export async function POST(req: NextRequest) {
     const store = await readStore();
     store.items.unshift(item);
     await writeStore(store);
+    await appendHistoryEvent("created", item, auth.userId);
 
     const downloadUrl = `/api/company-documents?slug=${encodeURIComponent(companySlug)}&id=${encodeURIComponent(
       item.id
@@ -269,6 +364,7 @@ export async function POST(req: NextRequest) {
   const store = await readStore();
   store.items.unshift(item);
   await writeStore(store);
+  await appendHistoryEvent("created", item, auth.userId);
 
   return NextResponse.json({ ok: true, item }, { status: 200 });
 }
@@ -288,6 +384,9 @@ export async function DELETE(req: NextRequest) {
   if (idx === -1) return NextResponse.json({ ok: true }, { status: 200 });
   const [removed] = store.items.splice(idx, 1);
   await writeStore(store);
+  if (removed) {
+    await appendHistoryEvent("deleted", removed, auth.userId);
+  }
 
   if (removed?.kind === "file" && removed.storagePath?.startsWith("local:")) {
     try {

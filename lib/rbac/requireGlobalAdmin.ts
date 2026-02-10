@@ -28,16 +28,17 @@ export async function extractAccessToken(req: Request): Promise<string | null> {
   }
 
   const store = await cookies();
-  return store.get("auth_token")?.value || null;
+  return store.get("access_token")?.value || store.get("auth_token")?.value || null;
 }
 
 async function readSessionUser(req: Request): Promise<SessionUser | null> {
-  const store = await cookies();
-  const sessionId = store.get("session_id")?.value;
-  if (sessionId) {
-    const redis = getRedis();
-    const raw = await redis.get<string>(`session:${sessionId}`);
-    if (raw) {
+  const token = await extractAccessToken(req);
+  if (token) {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      const redis = getRedis();
+      const raw = await redis.get<string>(`session:${token}`);
+      if (!raw) return null;
       try {
         const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
         return parsed as SessionUser;
@@ -45,28 +46,38 @@ async function readSessionUser(req: Request): Promise<SessionUser | null> {
         return null;
       }
     }
+
+    try {
+      const payload = jwt.verify(token, secret) as jwt.JwtPayload & {
+        sub?: string;
+        email?: string;
+        role?: string;
+        isGlobalAdmin?: boolean;
+        globalRole?: string | null;
+      };
+      return {
+        userId: typeof payload.sub === "string" ? payload.sub : undefined,
+        email: typeof payload.email === "string" ? payload.email : undefined,
+        role: typeof payload.role === "string" ? payload.role : undefined,
+        isGlobalAdmin: payload.isGlobalAdmin === true,
+        globalRole: typeof payload.globalRole === "string" ? payload.globalRole : null,
+      };
+    } catch {
+      // Token exists but is invalid/expired: do not fall back to session_id.
+      return null;
+    }
   }
 
-  const token = await extractAccessToken(req);
-  if (!token) return null;
-  const secret = process.env.JWT_SECRET;
-  if (!secret) return null;
+  const store = await cookies();
+  const sessionId = store.get("session_id")?.value;
+  if (!sessionId) return null;
 
+  const redis = getRedis();
+  const raw = await redis.get<string>(`session:${sessionId}`);
+  if (!raw) return null;
   try {
-    const payload = jwt.verify(token, secret) as jwt.JwtPayload & {
-      sub?: string;
-      email?: string;
-      role?: string;
-      isGlobalAdmin?: boolean;
-      globalRole?: string | null;
-    };
-    return {
-      userId: typeof payload.sub === "string" ? payload.sub : undefined,
-      email: typeof payload.email === "string" ? payload.email : undefined,
-      role: typeof payload.role === "string" ? payload.role : undefined,
-      isGlobalAdmin: payload.isGlobalAdmin === true,
-      globalRole: typeof payload.globalRole === "string" ? payload.globalRole : null,
-    };
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    return parsed as SessionUser;
   } catch {
     return null;
   }

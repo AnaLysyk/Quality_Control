@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismaClient";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { getSupportRequestById, updateSupportRequest } from "@/data/supportRequestsStore";
+
+export const runtime = "nodejs";
 
 type AccessType = "user" | "admin" | "company";
 
@@ -86,7 +88,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   }
 
   const { id } = await context.params;
-  const existing = await prisma.supportRequest.findUnique({ where: { id } });
+  const existing = await getSupportRequestById(id);
   if (!existing) {
     return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
   }
@@ -112,13 +114,10 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     adminNotes,
   });
 
-  const updated = await prisma.supportRequest.update({
-    where: { id },
-    data: {
-      email,
-      message,
-    },
-  });
+  const updated = await updateSupportRequest(id, { email, message });
+  if (!updated) {
+    return NextResponse.json({ error: "Falha ao atualizar solicitacao" }, { status: 500 });
+  }
 
   return NextResponse.json({
     item: {
@@ -126,7 +125,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       email: updated.email,
       message: updated.message,
       status: updated.status,
-      created_at: updated.created_at.toISOString(),
+      created_at: updated.created_at,
     },
   });
 }

@@ -19,6 +19,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local tooling caches:
+    ".pytest_cache/**",
+    ".venv/**",
+    ".tmp/**",
   ]),
 ]);
 

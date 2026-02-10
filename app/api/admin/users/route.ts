@@ -30,9 +30,34 @@ type UserItem = {
 };
 
 function mapUser(
-  user: { id: string; name: string; email: string; active?: boolean },
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    active?: boolean;
+    globalRole?: string | null;
+    is_global_admin?: boolean;
+    job_title?: string | null;
+    linkedin_url?: string | null;
+    avatar_url?: string | null;
+  },
   link?: { role?: string | null; companyId?: string | null },
 ) {
+  const isGlobalAdmin = user.globalRole === "global_admin" || user.is_global_admin === true;
+  if (isGlobalAdmin) {
+    return {
+      id: user.id,
+      name: user.name ?? "",
+      email: user.email,
+      role: "global_admin",
+      client_id: null,
+      active: user.active !== false,
+      job_title: user.job_title ?? null,
+      linkedin_url: user.linkedin_url ?? null,
+      avatar_url: user.avatar_url ?? null,
+    };
+  }
+
   const role = normalizeLocalRole(link?.role ?? "user");
   return {
     id: user.id,
@@ -41,17 +66,27 @@ function mapUser(
     role: role === "company_admin" ? "client_admin" : "client_user",
     client_id: link?.companyId ?? null,
     active: user.active !== false,
-    job_title: null,
-    linkedin_url: null,
-    avatar_url: null,
+    job_title: user.job_title ?? null,
+    linkedin_url: user.linkedin_url ?? null,
+    avatar_url: user.avatar_url ?? null,
   };
 }
 
-function normalizeRole(input?: string | null) {
+function normalizeRole(input?: string | null): {
+  globalRole: "global_admin" | null;
+  membershipRole: "company_admin" | "user" | "viewer";
+} {
   const value = (input ?? "").toLowerCase();
-  if (value === "client_admin" || value === "admin" || value === "global_admin" || value === "company_admin") return "company_admin";
-  if (value === "viewer" || value === "client_viewer") return "viewer";
-  return "user";
+  if (value === "global_admin" || value === "system_admin" || value === "super-admin") {
+    return { globalRole: "global_admin", membershipRole: "company_admin" };
+  }
+  if (value === "client_admin" || value === "admin" || value === "company_admin" || value === "company") {
+    return { globalRole: null, membershipRole: "company_admin" };
+  }
+  if (value === "viewer" || value === "client_viewer" || value === "read_only") {
+    return { globalRole: null, membershipRole: "viewer" };
+  }
+  return { globalRole: null, membershipRole: "user" };
 }
 
 export async function GET(req: NextRequest) {
@@ -103,28 +138,49 @@ export async function POST(req: NextRequest) {
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
   const clientId = typeof body?.client_id === "string" ? body.client_id : null;
-  const role = normalizeRole(body?.role);
+  const normalizedRole = normalizeRole(body?.role);
   const capabilities = Array.isArray(body?.capabilities)
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
+  const jobTitle = typeof body?.job_title === "string" ? body.job_title.trim() : null;
+  const linkedinUrl = typeof body?.linkedin_url === "string" ? body.linkedin_url.trim() : null;
+  const avatarUrl = typeof body?.avatar_url === "string" ? body.avatar_url.trim() : null;
+  const rawPassword = typeof body?.password === "string" ? body.password : "";
 
   if (!name || !email) {
     return NextResponse.json({ error: "Nome e email sao obrigatorios" }, { status: 400 });
   }
-  if (!clientId) {
+
+  const isGlobalAdmin = normalizedRole.globalRole === "global_admin";
+  if (!isGlobalAdmin && !clientId) {
     return NextResponse.json({ error: "Empresa obrigatoria para este perfil" }, { status: 400 });
   }
 
-  const tempPassword = hashPasswordSha256(`${Date.now()}-${randomUUID()}`);
-  const user = await createLocalUser({
+  const tempPassword = rawPassword.trim() || `qc-${randomUUID().slice(0, 8)}`;
+  const passwordHash = hashPasswordSha256(tempPassword);
+
+  let user = await createLocalUser({
     name,
     email,
-    password_hash: tempPassword,
+    password_hash: passwordHash,
     active: true,
     role: "user",
+    globalRole: isGlobalAdmin ? "global_admin" : null,
+    is_global_admin: isGlobalAdmin,
+    job_title: jobTitle,
+    linkedin_url: linkedinUrl,
+    avatar_url: avatarUrl,
   });
 
-  await upsertLocalLink({ userId: user.id, companyId: clientId, role, capabilities });
+  if (isGlobalAdmin && (user.globalRole ?? null) !== "global_admin") {
+    // createLocalUser retorna existente quando email ja existe: garante globalRole neste caso.
+    const updated = await updateLocalUser(user.id, { globalRole: "global_admin", is_global_admin: true });
+    if (updated) user = updated;
+  }
+
+  if (clientId) {
+    await upsertLocalLink({ userId: user.id, companyId: clientId, role: normalizedRole.membershipRole, capabilities });
+  }
 
   await addAuditLogSafe({
     actorUserId: admin.id,
@@ -133,10 +189,13 @@ export async function POST(req: NextRequest) {
     entityType: "user",
     entityId: user.id,
     entityLabel: user.email,
-    metadata: { companyId: clientId, role },
+    metadata: { companyId: clientId, role: body?.role ?? null, globalRole: normalizedRole.globalRole },
   });
 
-  return NextResponse.json({ ok: true }, { status: 201 });
+  return NextResponse.json(
+    { ok: true, temp_password: rawPassword.trim() ? null : tempPassword },
+    { status: 201 },
+  );
 }
 
 export async function PATCH(req: NextRequest) {
@@ -155,15 +214,27 @@ export async function PATCH(req: NextRequest) {
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : null;
   const active = typeof body?.active === "boolean" ? body.active : null;
   const clientId = typeof body?.client_id === "string" ? body.client_id : null;
-  const role = normalizeRole(body?.role);
+  const normalizedRole = normalizeRole(body?.role);
   const capabilities = Array.isArray(body?.capabilities)
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
+  const jobTitle = typeof body?.job_title === "string" ? body.job_title.trim() : undefined;
+  const linkedinUrl = typeof body?.linkedin_url === "string" ? body.linkedin_url.trim() : undefined;
+  const avatarUrl = typeof body?.avatar_url === "string" ? body.avatar_url.trim() : undefined;
+
+  const isGlobalAdmin = normalizedRole.globalRole === "global_admin";
+  if (!isGlobalAdmin && !clientId) {
+    return NextResponse.json({ error: "Empresa obrigatoria para este perfil" }, { status: 400 });
+  }
 
   const updated = await updateLocalUser(userId, {
     ...(name ? { name } : {}),
     ...(email ? { email } : {}),
     ...(active !== null ? { active } : {}),
+    ...(jobTitle !== undefined ? { job_title: jobTitle || null } : {}),
+    ...(linkedinUrl !== undefined ? { linkedin_url: linkedinUrl || null } : {}),
+    ...(avatarUrl !== undefined ? { avatar_url: avatarUrl || null } : {}),
+    ...(isGlobalAdmin ? { globalRole: "global_admin", is_global_admin: true } : { globalRole: null, is_global_admin: false }),
   });
 
   if (!updated) {
@@ -171,7 +242,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (clientId) {
-    await upsertLocalLink({ userId, companyId: clientId, role, capabilities });
+    await upsertLocalLink({ userId, companyId: clientId, role: normalizedRole.membershipRole, capabilities });
   }
 
   await addAuditLogSafe({
@@ -181,7 +252,7 @@ export async function PATCH(req: NextRequest) {
     entityType: "user",
     entityId: updated.id,
     entityLabel: updated.email,
-    metadata: { companyId: clientId, role, active },
+    metadata: { companyId: clientId, role: body?.role ?? null, globalRole: normalizedRole.globalRole, active },
   });
 
   return NextResponse.json({ ok: true }, { status: 200 });

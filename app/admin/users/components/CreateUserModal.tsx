@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+
 import { readApiError } from "@/lib/apiEnvelope";
 
 type ClientOption = { id: string; name: string };
@@ -25,6 +26,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [role, setRole] = useState("client_user");
   const [jobTitle, setJobTitle] = useState("");
   const [linkedin, setLinkedin] = useState("");
@@ -79,12 +81,14 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
       const payload = {
         name: name.trim(),
         email: email.trim(),
+        password: password.trim() || undefined,
         avatar_url: avatarUrl.trim() || undefined,
         role,
         client_id: requiresClient ? localClientId : null,
         job_title: jobTitle.trim() || undefined,
         linkedin_url: linkedin.trim() || undefined,
       };
+
       const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -96,15 +100,20 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
         handleUnauthorized();
         return;
       }
+
       if (!res.ok) {
         const err = await readApiError(res, "Erro ao salvar usuario");
         setError(err.message);
         toast.error(err.displayMessage);
         return;
       }
-      const okMsg = "Usuario criado. Convite enviado.";
+
+      const json = (await res.json().catch(() => null)) as { temp_password?: unknown } | null;
+      const tempPassword = typeof json?.temp_password === "string" ? json.temp_password : null;
+      const okMsg = tempPassword ? `Usuário criado. Senha temporária: ${tempPassword}` : "Usuário criado.";
       setMessage(okMsg);
-      toast.success(okMsg);
+      toast.success("Usuário criado.");
+
       try {
         await onCreated?.();
         resetForm();
@@ -126,6 +135,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
   function resetForm() {
     setName("");
     setEmail("");
+    setPassword("");
     setJobTitle("");
     setLinkedin("");
     setAvatarUrl("");
@@ -135,15 +145,25 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-3 py-4 overflow-y-auto" role="presentation">
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-3 py-4 overflow-y-auto"
+      role="presentation"
+    >
       <div className="w-full max-w-4xl rounded-xl bg-white p-5 shadow-2xl">
         <div className="flex items-start justify-between mb-4">
           <div>
             <p className="text-xs uppercase text-indigo-600">Usuario</p>
             <h3 className="text-lg font-semibold text-gray-900">Criar usuario</h3>
-            <p className="text-sm text-gray-600">Um convite sera enviado por email.</p>
+            <p className="text-sm text-gray-600">Defina uma senha ou deixe em branco para gerar uma senha temporária.</p>
           </div>
-          <button type="button" className="text-sm text-gray-500" onClick={() => { resetForm(); onClose(); }}>
+          <button
+            type="button"
+            className="text-sm text-gray-500"
+            onClick={() => {
+              resetForm();
+              onClose();
+            }}
+          >
             Fechar
           </button>
         </div>
@@ -153,112 +173,143 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
         )}
 
         <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <label className="block text-sm sm:col-span-2">
-                Empresa vinculada
-                <select
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                  value={localClientId ?? ""}
-                  onChange={(e) => setLocalClientId(e.target.value || null)}
-                  aria-label="Empresa vinculada ao usuário"
-                >
-                  <option value="">Selecione</option>
-                  {clients?.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block text-sm">
-                Nome completo
-                <input
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Nome do usuario"
-                  required
-                />
-              </label>
-              <label className="block text-sm">
-                Email
-                <input
-                  type="email"
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="email@empresa.com"
-                  required
-                />
-              </label>
-              <label className="block text-sm">
-                Cargo
-                <input
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                  value={jobTitle}
-                  onChange={(e) => setJobTitle(e.target.value)}
-                  placeholder="Cargo ou funcao"
-                />
-              </label>
-              <label className="block text-sm">
-                Perfil
-                <select
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                >
-                  {ROLE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block text-sm">
-                LinkedIn
-                <input
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                  value={linkedin}
-                  onChange={(e) => setLinkedin(e.target.value)}
-                  placeholder="https://www.linkedin.com/in/usuario"
-                />
-              </label>
-              <label className="block text-sm">
-                Foto (URL)
-                <input
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                  placeholder="https://example.com/avatar.jpg"
-                />
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked readOnly />
-                Ativo (ao criar)
-              </label>
-            </div>
-
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            {message && (
-              <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
-                {message}
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2">
-              <button type="button" className="rounded border border-gray-200 px-4 py-2 text-sm" onClick={() => { resetForm(); onClose(); }}>
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="rounded bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                disabled={!canSubmit || loading}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="block text-sm sm:col-span-2">
+              Empresa vinculada
+              <select
+                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                value={localClientId ?? ""}
+                onChange={(e) => setLocalClientId(e.target.value || null)}
+                disabled={role === "global_admin"}
+                aria-label="Empresa vinculada ao usuario"
               >
-                {loading ? "Criando..." : "Criar usuario"}
-              </button>
+                <option value="">Selecione</option>
+                {clients?.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block text-sm">
+              Nome completo
+              <input
+                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Nome do usuario"
+                required
+              />
+            </label>
+
+            <label className="block text-sm">
+              Email
+              <input
+                type="email"
+                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="email@empresa.com"
+                required
+              />
+            </label>
+
+            <label className="block text-sm">
+              Senha (opcional)
+              <input
+                type="text"
+                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Deixe em branco para gerar"
+              />
+            </label>
+
+            <label className="block text-sm">
+              Cargo
+              <input
+                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                value={jobTitle}
+                onChange={(e) => setJobTitle(e.target.value)}
+                placeholder="Cargo ou funcao"
+              />
+            </label>
+
+            <label className="block text-sm">
+              Perfil
+              <select
+                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                value={role}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setRole(next);
+                  if (next === "global_admin") setLocalClientId(null);
+                }}
+              >
+                {ROLE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block text-sm">
+              LinkedIn
+              <input
+                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                value={linkedin}
+                onChange={(e) => setLinkedin(e.target.value)}
+                placeholder="https://www.linkedin.com/in/usuario"
+              />
+            </label>
+
+            <label className="block text-sm">
+              Foto (URL)
+              <input
+                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                value={avatarUrl}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+                placeholder="https://example.com/avatar.jpg"
+              />
+            </label>
+
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked readOnly />
+              Ativo (ao criar)
+            </label>
+          </div>
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          {message && (
+            <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+              {message}
             </div>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              className="rounded border border-gray-200 px-4 py-2 text-sm"
+              onClick={() => {
+                resetForm();
+                onClose();
+              }}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="rounded bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              disabled={!canSubmit || loading}
+            >
+              {loading ? "Criando..." : "Criar usuario"}
+            </button>
+          </div>
         </form>
       </div>
     </div>
   );
 }
+

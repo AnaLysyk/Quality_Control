@@ -33,7 +33,7 @@ export async function POST(req: Request) {
         name: user.name,
         email: user.email,
         companyId: preferredCompany?.id,
-        companyName: preferredCompany?.name ?? preferredCompany?.company_name,
+        companyName: preferredCompany?.name ?? preferredCompany?.company_name ?? undefined,
       },
       "PASSWORD_RESET",
       { reason: "forgot_password" },

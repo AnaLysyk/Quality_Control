@@ -11,15 +11,17 @@ const config: JestConfigWithTsJest = {
     "^server-only$": "<rootDir>/tests/mocks/server-only.js",
   },
   reporters: ["default"],
-  // setupFiles removido pois o arquivo não existe mais
+  // Avoid child_process workers on restricted environments.
+  workerThreads: true,
+  // setupFiles removido pois o arquivo nao existe mais
   transform: {
     "^.+\\.(ts|tsx)$": [
       "ts-jest",
-      {
-      },
+      {},
     ],
   },
   testMatch: ["**/tests/**/*.test.ts?(x)"],
 };
 
 export default config;
+

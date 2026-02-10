@@ -15,6 +15,8 @@ export type LocalAuthUser = {
   status?: "active" | "blocked" | "invited";
   active?: boolean;
   is_global_admin?: boolean;
+  job_title?: string | null;
+  linkedin_url?: string | null;
   avatar_url?: string | null;
   phone?: string | null;
   default_company_slug?: string | null;
@@ -305,6 +307,9 @@ export async function createLocalUser(input: {
   status?: "active" | "blocked" | "invited";
   active?: boolean;
   is_global_admin?: boolean;
+  job_title?: string | null;
+  linkedin_url?: string | null;
+  avatar_url?: string | null;
 }): Promise<LocalAuthUser> {
   const store = await loadStoreForWrite();
   const email = normalizeLogin(input.email);
@@ -323,6 +328,9 @@ export async function createLocalUser(input: {
     status: input.status ?? "active",
     active: input.active ?? true,
     is_global_admin: input.is_global_admin ?? false,
+    job_title: input.job_title ?? null,
+    linkedin_url: input.linkedin_url ?? null,
+    avatar_url: input.avatar_url ?? null,
     createdAt: new Date().toISOString(),
   };
   store.users.push(user);
@@ -348,6 +356,9 @@ export async function updateLocalUser(
     ...(typeof patch.active === "boolean" ? { active: patch.active } : {}),
     ...(typeof patch.is_global_admin === "boolean" ? { is_global_admin: patch.is_global_admin } : {}),
     ...(patch.phone !== undefined ? { phone: patch.phone ?? null } : {}),
+    ...(patch.job_title !== undefined ? { job_title: patch.job_title ?? null } : {}),
+    ...(patch.linkedin_url !== undefined ? { linkedin_url: patch.linkedin_url ?? null } : {}),
+    ...(patch.avatar_url !== undefined ? { avatar_url: patch.avatar_url ?? null } : {}),
     ...(patch.password_hash ? { password_hash: patch.password_hash } : {}),
   };
   store.users[idx] = next;

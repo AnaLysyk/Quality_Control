@@ -87,3 +87,6 @@ docs/adr/
 # local auth data (keep sample file tracked)
 data/local-auth-store.json
 data/release-manual-store.json
+data/user-notes.json
+data/defects.json
+data/support-requests.json

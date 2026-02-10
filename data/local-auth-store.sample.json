@@ -83,6 +83,42 @@
                       "active":  true,
                       "default_company_slug":  null,
                       "createdAt":  "2026-02-03T00:00:00.000Z"
+                  },
+                  {
+                      "id":  "usr_analysyk",
+                      "name":  "Analysyk",
+                      "email":  "analysyk",
+                      "user":  "analysyk",
+                      "password_hash":  "e7195106ca655bbd33e4fdfec7033e2bd63df530e446763e96564316755ee8d1",
+                      "globalRole":  null,
+                      "status":  "active",
+                      "active":  true,
+                      "default_company_slug":  "griaule",
+                      "createdAt":  "2026-02-10T00:00:00.000Z"
+                  },
+                  {
+                      "id":  "usr_admin",
+                      "name":  "Admin",
+                      "email":  "admin",
+                      "user":  "admin",
+                      "password_hash":  "9d14308202a4b4c06c30f482c0612cfb82987815c86b24cb0644e40b4433fb43",
+                      "globalRole":  "global_admin",
+                      "status":  "active",
+                      "active":  true,
+                      "default_company_slug":  "griaule",
+                      "createdAt":  "2026-02-10T00:00:00.000Z"
+                  },
+                  {
+                      "id":  "usr_bravo",
+                      "name":  "Bravo",
+                      "email":  "bravo",
+                      "user":  "bravo",
+                      "password_hash":  "9edaef847fc1b272fcd9f1fe76adf616bb09bf1240d0554bc16637acd2518010",
+                      "globalRole":  null,
+                      "status":  "active",
+                      "active":  true,
+                      "default_company_slug":  "griaule",
+                      "createdAt":  "2026-02-10T00:00:00.000Z"
                   }
               ],
     "companies":  [
@@ -161,12 +197,26 @@
                             "role":  "company_admin",
                             "createdAt":  "2026-02-03T00:00:00.000Z"
                         },
-                        {
-                            "id":  "mbr_usr_admin_griaule_test_testing-company",
-                            "userId":  "usr_admin_griaule_test",
-                            "companyId":  "testing-company",
-                            "role":  "company_admin",
-                            "createdAt":  "2026-02-03T00:00:00.000Z"
-                        }
-                    ]
+                         {
+                             "id":  "mbr_usr_admin_griaule_test_testing-company",
+                             "userId":  "usr_admin_griaule_test",
+                             "companyId":  "testing-company",
+                             "role":  "company_admin",
+                             "createdAt":  "2026-02-03T00:00:00.000Z"
+                         },
+                         {
+                             "id":  "mbr_analysyk_griaule",
+                             "userId":  "usr_analysyk",
+                             "companyId":  "griaule",
+                             "role":  "user",
+                             "createdAt":  "2026-02-10T00:00:00.000Z"
+                         },
+                         {
+                             "id":  "mbr_bravo_griaule",
+                             "userId":  "usr_bravo",
+                             "companyId":  "griaule",
+                             "role":  "company_admin",
+                             "createdAt":  "2026-02-10T00:00:00.000Z"
+                         }
+                     ]
 }

@@ -229,7 +229,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
               value={clientId ?? ""}
               onChange={(e) => setClientId(e.target.value || null)}
               disabled={role === "global_admin"}
-              aria-label="Empresa vinculada ao usuário"
+              aria-label="Empresa vinculada ao usuario"
             >
               <option value="">Selecione</option>
               {clients?.map((c) => (
@@ -280,7 +280,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
                 setRole(next);
                 if (next === "global_admin") setClientId(null);
               }}
-              aria-label="Perfil do usuário"
+              aria-label="Perfil do usuario"
               title="Perfil"
             >
               {ROLE_OPTIONS.map((opt) => (

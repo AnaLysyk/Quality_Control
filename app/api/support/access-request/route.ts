@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismaClient";
+
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { createSupportRequest, extractAdminNotes, listSupportRequests } from "@/data/supportRequestsStore";
+
+export const runtime = "nodejs";
 
 type Payload = {
   email?: string;
@@ -102,7 +105,7 @@ export async function POST(req: Request) {
   const accessType = accessTypeRaw ? normalizeAccessType(accessTypeRaw) : null;
 
   if (!email || !name || !role || !accessType) {
-    return NextResponse.json({ message: "Campos obrigatórios ausentes" }, { status: 400 });
+    return NextResponse.json({ message: "Campos obrigatorios ausentes" }, { status: 400 });
   }
 
   // For non-admin access, a company is required.
@@ -126,43 +129,41 @@ export async function POST(req: Request) {
   });
 
   try {
-    await prisma.supportRequest.create({
-      data: {
-        email,
-        message: composedMessage,
-        status: "open",
-        ip_address,
-        user_agent,
-        user_id: userId,
-      },
+    await createSupportRequest({
+      email,
+      message: composedMessage,
+      status: "open",
+      ip_address,
+      user_agent,
+      user_id: userId,
     });
   } catch (error) {
     console.error("Erro ao registrar support_request:", error);
-    return NextResponse.json({ message: "Erro interno ao registrar solicitação" }, { status: 500 });
+    return NextResponse.json({ message: "Erro interno ao registrar solicitacao" }, { status: 500 });
   }
 
   return NextResponse.json({
     ok: true,
-    message: "Solicitação enviada. O administrador será notificado.",
+    message: "Solicitacao enviada. O administrador sera notificado.",
   });
 }
 
 export async function GET(req: Request) {
-  // Apenas admins podem listar
   const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-
+  if (!authUser) return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
   if (!authUser.isGlobalAdmin) {
     return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
   }
 
-  try {
-    const items = await prisma.supportRequest.findMany({
-      orderBy: { created_at: "desc" },
-    });
-    return NextResponse.json({ items });
-  } catch (error) {
-    console.error("Erro ao listar support_requests:", error);
-    return NextResponse.json({ message: "Erro interno" }, { status: 500 });
-  }
+  const items = await listSupportRequests();
+  const mapped = items.map((item) => ({
+    id: item.id,
+    email: item.email,
+    message: item.message,
+    status: item.status,
+    created_at: item.created_at,
+    admin_notes: extractAdminNotes(item.message),
+  }));
+
+  return NextResponse.json({ items: mapped }, { status: 200 });
 }

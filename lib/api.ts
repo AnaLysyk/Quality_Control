@@ -21,13 +21,13 @@ async function getServerAccessToken() {
   try {
     const { cookies }: typeof import("next/headers") = await import("next/headers");
     const store = await cookies();
-    return store.get("auth_token")?.value || null;
+    return store.get("access_token")?.value || null;
   } catch {
     return null;
   }
 }
 
-// fetch helper que adiciona Authorization: Bearer <jwt> quando disponível
+// fetch helper que adiciona Authorization: Bearer <jwt> quando disponivel
 export async function fetchApi(path: string, init: RequestInit = {}) {
   const url = apiUrl(path);
   const headers = new Headers(init.headers as HeadersInit | undefined);

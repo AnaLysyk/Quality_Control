@@ -39,7 +39,7 @@ export type AccessContext = {
 };
 
 const SESSION_COOKIE = "session_id";
-const AUTH_COOKIE = "auth_token";
+const ACCESS_COOKIE = "access_token";
 
 function readCookieValue(cookieHeader: string, name: string): string | null {
   if (!cookieHeader) return null;
@@ -116,28 +116,35 @@ function parseJwtSession(token: string, secret: string): SessionPayload | null {
 }
 
 export async function getSessionPayload(req: Request): Promise<SessionPayload | null> {
-  // 1) Primeiro tenta a sessao salva no Redis via cookie de sessao.
   const cookieHeader = req.headers.get("cookie") ?? "";
-  const sessionId = readCookieValue(cookieHeader, SESSION_COOKIE);
-  if (sessionId) {
-    const fromRedis = await readSessionFromRedis(sessionId);
-    if (fromRedis) return fromRedis;
-  }
 
-  // 2) Se nao houver sessao, tenta o token (Bearer ou cookie auth_token).
+  // 1) Preferimos um access token explicito (Bearer / cookie access_token).
+  // Importante: se o token existir mas for invalido/expirado, NAO fazemos fallback para session_id
+  // (isso evita burlar expiracao/refresh).
   const bearer = extractBearerToken(req);
-  const cookieToken = readCookieValue(cookieHeader, AUTH_COOKIE);
-  const token = bearer || cookieToken;
-  if (!token) return null;
-
-  // 3) Se JWT_SECRET nao existir, tratamos o token como session_id (fallback local).
+  const accessCookie = readCookieValue(cookieHeader, ACCESS_COOKIE);
+  const token = bearer || accessCookie;
   const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    return await readSessionFromRedis(token);
+  if (token) {
+    // 2) Se JWT_SECRET nao existir, tratamos o token como session_id (fallback local).
+    if (!secret) {
+      return await readSessionFromRedis(token);
+    }
+
+    // 3) Se tiver JWT_SECRET, decodifica o JWT e normaliza o payload.
+    return parseJwtSession(token, secret);
   }
 
-  // 4) Se tiver JWT_SECRET, decodifica o JWT e normaliza o payload.
-  return parseJwtSession(token, secret);
+  // 4) Se JWT_SECRET estiver ausente, aceitamos session_id local.
+  if (!secret) {
+    const sessionId = readCookieValue(cookieHeader, SESSION_COOKIE);
+    if (sessionId) {
+      const fromRedis = await readSessionFromRedis(sessionId);
+      if (fromRedis) return fromRedis;
+    }
+  }
+
+  return null;
 }
 
 export async function getAccessContext(req: Request): Promise<AccessContext | null> {

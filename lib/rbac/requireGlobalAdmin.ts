@@ -28,7 +28,7 @@ export async function extractAccessToken(req: Request): Promise<string | null> {
   }
 
   const store = await cookies();
-  return store.get("access_token")?.value || store.get("auth_token")?.value || null;
+  return store.get("access_token")?.value || null;
 }
 
 async function readSessionUser(req: Request): Promise<SessionUser | null> {
@@ -67,6 +67,8 @@ async function readSessionUser(req: Request): Promise<SessionUser | null> {
       return null;
     }
   }
+
+  if (process.env.JWT_SECRET) return null;
 
   const store = await cookies();
   const sessionId = store.get("session_id")?.value;

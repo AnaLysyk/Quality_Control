@@ -109,10 +109,7 @@ export async function POST(req: Request) {
   });
 
   setCookie(res, "access_token", accessToken, accessTtlSeconds);
-  // Legacy alias.
-  setCookie(res, "auth_token", accessToken, accessTtlSeconds);
   setCookie(res, "refresh_token", nextRefreshToken, refreshTtlSeconds);
 
   return res;
 }
-

@@ -40,7 +40,6 @@ export type AccessContext = {
 
 const SESSION_COOKIE = "session_id";
 const ACCESS_COOKIE = "access_token";
-const LEGACY_AUTH_COOKIE = "auth_token";
 
 function readCookieValue(cookieHeader: string, name: string): string | null {
   if (!cookieHeader) return null;
@@ -124,11 +123,10 @@ export async function getSessionPayload(req: Request): Promise<SessionPayload | 
   // (isso evita burlar expiracao/refresh).
   const bearer = extractBearerToken(req);
   const accessCookie = readCookieValue(cookieHeader, ACCESS_COOKIE);
-  const legacyCookie = readCookieValue(cookieHeader, LEGACY_AUTH_COOKIE);
-  const token = bearer || accessCookie || legacyCookie;
+  const token = bearer || accessCookie;
+  const secret = process.env.JWT_SECRET;
   if (token) {
     // 2) Se JWT_SECRET nao existir, tratamos o token como session_id (fallback local).
-    const secret = process.env.JWT_SECRET;
     if (!secret) {
       return await readSessionFromRedis(token);
     }
@@ -137,11 +135,13 @@ export async function getSessionPayload(req: Request): Promise<SessionPayload | 
     return parseJwtSession(token, secret);
   }
 
-  // 4) Fallback para clientes legados: session_id no Redis.
-  const sessionId = readCookieValue(cookieHeader, SESSION_COOKIE);
-  if (sessionId) {
-    const fromRedis = await readSessionFromRedis(sessionId);
-    if (fromRedis) return fromRedis;
+  // 4) Se JWT_SECRET estiver ausente, aceitamos session_id local.
+  if (!secret) {
+    const sessionId = readCookieValue(cookieHeader, SESSION_COOKIE);
+    if (sessionId) {
+      const fromRedis = await readSessionFromRedis(sessionId);
+      if (fromRedis) return fromRedis;
+    }
   }
 
   return null;

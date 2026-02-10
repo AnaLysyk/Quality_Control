@@ -41,7 +41,6 @@ export async function POST(req: Request) {
     });
 
   clear("session_id");
-  clear("auth_token");
   clear("access_token");
   clear("refresh_token");
   clear("active_company_slug");

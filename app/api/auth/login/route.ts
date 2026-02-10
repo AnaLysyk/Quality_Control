@@ -71,15 +71,23 @@ export async function POST(req: Request) {
     const accessTtlSeconds = readPositiveIntEnv("ACCESS_TOKEN_TTL_SECONDS", SESSION_TTL_SECONDS);
     const refreshTtlSeconds = readPositiveIntEnv("REFRESH_TOKEN_TTL_SECONDS", DEFAULT_REFRESH_TTL_SECONDS);
 
-    const sessionId = randomUUID();
-    const redis = getRedis();
-    await redis.set(`session:${sessionId}`, JSON.stringify(built.session), { ex: SESSION_TTL_SECONDS });
-
     const accessToken = buildAuthToken(built.jwt, accessTtlSeconds);
-    const tokenToExpose = accessToken ?? sessionId;
+    const useJwt = Boolean(accessToken);
+    let sessionId: string | null = null;
+    if (!useJwt) {
+      sessionId = randomUUID();
+      const redis = getRedis();
+      await redis.set(`session:${sessionId}`, JSON.stringify(built.session), { ex: SESSION_TTL_SECONDS });
+    }
 
-    const refreshToken = accessToken ? createRefreshToken() : null;
+    const tokenToExpose = accessToken ?? sessionId;
+    if (!tokenToExpose) {
+      return NextResponse.json({ error: "Falha ao gerar token" }, { status: 500 });
+    }
+
+    const refreshToken = useJwt ? createRefreshToken() : null;
     if (refreshToken) {
+      const redis = getRedis();
       const refreshHash = hashRefreshToken(refreshToken);
       await redis.set(
         `refresh:${refreshHash}`,
@@ -95,10 +103,13 @@ export async function POST(req: Request) {
         expires_in: accessTtlSeconds,
       },
     });
-    setCookie(res, "session_id", sessionId, refreshToken ? accessTtlSeconds : SESSION_TTL_SECONDS);
+    if (sessionId) {
+      setCookie(res, "session_id", sessionId, SESSION_TTL_SECONDS);
+    } else {
+      res.cookies.set("session_id", "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
+    }
     // Sempre expõe um token para manter compatibilidade no middleware.
     setCookie(res, "access_token", tokenToExpose, accessTtlSeconds);
-    setCookie(res, "auth_token", tokenToExpose, accessTtlSeconds);
     if (refreshToken) {
       setCookie(res, "refresh_token", refreshToken, refreshTtlSeconds);
     } else {

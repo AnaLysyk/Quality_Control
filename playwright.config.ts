@@ -44,7 +44,7 @@ export default defineConfig({
   webServer: useExistingServer
     ? undefined
     : {
-        command: "npm run dev",
+      command: "npm run dev:ci",
         url: baseURL,
         reuseExistingServer: true,
         timeout: 300 * 1000,

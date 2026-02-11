@@ -88,6 +88,10 @@ function sumStats(stats?: Stats | null) {
   return stats.fail + stats.blocked + stats.notRun;
 }
 
+function resolveCompanyKey(company: CompanyRow) {
+  return company.slug ?? company.id;
+}
+
 export default function AdminHomePage() {
   const router = useRouter();
   const [overview, setOverview] = useState<QualityOverviewResponse | null>(null);
@@ -98,15 +102,23 @@ export default function AdminHomePage() {
   const [loadingDefects, setLoadingDefects] = useState(true);
   const [loadingAudit, setLoadingAudit] = useState(true);
   const [loadingRanking, setLoadingRanking] = useState(true);
+  const [overviewError, setOverviewError] = useState<string | null>(null);
+  const [defectsError, setDefectsError] = useState<string | null>(null);
+  const [auditError, setAuditError] = useState<string | null>(null);
+  const [rankingError, setRankingError] = useState<string | null>(null);
   const [selectedCompanySlug, setSelectedCompanySlug] = useState<string | null>(null);
   const [selectedRunSlug, setSelectedRunSlug] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const firstError = overviewError ?? defectsError ?? auditError ?? rankingError;
 
   useEffect(() => {
     let canceled = false;
     const loadOverview = async () => {
       setLoadingOverview(true);
+      setOverviewError(null);
       try {
-        const res = await fetch("/api/admin/quality/overview?period=30", { cache: "no-store" });
+        const res = await fetch("/api/admin/quality/overview?period=30", { cache: "no-store", credentials: "include" });
         if (res.status === 401) {
           router.replace("/login");
           return;
@@ -117,6 +129,7 @@ export default function AdminHomePage() {
           const requestId = extractRequestIdFromJson(raw) || res.headers.get("x-request-id") || null;
           console.error("/admin/home overview failed", raw);
           if (!canceled) setOverview(null);
+          if (!canceled) setOverviewError(formatMessageWithRequestId(message, requestId));
           if (!canceled) console.warn(formatMessageWithRequestId(message, requestId));
           return;
         }
@@ -125,6 +138,7 @@ export default function AdminHomePage() {
         if (!canceled) setOverview(data);
       } catch {
         if (!canceled) setOverview(null);
+        if (!canceled) setOverviewError("Erro ao carregar overview");
       } finally {
         if (!canceled) setLoadingOverview(false);
       }
@@ -133,14 +147,15 @@ export default function AdminHomePage() {
     return () => {
       canceled = true;
     };
-  }, [router]);
+  }, [router, refreshKey]);
 
   useEffect(() => {
     let canceled = false;
     const loadDefects = async () => {
       setLoadingDefects(true);
+      setDefectsError(null);
       try {
-        const res = await fetch("/api/admin/defeitos", { cache: "no-store" });
+        const res = await fetch("/api/admin/defeitos", { cache: "no-store", credentials: "include" });
         if (res.status === 401) {
           router.replace("/login");
           return;
@@ -149,12 +164,14 @@ export default function AdminHomePage() {
         if (!res.ok) {
           console.error("/admin/home defects failed", raw);
           if (!canceled) setDefectsPayload(null);
+          if (!canceled) setDefectsError(extractMessageFromJson(raw) || "Erro ao carregar defeitos");
           return;
         }
         const data = unwrapEnvelopeData<DefectsResponse>(raw) ?? null;
         if (!canceled) setDefectsPayload(data);
       } catch {
         if (!canceled) setDefectsPayload(null);
+        if (!canceled) setDefectsError("Erro ao carregar defeitos");
       } finally {
         if (!canceled) setLoadingDefects(false);
       }
@@ -163,14 +180,15 @@ export default function AdminHomePage() {
     return () => {
       canceled = true;
     };
-  }, [router]);
+  }, [router, refreshKey]);
 
   useEffect(() => {
     let canceled = false;
     const loadLogs = async () => {
       setLoadingAudit(true);
+      setAuditError(null);
       try {
-        const res = await fetch("/api/admin/audit-logs?limit=5", { cache: "no-store" });
+        const res = await fetch("/api/admin/audit-logs?limit=5", { cache: "no-store", credentials: "include" });
         if (res.status === 401) {
           router.replace("/login");
           return;
@@ -179,12 +197,14 @@ export default function AdminHomePage() {
         if (!res.ok) {
           console.error("/admin/home audit logs failed", raw);
           if (!canceled) setAuditLogs([]);
+          if (!canceled) setAuditError(extractMessageFromJson(raw) || "Erro ao carregar historico");
           return;
         }
         const data = unwrapEnvelopeData<{ items?: AuditLogItem[] }>(raw) ?? null;
         if (!canceled) setAuditLogs(data?.items ?? []);
       } catch {
         if (!canceled) setAuditLogs([]);
+        if (!canceled) setAuditError("Erro ao carregar historico");
       } finally {
         if (!canceled) setLoadingAudit(false);
       }
@@ -193,14 +213,15 @@ export default function AdminHomePage() {
     return () => {
       canceled = true;
     };
-  }, [router]);
+  }, [router, refreshKey]);
 
   useEffect(() => {
     let canceled = false;
     const loadRanking = async () => {
       setLoadingRanking(true);
+      setRankingError(null);
       try {
-        const res = await fetch("/api/admin/metrics/ranking", { cache: "no-store" });
+        const res = await fetch("/api/admin/metrics/ranking", { cache: "no-store", credentials: "include" });
         if (res.status === 401 || res.status === 403) {
           router.replace("/login");
           return;
@@ -208,28 +229,34 @@ export default function AdminHomePage() {
         const raw = await res.json().catch(() => null);
         if (!res.ok) {
           if (!canceled) setRanking(null);
+          if (!canceled) setRankingError(extractMessageFromJson(raw) || "Erro ao carregar ranking");
           return;
         }
         if (!canceled) setRanking(raw);
       } catch {
         if (!canceled) setRanking(null);
+        if (!canceled) setRankingError("Erro ao carregar ranking");
       } finally {
         if (!canceled) setLoadingRanking(false);
       }
     };
     loadRanking();
     return () => { canceled = true; };
-  }, [router]);
+  }, [router, refreshKey]);
 
   const companies = useMemo(() => overview?.companies ?? [], [overview]);
   const selectedCompany = useMemo(() => {
     if (!companies.length) return null;
     if (!selectedCompanySlug) return null;
-    return companies.find((company) => company.slug === selectedCompanySlug) ?? null;
+    return companies.find((company) => resolveCompanyKey(company) === selectedCompanySlug) ?? null;
   }, [companies, selectedCompanySlug]);
 
   useEffect(() => {
-    if (!selectedCompany || !selectedCompany.releases.length) return;
+    if (!selectedCompany) {
+      setSelectedRunSlug(null);
+      return;
+    }
+    if (!selectedCompany.releases.length) return;
     const firstSlug = selectedCompany.releases[0].slug;
     if (firstSlug && firstSlug !== selectedRunSlug) {
       setSelectedRunSlug(firstSlug);
@@ -307,13 +334,27 @@ export default function AdminHomePage() {
                 {loadingOverview && (
                   <p className="mt-1 text-xs uppercase tracking-[0.4em] text-(--tc-text-muted,#6b7280)">Atualizando dados...</p>
                 )}
+                {firstError && (
+                  <p className="mt-2 text-xs font-semibold text-red-600">
+                    {firstError}
+                  </p>
+                )}
               </div>
-              <div className="flex items-center gap-3 rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) px-4 py-3">
-                <span className="text-xs font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Painel Admin</span>
-                <span className="h-4 w-px bg-(--tc-border,#e5e7eb)" aria-hidden />
-                <span className="text-sm font-semibold text-(--page-text,#0b1a3c)">
-                  {selectedCompany?.name ?? "Contexto global"}
-                </span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setRefreshKey((value) => value + 1)}
+                  className="rounded-full border border-(--tc-border,#e5e7eb) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text,#0b1a3c) transition hover:border-(--tc-accent,#ef0001)/50"
+                >
+                  Recarregar
+                </button>
+                <div className="flex items-center gap-3 rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) px-4 py-3">
+                  <span className="text-xs font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Painel Admin</span>
+                  <span className="h-4 w-px bg-(--tc-border,#e5e7eb)" aria-hidden />
+                  <span className="text-sm font-semibold text-(--page-text,#0b1a3c)">
+                    {selectedCompany?.name ?? "Contexto global"}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="mt-6 space-y-2 border-t border-(--tc-border,#e5e7eb) pt-6">
@@ -334,13 +375,14 @@ export default function AdminHomePage() {
                 </button>
                 {companyCards.map((company) => {
                   const tone = RISK_TONE[company.risk] ?? RISK_TONE.no_data;
-                  const isSelected = company.slug === selectedCompanySlug;
-                  const testSlug = slugifyTestId(company.slug ?? company.name ?? company.id);
+                  const selectedKey = resolveCompanyKey(company);
+                  const isSelected = selectedKey === selectedCompanySlug;
+                  const testSlug = slugifyTestId(selectedKey ?? company.name ?? company.id);
                   return (
                     <button
                       key={company.id}
                       type="button"
-                      onClick={() => setSelectedCompanySlug(company.slug)}
+                      onClick={() => setSelectedCompanySlug(selectedKey)}
                       data-testid={testSlug ? `benchmark-row-${testSlug}` : "benchmark-row"}
                       className={`flex min-w-56 flex-col gap-2 rounded-2xl border p-4 shadow-sm transition ${tone} ${
                         isSelected ? "ring-2 ring-offset-2 ring-(--tc-border,#e5e7eb)" : "opacity-80 hover:opacity-100"

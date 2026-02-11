@@ -28,10 +28,10 @@ input[type="password"]::-ms-clear {
 
   /* BACKGROUND / SURFACE */
   --tc-bg: #011848;
-  --tc-surface: rgba(255, 255, 255, 0.82);
-  --tc-surface-2: rgba(255, 255, 255, 0.68);
-  --tc-surface-dark: #0f1828;
-  --tc-surface-muted: #0f1626;
+  --tc-surface: #ffffff;
+  --tc-surface-2: #f5f7fb;
+  --tc-surface-dark: #eef1f8;
+  --tc-surface-muted: #e9edf5;
 
   /* TEXT */
   --tc-text: #0b1a3c;
@@ -50,8 +50,8 @@ input[type="password"]::-ms-clear {
   --page-bubble-4: rgba(99, 102, 241, 0.24);
 
   /* UI */
-  --tc-border: rgba(15, 23, 42, 0.10);
-  --tc-input-bg: rgba(255, 255, 255, 0.9);
+  --tc-border: rgba(15, 23, 42, 0.14);
+  --tc-input-bg: #ffffff;
   --tc-focus: #ef0001;
   --tc-accent-soft: rgba(239, 0, 1, 0.12);
 
@@ -91,9 +91,9 @@ input[type="password"]::-ms-clear {
   --background: #0b1a3c;
   --foreground: #f8fafc;
   --tc-bg: #0b1a3c;
-  --tc-surface: rgba(15, 24, 40, 0.82);
-  --tc-surface-2: rgba(18, 32, 58, 0.78);
-  --tc-surface-dark: rgba(12, 21, 38, 0.88);
+  --tc-surface: #0f1828;
+  --tc-surface-2: #121f33;
+  --tc-surface-dark: #0c1526;
   --tc-surface-muted: #172a50;
   --tc-text: #f8fafc;
   --tc-text-primary: #f8fafc;
@@ -108,8 +108,8 @@ input[type="password"]::-ms-clear {
   --page-bubble-2: rgba(239, 68, 68, 0.12);
   --page-bubble-3: rgba(148, 163, 184, 0.12);
   --page-bubble-4: rgba(167, 139, 250, 0.14);
-  --tc-border: rgba(226, 232, 240, 0.36);
-  --tc-input-bg: rgba(15, 29, 52, 0.9);
+  --tc-border: rgba(226, 232, 240, 0.42);
+  --tc-input-bg: #0f1d34;
   --surface-primary: #0f1828;
   --surface-secondary: #101a2f;
   --surface-border: rgba(148, 163, 184, 0.18);
@@ -152,7 +152,7 @@ input[type="password"]::-ms-clear {
 /* Paper-like surfaces */
 .bg-white {
   background-color: var(--tc-surface) !important;
-  backdrop-filter: blur(14px);
+  backdrop-filter: none;
 }
 
 html {
@@ -251,12 +251,12 @@ video {
   --button-export-text: #0b1305;
   --button-export-shadow: 0 10px 25px rgba(124, 211, 67, 0.25);
   --tc-bg: #fdfdfd;
-  --tc-surface: rgba(255, 255, 255, 0.82);
-  --tc-surface-2: rgba(255, 255, 255, 0.64);
-  --tc-surface-dark: rgba(244, 247, 255, 0.85);
-  --tc-surface-muted: rgba(246, 248, 255, 0.9);
-  --tc-border: rgba(15, 23, 42, 0.08);
-  --tc-input-bg: rgba(255, 255, 255, 0.92);
+  --tc-surface: #ffffff;
+  --tc-surface-2: #f6f8fd;
+  --tc-surface-dark: #f0f4ff;
+  --tc-surface-muted: #eef3ff;
+  --tc-border: rgba(15, 23, 42, 0.12);
+  --tc-input-bg: #ffffff;
   --tc-text-inverse: #0b1220;
   --page-bg: #edf2ff;
   --tc-watermark-opacity: 0.045;
@@ -633,6 +633,10 @@ video {
   .app-shell .sidebar-shell:not(:hover) .sidebar-logo-mark {
     width: 44px;
     height: 44px;
+  }
+  .app-shell .sidebar-shell:not(:hover) .sidebar-logo-image {
+    object-position: left center;
+    transform: translateX(-6px) scale(1.18);
   }
 }
 /* CENTRALIZAR GRAFICOS NA IMPRESSÃO */

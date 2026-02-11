@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
+import { getJsonStoreDir } from "@/data/jsonStorePath";
 
 export type TicketEventType =
   | "CREATED"
@@ -28,12 +29,10 @@ type EventsStore = {
   items: TicketEventRecord[];
 };
 
-const STORE_PATH = path.join(process.cwd(), "data", "ticket-events.json");
+const STORE_PATH = path.join(getJsonStoreDir(), "ticket-events.json");
 const STORE_KEY = "qc:ticket_events:v1";
 const USE_REDIS = process.env.TICKET_EVENTS_STORE === "redis" || isRedisConfigured();
-const USE_MEMORY =
-  process.env.TICKET_EVENTS_IN_MEMORY === "true" ||
-  (!USE_REDIS && process.env.VERCEL === "1");
+const USE_MEMORY = process.env.TICKET_EVENTS_IN_MEMORY === "true";
 let memoryStore: EventsStore = { items: [] };
 let warnedFsFailure = false;
 

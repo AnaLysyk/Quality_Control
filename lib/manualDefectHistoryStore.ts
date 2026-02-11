@@ -3,6 +3,7 @@ import "server-only";
 import crypto from "node:crypto";
 import path from "node:path";
 import fs from "node:fs/promises";
+import { getJsonStoreDir } from "@/data/jsonStorePath";
 
 export type DefectHistoryAction =
   | "created"
@@ -42,7 +43,7 @@ const USE_E2E_STORAGE =
   process.env.NODE_ENV === "test";
 const STORE_DIR = USE_E2E_STORAGE
   ? path.join(process.cwd(), ".tmp", "e2e")
-  : path.join(process.cwd(), "data");
+  : getJsonStoreDir();
 const HISTORY_PATH = path.join(STORE_DIR, "defects-history.json");
 
 const USE_MEMORY_STORE = process.env.MANUAL_DEFECT_HISTORY_IN_MEMORY === "true";

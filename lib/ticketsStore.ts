@@ -5,6 +5,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { LEGACY_TICKET_STATUS_MAP, normalizeKanbanStatus, type TicketStatus } from "@/lib/ticketsStatus";
+import { getJsonStoreDir } from "@/data/jsonStorePath";
 
 export type TicketPriority = "low" | "medium" | "high";
 export type TicketType = "bug" | "melhoria" | "tarefa";
@@ -60,10 +61,8 @@ type ImportPayload = {
   items?: unknown;
 };
 
-const DEFAULT_DATA_DIR = path.join(process.cwd(), "data");
-const DATA_DIR =
-  process.env.TICKETS_DATA_DIR ||
-  (process.env.VERCEL === "1" ? path.join("/tmp", "qc-data") : DEFAULT_DATA_DIR);
+const DEFAULT_DATA_DIR = getJsonStoreDir();
+const DATA_DIR = process.env.TICKETS_DATA_DIR || DEFAULT_DATA_DIR;
 const STORE_PATH = path.join(DATA_DIR, "support-tickets.json");
 const VERSION_DIR = path.join(DATA_DIR, "versions");
 const BACKUP_DIR = path.join(DATA_DIR, "backups");
@@ -71,9 +70,7 @@ const LOCK_PATH = `${STORE_PATH}.lock`;
 const STORE_KEY = "qc:support_tickets:v1";
 const STORE_COUNTER_KEY = "qc:support_tickets:counter:v1";
 const USE_REDIS = process.env.TICKETS_STORE === "redis" || isRedisConfigured();
-const USE_MEMORY =
-  process.env.TICKETS_IN_MEMORY === "true" ||
-  (!USE_REDIS && process.env.VERCEL === "1");
+const USE_MEMORY = process.env.TICKETS_IN_MEMORY === "true";
 
 const FLUSH_INTERVAL_MS = Math.max(1000, Number(process.env.TICKETS_FLUSH_INTERVAL_MS ?? 5000));
 const LOCK_TIMEOUT_MS = Math.max(1000, Number(process.env.TICKETS_LOCK_TIMEOUT_MS ?? 10000));

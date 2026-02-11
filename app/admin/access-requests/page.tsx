@@ -16,7 +16,7 @@ type RawSupportRequest = {
   admin_notes?: string | null;
 };
 
-type AccessTypeLabel = "Usuário da empresa" | "Admin da empresa" | "Admin do sistema";
+type AccessTypeLabel = "Usuario da empresa" | "Admin da empresa" | "Admin do sistema";
 
 type AccessRequestItem = {
   id: string;
@@ -46,7 +46,7 @@ type AccessRequestComment = {
 function parseAccessType(accessType: unknown): AccessTypeLabel {
   if (accessType === "admin") return "Admin do sistema";
   if (accessType === "company") return "Admin da empresa";
-  return "Usuário da empresa";
+  return "Usuario da empresa";
 }
 
 function parseFromMessage(message: string, fallbackEmail: string): Partial<AccessRequestItem> {
@@ -81,7 +81,7 @@ function parseFromMessage(message: string, fallbackEmail: string): Partial<Acces
     name: find("Nome"),
     jobRole: find("Cargo"),
     company: find("Empresa"),
-    accessType: "Usuário da empresa",
+    accessType: "Usuario da empresa",
     notes: find("Observacoes") || find("Mensagem"),
     clientId: null,
   };
@@ -119,6 +119,23 @@ function getItemsFromEnvelope<T>(value: unknown): T[] {
   const items = (value as { items?: unknown }).items;
   return Array.isArray(items) ? (items as T[]) : [];
 }
+
+function statusLabel(status: string) {
+  if (status === "closed") return "Aprovada";
+  if (status === "rejected") return "Rejeitada";
+  if (status === "in_progress") return "Em analise";
+  return "Aberta";
+}
+
+function statusBadgeClass(status: string) {
+  if (status === "closed") return "bg-emerald-50 text-emerald-700";
+  if (status === "rejected") return "bg-rose-50 text-rose-700";
+  if (status === "in_progress") return "bg-amber-50 text-amber-700";
+  return "bg-slate-100 text-slate-700";
+}
+
+const inputBase =
+  "mt-1 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#1e293b] transition focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10";
 
 function AccessRequestsPage() {
   const [items, setItems] = useState<AccessRequestItem[]>([]);
@@ -176,7 +193,7 @@ function AccessRequestsPage() {
           email: String(parsedMsg.email ?? r.email ?? ""),
           name: String(parsedMsg.name ?? ""),
           jobRole: String(parsedMsg.jobRole ?? ""),
-          accessType: (parsedMsg.accessType as AccessTypeLabel) ?? "Usuário da empresa",
+          accessType: (parsedMsg.accessType as AccessTypeLabel) ?? "Usuario da empresa",
           clientId: parsedMsg.clientId ?? null,
           company: String(parsedMsg.company ?? ""),
           notes: String(parsedMsg.notes ?? ""),
@@ -346,7 +363,7 @@ function AccessRequestsPage() {
           client_id: draft.clientId,
           comment: draft.adminNotes ?? "",
           admin_notes: draft.adminNotes ?? "",
-          access_type: toAcceptAccessType((draft.accessType ?? "Usuário da empresa") as AccessTypeLabel),
+          access_type: toAcceptAccessType((draft.accessType ?? "Usuario da empresa") as AccessTypeLabel),
         }),
       });
 
@@ -392,15 +409,15 @@ function AccessRequestsPage() {
   }
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between gap-3">
+    <div className="min-h-screen bg-[#f8fafc] text-[#1e293b] p-6 space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Solicitacoes de acesso</h1>
-          <p className="text-sm text-gray-600">Lista de solicitacoes com aprovacao pelo admin.</p>
+          <h1 className="text-3xl font-semibold">Solicitacoes de acesso</h1>
+          <p className="mt-1 text-sm text-[#64748b]">Lista de solicitacoes com aprovacao pelo admin.</p>
         </div>
         <button
           onClick={load}
-          className="rounded-lg border px-3 py-1 text-sm hover:bg-gray-50"
+          className="rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#1e293b] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           disabled={loading}
         >
           Atualizar
@@ -408,66 +425,58 @@ function AccessRequestsPage() {
       </div>
 
       {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {error}
+        </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1.2fr]">
-        <div className="rounded-xl border bg-white">
-          <div className="border-b px-4 py-3 text-sm font-semibold">Solicitacoes</div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1.3fr]">
+        <div className="space-y-4">
+          <div className="rounded-2xl bg-white p-4 shadow-sm">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-[#64748b]">Solicitacoes</h2>
+          </div>
+
           {loading ? (
-            <div className="px-4 py-3 text-sm text-gray-600">Carregando...</div>
+            <div className="rounded-2xl bg-white p-4 text-sm text-[#64748b] shadow-sm">Carregando...</div>
           ) : items.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-gray-600">Nenhuma solicitacao.</div>
+            <div className="rounded-2xl bg-white p-4 text-sm text-[#64748b] shadow-sm">Nenhuma solicitacao.</div>
           ) : (
-            <div className="divide-y">
+            <div className="space-y-4">
               {items.map((it) => (
                 <button
                   key={it.id}
-                  className={`w-full text-left px-4 py-3 hover:bg-gray-50 ${selectedId === it.id ? "bg-gray-50" : ""}`}
+                  className={`w-full text-left rounded-xl bg-white p-4 shadow-[0_4px_16px_rgba(0,0,0,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] ${
+                    selectedId === it.id ? "ring-2 ring-indigo-100" : ""
+                  }`}
                   onClick={() => setSelectedId(it.id)}
                 >
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="text-sm font-semibold text-gray-900 truncate">{it.name || "(sem nome)"}</div>
-                      <div className="text-xs text-gray-500 flex items-center gap-2">
-                        <span className="truncate">{it.email}</span>
-                        <span className="text-gray-300">•</span>
-                        <span>{new Date(it.createdAt).toLocaleString()}</span>
+                      <div className="text-base font-semibold text-[#1e293b] truncate">
+                        {it.name || "(sem nome)"}
                       </div>
+                      <div className="mt-1 text-xs text-[#94a3b8] truncate">{it.email}</div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        className="rounded border px-2 py-1 text-xs hover:bg-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          copy(it.email);
-                        }}
-                        title="Copiar email"
-                        aria-label="Copiar email"
-                      >
-                        Copiar
-                      </button>
-                      <span
-                        className={`text-xs px-2 py-1 rounded ${
-                          it.status === "closed"
-                            ? "bg-green-100 text-green-700"
-                            : it.status === "rejected"
-                              ? "bg-red-100 text-red-700"
-                              : it.status === "in_progress"
-                                ? "bg-yellow-100 text-yellow-700"
-                                : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {it.status === "closed"
-                          ? "Aprovada"
-                          : it.status === "rejected"
-                            ? "Rejeitada"
-                            : it.status === "in_progress"
-                              ? "Em anÃ¡lise"
-                              : "Aberta"}
-                      </span>
+                    <div className="text-xs text-[#64748b] whitespace-nowrap">
+                      {new Date(it.createdAt).toLocaleDateString("pt-BR")}
                     </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium ${statusBadgeClass(it.status)}`}>
+                      {statusLabel(it.status)}
+                    </span>
+                    <button
+                      type="button"
+                      className="rounded-full border border-[#e5e7eb] px-3 py-1 text-[11px] font-semibold text-[#475569] transition hover:border-[#cbd5f5] hover:text-[#1e293b]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copy(it.email);
+                      }}
+                      title="Copiar email"
+                      aria-label="Copiar email"
+                    >
+                      Copiar
+                    </button>
                   </div>
                 </button>
               ))}
@@ -475,18 +484,22 @@ function AccessRequestsPage() {
           )}
         </div>
 
-        <div className="rounded-xl border bg-white">
-          <div className="border-b px-4 py-3 text-sm font-semibold">Detalhes</div>
+        <div className="rounded-2xl bg-white p-6 shadow-[0_8px_32px_rgba(0,0,0,0.05)]">
           {!selected || !draft ? (
-            <div className="px-4 py-3 text-sm text-gray-600">Selecione uma solicitacao.</div>
+            <div className="text-sm text-[#64748b]">Selecione uma solicitacao.</div>
           ) : (
-            <div className="p-4 space-y-3">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <label className="block text-sm">
+            <div className="space-y-6">
+              <div className="space-y-1">
+                <h2 className="text-2xl font-semibold text-[#1e293b]">Detalhes da solicitacao</h2>
+                <p className="text-sm text-[#64748b]">Revise os dados e tome uma decisao.</p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <label className="block text-sm font-medium text-[#1e293b]">
                   Tipo de acesso
                   <select
-                    className="mt-1 w-full rounded border px-3 py-2"
-                    value={(draft.accessType ?? "Usuário da empresa") as AccessTypeLabel}
+                    className={inputBase}
+                    value={(draft.accessType ?? "Usuario da empresa") as AccessTypeLabel}
                     onChange={(e) => {
                       const v = e.target.value as AccessTypeLabel;
                       setDraft((d) => (d ? { ...d, accessType: v } : d));
@@ -495,16 +508,16 @@ function AccessRequestsPage() {
                     aria-label="Tipo de acesso"
                     title="Tipo de acesso"
                   >
-                    <option value="Usuário da empresa">Usuário da empresa</option>
+                    <option value="Usuario da empresa">Usuario da empresa</option>
                     <option value="Admin da empresa">Admin da empresa</option>
                     <option value="Admin do sistema">Admin do sistema</option>
                   </select>
                 </label>
 
-                <label className="block text-sm">
+                <label className="block text-sm font-medium text-[#1e293b]">
                   Empresa
                   <select
-                    className="mt-1 w-full rounded border px-3 py-2"
+                    className={inputBase}
                     value={draft.clientId ?? ""}
                     onChange={(e) => {
                       const id = e.target.value || null;
@@ -524,112 +537,112 @@ function AccessRequestsPage() {
                   </select>
                 </label>
 
-                <label className="block text-sm">
+                <label className="block text-sm font-medium text-[#1e293b]">
                   Nome
                   <input
-                    className="mt-1 w-full rounded border px-3 py-2"
+                    className={inputBase}
                     value={draft.name ?? ""}
                     onChange={(e) => setDraft((d) => (d ? { ...d, name: e.target.value } : d))}
                   />
                 </label>
 
-                <label className="block text-sm">
+                <label className="block text-sm font-medium text-[#1e293b]">
                   Email
                   <input
                     type="email"
-                    className="mt-1 w-full rounded border px-3 py-2"
+                    className={inputBase}
                     value={draft.email ?? ""}
                     onChange={(e) => setDraft((d) => (d ? { ...d, email: e.target.value } : d))}
                   />
                 </label>
 
-                <label className="block text-sm sm:col-span-2">
+                <label className="block text-sm font-medium text-[#1e293b] sm:col-span-2">
                   Cargo
                   <input
-                    className="mt-1 w-full rounded border px-3 py-2"
+                    className={inputBase}
                     value={draft.jobRole ?? ""}
                     onChange={(e) => setDraft((d) => (d ? { ...d, jobRole: e.target.value } : d))}
                   />
                 </label>
 
-                <label className="block text-sm sm:col-span-2">
+                <label className="block text-sm font-medium text-[#1e293b] sm:col-span-2">
                   Observacoes
                   <textarea
-                    className="mt-1 w-full rounded border px-3 py-2"
+                    className={inputBase}
                     rows={4}
                     value={draft.notes ?? ""}
                     onChange={(e) => setDraft((d) => (d ? { ...d, notes: e.target.value } : d))}
                   />
                 </label>
 
-                <label className="block text-sm sm:col-span-2">
-                  Notas do admin (motivo / observação)
+                <label className="block text-sm font-medium text-[#1e293b] sm:col-span-2">
+                  Notas do admin (motivo / observacao)
                   <textarea
-                    className="mt-1 w-full rounded border px-3 py-2"
+                    className={inputBase}
                     rows={3}
                     value={draft.adminNotes ?? ""}
                     onChange={(e) => setDraft((d) => (d ? { ...d, adminNotes: e.target.value } : d))}
                   />
                 </label>
+              </div>
 
-                <div className="sm:col-span-2 rounded-lg border bg-gray-50 p-3 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-gray-800">Comentarios</p>
-                    {commentLoading && <span className="text-xs text-gray-500">Carregando...</span>}
+              <div className="rounded-xl bg-[#f9fafb] p-4 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-[#1e293b]">Comentarios</p>
+                  {commentLoading && <span className="text-xs text-[#94a3b8]">Carregando...</span>}
+                </div>
+
+                {commentError && (
+                  <div className="rounded-lg bg-[#fff7ed] px-3 py-2 text-xs text-[#c2410c]">
+                    {commentError}
                   </div>
+                )}
 
-                  {commentError && (
-                    <div className="rounded border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700">
-                      {commentError}
-                    </div>
-                  )}
-
-                  {comments.length === 0 ? (
-                    <p className="text-xs text-gray-500">Nenhum comentario ainda.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {comments.map((comment) => (
-                        <div key={comment.id} className="rounded border bg-white px-3 py-2">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-xs font-semibold text-gray-800">
-                              {comment.authorRole === "admin" ? "Admin" : "Solicitante"}: {comment.authorName}
-                            </p>
-                            <span className="text-[11px] text-gray-400">
-                              {new Date(comment.createdAt).toLocaleString()}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">{comment.body}</p>
+                {comments.length === 0 ? (
+                  <p className="text-xs text-[#94a3b8]">Nenhum comentario ainda.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {comments.map((comment) => (
+                      <div key={comment.id} className="rounded-lg bg-white px-3 py-2 shadow-sm">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs font-semibold text-[#1e293b]">
+                            {comment.authorRole === "admin" ? "Admin" : "Solicitante"}: {comment.authorName}
+                          </p>
+                          <span className="text-[11px] text-[#94a3b8]">
+                            {new Date(comment.createdAt).toLocaleString("pt-BR")}
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <textarea
-                      className="w-full rounded border px-3 py-2 text-sm"
-                      rows={3}
-                      placeholder="Responder comentario"
-                      value={commentDraft}
-                      onChange={(e) => setCommentDraft(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      onClick={submitComment}
-                      disabled={commentSaving || !commentDraft.trim()}
-                      className="rounded border px-3 py-2 text-xs hover:bg-white disabled:opacity-60"
-                    >
-                      {commentSaving ? "Enviando..." : "Enviar comentario"}
-                    </button>
+                        <p className="mt-1 text-sm text-[#475569] whitespace-pre-wrap">{comment.body}</p>
+                      </div>
+                    ))}
                   </div>
+                )}
+
+                <div className="space-y-2">
+                  <textarea
+                    className={`${inputBase} mt-0`}
+                    rows={3}
+                    placeholder="Responder comentario"
+                    value={commentDraft}
+                    onChange={(e) => setCommentDraft(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={submitComment}
+                    disabled={commentSaving || !commentDraft.trim()}
+                    className="rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#1e293b] transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
+                  >
+                    {commentSaving ? "Enviando..." : "Enviar comentario"}
+                  </button>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={saveChanges}
                   disabled={!dirty || saving}
-                  className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-60"
+                  className="rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#1e293b] transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
                 >
                   {saving ? "Salvando..." : "Salvar alteracoes"}
                 </button>
@@ -638,26 +651,26 @@ function AccessRequestsPage() {
                   onClick={acceptRequest}
                   disabled={
                     accepting ||
-                    ((draft.accessType ?? "Usuário da empresa") !== "Admin do sistema" && !draft.clientId)
+                    ((draft.accessType ?? "Usuario da empresa") !== "Admin do sistema" && !draft.clientId)
                   }
-                  className="rounded-lg bg-indigo-600 px-3 py-2 text-sm text-white hover:bg-indigo-500 disabled:opacity-60"
+                  className="rounded-lg bg-emerald-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:bg-emerald-600 disabled:opacity-60"
                 >
-                  {accepting ? "Aceitando..." : "Aceitar solicitacao"}
+                  {accepting ? "Aceitando..." : "Aprovar"}
                 </button>
 
                 <button
                   type="button"
                   onClick={rejectRequest}
                   disabled={accepting}
-                  className="rounded-lg bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-500 disabled:opacity-60"
+                  className="rounded-lg border border-rose-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-rose-600 transition hover:bg-rose-50 disabled:opacity-60"
                 >
-                  {accepting ? "Processando..." : "Recusar solicitacao"}
+                  {accepting ? "Processando..." : "Recusar"}
                 </button>
               </div>
 
-              <details className="rounded border bg-gray-50 p-3">
-                <summary className="cursor-pointer text-sm text-gray-700">Ver mensagem bruta</summary>
-                <pre className="mt-2 whitespace-pre-wrap text-xs text-gray-700">{selected.rawMessage}</pre>
+              <details className="rounded-lg border border-[#e5e7eb] bg-white p-4">
+                <summary className="cursor-pointer text-sm text-[#64748b]">Ver mensagem bruta</summary>
+                <pre className="mt-3 whitespace-pre-wrap text-xs text-[#475569]">{selected.rawMessage}</pre>
               </details>
             </div>
           )}

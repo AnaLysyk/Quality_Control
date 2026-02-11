@@ -3,6 +3,7 @@ import "server-only";
 import path from "node:path";
 import fs from "node:fs/promises";
 import type { Release } from "@/types/release";
+import { getJsonStoreDir } from "@/data/jsonStorePath";
 
 export type ManualCaseItem = {
   id: string;
@@ -29,7 +30,7 @@ const USE_E2E_STORAGE =
   process.env.NODE_ENV === "test";
 const STORE_DIR = USE_E2E_STORAGE
   ? path.join(process.cwd(), ".tmp", "e2e")
-  : path.join(process.cwd(), "data");
+  : getJsonStoreDir();
 const RELEASES_PATH = path.join(STORE_DIR, "releases-manual.json");
 const CASES_PATH = path.join(STORE_DIR, "releases-manual-cases.json");
 

@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
+import { getJsonStoreDir } from "@/data/jsonStorePath";
 
 export type TicketCommentRecord = {
   id: string;
@@ -20,12 +21,10 @@ type CommentsStore = {
   items: TicketCommentRecord[];
 };
 
-const STORE_PATH = path.join(process.cwd(), "data", "ticket-comments.json");
+const STORE_PATH = path.join(getJsonStoreDir(), "ticket-comments.json");
 const STORE_KEY = "qc:ticket_comments:v1";
 const USE_REDIS = process.env.TICKET_COMMENTS_STORE === "redis" || isRedisConfigured();
-const USE_MEMORY =
-  process.env.TICKET_COMMENTS_IN_MEMORY === "true" ||
-  (!USE_REDIS && process.env.VERCEL === "1");
+const USE_MEMORY = process.env.TICKET_COMMENTS_IN_MEMORY === "true";
 let memoryStore: CommentsStore = { items: [] };
 let warnedFsFailure = false;
 

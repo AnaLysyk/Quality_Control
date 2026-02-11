@@ -88,7 +88,9 @@ function sumStats(stats?: Stats | null) {
   return stats.fail + stats.blocked + stats.notRun;
 }
 
-function resolveCompanyKey(company: CompanyRow) {
+type CompanyKeyable = { id: string; slug?: string | null };
+
+function resolveCompanyKey(company: CompanyKeyable) {
   return company.slug ?? company.id;
 }
 

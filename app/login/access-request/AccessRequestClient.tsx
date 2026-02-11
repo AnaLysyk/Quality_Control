@@ -67,17 +67,19 @@ export default function AccessRequestClient() {
   const [commentDraft, setCommentDraft] = useState("");
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [isLookupOpen, setIsLookupOpen] = useState(false);
+  const [isRequestOpen, setIsRequestOpen] = useState(false);
   const lookupNameRef = useRef<HTMLInputElement>(null);
+  const requestNameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!isLookupOpen) return;
+    if (!isLookupOpen && !isRequestOpen) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    const timer = window.setTimeout(() => lookupNameRef.current?.focus(), 80);
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setIsLookupOpen(false);
+        setIsRequestOpen(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -85,9 +87,20 @@ export default function AccessRequestClient() {
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
-      window.clearTimeout(timer);
     };
+  }, [isLookupOpen, isRequestOpen]);
+
+  useEffect(() => {
+    if (!isLookupOpen) return;
+    const timer = window.setTimeout(() => lookupNameRef.current?.focus(), 80);
+    return () => window.clearTimeout(timer);
   }, [isLookupOpen]);
+
+  useEffect(() => {
+    if (!isRequestOpen) return;
+    const timer = window.setTimeout(() => requestNameRef.current?.focus(), 80);
+    return () => window.clearTimeout(timer);
+  }, [isRequestOpen]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -285,162 +298,224 @@ export default function AccessRequestClient() {
             Solicitação
           </span>
           <h2 className="mt-5 text-3xl sm:text-4xl font-bold text-[#011848] mb-2 leading-tight drop-shadow-sm">
-            Solicitar acesso
+            Solicitações de acesso
           </h2>
           <p className="text-[#0b1a3c] font-medium">
-            Precisando de acesso a uma empresa ou ao admin? Preencha o formulário e nossa equipe vai orientar o
-            próximo passo.
+            Consulte uma solicitação existente ou envie um novo pedido de acesso ao painel.
           </p>
         </div>
 
-        <form
-          className={`bg-white/90 backdrop-blur-sm p-5 sm:p-8 rounded-2xl shadow-2xl border border-[#011848]/10 space-y-6 ${
-            styles.introBase
-          } ${styles.introDelay2}`}
-          onSubmit={handleSubmit}
-        >
-          {error && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-              {error}
+        <div className="space-y-4">
+          <div
+            className={`bg-white/90 backdrop-blur-sm border border-[#011848]/10 shadow-2xl rounded-2xl px-6 py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between ${
+              styles.introBase
+            } ${styles.introDelay2}`}
+          >
+            <div>
+              <h3 className="text-lg font-semibold text-[#011848]">Consultar solicitação</h3>
+              <p className="text-sm text-[#475569]">
+                Acompanhe o status e os comentários da sua solicitação em tempo real.
+              </p>
             </div>
-          )}
-
-          {success && (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              {success}
-            </div>
-          )}
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className={labelClass}>
-              Nome completo
-              <input
-                type="text"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                required
-                className={inputBase}
-                placeholder="Ana Souza"
-              />
-            </label>
-            <label className={labelClass}>
-              E-mail profissional
-              <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                required
-                className={inputBase}
-                placeholder="voce@empresa.com"
-              />
-            </label>
-          </div>
-
-          <label className={labelClass}>
-            Cargo ou função
-            <input
-              type="text"
-              value={role}
-              onChange={(event) => setRole(event.target.value)}
-              required
-              className={inputBase}
-              placeholder="Analista de QA"
-            />
-          </label>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className={labelClass}>
-              Empresa (ou nome do cliente)
-              <input
-                type="text"
-                value={company}
-                onChange={(event) => setCompany(event.target.value)}
-                className={inputBase}
-                placeholder="Testing Company"
-              />
-            </label>
-            <label className={labelClass}>
-              ID do cliente (opcional)
-              <input
-                type="text"
-                value={clientId}
-                onChange={(event) => setClientId(event.target.value)}
-                className={inputBase}
-                placeholder="client-123"
-              />
-            </label>
-          </div>
-
-          <div className="space-y-2 text-sm font-semibold text-[#011848]">
-            <div className="flex items-center justify-between">
-              <span>Tipo de acesso</span>
-              <span className="text-xs font-medium text-[#6b7280]">Escolha conforme seu papel</span>
-            </div>
-            <select
-              value={accessType}
-              onChange={(event) => setAccessType(event.target.value as "user" | "company" | "admin")}
-              className={inputBase}
+            <button
+              type="button"
+              onClick={() => {
+                setIsLookupOpen(true);
+                setIsRequestOpen(false);
+                setLookupError(null);
+              }}
+              className="inline-flex items-center justify-center rounded-xl border border-[#011848]/15 bg-white px-5 py-2 text-sm font-semibold text-[#011848] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#011848]/5 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/50"
             >
-              {ACCESS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            {currentOption && (
-              <p className="text-xs font-medium text-[#475569]">{currentOption.description}</p>
-            )}
+              Consultar agora
+            </button>
           </div>
 
-          <label className={labelClass}>
-            Observações (opcional)
-            <textarea
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              rows={4}
-              className={textareaBase}
-              placeholder="Preciso criar releases e revisar dashboards de aceitação."
-            />
-          </label>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:opacity-60 disabled:cursor-not-allowed"
+          <div
+            className={`bg-white/90 backdrop-blur-sm border border-[#011848]/10 shadow-2xl rounded-2xl px-6 py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between ${
+              styles.introBase
+            } ${styles.introDelay3}`}
           >
-            {loading ? "Enviando..." : "Enviar solicitação"}
-          </button>
-
-          <div className="text-center text-sm text-[#475569]">
-            <Link href="/login" className="font-semibold text-[#011848]/80 hover:text-[#011848]">
-              Voltar ao login
-            </Link>
+            <div>
+              <h3 className="text-lg font-semibold text-[#011848]">Solicitar acesso</h3>
+              <p className="text-sm text-[#475569]">
+                Envie um novo pedido de acesso e nossa equipe vai orientar o próximo passo.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setIsRequestOpen(true);
+                setIsLookupOpen(false);
+                setError(null);
+                setSuccess(null);
+              }}
+              className="inline-flex items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60"
+            >
+              Solicitar acesso
+            </button>
           </div>
-        </form>
+        </div>
 
-        <div
-          className={`bg-white/90 backdrop-blur-sm border border-[#011848]/10 shadow-2xl rounded-2xl px-6 py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between ${
-            styles.introBase
-          } ${styles.introDelay3}`}
-        >
-          <div>
-            <h3 className="text-lg font-semibold text-[#011848]">Consultar solicitação</h3>
-            <p className="text-sm text-[#475569]">
-              Acompanhe o status e os comentários da sua solicitação em tempo real.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setIsLookupOpen(true);
-              setLookupError(null);
-            }}
-            className="inline-flex items-center justify-center rounded-xl border border-[#011848]/15 bg-white px-5 py-2 text-sm font-semibold text-[#011848] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#011848]/5 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/50"
-          >
-            Consultar agora
-          </button>
+        <div className="text-center text-sm text-[#475569]">
+          <Link href="/login" className="font-semibold text-[#011848]/80 hover:text-[#011848]">
+            Voltar ao login
+          </Link>
         </div>
       </div>
+
+      {isRequestOpen && (
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-slate-950/50 backdrop-blur-sm ${
+            styles.modalOverlay
+          }`}
+          onClick={() => setIsRequestOpen(false)}
+          role="presentation"
+        >
+          <div
+            className={`w-full max-w-3xl rounded-2xl bg-white/95 backdrop-blur-xl border border-white/60 shadow-2xl p-6 sm:p-8 ${
+              styles.modalPanel
+            }`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="request-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 id="request-title" className="text-xl font-semibold text-[#011848]">
+                  Solicitar acesso
+                </h3>
+                <p className="text-sm text-[#475569]">
+                  Preencha os dados abaixo para abrir uma nova solicitação.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsRequestOpen(false)}
+                className="rounded-full border border-[#011848]/10 bg-white p-2 text-[#475569] transition hover:text-[#011848]"
+                aria-label="Fechar modal"
+              >
+                <span className="text-lg leading-none">×</span>
+              </button>
+            </div>
+
+            <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+              {error && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                  {error}
+                </div>
+              )}
+
+              {success && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  {success}
+                </div>
+              )}
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className={labelClass}>
+                  Nome completo
+                  <input
+                    ref={requestNameRef}
+                    type="text"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    required
+                    className={inputBase}
+                    placeholder="Ana Souza"
+                  />
+                </label>
+                <label className={labelClass}>
+                  E-mail profissional
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    required
+                    className={inputBase}
+                    placeholder="voce@empresa.com"
+                  />
+                </label>
+              </div>
+
+              <label className={labelClass}>
+                Cargo ou função
+                <input
+                  type="text"
+                  value={role}
+                  onChange={(event) => setRole(event.target.value)}
+                  required
+                  className={inputBase}
+                  placeholder="Analista de QA"
+                />
+              </label>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className={labelClass}>
+                  Empresa (ou nome do cliente)
+                  <input
+                    type="text"
+                    value={company}
+                    onChange={(event) => setCompany(event.target.value)}
+                    className={inputBase}
+                    placeholder="Testing Company"
+                  />
+                </label>
+                <label className={labelClass}>
+                  ID do cliente (opcional)
+                  <input
+                    type="text"
+                    value={clientId}
+                    onChange={(event) => setClientId(event.target.value)}
+                    className={inputBase}
+                    placeholder="client-123"
+                  />
+                </label>
+              </div>
+
+              <div className="space-y-2 text-sm font-semibold text-[#011848]">
+                <div className="flex items-center justify-between">
+                  <span>Tipo de acesso</span>
+                  <span className="text-xs font-medium text-[#6b7280]">Escolha conforme seu papel</span>
+                </div>
+                <select
+                  value={accessType}
+                  onChange={(event) => setAccessType(event.target.value as "user" | "company" | "admin")}
+                  className={inputBase}
+                >
+                  {ACCESS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {currentOption && (
+                  <p className="text-xs font-medium text-[#475569]">{currentOption.description}</p>
+                )}
+              </div>
+
+              <label className={labelClass}>
+                Observações (opcional)
+                <textarea
+                  value={notes}
+                  onChange={(event) => setNotes(event.target.value)}
+                  rows={4}
+                  className={textareaBase}
+                  placeholder="Preciso criar releases e revisar dashboards de aceitação."
+                />
+              </label>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loading ? "Enviando..." : "Enviar solicitação"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {isLookupOpen && (
         <div

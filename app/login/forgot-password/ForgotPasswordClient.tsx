@@ -8,9 +8,13 @@ import styles from "./ForgotPasswordClient.module.css";
 export default function ForgotPasswordClient() {
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isVerified, setIsVerified] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -31,28 +35,74 @@ export default function ForgotPasswordClient() {
       return;
     }
 
-    setLoading(true);
+    if (!isVerified) {
+      setVerifying(true);
+      try {
+        const response = await fetch("/api/auth/reset-verify", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ user: normalizedLogin, email: normalizedEmail }),
+        });
+
+        const data = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          throw new Error(data?.error || "Não foi possível validar seus dados.");
+        }
+        setIsVerified(true);
+        setSuccess("Dados confirmados. Agora defina sua nova senha.");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Erro desconhecido");
+      } finally {
+        setVerifying(false);
+      }
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setError("A nova senha precisa ter pelo menos 8 caracteres.");
+      return;
+    }
+
+    if (newPassword.length > 128) {
+      setError("A nova senha precisa ter no máximo 128 caracteres.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError("As senhas não coincidem.");
+      return;
+    }
+
+    setResetting(true);
     try {
-      const response = await fetch("/api/auth/reset-request", {
+      const response = await fetch("/api/auth/reset-direct", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ user: normalizedLogin, email: normalizedEmail }),
+        body: JSON.stringify({
+          user: normalizedLogin,
+          email: normalizedEmail,
+          newPassword,
+        }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data.error || "Erro ao solicitar reset");
+        throw new Error(data?.error || "Não foi possível atualizar sua senha.");
       }
-      setSuccess(
-        "Solicitação enviada. Um administrador vai revisar o pedido e, se aprovado, você receberá as instruções por e-mail."
-      );
+
+      setSuccess("Senha atualizada com sucesso. Você já pode entrar.");
+      setNewPassword("");
+      setConfirmPassword("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro desconhecido");
     } finally {
-      setLoading(false);
+      setResetting(false);
     }
   }
 
@@ -77,14 +127,11 @@ export default function ForgotPasswordClient() {
 
       <div className="max-w-lg w-full space-y-8 relative z-10 sm:max-w-xl md:max-w-2xl">
         <div className={`text-center ${styles.introBase} ${styles.introDelay1}`}>
-          <span className="inline-flex items-center gap-2 rounded-full border border-[#011848]/10 bg-white/70 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.35em] text-[#011848]/70">
-            Recuperação
-          </span>
-          <h2 className="mt-5 text-3xl sm:text-4xl font-bold text-[#011848] mb-2 leading-tight drop-shadow-sm">
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#011848] mb-2 leading-tight drop-shadow-sm">
             Esqueceu sua senha?
           </h2>
           <p className="text-[#0b1a3c] font-medium">
-            Digite seu usuário e e-mail para solicitar a redefinição de senha.
+            Digite seu usuário e e-mail para validar seus dados e liberar a troca de senha.
           </p>
         </div>
 
@@ -120,7 +167,15 @@ export default function ForgotPasswordClient() {
                 className="form-control-user w-full px-4 py-3 border border-[#011848]/15 rounded-xl focus:ring-2 focus:ring-[#ef0001]/40 focus:border-[#ef0001]/60 transition-all duration-200 bg-white text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
                 placeholder="Seu usuário"
                 value={login}
-                onChange={(e) => setLogin(e.target.value)}
+                onChange={(e) => {
+                  setLogin(e.target.value);
+                  if (isVerified) {
+                    setIsVerified(false);
+                    setNewPassword("");
+                    setConfirmPassword("");
+                    setSuccess(null);
+                  }
+                }}
               />
             </div>
 
@@ -137,17 +192,69 @@ export default function ForgotPasswordClient() {
                 className="form-control-user w-full px-4 py-3 border border-[#011848]/15 rounded-xl focus:ring-2 focus:ring-[#ef0001]/40 focus:border-[#ef0001]/60 transition-all duration-200 bg-white text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
                 placeholder="seu@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (isVerified) {
+                    setIsVerified(false);
+                    setNewPassword("");
+                    setConfirmPassword("");
+                    setSuccess(null);
+                  }
+                }}
               />
             </div>
           </div>
 
+          {isVerified && (
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="new-password" className="block text-sm font-semibold text-[#011848] mb-2">
+                  Nova senha
+                </label>
+                <input
+                  id="new-password"
+                  name="newPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  className="form-control-user w-full px-4 py-3 border border-[#011848]/15 rounded-xl focus:ring-2 focus:ring-[#ef0001]/40 focus:border-[#ef0001]/60 transition-all duration-200 bg-white text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
+                  placeholder="Mínimo de 8 caracteres"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="confirm-password" className="block text-sm font-semibold text-[#011848] mb-2">
+                  Confirmar nova senha
+                </label>
+                <input
+                  id="confirm-password"
+                  name="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  className="form-control-user w-full px-4 py-3 border border-[#011848]/15 rounded-xl focus:ring-2 focus:ring-[#ef0001]/40 focus:border-[#ef0001]/60 transition-all duration-200 bg-white text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
+                  placeholder="Repita a nova senha"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={verifying || resetting}
             className="mt-6 w-full bg-linear-to-r from-[#011848] to-[#ef0001] text-white py-3 px-4 rounded-xl font-semibold hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:ring-2 focus:ring-[#ef0001]/60 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Enviando..." : "Enviar instruções"}
+            {isVerified
+              ? resetting
+                ? "Atualizando..."
+                : "Atualizar senha"
+              : verifying
+                ? "Validando..."
+                : "Validar dados"}
           </button>
 
           <div className="mt-6 text-center text-sm">

@@ -1,12 +1,27 @@
-"use client";
+﻿"use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import loginStyles from "../LoginClient.module.css";
+import styles from "./AccessRequestClient.module.css";
 
 const ACCESS_OPTIONS = [
-  { value: "user", label: "Usuário da empresa", description: "Acesso regular vinculado a uma empresa/ciente (leitura de dashboards/permissão de execução)." },
-  { value: "company", label: "Admin da empresa", description: "Permite gerenciar usuários e releases da própria empresa." },
-  { value: "admin", label: "Admin do sistema", description: "Acesso completo ao painel (apenas para equipes internas)." },
+  {
+    value: "user",
+    label: "Usuário da empresa",
+    description:
+      "Acesso regular vinculado a uma empresa/cliente (leitura de dashboards e permissões operacionais).",
+  },
+  {
+    value: "company",
+    label: "Admin da empresa",
+    description: "Permite gerenciar usuários, releases e permissões da própria empresa.",
+  },
+  {
+    value: "admin",
+    label: "Admin do sistema",
+    description: "Acesso completo ao painel (apenas para equipes internas).",
+  },
 ];
 
 type LookupItem = {
@@ -42,6 +57,7 @@ export default function AccessRequestClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
   const [lookupName, setLookupName] = useState("");
   const [lookupEmail, setLookupEmail] = useState("");
   const [lookupLoading, setLookupLoading] = useState(false);
@@ -50,6 +66,28 @@ export default function AccessRequestClient() {
   const [lookupComments, setLookupComments] = useState<AccessRequestComment[]>([]);
   const [commentDraft, setCommentDraft] = useState("");
   const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [isLookupOpen, setIsLookupOpen] = useState(false);
+  const lookupNameRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isLookupOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const timer = window.setTimeout(() => lookupNameRef.current?.focus(), 80);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsLookupOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+      window.clearTimeout(timer);
+    };
+  }, [isLookupOpen]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -120,8 +158,15 @@ export default function AccessRequestClient() {
   const statusLabel = (status: string) => {
     if (status === "closed") return "Aprovada";
     if (status === "rejected") return "Rejeitada";
-    if (status === "in_progress") return "Em analise";
+    if (status === "in_progress") return "Em análise";
     return "Aberta";
+  };
+
+  const statusTone = (status: string) => {
+    if (status === "closed") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+    if (status === "rejected") return "border-rose-200 bg-rose-50 text-rose-700";
+    if (status === "in_progress") return "border-amber-200 bg-amber-50 text-amber-700";
+    return "border-slate-200 bg-slate-100 text-slate-700";
   };
 
   const handleLookup = async (event: FormEvent<HTMLFormElement>) => {
@@ -147,15 +192,19 @@ export default function AccessRequestClient() {
         )}`,
         { cache: "no-store" },
       );
-      const json = (await res.json().catch(() => null)) as { item?: LookupItem; comments?: AccessRequestComment[]; error?: string };
+      const json = (await res.json().catch(() => null)) as {
+        item?: LookupItem;
+        comments?: AccessRequestComment[];
+        error?: string;
+      };
       if (!res.ok) {
-        setLookupError(json?.error || "Solicitacao nao encontrada.");
+        setLookupError(json?.error || "Solicitação não encontrada.");
         return;
       }
       setLookupItem(json.item ?? null);
       setLookupComments(Array.isArray(json.comments) ? json.comments : []);
     } catch (err) {
-      setLookupError(err instanceof Error ? err.message : "Erro ao consultar solicitacao.");
+      setLookupError(err instanceof Error ? err.message : "Erro ao consultar solicitação.");
     } finally {
       setLookupLoading(false);
     }
@@ -181,7 +230,7 @@ export default function AccessRequestClient() {
       });
       const json = (await res.json().catch(() => null)) as { item?: AccessRequestComment; error?: string };
       if (!res.ok) {
-        setLookupError(json?.error || "Falha ao enviar comentario.");
+        setLookupError(json?.error || "Falha ao enviar comentário.");
         return;
       }
       if (json.item) {
@@ -189,7 +238,7 @@ export default function AccessRequestClient() {
       }
       setCommentDraft("");
     } catch (err) {
-      setLookupError(err instanceof Error ? err.message : "Erro ao enviar comentario.");
+      setLookupError(err instanceof Error ? err.message : "Erro ao enviar comentário.");
     } finally {
       setCommentSubmitting(false);
     }
@@ -203,100 +252,134 @@ export default function AccessRequestClient() {
       (comment) => comment.authorRole === "admin" && comment.body.trim() === adminNote,
     );
 
+  const inputBase =
+    "form-control-user w-full rounded-xl border border-[#011848]/15 bg-white px-4 py-3 text-sm text-[#011848] placeholder:text-[#94a3b8] focus:ring-2 focus:ring-[#ef0001]/40 focus:border-[#ef0001]/60 transition-all duration-200";
+
+  const textareaBase =
+    "form-control-user w-full rounded-xl border border-[#011848]/15 bg-white px-4 py-3 text-sm text-[#011848] placeholder:text-[#94a3b8] focus:ring-2 focus:ring-[#ef0001]/40 focus:border-[#ef0001]/60 transition-all duration-200";
+
+  const labelClass = "space-y-2 text-sm font-semibold text-[#011848]";
+
   return (
-    <div className="min-h-[100svh] flex items-start sm:items-center justify-start sm:justify-center bg-gradient-to-br from-[#f4f6fb] via-[#eff0f6] to-[#ffffff] py-12 px-4 sm:px-6 lg:px-8 overflow-x-hidden overflow-y-auto">
-      <div className="max-w-xl w-full space-y-8">
-        <div>
-          <h2 className="text-3xl font-extrabold text-[#0b1a3c] text-center">
+    <div
+      className={
+        `${loginStyles.loginContainer} ${loginStyles.loginFixedTheme} min-h-svh flex items-start sm:items-center ` +
+        "justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] " +
+        "relative overflow-x-hidden overflow-y-auto px-4 py-10 sm:px-6 md:px-10"
+      }
+    >
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-6 left-6 w-32 h-32 bg-[#011848] rounded-full opacity-20 blur-2xl animate-ping"></div>
+        <div className="absolute bottom-6 right-6 w-28 h-28 bg-[#ef0001] rounded-full opacity-20 blur-2xl animate-pulse"></div>
+        <div className="absolute top-1/6 right-1/5 w-20 h-20 bg-[#ef0001] rounded-full opacity-10 blur-lg animate-bounce delay-1000"></div>
+        <div className="absolute bottom-1/6 left-1/5 w-24 h-24 bg-[#011848] rounded-full opacity-10 blur-lg animate-pulse delay-700"></div>
+        <div className="absolute top-10 left-44 w-16 h-16 bg-[#ef0001] rounded-full opacity-10 blur animate-pulse delay-500"></div>
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-20 bg-[#011848] rounded-full opacity-10 blur animate-bounce delay-200"></div>
+        <div className="absolute top-1/2 left-2 w-14 h-14 bg-[#ef0001] rounded-full opacity-10 blur animate-pulse delay-800"></div>
+        <div className="absolute top-1/2 right-2 w-14 h-14 bg-[#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
+      </div>
+
+      <div className="max-w-3xl w-full space-y-8 relative z-10">
+        <div className={`text-center ${styles.introBase} ${styles.introDelay1}`}>
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/50 bg-white/70 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.35em] text-[#011848]/70">
+            Solicitação
+          </span>
+          <h2 className="mt-5 text-3xl sm:text-4xl font-bold text-[#011848] mb-2 leading-tight drop-shadow-sm">
             Solicitar acesso
           </h2>
-          <p className="mt-2 text-center text-sm text-[#475569]">
-            Precisando de acesso a uma empresa ou ao admin? Preencha o formulário e nossa equipe irá aprovar ou orientar o próximo passo.
+          <p className="text-[#0b1a3c] font-medium">
+            Precisando de acesso a uma empresa ou ao admin? Preencha o formulário e nossa equipe vai orientar o
+            próximo passo.
           </p>
         </div>
 
-        <form className="bg-white shadow-xl rounded-2xl px-8 py-10 space-y-6" onSubmit={handleSubmit}>
+        <form
+          className={`bg-white/90 backdrop-blur-sm p-5 sm:p-8 rounded-2xl shadow-2xl border border-[#011848]/10 space-y-6 ${
+            styles.introBase
+          } ${styles.introDelay2}`}
+          onSubmit={handleSubmit}
+        >
           {error && (
-            <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="rounded-md bg-green-50 border border-green-200 p-3 text-sm text-green-700">
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
               {success}
             </div>
           )}
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="space-y-1 text-sm text-[#0b1a3c]">
+            <label className={labelClass}>
               Nome completo
               <input
                 type="text"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 required
-                className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm focus:border-[#011848] focus:outline-none focus:ring-2 focus:ring-[#ef0001]/30"
+                className={inputBase}
                 placeholder="Ana Souza"
               />
             </label>
-            <label className="space-y-1 text-sm text-[#0b1a3c]">
+            <label className={labelClass}>
               E-mail profissional
               <input
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 required
-                className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm focus:border-[#011848] focus:outline-none focus:ring-2 focus:ring-[#ef0001]/30"
+                className={inputBase}
                 placeholder="voce@empresa.com"
               />
             </label>
           </div>
 
-          <label className="space-y-1 text-sm text-[#0b1a3c]">
+          <label className={labelClass}>
             Cargo ou função
             <input
               type="text"
               value={role}
               onChange={(event) => setRole(event.target.value)}
               required
-              className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm focus:border-[#011848] focus:outline-none focus:ring-2 focus:ring-[#ef0001]/30"
+              className={inputBase}
               placeholder="Analista de QA"
             />
           </label>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="space-y-1 text-sm text-[#0b1a3c]">
+            <label className={labelClass}>
               Empresa (ou nome do cliente)
               <input
                 type="text"
                 value={company}
                 onChange={(event) => setCompany(event.target.value)}
-                className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm focus:border-[#011848] focus:outline-none focus:ring-2 focus:ring-[#ef0001]/30"
+                className={inputBase}
                 placeholder="Testing Company"
               />
             </label>
-            <label className="space-y-1 text-sm text-[#0b1a3c]">
+            <label className={labelClass}>
               ID do cliente (opcional)
               <input
                 type="text"
                 value={clientId}
                 onChange={(event) => setClientId(event.target.value)}
-                className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm focus:border-[#011848] focus:outline-none focus:ring-2 focus:ring-[#ef0001]/30"
+                className={inputBase}
                 placeholder="client-123"
               />
             </label>
           </div>
 
-          <div className="space-y-1 text-sm text-[#0b1a3c]">
+          <div className="space-y-2 text-sm font-semibold text-[#011848]">
             <div className="flex items-center justify-between">
               <span>Tipo de acesso</span>
-              <span className="text-xs text-[#6b7280]">Escolha conforme seu papel</span>
+              <span className="text-xs font-medium text-[#6b7280]">Escolha conforme seu papel</span>
             </div>
             <select
               value={accessType}
               onChange={(event) => setAccessType(event.target.value as "user" | "company" | "admin")}
-              className="w-full rounded-lg border border-[#d1d5db] bg-white px-3 py-2 text-sm focus:border-[#011848] focus:outline-none focus:ring-2 focus:ring-[#ef0001]/30"
+              className={inputBase}
             >
               {ACCESS_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -305,17 +388,17 @@ export default function AccessRequestClient() {
               ))}
             </select>
             {currentOption && (
-              <p className="text-xs text-[#475569]">{currentOption.description}</p>
+              <p className="text-xs font-medium text-[#475569]">{currentOption.description}</p>
             )}
           </div>
 
-          <label className="space-y-1 text-sm text-[#0b1a3c]">
+          <label className={labelClass}>
             Observações (opcional)
             <textarea
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               rows={4}
-              className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm focus:border-[#011848] focus:outline-none focus:ring-2 focus:ring-[#ef0001]/30"
+              className={textareaBase}
               placeholder="Preciso criar releases e revisar dashboards de aceitação."
             />
           </label>
@@ -323,128 +406,187 @@ export default function AccessRequestClient() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center rounded-lg bg-[#011848] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#ef0001] hover:text-[#011848] focus:outline-none focus:ring-2 focus:ring-[#ef0001]/50 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading ? "Enviando..." : "Enviar solicitação"}
           </button>
 
           <div className="text-center text-sm text-[#475569]">
-            <Link href="/login" className="font-medium text-[#011848] hover:text-[#ef0001]">
+            <Link href="/login" className="font-semibold text-[#011848]/80 hover:text-[#011848]">
               Voltar ao login
             </Link>
           </div>
         </form>
 
-        <form className="bg-white shadow-xl rounded-2xl px-8 py-8 space-y-4" onSubmit={handleLookup}>
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <h3 className="text-lg font-semibold text-[#0b1a3c]">Consultar solicitacao</h3>
-              <p className="text-xs text-[#475569]">Preencha nome e e-mail para acompanhar status e comentarios.</p>
-            </div>
-            {lookupLoading && <span className="text-xs text-[#475569]">Consultando...</span>}
+        <div
+          className={`bg-white/90 backdrop-blur-sm border border-[#011848]/10 shadow-2xl rounded-2xl px-6 py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between ${
+            styles.introBase
+          } ${styles.introDelay3}`}
+        >
+          <div>
+            <h3 className="text-lg font-semibold text-[#011848]">Consultar solicitação</h3>
+            <p className="text-sm text-[#475569]">
+              Acompanhe o status e os comentários da sua solicitação em tempo real.
+            </p>
           </div>
-
-          {lookupError && (
-            <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-              {lookupError}
-            </div>
-          )}
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="space-y-1 text-sm text-[#0b1a3c]">
-              Nome completo
-              <input
-                type="text"
-                value={lookupName}
-                onChange={(event) => setLookupName(event.target.value)}
-                required
-                className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm focus:border-[#011848] focus:outline-none focus:ring-2 focus:ring-[#ef0001]/30"
-                placeholder="Ana Souza"
-              />
-            </label>
-            <label className="space-y-1 text-sm text-[#0b1a3c]">
-              E-mail
-              <input
-                type="email"
-                value={lookupEmail}
-                onChange={(event) => setLookupEmail(event.target.value)}
-                required
-                className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm focus:border-[#011848] focus:outline-none focus:ring-2 focus:ring-[#ef0001]/30"
-                placeholder="voce@empresa.com"
-              />
-            </label>
-          </div>
-
           <button
-            type="submit"
-            disabled={lookupLoading}
-            className="w-full flex items-center justify-center rounded-lg bg-[#011848] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#ef0001] hover:text-[#011848] focus:outline-none focus:ring-2 focus:ring-[#ef0001]/50 disabled:opacity-60 disabled:cursor-not-allowed"
+            type="button"
+            onClick={() => {
+              setIsLookupOpen(true);
+              setLookupError(null);
+            }}
+            className="inline-flex items-center justify-center rounded-xl border border-[#011848]/15 bg-white px-5 py-2 text-sm font-semibold text-[#011848] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#011848]/5 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/50"
           >
-            {lookupLoading ? "Consultando..." : "Consultar solicitacao"}
+            Consultar agora
           </button>
+        </div>
+      </div>
 
-          {lookupItem && (
-            <div className="rounded-xl border border-[#e5e7eb] bg-[#f8fafc] p-4 space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-[#0b1a3c]">Solicitacao encontrada</p>
-                  <p className="text-xs text-[#475569]">Criada em {new Date(lookupItem.createdAt).toLocaleString()}</p>
-                </div>
-                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#0b1a3c] border">
-                  {statusLabel(lookupItem.status)}
-                </span>
+      {isLookupOpen && (
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-slate-950/50 backdrop-blur-sm ${
+            styles.modalOverlay
+          }`}
+          onClick={() => setIsLookupOpen(false)}
+          role="presentation"
+        >
+          <div
+            className={`w-full max-w-2xl rounded-2xl bg-white/95 backdrop-blur-xl border border-white/60 shadow-2xl p-6 sm:p-8 ${
+              styles.modalPanel
+            }`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="lookup-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 id="lookup-title" className="text-xl font-semibold text-[#011848]">
+                  Consultar solicitação
+                </h3>
+                <p className="text-sm text-[#475569]">
+                  Informe nome e e-mail para ver o andamento e os comentários.
+                </p>
               </div>
+              <button
+                type="button"
+                onClick={() => setIsLookupOpen(false)}
+                className="rounded-full border border-[#011848]/10 bg-white p-2 text-[#475569] transition hover:text-[#011848]"
+                aria-label="Fechar modal"
+              >
+                <span className="text-lg leading-none">×</span>
+              </button>
+            </div>
 
-              {showAdminNote && (
-                <div className="rounded-lg border bg-white px-3 py-2 text-sm text-[#0b1a3c]">
-                  <strong>Comentario do admin:</strong> {adminNote}
+            <form className="mt-6 space-y-4" onSubmit={handleLookup}>
+              {lookupError && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                  {lookupError}
                 </div>
               )}
 
-              <div className="space-y-2">
-                <p className="text-sm font-semibold text-[#0b1a3c]">Comentarios</p>
-                {lookupComments.length === 0 ? (
-                  <p className="text-xs text-[#475569]">Nenhum comentario ainda.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {lookupComments.map((comment) => (
-                      <div key={comment.id} className="rounded-lg border bg-white px-3 py-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs font-semibold text-[#0b1a3c]">
-                            {comment.authorRole === "admin" ? "Admin" : "Solicitante"}: {comment.authorName}
-                          </p>
-                          <span className="text-[11px] text-[#64748b]">
-                            {new Date(comment.createdAt).toLocaleString()}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-sm text-[#334155] whitespace-pre-wrap">{comment.body}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className={labelClass}>
+                  Nome completo
+                  <input
+                    ref={lookupNameRef}
+                    type="text"
+                    value={lookupName}
+                    onChange={(event) => setLookupName(event.target.value)}
+                    required
+                    className={inputBase}
+                    placeholder="Ana Souza"
+                  />
+                </label>
+                <label className={labelClass}>
+                  E-mail
+                  <input
+                    type="email"
+                    value={lookupEmail}
+                    onChange={(event) => setLookupEmail(event.target.value)}
+                    required
+                    className={inputBase}
+                    placeholder="voce@empresa.com"
+                  />
+                </label>
               </div>
 
-              <div className="space-y-2">
-                <textarea
-                  className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm focus:border-[#011848] focus:outline-none focus:ring-2 focus:ring-[#ef0001]/30"
-                  rows={3}
-                  placeholder="Adicionar comentario"
-                  value={commentDraft}
-                  onChange={(event) => setCommentDraft(event.target.value)}
-                />
-                <button
-                  type="button"
-                  onClick={handleSubmitComment}
-                  disabled={commentSubmitting || !commentDraft.trim()}
-                  className="rounded-lg border px-3 py-2 text-xs font-semibold text-[#0b1a3c] hover:bg-white disabled:opacity-60"
-                >
-                  {commentSubmitting ? "Enviando..." : "Enviar comentario"}
-                </button>
+              <button
+                type="submit"
+                disabled={lookupLoading}
+                className="w-full flex items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {lookupLoading ? "Consultando..." : "Consultar solicitação"}
+              </button>
+            </form>
+
+            {lookupItem && (
+              <div className="mt-6 rounded-2xl border border-[#e5e7eb] bg-[#f8fafc] p-5 space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-[#011848]">Solicitação encontrada</p>
+                    <p className="text-xs text-[#64748b]">
+                      Criada em {new Date(lookupItem.createdAt).toLocaleString("pt-BR")}
+                    </p>
+                  </div>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold border ${statusTone(lookupItem.status)}`}
+                  >
+                    {statusLabel(lookupItem.status)}
+                  </span>
+                </div>
+
+                {showAdminNote && (
+                  <div className="rounded-lg border bg-white px-3 py-2 text-sm text-[#0b1a3c]">
+                    <strong>Comentário do admin:</strong> {adminNote}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-[#011848]">Comentários</p>
+                  {lookupComments.length === 0 ? (
+                    <p className="text-xs text-[#64748b]">Nenhum comentário ainda.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {lookupComments.map((comment) => (
+                        <div key={comment.id} className="rounded-lg border bg-white px-3 py-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-xs font-semibold text-[#011848]">
+                              {comment.authorRole === "admin" ? "Admin" : "Solicitante"}: {comment.authorName}
+                            </p>
+                            <span className="text-[11px] text-[#64748b]">
+                              {new Date(comment.createdAt).toLocaleString("pt-BR")}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-sm text-[#334155] whitespace-pre-wrap">{comment.body}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <textarea
+                    className={textareaBase}
+                    rows={3}
+                    placeholder="Adicionar comentário"
+                    value={commentDraft}
+                    onChange={(event) => setCommentDraft(event.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSubmitComment}
+                    disabled={commentSubmitting || !commentDraft.trim()}
+                    className="rounded-xl border border-[#011848]/15 bg-white px-4 py-2 text-xs font-semibold text-[#011848] transition hover:bg-[#011848]/5 disabled:opacity-60"
+                  >
+                    {commentSubmitting ? "Enviando..." : "Enviar comentário"}
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-        </form>
-      </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

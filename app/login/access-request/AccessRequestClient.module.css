@@ -1,0 +1,56 @@
+﻿.introBase {
+  opacity: 0;
+  transform: translateY(12px) scale(0.99);
+  animation: introFade 0.7s ease forwards;
+}
+
+.introDelay1 {
+  animation-delay: 0.05s;
+}
+
+.introDelay2 {
+  animation-delay: 0.18s;
+}
+
+.introDelay3 {
+  animation-delay: 0.32s;
+}
+
+.modalOverlay {
+  animation: overlayFade 0.2s ease;
+}
+
+.modalPanel {
+  animation: modalPop 0.25s ease;
+}
+
+@keyframes introFade {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes overlayFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes modalPop {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

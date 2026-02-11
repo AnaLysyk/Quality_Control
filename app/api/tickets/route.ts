@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { createTicket, listTicketsForUser } from "@/lib/ticketsStore";
+import { notifyTicketCreated } from "@/lib/notificationService";
 
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
@@ -33,6 +34,10 @@ export async function POST(req: Request) {
   if (!ticket) {
     return NextResponse.json({ error: "Informe titulo ou descricao" }, { status: 400 });
   }
+
+  notifyTicketCreated(ticket).catch((err) => {
+    console.error("Falha ao notificar novo chamado:", err);
+  });
 
   return NextResponse.json({ item: ticket }, { status: 201 });
 }

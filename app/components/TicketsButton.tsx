@@ -13,6 +13,10 @@ type TicketItem = {
   status: TicketStatus;
   createdAt: string;
   updatedAt: string;
+  createdBy?: string | null;
+  createdByName?: string | null;
+  createdByEmail?: string | null;
+  companySlug?: string | null;
 };
 
 type DraftTicket = {
@@ -68,7 +72,8 @@ export default function TicketsButton() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/tickets", { credentials: "include", cache: "no-store" });
+      const endpoint = user.isGlobalAdmin ? "/api/admin/tickets" : "/api/tickets";
+      const res = await fetch(endpoint, { credentials: "include", cache: "no-store" });
       const json = (await res.json().catch(() => ({}))) as { items?: TicketItem[]; error?: string };
       if (!res.ok) {
         setItems([]);
@@ -267,6 +272,9 @@ export default function TicketsButton() {
               const isExpanded = expandedId === ticket.id;
               const isEditing = editingId === ticket.id;
               const localDraft = isEditing && draft ? draft : null;
+              const currentUserId = user?.id ?? user?.userId ?? "";
+              const canEdit = !user?.isGlobalAdmin || ticket.createdBy === currentUserId || !ticket.createdBy;
+              const creatorLabel = ticket.createdByName || ticket.createdByEmail || ticket.createdBy || "";
 
               return (
                 <div
@@ -283,6 +291,12 @@ export default function TicketsButton() {
                       <p className="text-xs text-(--tc-text-muted,#6b7280)">
                         Atualizado em {new Date(ticket.updatedAt).toLocaleString("pt-BR")}
                       </p>
+                      {user?.isGlobalAdmin && creatorLabel && (
+                        <p className="text-xs text-(--tc-text-muted,#6b7280)">
+                          Criado por {creatorLabel}
+                          {ticket.companySlug ? ` · ${ticket.companySlug}` : ""}
+                        </p>
+                      )}
                     </div>
                     <span className={`text-[10px] uppercase tracking-[0.25em] px-2 py-1 rounded ${statusStyle(ticket.status)}`}>
                       {statusLabel(ticket.status)}
@@ -291,6 +305,11 @@ export default function TicketsButton() {
 
                   {isExpanded && (
                     <div className="mt-3 space-y-3">
+                      {!canEdit && (
+                        <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
+                          Somente leitura
+                        </p>
+                      )}
                       {isEditing && localDraft ? (
                         <>
                           <input
@@ -343,20 +362,24 @@ export default function TicketsButton() {
                             {ticket.description || "Sem descricao."}
                           </p>
                           <div className="flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              onClick={() => startEdit(ticket)}
-                              className="inline-flex items-center gap-2 rounded-lg bg-(--tc-surface-dark,#0b1a3c) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
-                            >
-                              <FiEdit2 size={14} /> Editar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => deleteTicket(ticket.id)}
-                              className="inline-flex items-center gap-2 rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
-                            >
-                              <FiTrash2 size={14} /> Excluir
-                            </button>
+                            {canEdit && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => startEdit(ticket)}
+                                  className="inline-flex items-center gap-2 rounded-lg bg-(--tc-surface-dark,#0b1a3c) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
+                                >
+                                  <FiEdit2 size={14} /> Editar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => deleteTicket(ticket.id)}
+                                  className="inline-flex items-center gap-2 rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                                >
+                                  <FiTrash2 size={14} /> Excluir
+                                </button>
+                              </>
+                            )}
                             <button
                               type="button"
                               onClick={() => setExpandedId(null)}

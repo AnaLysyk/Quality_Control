@@ -2,6 +2,7 @@ import "server-only";
 
 import type { RequestRecord } from "@/data/requestsStore";
 import type { Release } from "@/types/release";
+import type { TicketRecord } from "@/lib/ticketsStore";
 import {
   closeNotificationsByDedupeKey,
   createNotificationsForUsers,
@@ -119,5 +120,20 @@ export async function notifyManualRunFailure(
     companySlug,
     link,
     dedupeKey: `run:${runSlug}:fail`,
+  });
+}
+
+export async function notifyTicketCreated(ticket: TicketRecord) {
+  const recipients = await resolveAdminUserIds();
+  if (!recipients.length) return;
+  const requester = ticket.createdByName || ticket.createdByEmail || "Usuario";
+  const companyLabel = ticket.companySlug ? ` (${ticket.companySlug})` : "";
+  await createNotificationsForUsers(recipients, {
+    type: "TICKET_CREATED",
+    title: "Novo chamado",
+    description: `${requester}${companyLabel}: ${ticket.title}`,
+    companySlug: ticket.companySlug ?? null,
+    link: "/admin/chamados",
+    dedupeKey: `ticket:${ticket.id}`,
   });
 }

@@ -3,6 +3,7 @@ import "server-only";
 import { randomUUID } from "crypto";
 import path from "node:path";
 import fs from "node:fs/promises";
+import { getRedis, isRedisConfigured } from "@/lib/redis";
 
 export type NotificationStatus = "unread" | "closed";
 export type NotificationType =
@@ -11,7 +12,8 @@ export type NotificationType =
   | "PASSWORD_RESET_REQUEST"
   | "PASSWORD_RESET_PENDING"
   | "PASSWORD_RESET_APPROVED"
-  | "PASSWORD_RESET_REJECTED";
+  | "PASSWORD_RESET_REJECTED"
+  | "TICKET_CREATED";
 
 export type UserNotification = {
   id: string;
@@ -30,30 +32,80 @@ export type UserNotification = {
 type NotificationsStore = Record<string, UserNotification[]>;
 
 const STORE_PATH = path.join(process.cwd(), "data", "user-notifications.json");
+const STORE_KEY = "qc:user_notifications:v1";
+const USE_REDIS =
+  process.env.NOTIFICATIONS_STORE === "redis" || isRedisConfigured();
+const USE_MEMORY =
+  process.env.NOTIFICATIONS_IN_MEMORY === "true" ||
+  (!USE_REDIS && process.env.VERCEL === "1");
+let memoryStore: NotificationsStore = {};
+let warnedFsFailure = false;
 
-async function ensureStore() {
-  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
+async function ensureStore(): Promise<boolean> {
   try {
+    await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
     await fs.access(STORE_PATH);
+    return true;
   } catch {
-    await fs.writeFile(STORE_PATH, JSON.stringify({}), "utf8");
+    try {
+      await fs.writeFile(STORE_PATH, JSON.stringify({}), "utf8");
+      return true;
+    } catch {
+      if (!warnedFsFailure) {
+        warnedFsFailure = true;
+        console.warn("[NOTIFICATIONS] Falha ao acessar filesystem; usando fallback em memoria.");
+      }
+      return false;
+    }
   }
 }
 
 async function readStore(): Promise<NotificationsStore> {
-  await ensureStore();
+  if (USE_REDIS) {
+    const redis = getRedis();
+    const raw = await redis.get<string>(STORE_KEY);
+    if (!raw) return {};
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? (parsed as NotificationsStore) : {};
+    } catch {
+      return {};
+    }
+  }
+  if (USE_MEMORY) {
+    return memoryStore;
+  }
+  const ok = await ensureStore();
+  if (!ok) return memoryStore;
   try {
     const raw = await fs.readFile(STORE_PATH, "utf8");
     const parsed = JSON.parse(raw);
     return parsed && typeof parsed === "object" ? (parsed as NotificationsStore) : {};
   } catch {
-    return {};
+    return memoryStore;
   }
 }
 
 async function writeStore(next: NotificationsStore) {
-  await ensureStore();
-  await fs.writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
+  if (USE_REDIS) {
+    const redis = getRedis();
+    await redis.set(STORE_KEY, JSON.stringify(next));
+    return;
+  }
+  if (USE_MEMORY) {
+    memoryStore = next;
+    return;
+  }
+  const ok = await ensureStore();
+  if (!ok) {
+    memoryStore = next;
+    return;
+  }
+  try {
+    await fs.writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
+  } catch {
+    memoryStore = next;
+  }
 }
 
 function sanitizeText(value: unknown, max: number, fallback = "") {

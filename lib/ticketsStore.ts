@@ -3,6 +3,7 @@ import "server-only";
 import { randomUUID } from "crypto";
 import path from "node:path";
 import fs from "node:fs/promises";
+import { getRedis, isRedisConfigured } from "@/lib/redis";
 
 export type TicketStatus = "open" | "in_progress" | "closed";
 
@@ -25,30 +26,79 @@ type TicketsStore = {
 };
 
 const STORE_PATH = path.join(process.cwd(), "data", "support-tickets.json");
+const STORE_KEY = "qc:support_tickets:v1";
+const USE_REDIS = process.env.TICKETS_STORE === "redis" || isRedisConfigured();
+const USE_MEMORY =
+  process.env.TICKETS_IN_MEMORY === "true" ||
+  (!USE_REDIS && process.env.VERCEL === "1");
+let memoryStore: TicketsStore = { items: [] };
+let warnedFsFailure = false;
 
-async function ensureStore() {
-  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
+async function ensureStore(): Promise<boolean> {
   try {
+    await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
     await fs.access(STORE_PATH);
+    return true;
   } catch {
-    await fs.writeFile(STORE_PATH, JSON.stringify({ items: [] }, null, 2), "utf8");
+    try {
+      await fs.writeFile(STORE_PATH, JSON.stringify({ items: [] }, null, 2), "utf8");
+      return true;
+    } catch (err) {
+      if (!warnedFsFailure) {
+        warnedFsFailure = true;
+        console.warn("[TICKETS] Falha ao acessar filesystem; usando fallback em memoria.");
+      }
+      return false;
+    }
   }
 }
 
 async function readStore(): Promise<TicketsStore> {
-  await ensureStore();
+  if (USE_REDIS) {
+    const redis = getRedis();
+    const raw = await redis.get<string>(STORE_KEY);
+    if (!raw) return { items: [] };
+    try {
+      const parsed = JSON.parse(raw) as TicketsStore;
+      return Array.isArray(parsed?.items) ? parsed : { items: [] };
+    } catch {
+      return { items: [] };
+    }
+  }
+  if (USE_MEMORY) {
+    return memoryStore;
+  }
+  const ok = await ensureStore();
+  if (!ok) return memoryStore;
   try {
     const raw = await fs.readFile(STORE_PATH, "utf8");
     const parsed = JSON.parse(raw) as TicketsStore;
     return Array.isArray(parsed?.items) ? parsed : { items: [] };
   } catch {
-    return { items: [] };
+    return memoryStore;
   }
 }
 
 async function writeStore(next: TicketsStore) {
-  await ensureStore();
-  await fs.writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
+  if (USE_REDIS) {
+    const redis = getRedis();
+    await redis.set(STORE_KEY, JSON.stringify(next));
+    return;
+  }
+  if (USE_MEMORY) {
+    memoryStore = next;
+    return;
+  }
+  const ok = await ensureStore();
+  if (!ok) {
+    memoryStore = next;
+    return;
+  }
+  try {
+    await fs.writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
+  } catch {
+    memoryStore = next;
+  }
 }
 
 function sanitizeText(value: unknown, max: number) {

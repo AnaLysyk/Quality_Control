@@ -122,20 +122,10 @@ export async function writeAlertsStore(alerts: QualityAlert[]): Promise<void> {
 }
 
 async function safeFetch(input: RequestInfo, init?: RequestInit) {
-  // Prefer global fetch when available (Node 18+, browsers, runtimes)
-  if (typeof (globalThis as any).fetch === "function") {
-    return (globalThis as any).fetch(input, init);
+  if (typeof fetch !== "function") {
+    throw new Error("fetch is not available in this runtime");
   }
-  // Try dynamic imports for common node fetch packages if available
-  try {
-    const nodeFetch = await import("node-fetch").then((m) => (m.default ?? m) as any).catch(() => null);
-    if (nodeFetch) return nodeFetch(input as any, init as any);
-  } catch {}
-  try {
-    const undici = await import("undici").then((m) => (m.fetch ?? null) as any).catch(() => null);
-    if (undici) return undici(input as any, init as any);
-  } catch {}
-  throw new Error("fetch is not available in this runtime");
+  return fetch(input, init);
 }
 
 export async function sendQualityAlert({ companySlug, type, severity, message, metadata, timestamp }: QualityAlertInput): Promise<boolean> {

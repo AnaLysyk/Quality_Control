@@ -909,7 +909,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                 {timelineItems.map((item, idx) => (
                   <div key={`${item.at}-${idx}`} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3">
                     <p className="text-sm font-semibold text-(--tc-text,#0f172a)">
-                      {getTicketStatusLabel(item.from, selectableStatusOptions)} -> {getTicketStatusLabel(item.to, selectableStatusOptions)}
+                      {getTicketStatusLabel(item.from, selectableStatusOptions)}{" -> "}{getTicketStatusLabel(item.to, selectableStatusOptions)}
                     </p>
                     <p className="text-[11px] text-(--tc-text-muted,#6b7280)">
                       {item.changedById} • {new Date(item.at).toLocaleString("pt-BR")}

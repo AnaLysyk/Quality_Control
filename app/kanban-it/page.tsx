@@ -347,6 +347,9 @@ export default function KanbanItPage() {
                       cancelEditColumn();
                     }
                   }}
+                  placeholder="Nome da coluna"
+                  title="Editar nome da coluna"
+                  aria-label="Editar nome da coluna"
                   className="w-full rounded-md border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
                 />
               ) : (

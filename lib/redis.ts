@@ -86,11 +86,28 @@ let redis: RedisClient | null = null;
 let mockRedis: InMemoryRedis | null = null;
 let warnedRedisMissing = false;
 
+function resolveRedisEnv(): { url: string; token: string } | null {
+  const kvUrl = process.env.KV_REST_API_URL;
+  const kvToken = process.env.KV_REST_API_TOKEN;
+  if (kvUrl && kvToken) {
+    return { url: kvUrl, token: kvToken };
+  }
+
+  const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
+  const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (upstashUrl && upstashToken) {
+    return { url: upstashUrl, token: upstashToken };
+  }
+
+  return null;
+}
+
 export function getRedis() {
   if (redis) return redis;
 
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const resolved = resolveRedisEnv();
+  const url = resolved?.url;
+  const token = resolved?.token;
 
   if (!url || !token) {
     // Graceful degrade: never block auth/public APIs; use in-memory (non-persistent).
@@ -98,7 +115,9 @@ export function getRedis() {
     redis = mockRedis;
     if (!warnedRedisMissing) {
       warnedRedisMissing = true;
-      console.warn("[REDIS] UPSTASH_REDIS_REST_URL/TOKEN ausentes; usando fallback em memoria (nao persistente).");
+      console.warn(
+        "[REDIS] UPSTASH_REDIS_REST_URL/TOKEN ou KV_REST_API_URL/TOKEN ausentes; usando fallback em memoria (nao persistente).",
+      );
     }
     return redis;
   }
@@ -111,7 +130,5 @@ export function getRedis() {
 export { redis };
 
 export function isRedisConfigured(): boolean {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  return Boolean(url && token);
+  return resolveRedisEnv() !== null;
 }

@@ -84,44 +84,50 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  const body = await req.json().catch(() => ({}));
-  const localUser = await getLocalUserById(user.id);
-  const assignedToUserId =
-    canAssignTicket(user) && typeof body?.assignedToUserId === "string" ? body.assignedToUserId : null;
-  const tags =
-    Array.isArray(body?.tags) ? body.tags : typeof body?.tags === "string" ? body.tags.split(",") : undefined;
+  try {
+    const body = await req.json().catch(() => ({}));
+    const localUser = await getLocalUserById(user.id);
+    const assignedToUserId =
+      canAssignTicket(user) && typeof body?.assignedToUserId === "string" ? body.assignedToUserId : null;
+    const tags =
+      Array.isArray(body?.tags) ? body.tags : typeof body?.tags === "string" ? body.tags.split(",") : undefined;
 
-  const ticket = await createTicket({
-    title: body?.title,
-    description: body?.description,
-    type: body?.type,
-    priority: body?.priority,
-    tags,
-    assignedToUserId,
-    createdBy: user.id,
-    createdByName: localUser?.name ?? null,
-    createdByEmail: localUser?.email ?? null,
-    companySlug: user.companySlug ?? null,
-    companyId: user.companyId ?? null,
-  });
+    const ticket = await createTicket({
+      title: body?.title,
+      description: body?.description,
+      type: body?.type,
+      priority: body?.priority,
+      tags,
+      assignedToUserId,
+      createdBy: user.id,
+      createdByName: localUser?.name ?? null,
+      createdByEmail: localUser?.email ?? null,
+      companySlug: user.companySlug ?? null,
+      companyId: user.companyId ?? null,
+    });
 
-  if (!ticket) {
-    return NextResponse.json({ error: "Informe titulo ou descricao" }, { status: 400 });
+    if (!ticket) {
+      return NextResponse.json({ error: "Informe titulo ou descricao" }, { status: 400 });
+    }
+
+    appendTicketEvent({
+      ticketId: ticket.id,
+      type: "CREATED",
+      actorUserId: user.id,
+      payload: { title: ticket.title },
+    }).catch((err) => {
+      console.error("Falha ao registrar evento de chamado:", err);
+    });
+
+    notifyTicketCreated(ticket).catch((err) => {
+      console.error("Falha ao notificar novo chamado:", err);
+    });
+
+    const enriched = await attachAssigneeToTicket(ticket);
+    return NextResponse.json({ item: enriched }, { status: 201 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Erro ao criar chamado";
+    console.error("[tickets] Falha ao criar chamado:", err);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  appendTicketEvent({
-    ticketId: ticket.id,
-    type: "CREATED",
-    actorUserId: user.id,
-    payload: { title: ticket.title },
-  }).catch((err) => {
-    console.error("Falha ao registrar evento de chamado:", err);
-  });
-
-  notifyTicketCreated(ticket).catch((err) => {
-    console.error("Falha ao notificar novo chamado:", err);
-  });
-
-  const enriched = await attachAssigneeToTicket(ticket);
-  return NextResponse.json({ item: enriched }, { status: 201 });
 }

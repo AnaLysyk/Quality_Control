@@ -51,6 +51,14 @@ class InMemoryRedis {
     return 1;
   }
 
+  async incr(key: string) {
+    const currentRaw = await this.get<string>(key);
+    const current = Number.parseInt(String(currentRaw ?? "0"), 10);
+    const next = Number.isFinite(current) ? current + 1 : 1;
+    await this.set(key, String(next));
+    return next;
+  }
+
   async keys(pattern: string) {
     const regex = patternToRegex(pattern);
     return Array.from(this.store.keys()).filter((key) => {

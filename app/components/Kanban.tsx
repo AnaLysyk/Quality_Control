@@ -235,7 +235,7 @@ export default function Kanban({
 
   async function persistKanbanUpdate(payload: KanbanPayload, method: "POST" | "PATCH" = "PATCH") {
     const endpoint = persistEndpoint || "/api/kanban";
-    const shouldAugmentDefaultEndpoint = endpoint === "/api/kanban";
+    const shouldAugmentDefaultEndpoint = endpoint === "/api/kanban" || endpoint.startsWith("/api/kanban?");
     const normalizedPayload = shouldAugmentDefaultEndpoint
       ? {
           project: projectAbbr || project,

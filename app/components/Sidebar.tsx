@@ -207,8 +207,22 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
               alt="Logo"
               width={48}
               height={48}
-              className="object-contain p-1 pointer-events-none select-none sidebar-logo-image"
+              className="object-contain p-1 pointer-events-none select-none sidebar-logo-image sidebar-logo-full"
             />
+            <svg
+              viewBox="0 0 64 64"
+              aria-hidden="true"
+              className="absolute inset-0 m-auto h-7 w-7 text-slate-900 dark:text-white sidebar-logo-icon"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="32" cy="32" r="26" />
+              <path d="M24 40l16-16" />
+              <path d="M22 46h20" />
+            </svg>
           </div>
           <div className="flex flex-col leading-tight transition duration-200 whitespace-nowrap sidebar-brand">
             <span className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-white/55">Plataforma</span>
@@ -244,14 +258,28 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
         >
           <div className="flex items-center gap-3 p-4 border-b border-slate-200 dark:border-white/10 relative">
             <Link href={logoHref} prefetch={false} className="flex items-center gap-3" onClick={onClose}>
-              <div className="flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-white/5">
+              <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-white/5">
                 <Image
                   src={logoSrc}
                   alt="Logo"
                   width={48}
                   height={48}
-                  className="object-contain p-1 pointer-events-none select-none sidebar-logo-image"
+                  className="object-contain p-1 pointer-events-none select-none sidebar-logo-image sidebar-logo-full"
                 />
+                <svg
+                  viewBox="0 0 64 64"
+                  aria-hidden="true"
+                  className="absolute inset-0 m-auto h-7 w-7 text-slate-900 dark:text-white sidebar-logo-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="32" cy="32" r="26" />
+                  <path d="M24 40l16-16" />
+                  <path d="M22 46h20" />
+                </svg>
               </div>
               <div className="flex flex-col">
                 <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/55">Plataforma</span>

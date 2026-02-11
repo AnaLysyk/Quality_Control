@@ -593,6 +593,13 @@ video {
   --sidebar-expanded: 260px;
 }
 
+.sidebar-logo-icon {
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
 @media (min-width: 1024px) {
   .app-shell .sidebar-shell {
     width: var(--sidebar-collapsed);
@@ -631,12 +638,20 @@ video {
     padding-right: 0;
   }
   .app-shell .sidebar-shell:not(:hover) .sidebar-logo-mark {
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
   }
   .app-shell .sidebar-shell:not(:hover) .sidebar-logo-image {
-    object-position: left center;
-    transform: translateX(-6px) scale(1.18);
+    object-position: center;
+    transform: none;
+  }
+  .app-shell .sidebar-shell:not(:hover) .sidebar-logo-full {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  .app-shell .sidebar-shell:not(:hover) .sidebar-logo-icon {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 /* CENTRALIZAR GRAFICOS NA IMPRESSÃO */
@@ -718,6 +733,79 @@ video {
 .w-pct-48 { width: 48%; }
 .w-pct-49 { width: 49%; }
 .w-pct-50 { width: 50%; }
+
+/* Access request comments chat */
+.comments-chat {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.comments-chat-list {
+  max-height: 280px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 4px;
+}
+
+.comments-chat-empty {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.comments-chat-message {
+  max-width: min(70%, 520px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.comments-chat-message.mine {
+  align-self: flex-end;
+}
+
+.comments-chat-message.other {
+  align-self: flex-start;
+}
+
+.comments-chat-author {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.comments-chat-bubble {
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #1e293b;
+  background: #f3f4f6;
+}
+
+.comments-chat-message.mine .comments-chat-bubble {
+  background: #e0f2ff;
+}
+
+.comments-chat-meta {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.comments-chat-input {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comments-chat-actions {
+  display: flex;
+  justify-content: flex-end;
+}
 .w-pct-51 { width: 51%; }
 .w-pct-52 { width: 52%; }
 .w-pct-53 { width: 53%; }

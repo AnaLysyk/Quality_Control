@@ -627,43 +627,49 @@ function AccessRequestsPage() {
                     </div>
                   )}
 
-                  {comments.length === 0 ? (
-                    <p className="text-xs text-[#94a3b8]">Nenhum comentario ainda.</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {comments.map((comment) => (
-                        <div key={comment.id} className="rounded-lg bg-white px-3 py-2 shadow-sm">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-xs font-semibold text-[#1e293b]">
-                              {comment.authorRole === "admin" ? "Admin" : "Solicitante"}: {comment.authorName}
-                            </p>
-                            <span className="text-[11px] text-[#94a3b8]">
-                              {new Date(comment.createdAt).toLocaleString("pt-BR")}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-sm text-[#475569] whitespace-pre-wrap">{comment.body}</p>
-                        </div>
-                      ))}
+                  <div className="comments-chat">
+                    <div className="comments-chat-list" aria-live="polite">
+                      {comments.length === 0 ? (
+                        <p className="comments-chat-empty">Nenhum comentario ainda.</p>
+                      ) : (
+                        comments.map((comment) => {
+                          const mine = comment.authorRole === "admin";
+                          return (
+                            <div
+                              key={comment.id}
+                              className={`comments-chat-message ${mine ? "mine" : "other"}`}
+                            >
+                              <div className="comments-chat-author">
+                                {comment.authorRole === "admin" ? "Admin" : "Solicitante"}: {comment.authorName}
+                              </div>
+                              <div className="comments-chat-bubble whitespace-pre-wrap">{comment.body}</div>
+                              <div className="comments-chat-meta">
+                                {new Date(comment.createdAt).toLocaleString("pt-BR")}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
-                  )}
 
-                  <div className="space-y-2">
-                    <textarea
-                      className={`${inputBase} mt-0`}
-                      rows={3}
-                      placeholder="Responder comentario"
-                      value={commentDraft}
-                      onChange={(e) => setCommentDraft(e.target.value)}
-                    />
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={submitComment}
-                        disabled={commentSaving || !commentDraft.trim()}
-                        className="rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#1e293b] transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
-                      >
-                        {commentSaving ? "Enviando..." : "Enviar comentario"}
-                      </button>
+                    <div className="comments-chat-input">
+                      <textarea
+                        className={`${inputBase} mt-0`}
+                        rows={3}
+                        placeholder="Responder comentario"
+                        value={commentDraft}
+                        onChange={(e) => setCommentDraft(e.target.value)}
+                      />
+                      <div className="comments-chat-actions">
+                        <button
+                          type="button"
+                          onClick={submitComment}
+                          disabled={commentSaving || !commentDraft.trim()}
+                          className="rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#1e293b] transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
+                        >
+                          {commentSaving ? "Enviando..." : "Enviar comentario"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

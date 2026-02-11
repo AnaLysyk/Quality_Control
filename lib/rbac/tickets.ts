@@ -26,7 +26,7 @@ function hasCompanyAccess(user: AuthUser, ticket: TicketRecord) {
 
 export function canViewTicket(user: AuthUser | null, ticket: TicketRecord) {
   if (!user) return false;
-  if (isItDev(user)) return hasCompanyAccess(user, ticket);
+  if (isItDev(user)) return true;
   return ticket.createdBy === user.id;
 }
 
@@ -36,7 +36,7 @@ export function canCommentTicket(user: AuthUser | null, ticket: TicketRecord) {
 
 export function canEditTicketContent(user: AuthUser | null, ticket: TicketRecord) {
   if (!user) return false;
-  if (isItDev(user)) return hasCompanyAccess(user, ticket);
+  if (isItDev(user)) return true;
   return ticket.createdBy === user.id;
 }
 
@@ -44,12 +44,12 @@ export function canAssignTicket(user: AuthUser | null, ticket?: TicketRecord) {
   if (!user) return false;
   if (!isItDev(user)) return false;
   if (!ticket) return true;
-  return hasCompanyAccess(user, ticket);
+  return true;
 }
 
 export function canMoveTicket(user: AuthUser | null, ticket?: TicketRecord) {
   if (!user) return false;
   if (!isItDev(user)) return false;
   if (!ticket) return true;
-  return hasCompanyAccess(user, ticket);
+  return true;
 }

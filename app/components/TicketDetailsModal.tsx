@@ -233,7 +233,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     setLoadingComments(true);
     setCommentError(null);
     try {
-      const res = await fetch(`/api/tickets/${ticketId}/comments`, { credentials: "include", cache: "no-store" });
+      const res = await fetch(`/api/chamados/${ticketId}/comments`, { credentials: "include", cache: "no-store" });
       const json = (await res.json().catch(() => ({}))) as { items?: TicketComment[]; error?: string };
       if (!res.ok) {
         setCommentError(json?.error || "Erro ao carregar comentarios");
@@ -253,7 +253,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     if (!ticketId) return;
     setLoadingEvents(true);
     try {
-      const res = await fetch(`/api/tickets/${ticketId}/events`, { credentials: "include", cache: "no-store" });
+      const res = await fetch(`/api/chamados/${ticketId}/events`, { credentials: "include", cache: "no-store" });
       const json = (await res.json().catch(() => ({}))) as { items?: TicketEvent[] };
       if (!res.ok) {
         setEvents([]);
@@ -269,7 +269,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     if (!ticketId) return;
     setTimelineLoading(true);
     try {
-      const res = await fetch(`/api/tickets/${ticketId}/timeline`, { credentials: "include", cache: "no-store" });
+      const res = await fetch(`/api/chamados/${ticketId}/timeline`, { credentials: "include", cache: "no-store" });
       const json = (await res.json().catch(() => ({}))) as { items?: TimelineItem[] };
       if (!res.ok) {
         setTimelineItems([]);
@@ -294,7 +294,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     setCommentSaving(true);
     setCommentError(null);
     try {
-      const res = await fetch(`/api/tickets/${ticketId}/comments`, {
+      const res = await fetch(`/api/chamados/${ticketId}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

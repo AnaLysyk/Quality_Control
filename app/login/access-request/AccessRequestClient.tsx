@@ -616,43 +616,51 @@ export default function AccessRequestClient() {
 
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-[#011848]">Comentários</p>
-                  {lookupComments.length === 0 ? (
-                    <p className="text-xs text-[#64748b]">Nenhum comentário ainda.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {lookupComments.map((comment) => (
-                        <div key={comment.id} className="rounded-lg border bg-white px-3 py-2">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-xs font-semibold text-[#011848]">
-                              {comment.authorRole === "admin" ? "Admin" : "Solicitante"}: {comment.authorName}
-                            </p>
-                            <span className="text-[11px] text-[#64748b]">
-                              {new Date(comment.createdAt).toLocaleString("pt-BR")}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-sm text-[#334155] whitespace-pre-wrap">{comment.body}</p>
-                        </div>
-                      ))}
+                  <div className="comments-chat">
+                    <div className="comments-chat-list" aria-live="polite">
+                      {lookupComments.length === 0 ? (
+                        <p className="comments-chat-empty">Nenhum comentário ainda.</p>
+                      ) : (
+                        lookupComments.map((comment) => {
+                          const mine = comment.authorRole === "requester";
+                          return (
+                            <div
+                              key={comment.id}
+                              className={`comments-chat-message ${mine ? "mine" : "other"}`}
+                            >
+                              <div className="comments-chat-author">
+                                {comment.authorRole === "admin" ? "Admin" : "Solicitante"}: {comment.authorName}
+                              </div>
+                              <div className="comments-chat-bubble whitespace-pre-wrap">{comment.body}</div>
+                              <div className="comments-chat-meta">
+                                {new Date(comment.createdAt).toLocaleString("pt-BR")}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
-                  )}
-                </div>
 
-                <div className="space-y-2">
-                  <textarea
-                    className={textareaBase}
-                    rows={3}
-                    placeholder="Adicionar comentário"
-                    value={commentDraft}
-                    onChange={(event) => setCommentDraft(event.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSubmitComment}
-                    disabled={commentSubmitting || !commentDraft.trim()}
-                    className="rounded-xl border border-[#011848]/15 bg-white px-4 py-2 text-xs font-semibold text-[#011848] transition hover:bg-[#011848]/5 disabled:opacity-60"
-                  >
-                    {commentSubmitting ? "Enviando..." : "Enviar comentário"}
-                  </button>
+                    <div className="comments-chat-input">
+                      <textarea
+                        className={textareaBase}
+                        rows={3}
+                        placeholder="Adicionar comentário"
+                        value={commentDraft}
+                        onChange={(event) => setCommentDraft(event.target.value)}
+                      />
+                      <div className="comments-chat-actions">
+                        <button
+                          type="button"
+                          onClick={handleSubmitComment}
+                          disabled={commentSubmitting || !commentDraft.trim()}
+                          className="rounded-xl border border-[#011848]/15 bg-white px-4 py-2 text-xs font-semibold text-[#011848] transition hover:bg-[#011848]/5 disabled:opacity-60"
+                        >
+                          {commentSubmitting ? "Enviando..." : "Enviar comentário"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

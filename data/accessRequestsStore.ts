@@ -3,6 +3,7 @@ import "server-only";
 import { randomUUID } from "crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { getJsonStorePath } from "./jsonStorePath";
 
 export type AccessRequestStatus = "open" | "closed" | "rejected" | "in_progress";
 
@@ -20,7 +21,7 @@ export type AccessRequestRecord = {
 
 type StorePayload = { items: AccessRequestRecord[] };
 
-const STORE_PATH = path.join(process.cwd(), "data", "access-requests.json");
+const STORE_PATH = getJsonStorePath("access-requests.json");
 
 async function ensureStore() {
   await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
@@ -104,4 +105,3 @@ export async function updateAccessRequest(
   await writeStore(store);
   return updated;
 }
-

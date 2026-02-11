@@ -3,6 +3,7 @@ import "server-only";
 import { randomUUID } from "crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { getJsonStorePath } from "./jsonStorePath";
 
 export type RequestUser = {
   id: string;
@@ -33,7 +34,7 @@ export type RequestRecord = {
 
 type StorePayload = { items: RequestRecord[] };
 
-const STORE_PATH = path.join(process.cwd(), "data", "requests-store.json");
+const STORE_PATH = getJsonStorePath("requests-store.json");
 const DEFAULT_ITEMS: RequestRecord[] = [
   {
     id: "req_sample_email",

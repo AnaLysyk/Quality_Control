@@ -3,6 +3,7 @@ import "server-only";
 import { randomUUID } from "crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { getJsonStorePath } from "./jsonStorePath";
 
 export type AccessRequestComment = {
   id: string;
@@ -17,7 +18,7 @@ export type AccessRequestComment = {
 
 type StorePayload = { items: AccessRequestComment[] };
 
-const STORE_PATH = path.join(process.cwd(), "data", "access-request-comments.json");
+const STORE_PATH = getJsonStorePath("access-request-comments.json");
 
 async function ensureStore() {
   await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });

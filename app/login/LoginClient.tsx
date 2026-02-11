@@ -83,7 +83,7 @@ export default function LoginClient() {
         styles.loginContainer +
         " " +
         styles.loginFixedTheme +
-        " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-10 sm:px-6 md:px-10"
+        " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-8 sm:px-6 sm:py-10 md:px-10"
       }
     >
       <div className="absolute inset-0 pointer-events-none">
@@ -97,12 +97,14 @@ export default function LoginClient() {
         <div className="absolute top-1/2 right-2 w-14 h-14 bg-[#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
       </div>
 
-      <div className="max-w-lg w-full space-y-8 relative z-10 sm:max-w-xl md:max-w-2xl">
+      <div className="max-w-lg w-full space-y-6 sm:space-y-8 relative z-10 sm:max-w-xl md:max-w-2xl">
         <div className="text-center">
-          <div className={`relative mx-auto w-20 h-20 sm:w-24 sm:h-24 mb-6 ${styles.logoWrapper}`}>
+          <div
+            className={`relative mx-auto w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 mb-4 sm:mb-6 ${styles.logoWrapper}`}
+          >
             <div className="absolute inset-0 rounded-full bg-linear-to-r from-[#011848] to-[#ef0001] shadow-lg"></div>
-            <div className="absolute inset-2 rounded-full bg-transparent flex items-center justify-center overflow-hidden">
-              <div className="relative w-[70%] h-[70%]">
+            <div className="absolute inset-1 rounded-full bg-transparent flex items-center justify-center overflow-hidden">
+              <div className="relative w-[85%] h-[85%]">
                 <Image
                   src="/images/tc.png"
                   alt="Logo Quality Control"
@@ -113,7 +115,7 @@ export default function LoginClient() {
               </div>
             </div>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#011848] mb-2 leading-tight drop-shadow-sm">
+          <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-bold text-[#011848] mb-2 leading-tight drop-shadow-sm">
             Quality Control
           </h2>
           <p className="text-[#011848] font-medium drop-shadow-sm">Bem-vindo, entre na sua conta</p>

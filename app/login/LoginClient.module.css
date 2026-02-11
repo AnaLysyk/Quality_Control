@@ -22,6 +22,27 @@
   --page-text: #0b1a3c;
 }
 
+.logoWrapper {
+  animation: logoIntro 1.2s ease-out forwards;
+  opacity: 0;
+  transform: translateY(10px) scale(0.96);
+}
+
+@keyframes logoIntro {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (max-width: 640px) {
   .loginContainer {
     padding: 1rem;

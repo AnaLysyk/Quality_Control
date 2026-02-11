@@ -49,11 +49,11 @@ export async function GET(req: Request) {
     }));
   } else {
     try {
-      const list = await prisma.supportRequest.findMany({
+      const list = (await prisma.supportRequest.findMany({
         where: { email: rawEmail.trim().toLowerCase() },
         orderBy: { created_at: "desc" },
-      });
-      items = list.map((item) => ({
+      })) as SupportRequestRow[];
+      items = list.map((item: SupportRequestRow) => ({
         id: item.id,
         email: item.email,
         message: item.message,

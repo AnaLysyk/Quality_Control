@@ -4,6 +4,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import type { Release } from "@/types/release";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
+import { getRedis, isRedisConfigured } from "@/lib/redis";
 
 export type ManualCaseItem = {
   id: string;
@@ -35,6 +36,9 @@ const RELEASES_PATH = path.join(STORE_DIR, "releases-manual.json");
 const CASES_PATH = path.join(STORE_DIR, "releases-manual-cases.json");
 
 const USE_MEMORY_STORE = process.env.MANUAL_RELEASES_IN_MEMORY === "true";
+const USE_REDIS = !USE_E2E_STORAGE && isRedisConfigured();
+const REDIS_RELEASES_KEY = "qc:manualReleases";
+const REDIS_CASES_KEY = "qc:manualReleaseCases";
 
 function getGlobalStore<T>(key: string, fallback: T): StoreState<T> {
   const globalStores = (globalThis as GlobalStores).__qcManualStores ?? {};
@@ -79,8 +83,32 @@ async function writeJsonFile<T>(filePath: string, value: T, initial: string) {
   await fs.writeFile(filePath, JSON.stringify(value, null, 2), "utf8");
 }
 
+async function readRedisJson<T>(key: string): Promise<T | null> {
+  try {
+    const redis = getRedis();
+    const raw = await redis.get<string>(key);
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
+async function writeRedisJson<T>(key: string, value: T) {
+  const redis = getRedis();
+  await redis.set(key, JSON.stringify(value));
+}
+
 export async function readManualReleases(): Promise<Release[]> {
   if (!USE_MEMORY_STORE) {
+    if (USE_REDIS) {
+      const cached = await readRedisJson<Release[]>(REDIS_RELEASES_KEY);
+      if (cached) return Array.isArray(cached) ? cached.filter(Boolean) : [];
+      const seeded = await readJsonFile<Release[]>(RELEASES_PATH, [], "[]");
+      const normalized = Array.isArray(seeded) ? seeded.filter(Boolean) : [];
+      await writeRedisJson(REDIS_RELEASES_KEY, normalized);
+      return normalized;
+    }
     const data = await readJsonFile<Release[]>(RELEASES_PATH, [], "[]");
     return Array.isArray(data) ? data.filter(Boolean) : [];
   }
@@ -97,6 +125,10 @@ export async function readManualReleases(): Promise<Release[]> {
 export async function writeManualReleases(releases: Release[]) {
   const next = Array.isArray(releases) ? releases.filter(Boolean) : [];
   if (!USE_MEMORY_STORE) {
+    if (USE_REDIS) {
+      await writeRedisJson(REDIS_RELEASES_KEY, next);
+      return;
+    }
     await writeJsonFile(RELEASES_PATH, next, "[]");
     return;
   }
@@ -108,6 +140,14 @@ export async function writeManualReleases(releases: Release[]) {
 
 export async function readManualReleaseCases(): Promise<Record<string, ManualCaseItem[]>> {
   if (!USE_MEMORY_STORE) {
+    if (USE_REDIS) {
+      const cached = await readRedisJson<Record<string, ManualCaseItem[]>>(REDIS_CASES_KEY);
+      if (cached) return cached && typeof cached === "object" ? cached : {};
+      const seeded = await readJsonFile<Record<string, ManualCaseItem[]>>(CASES_PATH, {}, "{}");
+      const normalized = seeded && typeof seeded === "object" ? seeded : {};
+      await writeRedisJson(REDIS_CASES_KEY, normalized);
+      return normalized;
+    }
     const data = await readJsonFile<Record<string, ManualCaseItem[]>>(CASES_PATH, {}, "{}");
     return data && typeof data === "object" ? data : {};
   }
@@ -124,6 +164,10 @@ export async function readManualReleaseCases(): Promise<Record<string, ManualCas
 export async function writeManualReleaseCases(storeValue: Record<string, ManualCaseItem[]>) {
   const next = storeValue && typeof storeValue === "object" ? storeValue : {};
   if (!USE_MEMORY_STORE) {
+    if (USE_REDIS) {
+      await writeRedisJson(REDIS_CASES_KEY, next);
+      return;
+    }
     await writeJsonFile(CASES_PATH, next, "{}");
     return;
   }

@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
+import { getRedis, isRedisConfigured } from "@/lib/redis";
 
 export type DefectHistoryAction =
   | "created"
@@ -47,6 +48,8 @@ const STORE_DIR = USE_E2E_STORAGE
 const HISTORY_PATH = path.join(STORE_DIR, "defects-history.json");
 
 const USE_MEMORY_STORE = process.env.MANUAL_DEFECT_HISTORY_IN_MEMORY === "true";
+const USE_REDIS = !USE_E2E_STORAGE && isRedisConfigured();
+const REDIS_HISTORY_KEY = "qc:defectsHistory";
 
 function getGlobalStore<T>(key: string, fallback: T): StoreState<T> {
   const globalStores = (globalThis as GlobalStores).__qcManualStores ?? {};
@@ -91,8 +94,32 @@ async function writeJsonFile<T>(filePath: string, value: T, initial: string) {
   await fs.writeFile(filePath, JSON.stringify(value, null, 2), "utf8");
 }
 
+async function readRedisJson<T>(key: string): Promise<T | null> {
+  try {
+    const redis = getRedis();
+    const raw = await redis.get<string>(key);
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
+async function writeRedisJson<T>(key: string, value: T) {
+  const redis = getRedis();
+  await redis.set(key, JSON.stringify(value));
+}
+
 async function readStore(): Promise<Record<string, DefectHistoryEvent[]>> {
   if (!USE_MEMORY_STORE) {
+    if (USE_REDIS) {
+      const cached = await readRedisJson<Record<string, DefectHistoryEvent[]>>(REDIS_HISTORY_KEY);
+      if (cached) return cached && typeof cached === "object" ? cached : {};
+      const seeded = await readJsonFile<Record<string, DefectHistoryEvent[]>>(HISTORY_PATH, {}, "{}");
+      const normalized = seeded && typeof seeded === "object" ? seeded : {};
+      await writeRedisJson(REDIS_HISTORY_KEY, normalized);
+      return normalized;
+    }
     const data = await readJsonFile<Record<string, DefectHistoryEvent[]>>(HISTORY_PATH, {}, "{}");
     return data && typeof data === "object" ? data : {};
   }
@@ -109,6 +136,10 @@ async function readStore(): Promise<Record<string, DefectHistoryEvent[]>> {
 async function writeStore(next: Record<string, DefectHistoryEvent[]>) {
   const payload = next && typeof next === "object" ? next : {};
   if (!USE_MEMORY_STORE) {
+    if (USE_REDIS) {
+      await writeRedisJson(REDIS_HISTORY_KEY, payload);
+      return;
+    }
     await writeJsonFile(HISTORY_PATH, payload, "{}");
     return;
   }

@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { hasCapability, type Capability } from "@/lib/permissions";
+import { getJsonStoreDir } from "@/data/jsonStorePath";
 
 type ManualRelease = {
   id: string;
@@ -14,7 +15,7 @@ type ManualRelease = {
   createdAt: string;
 };
 
-const STORE_PATH = path.join(process.cwd(), "data", "release-manual-store.json");
+const STORE_PATH = path.join(getJsonStoreDir(), "release-manual-store.json");
 
 function normalizeRole(role?: string | null) {
   return (role ?? "").trim().toLowerCase();

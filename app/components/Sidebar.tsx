@@ -195,9 +195,9 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
         <Link
           href={logoHref}
           prefetch={false}
-          className="flex items-center gap-3 transition-all duration-200 justify-start w-full px-2"
+          className="flex items-center gap-3 transition-all duration-200 justify-start w-full px-2 sidebar-logo"
         >
-          <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 backdrop-blur dark:border-white/10 dark:bg-white/5">
+          <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 backdrop-blur dark:border-white/10 dark:bg-white/5 sidebar-logo-mark">
             <span
               className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(78,141,245,0.15),transparent_55%)]"
               aria-hidden
@@ -224,7 +224,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-white/55 transition duration-150 sidebar-divider">
                 Navegacao
               </p>
-              <span className="h-px flex-1 ml-3 bg-slate-200 dark:bg-white/15" aria-hidden />
+              <span className="h-px flex-1 ml-3 bg-slate-200 dark:bg-white/15 sidebar-divider-line" aria-hidden />
             </div>
             <div className="space-y-3">{renderNavLinks()}</div>
           </div>

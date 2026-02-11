@@ -615,9 +615,24 @@ video {
     transform: translateX(-6px);
     pointer-events: none;
   }
+  .app-shell .sidebar-shell:not(:hover) .sidebar-divider-line {
+    opacity: 0;
+    transform: scaleX(0.2);
+    transform-origin: left;
+  }
   .app-shell .sidebar-shell:not(:hover) .sidebar-link {
     justify-content: center;
     gap: 0;
+  }
+  .app-shell .sidebar-shell:not(:hover) .sidebar-logo {
+    justify-content: center;
+    gap: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .app-shell .sidebar-shell:not(:hover) .sidebar-logo-mark {
+    width: 44px;
+    height: 44px;
   }
 }
 /* CENTRALIZAR GRAFICOS NA IMPRESSÃO */

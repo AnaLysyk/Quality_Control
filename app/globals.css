@@ -624,6 +624,15 @@ video {
     transform: translateX(-6px);
     pointer-events: none;
   }
+  .app-shell .sidebar-shell:not(:hover) .sidebar-label,
+  .app-shell .sidebar-shell:not(:hover) .sidebar-brand {
+    flex: 0 0 0;
+    width: 0;
+    max-width: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
   .app-shell .sidebar-shell:not(:hover) .sidebar-divider-line {
     opacity: 0;
     transform: scaleX(0.2);

@@ -41,12 +41,14 @@ export function canEditTicketContent(user: AuthUser | null, ticket: TicketRecord
 }
 
 export function canAssignTicket(user: AuthUser | null, ticket?: TicketRecord) {
+  if (!user) return false;
   if (!isItDev(user)) return false;
   if (!ticket) return true;
   return hasCompanyAccess(user, ticket);
 }
 
 export function canMoveTicket(user: AuthUser | null, ticket?: TicketRecord) {
+  if (!user) return false;
   if (!isItDev(user)) return false;
   if (!ticket) return true;
   return hasCompanyAccess(user, ticket);

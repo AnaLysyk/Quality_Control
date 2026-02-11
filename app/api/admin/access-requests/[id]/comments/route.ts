@@ -5,6 +5,8 @@ import { shouldUseJsonStore } from "@/lib/storeMode";
 import { getAccessRequestById } from "@/data/accessRequestsStore";
 import { createAccessRequestComment, listAccessRequestComments } from "@/data/accessRequestCommentsStore";
 
+export const runtime = "nodejs";
+
 function sanitizeBody(value: unknown, max = 2000) {
   if (typeof value !== "string") return "";
   const trimmed = value.trim();
@@ -34,8 +36,13 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
   }
 
   const { id } = await context.params;
-  const comments = await listAccessRequestComments(id);
-  return NextResponse.json({ items: comments }, { status: 200 });
+  try {
+    const comments = await listAccessRequestComments(id);
+    return NextResponse.json({ items: comments }, { status: 200 });
+  } catch (error) {
+    console.error("Falha ao carregar comentarios (access-requests):", error);
+    return NextResponse.json({ items: [], error: "Falha ao carregar comentarios" }, { status: 200 });
+  }
 }
 
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {

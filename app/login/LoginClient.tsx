@@ -108,7 +108,7 @@ export default function LoginClient() {
                 width={64}
                 height={64}
                 priority
-                className="w-10 h-10 sm:w-12 sm:h-12 select-none pointer-events-none object-contain object-center animate-spin-slower"
+                className="w-[85%] h-[85%] select-none pointer-events-none object-contain object-center animate-spin-slower"
               />
             </div>
           </div>

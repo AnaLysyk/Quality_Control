@@ -294,9 +294,6 @@ export default function AccessRequestClient() {
 
       <div className="max-w-3xl w-full space-y-8 relative z-10">
         <div className={`text-center ${styles.introBase} ${styles.introDelay1}`}>
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/50 bg-white/70 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.35em] text-[#011848]/70">
-            Solicitação
-          </span>
           <h2 className="mt-5 text-3xl sm:text-4xl font-bold text-[#011848] mb-2 leading-tight drop-shadow-sm">
             Solicitações de acesso
           </h2>

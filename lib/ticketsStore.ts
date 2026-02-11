@@ -282,7 +282,6 @@ function startFlushLoop() {
   flushTimer = setInterval(() => {
     flushNow().catch(() => null);
   }, FLUSH_INTERVAL_MS);
-  // @ts-expect-error unref may not exist in all runtimes
   flushTimer?.unref?.();
 }
 
@@ -291,7 +290,6 @@ function startBackupLoop() {
   backupTimer = setInterval(() => {
     createBackup().catch(() => null);
   }, BACKUP_INTERVAL_MS);
-  // @ts-expect-error unref may not exist in all runtimes
   backupTimer?.unref?.();
 }
 

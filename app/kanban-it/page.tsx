@@ -257,7 +257,10 @@ export default function KanbanItPage() {
           <div
             key={columnKey}
             className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-3 min-h-[20rem]"
-            onDragOver={(e) => e.preventDefault()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+            }}
             onDrop={() => handleDrop(columnKey)}
           >
             <div className="flex items-center justify-between">
@@ -272,14 +275,16 @@ export default function KanbanItPage() {
               {(grouped[columnKey] ?? []).map((ticket) => {
                 const creatorLabel = ticket.createdByName || ticket.createdByEmail || ticket.createdBy || "-";
                 return (
-                  <div
-                    key={ticket.id}
-                    draggable
-                    onDragStart={() => handleDragStart(ticket)}
-                    className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 text-left shadow-sm"
-                  >
+                  <div key={ticket.id} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 text-left shadow-sm">
                     <button
                       type="button"
+                      draggable
+                      onDragStart={(event) => {
+                        event.dataTransfer.setData("text/plain", ticket.id);
+                        event.dataTransfer.effectAllowed = "move";
+                        handleDragStart(ticket);
+                      }}
+                      onDragEnd={() => setDragging(null)}
                       onClick={() => setSelectedTicket(ticket)}
                       className="w-full text-left"
                     >

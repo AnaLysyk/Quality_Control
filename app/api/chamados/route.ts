@@ -23,7 +23,7 @@ export async function GET(req: Request) {
   const limit = Math.max(1, Math.min(500, Number(url.searchParams.get("limit") ?? 200)));
   let items = scope === "all" ? await listAllTickets() : await listTicketsForUser(user.id);
 
-  if (scope === "all") {
+  if (scope === "all" && !allowAll) {
     if (user.companyId) {
       items = items.filter((ticket) => ticket.companyId === user.companyId);
     } else if (user.companySlug) {

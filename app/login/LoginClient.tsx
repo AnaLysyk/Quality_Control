@@ -81,6 +81,8 @@ export default function LoginClient() {
     <div
       className={
         styles.loginContainer +
+        " " +
+        styles.loginFixedTheme +
         " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-10 sm:px-6 md:px-10"
       }
     >
@@ -104,7 +106,7 @@ export default function LoginClient() {
               width={64}
               height={64}
               priority
-              className="w-12 h-12 sm:w-16 sm:h-16 animate-spin-slower select-none pointer-events-none"
+              className="w-12 h-12 sm:w-16 sm:h-16 animate-spin-slower select-none pointer-events-none object-contain object-center"
             />
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold text-[#011848] mb-2 leading-tight drop-shadow-sm">

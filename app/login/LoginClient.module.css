@@ -5,6 +5,21 @@
   font-size: clamp(1rem, 2.5vw, 1.5rem);
 }
 
+.loginFixedTheme {
+  /* Keep login visuals consistent regardless of global theme */
+  color-scheme: light;
+  --tc-border: rgba(15, 23, 42, 0.1);
+  --tc-input-bg: #eef4ff;
+  --tc-text: #0b1a3c;
+  --tc-text-primary: #0b1a3c;
+  --tc-text-secondary: #4b5563;
+  --tc-text-muted: #6b7280;
+  --tc-surface: #ffffff;
+  --tc-surface-2: #f8fafc;
+  --page-bg: #f4f6fb;
+  --page-text: #0b1a3c;
+}
+
 @media (max-width: 640px) {
   .loginContainer {
     padding: 1rem;

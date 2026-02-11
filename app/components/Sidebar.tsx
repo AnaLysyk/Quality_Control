@@ -102,7 +102,6 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
       { label: t("nav.adminPanel"), icon: FiCompass, href: "/admin/home" },
       { label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric" },
       { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
-      { label: "Empresas (acesso)", icon: FiUsers, href: "/empresas" },
       { label: t("nav.apps"), icon: FiBriefcase, href: `${companyTarget}${activeClientSlug ? "/aplicacoes" : ""}` },
       { label: t("nav.runs"), icon: FiList, href: `${companyTarget}${activeClientSlug ? "/runs" : ""}` },
       { label: t("nav.defects"), icon: FiAlertTriangle, href: `${companyTarget}${activeClientSlug ? "/defeitos" : ""}` },

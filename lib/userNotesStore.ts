@@ -65,7 +65,8 @@ async function readStoreFile(): Promise<NotesStore> {
     const parsed = JSON.parse(raw);
     return parsed && typeof parsed === "object" ? (parsed as NotesStore) : {};
   } catch (err) {
-    console.warn("[userNotesStore] Falha ao ler arquivo, usando memoria:", err?.message ?? err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn("[userNotesStore] Falha ao ler arquivo, usando memoria:", msg);
     return memoryStore;
   }
 }
@@ -79,7 +80,8 @@ async function writeStoreFile(next: NotesStore) {
   try {
     await fs.writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
   } catch (err) {
-    console.warn("[userNotesStore] Falha ao escrever arquivo, usando memoria:", err?.message ?? err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn("[userNotesStore] Falha ao escrever arquivo, usando memoria:", msg);
     memoryStore = next;
   }
 }
@@ -97,7 +99,8 @@ async function readStoreRedis(userId?: string): Promise<NotesStore | UserNote[] 
     if (!raw) return [];
     return JSON.parse(raw) as UserNote[];
   } catch (err) {
-    console.warn("[userNotesStore] Redis read failed, falling back to memory:", err?.message ?? err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn("[userNotesStore] Redis read failed, falling back to memory:", msg);
     return null;
   }
 }
@@ -110,7 +113,8 @@ async function writeStoreRedis(userId: string, items: UserNote[]) {
     await redis.set(key, JSON.stringify(items));
     return true;
   } catch (err) {
-    console.warn("[userNotesStore] Redis write failed, falling back to memory:", err?.message ?? err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn("[userNotesStore] Redis write failed, falling back to memory:", msg);
     return false;
   }
 }

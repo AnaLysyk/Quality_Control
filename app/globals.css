@@ -16,8 +16,8 @@ input[type="password"]::-ms-clear {
   --foreground: #0b1a3c;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-poppins, 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   /* BRAND (fixos da Testing Company) */
   --tc-primary: #011848;
@@ -613,4 +613,3 @@ video {
 .w-pct-98 { width: 98%; }
 .w-pct-99 { width: 99%; }
 .w-pct-100 { width: 100%; }
-

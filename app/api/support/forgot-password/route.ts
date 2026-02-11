@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-// Importa prisma só em ambiente Node/server
-let prisma: typeof import("@/lib/prismaClient").prisma | undefined;
-if (typeof process !== "undefined" && process.release?.name === "node") {
-  prisma = require("@/lib/prismaClient").prisma;
-}
+
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { createSupportRequest } from "@/data/supportRequestsStore";
+
+export const runtime = "nodejs";
 
 type Payload = {
   email?: string;
@@ -15,16 +14,13 @@ type Payload = {
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as Payload;
-  const email = body.email?.toLowerCase().trim();
-  const company = (body.company || "").trim();
-  const role = (body.role || "").trim();
-  const name = (body.name || "").trim();
+  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  const company = typeof body.company === "string" ? body.company.trim() : "";
+  const role = typeof body.role === "string" ? body.role.trim() : "";
+  const name = typeof body.name === "string" ? body.name.trim() : "";
 
   if (!email || !company || !role || !name) {
-    return NextResponse.json(
-      { message: "Empresa, cargo, nome e e-mail sao obrigatorios" },
-      { status: 400 },
-    );
+    return NextResponse.json({ message: "Empresa, cargo, nome e e-mail sao obrigatorios" }, { status: 400 });
   }
 
   const message = [
@@ -35,30 +31,22 @@ export async function POST(req: Request) {
     `Email: ${email}`,
   ].join("\n");
 
-  // Identifica usuário autenticado (se houver) para preencher user_id
   const authUser = await authenticateRequest(req);
   const userId = authUser?.id ?? null;
-
-  // Contexto técnico (audit)
   const ip_address = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
   const user_agent = req.headers.get("user-agent") || null;
 
-
   try {
-    if (prisma) {
-      await prisma.supportRequest.create({
-        data: {
-          email,
-          message,
-          status: "open",
-          ip_address,
-          user_agent,
-          user_id: userId,
-        },
-      });
-    }
+    await createSupportRequest({
+      email,
+      message,
+      status: "open",
+      ip_address,
+      user_agent,
+      user_id: userId,
+    });
   } catch (err) {
-    // Não vaza detalhes; apenas loga no servidor
+    // Do not block user flow if persistence fails.
     console.error("Erro ao registrar support_request:", err);
   }
 
@@ -67,3 +55,4 @@ export async function POST(req: Request) {
     message: "Solicitacao enviada. O administrador sera notificado.",
   });
 }
+

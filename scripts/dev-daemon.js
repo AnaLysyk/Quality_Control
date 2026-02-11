@@ -48,28 +48,19 @@ try {
 
 const isWin = process.platform === "win32";
 
-// On Windows, `.cmd` shims (like node_modules/.bin/next.cmd) cannot be spawned
-// directly without a shell. Use Node.js + Next's JS entrypoint instead.
-const nextJsBin = path.join(root, "node_modules", "next", "dist", "bin", "next");
-const nextBin = path.join(root, "node_modules", ".bin", "next");
-
-if (isWin) {
-  if (!fs.existsSync(nextJsBin)) {
-    console.error("next CLI entry not found. Run `npm install` first.");
-    process.exit(1);
-  }
-} else {
-  if (!fs.existsSync(nextBin)) {
-    console.error("next binary not found. Run `npm install` first.");
-    process.exit(1);
-  }
+const devNoForkScript = path.join(root, "scripts", "dev-no-fork.cjs");
+if (!fs.existsSync(devNoForkScript)) {
+  console.error("dev-no-fork script not found. Check scripts/dev-no-fork.cjs.");
+  process.exit(1);
 }
 
 const outFd = fs.openSync(outFile, "a");
 const errFd = fs.openSync(errFile, "a");
 
-const command = isWin ? process.execPath : nextBin;
-const args = isWin ? [nextJsBin, "dev"] : ["dev"];
+// Run in-process dev server starter to avoid environments where `child_process.fork`
+// is blocked (EPERM) for the Next.js CLI.
+const command = process.execPath;
+const args = [devNoForkScript];
 
 const child = spawn(command, args, {
   cwd: root,

@@ -1,24 +1,12 @@
 // app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Geist_Mono, Poppins } from "next/font/google";
 import AppShell from "@/components/AppShell";
 import ToasterProvider from "@/components/ToasterProvider";
 import { AuthProvider } from "@/context/AuthContext";
 import { AppSettingsProvider } from "@/context/AppSettingsContext";
 import { ClientProvider } from "@/context/ClientContext";
 import "./globals.css";
-
-const poppins = Poppins({
-  variable: "--font-poppins",
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Quality Control",
@@ -59,7 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body
         suppressHydrationWarning
-        className={`min-h-screen w-full overflow-y-auto ${poppins.variable} ${geistMono.variable} antialiased`}
+        className="min-h-screen w-full overflow-y-auto antialiased"
       >
         <AuthProvider>
           <AppSettingsProvider>

@@ -26,6 +26,38 @@ type ManualRun = {
 
 const LOCAL_LINKS_KEY = "qc_defect_run_links";
 
+type LocalLinksMap = Record<string, Record<string, string>>;
+
+function readLocalLinks(): LocalLinksMap {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(LOCAL_LINKS_KEY);
+    return raw ? (JSON.parse(raw) as LocalLinksMap) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeLocalLinks(payload: LocalLinksMap) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(LOCAL_LINKS_KEY, JSON.stringify(payload));
+  } catch {
+    // ignore
+  }
+}
+
+function mergeLocalLinksForCompany(companySlug: string | undefined, items: ManualDefect[]) {
+  if (!companySlug) return items;
+  const map = readLocalLinks();
+  const companyLinks = map[companySlug] ?? {};
+  return items.map((item) => {
+    if (item.runSlug) return item;
+    const localRun = companyLinks[item.slug];
+    return localRun ? { ...item, runSlug: localRun } : item;
+  });
+}
+
 function normalizeDefects(data: unknown[]): ManualDefect[] {
   return data
     .map((item) => {
@@ -99,36 +131,6 @@ export default function CompanyDefectsPage() {
       ? runs.find((run) => run.slug === runFilter)?.name ?? runFilter
       : runFilter;
 
-  const readLocalLinks = () => {
-    if (typeof window === "undefined") return {};
-    try {
-      const raw = window.localStorage.getItem(LOCAL_LINKS_KEY);
-      return raw ? (JSON.parse(raw) as Record<string, Record<string, string>>) : {};
-    } catch {
-      return {};
-    }
-  };
-
-  const writeLocalLinks = (payload: Record<string, Record<string, string>>) => {
-    if (typeof window === "undefined") return;
-    try {
-      window.localStorage.setItem(LOCAL_LINKS_KEY, JSON.stringify(payload));
-    } catch {
-      // ignore
-    }
-  };
-
-  const mergeLocalLinks = (items: ManualDefect[]) => {
-    if (!companySlug) return items;
-    const map = readLocalLinks();
-    const companyLinks = map[companySlug] ?? {};
-    return items.map((item) => {
-      if (item.runSlug) return item;
-      const localRun = companyLinks[item.slug];
-      return localRun ? { ...item, runSlug: localRun } : item;
-    });
-  };
-
   useEffect(() => {
     if (!companySlug) return;
     let active = true;
@@ -139,7 +141,7 @@ export default function CompanyDefectsPage() {
         .then((data) => {
           if (!active) return;
           const normalized = normalizeDefects(Array.isArray(data) ? data : []);
-          setDefects(sortDefects(mergeLocalLinks(normalized)));
+          setDefects(sortDefects(mergeLocalLinksForCompany(companySlug, normalized)));
         }),
       fetch(`/api/releases-manual?clientSlug=${encodeURIComponent(companySlug)}&kind=run`, { cache: "no-store" })
         .then((res) => res.json())
@@ -238,7 +240,7 @@ export default function CompanyDefectsPage() {
       setDefects((prev) => {
         const normalized = normalizeDefects([created])[0];
         if (!normalized) return prev;
-        const withLocal = mergeLocalLinks([normalized])[0] ?? normalized;
+        const withLocal = mergeLocalLinksForCompany(companySlug, [normalized])[0] ?? normalized;
         const filtered = prev.filter((item) => item.slug !== normalized.slug);
         return sortDefects([withLocal, ...filtered]);
       });

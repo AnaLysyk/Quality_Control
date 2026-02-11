@@ -9,18 +9,47 @@ type NoteColorKey = "amber" | "sky" | "emerald" | "rose" | "violet" | "orange";
 type ColorOption = {
   key: NoteColorKey;
   label: string;
-  bg: string;
-  border: string;
-  text: string;
+  cardClass: string;
+  chipClass: string;
 };
 
 const NOTE_COLORS: ColorOption[] = [
-  { key: "amber", label: "Amarelo", bg: "#FEF3C7", border: "#FDE68A", text: "#92400E" },
-  { key: "sky", label: "Azul", bg: "#DBEAFE", border: "#BFDBFE", text: "#1E3A8A" },
-  { key: "emerald", label: "Verde", bg: "#DCFCE7", border: "#BBF7D0", text: "#065F46" },
-  { key: "rose", label: "Rosa", bg: "#FCE7F3", border: "#FBCFE8", text: "#9D174D" },
-  { key: "violet", label: "Violeta", bg: "#EDE9FE", border: "#DDD6FE", text: "#5B21B6" },
-  { key: "orange", label: "Laranja", bg: "#FFEDD5", border: "#FED7AA", text: "#9A3412" },
+  {
+    key: "amber",
+    label: "Amarelo",
+    cardClass: "bg-amber-100 border-amber-200 text-amber-800",
+    chipClass: "bg-amber-100 border-amber-200",
+  },
+  {
+    key: "sky",
+    label: "Azul",
+    cardClass: "bg-sky-100 border-sky-200 text-sky-800",
+    chipClass: "bg-sky-100 border-sky-200",
+  },
+  {
+    key: "emerald",
+    label: "Verde",
+    cardClass: "bg-emerald-100 border-emerald-200 text-emerald-800",
+    chipClass: "bg-emerald-100 border-emerald-200",
+  },
+  {
+    key: "rose",
+    label: "Rosa",
+    cardClass: "bg-rose-100 border-rose-200 text-rose-800",
+    chipClass: "bg-rose-100 border-rose-200",
+  },
+  {
+    key: "violet",
+    label: "Violeta",
+    cardClass: "bg-violet-100 border-violet-200 text-violet-800",
+    chipClass: "bg-violet-100 border-violet-200",
+  },
+  {
+    key: "orange",
+    label: "Laranja",
+    cardClass: "bg-orange-100 border-orange-200 text-orange-800",
+    chipClass: "bg-orange-100 border-orange-200",
+  },
 ];
 
 type NoteItem = {
@@ -229,19 +258,14 @@ export default function NotesButton() {
 
           <div className="max-h-[70vh] overflow-auto px-4 py-3 space-y-3">
             {isCreating && draft && (
-              <div
-                className="rounded-xl border p-3"
-                style={{
-                  backgroundColor: resolveColor(draft.color).bg,
-                  borderColor: resolveColor(draft.color).border,
-                }}
-              >
+              <div className={`rounded-xl border p-3 ${resolveColor(draft.color).cardClass}`}>
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
                   Nova nota
                 </p>
                 <div className="mt-2 space-y-2">
                   <input
                     className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                    aria-label="Titulo da nota"
                     placeholder="Titulo"
                     value={draft.title}
                     onChange={(e) => setDraft((prev) => (prev ? { ...prev, title: e.target.value } : prev))}
@@ -249,6 +273,7 @@ export default function NotesButton() {
                   <textarea
                     rows={5}
                     className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                    aria-label="Conteudo da nota"
                     placeholder="Escreva sua nota..."
                     value={draft.content}
                     onChange={(e) => setDraft((prev) => (prev ? { ...prev, content: e.target.value } : prev))}
@@ -262,8 +287,7 @@ export default function NotesButton() {
                         onClick={() =>
                           setDraft((prev) => (prev ? { ...prev, color: color.key } : prev))
                         }
-                        className={`h-7 w-7 rounded-full border ${draft.color === color.key ? "ring-2 ring-(--tc-accent,#ef0001)/40" : ""}`}
-                        style={{ backgroundColor: color.bg, borderColor: color.border }}
+                        className={`h-7 w-7 rounded-full border ${color.chipClass} ${draft.color === color.key ? "ring-2 ring-(--tc-accent,#ef0001)/40" : ""}`}
                       />
                     ))}
                   </div>
@@ -300,11 +324,7 @@ export default function NotesButton() {
               const localDraft = isEditing && draft ? draft : null;
 
               return (
-                <div
-                  key={note.id}
-                  className="rounded-xl border p-3 transition"
-                  style={{ backgroundColor: color.bg, borderColor: color.border, color: color.text }}
-                >
+                <div key={note.id} className={`rounded-xl border p-3 transition ${color.cardClass}`}>
                   <button
                     type="button"
                     onClick={() => setExpandedId((prev) => (prev === note.id ? null : note.id))}
@@ -325,6 +345,8 @@ export default function NotesButton() {
                         <>
                           <input
                             className="w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                            aria-label="Titulo da nota"
+                            title="Titulo da nota"
                             value={localDraft.title}
                             onChange={(e) =>
                               setDraft((prev) => (prev ? { ...prev, title: e.target.value } : prev))
@@ -333,6 +355,8 @@ export default function NotesButton() {
                           <textarea
                             rows={5}
                             className="w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                            aria-label="Conteudo da nota"
+                            title="Conteudo da nota"
                             value={localDraft.content}
                             onChange={(e) =>
                               setDraft((prev) => (prev ? { ...prev, content: e.target.value } : prev))
@@ -349,8 +373,7 @@ export default function NotesButton() {
                                     prev ? { ...prev, color: option.key } : prev
                                   )
                                 }
-                                className={`h-7 w-7 rounded-full border ${localDraft.color === option.key ? "ring-2 ring-(--tc-accent,#ef0001)/40" : ""}`}
-                                style={{ backgroundColor: option.bg, borderColor: option.border }}
+                                className={`h-7 w-7 rounded-full border ${option.chipClass} ${localDraft.color === option.key ? "ring-2 ring-(--tc-accent,#ef0001)/40" : ""}`}
                               />
                             ))}
                           </div>

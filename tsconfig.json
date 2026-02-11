@@ -74,6 +74,12 @@
   ],
   "exclude": [
     "node_modules",
-    "backend"
+    "backend",
+    "scripts",
+    "tests",
+    "tests-e2e",
+    ".tmp",
+    ".pytest_cache",
+    ".venv"
   ]
 }

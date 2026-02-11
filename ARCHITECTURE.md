@@ -9,6 +9,8 @@ Este repo e uma ferramenta interna (QA). Prioridade:
 
 Nao estamos otimizando para SaaS/publico, compliance ou "seguranca bancaria".
 
+Para um "como esta funcionando" detalhado (rotas, stores, reset, env), ver `docs/RELATORIO_SISTEMA_INTERNO.md`.
+
 ## Mapa do sistema
 - Next.js (App Router): UI + BFF (`app/` + `app/api/**`).
 - Auth local (usuarios/empresas/vinculos): JSON em `data/local-auth-store.sample.json` (seed) e `data/local-auth-store.json` (opcional).
@@ -32,4 +34,3 @@ Nao estamos otimizando para SaaS/publico, compliance ou "seguranca bancaria".
 - `LOCAL_AUTH_IN_MEMORY=true`: opcional (nao grava `data/local-auth-store.json`).
 - `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`: opcional (se ausente, Redis em memoria).
 - `QASE_API_TOKEN` / `QASE_TOKEN`: opcional (sem token, algumas telas retornam warning/erro controlado).
-

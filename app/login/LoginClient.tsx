@@ -100,9 +100,8 @@ export default function LoginClient() {
       <div className="max-w-lg w-full space-y-8 relative z-10 sm:max-w-xl md:max-w-2xl">
         <div className="text-center">
           <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 mb-6">
-            <div className="absolute inset-0 rounded-full bg-linear-to-r from-[#011848] to-[#ef0001] shadow-lg animate-spin-slower"></div>
-            <div className="absolute inset-2 rounded-full bg-white/90 shadow-inner"></div>
-            <div className="relative z-10 w-full h-full flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full bg-linear-to-r from-[#011848] to-[#ef0001] shadow-lg"></div>
+            <div className="absolute inset-2 rounded-full bg-white shadow-lg flex items-center justify-center overflow-hidden animate-spin-slower">
               <Image
                 src="/images/tc.png"
                 alt="Logo Quality Control"

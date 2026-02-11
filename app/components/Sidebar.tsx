@@ -154,7 +154,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             href={item.href}
             prefetch={false}
             {...extraProps}
-            className={`group/link relative flex items-center h-11 w-full rounded-xl text-sm font-semibold transition-all duration-200 overflow-hidden min-w-0 ${
+            className={`group/link relative flex items-center h-11 w-full rounded-xl text-sm font-semibold transition-all duration-200 overflow-hidden min-w-0 sidebar-link ${
               isMobile
                 ? "px-3 justify-start gap-3"
                 : "px-3 justify-start gap-3"
@@ -172,7 +172,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
               }`}
             />
             <div
-              className={`flex items-center justify-center w-11 h-11 rounded-[14px] border transition-all duration-200 shrink-0 backdrop-blur-sm ${
+              className={`flex items-center justify-center w-11 h-11 rounded-[14px] border transition-all duration-200 shrink-0 backdrop-blur-sm sidebar-icon ${
                 isActive
                   ? "border-[#4e8df5]/50 bg-[#4e8df5]/10 text-[#2563eb] shadow-[0_10px_22px_rgba(78,141,245,0.2)] dark:border-[#4e8df5]/60 dark:bg-[#4e8df5]/12 dark:text-[#4e8df5] dark:shadow-[0_12px_28px_rgba(78,141,245,0.25)]"
                   : "border-slate-200 bg-white text-[#2563eb] group-hover/link:border-[#4e8df5]/35 group-hover/link:bg-slate-100 dark:border-white/12 dark:bg-white/6 dark:text-[#4e8df5] dark:group-hover/link:bg-white/10"
@@ -180,7 +180,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             >
               <item.icon size={20} />
             </div>
-            <span className="inline-flex whitespace-normal text-left leading-snug flex-1 overflow-hidden pl-3">
+            <span className="inline-flex whitespace-normal text-left leading-snug flex-1 overflow-hidden pl-3 sidebar-label">
               {item.label}
             </span>
           </Link>
@@ -189,7 +189,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
   const DesktopNav = (
     <aside
-      className="hidden lg:flex fixed left-0 top-0 z-40 h-screen w-65 overflow-hidden border-r border-slate-200 text-slate-900 flex-col bg-white backdrop-blur-2xl shadow-[0_12px_30px_rgba(15,23,42,0.12)] dark:border-white/10 dark:text-white dark:bg-[linear-gradient(180deg,#03123b_0%,#051a52_60%,#03123b_100%)] dark:shadow-[0_18px_40px_rgba(0,0,0,0.45)]"
+      className="hidden lg:flex fixed left-0 top-0 z-40 h-screen overflow-hidden border-r border-slate-200 text-slate-900 flex-col bg-white/70 backdrop-blur-2xl shadow-[0_12px_30px_rgba(15,23,42,0.12)] dark:border-white/10 dark:text-white dark:bg-[linear-gradient(180deg,#03123b_0%,#051a52_60%,#03123b_100%)] dark:shadow-[0_18px_40px_rgba(0,0,0,0.45)] sidebar-shell"
     >
       <div className="flex items-center px-2 py-3 border-b border-slate-200/70 dark:border-white/5 relative">
         <Link
@@ -210,7 +210,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
               className="object-cover pointer-events-none select-none"
             />
           </div>
-          <div className="flex flex-col leading-tight transition duration-200 whitespace-nowrap">
+          <div className="flex flex-col leading-tight transition duration-200 whitespace-nowrap sidebar-brand">
             <span className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-white/55">Plataforma</span>
             <span className="text-base font-semibold tracking-wide text-slate-900 dark:text-white">Quality Control</span>
           </div>
@@ -221,7 +221,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
         <div className="flex-1 px-3 py-6 space-y-6">
           <div className="space-y-3">
             <div className="flex items-center px-1">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-white/55 transition duration-150">
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-white/55 transition duration-150 sidebar-divider">
                 Navegacao
               </p>
               <span className="h-px flex-1 ml-3 bg-slate-200 dark:bg-white/15" aria-hidden />

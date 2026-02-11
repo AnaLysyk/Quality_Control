@@ -34,7 +34,7 @@ export default function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className="min-h-screen w-full bg-(--page-bg) text-(--page-text)">
+    <div className="min-h-screen w-full bg-(--page-bg) text-(--page-text) app-shell">
       <SidebarVisibility mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
       <button
@@ -55,7 +55,7 @@ export default function AppShell({ children }: AppShellProps) {
 
       <ChatButton />
 
-      <div className="flex flex-col min-h-screen lg:ml-65">
+      <div className="flex flex-col min-h-screen app-main">
         <div className="flex-1 min-h-screen overflow-y-auto overflow-x-hidden">
           <MainWrapper>{children}</MainWrapper>
         </div>

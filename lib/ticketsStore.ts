@@ -60,9 +60,13 @@ type ImportPayload = {
   items?: unknown;
 };
 
-const STORE_PATH = path.join(process.cwd(), "data", "support-tickets.json");
-const VERSION_DIR = path.join(process.cwd(), "data", "versions");
-const BACKUP_DIR = path.join(process.cwd(), "data", "backups");
+const DEFAULT_DATA_DIR = path.join(process.cwd(), "data");
+const DATA_DIR =
+  process.env.TICKETS_DATA_DIR ||
+  (process.env.VERCEL === "1" ? path.join("/tmp", "qc-data") : DEFAULT_DATA_DIR);
+const STORE_PATH = path.join(DATA_DIR, "support-tickets.json");
+const VERSION_DIR = path.join(DATA_DIR, "versions");
+const BACKUP_DIR = path.join(DATA_DIR, "backups");
 const LOCK_PATH = `${STORE_PATH}.lock`;
 const STORE_KEY = "qc:support_tickets:v1";
 const STORE_COUNTER_KEY = "qc:support_tickets:counter:v1";
@@ -88,6 +92,11 @@ let backupTimer: NodeJS.Timeout | null = null;
 let versionCounter = 0;
 let flushingPromise: Promise<void> | null = null;
 let warnedRedisFailure = false;
+let forceMemory = false;
+
+function usingMemory() {
+  return USE_MEMORY || forceMemory;
+}
 
 async function ensureStore(): Promise<boolean> {
   try {
@@ -103,6 +112,7 @@ async function ensureStore(): Promise<boolean> {
         warnedFsFailure = true;
         console.warn("[TICKETS] Falha ao acessar filesystem; usando fallback em memoria.");
       }
+      forceMemory = true;
       return false;
     }
   }
@@ -234,7 +244,7 @@ async function tryAcquireLock() {
 }
 
 async function withFileLock<T>(fn: () => Promise<T>) {
-  if (USE_REDIS || USE_MEMORY) return fn();
+  if (USE_REDIS || usingMemory()) return fn();
   const start = Date.now();
   while (true) {
     const handle = await tryAcquireLock();
@@ -279,7 +289,7 @@ async function loadVersionCounter() {
 }
 
 function startFlushLoop() {
-  if (flushTimer || USE_REDIS || USE_MEMORY) return;
+  if (flushTimer || USE_REDIS || usingMemory()) return;
   flushTimer = setInterval(() => {
     flushNow().catch(() => null);
   }, FLUSH_INTERVAL_MS);
@@ -287,7 +297,7 @@ function startFlushLoop() {
 }
 
 function startBackupLoop() {
-  if (backupTimer || USE_REDIS || USE_MEMORY) return;
+  if (backupTimer || USE_REDIS || usingMemory()) return;
   backupTimer = setInterval(() => {
     createBackup().catch(() => null);
   }, BACKUP_INTERVAL_MS);
@@ -295,16 +305,26 @@ function startBackupLoop() {
 }
 
 async function initStore() {
-  if (USE_REDIS || USE_MEMORY) return;
+  if (USE_REDIS || usingMemory()) return;
   if (cacheStore) return;
   if (initPromise) return initPromise;
   initPromise = (async () => {
-    await fs.mkdir(VERSION_DIR, { recursive: true });
-    await fs.mkdir(BACKUP_DIR, { recursive: true });
-    cacheStore = await loadStoreFromDisk();
-    await loadVersionCounter();
-    startFlushLoop();
-    startBackupLoop();
+    try {
+      await fs.mkdir(VERSION_DIR, { recursive: true });
+      await fs.mkdir(BACKUP_DIR, { recursive: true });
+      cacheStore = await loadStoreFromDisk();
+      await loadVersionCounter();
+      startFlushLoop();
+      startBackupLoop();
+    } catch (err) {
+      if (!warnedFsFailure) {
+        warnedFsFailure = true;
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn("[TICKETS] Falha ao preparar storage; usando memoria.", msg);
+      }
+      forceMemory = true;
+      cacheStore = null;
+    }
   })();
   return initPromise;
 }
@@ -329,7 +349,7 @@ async function readStore(): Promise<TicketsStore> {
       return memoryStore;
     }
   }
-  if (USE_MEMORY) {
+  if (usingMemory()) {
     return memoryStore;
   }
   await initStore();
@@ -357,7 +377,7 @@ async function writeStore(next: TicketsStore) {
       return;
     }
   }
-  if (USE_MEMORY) {
+  if (usingMemory()) {
     memoryStore = payload;
     return;
   }
@@ -403,7 +423,7 @@ async function rotateBackups() {
 }
 
 export async function createBackup() {
-  if (USE_REDIS || USE_MEMORY) return;
+  if (USE_REDIS || usingMemory()) return;
   await initStore();
   if (!cacheStore) return;
   await withFileLock(async () => {
@@ -414,7 +434,7 @@ export async function createBackup() {
 }
 
 export async function flushNow() {
-  if (USE_REDIS || USE_MEMORY) return;
+  if (USE_REDIS || usingMemory()) return;
   if (!dirty) return;
   if (flushingPromise) return flushingPromise;
   flushingPromise = withFileLock(async () => {
@@ -431,14 +451,14 @@ export async function flushNow() {
 }
 
 export async function listVersions() {
-  if (USE_REDIS || USE_MEMORY) return [];
+  if (USE_REDIS || usingMemory()) return [];
   await initStore();
   const files = (await fs.readdir(VERSION_DIR)).filter((file) => file.endsWith(".json")).sort();
   return files;
 }
 
 export async function restoreVersion(name: string) {
-  if (USE_REDIS || USE_MEMORY) {
+  if (USE_REDIS || usingMemory()) {
     throw new Error("TICKETS_RESTORE_UNSUPPORTED");
   }
   await initStore();
@@ -471,7 +491,7 @@ function validateImportItem(item: TicketRecord) {
 }
 
 export async function importTickets(payload: ImportPayload, mode: ImportMode) {
-  if (USE_REDIS || USE_MEMORY) {
+  if (USE_REDIS || usingMemory()) {
     throw new Error("TICKETS_IMPORT_UNSUPPORTED");
   }
   if (!payload || payload.format !== "tickets-export") {

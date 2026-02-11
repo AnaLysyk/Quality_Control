@@ -9,6 +9,7 @@ export type NotificationStatus = "unread" | "closed";
 export type NotificationType =
   | "RUN_CREATED"
   | "TEST_FAILED"
+  | "ACCESS_REQUEST_COMMENT"
   | "PASSWORD_RESET_REQUEST"
   | "PASSWORD_RESET_PENDING"
   | "PASSWORD_RESET_APPROVED"

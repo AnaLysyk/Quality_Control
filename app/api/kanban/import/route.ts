@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Papa from "papaparse";
 
-import store, { nextId } from "../store";
+import { getNextId, readKanbanStore, writeKanbanStore } from "../store";
 import type { Status } from "../types";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 
@@ -194,9 +194,10 @@ export async function POST(request: NextRequest) {
     return jsonError("Nenhum item valido para importar (verifique title/status)", 400);
   }
 
+  const store = await readKanbanStore();
   for (const item of items) {
-    store.push({
-      id: nextId(),
+    store.items.push({
+      id: getNextId(store),
       client_slug: effectiveSlug,
       project,
       run_id: runId,
@@ -208,6 +209,7 @@ export async function POST(request: NextRequest) {
       created_at: new Date().toISOString(),
     });
   }
+  await writeKanbanStore(store);
 
-  return NextResponse.json({ inserted: items.length, mode: "memory" }, { status: 201 });
+  return NextResponse.json({ inserted: items.length, mode: "json" }, { status: 201 });
 }

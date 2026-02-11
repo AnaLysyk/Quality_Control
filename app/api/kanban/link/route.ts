@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import store, { nextId } from "../store";
+import { getNextId, readKanbanStore, writeKanbanStore } from "../store";
 import type { Status } from "../types";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 
@@ -113,7 +113,8 @@ export async function POST(request: NextRequest) {
     return jsonError("Nenhum campo para atualizar", 400);
   }
 
-  const existing = store.find(
+  const store = await readKanbanStore();
+  const existing = store.items.find(
     (c) => c.project === project && c.run_id === runId && c.case_id === caseId && c.client_slug === effectiveSlug,
   );
   if (existing) {
@@ -121,6 +122,7 @@ export async function POST(request: NextRequest) {
     if (status) existing.status = status;
     if (bug !== undefined) existing.bug = bug as string | null;
     if (link !== undefined) existing.link = link as string | null;
+    await writeKanbanStore(store);
     return NextResponse.json(existing);
   }
 
@@ -129,7 +131,7 @@ export async function POST(request: NextRequest) {
   }
 
   const created = {
-    id: nextId(),
+    id: getNextId(store),
     client_slug: effectiveSlug,
     project,
     run_id: runId,
@@ -140,6 +142,7 @@ export async function POST(request: NextRequest) {
     link: (link as string | null | undefined) ?? null,
     created_at: new Date().toISOString(),
   };
-  store.push(created);
+  store.items.push(created);
+  await writeKanbanStore(store);
   return NextResponse.json(created, { status: 201 });
 }

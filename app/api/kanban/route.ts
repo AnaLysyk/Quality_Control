@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import store, { nextId } from "./store";
+import { getNextId, readKanbanStore, writeKanbanStore } from "./store";
 import type { Status } from "./types";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 
@@ -98,7 +98,8 @@ export async function GET(request: NextRequest) {
     effectiveSlug = requestedSlug ?? user.companySlug ?? allowed[0] ?? null;
   }
 
-  const items = store
+  const { items: allItems } = await readKanbanStore();
+  const items = allItems
     .filter((c) => {
       if (c.project !== project || c.run_id !== runId) return false;
       if (!effectiveSlug) return true;
@@ -147,8 +148,9 @@ export async function POST(request: NextRequest) {
   const bug = asOptionalString(record.bug);
   const link = asOptionalString(record.link);
 
+  const store = await readKanbanStore();
   const card = {
-    id: nextId(),
+    id: getNextId(store),
     client_slug: effectiveSlug,
     project,
     run_id: runId,
@@ -159,6 +161,7 @@ export async function POST(request: NextRequest) {
     link,
     created_at: new Date().toISOString(),
   };
-  store.push(card);
+  store.items.push(card);
+  await writeKanbanStore(store);
   return NextResponse.json(card, { status: 201 });
 }

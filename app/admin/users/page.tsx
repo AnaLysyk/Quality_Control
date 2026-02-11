@@ -11,7 +11,7 @@ import { toast } from "react-hot-toast";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 
 type ClientOption = { id: string; name: string };
-type UserItem = { id: string; name: string; email?: string; role?: string; job_title?: string | null; client_id?: string | null; active?: boolean; linkedin_url?: string };
+type UserItem = { id: string; name: string; email?: string; user?: string; role?: string; job_title?: string | null; client_id?: string | null; active?: boolean; linkedin_url?: string };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object") return null;
@@ -169,6 +169,7 @@ function AdminUsersPage() {
             >
               <div>
                 <div className="font-semibold text-sm text-gray-900">{u.name}</div>
+                <div className="text-xs text-gray-500">{u.user ?? u.email}</div>
                 <div className="text-xs text-gray-500">{u.email}</div>
                 <div className="text-xs text-gray-500">{u.role ?? "client_user"}</div>
               </div>

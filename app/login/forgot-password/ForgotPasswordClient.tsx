@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 
 export default function ForgotPasswordClient() {
+  const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -14,9 +15,10 @@ export default function ForgotPasswordClient() {
     setError(null);
     setSuccess(null);
 
+    const normalizedLogin = login.trim().toLowerCase();
     const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail) {
-      setError("Informe seu e-mail");
+    if (!normalizedLogin || !normalizedEmail) {
+      setError("Informe seu usuario e e-mail");
       return;
     }
 
@@ -34,7 +36,7 @@ export default function ForgotPasswordClient() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email: normalizedEmail }),
+        body: JSON.stringify({ user: normalizedLogin, email: normalizedEmail }),
       });
 
       const data = await response.json();
@@ -58,7 +60,7 @@ export default function ForgotPasswordClient() {
             Esqueceu sua senha?
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Digite seu e-mail e enviaremos instruções para redefinir sua senha.
+            Digite seu usuario e e-mail para solicitar a redefinição de senha.
           </p>
         </div>
 
@@ -74,6 +76,23 @@ export default function ForgotPasswordClient() {
               <div className="text-sm text-green-700">{success}</div>
             </div>
           )}
+
+          <div>
+            <label htmlFor="login" className="sr-only">
+              Usuario
+            </label>
+            <input
+              id="login"
+              name="login"
+              type="text"
+              autoComplete="username"
+              required
+              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+              placeholder="Seu usuario"
+              value={login}
+              onChange={(e) => setLogin(e.target.value)}
+            />
+          </div>
 
           <div>
             <label htmlFor="email" className="sr-only">

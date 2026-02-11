@@ -10,6 +10,7 @@ type UserItem = {
   id: string;
   name: string;
   email?: string;
+  user?: string;
   role?: string;
   job_title?: string | null;
   client_id?: string | null;
@@ -30,6 +31,7 @@ type Props = {
 const ROLE_OPTIONS = [
   { value: "client_admin", label: "Admin do cliente" },
   { value: "client_user", label: "Usuario do cliente" },
+  { value: "it_dev", label: "Dev / IT" },
   { value: "global_admin", label: "Admin global" },
 ] as const;
 
@@ -37,12 +39,14 @@ type RoleValue = (typeof ROLE_OPTIONS)[number]["value"];
 
 const normalizeRole = (value?: string | null): RoleValue => {
   if (value === "global_admin") return "global_admin";
+  if (value === "it_dev" || value === "developer" || value === "dev") return "it_dev";
   if (value === "client_admin" || value === "client_owner" || value === "client_manager") return "client_admin";
   return "client_user";
 };
 
 function isDirty(a: {
   name: string;
+  login: string;
   email: string;
   role: RoleValue;
   clientId: string | null;
@@ -52,6 +56,7 @@ function isDirty(a: {
   active: boolean;
 }, b: {
   name: string;
+  login: string;
   email: string;
   role: RoleValue;
   clientId: string | null;
@@ -62,6 +67,7 @@ function isDirty(a: {
 }) {
   return (
     a.name !== b.name ||
+    a.login !== b.login ||
     a.email !== b.email ||
     a.role !== b.role ||
     a.clientId !== b.clientId ||
@@ -75,6 +81,7 @@ function isDirty(a: {
 export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirtyChange }: Props) {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<RoleValue>("client_user");
   const [jobTitle, setJobTitle] = useState("");
@@ -90,6 +97,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
     if (!u) {
       return {
         name: "",
+        login: "",
         email: "",
         role: "client_user" as RoleValue,
         clientId: null as string | null,
@@ -102,6 +110,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
 
     return {
       name: u.name ?? "",
+      login: (u.user ?? u.email ?? "").toString(),
       email: (u.email ?? "").toString(),
       role: normalizeRole(u.role ?? null),
       clientId: u.client_id ?? null,
@@ -113,19 +122,20 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
   }, [user]);
 
   const draft = useMemo(
-    () => ({ name, email, role, clientId, jobTitle, linkedin, avatarUrl, active }),
-    [name, email, role, clientId, jobTitle, linkedin, avatarUrl, active],
+    () => ({ name, login, email, role, clientId, jobTitle, linkedin, avatarUrl, active }),
+    [name, login, email, role, clientId, jobTitle, linkedin, avatarUrl, active],
   );
 
   const dirty = useMemo(() => isDirty(initial, draft), [initial, draft]);
 
-  const requiresClient = role !== "global_admin";
-  const canSave = !!user?.id && dirty && (!requiresClient || !!clientId) && !!name.trim() && !!email.trim();
+  const requiresClient = true;
+  const canSave = !!user?.id && dirty && !!clientId && !!name.trim() && !!login.trim() && !!email.trim();
 
   useEffect(() => {
     if (!open) return;
     setError(null);
     setName(initial.name);
+    setLogin(initial.login);
     setEmail(initial.email);
     setRole(initial.role);
     setClientId(initial.clientId);
@@ -166,9 +176,10 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
       const payload = {
         id: user.id,
         name: name.trim(),
+        user: login.trim(),
         email: email.trim(),
         role,
-        client_id: role === "global_admin" ? null : clientId,
+        client_id: clientId,
         job_title: jobTitle.trim() || undefined,
         linkedin_url: linkedin.trim() || undefined,
         avatar_url: avatarUrl.trim() || undefined,
@@ -228,7 +239,6 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
               className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
               value={clientId ?? ""}
               onChange={(e) => setClientId(e.target.value || null)}
-              disabled={role === "global_admin"}
               aria-label="Empresa vinculada ao usuário"
             >
               <option value="">Selecione</option>
@@ -246,6 +256,16 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
               className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </label>
+
+          <label className="block text-sm">
+            Usuario (login)
+            <input
+              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+              value={login}
+              onChange={(e) => setLogin(e.target.value)}
               required
             />
           </label>
@@ -278,7 +298,6 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
               onChange={(e) => {
                 const next = e.target.value as RoleValue;
                 setRole(next);
-                if (next === "global_admin") setClientId(null);
               }}
               aria-label="Perfil do usuário"
               title="Perfil"
@@ -317,7 +336,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
           </label>
         </div>
 
-        {requiresClient && !clientId && <p className="text-sm text-red-600 mt-3">Empresa e obrigatoria para este perfil.</p>}
+        {requiresClient && !clientId && <p className="text-sm text-red-600 mt-3">Empresa e obrigatoria.</p>}
         {error && <p className="text-sm text-red-600 mt-3">{error}</p>}
 
         <div className="mt-4 flex items-center justify-between gap-2">

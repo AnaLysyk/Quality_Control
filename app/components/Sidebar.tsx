@@ -98,7 +98,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
       { label: t("nav.runsManagement"), icon: FiLayers, href: "/admin/runs" },
       { label: t("nav.defects"), icon: FiShield, href: "/admin/defeitos" },
       { label: "Chamados", icon: FiMessageSquare, href: "/admin/chamados" },
-      { label: "Kanban IT", icon: FiColumns, href: "/kanban-it" },
+      // Kanban IT e exclusivo para perfil de desenvolvimento (it_dev).
       { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
       { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
     ],
@@ -125,7 +125,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             { label: t("nav.runs"), icon: FiList, href: `/empresas/${companySlug}/runs` },
             { label: t("nav.defects"), icon: FiAlertTriangle, href: `/empresas/${companySlug}/defeitos` },
             { label: "Meus Chamados", icon: FiMessageSquare, href: "/meus-chamados" },
-            { label: "Kanban IT", icon: FiColumns, href: "/kanban-it", roles: ["admin", "it_dev"] },
+            { label: "Kanban IT", icon: FiColumns, href: "/kanban-it", roles: ["it_dev"] },
           ]
         : [],
     [companySlug, t]

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { listAllTickets } from "@/lib/ticketsStore";
+import { attachAssigneeInfo } from "@/lib/ticketsPresenter";
 
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
@@ -12,5 +13,6 @@ export async function GET(req: Request) {
   }
 
   const items = await listAllTickets();
-  return NextResponse.json({ items }, { status: 200 });
+  const enriched = await attachAssigneeInfo(items);
+  return NextResponse.json({ items: enriched }, { status: 200 });
 }

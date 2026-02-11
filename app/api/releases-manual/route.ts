@@ -6,7 +6,7 @@ import { canCreateManualDefect, getMockRole, resolveDefectRole } from "@/lib/rba
 import type { Release, Stats } from "@/types/release";
 import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalization";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
-import { readManualReleases, writeManualReleases } from "@/lib/manualReleaseStore";
+import { readManualReleases, readManualReleaseCases, writeManualReleases, writeManualReleaseCases } from "@/lib/manualReleaseStore";
 import { notifyManualRunCreated } from "@/lib/notificationService";
 import { appendDefectHistory } from "@/lib/manualDefectHistoryStore";
 import { getLocalUserById } from "@/lib/auth/localStore";
@@ -36,8 +36,9 @@ function resolveAllowedSlugs(user: AuthUser): string[] {
 export async function GET(req: Request) {
   const authUser = await authenticateRequest(req);
   const mockRole = await getMockRole();
-  const effectiveAuthUser =
-    authUser ?? (mockRole ? { id: "mock-user", isGlobalAdmin: mockRole === "admin" } : null);
+  const effectiveAuthUser: AuthUser | null =
+    authUser ??
+    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "admin" } : null);
   if (!effectiveAuthUser) {
     return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
   }
@@ -84,8 +85,9 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const authUser = await authenticateRequest(req);
   const mockRole = await getMockRole();
-  const effectiveAuthUser =
-    authUser ?? (mockRole ? { id: "mock-user", isGlobalAdmin: mockRole === "admin" } : null);
+  const effectiveAuthUser: AuthUser | null =
+    authUser ??
+    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "admin" } : null);
   if (!effectiveAuthUser) return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
   try {
     const body = await req.json();
@@ -142,6 +144,13 @@ export async function POST(req: Request) {
     await writeManualReleases(filtered);
 
     if (kind === "run") {
+      if (release.slug) {
+        const casesStore = await readManualReleaseCases();
+        if (!Array.isArray(casesStore[release.slug])) {
+          casesStore[release.slug] = [];
+          await writeManualReleaseCases(casesStore);
+        }
+      }
       try {
         await notifyManualRunCreated(release);
       } catch (err) {

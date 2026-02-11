@@ -20,6 +20,8 @@ type TicketItem = {
   createdByEmail?: string | null;
   companySlug?: string | null;
   assignedToUserId?: string | null;
+  assignedToName?: string | null;
+  assignedToEmail?: string | null;
 };
 
 type NotificationItem = {
@@ -129,6 +131,7 @@ export default function MeusChamadosPage() {
         <div className="grid gap-3 md:grid-cols-2">
           {tickets.map((ticket) => {
             const unread = unreadByTicket[ticket.id] ?? 0;
+            const assigneeLabel = ticket.assignedToName || ticket.assignedToEmail || "";
             return (
               <button
                 key={ticket.id}
@@ -151,6 +154,9 @@ export default function MeusChamadosPage() {
                 </div>
                 <p className="mt-2 text-xs uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
                   {getTicketStatusLabel(ticket.status)}
+                </p>
+                <p className="mt-2 text-xs text-(--tc-text-muted,#6b7280)">
+                  {assigneeLabel ? `Responsavel: ${assigneeLabel}` : "Responsavel: nao atribuido"}
                 </p>
                 {ticket.tags && ticket.tags.length > 0 && (
                   <p className="mt-2 text-xs text-(--tc-text-muted,#6b7280)">

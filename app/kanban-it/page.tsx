@@ -19,7 +19,10 @@ type TicketItem = {
   createdByName?: string | null;
   createdByEmail?: string | null;
   companySlug?: string | null;
+  companyId?: string | null;
   assignedToUserId?: string | null;
+  assignedToName?: string | null;
+  assignedToEmail?: string | null;
 };
 
 type NotificationItem = {
@@ -56,7 +59,7 @@ export default function KanbanItPage() {
 
   const isAllowed = useMemo(() => {
     const role = (user?.role ?? "").toLowerCase();
-    return user?.isGlobalAdmin === true || role === "it_dev" || role === "dev" || role === "developer";
+    return role === "it_dev" || role === "dev" || role === "developer";
   }, [user]);
 
   const grouped = useMemo(() => {
@@ -265,6 +268,7 @@ export default function KanbanItPage() {
             <div className="mt-3 space-y-3">
               {(grouped[column.key] ?? []).map((ticket) => {
                 const unread = unreadByTicket[ticket.id] ?? 0;
+                const assigneeLabel = ticket.assignedToName || ticket.assignedToEmail || "";
                 return (
                   <button
                     key={ticket.id}
@@ -291,6 +295,9 @@ export default function KanbanItPage() {
                       <span>{getTicketStatusLabel(ticket.status)}</span>
                       {ticket.priority && <span>{ticket.priority}</span>}
                     </div>
+                    <p className="mt-2 text-[11px] text-(--tc-text-muted,#6b7280)">
+                      {assigneeLabel ? `Dev: ${assigneeLabel}` : "Sem responsavel"}
+                    </p>
                     {ticket.tags && ticket.tags.length > 0 && (
                       <p className="mt-2 text-[11px] text-(--tc-text-muted,#6b7280)">
                         {ticket.tags.join(", ")}

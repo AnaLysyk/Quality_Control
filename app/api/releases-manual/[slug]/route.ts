@@ -43,8 +43,9 @@ function normalizeStats(stats?: Partial<Stats> | null): Stats {
 export async function GET(_req: Request, context: { params: Promise<{ slug: string }> }) {
   const authUser = await authenticateRequest(_req);
   const mockRole = await getMockRole();
-  const effectiveAuthUser =
-    authUser ?? (mockRole ? { id: "mock-user", isGlobalAdmin: mockRole === "admin" } : null);
+  const effectiveAuthUser: AuthUser | null =
+    authUser ??
+    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "admin" } : null);
   if (!effectiveAuthUser) {
     return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
   }
@@ -68,8 +69,9 @@ export async function GET(_req: Request, context: { params: Promise<{ slug: stri
 export async function PATCH(req: Request, context: { params: Promise<{ slug: string }> }) {
   const authUser = await authenticateRequest(req);
   const mockRole = await getMockRole();
-  const effectiveAuthUser =
-    authUser ?? (mockRole ? { id: "mock-user", isGlobalAdmin: mockRole === "admin" } : null);
+  const effectiveAuthUser: AuthUser | null =
+    authUser ??
+    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "admin" } : null);
   if (!effectiveAuthUser) {
     return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
   }
@@ -187,8 +189,9 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
 export async function DELETE(req: Request, context: { params: Promise<{ slug: string }> }) {
   const authUser = await authenticateRequest(req);
   const mockRole = await getMockRole();
-  const effectiveAuthUser =
-    authUser ?? (mockRole ? { id: "mock-user", isGlobalAdmin: mockRole === "admin" } : null);
+  const effectiveAuthUser: AuthUser | null =
+    authUser ??
+    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "admin" } : null);
   if (!effectiveAuthUser) {
     return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
   }

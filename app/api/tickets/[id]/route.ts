@@ -4,6 +4,7 @@ import { getTicketById, deleteTicketForUser, updateTicket } from "@/lib/ticketsS
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketAssigned } from "@/lib/notificationService";
 import { canAssignTicket, canEditTicketContent, canViewTicket, isTicketAdmin } from "@/lib/rbac/tickets";
+import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
@@ -20,7 +21,8 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
 
-  return NextResponse.json({ item }, { status: 200 });
+  const enriched = await attachAssigneeToTicket(item);
+  return NextResponse.json({ item: enriched }, { status: 200 });
 }
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
@@ -103,7 +105,8 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     }).catch((err) => console.error("Falha ao registrar atualizacao:", err));
   }
 
-  return NextResponse.json({ item: updated }, { status: 200 });
+  const enriched = await attachAssigneeToTicket(updated);
+  return NextResponse.json({ item: enriched }, { status: 200 });
 }
 
 export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {

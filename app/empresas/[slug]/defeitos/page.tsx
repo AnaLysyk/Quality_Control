@@ -81,7 +81,7 @@ function formatDefectStatus(value?: string | null) {
 function formatHistoryLabel(item: DefectHistoryEvent) {
   switch (item.action) {
     case "created":
-      return "Defeito criado";
+      return item.note ? `Defeito criado: ${item.note}` : "Defeito criado";
     case "status_changed":
       return `Status: ${formatDefectStatus(item.fromStatus)} -> ${formatDefectStatus(item.toStatus)}`;
     case "run_linked":
@@ -89,7 +89,7 @@ function formatHistoryLabel(item: DefectHistoryEvent) {
     case "run_unlinked":
       return item.fromRunSlug ? `Run removida: ${item.fromRunSlug}` : "Run removida";
     case "deleted":
-      return "Defeito removido";
+      return item.note ? `Defeito removido: ${item.note}` : "Defeito removido";
     case "updated":
       return item.note ?? "Defeito atualizado";
     default:

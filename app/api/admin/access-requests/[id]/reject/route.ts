@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prismaClient";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
+import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
 
 function applyAdminNotes(message: string, notes: string | null) {
   if (!notes || !notes.trim()) return message;
@@ -17,8 +18,9 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
   }
 
-  const body = (await req.json().catch(() => null)) as { reason?: string | null } | null;
+  const body = (await req.json().catch(() => null)) as { reason?: string | null; comment?: string | null } | null;
   const reason = typeof body?.reason === "string" ? body.reason.trim() : "";
+  const comment = typeof body?.comment === "string" ? body.comment.trim() : "";
 
   const { id } = await context.params;
   if (shouldUseJsonStore()) {
@@ -28,6 +30,16 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     }
     const updatedMessage = applyAdminNotes(existing.message, reason || null);
     const updated = await updateAccessRequest(id, { status: "rejected", message: updatedMessage });
+    if (comment || reason) {
+      await createAccessRequestComment({
+        requestId: id,
+        authorRole: "admin",
+        authorName: admin.email || "Admin",
+        authorEmail: admin.email || null,
+        authorId: admin.id || null,
+        body: comment || reason,
+      });
+    }
     return NextResponse.json({
       ok: true,
       item: {
@@ -49,6 +61,17 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       message: applyAdminNotes(existing.message, reason || null),
     },
   });
+
+  if (comment || reason) {
+    await createAccessRequestComment({
+      requestId: id,
+      authorRole: "admin",
+      authorName: admin.email || "Admin",
+      authorEmail: admin.email || null,
+      authorId: admin.id || null,
+      body: comment || reason,
+    });
+  }
 
   return NextResponse.json({
     ok: true,

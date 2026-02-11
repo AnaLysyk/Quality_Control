@@ -17,6 +17,11 @@ export async function GET(req: NextRequest) {
   const limit = Number(searchParams.get("limit") ?? "200");
   const offset = Number(searchParams.get("offset") ?? "0");
   const action = searchParams.get("action");
+  const entityType = searchParams.get("entityType");
+  const actor = searchParams.get("actor");
+  const query = searchParams.get("query");
+  const startDate = searchParams.get("startDate");
+  const endDate = searchParams.get("endDate");
 
   const storageReady = isAuditLogStorageConfigured();
   if (!storageReady) {
@@ -30,7 +35,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const items = await listAuditLogs({ limit, offset, action });
+    const items = await listAuditLogs({ limit, offset, action, entityType, actor, query, startDate, endDate });
     const payload = {
       items,
       retentionDays: AUDIT_LOG_RETENTION_DAYS,

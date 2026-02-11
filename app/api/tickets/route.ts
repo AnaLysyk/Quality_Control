@@ -5,6 +5,7 @@ import { createTicket, listAllTickets, listTicketsForUser } from "@/lib/ticketsS
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketCreated } from "@/lib/notificationService";
 import { canAssignTicket, isItDev, isTicketAdmin } from "@/lib/rbac/tickets";
+import { attachAssigneeInfo, attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
@@ -67,7 +68,8 @@ export async function GET(req: Request) {
   }
 
   items = items.slice(0, limit);
-  return NextResponse.json({ items }, { status: 200 });
+  const enriched = await attachAssigneeInfo(items);
+  return NextResponse.json({ items: enriched }, { status: 200 });
 }
 
 export async function POST(req: Request) {
@@ -113,5 +115,6 @@ export async function POST(req: Request) {
     console.error("Falha ao notificar novo chamado:", err);
   });
 
-  return NextResponse.json({ item: ticket }, { status: 201 });
+  const enriched = await attachAssigneeToTicket(ticket);
+  return NextResponse.json({ item: enriched }, { status: 201 });
 }

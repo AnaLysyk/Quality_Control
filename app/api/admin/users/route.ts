@@ -21,6 +21,7 @@ type UserItem = {
   id: string;
   name: string;
   email: string;
+  user?: string;
   role?: string;
   client_id?: string | null;
   active?: boolean;
@@ -30,28 +31,53 @@ type UserItem = {
 };
 
 function mapUser(
-  user: { id: string; name: string; email: string; active?: boolean },
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    user?: string;
+    active?: boolean;
+    job_title?: string | null;
+    linkedin_url?: string | null;
+    avatar_url?: string | null;
+    globalRole?: string | null;
+    is_global_admin?: boolean;
+  },
   link?: { role?: string | null; companyId?: string | null },
 ) {
   const role = normalizeLocalRole(link?.role ?? "user");
+  const isGlobalAdmin = user.globalRole === "global_admin" || user.is_global_admin === true;
+  const mappedRole = isGlobalAdmin
+    ? "global_admin"
+    : role === "company_admin"
+      ? "client_admin"
+      : role === "it_dev"
+        ? "it_dev"
+        : "client_user";
   return {
     id: user.id,
     name: user.name ?? "",
     email: user.email,
-    role: role === "company_admin" ? "client_admin" : "client_user",
+    user: user.user ?? user.email ?? "",
+    role: mappedRole,
     client_id: link?.companyId ?? null,
     active: user.active !== false,
-    job_title: null,
-    linkedin_url: null,
-    avatar_url: null,
+    job_title: user.job_title ?? null,
+    linkedin_url: user.linkedin_url ?? null,
+    avatar_url: user.avatar_url ?? null,
   };
 }
 
 function normalizeRole(input?: string | null) {
   const value = (input ?? "").toLowerCase();
   if (value === "client_admin" || value === "admin" || value === "global_admin" || value === "company_admin") return "company_admin";
+  if (value === "it_dev" || value === "itdev" || value === "developer" || value === "dev") return "it_dev";
   if (value === "viewer" || value === "client_viewer") return "viewer";
   return "user";
+}
+
+function normalizeLogin(value?: string | null) {
+  return (value ?? "").trim().toLowerCase();
 }
 
 export async function GET(req: NextRequest) {
@@ -102,27 +128,59 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+  const login = normalizeLogin(typeof body?.user === "string" ? body.user : "");
   const clientId = typeof body?.client_id === "string" ? body.client_id : null;
-  const role = normalizeRole(body?.role);
+  const jobTitle = typeof body?.job_title === "string" ? body.job_title.trim() || null : null;
+  const linkedinUrl = typeof body?.linkedin_url === "string" ? body.linkedin_url.trim() || null : null;
+  const avatarUrl = typeof body?.avatar_url === "string" ? body.avatar_url.trim() || null : null;
+  const rawRole = typeof body?.role === "string" ? body.role : "";
+  const wantsGlobalAdmin = rawRole.trim().toLowerCase() === "global_admin";
+  const role = normalizeRole(rawRole);
   const capabilities = Array.isArray(body?.capabilities)
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
 
-  if (!name || !email) {
-    return NextResponse.json({ error: "Nome e email sao obrigatorios" }, { status: 400 });
+  if (!name || !email || !login) {
+    return NextResponse.json({ error: "Nome, usuario e email sao obrigatorios" }, { status: 400 });
   }
   if (!clientId) {
     return NextResponse.json({ error: "Empresa obrigatoria para este perfil" }, { status: 400 });
   }
 
+  const users = await listLocalUsers();
+  if (users.some((user) => normalizeLogin(user.email) === email)) {
+    return NextResponse.json({ error: "E-mail ja existe" }, { status: 409 });
+  }
+  if (users.some((user) => normalizeLogin(user.user ?? user.email) === login)) {
+    return NextResponse.json({ error: "Usuario ja existe" }, { status: 409 });
+  }
+
   const tempPassword = hashPasswordSha256(`${Date.now()}-${randomUUID()}`);
-  const user = await createLocalUser({
-    name,
-    email,
-    password_hash: tempPassword,
-    active: true,
-    role: "user",
-  });
+  let user = null;
+  try {
+    user = await createLocalUser({
+      name,
+      email,
+      user: login,
+      password_hash: tempPassword,
+      active: true,
+      role: "user",
+      globalRole: wantsGlobalAdmin ? "global_admin" : null,
+      is_global_admin: wantsGlobalAdmin,
+      job_title: jobTitle || null,
+      linkedin_url: linkedinUrl || null,
+      avatar_url: avatarUrl || null,
+    });
+  } catch (err) {
+    const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
+    if (code === "DUPLICATE_EMAIL") {
+      return NextResponse.json({ error: "E-mail ja existe" }, { status: 409 });
+    }
+    if (code === "DUPLICATE_USER") {
+      return NextResponse.json({ error: "Usuario ja existe" }, { status: 409 });
+    }
+    throw err;
+  }
 
   await upsertLocalLink({ userId: user.id, companyId: clientId, role, capabilities });
 
@@ -153,17 +211,38 @@ export async function PATCH(req: NextRequest) {
 
   const name = typeof body?.name === "string" ? body.name.trim() : null;
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : null;
+  const login = typeof body?.user === "string" ? normalizeLogin(body.user) : null;
   const active = typeof body?.active === "boolean" ? body.active : null;
   const clientId = typeof body?.client_id === "string" ? body.client_id : null;
-  const role = normalizeRole(body?.role);
+  const jobTitle = typeof body?.job_title === "string" ? body.job_title.trim() || null : null;
+  const linkedinUrl = typeof body?.linkedin_url === "string" ? body.linkedin_url.trim() || null : null;
+  const avatarUrl = typeof body?.avatar_url === "string" ? body.avatar_url.trim() || null : null;
+  const rawRole = typeof body?.role === "string" ? body.role : "";
+  const wantsGlobalAdmin = rawRole.trim().toLowerCase() === "global_admin";
+  const role = normalizeRole(rawRole);
   const capabilities = Array.isArray(body?.capabilities)
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
 
+  if (email || login) {
+    const users = await listLocalUsers();
+    if (email && users.some((user) => user.id !== userId && normalizeLogin(user.email) === email)) {
+      return NextResponse.json({ error: "E-mail ja existe" }, { status: 409 });
+    }
+    if (login && users.some((user) => user.id !== userId && normalizeLogin(user.user ?? user.email) === login)) {
+      return NextResponse.json({ error: "Usuario ja existe" }, { status: 409 });
+    }
+  }
+
   const updated = await updateLocalUser(userId, {
     ...(name ? { name } : {}),
     ...(email ? { email } : {}),
+    ...(login ? { user: login } : {}),
     ...(active !== null ? { active } : {}),
+    ...(jobTitle !== null ? { job_title: jobTitle } : {}),
+    ...(linkedinUrl !== null ? { linkedin_url: linkedinUrl } : {}),
+    ...(avatarUrl !== null ? { avatar_url: avatarUrl } : {}),
+    ...(rawRole ? { globalRole: wantsGlobalAdmin ? "global_admin" : null, is_global_admin: wantsGlobalAdmin } : {}),
   });
 
   if (!updated) {

@@ -6,12 +6,14 @@ type Client = {
   id: string;
   name: string;
   taxId?: string | null;
+  zip?: string | null;
   address?: string | null;
   description?: string | null;
   website?: string | null;
   phone?: string | null;
   logoUrl?: string | null;
   docsLink?: string | null;
+  linkedin?: string | null;
   notes?: string | null;
   active: boolean;
   team: { id: string; name: string; role: string; avatarUrl?: string | null }[];
@@ -30,14 +32,16 @@ export function ClientDetails({ client, isGlobalAdmin, onOpenCreateUser, onEditC
   }
 
   const infoFields = [
-    { label: "CNPJ", value: client.taxId },
-    { label: "Endereco", value: client.address },
-    { label: "Website", value: client.website, isLink: true },
-    { label: "Telefone", value: client.phone },
-    { label: "LinkedIn", value: client.docsLink, isLink: true },
-    { label: "Descricao", value: client.description, full: true },
-    { label: "Notas internas", value: client.notes, full: true },
-  ].filter((f) => !!f.value);
+    { label: "CNPJ", value: client.taxId ?? "Nao informado" },
+    { label: "CEP", value: client.zip ?? "Nao informado" },
+    { label: "Endereco", value: client.address ?? "Nao informado" },
+    { label: "Website", value: client.website ?? "Nao informado", isLink: true },
+    { label: "Telefone", value: client.phone ?? "Nao informado" },
+    { label: "Documentacao", value: client.docsLink ?? "Nao informado", isLink: true },
+    { label: "LinkedIn", value: client.linkedin ?? "Nao informado", isLink: true },
+    { label: "Descricao", value: client.description ?? "Sem descricao", full: true },
+    { label: "Notas internas", value: client.notes ?? "Sem notas", full: true },
+  ];
 
   return (
     <div className="space-y-6">
@@ -96,14 +100,18 @@ export function ClientDetails({ client, isGlobalAdmin, onOpenCreateUser, onEditC
 }
 
 function Field({ label, value, isLink, full }: { label: string; value: string; isLink?: boolean; full?: boolean }) {
-  const content =
-    isLink && value && value !== "Nao informado" && value !== "Sem notas" && value !== "Sem descricao" ? (
-      <a href={value} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline break-all">
-        {value}
-      </a>
-    ) : (
-      <span className="font-medium wrap-break-word">{value}</span>
-    );
+  const display = value ?? "Nao informado";
+  const trimmed = display.trim();
+  const isPlaceholder =
+    display === "Nao informado" || display === "Sem notas" || display === "Sem descricao";
+  const isUrl = isLink && /^https?:\/\//i.test(trimmed);
+  const content = isUrl ? (
+    <a href={trimmed} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline break-all">
+      {display}
+    </a>
+  ) : (
+    <span className={`font-medium wrap-break-word ${isPlaceholder ? "text-gray-400" : ""}`}>{display}</span>
+  );
 
   return (
     <div className={full ? "md:col-span-2" : undefined}>

@@ -32,7 +32,9 @@ export default function AdminAuditLogsPage() {
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [action, setAction] = useState("");
+  const [entityType, setEntityType] = useState("");
   const [actor, setActor] = useState("");
+  const [targetQuery, setTargetQuery] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -69,10 +71,23 @@ export default function AdminAuditLogsPage() {
     return Array.from(set).sort();
   }, [items]);
 
+  const entityTypes = useMemo(() => {
+    const set = new Set(items.map((i) => i.entity_type));
+    return Array.from(set).sort();
+  }, [items]);
+
   const filteredItems = useMemo(() => {
     return items.filter((log) => {
       if (action && log.action !== action) return false;
+      if (entityType && log.entity_type !== entityType) return false;
       if (actor && !(log.actor_email ?? "").toLowerCase().includes(actor.toLowerCase())) return false;
+      if (targetQuery) {
+        const q = targetQuery.toLowerCase();
+        const label = (log.entity_label ?? "").toLowerCase();
+        const id = (log.entity_id ?? "").toLowerCase();
+        const type = (log.entity_type ?? "").toLowerCase();
+        if (!label.includes(q) && !id.includes(q) && !type.includes(q)) return false;
+      }
       if (startDate) {
         const date = new Date(log.created_at);
         if (date < new Date(startDate)) return false;
@@ -104,9 +119,11 @@ export default function AdminAuditLogsPage() {
         </header>
 
         <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 space-y-4 shadow shadow-black/5">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <FilterSelect label="Ação" value={action} onChange={setAction} options={actions} />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+            <FilterSelect label="Acao" value={action} onChange={setAction} options={actions} />
+            <FilterSelect label="Entidade" value={entityType} onChange={setEntityType} options={entityTypes} />
             <FilterInput label="Ator" value={actor} onChange={setActor} placeholder="email ou uid" />
+            <FilterInput label="Alvo" value={targetQuery} onChange={setTargetQuery} placeholder="empresa, usuario, id" />
             <FilterInput label="Data inicial" value={startDate} onChange={setStartDate} type="date" />
             <FilterInput label="Data final" value={endDate} onChange={setEndDate} type="date" />
           </div>
@@ -121,7 +138,9 @@ export default function AdminAuditLogsPage() {
             <button
               onClick={() => {
                 setAction("");
+                setEntityType("");
                 setActor("");
+                setTargetQuery("");
                 setStartDate("");
                 setEndDate("");
               }}

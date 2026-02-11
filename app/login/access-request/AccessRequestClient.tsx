@@ -9,6 +9,28 @@ const ACCESS_OPTIONS = [
   { value: "admin", label: "Admin do sistema", description: "Acesso completo ao painel (apenas para equipes internas)." },
 ];
 
+type LookupItem = {
+  id: string;
+  status: string;
+  createdAt: string;
+  email: string;
+  name: string;
+  jobRole?: string | null;
+  company?: string | null;
+  clientId?: string | null;
+  accessType?: string | null;
+  notes?: string | null;
+  adminNotes?: string | null;
+};
+
+type AccessRequestComment = {
+  id: string;
+  authorRole: "admin" | "requester";
+  authorName: string;
+  body: string;
+  createdAt: string;
+};
+
 export default function AccessRequestClient() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -20,6 +42,14 @@ export default function AccessRequestClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [lookupName, setLookupName] = useState("");
+  const [lookupEmail, setLookupEmail] = useState("");
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [lookupItem, setLookupItem] = useState<LookupItem | null>(null);
+  const [lookupComments, setLookupComments] = useState<AccessRequestComment[]>([]);
+  const [commentDraft, setCommentDraft] = useState("");
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -87,7 +117,91 @@ export default function AccessRequestClient() {
     }
   };
 
+  const statusLabel = (status: string) => {
+    if (status === "closed") return "Aprovada";
+    if (status === "rejected") return "Rejeitada";
+    if (status === "in_progress") return "Em analise";
+    return "Aberta";
+  };
+
+  const handleLookup = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLookupError(null);
+    setLookupItem(null);
+    setLookupComments([]);
+    setCommentDraft("");
+
+    const normalizedEmail = lookupEmail.trim().toLowerCase();
+    const normalizedName = lookupName.trim();
+
+    if (!normalizedName || !normalizedEmail) {
+      setLookupError("Informe nome e e-mail para consultar.");
+      return;
+    }
+
+    setLookupLoading(true);
+    try {
+      const res = await fetch(
+        `/api/support/access-request/lookup?name=${encodeURIComponent(normalizedName)}&email=${encodeURIComponent(
+          normalizedEmail,
+        )}`,
+        { cache: "no-store" },
+      );
+      const json = (await res.json().catch(() => null)) as { item?: LookupItem; comments?: AccessRequestComment[]; error?: string };
+      if (!res.ok) {
+        setLookupError(json?.error || "Solicitacao nao encontrada.");
+        return;
+      }
+      setLookupItem(json.item ?? null);
+      setLookupComments(Array.isArray(json.comments) ? json.comments : []);
+    } catch (err) {
+      setLookupError(err instanceof Error ? err.message : "Erro ao consultar solicitacao.");
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
+  const handleSubmitComment = async () => {
+    if (!lookupItem) return;
+    const body = commentDraft.trim();
+    if (!body) return;
+
+    setCommentSubmitting(true);
+    setLookupError(null);
+    try {
+      const res = await fetch("/api/support/access-request/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId: lookupItem.id,
+          name: lookupName.trim(),
+          email: lookupEmail.trim().toLowerCase(),
+          comment: body,
+        }),
+      });
+      const json = (await res.json().catch(() => null)) as { item?: AccessRequestComment; error?: string };
+      if (!res.ok) {
+        setLookupError(json?.error || "Falha ao enviar comentario.");
+        return;
+      }
+      if (json.item) {
+        setLookupComments((prev) => [...prev, json.item as AccessRequestComment]);
+      }
+      setCommentDraft("");
+    } catch (err) {
+      setLookupError(err instanceof Error ? err.message : "Erro ao enviar comentario.");
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
+
   const currentOption = ACCESS_OPTIONS.find((option) => option.value === accessType);
+  const adminNote = lookupItem?.adminNotes?.trim() || "";
+  const showAdminNote =
+    Boolean(adminNote) &&
+    !lookupComments.some(
+      (comment) => comment.authorRole === "admin" && comment.body.trim() === adminNote,
+    );
 
   return (
     <div className="min-h-[100svh] flex items-start sm:items-center justify-start sm:justify-center bg-gradient-to-br from-[#f4f6fb] via-[#eff0f6] to-[#ffffff] py-12 px-4 sm:px-6 lg:px-8 overflow-x-hidden overflow-y-auto">
@@ -219,6 +333,116 @@ export default function AccessRequestClient() {
               Voltar ao login
             </Link>
           </div>
+        </form>
+
+        <form className="bg-white shadow-xl rounded-2xl px-8 py-8 space-y-4" onSubmit={handleLookup}>
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <h3 className="text-lg font-semibold text-[#0b1a3c]">Consultar solicitacao</h3>
+              <p className="text-xs text-[#475569]">Preencha nome e e-mail para acompanhar status e comentarios.</p>
+            </div>
+            {lookupLoading && <span className="text-xs text-[#475569]">Consultando...</span>}
+          </div>
+
+          {lookupError && (
+            <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+              {lookupError}
+            </div>
+          )}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="space-y-1 text-sm text-[#0b1a3c]">
+              Nome completo
+              <input
+                type="text"
+                value={lookupName}
+                onChange={(event) => setLookupName(event.target.value)}
+                required
+                className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm focus:border-[#011848] focus:outline-none focus:ring-2 focus:ring-[#ef0001]/30"
+                placeholder="Ana Souza"
+              />
+            </label>
+            <label className="space-y-1 text-sm text-[#0b1a3c]">
+              E-mail
+              <input
+                type="email"
+                value={lookupEmail}
+                onChange={(event) => setLookupEmail(event.target.value)}
+                required
+                className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm focus:border-[#011848] focus:outline-none focus:ring-2 focus:ring-[#ef0001]/30"
+                placeholder="voce@empresa.com"
+              />
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            disabled={lookupLoading}
+            className="w-full flex items-center justify-center rounded-lg bg-[#011848] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#ef0001] hover:text-[#011848] focus:outline-none focus:ring-2 focus:ring-[#ef0001]/50 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {lookupLoading ? "Consultando..." : "Consultar solicitacao"}
+          </button>
+
+          {lookupItem && (
+            <div className="rounded-xl border border-[#e5e7eb] bg-[#f8fafc] p-4 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-[#0b1a3c]">Solicitacao encontrada</p>
+                  <p className="text-xs text-[#475569]">Criada em {new Date(lookupItem.createdAt).toLocaleString()}</p>
+                </div>
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#0b1a3c] border">
+                  {statusLabel(lookupItem.status)}
+                </span>
+              </div>
+
+              {showAdminNote && (
+                <div className="rounded-lg border bg-white px-3 py-2 text-sm text-[#0b1a3c]">
+                  <strong>Comentario do admin:</strong> {adminNote}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-[#0b1a3c]">Comentarios</p>
+                {lookupComments.length === 0 ? (
+                  <p className="text-xs text-[#475569]">Nenhum comentario ainda.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {lookupComments.map((comment) => (
+                      <div key={comment.id} className="rounded-lg border bg-white px-3 py-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs font-semibold text-[#0b1a3c]">
+                            {comment.authorRole === "admin" ? "Admin" : "Solicitante"}: {comment.authorName}
+                          </p>
+                          <span className="text-[11px] text-[#64748b]">
+                            {new Date(comment.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-sm text-[#334155] whitespace-pre-wrap">{comment.body}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <textarea
+                  className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm focus:border-[#011848] focus:outline-none focus:ring-2 focus:ring-[#ef0001]/30"
+                  rows={3}
+                  placeholder="Adicionar comentario"
+                  value={commentDraft}
+                  onChange={(event) => setCommentDraft(event.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={handleSubmitComment}
+                  disabled={commentSubmitting || !commentDraft.trim()}
+                  className="rounded-lg border px-3 py-2 text-xs font-semibold text-[#0b1a3c] hover:bg-white disabled:opacity-60"
+                >
+                  {commentSubmitting ? "Enviando..." : "Enviar comentario"}
+                </button>
+              </div>
+            </div>
+          )}
         </form>
       </div>
     </div>

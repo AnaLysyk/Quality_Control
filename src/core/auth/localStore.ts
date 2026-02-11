@@ -17,6 +17,8 @@ export type LocalAuthUser = {
   active?: boolean;
   is_global_admin?: boolean;
   avatar_url?: string | null;
+  job_title?: string | null;
+  linkedin_url?: string | null;
   phone?: string | null;
   default_company_slug?: string | null;
   createdAt?: string | null;
@@ -363,30 +365,48 @@ export async function listLocalLinksForCompany(companyId: string): Promise<Local
 export async function createLocalUser(input: {
   name: string;
   email: string;
+  user?: string;
   password_hash: string;
   role?: string | null;
   globalRole?: "global_admin" | null;
   status?: "active" | "blocked" | "invited";
   active?: boolean;
   is_global_admin?: boolean;
+  avatar_url?: string | null;
+  job_title?: string | null;
+  linkedin_url?: string | null;
+  phone?: string | null;
 }): Promise<LocalAuthUser> {
   const store = await loadStoreForWrite();
   const email = normalizeLogin(input.email);
-  const existing = store.users.find((user) => normalizeLogin(user.email) === email);
-  if (existing) {
-    return { ...existing };
+  const login = normalizeLogin(input.user ?? input.email);
+  const existingByEmail = store.users.find((user) => normalizeLogin(user.email) === email);
+  if (existingByEmail) {
+    const err = new Error("E-mail ja existe") as Error & { code?: string };
+    err.code = "DUPLICATE_EMAIL";
+    throw err;
+  }
+  const existingByLogin = store.users.find((user) => normalizeLogin(user.user ?? user.email) === login);
+  if (existingByLogin) {
+    const err = new Error("Usuario ja existe") as Error & { code?: string };
+    err.code = "DUPLICATE_USER";
+    throw err;
   }
   const user: LocalAuthUser = {
     id: `usr_${randomUUID().slice(0, 8)}`,
     name: input.name.trim() || email,
     email,
-    user: email,
+    user: login || email,
     password_hash: input.password_hash,
     role: input.role ?? "user",
     globalRole: input.globalRole ?? null,
     status: input.status ?? "active",
     active: input.active ?? true,
     is_global_admin: input.is_global_admin ?? false,
+    avatar_url: input.avatar_url ?? null,
+    job_title: input.job_title ?? null,
+    linkedin_url: input.linkedin_url ?? null,
+    phone: input.phone ?? null,
     createdAt: new Date().toISOString(),
   };
   store.users.push(user);
@@ -405,12 +425,16 @@ export async function updateLocalUser(
   const next: LocalAuthUser = {
     ...current,
     ...(patch.name ? { name: patch.name } : {}),
-    ...(patch.email ? { email: normalizeLogin(patch.email), user: normalizeLogin(patch.email) } : {}),
+    ...(patch.email ? { email: normalizeLogin(patch.email) } : {}),
+    ...(typeof patch.user === "string" ? { user: normalizeLogin(patch.user) } : {}),
     ...(typeof patch.role === "string" ? { role: patch.role } : {}),
-    ...(typeof patch.globalRole === "string" ? { globalRole: patch.globalRole } : {}),
+    ...(patch.globalRole !== undefined ? { globalRole: patch.globalRole } : {}),
     ...(typeof patch.status === "string" ? { status: patch.status } : {}),
     ...(typeof patch.active === "boolean" ? { active: patch.active } : {}),
     ...(typeof patch.is_global_admin === "boolean" ? { is_global_admin: patch.is_global_admin } : {}),
+    ...(patch.avatar_url !== undefined ? { avatar_url: patch.avatar_url ?? null } : {}),
+    ...(patch.job_title !== undefined ? { job_title: patch.job_title ?? null } : {}),
+    ...(patch.linkedin_url !== undefined ? { linkedin_url: patch.linkedin_url ?? null } : {}),
     ...(patch.phone !== undefined ? { phone: patch.phone ?? null } : {}),
     ...(patch.password_hash ? { password_hash: patch.password_hash } : {}),
   };

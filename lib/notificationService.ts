@@ -244,3 +244,22 @@ export async function notifyTicketAssigned(input: {
     dedupeKey: `ticket:${input.ticket.id}:assigned:${input.assigneeId}`,
   });
 }
+
+export async function notifyAccessRequestComment(input: {
+  requestId: string;
+  commentId: string;
+  authorName: string;
+  body: string;
+}) {
+  const adminIds = await resolveAdminUserIds();
+  if (!adminIds.length) return;
+  const preview = input.body.length > 160 ? `${input.body.slice(0, 160)}...` : input.body;
+  await createNotificationsForUsers(adminIds, {
+    type: "ACCESS_REQUEST_COMMENT",
+    title: "Novo comentario em solicitacao de acesso",
+    description: `${input.authorName}: ${preview}`,
+    requestId: input.requestId,
+    link: "/admin/access-requests",
+    dedupeKey: `access-request:${input.requestId}:comment:${input.commentId}`,
+  });
+}

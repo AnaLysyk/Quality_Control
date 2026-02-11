@@ -18,12 +18,14 @@ type Props = {
 const ROLE_OPTIONS = [
   { value: "client_admin", label: "Admin do cliente" },
   { value: "client_user", label: "Usuario do cliente" },
+  { value: "it_dev", label: "Dev / IT" },
   { value: "global_admin", label: "Admin global" },
 ];
 
 export function CreateUserModal({ open, clientId, clients, onClose, onCreated }: Props) {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("client_user");
   const [jobTitle, setJobTitle] = useState("");
@@ -38,10 +40,10 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
     return null;
   });
 
-  const requiresClient = role !== "global_admin";
+  const requiresClient = true;
   const canSubmit = useMemo(
-    () => !!open && (!requiresClient || !!localClientId) && !!name.trim() && !!email.trim(),
-    [open, requiresClient, localClientId, name, email],
+    () => !!open && (!requiresClient || !!localClientId) && !!name.trim() && !!login.trim() && !!email.trim(),
+    [open, requiresClient, localClientId, name, login, email],
   );
 
   useEffect(() => {
@@ -91,10 +93,11 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
     try {
       const payload = {
         name: name.trim(),
+        user: login.trim(),
         email: email.trim(),
         avatar_url: avatarUrl.trim() || undefined,
         role,
-        client_id: requiresClient ? localClientId : null,
+        client_id: localClientId,
         job_title: jobTitle.trim() || undefined,
         linkedin_url: linkedin.trim() || undefined,
       };
@@ -138,6 +141,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
 
   function resetForm() {
     setName("");
+    setLogin("");
     setEmail("");
     setJobTitle("");
     setLinkedin("");
@@ -192,6 +196,16 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Nome do usuario"
+                  required
+                />
+              </label>
+              <label className="block text-sm">
+                Usuario (login)
+                <input
+                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
+                  placeholder="usuario"
                   required
                 />
               </label>

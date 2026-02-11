@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getTicketById, updateTicketStatus } from "@/lib/ticketsStore";
+import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
@@ -17,7 +18,8 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
     return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
   }
 
-  return NextResponse.json({ item }, { status: 200 });
+  const enriched = await attachAssigneeToTicket(item);
+  return NextResponse.json({ item: enriched }, { status: 200 });
 }
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
@@ -37,5 +39,6 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     return NextResponse.json({ error: "Chamado nao encontrado ou status invalido" }, { status: 404 });
   }
 
-  return NextResponse.json({ item: updated }, { status: 200 });
+  const enriched = await attachAssigneeToTicket(updated);
+  return NextResponse.json({ item: enriched }, { status: 200 });
 }

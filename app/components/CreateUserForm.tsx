@@ -9,6 +9,7 @@ export default function CreateUserForm({
   companies: { id: string; name: string }[];
 }) {
   const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [companyId, setCompanyId] = useState(companies[0]?.id || "");
@@ -25,7 +26,7 @@ export default function CreateUserForm({
       const res = await fetch("/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, password, companyId }),
+        body: JSON.stringify({ user: login, email, name, password, companyId }),
       });
       if (!res.ok) {
         let msg = "Erro ao criar usuario";
@@ -36,6 +37,7 @@ export default function CreateUserForm({
         throw new Error(msg);
       }
       setEmail("");
+      setLogin("");
       setName("");
       setPassword("");
       // setCompanyId(companies[0]?.id || ""); // Descomente se quiser resetar empresa
@@ -62,6 +64,17 @@ export default function CreateUserForm({
           required
           type="email"
           autoComplete="email"
+        />
+      </label>
+      <label className="block">
+        <span className="text-sm">Usuario (login)</span>
+        <input
+          className="form-control-user border rounded px-2 py-1 w-full mt-1"
+          placeholder="usuario"
+          value={login}
+          onChange={e => setLogin(e.target.value)}
+          required
+          autoComplete="username"
         />
       </label>
       <label className="block">
@@ -105,9 +118,9 @@ export default function CreateUserForm({
       <button
         type="submit"
         className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
-        disabled={loading || !email || !name || !password || !companyId}
+        disabled={loading || !email || !login || !name || !password || !companyId}
         aria-busy={loading}
-        aria-disabled={loading || !email || !name || !password || !companyId}
+        aria-disabled={loading || !email || !login || !name || !password || !companyId}
         role="button"
       >
         {loading ? <span className="animate-pulse">Salvando...</span> : "Criar Usuario"}

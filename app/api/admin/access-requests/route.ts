@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prismaClient";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { listAccessRequests } from "@/data/accessRequestsStore";
+import { extractAdminNotes } from "@/lib/accessRequestMessage";
 
 export const runtime = "nodejs";
 
@@ -13,13 +14,6 @@ type SupportRequestRow = {
   status: string;
   created_at: Date;
 };
-
-function extractAdminNotes(message: string): string | null {
-  const line = message.split("\n").find((l) => l.startsWith("ADMIN_NOTES:"));
-  if (!line) return null;
-  const notes = line.slice("ADMIN_NOTES:".length).trim();
-  return notes || null;
-}
 
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);

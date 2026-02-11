@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rateLimit";
 
-import store from "../store";
+import { readKanbanStore } from "../store";
 import type { Status } from "../types";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 
@@ -125,7 +125,8 @@ export async function GET(request: NextRequest) {
     return jsonError("O parâmetro 'slug' é obrigatório", 400);
   }
 
-  const rows: ExportRow[] = store
+  const { items: storeItems } = await readKanbanStore();
+  const rows: ExportRow[] = storeItems
     .filter((c) => {
       if (c.project !== project || c.run_id !== runId) return false;
       if (!effectiveSlug) return true;

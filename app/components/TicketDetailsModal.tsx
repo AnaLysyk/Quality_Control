@@ -18,7 +18,10 @@ type TicketItem = {
   createdByName?: string | null;
   createdByEmail?: string | null;
   assignedToUserId?: string | null;
+  assignedToName?: string | null;
+  assignedToEmail?: string | null;
   companySlug?: string | null;
+  companyId?: string | null;
 };
 
 type TicketComment = {
@@ -40,7 +43,17 @@ type TicketEvent = {
   type: string;
   payload?: Record<string, unknown> | null;
   actorUserId?: string | null;
+  actorName?: string | null;
+  actorEmail?: string | null;
   createdAt: string;
+};
+
+type AssigneeItem = {
+  id: string;
+  name: string;
+  email: string;
+  role?: string | null;
+  active?: boolean;
 };
 
 type Props = {
@@ -87,9 +100,19 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
   const [editingSaving, setEditingSaving] = useState(false);
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
+  const [assignees, setAssignees] = useState<AssigneeItem[]>([]);
+  const [assigneesLoading, setAssigneesLoading] = useState(false);
+  const [assigneeError, setAssigneeError] = useState<string | null>(null);
+  const [assigning, setAssigning] = useState(false);
+  const [selectedAssignee, setSelectedAssignee] = useState("");
 
   const ticketId = ticket?.id ?? null;
-  const assignedLabel = ticket?.assignedToUserId ? `UID: ${ticket.assignedToUserId}` : "Nao atribuido";
+  const assignedLabel =
+    ticket?.assignedToName ||
+    ticket?.assignedToEmail ||
+    (ticket?.assignedToUserId ? `UID: ${ticket.assignedToUserId}` : "Nao atribuido");
+  const role = (user?.role ?? "").toLowerCase();
+  const canAssign = Boolean(user && (user.isGlobalAdmin || role === "admin" || role === "it_dev" || role === "dev" || role === "developer"));
 
   const tagsLabel = useMemo(() => {
     const tags = Array.isArray(ticket?.tags) ? ticket?.tags : [];
@@ -114,6 +137,45 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
       setTab("details");
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    setSelectedAssignee(ticket?.assignedToUserId ?? "");
+  }, [open, ticket?.assignedToUserId]);
+
+  useEffect(() => {
+    if (!open || !canAssign) return;
+    let active = true;
+    setAssigneesLoading(true);
+    setAssigneeError(null);
+    const endpoint = ticket?.companyId
+      ? `/api/admin/users?client_id=${encodeURIComponent(ticket.companyId)}`
+      : "/api/admin/users";
+    fetch(endpoint, { credentials: "include", cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!active) return;
+        const items = Array.isArray(data?.items) ? (data.items as AssigneeItem[]) : [];
+        const filtered = items.filter((item) => {
+          const role = (item.role ?? "").toLowerCase();
+          return role === "it_dev" || role === "dev" || role === "developer";
+        });
+        setAssignees(filtered);
+      })
+      .catch((err) => {
+        if (!active) return;
+        const msg = err instanceof Error ? err.message : "Erro ao carregar desenvolvedores";
+        setAssignees([]);
+        setAssigneeError(msg);
+      })
+      .finally(() => {
+        if (!active) return;
+        setAssigneesLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [open, canAssign, ticket?.companyId]);
 
   async function loadComments() {
     if (!ticketId) return;
@@ -269,6 +331,33 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     }
   }
 
+  async function updateAssignment(nextAssignee: string) {
+    if (!ticketId) return;
+    setAssigning(true);
+    setAssigneeError(null);
+    try {
+      const res = await fetch(`/api/tickets/${ticketId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ assignedToUserId: nextAssignee || null }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.item) {
+        setAssigneeError(json?.error || "Erro ao atribuir");
+        return;
+      }
+      setSelectedAssignee(json.item.assignedToUserId ?? "");
+      onTicketUpdated?.(json.item as TicketItem);
+      await loadEvents();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao atribuir";
+      setAssigneeError(msg);
+    } finally {
+      setAssigning(false);
+    }
+  }
+
   if (!open || !ticket) return null;
 
   return (
@@ -324,6 +413,43 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                   <p className="text-sm font-semibold">{tagsLabel}</p>
                 </div>
               </div>
+              {canAssign && (
+                <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4 space-y-2">
+                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
+                    Responsavel pelo ticket
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <select
+                      className="rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
+                      value={selectedAssignee}
+                      onChange={(e) => updateAssignment(e.target.value)}
+                      disabled={assigning || assigneesLoading}
+                    >
+                      <option value="">Sem responsavel</option>
+                      {assignees.map((assignee) => (
+                        <option key={assignee.id} value={assignee.id}>
+                          {assignee.name || assignee.email}
+                        </option>
+                      ))}
+                    </select>
+                    {user?.id && (
+                      <button
+                        type="button"
+                        onClick={() => updateAssignment(user.id)}
+                        disabled={assigning || selectedAssignee === user.id}
+                        className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.3em]"
+                      >
+                        Assumir
+                      </button>
+                    )}
+                    {assigneesLoading && <span className="text-xs text-(--tc-text-muted,#6b7280)">Carregando...</span>}
+                  </div>
+                  {assigneeError && <p className="text-xs text-red-600">{assigneeError}</p>}
+                  {!assigneesLoading && assignees.length === 0 && (
+                    <p className="text-xs text-(--tc-text-muted,#6b7280)">Nenhum desenvolvedor disponivel.</p>
+                  )}
+                </div>
+              )}
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Descricao</p>
                 <p className="mt-2 text-sm whitespace-pre-wrap text-(--tc-text-secondary,#4b5563)">
@@ -504,6 +630,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                   <div key={event.id} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3">
                     <p className="text-sm font-semibold text-(--tc-text,#0f172a)">{formatEventLabel(event)}</p>
                     <p className="text-[11px] text-(--tc-text-muted,#6b7280)">
+                      {event.actorName || event.actorEmail || event.actorUserId || "Sistema"} •{" "}
                       {new Date(event.createdAt).toLocaleString("pt-BR")}
                     </p>
                   </div>

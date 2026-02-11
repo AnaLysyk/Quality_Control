@@ -5,6 +5,7 @@ import { getMockRole } from "@/lib/rbac/defects";
 import { readManualReleases } from "@/lib/manualReleaseStore";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
 import { listDefectHistory } from "@/lib/manualDefectHistoryStore";
+import { getLocalUserById } from "@/lib/auth/localStore";
 
 function resolveAllowedSlugs(user: AuthUser): string[] {
   if (Array.isArray(user.companySlugs) && user.companySlugs.length) return user.companySlugs;
@@ -15,8 +16,9 @@ function resolveAllowedSlugs(user: AuthUser): string[] {
 export async function GET(req: Request, context: { params: Promise<{ slug: string }> }) {
   const authUser = await authenticateRequest(req);
   const mockRole = await getMockRole();
-  const effectiveAuthUser =
-    authUser ?? (mockRole ? { id: "mock-user", isGlobalAdmin: mockRole === "admin" } : null);
+  const effectiveAuthUser: AuthUser | null =
+    authUser ??
+    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "admin" } : null);
   if (!effectiveAuthUser) {
     return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
   }
@@ -41,5 +43,18 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   }
 
   const items = await listDefectHistory(targetSlug);
-  return NextResponse.json({ items }, { status: 200 });
+  const uniqueActors = Array.from(
+    new Set(items.map((event) => event.actorId).filter((value): value is string => Boolean(value))),
+  );
+  const actors = await Promise.all(uniqueActors.map((actorId) => getLocalUserById(actorId)));
+  const actorMap = new Map(uniqueActors.map((actorId, idx) => [actorId, actors[idx] ?? null]));
+
+  const enriched = items.map((event) => {
+    if (event.actorName || !event.actorId) return event;
+    const actor = actorMap.get(event.actorId) ?? null;
+    if (!actor) return event;
+    return { ...event, actorName: actor.name ?? actor.email ?? event.actorName ?? null };
+  });
+
+  return NextResponse.json({ items: enriched }, { status: 200 });
 }

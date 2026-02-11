@@ -5,6 +5,7 @@ import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { getTicketStatusLabel } from "@/lib/ticketsStatus";
 import { notifyTicketAssigned, notifyTicketStatusChanged } from "@/lib/notificationService";
 import { canMoveTicket, isItDev, isTicketAdmin } from "@/lib/rbac/tickets";
+import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
@@ -64,5 +65,6 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     reason,
   }).catch((err) => console.error("Falha ao notificar status:", err));
 
-  return NextResponse.json({ item: finalTicket }, { status: 200 });
+  const enriched = await attachAssigneeToTicket(finalTicket);
+  return NextResponse.json({ item: enriched }, { status: 200 });
 }

@@ -96,6 +96,13 @@ export async function POST(req: NextRequest) {
   const slugBase = toSlug(desiredSlug || name) || `empresa-${randomUUID().slice(0, 8)}`;
 
   const integrationType = (input as { integration_type?: string | null }).integration_type ?? null;
+  const resolvedNotes =
+    input.notes ??
+    input.internal_notes ??
+    input.extra_notes ??
+    input.description ??
+    input.short_description ??
+    null;
   const company = await createLocalCompany({
     name,
     slug: slugBase,
@@ -106,7 +113,13 @@ export async function POST(req: NextRequest) {
     website: input.website ?? null,
     logo_url: input.logo_url ?? null,
     docs_link: input.docs_link ?? input.docs_url ?? null,
-    notes: input.notes ?? input.description ?? null,
+    notes: resolvedNotes,
+    cep: input.cep ?? null,
+    address_detail: input.address_detail ?? null,
+    linkedin_url: input.linkedin_url ?? null,
+    short_description: input.short_description ?? input.description ?? null,
+    internal_notes: input.internal_notes ?? input.notes ?? null,
+    extra_notes: input.extra_notes ?? null,
     qase_project_code: input.qase_project_code ?? null,
     qase_project_codes: input.qase_project_codes ?? null,
     qase_token: input.qase_token ?? null,

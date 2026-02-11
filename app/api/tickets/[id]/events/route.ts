@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getTicketById } from "@/lib/ticketsStore";
 import { listTicketEvents } from "@/lib/ticketEventsStore";
+import { getLocalUserById } from "@/lib/auth/localStore";
 import { canViewTicket } from "@/lib/rbac/tickets";
 
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
@@ -24,5 +25,22 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
   const offset = Number(url.searchParams.get("offset") ?? 0);
   const items = await listTicketEvents(id, { limit, offset });
 
-  return NextResponse.json({ items }, { status: 200 });
+  const uniqueActors = Array.from(
+    new Set(items.map((event) => event.actorUserId).filter((value): value is string => Boolean(value))),
+  );
+  const actors = await Promise.all(uniqueActors.map((actorId) => getLocalUserById(actorId)));
+  const actorMap = new Map(
+    uniqueActors.map((actorId, idx) => [actorId, actors[idx] ?? null]),
+  );
+
+  const enriched = items.map((event) => {
+    const actor = event.actorUserId ? actorMap.get(event.actorUserId) ?? null : null;
+    return {
+      ...event,
+      actorName: actor?.name ?? null,
+      actorEmail: actor?.email ?? null,
+    };
+  });
+
+  return NextResponse.json({ items: enriched }, { status: 200 });
 }

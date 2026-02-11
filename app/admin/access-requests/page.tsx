@@ -137,6 +137,10 @@ function statusBadgeClass(status: string) {
 const inputBase =
   "mt-1 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#1e293b] transition focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10";
 
+const labelBase = "text-[11px] font-semibold uppercase tracking-[0.3em] text-[#94a3b8]";
+const sectionCard = "rounded-xl border border-[#e5e7eb] bg-white p-4";
+const sectionMuted = "rounded-xl border border-[#e5e7eb] bg-[#f8fafc] p-4";
+
 function AccessRequestsPage() {
   const [items, setItems] = useState<AccessRequestItem[]>([]);
   const [clients, setClients] = useState<ClientOption[]>([]);
@@ -435,17 +439,17 @@ function AccessRequestsPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
           <div className="rounded-2xl bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.35em] text-[#64748b]">Solicitacoes</h2>
+              <h2 className={labelBase}>Solicitacoes</h2>
               <span className="text-xs text-[#94a3b8]">{items.length}</span>
             </div>
 
             <div className="mt-4 space-y-3">
               {loading ? (
-                <div className="rounded-xl border border-[#e5e7eb] bg-[#f8fafc] p-4 text-sm text-[#64748b]">
+                <div className={sectionMuted + " text-sm text-[#64748b]"}>
                   Carregando...
                 </div>
               ) : items.length === 0 ? (
-                <div className="rounded-xl border border-[#e5e7eb] bg-[#f8fafc] p-4 text-sm text-[#64748b]">
+                <div className={sectionMuted + " text-sm text-[#64748b]"}>
                   Nenhuma solicitacao.
                 </div>
               ) : (
@@ -492,18 +496,36 @@ function AccessRequestsPage() {
           </div>
 
           <div className="rounded-2xl bg-white p-6 shadow-[0_8px_32px_rgba(0,0,0,0.05)]">
-          {!selected || !draft ? (
-            <div className="text-sm text-[#64748b]">Selecione uma solicitacao.</div>
-          ) : (
-            <div className="space-y-6">
-              <div className="space-y-1">
-                <h2 className="text-2xl font-semibold text-[#1e293b]">Detalhes da solicitacao</h2>
-                <p className="text-sm text-[#64748b]">Revise os dados e tome uma decisao.</p>
-              </div>
+            {!selected || !draft ? (
+              <div className="text-sm text-[#64748b]">Selecione uma solicitacao.</div>
+            ) : (
+              <div className="space-y-6">
+                <div className={sectionMuted + " flex flex-wrap items-center justify-between gap-4"}>
+                  <div>
+                    <p className={labelBase}>Solicitante</p>
+                    <h2 className="mt-2 text-xl font-semibold text-[#1e293b]">
+                      {selected.name || "(sem nome)"}
+                    </h2>
+                    <p className="mt-1 text-sm text-[#64748b]">{selected.email}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium ${statusBadgeClass(selected.status)}`}>
+                      {statusLabel(selected.status)}
+                    </span>
+                    <span className="text-xs text-[#94a3b8]">
+                      {new Date(selected.createdAt).toLocaleString("pt-BR")}
+                    </span>
+                  </div>
+                </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <label className="block text-sm font-medium text-[#1e293b]">
-                  Tipo de acesso
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold text-[#1e293b]">Detalhes da solicitacao</h3>
+                  <p className="text-sm text-[#64748b]">Revise os dados e tome uma decisao.</p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <label className="block text-sm font-medium text-[#1e293b]">
+                    Tipo de acesso
                   <select
                     className={inputBase}
                     value={(draft.accessType ?? "Usuario da empresa") as AccessTypeLabel}
@@ -521,8 +543,8 @@ function AccessRequestsPage() {
                   </select>
                 </label>
 
-                <label className="block text-sm font-medium text-[#1e293b]">
-                  Empresa
+                  <label className="block text-sm font-medium text-[#1e293b]">
+                    Empresa
                   <select
                     className={inputBase}
                     value={draft.clientId ?? ""}
@@ -544,8 +566,8 @@ function AccessRequestsPage() {
                   </select>
                 </label>
 
-                <label className="block text-sm font-medium text-[#1e293b]">
-                  Nome
+                  <label className="block text-sm font-medium text-[#1e293b]">
+                    Nome
                   <input
                     className={inputBase}
                     value={draft.name ?? ""}
@@ -553,8 +575,8 @@ function AccessRequestsPage() {
                   />
                 </label>
 
-                <label className="block text-sm font-medium text-[#1e293b]">
-                  Email
+                  <label className="block text-sm font-medium text-[#1e293b]">
+                    Email
                   <input
                     type="email"
                     className={inputBase}
@@ -563,8 +585,8 @@ function AccessRequestsPage() {
                   />
                 </label>
 
-                <label className="block text-sm font-medium text-[#1e293b] sm:col-span-2">
-                  Cargo
+                  <label className="block text-sm font-medium text-[#1e293b] sm:col-span-2">
+                    Cargo
                   <input
                     className={inputBase}
                     value={draft.jobRole ?? ""}
@@ -572,8 +594,8 @@ function AccessRequestsPage() {
                   />
                 </label>
 
-                <label className="block text-sm font-medium text-[#1e293b] sm:col-span-2">
-                  Observacoes
+                  <label className="block text-sm font-medium text-[#1e293b] sm:col-span-2">
+                    Observacoes
                   <textarea
                     className={inputBase}
                     rows={4}
@@ -582,8 +604,8 @@ function AccessRequestsPage() {
                   />
                 </label>
 
-                <label className="block text-sm font-medium text-[#1e293b] sm:col-span-2">
-                  Notas do admin (motivo / observacao)
+                  <label className="block text-sm font-medium text-[#1e293b] sm:col-span-2">
+                    Notas do admin (motivo / observacao)
                   <textarea
                     className={inputBase}
                     rows={3}
@@ -591,96 +613,102 @@ function AccessRequestsPage() {
                     onChange={(e) => setDraft((d) => (d ? { ...d, adminNotes: e.target.value } : d))}
                   />
                 </label>
-              </div>
-
-              <div className="rounded-xl bg-[#f9fafb] p-4 space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-[#1e293b]">Comentarios</p>
-                  {commentLoading && <span className="text-xs text-[#94a3b8]">Carregando...</span>}
                 </div>
 
-                {commentError && (
-                  <div className="rounded-lg bg-[#fff7ed] px-3 py-2 text-xs text-[#c2410c]">
-                    {commentError}
+                <div className={sectionMuted + " space-y-3"}>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-[#1e293b]">Comentarios</p>
+                    {commentLoading && <span className="text-xs text-[#94a3b8]">Carregando...</span>}
                   </div>
-                )}
 
-                {comments.length === 0 ? (
-                  <p className="text-xs text-[#94a3b8]">Nenhum comentario ainda.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {comments.map((comment) => (
-                      <div key={comment.id} className="rounded-lg bg-white px-3 py-2 shadow-sm">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs font-semibold text-[#1e293b]">
-                            {comment.authorRole === "admin" ? "Admin" : "Solicitante"}: {comment.authorName}
-                          </p>
-                          <span className="text-[11px] text-[#94a3b8]">
-                            {new Date(comment.createdAt).toLocaleString("pt-BR")}
-                          </span>
+                  {commentError && (
+                    <div className="rounded-lg bg-[#fff7ed] px-3 py-2 text-xs text-[#c2410c]">
+                      {commentError}
+                    </div>
+                  )}
+
+                  {comments.length === 0 ? (
+                    <p className="text-xs text-[#94a3b8]">Nenhum comentario ainda.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {comments.map((comment) => (
+                        <div key={comment.id} className="rounded-lg bg-white px-3 py-2 shadow-sm">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-xs font-semibold text-[#1e293b]">
+                              {comment.authorRole === "admin" ? "Admin" : "Solicitante"}: {comment.authorName}
+                            </p>
+                            <span className="text-[11px] text-[#94a3b8]">
+                              {new Date(comment.createdAt).toLocaleString("pt-BR")}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-sm text-[#475569] whitespace-pre-wrap">{comment.body}</p>
                         </div>
-                        <p className="mt-1 text-sm text-[#475569] whitespace-pre-wrap">{comment.body}</p>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <textarea
+                      className={`${inputBase} mt-0`}
+                      rows={3}
+                      placeholder="Responder comentario"
+                      value={commentDraft}
+                      onChange={(e) => setCommentDraft(e.target.value)}
+                    />
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={submitComment}
+                        disabled={commentSaving || !commentDraft.trim()}
+                        className="rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#1e293b] transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
+                      >
+                        {commentSaving ? "Enviando..." : "Enviar comentario"}
+                      </button>
+                    </div>
                   </div>
-                )}
-
-                <div className="space-y-2">
-                  <textarea
-                    className={`${inputBase} mt-0`}
-                    rows={3}
-                    placeholder="Responder comentario"
-                    value={commentDraft}
-                    onChange={(e) => setCommentDraft(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={submitComment}
-                    disabled={commentSaving || !commentDraft.trim()}
-                    className="rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#1e293b] transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
-                  >
-                    {commentSaving ? "Enviando..." : "Enviar comentario"}
-                  </button>
                 </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#e5e7eb] bg-white px-4 py-3">
+                  <div className="text-xs text-[#94a3b8]">Acoes</div>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={saveChanges}
+                      disabled={!dirty || saving}
+                      className="rounded-full border border-[#e5e7eb] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#1e293b] transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
+                    >
+                      {saving ? "Salvando..." : "Salvar alteracoes"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={acceptRequest}
+                      disabled={
+                        accepting ||
+                        ((draft.accessType ?? "Usuario da empresa") !== "Admin do sistema" && !draft.clientId)
+                      }
+                      className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:bg-emerald-600 disabled:opacity-60"
+                    >
+                      {accepting ? "Aceitando..." : "Aprovar"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={rejectRequest}
+                      disabled={accepting}
+                      className="rounded-full border border-rose-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-rose-600 transition hover:bg-rose-50 disabled:opacity-60"
+                    >
+                      {accepting ? "Processando..." : "Recusar"}
+                    </button>
+                  </div>
+                </div>
+
+                <details className={sectionCard}>
+                  <summary className="cursor-pointer text-sm text-[#64748b]">Ver mensagem bruta</summary>
+                  <pre className="mt-3 whitespace-pre-wrap text-xs text-[#475569]">{selected.rawMessage}</pre>
+                </details>
               </div>
-
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={saveChanges}
-                  disabled={!dirty || saving}
-                  className="rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#1e293b] transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
-                >
-                  {saving ? "Salvando..." : "Salvar alteracoes"}
-                </button>
-                <button
-                  type="button"
-                  onClick={acceptRequest}
-                  disabled={
-                    accepting ||
-                    ((draft.accessType ?? "Usuario da empresa") !== "Admin do sistema" && !draft.clientId)
-                  }
-                  className="rounded-lg bg-emerald-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:bg-emerald-600 disabled:opacity-60"
-                >
-                  {accepting ? "Aceitando..." : "Aprovar"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={rejectRequest}
-                  disabled={accepting}
-                  className="rounded-lg border border-rose-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-rose-600 transition hover:bg-rose-50 disabled:opacity-60"
-                >
-                  {accepting ? "Processando..." : "Recusar"}
-                </button>
-              </div>
-
-              <details className="rounded-lg border border-[#e5e7eb] bg-white p-4">
-                <summary className="cursor-pointer text-sm text-[#64748b]">Ver mensagem bruta</summary>
-                <pre className="mt-3 whitespace-pre-wrap text-xs text-[#475569]">{selected.rawMessage}</pre>
-              </details>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

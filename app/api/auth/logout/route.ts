@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { hashRefreshToken } from "@/lib/auth/refreshToken";
 import { getRedis } from "@/lib/redis";
+import { shouldUseSecureCookies } from "@/lib/auth/cookies";
 
 function readCookieValue(cookieHeader: string, name: string): string | null {
   if (!cookieHeader) return null;
@@ -31,11 +32,12 @@ export async function POST(req: Request) {
   }
 
   const res = NextResponse.json({ ok: true });
+  const secureCookies = shouldUseSecureCookies(req);
   const clear = (name: string) =>
     res.cookies.set(name, "", {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: secureCookies,
       path: "/",
       maxAge: 0,
     });

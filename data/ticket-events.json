@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "id": "evt_001",
+      "ticketId": "tck_001",
+      "type": "CREATED",
+      "payload": {
+        "title": "Falha no login"
+      },
+      "actorUserId": "usr_user_griaule_test",
+      "createdAt": "2026-02-11T10:00:00.000Z"
+    },
+    {
+      "id": "evt_002",
+      "ticketId": "tck_002",
+      "type": "STATUS_CHANGED",
+      "payload": {
+        "from": "backlog",
+        "to": "in_progress"
+      },
+      "actorUserId": "usr_itdev",
+      "createdAt": "2026-02-11T11:45:00.000Z"
+    }
+  ]
+}

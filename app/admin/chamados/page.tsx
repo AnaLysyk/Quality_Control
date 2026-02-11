@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
-
-type TicketStatus = "open" | "in_progress" | "closed";
+import { TICKET_STATUS_OPTIONS, type TicketStatus } from "@/lib/ticketsStatus";
 
 type TicketItem = {
   id: string;
@@ -17,12 +16,6 @@ type TicketItem = {
   createdByEmail?: string | null;
   companySlug?: string | null;
 };
-
-const STATUS_OPTIONS: Array<{ value: TicketStatus; label: string }> = [
-  { value: "open", label: "Aberto" },
-  { value: "in_progress", label: "Em andamento" },
-  { value: "closed", label: "Fechado" },
-];
 
 export default function AdminChamadosPage() {
   const [items, setItems] = useState<TicketItem[]>([]);
@@ -185,7 +178,7 @@ export default function AdminChamadosPage() {
                 onChange={(e) => setStatusFilter(e.target.value as TicketStatus | "all")}
               >
                 <option value="all">Todos</option>
-                {STATUS_OPTIONS.map((opt) => (
+                {TICKET_STATUS_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}
                   </option>
@@ -226,7 +219,7 @@ export default function AdminChamadosPage() {
                       onChange={(e) => updateStatus(item.id, e.target.value as TicketStatus)}
                       disabled={updatingId === item.id}
                     >
-                      {STATUS_OPTIONS.map((opt) => (
+                      {TICKET_STATUS_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
                           {opt.label}
                         </option>

@@ -24,6 +24,19 @@ type ManualRun = {
   name: string;
 };
 
+type DefectHistoryEvent = {
+  id: string;
+  action: string;
+  createdAt: string;
+  actorName?: string | null;
+  actorId?: string | null;
+  fromStatus?: string | null;
+  toStatus?: string | null;
+  fromRunSlug?: string | null;
+  toRunSlug?: string | null;
+  note?: string | null;
+};
+
 const LOCAL_LINKS_KEY = "qc_defect_run_links";
 
 function normalizeDefects(data: unknown[]): ManualDefect[] {
@@ -58,6 +71,32 @@ function normalizeRuns(data: unknown[]): ManualRun[] {
     .filter((run) => run.slug.length > 0);
 }
 
+function formatDefectStatus(value?: string | null) {
+  const normalized = normalizeDefectStatus(value ?? "");
+  if (normalized === "done") return "Concluido";
+  if (normalized === "in_progress") return "Em andamento";
+  return "Aberto";
+}
+
+function formatHistoryLabel(item: DefectHistoryEvent) {
+  switch (item.action) {
+    case "created":
+      return "Defeito criado";
+    case "status_changed":
+      return `Status: ${formatDefectStatus(item.fromStatus)} -> ${formatDefectStatus(item.toStatus)}`;
+    case "run_linked":
+      return item.toRunSlug ? `Run vinculada: ${item.toRunSlug}` : "Run vinculada";
+    case "run_unlinked":
+      return item.fromRunSlug ? `Run removida: ${item.fromRunSlug}` : "Run removida";
+    case "deleted":
+      return "Defeito removido";
+    case "updated":
+      return item.note ?? "Defeito atualizado";
+    default:
+      return item.note ?? "Atualizacao registrada";
+  }
+}
+
 function sortDefects(items: ManualDefect[]) {
   return [...items].sort((a, b) => {
     const timeA = Date.parse(a.createdAt ?? "") || 0;
@@ -85,6 +124,9 @@ export default function CompanyDefectsPage() {
   const [editStatus, setEditStatus] = useState("open");
   const [linkingDefectId, setLinkingDefectId] = useState<string | null>(null);
   const [linkInput, setLinkInput] = useState("");
+  const [historyItems, setHistoryItems] = useState<DefectHistoryEvent[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
   const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
   const isAdmin = Boolean(user?.isGlobalAdmin || role === "admin");
@@ -202,6 +244,32 @@ export default function CompanyDefectsPage() {
     return null;
   }, [filteredDefects]);
 
+  const loadHistory = async (defectSlug: string) => {
+    if (!defectSlug) return;
+    setHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const res = await fetch(`/api/releases-manual/${encodeURIComponent(defectSlug)}/history`, {
+        cache: "no-store",
+        credentials: "include",
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setHistoryItems([]);
+        setHistoryError(typeof payload?.message === "string" ? payload.message : "Erro ao carregar historico");
+        return;
+      }
+      const items = Array.isArray(payload?.items) ? (payload.items as DefectHistoryEvent[]) : [];
+      setHistoryItems(items);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao carregar historico";
+      setHistoryItems([]);
+      setHistoryError(msg);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
   const handleCreate = async () => {
     if (!companySlug || !title.trim() || !canCreate) return;
     setSaving(true);
@@ -254,6 +322,9 @@ export default function CompanyDefectsPage() {
   const handleOpenModal = (defect: ManualDefect) => {
     setActiveDefect(defect);
     setEditStatus(normalizeDefectStatus(defect.status));
+    setHistoryItems([]);
+    setHistoryError(null);
+    loadHistory(defect.slug);
   };
 
   const handleSaveModal = async () => {
@@ -273,6 +344,7 @@ export default function CompanyDefectsPage() {
             prev.map((item) => (item.slug === activeDefect.slug ? normalizeDefects([updated])[0] : item)),
           ),
         );
+        await loadHistory(activeDefect.slug);
       }
     } finally {
       setSaving(false);
@@ -541,9 +613,17 @@ export default function CompanyDefectsPage() {
             <h2 className="text-lg font-semibold">{activeDefect.name}</h2>
             <p className="mt-1 text-xs text-(--tc-text-muted)">Atualize o status do defeito.</p>
             <div className="mt-4 space-y-2">
-              <label className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">Status</label>
+              <label
+                id="defect-status-label"
+                className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)"
+                htmlFor="defect-status-select"
+              >
+                Status
+              </label>
               <select
                 data-testid="defect-status"
+                id="defect-status-select"
+                aria-labelledby="defect-status-label"
                 value={editStatus}
                 onChange={(e) => setEditStatus(e.target.value)}
                 className="w-full rounded-2xl border border-(--tc-border,#e5e7eb) px-3 py-2 text-sm"
@@ -554,6 +634,7 @@ export default function CompanyDefectsPage() {
               </select>
               <select
                 data-testid="defect-status-select"
+                aria-labelledby="defect-status-label"
                 value={editStatus}
                 onChange={(e) => setEditStatus(e.target.value)}
                 className="sr-only"
@@ -562,6 +643,40 @@ export default function CompanyDefectsPage() {
                 <option value="in_progress">Em andamento</option>
                 <option value="done">Concluido</option>
               </select>
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold text-(--tc-text)">Historico</h3>
+                <button
+                  type="button"
+                  onClick={() => activeDefect && loadHistory(activeDefect.slug)}
+                  className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em]"
+                >
+                  Atualizar
+                </button>
+              </div>
+              {historyLoading && (
+                <p className="mt-2 text-xs text-(--tc-text-muted)">Carregando historico...</p>
+              )}
+              {historyError && (
+                <p className="mt-2 text-xs text-red-600">{historyError}</p>
+              )}
+              {!historyLoading && !historyError && historyItems.length === 0 && (
+                <p className="mt-2 text-xs text-(--tc-text-muted)">Nenhum historico registrado.</p>
+              )}
+              <div className="mt-3 space-y-3">
+                {historyItems.map((event) => (
+                  <div key={event.id} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3">
+                    <div className="text-xs font-semibold text-(--tc-text)">
+                      {formatHistoryLabel(event)}
+                    </div>
+                    <div className="mt-1 text-[11px] text-(--tc-text-muted)">
+                      {event.actorName || "Sistema"} • {new Date(event.createdAt).toLocaleString("pt-BR")}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="mt-6 flex items-center justify-end gap-3">
               <button

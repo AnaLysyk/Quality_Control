@@ -71,10 +71,23 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   const rawRole = primaryLink?.role ?? (user as { role?: string | null }).role ?? null;
   const normalizedRole = normalizeLocalRole(rawRole);
   const companyRole = normalizedRole;
-  const effectiveRole = isGlobalAdmin ? "admin" : normalizedRole === "company_admin" ? "company" : "user";
+  const effectiveRole = isGlobalAdmin
+    ? "admin"
+    : normalizedRole === "it_dev"
+      ? "it_dev"
+      : normalizedRole === "company_admin"
+        ? "company"
+        : "user";
   const capabilities = resolveCapabilities({
     globalRole: isGlobalAdmin ? "global_admin" : null,
-    companyRole: companyRole === "company_admin" ? "company_admin" : companyRole === "viewer" ? "viewer" : "user",
+    companyRole:
+      companyRole === "company_admin"
+        ? "company_admin"
+        : companyRole === "it_dev"
+          ? "it_dev"
+          : companyRole === "viewer"
+            ? "viewer"
+            : "user",
     membershipCapabilities: primaryLink?.capabilities ?? null,
   });
 

@@ -1,5 +1,5 @@
 export type UserRole = "user" | "admin" | "super-admin";
-export type CompanyRole = "company_admin" | "user" | "viewer";
+export type CompanyRole = "company_admin" | "it_dev" | "user" | "viewer";
 export type GlobalRole = "global_admin";
 export type Capability =
   | "company:read"

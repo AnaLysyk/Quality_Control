@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { shouldUseSecureCookies } from "@/lib/auth/cookies";
 
 export async function POST(request: Request) {
+  const secureCookies = shouldUseSecureCookies(request);
   const isProd =
     process.env.NODE_ENV === "production" || process.env.VERCEL === "1" || typeof process.env.VERCEL_ENV === "string";
   if (isProd) {
@@ -13,7 +15,7 @@ export async function POST(request: Request) {
       maxAge: 0,
       path: "/",
       sameSite: "lax",
-      secure: true,
+      secure: secureCookies,
     });
     return response;
   }
@@ -33,6 +35,8 @@ export async function POST(request: Request) {
       httpOnly: true,
       maxAge: 0,
       path: "/",
+      sameSite: "lax",
+      secure: secureCookies,
     });
 
     return response;
@@ -48,6 +52,8 @@ export async function POST(request: Request) {
       httpOnly: true,
       maxAge: 0,
       path: "/",
+      sameSite: "lax",
+      secure: secureCookies,
     });
 
     return response;
@@ -60,7 +66,7 @@ export async function POST(request: Request) {
     maxAge: 60 * 60 * 8, // 8 horas
     path: "/",
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: secureCookies,
   });
 
   return response;

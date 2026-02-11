@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useAppSettings, type Theme, type Language } from "@/context/AppSettingsContext";
 import { useI18n } from "@/hooks/useI18n";
@@ -56,6 +56,11 @@ function SettingsPageInner({
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }, [name]);
 
+  useEffect(() => {
+    setName(initial.name);
+    setPhone(initial.phone);
+  }, [initial.name, initial.phone]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMessage(null);
@@ -70,10 +75,17 @@ function SettingsPageInner({
         body: JSON.stringify({ name, phone }),
       });
 
+      const profileJson = await profileRes.json().catch(() => null);
       if (!profileRes.ok) {
         setError(t("settings.saveError"));
         return;
       }
+      const profileRecord = (profileJson ?? null) as Record<string, unknown> | null;
+      const profileUser = (profileRecord?.user ?? null) as Record<string, unknown> | null;
+      const updatedName = typeof profileUser?.name === "string" ? profileUser.name : null;
+      const updatedPhone = typeof profileUser?.phone === "string" ? profileUser.phone : null;
+      if (updatedName) setName(updatedName);
+      if (updatedPhone !== null) setPhone(updatedPhone);
 
       const result = await saveSettings({ theme, language });
       if (!result.ok) {
@@ -201,7 +213,12 @@ export default function SettingsPage() {
   const { user, refreshUser } = useAuthUser();
   const { theme, language, setTheme, setLanguage, saveSettings, loading: settingsLoading } = useAppSettings();
 
-  const key = typeof (user as { id?: unknown } | null)?.id === "string" ? (user as { id: string }).id : "anon";
+  const key =
+    typeof (user as { id?: unknown; userId?: unknown } | null)?.id === "string"
+      ? (user as { id: string }).id
+      : typeof (user as { id?: unknown; userId?: unknown } | null)?.userId === "string"
+        ? (user as { userId: string }).userId
+        : "anon";
 
   return (
     <SettingsPageInner

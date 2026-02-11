@@ -74,11 +74,24 @@ export async function buildLocalSessionForUser(
 
   const capabilities = resolveCapabilities({
     globalRole: isGlobalAdmin ? "global_admin" : null,
-    companyRole: companyRole === "company_admin" ? "company_admin" : companyRole === "viewer" ? "viewer" : "user",
+    companyRole:
+      companyRole === "company_admin"
+        ? "company_admin"
+        : companyRole === "it_dev"
+          ? "it_dev"
+          : companyRole === "viewer"
+            ? "viewer"
+            : "user",
     membershipCapabilities: activeLink?.capabilities ?? null,
   });
 
-  const effectiveRole = isGlobalAdmin ? "admin" : companyRole === "company_admin" ? "company" : "user";
+  const effectiveRole = isGlobalAdmin
+    ? "admin"
+    : companyRole === "it_dev"
+      ? "it_dev"
+      : companyRole === "company_admin"
+        ? "company"
+        : "user";
 
   const session: BuiltSessionPayload = {
     userId: user.id,
@@ -111,4 +124,3 @@ export async function buildLocalSessionForUser(
     requestedCompanySlug: requestedCompany?.slug ?? null,
   };
 }
-

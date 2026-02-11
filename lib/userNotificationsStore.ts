@@ -13,7 +13,11 @@ export type NotificationType =
   | "PASSWORD_RESET_PENDING"
   | "PASSWORD_RESET_APPROVED"
   | "PASSWORD_RESET_REJECTED"
-  | "TICKET_CREATED";
+  | "TICKET_CREATED"
+  | "TICKET_STATUS_CHANGED"
+  | "TICKET_COMMENT_ADDED"
+  | "TICKET_REACTION_ADDED"
+  | "TICKET_ASSIGNED";
 
 export type UserNotification = {
   id: string;
@@ -26,6 +30,7 @@ export type UserNotification = {
   link?: string | null;
   companySlug?: string | null;
   requestId?: string | null;
+  ticketId?: string | null;
   dedupeKey?: string | null;
 };
 
@@ -125,6 +130,7 @@ function appendNotification(
     link?: string | null;
     companySlug?: string | null;
     requestId?: string | null;
+    ticketId?: string | null;
     dedupeKey?: string | null;
   },
 ) {
@@ -146,6 +152,7 @@ function appendNotification(
     link: input.link ?? null,
     companySlug: input.companySlug ?? null,
     requestId: input.requestId ?? null,
+    ticketId: input.ticketId ?? null,
     dedupeKey: input.dedupeKey ?? null,
   };
 
@@ -170,6 +177,7 @@ export async function createUserNotification(
     link?: string | null;
     companySlug?: string | null;
     requestId?: string | null;
+    ticketId?: string | null;
     dedupeKey?: string | null;
   },
 ) {
@@ -191,6 +199,7 @@ export async function createNotificationsForUsers(
     link?: string | null;
     companySlug?: string | null;
     requestId?: string | null;
+    ticketId?: string | null;
     dedupeKey?: string | null;
   },
 ) {
@@ -234,6 +243,43 @@ export async function closeNotificationsByDedupeKey(userId: string, dedupeKey: s
   let changed = false;
   const nextItems = items.map<UserNotification>((item) => {
     if (item.dedupeKey === dedupeKey && item.status !== "closed") {
+      changed = true;
+      return { ...item, status: "closed", updatedAt: new Date().toISOString() };
+    }
+    return item;
+  });
+  if (changed) {
+    const nextStore: NotificationsStore = { ...store, [userId]: nextItems };
+    await writeStore(nextStore);
+  }
+  return changed;
+}
+
+export async function closeNotificationsByTicketId(userId: string, ticketId: string) {
+  if (!ticketId) return false;
+  const store = await readStore();
+  const items = (Array.isArray(store[userId]) ? store[userId] : []) as UserNotification[];
+  let changed = false;
+  const nextItems = items.map<UserNotification>((item) => {
+    if (item.ticketId === ticketId && item.status !== "closed") {
+      changed = true;
+      return { ...item, status: "closed", updatedAt: new Date().toISOString() };
+    }
+    return item;
+  });
+  if (changed) {
+    const nextStore: NotificationsStore = { ...store, [userId]: nextItems };
+    await writeStore(nextStore);
+  }
+  return changed;
+}
+
+export async function closeAllNotifications(userId: string) {
+  const store = await readStore();
+  const items = (Array.isArray(store[userId]) ? store[userId] : []) as UserNotification[];
+  let changed = false;
+  const nextItems = items.map<UserNotification>((item) => {
+    if (item.status !== "closed") {
       changed = true;
       return { ...item, status: "closed", updatedAt: new Date().toISOString() };
     }

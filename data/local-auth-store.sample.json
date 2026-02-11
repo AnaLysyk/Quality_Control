@@ -98,6 +98,20 @@
       "createdAt": "2026-02-03T00:00:00Z"
     },
     {
+      "id": "usr_itdev",
+      "name": "IT Dev",
+      "email": "itdev",
+      "user": "itdev",
+      "password_hash": "87274af01876341455b32d805946f272871bb42effa6604dccf28bb027afa82b",
+      "globalRole": null,
+      "role": "it_dev",
+      "status": "active",
+      "active": true,
+      "is_global_admin": false,
+      "default_company_slug": "griaule",
+      "createdAt": "2026-02-11T00:00:00.000Z"
+    },
+    {
       "id": "usr_analysyk",
       "name": "Analysyk",
       "email": "analysyk",
@@ -176,6 +190,13 @@
       "companyId": "griaule",
       "role": "company_admin",
       "createdAt": "2026-02-03T00:00:00.000Z"
+    },
+    {
+      "id": "mbr_itdev_griaule",
+      "userId": "usr_itdev",
+      "companyId": "griaule",
+      "role": "it_dev",
+      "createdAt": "2026-02-11T00:00:00.000Z"
     },
     {
       "id": "mbr_user_griaule_test",

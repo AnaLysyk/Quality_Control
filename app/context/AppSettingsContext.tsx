@@ -39,6 +39,10 @@ const isValidLanguage = (value?: string | null): value is Language =>
 
 const storageKey = (userId?: string | null) => `tc-settings:${userId ?? "guest"}`;
 
+function resolveUserId(user: { id?: string | null; userId?: string | null } | null | undefined) {
+  return (typeof user?.id === "string" && user.id) || (typeof user?.userId === "string" && user.userId) || null;
+}
+
 function readLastUserId(): string | null {
   if (typeof window === "undefined") return null;
   try {
@@ -97,7 +101,8 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refreshSettings = useCallback(async () => {
-    const key = storageKey(user?.id);
+    const userId = resolveUserId(user);
+    const key = storageKey(userId);
     const cached = readStoredSettings(key);
     if (cached) {
       setSettings(cached);
@@ -126,7 +131,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
       const normalized = normalizeSettings(payload?.settings ?? payload);
       setSettings(normalized);
       writeStoredSettings(key, normalized);
-      if (user?.id) rememberLastUserId(user.id);
+      if (userId) rememberLastUserId(userId);
     } catch {
       /* ignore */
     } finally {
@@ -136,7 +141,8 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
 
   const saveSettings = useCallback(
     async (next?: Partial<AppSettings>): Promise<SaveResult> => {
-      const key = storageKey(user?.id);
+      const userId = resolveUserId(user);
+      const key = storageKey(userId);
       const normalized = normalizeSettings({ ...settings, ...next });
       setSettings(normalized);
       writeStoredSettings(key, normalized);
@@ -165,7 +171,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
         const serverSettings = normalizeSettings(payload?.settings ?? payload);
         setSettings(serverSettings);
         writeStoredSettings(key, serverSettings);
-        if (user?.id) rememberLastUserId(user.id);
+        if (userId) rememberLastUserId(userId);
         return { ok: true };
       } catch {
         return { ok: false, error: "save_failed" };

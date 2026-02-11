@@ -196,7 +196,14 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
   const companyRole = normalizeLocalRole(rawRole);
   const capabilities = resolveCapabilities({
     globalRole: isGlobalAdmin ? "global_admin" : null,
-    companyRole: companyRole === "company_admin" ? "company_admin" : companyRole === "viewer" ? "viewer" : "user",
+    companyRole:
+      companyRole === "company_admin"
+        ? "company_admin"
+        : companyRole === "it_dev"
+          ? "it_dev"
+          : companyRole === "viewer"
+            ? "viewer"
+            : "user",
     membershipCapabilities: primaryLink?.capabilities ?? session.capabilities ?? null,
   });
   const effectiveRole = toLegacyRole(companyRole, isGlobalAdmin);

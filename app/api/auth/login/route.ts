@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
 
 import { hashPasswordSha256, safeEqualHex } from "@/lib/passwordHash";
+import { shouldUseSecureCookies } from "@/lib/auth/cookies";
 import { createRefreshToken, hashRefreshToken } from "@/lib/auth/refreshToken";
 import { buildLocalSessionForUser } from "@/lib/auth/sessionBuilder";
 import { getRedis } from "@/lib/redis";
@@ -19,11 +20,11 @@ function readPositiveIntEnv(name: string, fallback: number): number {
   return Math.floor(parsed);
 }
 
-function setCookie(res: NextResponse, name: string, value: string, maxAgeSeconds: number) {
+function setCookie(res: NextResponse, name: string, value: string, maxAgeSeconds: number, secure: boolean) {
   res.cookies.set(name, value, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure,
     path: "/",
     maxAge: maxAgeSeconds,
   });
@@ -87,6 +88,7 @@ export async function POST(req: Request) {
         { ex: refreshTtlSeconds },
       );
     }
+    const secureCookies = shouldUseSecureCookies(req);
     const res = NextResponse.json({
       ok: true,
       session: {
@@ -95,14 +97,20 @@ export async function POST(req: Request) {
         expires_in: accessTtlSeconds,
       },
     });
-    setCookie(res, "session_id", sessionId, refreshToken ? accessTtlSeconds : SESSION_TTL_SECONDS);
+    setCookie(res, "session_id", sessionId, refreshToken ? accessTtlSeconds : SESSION_TTL_SECONDS, secureCookies);
     // Sempre expõe um token para manter compatibilidade no middleware.
-    setCookie(res, "access_token", tokenToExpose, accessTtlSeconds);
-    setCookie(res, "auth_token", tokenToExpose, accessTtlSeconds);
+    setCookie(res, "access_token", tokenToExpose, accessTtlSeconds, secureCookies);
+    setCookie(res, "auth_token", tokenToExpose, accessTtlSeconds, secureCookies);
     if (refreshToken) {
-      setCookie(res, "refresh_token", refreshToken, refreshTtlSeconds);
+      setCookie(res, "refresh_token", refreshToken, refreshTtlSeconds, secureCookies);
     } else {
-      res.cookies.set("refresh_token", "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
+      res.cookies.set("refresh_token", "", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: secureCookies,
+        path: "/",
+        maxAge: 0,
+      });
     }
 
     if (built.requestedCompanySlug) {
@@ -112,10 +120,17 @@ export async function POST(req: Request) {
         "active_company_slug",
         built.requestedCompanySlug,
         refreshToken ? refreshTtlSeconds : SESSION_TTL_SECONDS,
+        secureCookies,
       );
     } else {
       // Limpa o contexto salvo quando o login nao especifica empresa.
-      res.cookies.set("active_company_slug", "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
+      res.cookies.set("active_company_slug", "", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: secureCookies,
+        path: "/",
+        maxAge: 0,
+      });
     }
 
     return res;

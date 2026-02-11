@@ -3,8 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiMessageSquare, FiPlus, FiEdit2, FiTrash2, FiX, FiSave } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
-
-type TicketStatus = "open" | "in_progress" | "closed";
+import { getTicketStatusLabel, type TicketStatus } from "@/lib/ticketsStatus";
 
 type TicketItem = {
   id: string;
@@ -24,14 +23,12 @@ type DraftTicket = {
   description: string;
 };
 
-function statusLabel(status: TicketStatus) {
-  if (status === "in_progress") return "Em andamento";
-  if (status === "closed") return "Fechado";
-  return "Aberto";
-}
-
 function statusStyle(status: TicketStatus) {
-  if (status === "closed") return "bg-emerald-100 text-emerald-700";
+  if (status === "done") return "bg-emerald-100 text-emerald-700";
+  if (status === "ready_deploy") return "bg-orange-100 text-orange-700";
+  if (status === "in_review") return "bg-violet-100 text-violet-700";
+  if (status === "refining") return "bg-sky-100 text-sky-700";
+  if (status === "ticket") return "bg-indigo-100 text-indigo-700";
   if (status === "in_progress") return "bg-amber-100 text-amber-700";
   return "bg-slate-100 text-slate-700";
 }
@@ -299,7 +296,7 @@ export default function TicketsButton() {
                       )}
                     </div>
                     <span className={`text-[10px] uppercase tracking-[0.25em] px-2 py-1 rounded ${statusStyle(ticket.status)}`}>
-                      {statusLabel(ticket.status)}
+                      {getTicketStatusLabel(ticket.status)}
                     </span>
                   </button>
 

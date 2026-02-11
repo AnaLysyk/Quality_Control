@@ -11,6 +11,7 @@ import {
   FiBriefcase,
   FiClipboard,
   FiCompass,
+  FiColumns,
   FiGrid,
   FiHome,
   FiLayers,
@@ -26,7 +27,7 @@ import { useClientContext } from "@/context/ClientContext";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
 
-type AppRole = "admin" | "client" | "user";
+type AppRole = "admin" | "client" | "user" | "it_dev";
 
 type NavItem = {
   label: string;
@@ -62,6 +63,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     if (!user) return null;
     if (isGlobalAdmin) return "admin";
     const role = (user.role ?? "").toLowerCase();
+    if (["it_dev", "itdev", "developer", "dev"].includes(role)) return "it_dev";
     if (["client_owner", "client_manager", "client_admin"].includes(role)) return "client";
     if (["client_member", "client_user", "user"].includes(role)) return "user";
     return "user";
@@ -96,10 +98,19 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
       { label: t("nav.runsManagement"), icon: FiLayers, href: "/admin/runs" },
       { label: t("nav.defects"), icon: FiShield, href: "/admin/defeitos" },
       { label: "Chamados", icon: FiMessageSquare, href: "/admin/chamados" },
+      { label: "Kanban IT", icon: FiColumns, href: "/kanban-it" },
       { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
       { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
     ],
     [t]
+  );
+
+  const itDevNav: NavItem[] = useMemo(
+    () => [
+      { label: "Kanban IT", icon: FiColumns, href: "/kanban-it" },
+      { label: "Meus Chamados", icon: FiMessageSquare, href: "/meus-chamados" },
+    ],
+    []
   );
 
   const companyNav: NavItem[] = useMemo(
@@ -113,6 +124,8 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             { label: t("nav.testPlans"), icon: FiClipboard, href: `/empresas/${companySlug}/planos-de-teste` },
             { label: t("nav.runs"), icon: FiList, href: `/empresas/${companySlug}/runs` },
             { label: t("nav.defects"), icon: FiAlertTriangle, href: `/empresas/${companySlug}/defeitos` },
+            { label: "Meus Chamados", icon: FiMessageSquare, href: "/meus-chamados" },
+            { label: "Kanban IT", icon: FiColumns, href: "/kanban-it", roles: ["admin", "it_dev"] },
           ]
         : [],
     [companySlug, t]
@@ -121,9 +134,10 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const navigation = useMemo(() => {
     if (!user) return publicNav;
     if (appRole === "admin" && isAdminArea) return adminNav;
+    if (appRole === "it_dev") return itDevNav;
     if (companyNav.length) return companyNav;
     return appRole === "admin" ? adminNav : publicNav;
-  }, [user, appRole, isAdminArea, adminNav, companyNav, publicNav]);
+  }, [user, appRole, isAdminArea, adminNav, itDevNav, companyNav, publicNav]);
 
   const renderNavLinks = (isMobile = false) =>
     navigation

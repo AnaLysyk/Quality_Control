@@ -9,6 +9,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
+  const url = new URL(req.url);
+  const unreadOnly = url.searchParams.get("unread") === "true";
+
   const pendingResets = await listUserRequests(user.id, { status: "PENDING", type: "PASSWORD_RESET" });
   for (const request of pendingResets) {
     await createUserNotification(user.id, {
@@ -20,6 +23,9 @@ export async function GET(req: Request) {
     });
   }
 
-  const items = await listUserNotifications(user.id);
+  let items = await listUserNotifications(user.id);
+  if (unreadOnly) {
+    items = items.filter((item) => item.status !== "closed");
+  }
   return NextResponse.json({ items }, { status: 200 });
 }

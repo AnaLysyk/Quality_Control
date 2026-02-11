@@ -8,6 +8,8 @@
 .loginFixedTheme {
   /* Keep login visuals consistent regardless of global theme */
   color-scheme: light;
+  --background: #ffffff;
+  --foreground: #0b1a3c;
   --tc-border: rgba(15, 23, 42, 0.1);
   --tc-input-bg: #eef4ff;
   --tc-text: #0b1a3c;

@@ -89,6 +89,7 @@ function normalizeSlug(value: string) {
 function normalizeMembershipRole(role?: string | null) {
   const normalized = (role ?? "").toLowerCase();
   if (normalized === "company_admin" || normalized === "user" || normalized === "viewer") return normalized;
+  if (normalized === "it_dev" || normalized === "itdev" || normalized === "developer" || normalized === "dev") return "it_dev";
   if (normalized === "admin" || normalized === "client_admin" || normalized === "company") return "company_admin";
   if (normalized === "read_only") return "viewer";
   return "user";
@@ -542,6 +543,7 @@ export function normalizeGlobalRole(role?: string | null) {
 export function toLegacyRole(companyRole?: string | null, isGlobalAdmin?: boolean) {
   if (isGlobalAdmin) return "admin";
   const normalized = normalizeMembershipRole(companyRole ?? null);
+  if (normalized === "it_dev") return "it_dev";
   if (normalized === "company_admin") return "company";
   return "user";
 }

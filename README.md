@@ -56,6 +56,26 @@ Quando `E2E_USE_JSON=1`, o login usa o arquivo `data/local-auth-store.json` (ou 
 - Admin: `admin@griaule.test` / senha `Griaule@123`
 - Usuario: `user@griaule.test` / senha `Griaule@123`
 
+## Kanban IT / Chamados
+
+- Kanban IT: `/kanban-it` (visivel para `it_dev` e `admin`).
+- Meus Chamados: `/meus-chamados` (visivel para usuarios).
+- Seed de exemplo: `data/support-tickets.json`, `data/ticket-comments.json`, `data/ticket-events.json`.
+- Usuario IT (seed): `itdev` / senha igual a `dev` (hash reaproveitado em `data/local-auth-store.json`).
+
+### Como testar (UI)
+
+1. Faça login com `itdev` ou `admin`.
+2. Abra `/kanban-it`, arraste um ticket entre colunas e abra o detalhe.
+3. Faça login com `user@griaule.test` e acesse `/meus-chamados` para ver comentários e notificações.
+
+### Como testar (Postman)
+
+1. `POST /api/tickets` com `{ "title": "...", "description": "...", "priority": "high", "tags": ["bug"] }`.
+2. `PATCH /api/tickets/{id}/status` com `{ "status": "in_progress" }`.
+3. `POST /api/tickets/{id}/comments` com `{ "body": "..." }`.
+4. `GET /api/notifications?unread=true` para verificar badges.
+
 ## Notas sobre Qase
 
 - A integracao envia o header `Token: <API_TOKEN>` (conforme a documentacao da Qase).

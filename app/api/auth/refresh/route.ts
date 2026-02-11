@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { buildLocalSessionForUser } from "@/lib/auth/sessionBuilder";
 import { createRefreshToken, hashRefreshToken } from "@/lib/auth/refreshToken";
 import { getRedis } from "@/lib/redis";
+import { shouldUseSecureCookies } from "@/lib/auth/cookies";
 
 const DEFAULT_ACCESS_TTL_SECONDS = 60 * 60 * 8;
 const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -16,11 +17,11 @@ function readPositiveIntEnv(name: string, fallback: number): number {
   return Math.floor(parsed);
 }
 
-function setCookie(res: NextResponse, name: string, value: string, maxAgeSeconds: number) {
+function setCookie(res: NextResponse, name: string, value: string, maxAgeSeconds: number, secure: boolean) {
   res.cookies.set(name, value, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure,
     path: "/",
     maxAge: maxAgeSeconds,
   });
@@ -99,6 +100,7 @@ export async function POST(req: Request) {
 
   const accessToken = jwt.sign(built.jwt, secret, { expiresIn: `${accessTtlSeconds}s` });
 
+  const secureCookies = shouldUseSecureCookies(req);
   const res = NextResponse.json({
     ok: true,
     session: {
@@ -108,11 +110,10 @@ export async function POST(req: Request) {
     },
   });
 
-  setCookie(res, "access_token", accessToken, accessTtlSeconds);
+  setCookie(res, "access_token", accessToken, accessTtlSeconds, secureCookies);
   // Legacy alias.
-  setCookie(res, "auth_token", accessToken, accessTtlSeconds);
-  setCookie(res, "refresh_token", nextRefreshToken, refreshTtlSeconds);
+  setCookie(res, "auth_token", accessToken, accessTtlSeconds, secureCookies);
+  setCookie(res, "refresh_token", nextRefreshToken, refreshTtlSeconds, secureCookies);
 
   return res;
 }
-

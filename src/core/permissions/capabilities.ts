@@ -29,6 +29,13 @@ const roleCapabilities: Record<CompanyRole, Capability[]> = {
     "defect:read",
     "defect:write",
   ],
+  it_dev: [
+    "company:read",
+    "metrics:read",
+    "release:read",
+    "run:read",
+    "defect:read",
+  ],
   user: [
     "company:read",
     "metrics:read",

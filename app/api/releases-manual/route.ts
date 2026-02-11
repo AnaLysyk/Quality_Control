@@ -8,6 +8,17 @@ import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalizatio
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
 import { readManualReleases, writeManualReleases } from "@/lib/manualReleaseStore";
 import { notifyManualRunCreated } from "@/lib/notificationService";
+import { appendDefectHistory } from "@/lib/manualDefectHistoryStore";
+import { getLocalUserById } from "@/lib/auth/localStore";
+
+async function resolveActor(authUser: AuthUser | null) {
+  if (!authUser) return { actorId: null, actorName: null };
+  const local = await getLocalUserById(authUser.id);
+  return {
+    actorId: authUser.id,
+    actorName: local?.name ?? authUser.email ?? null,
+  };
+}
 
 function shouldCloseFromStats(stats: Partial<Stats>) {
   const fail = Math.max(0, Number(stats.fail ?? 0));
@@ -135,6 +146,21 @@ export async function POST(req: Request) {
         await notifyManualRunCreated(release);
       } catch (err) {
         console.error("Falha ao enviar notificacoes de run", err);
+      }
+    }
+    if (kind === "defect") {
+      try {
+        const actor = await resolveActor(effectiveAuthUser);
+        await appendDefectHistory(release.slug, {
+          action: "created",
+          actorId: actor.actorId,
+          actorName: actor.actorName,
+          toStatus: release.status ?? null,
+          toRunSlug: release.runSlug ?? null,
+          note: release.name ?? null,
+        });
+      } catch (err) {
+        console.warn("Falha ao registrar historico do defeito:", err);
       }
     }
 

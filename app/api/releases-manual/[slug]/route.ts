@@ -8,6 +8,17 @@ import { evaluateQualityGate } from "@/lib/quality";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
 import { readManualReleases, writeManualReleases } from "@/lib/manualReleaseStore";
 import { notifyManualRunFailure } from "@/lib/notificationService";
+import { appendDefectHistory } from "@/lib/manualDefectHistoryStore";
+import { getLocalUserById } from "@/lib/auth/localStore";
+
+async function resolveActor(authUser: AuthUser | null) {
+  if (!authUser) return { actorId: null, actorName: null };
+  const local = await getLocalUserById(authUser.id);
+  return {
+    actorId: authUser.id,
+    actorName: local?.name ?? authUser.email ?? null,
+  };
+}
 
 function resolveAllowedSlugs(user: AuthUser): string[] {
   if (Array.isArray(user.companySlugs) && user.companySlugs.length) return user.companySlugs;
@@ -108,11 +119,15 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
       ? resolveClosedAt(normalizeDefectStatus(nextStatus), current.closedAt ?? null, normalizeDefectStatus(nextStatus) === "done" ? now : null)
       : current.closedAt ?? null;
 
+  const nextName =
+    typeof body.name === "string" ? body.name : typeof body.title === "string" ? body.title : current.name;
+  const nextRunSlug = typeof body.runSlug === "string" ? body.runSlug : current.runSlug;
+
   const updated: Release = {
     ...current,
-    name: typeof body.name === "string" ? body.name : typeof body.title === "string" ? body.title : current.name,
+    name: nextName,
     status: nextStatus ?? current.status,
-    runSlug: typeof body.runSlug === "string" ? body.runSlug : current.runSlug,
+    runSlug: nextRunSlug,
     runName: typeof body.runName === "string" ? body.runName : current.runName,
     stats: statsPatch,
     kind: nextKind,
@@ -127,6 +142,43 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
       await notifyManualRunFailure(updated);
     } catch (err) {
       console.error("Falha ao notificar falha de run", err);
+    }
+  }
+  if (nextKind === "defect") {
+    try {
+      const actor = await resolveActor(effectiveAuthUser as AuthUser);
+      const prevStatus = normalizeDefectStatus(current.status);
+      const nextStatusFinal = normalizeDefectStatus(updated.status);
+      const prevRun = typeof current.runSlug === "string" ? current.runSlug : null;
+      const nextRun = typeof updated.runSlug === "string" ? updated.runSlug : null;
+      if (prevStatus !== nextStatusFinal) {
+        await appendDefectHistory(updated.slug, {
+          action: "status_changed",
+          actorId: actor.actorId,
+          actorName: actor.actorName,
+          fromStatus: prevStatus,
+          toStatus: nextStatusFinal,
+        });
+      }
+      if (prevRun !== nextRun) {
+        await appendDefectHistory(updated.slug, {
+          action: nextRun ? "run_linked" : "run_unlinked",
+          actorId: actor.actorId,
+          actorName: actor.actorName,
+          fromRunSlug: prevRun,
+          toRunSlug: nextRun,
+        });
+      }
+      if (nextName !== current.name) {
+        await appendDefectHistory(updated.slug, {
+          action: "updated",
+          actorId: actor.actorId,
+          actorName: actor.actorName,
+          note: `Nome atualizado: ${current.name} -> ${nextName}`,
+        });
+      }
+    } catch (err) {
+      console.warn("Falha ao registrar historico do defeito:", err);
     }
   }
   return NextResponse.json({ ...updated, kind: resolveManualReleaseKind(updated) });
@@ -154,5 +206,18 @@ export async function DELETE(req: Request, context: { params: Promise<{ slug: st
 
   const filtered = releases.filter((r) => r.slug !== targetSlug);
   await writeManualReleases(filtered);
+  if (resolveManualReleaseKind(target) === "defect") {
+    try {
+      const actor = await resolveActor(effectiveAuthUser as AuthUser);
+      await appendDefectHistory(target.slug, {
+        action: "deleted",
+        actorId: actor.actorId,
+        actorName: actor.actorName,
+        note: target.name ?? null,
+      });
+    } catch (err) {
+      console.warn("Falha ao registrar historico do defeito:", err);
+    }
+  }
   return NextResponse.json({ ok: true });
 }

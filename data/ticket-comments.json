@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "id": "cmt_001",
+      "ticketId": "tck_001",
+      "authorUserId": "usr_user_griaule_test",
+      "authorName": "Usuario Griaule",
+      "body": "O erro começou hoje de manhã.",
+      "createdAt": "2026-02-11T10:05:00.000Z",
+      "updatedAt": "2026-02-11T10:05:00.000Z",
+      "deletedAt": null
+    }
+  ]
+}

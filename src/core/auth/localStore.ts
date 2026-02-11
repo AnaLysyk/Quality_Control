@@ -60,8 +60,12 @@ export type LocalAuthStore = {
   links?: LocalAuthLink[];
 };
 
-const STORE_PATH = path.join(process.cwd(), "data", "local-auth-store.json");
-const SAMPLE_PATH = path.join(process.cwd(), "data", "local-auth-store.sample.json");
+const DEFAULT_DATA_DIR = path.join(process.cwd(), "data");
+const DATA_DIR =
+  process.env.LOCAL_AUTH_DATA_DIR ||
+  (process.env.VERCEL === "1" ? path.join("/tmp", "qc-data") : DEFAULT_DATA_DIR);
+const STORE_PATH = path.join(DATA_DIR, "local-auth-store.json");
+const SAMPLE_PATH = path.join(DEFAULT_DATA_DIR, "local-auth-store.sample.json");
 const STORE_KEY = "qc:local_auth_store:v1";
 const USE_REDIS = process.env.LOCAL_AUTH_STORE === "redis" || isRedisConfigured();
 const USE_MEMORY_STORE =

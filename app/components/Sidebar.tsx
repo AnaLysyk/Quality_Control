@@ -97,8 +97,6 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
       { label: "Benchmark", icon: FiBarChart2, href: "/admin/benchmark", roles: ["admin"] },
       { label: t("nav.runsManagement"), icon: FiLayers, href: "/admin/runs" },
       { label: t("nav.defects"), icon: FiShield, href: "/admin/defeitos" },
-      { label: "Chamados", icon: FiMessageSquare, href: "/admin/chamados" },
-      // Kanban IT e exclusivo para perfil de desenvolvimento (it_dev).
       { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
       { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
     ],
@@ -107,8 +105,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
   const itDevNav: NavItem[] = useMemo(
     () => [
-      { label: "Kanban IT", icon: FiColumns, href: "/kanban-it" },
-      { label: "Meus Chamados", icon: FiMessageSquare, href: "/meus-chamados" },
+      { label: "Chamados", icon: FiColumns, href: "/kanban-it" },
     ],
     []
   );
@@ -124,8 +121,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             { label: t("nav.testPlans"), icon: FiClipboard, href: `/empresas/${companySlug}/planos-de-teste` },
             { label: t("nav.runs"), icon: FiList, href: `/empresas/${companySlug}/runs` },
             { label: t("nav.defects"), icon: FiAlertTriangle, href: `/empresas/${companySlug}/defeitos` },
-            { label: "Meus Chamados", icon: FiMessageSquare, href: "/meus-chamados" },
-            { label: "Kanban IT", icon: FiColumns, href: "/kanban-it", roles: ["it_dev"] },
+            { label: "Chamados", icon: FiMessageSquare, href: "/meus-chamados", roles: ["client", "user"] },
           ]
         : [],
     [companySlug, t]

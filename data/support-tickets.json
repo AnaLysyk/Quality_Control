@@ -1,10 +1,13 @@
-{
+﻿{
+  "counter": 2,
   "items": [
     {
       "id": "tck_001",
+      "code": "CH-000001",
       "title": "Falha no login",
       "description": "Usuário não consegue acessar após troca de senha.",
       "status": "backlog",
+      "type": "tarefa",
       "priority": "high",
       "tags": ["login", "auth"],
       "createdAt": "2026-02-11T10:00:00.000Z",
@@ -14,13 +17,16 @@
       "createdByEmail": "user@griaule.test",
       "companySlug": "griaule",
       "companyId": "griaule",
-      "assignedToUserId": null
+      "assignedToUserId": null,
+      "timeline": []
     },
     {
       "id": "tck_002",
+      "code": "CH-000002",
       "title": "Ajustar exportação de relatório",
       "description": "Exportação CSV precisa incluir coluna de prioridade.",
       "status": "in_progress",
+      "type": "tarefa",
       "priority": "medium",
       "tags": ["relatorio", "exportacao"],
       "createdAt": "2026-02-11T11:20:00.000Z",
@@ -30,7 +36,8 @@
       "createdByEmail": "user@griaule.test",
       "companySlug": "griaule",
       "companyId": "griaule",
-      "assignedToUserId": "usr_itdev"
+      "assignedToUserId": "usr_itdev",
+      "timeline": []
     }
   ]
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { listAllTickets } from "@/lib/ticketsStore";
+import { listAllTickets, listTicketsForUser } from "@/lib/ticketsStore";
+import { isItDev } from "@/lib/rbac/tickets";
 import { attachAssigneeInfo } from "@/lib/ticketsPresenter";
 
 export async function GET(req: Request) {
@@ -8,11 +9,19 @@ export async function GET(req: Request) {
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
-  if (!user.isGlobalAdmin) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+  const allowAll = isItDev(user);
+  let items = allowAll ? await listAllTickets() : await listTicketsForUser(user.id);
+  if (allowAll) {
+    if (user.companyId) {
+      items = items.filter((ticket) => ticket.companyId === user.companyId);
+    } else if (user.companySlug) {
+      items = items.filter((ticket) => ticket.companySlug === user.companySlug);
+    } else if (Array.isArray(user.companySlugs) && user.companySlugs.length) {
+      items = items.filter((ticket) => ticket.companySlug && user.companySlugs?.includes(ticket.companySlug));
+    } else {
+      items = [];
+    }
   }
-
-  const items = await listAllTickets();
   const enriched = await attachAssigneeInfo(items);
   return NextResponse.json({ items: enriched }, { status: 200 });
 }

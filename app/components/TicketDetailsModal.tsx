@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { FiHeart, FiMessageSquare, FiRefreshCw, FiX } from "react-icons/fi";
@@ -10,6 +10,8 @@ type TicketItem = {
   title: string;
   description: string;
   status: TicketStatus;
+  type?: string | null;
+  code?: string | null;
   priority?: string | null;
   tags?: string[];
   createdAt: string;
@@ -48,6 +50,13 @@ type TicketEvent = {
   createdAt: string;
 };
 
+type TimelineItem = {
+  from: TicketStatus;
+  to: TicketStatus;
+  changedById: string;
+  at: string;
+};
+
 type AssigneeItem = {
   id: string;
   name: string;
@@ -61,6 +70,7 @@ type Props = {
   ticket: TicketItem | null;
   onClose: () => void;
   canEditStatus?: boolean;
+  statusOptions?: Array<{ value: TicketStatus; label: string }>;
   onTicketUpdated?: (ticket: TicketItem) => void;
 };
 
@@ -75,19 +85,31 @@ const EVENT_LABELS: Record<string, string> = {
   UPDATED: "Detalhes atualizados",
 };
 
+const TYPE_OPTIONS = [
+  { value: "bug", label: "Bug" },
+  { value: "melhoria", label: "Melhoria" },
+  { value: "tarefa", label: "Tarefa" },
+];
+
+const PRIORITY_OPTIONS = [
+  { value: "low", label: "Baixa" },
+  { value: "medium", label: "Média" },
+  { value: "high", label: "Alta" },
+];
+
 function formatEventLabel(event: TicketEvent) {
   const base = EVENT_LABELS[event.type] ?? event.type;
   if (event.type === "STATUS_CHANGED") {
     const from = event.payload?.from ? String(event.payload.from) : "";
     const to = event.payload?.to ? String(event.payload.to) : "";
-    if (from && to) return `${base}: ${getTicketStatusLabel(from as TicketStatus)} → ${getTicketStatusLabel(to as TicketStatus)}`;
+    if (from && to) return `${base}: ${getTicketStatusLabel(from as TicketStatus)} ? ${getTicketStatusLabel(to as TicketStatus)}`;
   }
   return base;
 }
 
-export default function TicketDetailsModal({ open, ticket, onClose, canEditStatus, onTicketUpdated }: Props) {
+export default function TicketDetailsModal({ open, ticket, onClose, canEditStatus, statusOptions, onTicketUpdated }: Props) {
   const { user } = useAuthUser();
-  const [tab, setTab] = useState<"details" | "comments" | "history">("details");
+  const [tab, setTab] = useState<"details" | "comments" | "history" | "timeline">("details");
   const [comments, setComments] = useState<TicketComment[]>([]);
   const [events, setEvents] = useState<TicketEvent[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -100,19 +122,34 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
   const [editingSaving, setEditingSaving] = useState(false);
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
+  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
+  const [timelineLoading, setTimelineLoading] = useState(false);
   const [assignees, setAssignees] = useState<AssigneeItem[]>([]);
   const [assigneesLoading, setAssigneesLoading] = useState(false);
   const [assigneeError, setAssigneeError] = useState<string | null>(null);
   const [assigning, setAssigning] = useState(false);
   const [selectedAssignee, setSelectedAssignee] = useState("");
+  const [editingDetails, setEditingDetails] = useState(false);
+  const [detailsDraft, setDetailsDraft] = useState({
+    title: "",
+    description: "",
+    priority: "medium",
+    type: "tarefa",
+  });
+  const [detailsSaving, setDetailsSaving] = useState(false);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
 
   const ticketId = ticket?.id ?? null;
+  const codeLabel = ticket?.code ?? null;
   const assignedLabel =
     ticket?.assignedToName ||
     ticket?.assignedToEmail ||
     (ticket?.assignedToUserId ? `UID: ${ticket.assignedToUserId}` : "Nao atribuido");
   const role = (user?.role ?? "").toLowerCase();
-  const canAssign = Boolean(user && (user.isGlobalAdmin || role === "admin" || role === "it_dev" || role === "dev" || role === "developer"));
+  const isDev = role === "it_dev" || role === "itdev" || role === "developer" || role === "dev";
+  const canAssign = Boolean(user && isDev);
+  const canEditDetails = Boolean(user && isDev);
+  const selectableStatusOptions = statusOptions ?? TICKET_STATUS_OPTIONS;
 
   const tagsLabel = useMemo(() => {
     const tags = Array.isArray(ticket?.tags) ? ticket?.tags : [];
@@ -135,8 +172,22 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
       setEditingCommentBody("");
       setCommentBody("");
       setTab("details");
+      setEditingDetails(false);
+      setDetailsError(null);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !ticket) return;
+    setDetailsDraft({
+      title: ticket.title ?? "",
+      description: ticket.description ?? "",
+      priority: ticket.priority ?? "medium",
+      type: ticket.type ?? "tarefa",
+    });
+    setEditingDetails(false);
+    setDetailsError(null);
+  }, [open, ticket]);
 
   useEffect(() => {
     if (!open) return;
@@ -214,10 +265,28 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     }
   }
 
+  async function loadTimeline() {
+    if (!ticketId) return;
+    setTimelineLoading(true);
+    try {
+      const res = await fetch(`/api/tickets/${ticketId}/timeline`, { credentials: "include", cache: "no-store" });
+      const json = (await res.json().catch(() => ({}))) as { items?: TimelineItem[] };
+      if (!res.ok) {
+        setTimelineItems([]);
+        return;
+      }
+      const items = Array.isArray(json.items) ? json.items : [];
+      setTimelineItems(items);
+    } finally {
+      setTimelineLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (!open) return;
     loadComments();
     loadEvents();
+    loadTimeline();
   }, [open, ticketId]);
 
   async function submitComment() {
@@ -303,12 +372,68 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     }
   }
 
+  function startEditDetails() {
+    if (!ticket) return;
+    setDetailsDraft({
+      title: ticket.title ?? "",
+      description: ticket.description ?? "",
+      priority: ticket.priority ?? "medium",
+      type: ticket.type ?? "tarefa",
+    });
+    setDetailsError(null);
+    setEditingDetails(true);
+  }
+
+  function cancelEditDetails() {
+    if (!ticket) return;
+    setDetailsDraft({
+      title: ticket.title ?? "",
+      description: ticket.description ?? "",
+      priority: ticket.priority ?? "medium",
+      type: ticket.type ?? "tarefa",
+    });
+    setDetailsError(null);
+    setEditingDetails(false);
+  }
+
+  async function saveDetails() {
+    if (!ticketId) return;
+    setDetailsSaving(true);
+    setDetailsError(null);
+    try {
+      const res = await fetch(`/api/chamados/${ticketId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          title: detailsDraft.title,
+          description: detailsDraft.description,
+          priority: detailsDraft.priority,
+          type: detailsDraft.type,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.item) {
+        setDetailsError(json?.error || "Erro ao atualizar chamado");
+        return;
+      }
+      onTicketUpdated?.(json.item as TicketItem);
+      setEditingDetails(false);
+      await loadEvents();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao atualizar chamado";
+      setDetailsError(msg);
+    } finally {
+      setDetailsSaving(false);
+    }
+  }
+
   async function updateStatus(nextStatus: TicketStatus) {
     if (!ticketId) return;
     setStatusUpdating(true);
     setStatusError(null);
     try {
-      const res = await fetch(`/api/tickets/${ticketId}/status`, {
+      const res = await fetch(`/api/chamados/${ticketId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -336,7 +461,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     setAssigning(true);
     setAssigneeError(null);
     try {
-      const res = await fetch(`/api/tickets/${ticketId}`, {
+      const res = await fetch(`/api/chamados/${ticketId}/assign`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -378,7 +503,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
         </div>
 
         <div className="flex items-center gap-2 border-b border-(--tc-border,#e5e7eb) px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em]">
-          {(["details", "comments", "history"] as const).map((key) => (
+          {(["details", "comments", "history", "timeline"] as const).map((key) => (
             <button
               key={key}
               type="button"
@@ -387,7 +512,13 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                 tab === key ? "bg-(--tc-accent,#ef0001) text-white" : "text-(--tc-text-muted,#6b7280)"
               }`}
             >
-              {key === "details" ? "Detalhes" : key === "comments" ? "Comentarios" : "Historico"}
+              {key === "details"
+                ? "Detalhes"
+                : key === "comments"
+                  ? "Comentarios"
+                  : key === "history"
+                    ? "Historico"
+                    : "Timeline"}
             </button>
           ))}
         </div>
@@ -397,12 +528,20 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
             <>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Codigo</p>
+                  <p className="text-sm font-semibold">{codeLabel ?? "CH-000000"}</p>
+                </div>
+                <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Status</p>
                   <p className="text-sm font-semibold">{getTicketStatusLabel(ticket.status)}</p>
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Prioridade</p>
                   <p className="text-sm font-semibold">{ticket.priority ?? "medium"}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Tipo</p>
+                  <p className="text-sm font-semibold">{ticket.type || "Nao informado"}</p>
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Atribuido</p>
@@ -466,6 +605,81 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                 <p>Atualizado em {new Date(ticket.updatedAt).toLocaleString("pt-BR")}</p>
                 {ticket.companySlug && <p>Empresa: {ticket.companySlug}</p>}
               </div>
+
+              {canEditDetails && !editingDetails && (
+                <button
+                  type="button"
+                  onClick={startEditDetails}
+                  className="inline-flex items-center gap-2 rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                >
+                  Editar chamado
+                </button>
+              )}
+
+              {canEditDetails && editingDetails && (
+                <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4 space-y-3">
+                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
+                    Editar detalhes
+                  </p>
+                  <div className="space-y-2">
+                    <input
+                      className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
+                      placeholder="Titulo"
+                      value={detailsDraft.title}
+                      onChange={(e) => setDetailsDraft((prev) => ({ ...prev, title: e.target.value }))}
+                    />
+                    <textarea
+                      rows={4}
+                      className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
+                      placeholder="Descreva o chamado..."
+                      value={detailsDraft.description}
+                      onChange={(e) => setDetailsDraft((prev) => ({ ...prev, description: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <select
+                      className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
+                      value={detailsDraft.type}
+                      onChange={(e) => setDetailsDraft((prev) => ({ ...prev, type: e.target.value }))}
+                    >
+                      {TYPE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
+                      value={detailsDraft.priority}
+                      onChange={(e) => setDetailsDraft((prev) => ({ ...prev, priority: e.target.value }))}
+                    >
+                      {PRIORITY_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={saveDetails}
+                      disabled={detailsSaving}
+                      className="rounded-lg bg-(--tc-surface-dark,#0b1a3c) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
+                    >
+                      {detailsSaving ? "Salvando" : "Salvar"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelEditDetails}
+                      className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                  {detailsError && <p className="text-xs text-red-600">{detailsError}</p>}
+                </div>
+              )}
               {canEditStatus && (
                 <div className="mt-4 rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4 space-y-2">
                   <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
@@ -478,7 +692,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                       onChange={(e) => updateStatus(e.target.value as TicketStatus)}
                       disabled={statusUpdating}
                     >
-                      {TICKET_STATUS_OPTIONS.map((opt) => (
+                      {selectableStatusOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>
                           {opt.label}
                         </option>
@@ -552,7 +766,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                           <FiHeart size={12} />
                           {comment.reactions?.like ?? 0}
                         </button>
-                        {(comment.authorUserId === user?.id || user?.isGlobalAdmin) && !comment.deletedAt && (
+                        {(comment.authorUserId === user?.id || isDev) && !comment.deletedAt && (
                           <>
                             <button
                               type="button"
@@ -638,8 +852,42 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
               </div>
             </div>
           )}
+
+          {tab === "timeline" && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Timeline</p>
+                <button
+                  type="button"
+                  onClick={loadTimeline}
+                  className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em]"
+                >
+                  Atualizar
+                </button>
+              </div>
+              {timelineLoading && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
+              {!timelineLoading && timelineItems.length === 0 && (
+                <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma movimentacao registrada.</p>
+              )}
+              <div className="space-y-2">
+                {timelineItems.map((item, idx) => (
+                  <div key={`${item.at}-${idx}`} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3">
+                    <p className="text-sm font-semibold text-(--tc-text,#0f172a)">
+                      {getTicketStatusLabel(item.from)} ? {getTicketStatusLabel(item.to)}
+                    </p>
+                    <p className="text-[11px] text-(--tc-text-muted,#6b7280)">
+                      {item.changedById} • {new Date(item.at).toLocaleString("pt-BR")}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
+
+

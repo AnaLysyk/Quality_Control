@@ -3,7 +3,7 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { getTicketById, touchTicket } from "@/lib/ticketsStore";
 import { findTicketCommentById, softDeleteTicketComment, updateTicketComment } from "@/lib/ticketCommentsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
-import { canViewTicket, isTicketAdmin } from "@/lib/rbac/tickets";
+import { canViewTicket, isItDev } from "@/lib/rbac/tickets";
 
 export async function PATCH(req: Request, context: { params: Promise<{ commentId: string }> }) {
   const user = await authenticateRequest(req);
@@ -25,7 +25,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ commentId
   }
 
   const isAuthor = comment.authorUserId === user.id;
-  if (!isAuthor && !isTicketAdmin(user)) {
+  if (!isAuthor && !isItDev(user)) {
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
 
@@ -66,7 +66,7 @@ export async function DELETE(req: Request, context: { params: Promise<{ commentI
   }
 
   const isAuthor = comment.authorUserId === user.id;
-  if (!isAuthor && !isTicketAdmin(user)) {
+  if (!isAuthor && !isItDev(user)) {
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
 

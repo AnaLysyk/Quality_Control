@@ -3,7 +3,7 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { getTicketById, deleteTicketForUser, updateTicket } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketAssigned } from "@/lib/notificationService";
-import { canAssignTicket, canEditTicketContent, canViewTicket, isTicketAdmin } from "@/lib/rbac/tickets";
+import { canAssignTicket, canEditTicketContent, canViewTicket, isItDev } from "@/lib/rbac/tickets";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
@@ -45,6 +45,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   const wantsContentUpdate =
     body?.title !== undefined ||
     body?.description !== undefined ||
+    body?.type !== undefined ||
     body?.priority !== undefined ||
     body?.tags !== undefined;
 
@@ -52,7 +53,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     return NextResponse.json({ error: "Nenhuma alteracao informada" }, { status: 400 });
   }
 
-  if (wantsAssignment && !canAssignTicket(user)) {
+  if (wantsAssignment && !canAssignTicket(user, item)) {
     return NextResponse.json({ error: "Sem permissao para atribuir" }, { status: 403 });
   }
   if (wantsContentUpdate && !canEditTicketContent(user, item)) {
@@ -65,6 +66,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   const updated = await updateTicket(id, {
     title: body?.title,
     description: body?.description,
+    type: body?.type,
     priority: body?.priority,
     tags,
     assignedToUserId: body?.assignedToUserId,
@@ -99,6 +101,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       actorUserId: user.id,
       payload: {
         title: updated.title,
+        type: updated.type ?? null,
         priority: updated.priority,
         tags: updated.tags,
       },
@@ -120,7 +123,7 @@ export async function DELETE(req: Request, context: { params: Promise<{ id: stri
   if (!item) {
     return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
   }
-  const canDelete = isTicketAdmin(user) || item.createdBy === user.id;
+  const canDelete = item.createdBy === user.id || isItDev(user);
   if (!canDelete) {
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }

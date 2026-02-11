@@ -13,9 +13,20 @@ export function isItDev(user: AuthUser | null) {
   return role === "it_dev" || role === "itdev" || role === "developer" || role === "dev";
 }
 
+function hasCompanyAccess(user: AuthUser, ticket: TicketRecord) {
+  if (user.companyId && ticket.companyId) {
+    return user.companyId === ticket.companyId;
+  }
+  if (ticket.companySlug && Array.isArray(user.companySlugs) && user.companySlugs.length) {
+    return user.companySlugs.includes(ticket.companySlug);
+  }
+  if (!ticket.companyId && !ticket.companySlug) return true;
+  return false;
+}
+
 export function canViewTicket(user: AuthUser | null, ticket: TicketRecord) {
   if (!user) return false;
-  if (isTicketAdmin(user) || isItDev(user)) return true;
+  if (isItDev(user)) return hasCompanyAccess(user, ticket);
   return ticket.createdBy === user.id;
 }
 
@@ -25,14 +36,18 @@ export function canCommentTicket(user: AuthUser | null, ticket: TicketRecord) {
 
 export function canEditTicketContent(user: AuthUser | null, ticket: TicketRecord) {
   if (!user) return false;
-  if (isTicketAdmin(user)) return true;
+  if (isItDev(user)) return hasCompanyAccess(user, ticket);
   return ticket.createdBy === user.id;
 }
 
-export function canAssignTicket(user: AuthUser | null) {
-  return isTicketAdmin(user) || isItDev(user);
+export function canAssignTicket(user: AuthUser | null, ticket?: TicketRecord) {
+  if (!isItDev(user)) return false;
+  if (!ticket) return true;
+  return hasCompanyAccess(user, ticket);
 }
 
-export function canMoveTicket(user: AuthUser | null) {
-  return isTicketAdmin(user) || isItDev(user);
+export function canMoveTicket(user: AuthUser | null, ticket?: TicketRecord) {
+  if (!isItDev(user)) return false;
+  if (!ticket) return true;
+  return hasCompanyAccess(user, ticket);
 }

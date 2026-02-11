@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiMessageSquare, FiPlus, FiEdit2, FiTrash2, FiX, FiSave } from "react-icons/fi";
@@ -25,11 +25,8 @@ type DraftTicket = {
 
 function statusStyle(status: TicketStatus) {
   if (status === "done") return "bg-emerald-100 text-emerald-700";
-  if (status === "ready_deploy") return "bg-orange-100 text-orange-700";
-  if (status === "in_review") return "bg-violet-100 text-violet-700";
-  if (status === "refining") return "bg-sky-100 text-sky-700";
-  if (status === "ticket") return "bg-indigo-100 text-indigo-700";
-  if (status === "in_progress") return "bg-amber-100 text-amber-700";
+  if (status === "review") return "bg-violet-100 text-violet-700";
+  if (status === "doing") return "bg-amber-100 text-amber-700";
   return "bg-slate-100 text-slate-700";
 }
 
@@ -69,8 +66,7 @@ export default function TicketsButton() {
     setLoading(true);
     setError(null);
     try {
-      const endpoint = user.isGlobalAdmin ? "/api/admin/tickets" : "/api/tickets";
-      const res = await fetch(endpoint, { credentials: "include", cache: "no-store" });
+      const res = await fetch("/api/tickets?scope=mine", { credentials: "include", cache: "no-store" });
       const json = (await res.json().catch(() => ({}))) as { items?: TicketItem[]; error?: string };
       if (!res.ok) {
         setItems([]);
@@ -191,6 +187,9 @@ export default function TicketsButton() {
   }
 
   if (!user) return null;
+  const role = (user.role ?? "").toLowerCase();
+  const isAdmin = user.isGlobalAdmin || role === "admin" || role === "global_admin";
+  if (isAdmin) return null;
 
   return (
     <div className="relative" ref={boxRef}>
@@ -401,3 +400,5 @@ export default function TicketsButton() {
     </div>
   );
 }
+
+

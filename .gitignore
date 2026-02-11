@@ -88,3 +88,17 @@ docs/adr/
 # local auth data (keep sample file tracked)
 data/local-auth-store.json
 data/release-manual-store.json
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Turbopack / Next.js internal files
+.next/turbopack
+.next/dev/lock
+
+# Node module tooling logs
+node_modules/**/lint.log
+
+# Temporary files
+*.tmp

@@ -97,12 +97,14 @@ const PRIORITY_OPTIONS = [
   { value: "high", label: "Alta" },
 ];
 
-function formatEventLabel(event: TicketEvent) {
+function formatEventLabel(event: TicketEvent, options?: Array<{ value: TicketStatus; label: string }>) {
   const base = EVENT_LABELS[event.type] ?? event.type;
   if (event.type === "STATUS_CHANGED") {
     const from = event.payload?.from ? String(event.payload.from) : "";
     const to = event.payload?.to ? String(event.payload.to) : "";
-    if (from && to) return `${base}: ${getTicketStatusLabel(from as TicketStatus)} ? ${getTicketStatusLabel(to as TicketStatus)}`;
+    if (from && to) {
+      return `${base}: ${getTicketStatusLabel(from as TicketStatus, options)} -> ${getTicketStatusLabel(to as TicketStatus, options)}`;
+    }
   }
   return base;
 }
@@ -496,6 +498,8 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
           <button
             type="button"
             onClick={onClose}
+            aria-label="Fechar modal"
+            title="Fechar"
             className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
           >
             <FiX />
@@ -503,24 +507,23 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
         </div>
 
         <div className="flex items-center gap-2 border-b border-(--tc-border,#e5e7eb) px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em]">
-          {(["details", "comments", "history", "timeline"] as const).map((key) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setTab(key)}
-              className={`rounded-full px-3 py-1 ${
-                tab === key ? "bg-(--tc-accent,#ef0001) text-white" : "text-(--tc-text-muted,#6b7280)"
-              }`}
-            >
-              {key === "details"
-                ? "Detalhes"
-                : key === "comments"
-                  ? "Comentarios"
-                  : key === "history"
-                    ? "Historico"
-                    : "Timeline"}
-            </button>
-          ))}
+          {(["details", "comments", "history", "timeline"] as const).map((key) => {
+            const label = key === "details" ? "Detalhes" : key === "comments" ? "Comentarios" : key === "history" ? "Historico" : "Timeline";
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setTab(key)}
+                aria-label={`Ir para ${label}`}
+                title={`Ir para ${label}`}
+                className={`rounded-full px-3 py-1 ${
+                  tab === key ? "bg-(--tc-accent,#ef0001) text-white" : "text-(--tc-text-muted,#6b7280)"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
 
         <div className="px-6 py-4 space-y-4 max-h-[70vh] overflow-auto">
@@ -533,7 +536,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Status</p>
-                  <p className="text-sm font-semibold">{getTicketStatusLabel(ticket.status)}</p>
+                  <p className="text-sm font-semibold">{getTicketStatusLabel(ticket.status, selectableStatusOptions)}</p>
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Prioridade</p>
@@ -558,7 +561,13 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                     Responsavel pelo ticket
                   </p>
                   <div className="flex flex-wrap items-center gap-2">
+                    <label className="sr-only" htmlFor="ticket-assignee-select">
+                      Responsavel pelo ticket
+                    </label>
                     <select
+                      id="ticket-assignee-select"
+                      aria-label="Responsavel pelo ticket"
+                      title="Responsavel pelo ticket"
                       className="rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
                       value={selectedAssignee}
                       onChange={(e) => updateAssignment(e.target.value)}
@@ -637,7 +646,13 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                     />
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2">
+                    <label className="sr-only" htmlFor="ticket-type-select">
+                      Tipo do chamado
+                    </label>
                     <select
+                      id="ticket-type-select"
+                      aria-label="Tipo do chamado"
+                      title="Tipo do chamado"
                       className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
                       value={detailsDraft.type}
                       onChange={(e) => setDetailsDraft((prev) => ({ ...prev, type: e.target.value }))}
@@ -648,7 +663,13 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                         </option>
                       ))}
                     </select>
+                    <label className="sr-only" htmlFor="ticket-priority-select">
+                      Prioridade do chamado
+                    </label>
                     <select
+                      id="ticket-priority-select"
+                      aria-label="Prioridade do chamado"
+                      title="Prioridade do chamado"
                       className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
                       value={detailsDraft.priority}
                       onChange={(e) => setDetailsDraft((prev) => ({ ...prev, priority: e.target.value }))}
@@ -686,7 +707,13 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                     Atualizar status
                   </p>
                   <div className="flex flex-wrap items-center gap-2">
+                    <label className="sr-only" htmlFor="ticket-status-select">
+                      Atualizar status
+                    </label>
                     <select
+                      id="ticket-status-select"
+                      aria-label="Atualizar status do chamado"
+                      title="Atualizar status do chamado"
                       className="rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
                       value={ticket.status}
                       onChange={(e) => updateStatus(e.target.value as TicketStatus)}
@@ -728,6 +755,8 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                   <button
                     type="button"
                     onClick={loadComments}
+                    aria-label="Recarregar comentarios"
+                    title="Recarregar comentarios"
                     className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
                   >
                     <FiRefreshCw size={14} />
@@ -757,6 +786,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                         <button
                           type="button"
                           onClick={() => toggleLike(comment)}
+                          aria-label={comment.viewerHasLiked ? "Remover curtida" : "Curtir comentario"}
                           className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] ${
                             comment.viewerHasLiked
                               ? "border-rose-200 bg-rose-50 text-rose-600"
@@ -790,6 +820,8 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                       <div className="mt-2 space-y-2">
                         <textarea
                           rows={3}
+                          aria-label="Editar comentario"
+                          placeholder="Edite o comentario..."
                           className="w-full rounded-xl border border-(--tc-border,#e5e7eb) px-3 py-2 text-sm"
                           value={editingCommentBody}
                           onChange={(e) => setEditingCommentBody(e.target.value)}
@@ -830,6 +862,8 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                 <button
                   type="button"
                   onClick={loadEvents}
+                  aria-label="Recarregar historico"
+                  title="Recarregar historico"
                   className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em]"
                 >
                   Atualizar
@@ -842,7 +876,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
               <div className="space-y-2">
                 {events.map((event) => (
                   <div key={event.id} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3">
-                    <p className="text-sm font-semibold text-(--tc-text,#0f172a)">{formatEventLabel(event)}</p>
+                    <p className="text-sm font-semibold text-(--tc-text,#0f172a)">{formatEventLabel(event, selectableStatusOptions)}</p>
                     <p className="text-[11px] text-(--tc-text-muted,#6b7280)">
                       {event.actorName || event.actorEmail || event.actorUserId || "Sistema"} •{" "}
                       {new Date(event.createdAt).toLocaleString("pt-BR")}
@@ -860,6 +894,8 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                 <button
                   type="button"
                   onClick={loadTimeline}
+                  aria-label="Recarregar timeline"
+                  title="Recarregar timeline"
                   className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em]"
                 >
                   Atualizar
@@ -873,7 +909,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                 {timelineItems.map((item, idx) => (
                   <div key={`${item.at}-${idx}`} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3">
                     <p className="text-sm font-semibold text-(--tc-text,#0f172a)">
-                      {getTicketStatusLabel(item.from)} ? {getTicketStatusLabel(item.to)}
+                      {getTicketStatusLabel(item.from, selectableStatusOptions)} -> {getTicketStatusLabel(item.to, selectableStatusOptions)}
                     </p>
                     <p className="text-[11px] text-(--tc-text-muted,#6b7280)">
                       {item.changedById} • {new Date(item.at).toLocaleString("pt-BR")}
@@ -888,6 +924,3 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     </div>
   );
 }
-
-
-

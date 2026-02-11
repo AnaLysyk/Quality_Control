@@ -3,6 +3,7 @@
   animation: spin 18s linear infinite;
 }
 @import "tailwindcss";
+/* PostCSS custom-variant directive (handled by postcss/tailwind plugin) */
 @custom-variant dark (&:where(.dark, .dark *));
 
 input[type="password"]::-ms-reveal,
@@ -152,6 +153,7 @@ input[type="password"]::-ms-clear {
 /* Paper-like surfaces */
 .bg-white {
   background-color: var(--tc-surface) !important;
+  -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 
@@ -646,12 +648,12 @@ video {
     transform: none;
   }
   .app-shell .sidebar-shell:not(:hover) .sidebar-logo-full {
-    opacity: 0;
-    transform: scale(0.9);
+    opacity: 1;
+    transform: scale(0.95);
   }
   .app-shell .sidebar-shell:not(:hover) .sidebar-logo-icon {
-    opacity: 1;
-    transform: scale(1);
+    opacity: 0;
+    transform: scale(0.9);
   }
 }
 /* CENTRALIZAR GRAFICOS NA IMPRESSÃO */

@@ -3,12 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FiPlus, FiRefreshCw } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import {
-  KANBAN_STATUS_OPTIONS,
-  getTicketStatusLabel,
-  normalizeKanbanStatus,
-  type TicketStatus,
-} from "@/lib/ticketsStatus";
+import { useTicketKanbanColumns } from "@/hooks/useTicketKanbanColumns";
+import { getTicketStatusLabel, normalizeKanbanStatus, type TicketStatus } from "@/lib/ticketsStatus";
 import TicketDetailsModal from "@/components/TicketDetailsModal";
 
 type TicketItem = {
@@ -32,14 +28,7 @@ type TicketItem = {
   assignedToEmail?: string | null;
 };
 
-type ColumnKey = "backlog" | "doing" | "review" | "done";
-
-const COLUMN_LABELS: Record<ColumnKey, string> = {
-  backlog: "Backlog",
-  doing: "Em andamento",
-  review: "Em revisão",
-  done: "Concluído",
-};
+type ColumnKey = string;
 
 const PRIORITY_OPTIONS = [
   { value: "low", label: "Baixa" },
@@ -52,6 +41,11 @@ const TYPE_OPTIONS = [
   { value: "melhoria", label: "Melhoria" },
   { value: "tarefa", label: "Tarefa" },
 ];
+
+function isDevRole(role: string | null | undefined) {
+  const value = (role ?? "").toLowerCase();
+  return value === "it_dev" || value === "itdev" || value === "developer" || value === "dev";
+}
 
 function shortText(value?: string | null, max = 120) {
   if (!value) return "Sem descricao.";
@@ -72,6 +66,7 @@ export default function MeusChamadosPage() {
   const [tickets, setTickets] = useState<TicketItem[]>([]);
   const [loadingTickets, setLoadingTickets] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dragging, setDragging] = useState<{ id: string; from: TicketStatus } | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<TicketItem | null>(null);
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -84,19 +79,29 @@ export default function MeusChamadosPage() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
+  const [editingColumnKey, setEditingColumnKey] = useState<string | null>(null);
+  const [editingColumnLabel, setEditingColumnLabel] = useState("");
+  const [addingColumn, setAddingColumn] = useState(false);
+  const [newColumnLabel, setNewColumnLabel] = useState("");
+
+  const canManage = useMemo(() => isDevRole(user?.role ?? ""), [user?.role]);
+  const statusKeys = useMemo(
+    () => tickets.map((ticket) => normalizeKanbanStatus(ticket.status)),
+    [tickets],
+  );
+  const { columns, statusOptions, addColumn, renameColumn } = useTicketKanbanColumns(statusKeys);
+
   const grouped = useMemo(() => {
-    const map: Record<ColumnKey, TicketItem[]> = {
-      backlog: [],
-      doing: [],
-      review: [],
-      done: [],
-    };
+    const map: Record<ColumnKey, TicketItem[]> = {};
+    columns.forEach((col) => {
+      map[col.key] = [];
+    });
     for (const ticket of tickets) {
       const normalized = normalizeKanbanStatus(ticket.status) as ColumnKey;
       if (map[normalized]) map[normalized].push(ticket);
     }
     return map;
-  }, [tickets]);
+  }, [tickets, columns]);
 
   const loadTickets = useCallback(async () => {
     if (!user) return;
@@ -155,6 +160,80 @@ export default function MeusChamadosPage() {
     }
   }
 
+  function startEditColumn(key: string, label: string) {
+    if (!canManage) return;
+    setEditingColumnKey(key);
+    setEditingColumnLabel(label);
+  }
+
+  function commitEditColumn() {
+    if (!editingColumnKey) return;
+    renameColumn(editingColumnKey, editingColumnLabel);
+    setEditingColumnKey(null);
+    setEditingColumnLabel("");
+  }
+
+  function cancelEditColumn() {
+    setEditingColumnKey(null);
+    setEditingColumnLabel("");
+  }
+
+  function startAddColumn() {
+    if (!canManage) return;
+    setAddingColumn(true);
+    setNewColumnLabel("");
+  }
+
+  function commitAddColumn() {
+    const created = addColumn(newColumnLabel);
+    setAddingColumn(false);
+    setNewColumnLabel("");
+    return created;
+  }
+
+  function handleDragStart(ticket: TicketItem) {
+    if (!canManage) return;
+    setDragging({ id: ticket.id, from: ticket.status });
+  }
+
+  async function updateStatus(ticketId: string, nextStatus: TicketStatus) {
+    const previous = tickets;
+    setTickets((current) =>
+      current.map((ticket) => (ticket.id === ticketId ? { ...ticket, status: nextStatus } : ticket)),
+    );
+    try {
+      const res = await fetch(`/api/chamados/${ticketId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { item?: TicketItem; error?: string };
+      if (!res.ok || !json.item) {
+        setTickets(previous);
+        setError(json?.error || "Falha ao atualizar status");
+        return;
+      }
+      setTickets((current) =>
+        current.map((ticket) => (ticket.id === json.item?.id ? json.item : ticket)),
+      );
+    } catch {
+      setTickets(previous);
+      setError("Falha ao atualizar status");
+    }
+  }
+
+  async function handleDrop(toStatus: TicketStatus) {
+    if (!dragging) return;
+    if (dragging.from === toStatus) {
+      setDragging(null);
+      return;
+    }
+    const ticketId = dragging.id;
+    setDragging(null);
+    await updateStatus(ticketId, toStatus);
+  }
+
   if (loading) {
     return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Carregando...</div>;
   }
@@ -193,54 +272,152 @@ export default function MeusChamadosPage() {
       {error && <p className="text-sm text-red-600">{error}</p>}
       {loadingTickets && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
 
-      <section className="grid gap-4 lg:grid-cols-4">
-        {(Object.keys(COLUMN_LABELS) as ColumnKey[]).map((columnKey) => (
+      {canManage && (
+        <div className="flex flex-wrap items-center gap-2">
+          {!addingColumn && (
+            <button
+              type="button"
+              onClick={startAddColumn}
+              className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+            >
+              + Coluna
+            </button>
+          )}
+          {addingColumn && (
+            <input
+              value={newColumnLabel}
+              autoFocus
+              onChange={(e) => setNewColumnLabel(e.target.value)}
+              onBlur={commitAddColumn}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  commitAddColumn();
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  setAddingColumn(false);
+                  setNewColumnLabel("");
+                }
+              }}
+              className="w-56 rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
+              placeholder="Nome da coluna"
+            />
+          )}
+        </div>
+      )}
+
+      <section className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+        {columns.map((column) => (
           <div
-            key={columnKey}
-            className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-3 min-h-[20rem]"
+            key={column.key}
+            className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-3 min-h-80"
+            onDragOver={
+              canManage
+                ? (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                  }
+                : undefined
+            }
+            onDrop={canManage ? () => handleDrop(column.key) : undefined}
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
-                {COLUMN_LABELS[columnKey]}
-              </h2>
+              {editingColumnKey === column.key ? (
+                <input
+                  value={editingColumnLabel}
+                  autoFocus
+                  onChange={(e) => setEditingColumnLabel(e.target.value)}
+                  onBlur={commitEditColumn}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      commitEditColumn();
+                    }
+                    if (e.key === "Escape") {
+                      e.preventDefault();
+                      cancelEditColumn();
+                    }
+                  }}
+                  className="w-full rounded-md border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => (canManage ? startEditColumn(column.key, column.label) : undefined)}
+                  className="text-left text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
+                >
+                  {column.label}
+                </button>
+              )}
               <span className="text-xs text-(--tc-text-muted,#6b7280)">
-                {grouped[columnKey]?.length ?? 0}
+                {grouped[column.key]?.length ?? 0}
               </span>
             </div>
             <div className="mt-3 space-y-3">
-              {(grouped[columnKey] ?? []).map((ticket) => {
+              {(grouped[column.key] ?? []).map((ticket) => {
                 const creatorLabel = ticket.createdByName || ticket.createdByEmail || ticket.createdBy || "-";
                 return (
-                  <button
-                    key={ticket.id}
-                    type="button"
-                    onClick={() => setSelectedTicket(ticket)}
-                    className="w-full rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 text-left shadow-sm"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                        {ticket.code || `CH-${ticket.id.slice(0, 6).toUpperCase()}`}
+                  <div key={ticket.id} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 text-left shadow-sm">
+                    <button
+                      type="button"
+                      draggable={canManage}
+                      onDragStart={(event) => {
+                        if (!canManage) return;
+                        event.dataTransfer.setData("text/plain", ticket.id);
+                        event.dataTransfer.effectAllowed = "move";
+                        handleDragStart(ticket);
+                      }}
+                      onDragEnd={() => setDragging(null)}
+                      onClick={() => setSelectedTicket(ticket)}
+                      className="w-full text-left"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                          {ticket.code || `CH-${ticket.id.slice(0, 6).toUpperCase()}`}
+                        </p>
+                        <span className="text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                          {getTicketStatusLabel(normalizeKanbanStatus(ticket.status), statusOptions)}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm font-semibold">{ticket.title || "Sem titulo"}</p>
+                      <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">
+                        {shortText(ticket.description, 100)}
                       </p>
-                      <span className="text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                        {getTicketStatusLabel(normalizeKanbanStatus(ticket.status))}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm font-semibold">{ticket.title || "Sem titulo"}</p>
-                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">
-                      {shortText(ticket.description, 100)}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                      <span>Tipo: {ticket.type || "tarefa"}</span>
-                      <span>Prioridade: {ticket.priority || "medium"}</span>
-                    </div>
-                    <div className="mt-2 text-[11px] text-(--tc-text-muted,#6b7280) space-y-1">
-                      <p>Criador: {creatorLabel}</p>
-                      <p>Data: {formatDate(ticket.createdAt)}</p>
-                    </div>
-                  </button>
+                      <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                        <span>Tipo: {ticket.type || "tarefa"}</span>
+                        <span>Prioridade: {ticket.priority || "medium"}</span>
+                      </div>
+                      <div className="mt-2 text-[11px] text-(--tc-text-muted,#6b7280) space-y-1">
+                        <p>Criador: {creatorLabel}</p>
+                        <p>Data: {formatDate(ticket.createdAt)}</p>
+                      </div>
+                    </button>
+                    {canManage && (
+                      <div className="mt-3">
+                        <label className="sr-only" htmlFor={`status-${ticket.id}`}>
+                          Status
+                        </label>
+                        <select
+                          id={`status-${ticket.id}`}
+                          aria-label="Status do chamado"
+                          title="Status do chamado"
+                          className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[11px]"
+                          value={normalizeKanbanStatus(ticket.status)}
+                          onChange={(e) => updateStatus(ticket.id, e.target.value as TicketStatus)}
+                        >
+                          {statusOptions.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
-              {(grouped[columnKey] ?? []).length === 0 && (
+              {(grouped[column.key] ?? []).length === 0 && (
                 <p className="text-xs text-(--tc-text-muted,#6b7280)">Sem chamados</p>
               )}
             </div>
@@ -252,8 +429,8 @@ export default function MeusChamadosPage() {
         open={Boolean(selectedTicket)}
         ticket={selectedTicket}
         onClose={() => setSelectedTicket(null)}
-        canEditStatus={false}
-        statusOptions={KANBAN_STATUS_OPTIONS}
+        canEditStatus={canManage}
+        statusOptions={statusOptions}
         onTicketUpdated={(updated) => {
           setSelectedTicket(updated);
           setTickets((current) =>
@@ -292,6 +469,8 @@ export default function MeusChamadosPage() {
               <div className="grid gap-2 sm:grid-cols-2">
                 <select
                   className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
+                  title="Tipo do chamado"
+                  aria-label="Tipo do chamado"
                   value={createDraft.type}
                   onChange={(e) => setCreateDraft((prev) => ({ ...prev, type: e.target.value }))}
                 >
@@ -303,6 +482,8 @@ export default function MeusChamadosPage() {
                 </select>
                 <select
                   className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
+                  title="Prioridade do chamado"
+                  aria-label="Prioridade do chamado"
                   value={createDraft.priority}
                   onChange={(e) => setCreateDraft((prev) => ({ ...prev, priority: e.target.value }))}
                 >

@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FiPlus, FiRefreshCw } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useTicketKanbanColumns } from "@/hooks/useTicketKanbanColumns";
 import {
-  KANBAN_STATUS_OPTIONS,
   getTicketStatusLabel,
   normalizeKanbanStatus,
   type TicketStatus,
@@ -32,14 +32,7 @@ type TicketItem = {
   assignedToEmail?: string | null;
 };
 
-type ColumnKey = "backlog" | "doing" | "review" | "done";
-
-const COLUMN_LABELS: Record<ColumnKey, string> = {
-  backlog: "Backlog",
-  doing: "Em andamento",
-  review: "Em revisão",
-  done: "Concluído",
-};
+type ColumnKey = string;
 
 const PRIORITY_OPTIONS = [
   { value: "low", label: "Baixa" },
@@ -90,21 +83,29 @@ export default function KanbanItPage() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
+  const [editingColumnKey, setEditingColumnKey] = useState<string | null>(null);
+  const [editingColumnLabel, setEditingColumnLabel] = useState("");
+  const [addingColumn, setAddingColumn] = useState(false);
+  const [newColumnLabel, setNewColumnLabel] = useState("");
+
   const isAllowed = useMemo(() => isDevRole(user?.role ?? ""), [user?.role]);
+  const statusKeys = useMemo(
+    () => tickets.map((ticket) => normalizeKanbanStatus(ticket.status)),
+    [tickets],
+  );
+  const { columns, statusOptions, addColumn, renameColumn } = useTicketKanbanColumns(statusKeys);
 
   const grouped = useMemo(() => {
-    const map: Record<ColumnKey, TicketItem[]> = {
-      backlog: [],
-      doing: [],
-      review: [],
-      done: [],
-    };
+    const map: Record<ColumnKey, TicketItem[]> = {};
+    columns.forEach((col) => {
+      map[col.key] = [];
+    });
     for (const ticket of tickets) {
       const normalized = normalizeKanbanStatus(ticket.status) as ColumnKey;
       if (map[normalized]) map[normalized].push(ticket);
     }
     return map;
-  }, [tickets]);
+  }, [tickets, columns]);
 
   const loadTickets = useCallback(async () => {
     if (!isAllowed) return;
@@ -214,6 +215,37 @@ export default function KanbanItPage() {
     }
   }
 
+  function startEditColumn(key: string, label: string) {
+    if (!isAllowed) return;
+    setEditingColumnKey(key);
+    setEditingColumnLabel(label);
+  }
+
+  function commitEditColumn() {
+    if (!editingColumnKey) return;
+    renameColumn(editingColumnKey, editingColumnLabel);
+    setEditingColumnKey(null);
+    setEditingColumnLabel("");
+  }
+
+  function cancelEditColumn() {
+    setEditingColumnKey(null);
+    setEditingColumnLabel("");
+  }
+
+  function startAddColumn() {
+    if (!isAllowed) return;
+    setAddingColumn(true);
+    setNewColumnLabel("");
+  }
+
+  function commitAddColumn() {
+    const created = addColumn(newColumnLabel);
+    setAddingColumn(false);
+    setNewColumnLabel("");
+    return created;
+  }
+
   if (loading) {
     return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Carregando...</div>;
   }
@@ -252,27 +284,86 @@ export default function KanbanItPage() {
       {error && <p className="text-sm text-red-600">{error}</p>}
       {loadingTickets && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
 
-      <section className="grid gap-4 lg:grid-cols-4">
-        {(Object.keys(COLUMN_LABELS) as ColumnKey[]).map((columnKey) => (
+      {isAllowed && (
+        <div className="flex flex-wrap items-center gap-2">
+          {!addingColumn && (
+            <button
+              type="button"
+              onClick={startAddColumn}
+              className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+            >
+              + Coluna
+            </button>
+          )}
+          {addingColumn && (
+            <input
+              value={newColumnLabel}
+              autoFocus
+              onChange={(e) => setNewColumnLabel(e.target.value)}
+              onBlur={commitAddColumn}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  commitAddColumn();
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  setAddingColumn(false);
+                  setNewColumnLabel("");
+                }
+              }}
+              className="w-56 rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
+              placeholder="Nome da coluna"
+            />
+          )}
+        </div>
+      )}
+
+      <section className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+        {columns.map((column) => (
           <div
-            key={columnKey}
-            className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-3 min-h-[20rem]"
+            key={column.key}
+            className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-3 min-h-80"
             onDragOver={(e) => {
               e.preventDefault();
               e.dataTransfer.dropEffect = "move";
             }}
-            onDrop={() => handleDrop(columnKey)}
+            onDrop={() => handleDrop(column.key)}
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
-                {COLUMN_LABELS[columnKey]}
-              </h2>
+              {editingColumnKey === column.key ? (
+                <input
+                  value={editingColumnLabel}
+                  autoFocus
+                  onChange={(e) => setEditingColumnLabel(e.target.value)}
+                  onBlur={commitEditColumn}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      commitEditColumn();
+                    }
+                    if (e.key === "Escape") {
+                      e.preventDefault();
+                      cancelEditColumn();
+                    }
+                  }}
+                  className="w-full rounded-md border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => startEditColumn(column.key, column.label)}
+                  className="text-left text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
+                >
+                  {column.label}
+                </button>
+              )}
               <span className="text-xs text-(--tc-text-muted,#6b7280)">
-                {grouped[columnKey]?.length ?? 0}
+                {grouped[column.key]?.length ?? 0}
               </span>
             </div>
             <div className="mt-3 space-y-3">
-              {(grouped[columnKey] ?? []).map((ticket) => {
+              {(grouped[column.key] ?? []).map((ticket) => {
                 const creatorLabel = ticket.createdByName || ticket.createdByEmail || ticket.createdBy || "-";
                 return (
                   <div key={ticket.id} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 text-left shadow-sm">
@@ -293,7 +384,7 @@ export default function KanbanItPage() {
                           {ticket.code || `CH-${ticket.id.slice(0, 6).toUpperCase()}`}
                         </p>
                         <span className="text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                          {getTicketStatusLabel(normalizeKanbanStatus(ticket.status))}
+                          {getTicketStatusLabel(normalizeKanbanStatus(ticket.status), statusOptions)}
                         </span>
                       </div>
                       <p className="mt-2 text-sm font-semibold">{ticket.title || "Sem titulo"}</p>
@@ -315,11 +406,13 @@ export default function KanbanItPage() {
                       </label>
                       <select
                         id={`status-${ticket.id}`}
+                        aria-label="Status do chamado"
+                        title="Status do chamado"
                         className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[11px]"
                         value={normalizeKanbanStatus(ticket.status)}
                         onChange={(e) => updateStatus(ticket.id, e.target.value as TicketStatus)}
                       >
-                        {KANBAN_STATUS_OPTIONS.map((opt) => (
+                        {statusOptions.map((opt) => (
                           <option key={opt.value} value={opt.value}>
                             {opt.label}
                           </option>
@@ -329,7 +422,7 @@ export default function KanbanItPage() {
                   </div>
                 );
               })}
-              {(grouped[columnKey] ?? []).length === 0 && (
+              {(grouped[column.key] ?? []).length === 0 && (
                 <p className="text-xs text-(--tc-text-muted,#6b7280)">Sem chamados</p>
               )}
             </div>
@@ -342,7 +435,7 @@ export default function KanbanItPage() {
         ticket={selectedTicket}
         onClose={() => setSelectedTicket(null)}
         canEditStatus={true}
-        statusOptions={KANBAN_STATUS_OPTIONS}
+        statusOptions={statusOptions}
         onTicketUpdated={(updated) => {
           setSelectedTicket(updated);
           setTickets((current) =>
@@ -379,7 +472,13 @@ export default function KanbanItPage() {
                 onChange={(e) => setCreateDraft((prev) => ({ ...prev, description: e.target.value }))}
               />
               <div className="grid gap-2 sm:grid-cols-2">
+                <label className="sr-only" htmlFor="create-ticket-type">
+                  Tipo do chamado
+                </label>
                 <select
+                  id="create-ticket-type"
+                  aria-label="Tipo do chamado"
+                  title="Tipo do chamado"
                   className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
                   value={createDraft.type}
                   onChange={(e) => setCreateDraft((prev) => ({ ...prev, type: e.target.value }))}
@@ -390,7 +489,13 @@ export default function KanbanItPage() {
                     </option>
                   ))}
                 </select>
+                <label className="sr-only" htmlFor="create-ticket-priority">
+                  Prioridade do chamado
+                </label>
                 <select
+                  id="create-ticket-priority"
+                  aria-label="Prioridade do chamado"
+                  title="Prioridade do chamado"
                   className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
                   value={createDraft.priority}
                   onChange={(e) => setCreateDraft((prev) => ({ ...prev, priority: e.target.value }))}

@@ -213,12 +213,10 @@ export default function SettingsPage() {
   const { user, refreshUser } = useAuthUser();
   const { theme, language, setTheme, setLanguage, saveSettings, loading: settingsLoading } = useAppSettings();
 
-  const key =
-    typeof (user as { id?: unknown; userId?: unknown } | null)?.id === "string"
-      ? (user as { id: string }).id
-      : typeof (user as { id?: unknown; userId?: unknown } | null)?.userId === "string"
-        ? (user as { userId: string }).userId
-        : "anon";
+  const userRecord = (user ?? null) as Record<string, unknown> | null;
+  const idValue = userRecord?.id;
+  const userIdValue = userRecord?.userId;
+  const key = typeof idValue === "string" ? idValue : typeof userIdValue === "string" ? userIdValue : "anon";
 
   return (
     <SettingsPageInner

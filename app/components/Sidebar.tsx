@@ -94,6 +94,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
       { label: t("nav.adminPanel"), icon: FiCompass, href: "/admin/home" },
       { label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric" },
       { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
+      { label: "Chamados", icon: FiMessageSquare, href: "/admin/chamados" },
       { label: "Benchmark", icon: FiBarChart2, href: "/admin/benchmark", roles: ["admin"] },
       { label: t("nav.runsManagement"), icon: FiLayers, href: "/admin/runs" },
       { label: t("nav.defects"), icon: FiShield, href: "/admin/defeitos" },
@@ -121,7 +122,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             { label: t("nav.testPlans"), icon: FiClipboard, href: `/empresas/${companySlug}/planos-de-teste` },
             { label: t("nav.runs"), icon: FiList, href: `/empresas/${companySlug}/runs` },
             { label: t("nav.defects"), icon: FiAlertTriangle, href: `/empresas/${companySlug}/defeitos` },
-            { label: "Chamados", icon: FiMessageSquare, href: "/meus-chamados", roles: ["client", "user"] },
+            { label: "Chamados", icon: FiMessageSquare, href: "/meus-chamados", roles: ["client", "user", "admin"] },
           ]
         : [],
     [companySlug, t]

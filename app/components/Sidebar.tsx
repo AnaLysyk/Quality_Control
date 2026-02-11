@@ -207,7 +207,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
               alt="Logo"
               width={48}
               height={48}
-              className="object-cover pointer-events-none select-none"
+              className="object-contain p-1 pointer-events-none select-none"
             />
           </div>
           <div className="flex flex-col leading-tight transition duration-200 whitespace-nowrap sidebar-brand">
@@ -250,7 +250,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                   alt="Logo"
                   width={48}
                   height={48}
-                  className="object-cover pointer-events-none select-none"
+                  className="object-contain p-1 pointer-events-none select-none"
                 />
               </div>
               <div className="flex flex-col">

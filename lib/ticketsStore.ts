@@ -69,7 +69,16 @@ const BACKUP_DIR = path.join(DATA_DIR, "backups");
 const LOCK_PATH = `${STORE_PATH}.lock`;
 const STORE_KEY = "qc:support_tickets:v1";
 const STORE_COUNTER_KEY = "qc:support_tickets:counter:v1";
-const USE_REDIS = process.env.TICKETS_STORE === "redis" || isRedisConfigured();
+const FORCE_FILE = process.env.TICKETS_STORE === "file";
+const FORCE_REDIS = process.env.TICKETS_STORE === "redis";
+const REDIS_AVAILABLE = isRedisConfigured();
+const USE_REDIS = !FORCE_FILE && REDIS_AVAILABLE;
+const SHOULD_FLUSH_ON_WRITE = Boolean(
+  process.env.VERCEL ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME ||
+    process.env.NETLIFY ||
+    process.env.SERVERLESS,
+);
 const USE_MEMORY = process.env.TICKETS_IN_MEMORY === "true";
 
 const FLUSH_INTERVAL_MS = Math.max(1000, Number(process.env.TICKETS_FLUSH_INTERVAL_MS ?? 5000));
@@ -90,6 +99,10 @@ let versionCounter = 0;
 let flushingPromise: Promise<void> | null = null;
 let warnedRedisFailure = false;
 let forceMemory = false;
+
+if (FORCE_REDIS && !REDIS_AVAILABLE) {
+  console.warn("[TICKETS] TICKETS_STORE=redis sem credenciais; usando filesystem.");
+}
 
 function usingMemory() {
   return USE_MEMORY || forceMemory;
@@ -381,6 +394,12 @@ async function writeStore(next: TicketsStore) {
   await initStore();
   cacheStore = payload;
   dirty = true;
+  if (SHOULD_FLUSH_ON_WRITE) {
+    await flushNow().catch((err) => {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn("[TICKETS] Falha ao persistir imediatamente:", msg);
+    });
+  }
 }
 
 function buildVersionName(counter: number) {

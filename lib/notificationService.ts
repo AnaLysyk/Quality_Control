@@ -12,6 +12,7 @@ import {
   listLocalCompanies,
   listLocalLinksForCompany,
   listLocalUsers,
+  listLocalMemberships,
 } from "@/lib/auth/localStore";
 
 function isAdminUser(user: { is_global_admin?: boolean; globalRole?: string | null }) {
@@ -29,8 +30,13 @@ async function resolveAdminUserIds() {
 }
 
 async function resolveItDevUserIds() {
-  const users = await listLocalUsers();
-  return users.filter(isItDevUser).map((user) => user.id);
+  const [users, memberships] = await Promise.all([listLocalUsers(), listLocalMemberships()]);
+  const ids = new Set<string>();
+  users.filter(isItDevUser).forEach((user) => ids.add(user.id));
+  memberships
+    .filter((membership) => isItDevUser({ role: membership.role }))
+    .forEach((membership) => ids.add(membership.userId));
+  return Array.from(ids);
 }
 
 async function resolveCompanyUserIds(companySlug?: string | null) {

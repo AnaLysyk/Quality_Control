@@ -244,7 +244,7 @@ export default function TicketsButton() {
                     type="button"
                     onClick={saveDraft}
                     disabled={saving}
-                    className="inline-flex items-center gap-2 rounded-lg bg-(--tc-surface-dark,#0b1a3c) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:bg-(--tc-accent-hover,#c80001) disabled:opacity-60"
                   >
                     <FiSave size={14} /> {saving ? "Salvando" : "Salvar"}
                   </button>
@@ -268,8 +268,7 @@ export default function TicketsButton() {
               const isExpanded = expandedId === ticket.id;
               const isEditing = editingId === ticket.id;
               const localDraft = isEditing && draft ? draft : null;
-              const currentUserId = user?.id ?? user?.userId ?? "";
-              const canEdit = !user?.isGlobalAdmin || ticket.createdBy === currentUserId || !ticket.createdBy;
+              const canEdit = false;
               const creatorLabel = ticket.createdByName || ticket.createdByEmail || ticket.createdBy || "";
 
               return (
@@ -332,7 +331,7 @@ export default function TicketsButton() {
                               type="button"
                               onClick={saveDraft}
                               disabled={saving}
-                              className="inline-flex items-center gap-2 rounded-lg bg-(--tc-surface-dark,#0b1a3c) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
+                              className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:bg-(--tc-accent-hover,#c80001) disabled:opacity-60"
                             >
                               <FiSave size={14} /> {saving ? "Salvando" : "Salvar"}
                             </button>

@@ -962,8 +962,14 @@ export default function Kanban({
 
                     {editable && allowStatusChange && (
                       <div className="mt-3 space-y-1" data-testid={`kanban-actions-${cardTestId}`}>
-                        <label className="text-[10px] uppercase tracking-[0.3em] text-slate-500">Status</label>
+                        <label
+                          htmlFor={`kanban-status-${itemKey}`}
+                          className="text-[10px] uppercase tracking-[0.3em] text-slate-500"
+                        >
+                          Status
+                        </label>
                         <select
+                          id={`kanban-status-${itemKey}`}
                           value={column.key}
                           onChange={(event) => moveItem(column.key, item, event.target.value as keyof KanbanData)}
                           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"

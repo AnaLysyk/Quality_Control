@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCompanyQualitySummary, getCompanyDefects } from "@/lib/quality";
 import { getAllReleases } from "@/release/data";
-import { sendQualityAlert, readAlertsStore } from "@/lib/qualityAlert";
+import { ensureSummaryAlerts, readAlertsStore } from "@/lib/qualityAlert";
 import { getRedis } from "@/lib/redis";
 import { rateLimit } from "@/lib/rateLimit";
 import { calculateQualityScore } from "@/lib/qualityScore";
@@ -44,47 +44,9 @@ export async function GET(req: Request, context: { params: Promise<{ slug?: stri
     .filter((r) => r.project === slug || r.app === slug)
     .map((r) => ({ version: r.title, status: r.status || "unknown" }));
 
-  if (summary.qualityScore < 70) {
-    await sendQualityAlert({
-      companySlug: slug,
-      type: "quality_score",
-      severity: "critical",
-      message: `Quality Score crítico: ${summary.qualityScore}`,
-      metadata: { score: summary.qualityScore },
-      timestamp: new Date().toISOString(),
-    });
-  }
-  if (summary.slaOverdue > 0) {
-    await sendQualityAlert({
-      companySlug: slug,
-      type: "sla",
-      severity: "critical",
-      message: `Defeitos fora do SLA: ${summary.slaOverdue}`,
-      metadata: { slaOverdue: summary.slaOverdue },
-      timestamp: new Date().toISOString(),
-    });
-  }
-  if (summary.mttrAvg != null && summary.mttrAvg > 48) {
-    await sendQualityAlert({
-      companySlug: slug,
-      type: "mttr",
-      severity: "critical",
-      message: `MTTR alto: ${summary.mttrAvg} dias`,
-      metadata: { mttr: summary.mttrAvg },
-      timestamp: new Date().toISOString(),
-    });
-  }
-  const failedRelease = impacted.find((r) => r.status === "failed");
-  if (failedRelease) {
-    await sendQualityAlert({
-      companySlug: slug,
-      type: "release_failed",
-      severity: "critical",
-      message: `Release falhou: ${failedRelease.version}`,
-      metadata: { version: failedRelease.version },
-      timestamp: new Date().toISOString(),
-    });
-  }
+  try {
+    await ensureSummaryAlerts({ companySlug: slug, summary, releases: impacted });
+  } catch {}
 
   const allAlerts = await readAlertsStore();
   const recentAlerts = allAlerts

@@ -321,6 +321,7 @@ export default function AccessRequestClient() {
                 setIsRequestOpen(false);
                 setLookupError(null);
               }}
+              title="Consultar agora"
               className="inline-flex items-center justify-center rounded-xl border border-[#011848]/15 bg-white px-5 py-2 text-sm font-semibold text-[#011848] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#011848]/5 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/50"
             >
               Consultar agora
@@ -346,6 +347,7 @@ export default function AccessRequestClient() {
                 setError(null);
                 setSuccess(null);
               }}
+              title="Solicitar acesso"
               className="inline-flex items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60"
             >
               Solicitar acesso
@@ -475,7 +477,12 @@ export default function AccessRequestClient() {
                   <span>Tipo de acesso</span>
                   <span className="text-xs font-medium text-[#6b7280]">Escolha conforme seu papel</span>
                 </div>
+                <label className="sr-only" htmlFor="access-type-select">
+                  Tipo de acesso
+                </label>
                 <select
+                  id="access-type-select"
+                  aria-label="Tipo de acesso"
                   value={accessType}
                   onChange={(event) => setAccessType(event.target.value as "user" | "company" | "admin")}
                   className={inputBase}
@@ -504,6 +511,7 @@ export default function AccessRequestClient() {
 
               <button
                 type="submit"
+                title="Enviar solicitação"
                 disabled={loading}
                 className="w-full flex items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:opacity-60 disabled:cursor-not-allowed"
               >
@@ -585,6 +593,7 @@ export default function AccessRequestClient() {
 
               <button
                 type="submit"
+                title="Consultar solicitação"
                 disabled={lookupLoading}
                 className="w-full flex items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:opacity-60 disabled:cursor-not-allowed"
               >
@@ -654,6 +663,7 @@ export default function AccessRequestClient() {
                           type="button"
                           onClick={handleSubmitComment}
                           disabled={commentSubmitting || !commentDraft.trim()}
+                          title="Enviar comentário"
                           className="rounded-xl border border-[#011848]/15 bg-white px-4 py-2 text-xs font-semibold text-[#011848] transition hover:bg-[#011848]/5 disabled:opacity-60"
                         >
                           {commentSubmitting ? "Enviando..." : "Enviar comentário"}

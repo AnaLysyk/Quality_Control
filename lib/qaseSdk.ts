@@ -68,6 +68,31 @@ export class QaseClient {
     return { data: json, status: res.status };
   }
 
+  async postWithStatus<T>(path: string, body?: unknown, options: RequestOptions = {}): Promise<{ data: T; status: number }> {
+    const url = this.buildUrl(path, options.params);
+    const headers = {
+      Token: this.token,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      ...(options.headers ?? {}),
+    };
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      cache: options.cache ?? this.defaultFetchOptions?.cache,
+      ...this.defaultFetchOptions,
+    });
+
+    if (!res.ok) {
+      throw new QaseError(`Qase request failed: ${res.status}`, res.status);
+    }
+
+    const json = (await res.json().catch(() => ({}))) as T;
+    return { data: json, status: res.status };
+  }
+
   async listPlans(
     projectCode: string,
     params?: Record<string, string | number | undefined>,
@@ -75,6 +100,13 @@ export class QaseClient {
     const { data } = await this.getWithStatus<{ result?: { entities?: unknown[] } }>(`/plan/${projectCode}`, {
       params,
     });
+    return data;
+  }
+
+  async createResult(projectCode: string, runId: number, body: Record<string, unknown>) {
+    // Qase API accepts creating a result for a run via /run/{runId}/result
+    const path = `/run/${runId}/result`;
+    const { data } = await this.postWithStatus<{ result?: unknown }>(path, body);
     return data;
   }
 }

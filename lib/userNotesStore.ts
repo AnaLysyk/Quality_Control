@@ -94,7 +94,7 @@ async function readStoreRedis(userId?: string): Promise<NotesStore | UserNote[] 
   }
   try {
     const key = `${STORE_KEY_PREFIX}:${userId}`;
-    // @ts-ignore
+    // @ts-expect-error - redis client typing may be dynamic in different runtimes
     const raw = await redis.get<string>(key);
     if (!raw) return [];
     return JSON.parse(raw) as UserNote[];
@@ -109,7 +109,7 @@ async function writeStoreRedis(userId: string, items: UserNote[]) {
   const redis = getRedis();
   const key = `${STORE_KEY_PREFIX}:${userId}`;
   try {
-    // @ts-ignore
+    // @ts-expect-error - redis client typing may be dynamic in different runtimes
     await redis.set(key, JSON.stringify(items));
     return true;
   } catch (err) {

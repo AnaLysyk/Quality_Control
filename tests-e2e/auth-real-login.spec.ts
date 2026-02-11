@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type APIRequestContext } from "@playwright/test";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
 const adminUser = {
@@ -19,7 +19,7 @@ function parseCookie(setCookie: string | string[] | undefined, name: string): st
   return match?.[1] ?? null;
 }
 
-async function login(request: typeof test["request"], email: string, password: string) {
+async function login(request: APIRequestContext, email: string, password: string) {
   const response = await request.post(`${baseURL}/api/auth/login`, {
     data: { user: email, password },
   });

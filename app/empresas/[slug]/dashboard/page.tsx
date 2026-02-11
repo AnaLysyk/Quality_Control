@@ -4,7 +4,8 @@ import { readManualReleaseStore } from "@/data/manualData";
 import { evaluateQualityGate, sumStats, toPercent } from "@/lib/quality";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
 import { getCompanyQualitySummary } from "@/lib/quality";
-import { readAlertsStore, type QualityAlert } from "@/lib/qualityAlert";
+import { ensureSummaryAlerts, readAlertsStore, type QualityAlert } from "@/lib/qualityAlert";
+import { getAllReleases } from "@/release/data";
 import DashboardClient from "./DashboardClient";
 
 export const dynamic = "force-dynamic";
@@ -64,6 +65,13 @@ export default async function CompanyDashboardPage({ params }: PageProps) {
     .sort((a, b) => String(b.createdAt ?? "").localeCompare(String(a.createdAt ?? "")));
 
   const summary = await getCompanyQualitySummary(slug);
+  try {
+    const allReleases = await getAllReleases();
+    const impacted = allReleases
+      .filter((r) => r.project === slug || r.app === slug)
+      .map((r) => ({ version: r.title, status: r.status || "unknown" }));
+    await ensureSummaryAlerts({ companySlug: slug, summary, releases: impacted });
+  } catch {}
 
   let goals: GoalStatus[] = [];
   try {

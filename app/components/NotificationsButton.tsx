@@ -244,7 +244,7 @@ export default function NotificationsButton() {
       >
         <FiBell size={18} />
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 min-w-[1.25rem] rounded-full bg-(--tc-accent,#ef0001) px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-[0_6px_16px_rgba(239,0,1,0.35)]">
+          <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-(--tc-accent,#ef0001) px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-[0_6px_16px_rgba(239,0,1,0.35)]">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -403,10 +403,14 @@ export default function NotificationsButton() {
                         {ticketInfo.description || "Sem descricao."}
                       </p>
                       <div className="flex flex-wrap items-center gap-2">
-                        <label className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
+                        <label
+                          htmlFor={`notification-ticket-status-${selected.ticketId ?? "current"}`}
+                          className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
+                        >
                           Status
                         </label>
                         <select
+                          id={`notification-ticket-status-${selected.ticketId ?? "current"}`}
                           className="rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
                           value={ticketInfo.status}
                           onChange={(e) => updateTicketStatus(e.target.value as TicketStatus)}

@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import { getRedis } from "@/lib/redis";
 import { listLocalCompanies, listLocalLinksForUser } from "@/lib/auth/localStore";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
+import { getJsonStoreDir } from "@/data/jsonStorePath";
 
 type CompanyDocumentKind = "file" | "link";
 type DocumentHistoryAction = "created" | "deleted";
@@ -45,9 +46,9 @@ type AuthContext = {
   companySlugs: string[];
 };
 
-const STORE_PATH = path.join(process.cwd(), "data", "company-documents-store.json");
-const HISTORY_PATH = path.join(process.cwd(), "data", "company-documents-history.json");
-const LOCAL_UPLOAD_ROOT = path.join(process.cwd(), "data", "company-documents-files");
+const STORE_PATH = path.join(getJsonStoreDir(), "company-documents-store.json");
+const HISTORY_PATH = path.join(getJsonStoreDir(), "company-documents-history.json");
+const LOCAL_UPLOAD_ROOT = path.join(getJsonStoreDir(), "company-documents-files");
 
 function sanitizeSlug(raw: string) {
   return raw.trim().toLowerCase().replace(/[^a-z0-9-_]/g, "-").slice(0, 80);

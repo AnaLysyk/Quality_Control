@@ -87,11 +87,11 @@ async function findRequestByLookup(email: string, name: string): Promise<Support
     }));
   } else {
     try {
-      const list = await prisma.supportRequest.findMany({
+      const list = (await prisma.supportRequest.findMany({
         where: { email: email.trim().toLowerCase() },
         orderBy: { created_at: "desc" },
-      });
-      items = list.map((item) => ({
+      })) as SupportRequestRow[];
+      items = list.map((item: SupportRequestRow) => ({
         id: item.id,
         email: item.email,
         message: item.message,

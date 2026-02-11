@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
+import { getRedis, isRedisConfigured } from "@/lib/redis";
 
 let fs: typeof import("fs/promises") | undefined;
 let path: typeof import("path") | undefined;
@@ -10,6 +11,13 @@ if (typeof process !== "undefined" && process.release?.name === "node") {
 }
 
 const STORE_PATH = path && path.join(process.cwd(), "data", "user-settings.json");
+const STORE_KEY_PREFIX = "qc:user_settings:v1";
+const USE_REDIS = process.env.USER_SETTINGS_STORE === "redis" || isRedisConfigured();
+const USE_MEMORY =
+  process.env.USER_SETTINGS_IN_MEMORY === "true" ||
+  (!USE_REDIS && process.env.VERCEL === "1");
+let memoryStore: Record<string, StoredSettings> = {};
+let warnedFsFailure = false;
 
 type Theme = "light" | "dark" | "system";
 
@@ -32,19 +40,8 @@ const isValidTheme = (value?: string | null): value is Theme =>
 const isValidLanguage = (value?: string | null): value is Locale =>
   Boolean(value) && LOCALES.includes(value as Locale);
 
-async function ensureStore() {
-  if (!fs || !path || !STORE_PATH) return;
-  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-  try {
-    await fs.access(STORE_PATH);
-  } catch {
-    await fs.writeFile(STORE_PATH, JSON.stringify({}), "utf8");
-  }
-}
-
-async function readStore(): Promise<Record<string, StoredSettings>> {
+async function readStoreFile(): Promise<Record<string, StoredSettings>> {
   if (!fs || !STORE_PATH) return {};
-  await ensureStore();
   try {
     const raw = await fs.readFile(STORE_PATH, "utf8");
     const parsed = JSON.parse(raw);
@@ -54,10 +51,46 @@ async function readStore(): Promise<Record<string, StoredSettings>> {
   }
 }
 
-async function writeStore(data: Record<string, StoredSettings>) {
-  if (!fs || !STORE_PATH) return;
-  await ensureStore();
-  await fs.writeFile(STORE_PATH, JSON.stringify(data, null, 2), "utf8");
+async function writeStoreFile(data: Record<string, StoredSettings>) {
+  if (!fs || !path || !STORE_PATH) return;
+  try {
+    await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
+    await fs.writeFile(STORE_PATH, JSON.stringify(data, null, 2), "utf8");
+  } catch (err) {
+    if (!warnedFsFailure) {
+      warnedFsFailure = true;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn("[userSettings] Falha ao escrever arquivo, usando memoria:", msg);
+    }
+    memoryStore = data;
+  }
+}
+
+async function readSettingsFromRedis(userId: string): Promise<StoredSettings | null> {
+  try {
+    const redis = getRedis();
+    const raw = await redis.get<string>(`${STORE_KEY_PREFIX}:${userId}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StoredSettings;
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn("[userSettings] Redis read failed, falling back:", msg);
+    return null;
+  }
+}
+
+async function writeSettingsToRedis(userId: string, settings: StoredSettings): Promise<boolean> {
+  try {
+    const redis = getRedis();
+    await redis.set(`${STORE_KEY_PREFIX}:${userId}`, JSON.stringify(settings));
+    return true;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn("[userSettings] Redis write failed, falling back:", msg);
+    return false;
+  }
 }
 
 function normalizeSettings(input?: Partial<StoredSettings> | null): Omit<StoredSettings, "user_id"> {
@@ -73,25 +106,51 @@ async function resolveUserId(req: Request): Promise<string | null> {
 }
 
 async function fetchSettingsFromStore(userId: string): Promise<StoredSettings> {
-  const store = await readStore();
-  const entry = store[userId];
-  if (entry) return entry;
-  return { user_id: userId, ...DEFAULT_SETTINGS };
+  if (USE_REDIS) {
+    const fromRedis = await readSettingsFromRedis(userId);
+    if (fromRedis) return fromRedis;
+  }
+
+  if (USE_MEMORY) {
+    return memoryStore[userId] ?? { user_id: userId, ...DEFAULT_SETTINGS };
+  }
+
+  const store = await readStoreFile();
+  const entry = store[userId] ?? { user_id: userId, ...DEFAULT_SETTINGS };
+  if (USE_REDIS) {
+    await writeSettingsToRedis(userId, entry);
+  }
+  return entry;
 }
 
 async function saveSettingsToStore(userId: string, next: Omit<StoredSettings, "user_id">) {
-  const store = await readStore();
   const now = new Date().toISOString();
-  const existing = store[userId];
-  store[userId] = {
+  const existing =
+    (USE_REDIS ? await readSettingsFromRedis(userId) : null) ??
+    memoryStore[userId] ??
+    (USE_MEMORY ? null : (await readStoreFile())[userId]);
+  const saved: StoredSettings = {
     user_id: userId,
     language: next.language,
     theme: next.theme,
     created_at: existing?.created_at ?? now,
     updated_at: now,
   };
-  await writeStore(store);
-  return store[userId];
+
+  if (USE_REDIS) {
+    const ok = await writeSettingsToRedis(userId, saved);
+    if (ok) return saved;
+  }
+
+  if (USE_MEMORY) {
+    memoryStore[userId] = saved;
+    return saved;
+  }
+
+  const store = await readStoreFile();
+  store[userId] = saved;
+  await writeStoreFile(store);
+  return saved;
 }
 
 export async function GET(req: Request) {

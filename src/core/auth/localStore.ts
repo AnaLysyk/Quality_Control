@@ -3,6 +3,7 @@ import "server-only";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { randomUUID } from "crypto";
+import { getRedis, isRedisConfigured } from "@/lib/redis";
 
 export type LocalAuthUser = {
   id: string;
@@ -59,7 +60,12 @@ export type LocalAuthStore = {
 
 const STORE_PATH = path.join(process.cwd(), "data", "local-auth-store.json");
 const SAMPLE_PATH = path.join(process.cwd(), "data", "local-auth-store.sample.json");
-const USE_MEMORY_STORE = process.env.LOCAL_AUTH_IN_MEMORY === "true";
+const STORE_KEY = "qc:local_auth_store:v1";
+const USE_REDIS = process.env.LOCAL_AUTH_STORE === "redis" || isRedisConfigured();
+const USE_MEMORY_STORE =
+  process.env.LOCAL_AUTH_IN_MEMORY === "true" ||
+  (!USE_REDIS && process.env.VERCEL === "1");
+let warnedFsFailure = false;
 
 type GlobalAuthStore = {
   __qcLocalAuthStore?: LocalAuthStore;
@@ -189,6 +195,40 @@ async function readStoreFromDisk(): Promise<LocalAuthStore> {
   return normalized;
 }
 
+async function readStoreFromRedis(): Promise<LocalAuthStore | null> {
+  try {
+    const redis = getRedis();
+    const raw = await redis.get<string>(STORE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as LocalAuthStore;
+    if (!parsed || typeof parsed !== "object") return null;
+    const normalized: LocalAuthStore = {
+      users: Array.isArray(parsed.users) ? parsed.users : [],
+      companies: Array.isArray(parsed.companies) ? parsed.companies : [],
+      memberships: Array.isArray(parsed.memberships) ? parsed.memberships : [],
+      links: Array.isArray(parsed.links) ? parsed.links : [],
+    };
+    normalized.memberships = normalizeMemberships(normalized);
+    return normalized;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn("[localAuthStore] Redis read failed, falling back:", msg);
+    return null;
+  }
+}
+
+async function writeStoreToRedis(store: LocalAuthStore): Promise<boolean> {
+  try {
+    const redis = getRedis();
+    await redis.set(STORE_KEY, JSON.stringify(store));
+    return true;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn("[localAuthStore] Redis write failed, falling back:", msg);
+    return false;
+  }
+}
+
 async function storeExists() {
   try {
     await fs.access(STORE_PATH);
@@ -199,6 +239,16 @@ async function storeExists() {
 }
 
 export async function readLocalAuthStore(): Promise<LocalAuthStore> {
+  if (USE_REDIS) {
+    const redisStore = await readStoreFromRedis();
+    if (redisStore) return cloneStore(redisStore);
+    const seeded = await readStoreFromDisk();
+    const ok = await writeStoreToRedis(seeded);
+    if (!ok) {
+      setMemoryStore(seeded);
+    }
+    return cloneStore(seeded);
+  }
   if (!USE_MEMORY_STORE) {
     return readStoreFromDisk();
   }
@@ -218,17 +268,30 @@ export async function writeLocalAuthStore(store: LocalAuthStore): Promise<void> 
     memberships: store.memberships ?? normalizeMemberships(store),
     links: store.links ?? [],
   };
+  if (USE_REDIS) {
+    const ok = await writeStoreToRedis(payload);
+    if (ok) return;
+  }
   if (USE_MEMORY_STORE) {
     setMemoryStore(cloneStore(payload));
     return;
   }
-  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-  await fs.writeFile(STORE_PATH, JSON.stringify(payload, null, 2), "utf8");
+  try {
+    await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
+    await fs.writeFile(STORE_PATH, JSON.stringify(payload, null, 2), "utf8");
+  } catch (err) {
+    if (!warnedFsFailure) {
+      warnedFsFailure = true;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn("[localAuthStore] Falha ao escrever arquivo, usando memoria:", msg);
+    }
+    setMemoryStore(cloneStore(payload));
+  }
 }
 
 async function loadStoreForWrite(): Promise<LocalAuthStore> {
   const store = await readLocalAuthStore();
-  if (!USE_MEMORY_STORE) {
+  if (!USE_MEMORY_STORE && !USE_REDIS) {
     const exists = await storeExists();
     if (!exists) {
       await writeLocalAuthStore(store);

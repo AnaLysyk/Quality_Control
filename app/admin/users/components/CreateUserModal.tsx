@@ -42,7 +42,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
 
   const requiresClient = true;
   const canSubmit = useMemo(
-    () => !!open && (!requiresClient || !!localClientId) && !!name.trim() && !!login.trim() && !!email.trim(),
+    () => !!open && (!requiresClient || !!localClientId) && !!name.trim() && !!email.trim(),
     [open, requiresClient, localClientId, name, login, email],
   );
 
@@ -93,7 +93,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
     try {
       const payload = {
         name: name.trim(),
-        user: login.trim(),
+        ...(login.trim() ? { user: login.trim() } : {}),
         email: email.trim(),
         avatar_url: avatarUrl.trim() || undefined,
         role,
@@ -200,13 +200,12 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
                 />
               </label>
               <label className="block text-sm">
-                Usuario (login)
+                Usuario (login) (opcional)
                 <input
                   className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                   value={login}
                   onChange={(e) => setLogin(e.target.value)}
                   placeholder="usuario"
-                  required
                 />
               </label>
               <label className="block text-sm">

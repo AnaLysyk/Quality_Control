@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Papa from "papaparse";
@@ -12,11 +12,36 @@ const columns: {
   label: string;
   bgClass: string;
   borderClass: string;
+  accentClass: string;
 }[] = [
-  { key: "pass", label: "Pass", bgClass: "bg-(--success,rgba(124,211,67,0.12))", borderClass: "border-(--success,#7cd343)" },
-  { key: "fail", label: "Fail", bgClass: "bg-(--tc-accent-soft,rgba(239,0,1,0.12))", borderClass: "border-(--tc-accent,#ef0001)" },
-  { key: "blocked", label: "Blocked", bgClass: "bg-[rgba(255,167,58,0.12)]", borderClass: "border-(--color-cds,#ffa73a)" },
-  { key: "notRun", label: "Not Run", bgClass: "bg-[rgba(15,22,38,0.08)]", borderClass: "border-(--tc-surface-muted,#0f1626)" },
+  {
+    key: "pass",
+    label: "Pass",
+    bgClass: "bg-(--success,rgba(124,211,67,0.12))",
+    borderClass: "border-(--success,#7cd343)",
+    accentClass: "bg-emerald-500",
+  },
+  {
+    key: "fail",
+    label: "Fail",
+    bgClass: "bg-(--tc-accent-soft,rgba(239,0,1,0.12))",
+    borderClass: "border-(--tc-accent,#ef0001)",
+    accentClass: "bg-rose-500",
+  },
+  {
+    key: "blocked",
+    label: "Blocked",
+    bgClass: "bg-[rgba(255,167,58,0.12)]",
+    borderClass: "border-(--color-cds,#ffa73a)",
+    accentClass: "bg-amber-500",
+  },
+  {
+    key: "notRun",
+    label: "Not Run",
+    bgClass: "bg-[rgba(15,22,38,0.08)]",
+    borderClass: "border-(--tc-surface-muted,#0f1626)",
+    accentClass: "bg-slate-500",
+  },
 ];
 
 type KanbanProps = {
@@ -52,6 +77,22 @@ export default function Kanban({
   const [dragInfo, setDragInfo] = useState<DragInfo | null>(null);
   const [exporting, setExporting] = useState(false);
   const [exported, setExported] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | keyof KanbanData>("all");
+  const [showOnlyMissingEvidence, setShowOnlyMissingEvidence] = useState(false);
+  const [showOnlyMissingBug, setShowOnlyMissingBug] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [addDraft, setAddDraft] = useState({
+    id: "",
+    title: "",
+    status: "notRun" as keyof KanbanData,
+    link: "",
+    bug: "",
+  });
+  const [addError, setAddError] = useState<string | null>(null);
+  const [savingAdd, setSavingAdd] = useState(false);
+  const [editingBugId, setEditingBugId] = useState<string | null>(null);
+  const [editingBugValue, setEditingBugValue] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const projectAbbr = (qaseProject || project || "").toUpperCase();
 
@@ -60,6 +101,14 @@ export default function Kanban({
     localData.fail.length ||
     localData.blocked.length ||
     localData.notRun.length;
+  const totals = {
+    pass: localData.pass.length,
+    fail: localData.fail.length,
+    blocked: localData.blocked.length,
+    notRun: localData.notRun.length,
+  };
+  const totalCount = totals.pass + totals.fail + totals.blocked + totals.notRun;
+  const passRate = totalCount ? Math.round((totals.pass / totalCount) * 100) : 0;
 
   // Sincroniza dados externos (ex.: localStorage ou troca de slug) com o estado interno do Kanban.
   useEffect(() => {
@@ -98,6 +147,88 @@ export default function Kanban({
   function buildCaseLink(caseId?: number | string | null) {
     if (!caseId || !projectAbbr) return null;
     return `https://app.qase.io/case/${projectAbbr}/${caseId}`;
+  }
+
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+
+  function matchesFilters(item: KanbanItem) {
+    const id = String(item.id ?? "").toLowerCase();
+    const title = (item.title ?? "").toLowerCase();
+    const link = (item.link ?? "").toLowerCase();
+    const bug = (item.bug ?? "").toLowerCase();
+    const matchesSearch =
+      !normalizedSearch ||
+      id.includes(normalizedSearch) ||
+      title.includes(normalizedSearch) ||
+      link.includes(normalizedSearch) ||
+      bug.includes(normalizedSearch);
+    if (!matchesSearch) return false;
+    if (showOnlyMissingEvidence && (item.link ?? "").trim()) return false;
+    if (showOnlyMissingBug && (item.bug ?? "").trim()) return false;
+    return true;
+  }
+
+  const filteredCounts = {
+    pass: localData.pass.filter(matchesFilters).length,
+    fail: localData.fail.filter(matchesFilters).length,
+    blocked: localData.blocked.filter(matchesFilters).length,
+    notRun: localData.notRun.filter(matchesFilters).length,
+  };
+  const filteredTotal =
+    filteredCounts.pass + filteredCounts.fail + filteredCounts.blocked + filteredCounts.notRun;
+  const hasFilteredItems = filteredTotal > 0;
+  const showFilteredCount = Boolean(normalizedSearch || showOnlyMissingEvidence || showOnlyMissingBug);
+
+  function openAddModal(defaultStatus: keyof KanbanData = "notRun") {
+    setAddDraft({ id: "", title: "", status: defaultStatus, link: "", bug: "" });
+    setAddError(null);
+    setAddOpen(true);
+  }
+
+  async function submitAdd() {
+    if (!editable) return;
+    const id = addDraft.id.trim();
+    const title = addDraft.title.trim();
+    const status = addDraft.status;
+    if (!id || !title) {
+      setAddError("Informe ID e t\u00edtulo do caso.");
+      return;
+    }
+    const exists = (Object.keys(localData) as (keyof KanbanData)[]).some((key) =>
+      localData[key].some((item) => String(item.id) === id),
+    );
+    if (exists) {
+      setAddError("ID do caso j\u00e1 existe no Kanban.");
+      return;
+    }
+
+    const newItem: KanbanItem = {
+      id,
+      title,
+      bug: addDraft.bug.trim() || null,
+      dbId: null,
+      link: addDraft.link.trim(),
+      fromApi: false,
+    };
+
+    setSavingAdd(true);
+    setAddError(null);
+    if (persistEndpoint) {
+      try {
+        await persistKanbanUpdate({ ...newItem, status }, "POST");
+      } catch (e) {
+        setAddError("Erro ao salvar caso no backend.");
+        setSavingAdd(false);
+        return;
+      }
+    }
+
+    setLocalData((prev) => ({
+      ...prev,
+      [status]: [...prev[status], newItem],
+    }));
+    setSavingAdd(false);
+    setAddOpen(false);
   }
 
   type KanbanPayload = Record<string, unknown>;
@@ -214,32 +345,7 @@ export default function Kanban({
 
   async function handleAdd(columnKey: keyof KanbanData) {
     if (!editable) return;
-    const idStr = prompt("ID do caso:");
-    const title = prompt("Título do caso:");
-    if (!idStr || !title) return;
-
-    const newItem: KanbanItem = {
-      id: idStr,
-      title,
-      bug: null,
-      dbId: null,
-      link: "",
-      fromApi: false,
-    };
-
-    if (persistEndpoint) {
-      try {
-        await persistKanbanUpdate({ ...newItem, status: columnKey }, "POST");
-      } catch (e) {
-        console.error("Erro ao salvar caso no backend", e);
-        return;
-      }
-    }
-
-    setLocalData((prev) => ({
-      ...prev,
-      [columnKey]: [...prev[columnKey], newItem],
-    }));
+    openAddModal(columnKey);
   }
 
   async function handleDelete(columnKey: keyof KanbanData, item: KanbanItem) {
@@ -427,9 +533,194 @@ export default function Kanban({
       data-hide-on-export="true"
       data-testid="kanban-page"
     >
+      {addOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+          data-hide-on-export="true"
+          onClick={() => setAddOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Novo caso</p>
+                <h3 className="text-lg font-semibold text-(--page-text,#0b1a3c)">Adicionar caso manual</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAddOpen(false)}
+                className="text-slate-400 hover:text-slate-600"
+                aria-label="Fechar"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mt-5 grid gap-4">
+              <label className="text-sm text-(--page-text,#0b1a3c)">
+                ID do caso
+                <input
+                  value={addDraft.id}
+                  onChange={(e) => setAddDraft((prev) => ({ ...prev, id: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                  placeholder="Ex.: 123"
+                />
+              </label>
+              <label className="text-sm text-(--page-text,#0b1a3c)">
+                Título
+                <input
+                  value={addDraft.title}
+                  onChange={(e) => setAddDraft((prev) => ({ ...prev, title: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                  placeholder="Descrição curta do caso"
+                />
+              </label>
+              <label className="text-sm text-(--page-text,#0b1a3c)">
+                Status
+                <select
+                  value={addDraft.status}
+                  onChange={(e) =>
+                    setAddDraft((prev) => ({ ...prev, status: e.target.value as keyof KanbanData }))
+                  }
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                >
+                  {columns.map((opt) => (
+                    <option key={opt.key} value={opt.key}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm text-(--page-text,#0b1a3c)">
+                Link de evidência (opcional)
+                <input
+                  value={addDraft.link}
+                  onChange={(e) => setAddDraft((prev) => ({ ...prev, link: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                  placeholder="https://"
+                />
+              </label>
+              <label className="text-sm text-(--page-text,#0b1a3c)">
+                Bug (opcional)
+                <input
+                  value={addDraft.bug}
+                  onChange={(e) => setAddDraft((prev) => ({ ...prev, bug: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                  placeholder="Link ou ID do bug"
+                />
+              </label>
+            </div>
+
+            {addError && <p className="mt-3 text-sm text-rose-600">{addError}</p>}
+
+            <div className="mt-6 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setAddOpen(false)}
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600"
+                disabled={savingAdd}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={submitAdd}
+                disabled={savingAdd}
+                className="rounded-full bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white hover:bg-(--tc-accent-hover,#c80001) disabled:opacity-60"
+              >
+                {savingAdd ? "Salvando..." : "Adicionar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="col-span-full flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-(--surface-border,#e5e7eb) bg-white px-4 py-3">
+        <div className="space-y-2">
+          <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Resumo</p>
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full border border-slate-200 px-3 py-1 text-(--page-text,#0b1a3c)">
+              Total: {totalCount}
+            </span>
+            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700">
+              Pass: {totals.pass}
+            </span>
+            <span className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-rose-700">
+              Fail: {totals.fail}
+            </span>
+            <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-700">
+              Blocked: {totals.blocked}
+            </span>
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-700">
+              Not Run: {totals.notRun}
+            </span>
+            <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-indigo-700">
+              Pass rate: {passRate}%
+            </span>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Buscar por ID, título, link ou bug"
+            className="w-64 max-w-full rounded-full border border-(--tc-border,#e5e7eb) bg-white px-4 py-2 text-sm"
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setStatusFilter("all")}
+              className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${
+                statusFilter === "all"
+                  ? "bg-(--tc-accent,#ef0001) text-white"
+                  : "border border-(--tc-border,#e5e7eb) text-(--tc-text-muted,#6b7280)"
+              }`}
+            >
+              Todos
+            </button>
+            {columns.map((column) => (
+              <button
+                key={column.key}
+                type="button"
+                onClick={() => setStatusFilter(column.key)}
+                className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${
+                  statusFilter === column.key
+                    ? "bg-(--tc-primary-dark,#000f2e) text-white"
+                    : "border border-(--tc-border,#e5e7eb) text-(--tc-text-muted,#6b7280)"
+                }`}
+              >
+                {column.label}
+              </button>
+            ))}
+          </div>
+          <label className="flex items-center gap-2 text-xs text-(--tc-text-muted,#6b7280)">
+            <input
+              type="checkbox"
+              checked={showOnlyMissingEvidence}
+              onChange={(e) => setShowOnlyMissingEvidence(e.target.checked)}
+            />
+            Sem evidência
+          </label>
+          <label className="flex items-center gap-2 text-xs text-(--tc-text-muted,#6b7280)">
+            <input
+              type="checkbox"
+              checked={showOnlyMissingBug}
+              onChange={(e) => setShowOnlyMissingBug(e.target.checked)}
+            />
+            Sem bug
+          </label>
+        </div>
+      </div>
       {!hasItems && (
         <div className="col-span-full text-sm text-(--page-text,#0b1a3c) bg-[#f8fafc] border border-(--surface-border,#e5e7eb) rounded-xl px-3 py-2">
           Cases nao disponiveis para este run.
+        </div>
+      )}
+      {hasItems && !hasFilteredItems && (
+        <div className="col-span-full text-sm text-(--tc-text-muted,#6b7280) bg-[#f8fafc] border border-(--surface-border,#e5e7eb) rounded-xl px-3 py-2">
+          Nenhum caso encontrado com os filtros atuais.
         </div>
       )}
       <div className="col-span-full flex items-center gap-3">
@@ -486,8 +777,12 @@ export default function Kanban({
         )}
       </div>
 
-      {columns.map((column) => {
+      {columns
+        .filter((column) => statusFilter === "all" || column.key === statusFilter)
+        .map((column) => {
         const list = localData[column.key];
+        const filteredList = list.filter(matchesFilters);
+        const countLabel = showFilteredCount ? `${filteredList.length}/${list.length}` : `${list.length}`;
         return (
           <div
             key={column.key}
@@ -498,28 +793,30 @@ export default function Kanban({
             data-drop-target={column.key}
           >
             <h2 className="font-extrabold text-xl mb-4 text-(--page-text,#0b1a3c) tracking-wide">
-              {column.label} <span className="opacity-70 text-(--tc-text-secondary,#4b5563)">({list.length})</span>
+              {column.label} <span className="opacity-70 text-(--tc-text-secondary,#4b5563)">({countLabel})</span>
             </h2>
             {column.key === "pass" && editable && allowStatusChange && (
               <span className="sr-only">Erro no login</span>
             )}
 
             <div className="space-y-4 max-h-90 overflow-y-auto pr-2 custom-scroll">
-              {list.length === 0 && (
+              {filteredList.length === 0 && (
                 <p className="text-(--tc-text-muted,#6b7280) text-sm italic">Nenhum caso</p>
               )}
 
-              {list.map((item, index) => {
+              {filteredList.map((item, index) => {
                 const itemKey = getItemKey(item, `${column.key}-${index}`);
                 const qaseCaseLink = buildCaseLink(item.id);
                 const evidenceLink = (item.link ?? "").trim() || null;
+                const bugLink = (item.bug ?? "").trim();
+                const bugIsUrl = /^https?:\/\//i.test(bugLink);
                 const canEditEvidenceLink = editable ? !item.fromApi : allowLinkEdit;
-                const moveTargets = columns.filter((c) => c.key !== column.key).map((c) => c.key);
+                const canEditBugLink = editable ? !item.fromApi : allowLinkEdit;
                 const cardTestId = item.id ? String(item.id) : itemKey;
                 return (
                   <div
                     key={itemKey}
-                  className="bg-linear-to-br from-[#0c1120] via-[#0a0e1d] to-[#0f1626] border border-(--surface-border,rgba(255,255,255,0.12)) p-5 rounded-3xl shadow-[0_30px_60px_rgba(15,23,42,0.45)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_40px_90px_rgba(0,0,0,0.55)] relative overflow-hidden"
+                    className="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
                     draggable={editable && allowStatusChange}
                     onDragStart={() => editable && allowStatusChange && setDragInfo({ item, from: column.key })}
                     onDragEnd={() => setDragInfo(null)}
@@ -530,28 +827,29 @@ export default function Kanban({
                       <button
                         onClick={() => handleDelete(column.key, item)}
                         data-hide-on-export="true"
-                        className="absolute top-3 right-3 text-rose-500 hover:text-red-200 text-lg font-bold"
+                        className="absolute top-3 right-3 text-rose-500 hover:text-rose-700 text-lg font-bold"
                         aria-label="Excluir caso"
                       >
                         ×
                       </button>
                     )}
-                    {item.fromApi && (
-                      <div className="absolute bottom-3 right-3 rounded-full border border-white/30 bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/80">
-                        API
-                      </div>
-                    )}
 
-                    <div className="flex items-center justify-between gap-2 text-[11px] uppercase tracking-[0.4em] text-white/70">
+                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-slate-500">
+                      <span className={`h-2 w-2 rounded-full ${column.accentClass}`} />
                       <span>ID</span>
-                      <strong className="text-white">{item.id}</strong>
+                      <strong className="text-slate-900">{item.id}</strong>
+                      {item.fromApi && (
+                        <span className="ml-auto rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-500">
+                          API
+                        </span>
+                      )}
                     </div>
 
                     <div className="mt-3">
                       {editingId === itemKey ? (
                         <input
                           aria-label="Editar título do caso"
-                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white focus:border-white/40"
+                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-900 focus:border-slate-300"
                           value={editingValue}
                           autoFocus
                           disabled={!editable}
@@ -566,7 +864,7 @@ export default function Kanban({
                         />
                       ) : (
                         <h3
-                          className={`mt-1 text-lg font-bold uppercase tracking-tight ${editable && !item.fromApi ? "cursor-pointer" : ""}`}
+                          className={`mt-1 text-base font-semibold text-slate-900 ${editable && !item.fromApi ? "cursor-pointer" : ""}`}
                           onClick={() => (editable && !item.fromApi ? handleEditClick(column.key, item) : undefined)}
                         >
                           {item.title || "Sem título"}
@@ -574,88 +872,115 @@ export default function Kanban({
                       )}
                     </div>
 
-                    <div className="mt-3 flex items-center justify-between text-xs text-white/70 gap-3">
-                      <div className="flex items-center gap-3">
-                        {qaseCaseLink ? (
+                    <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-600">
+                      {qaseCaseLink ? (
+                        <a
+                          href={qaseCaseLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 font-semibold text-slate-700 hover:text-(--tc-accent,#ef0001)"
+                        >
+                          <FiExternalLink size={14} />
+                          Qase
+                        </a>
+                      ) : (
+                        <span className="text-slate-400">Sem Qase</span>
+                      )}
+
+                      {evidenceLink ? (
+                        <a
+                          href={evidenceLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 font-semibold text-slate-700 hover:text-(--tc-accent,#ef0001)"
+                          title="Abrir evidência"
+                        >
+                          <FiExternalLink size={14} />
+                          Evidência
+                        </a>
+                      ) : (
+                        <span className="text-slate-400">Sem evidência</span>
+                      )}
+
+                      {bugLink ? (
+                        bugIsUrl ? (
                           <a
-                            href={qaseCaseLink}
+                            href={bugLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 font-semibold text-white/90 hover:text-(--tc-accent,#ef0001)"
+                            className="inline-flex items-center gap-1 font-semibold text-slate-700 hover:text-(--tc-accent,#ef0001)"
+                            title="Abrir bug"
                           >
                             <FiExternalLink size={14} />
-                            Qase
+                            Bug
                           </a>
                         ) : (
-                          <span className="text-white/60">Sem Qase</span>
-                        )}
+                          <span className="text-slate-500">Bug: {bugLink}</span>
+                        )
+                      ) : (
+                        <span className="text-slate-400">Sem bug</span>
+                      )}
+                    </div>
 
-                        {evidenceLink ? (
-                          <a
-                            href={evidenceLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 font-semibold text-white/90 hover:text-(--tc-accent,#ef0001)"
-                            title="Abrir evidência"
-                          >
-                            <FiExternalLink size={14} />
-                            Evidência
-                          </a>
-                        ) : (
-                          <span className="text-white/60">Sem evidência</span>
-                        )}
-                      </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      {editable && !item.fromApi && (
+                        <button
+                          type="button"
+                          onClick={() => handleEditClick(column.key, item)}
+                          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-600 transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                        >
+                          Editar
+                        </button>
+                      )}
 
-                      <div className="flex items-center gap-2">
-                        {editable && !item.fromApi && (
-                          <button
-                            type="button"
-                            onClick={() => handleEditClick(column.key, item)}
-                            className="rounded-full border border-white/40 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/80 transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
-                          >
-                            Editar
-                          </button>
-                        )}
+                      {canEditEvidenceLink && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingLinkId(itemKey);
+                            setEditingLinkValue(item.link ?? "");
+                          }}
+                          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-600 transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                        >
+                          Evidência
+                        </button>
+                      )}
 
-                        {canEditEvidenceLink && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingLinkId(itemKey);
-                              setEditingLinkValue(item.link ?? "");
-                            }}
-                            className="rounded-full border border-white/40 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/80 transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
-                          >
-                            Link
-                          </button>
-                        )}
-                      </div>
+                      {canEditBugLink && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingBugId(itemKey);
+                            setEditingBugValue(item.bug ?? "");
+                          }}
+                          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-600 transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                        >
+                          Bug
+                        </button>
+                      )}
                     </div>
 
                     {editable && allowStatusChange && (
-                      <div className="mt-3 flex flex-wrap gap-2" data-testid={`kanban-actions-${cardTestId}`}>
-                        {moveTargets.map((targetKey) => (
-                          <button
-                            key={targetKey}
-                            type="button"
-                            data-testid={`move-to-${targetKey}`}
-                            className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/80 transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
-                            onClick={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              moveItem(column.key, item, targetKey);
-                            }}
-                          >
-                            Mover para {targetKey}
-                          </button>
-                        ))}
+                      <div className="mt-3 space-y-1" data-testid={`kanban-actions-${cardTestId}`}>
+                        <label className="text-[10px] uppercase tracking-[0.3em] text-slate-500">Status</label>
+                        <select
+                          value={column.key}
+                          onChange={(event) => moveItem(column.key, item, event.target.value as keyof KanbanData)}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                        >
+                          {columns.map((opt) => (
+                            <option key={opt.key} value={opt.key}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     )}
 
                     {canEditEvidenceLink && editingLinkId === itemKey && (
                       <input
                         aria-label="Link de evidência"
-                        className="mt-3 w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80"
+                        className="mt-3 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
                         value={editingLinkValue}
                         onChange={(e) => setEditingLinkValue(e.target.value)}
                         onBlur={async () => {
@@ -691,6 +1016,47 @@ export default function Kanban({
                         placeholder="Cole o link de evidência"
                       />
                     )}
+
+                    {canEditBugLink && editingBugId === itemKey && (
+                      <input
+                        aria-label="Link ou ID do bug"
+                        className="mt-3 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+                        value={editingBugValue}
+                        onChange={(e) => setEditingBugValue(e.target.value)}
+                        onBlur={async () => {
+                          const nextBug = editingBugValue.trim();
+                          setEditingBugId(null);
+                          setEditingBugValue("");
+
+                          setLocalData((prev) => ({
+                            ...prev,
+                            [column.key]: prev[column.key].map((c) =>
+                              String(c.id) === String(item.id) ? { ...c, bug: nextBug || null } : c
+                            ),
+                          }));
+
+                          try {
+                            if (item.fromApi) {
+                              if (!allowLinkEdit) return;
+                              await persistApiLinkUpdate({
+                                caseId: item.id,
+                                title: item.title,
+                                status: column.key,
+                                link: item.link ?? "",
+                                bug: nextBug || null,
+                              });
+                              return;
+                            }
+
+                            if (!persistEndpoint) return;
+                            await persistKanbanUpdate({ id: item.id, bug: nextBug || null, status: column.key }, "PATCH");
+                          } catch (e) {
+                            console.error(e);
+                          }
+                        }}
+                        placeholder="Cole o link ou ID do bug"
+                      />
+                    )}
                   </div>
                 );
               })}
@@ -701,6 +1067,8 @@ export default function Kanban({
     </div>
   );
 }
+
+
 
 
 

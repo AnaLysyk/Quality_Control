@@ -188,8 +188,8 @@ export default function TicketsButton() {
 
   if (!user) return null;
   const role = (user.role ?? "").toLowerCase();
-  const isAdmin = user.isGlobalAdmin || role === "admin" || role === "global_admin";
-  if (isAdmin) return null;
+  const isDev = role === "it_dev" || role === "itdev" || role === "developer" || role === "dev";
+  if (isDev) return null;
 
   return (
     <div className="relative" ref={boxRef}>

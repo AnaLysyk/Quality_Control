@@ -319,7 +319,7 @@ export default function KanbanItPage() {
         </div>
       )}
 
-      <section className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+      <section className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(240px,1fr))]">
         {columns.map((column) => (
           <div
             key={column.key}

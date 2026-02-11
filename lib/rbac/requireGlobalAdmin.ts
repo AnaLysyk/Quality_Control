@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
 import { getRedis } from "@/lib/redis";
+import { getJwtSecret } from "@/lib/auth/jwtSecret";
 
 type AdminSession = {
   id: string;
@@ -34,7 +35,7 @@ export async function extractAccessToken(req: Request): Promise<string | null> {
 async function readSessionUser(req: Request): Promise<SessionUser | null> {
   const token = await extractAccessToken(req);
   if (token) {
-    const secret = process.env.JWT_SECRET;
+    const secret = getJwtSecret();
     if (!secret) {
       const redis = getRedis();
       const raw = await redis.get<string>(`session:${token}`);

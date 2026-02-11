@@ -11,6 +11,7 @@ import {
   toLegacyRole,
 } from "@/lib/auth/localStore";
 import { resolveCapabilities } from "@/lib/permissions";
+import { getJwtSecret } from "@/lib/auth/jwtSecret";
 
 export type SessionPayload = {
   userId?: string;
@@ -128,7 +129,7 @@ export async function getSessionPayload(req: Request): Promise<SessionPayload | 
   const token = bearer || accessCookie || legacyCookie;
   if (token) {
     // 2) Se JWT_SECRET nao existir, tratamos o token como session_id (fallback local).
-    const secret = process.env.JWT_SECRET;
+    const secret = getJwtSecret();
     if (!secret) {
       return await readSessionFromRedis(token);
     }

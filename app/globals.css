@@ -84,31 +84,31 @@ input[type="password"]::-ms-clear {
   --background: #0b1a3c;
   --foreground: #f8fafc;
   --tc-bg: #0b1a3c;
-  --tc-surface: #0f1828;
-  --tc-surface-2: #101a2f;
-  --tc-surface-dark: #0f1828;
-  --tc-surface-muted: #101f3a;
+  --tc-surface: #12203a;
+  --tc-surface-2: #14264b;
+  --tc-surface-dark: #101e36;
+  --tc-surface-muted: #172a50;
   --tc-text: #f8fafc;
   --tc-text-primary: #f8fafc;
-  --tc-text-secondary: #cbd5e1;
-  --tc-text-muted: #94a3b8;
+  --tc-text-secondary: #e2e8f0;
+  --tc-text-muted: #cbd5e1;
   --page-bg: #0b1a3c;
   --page-text: #f8fafc;
-  --tc-border: rgba(148, 163, 184, 0.28);
-  --tc-input-bg: #0b1425;
+  --tc-border: rgba(226, 232, 240, 0.36);
+  --tc-input-bg: #0f1d34;
   --surface-primary: #0f1828;
   --surface-secondary: #101a2f;
   --surface-border: rgba(148, 163, 184, 0.18);
-  --tc-watermark-opacity: 0.035;
+  --tc-watermark-opacity: 0.045;
 }
 
 .tc-dark {
-  --tc-bg: #0a214f;
-  --tc-surface-dark: #0c182f;
-  --tc-surface-muted: #101f3a;
-  --tc-text-secondary: #d1d7e3;
-  --tc-text-muted: #a7b3c8;
-  --tc-border: rgba(148, 163, 184, 0.35);
+  --tc-bg: #0b2048;
+  --tc-surface-dark: #11213f;
+  --tc-surface-muted: #172a50;
+  --tc-text-secondary: #e2e8f0;
+  --tc-text-muted: #cbd5e1;
+  --tc-border: rgba(226, 232, 240, 0.3);
 }
 
 /* Dark mode overrides for common light utility classes */

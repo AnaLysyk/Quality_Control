@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 
 import { getRedis } from "@/lib/redis";
 import { listLocalCompanies, listLocalLinksForUser } from "@/lib/auth/localStore";
+import { getJwtSecret } from "@/lib/auth/jwtSecret";
 
 type CompanyDocumentKind = "file" | "link";
 type DocumentHistoryAction = "created" | "deleted";
@@ -152,7 +153,7 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
   const cookieToken = readCookieValue(cookieHeader, "access_token") ?? readCookieValue(cookieHeader, "auth_token");
   const token = bearer || cookieToken;
   if (token) {
-    const secret = process.env.JWT_SECRET;
+    const secret = getJwtSecret();
     if (!secret) {
       const redis = getRedis();
       const raw = await redis.get<string>(`session:${token}`);

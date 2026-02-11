@@ -42,8 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         const parsed = raw ? JSON.parse(raw) : null;
         // Standard theme: light by default (avoids dark->light flash on first paint).
         const storedTheme = parsed && isValid(parsed.theme) ? parsed.theme : "light";
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const useDark = storedTheme === "system" ? prefersDark : storedTheme === "dark";
+        const useDark = storedTheme === "dark";
         root.classList.toggle("dark", useDark);
         root.style.colorScheme = useDark ? "dark" : "light";
       } catch (err) {

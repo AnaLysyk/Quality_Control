@@ -186,23 +186,17 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-
-    const applySystemTheme = () => {
-      root.classList.toggle("dark", media.matches);
+    const applyTheme = (useDark: boolean) => {
+      root.classList.toggle("dark", useDark);
+      root.style.colorScheme = useDark ? "dark" : "light";
     };
 
     if (settings.theme === "system") {
-      applySystemTheme();
-      if (media.addEventListener) {
-        media.addEventListener("change", applySystemTheme);
-        return () => media.removeEventListener("change", applySystemTheme);
-      }
-      media.addListener(applySystemTheme);
-      return () => media.removeListener(applySystemTheme);
+      applyTheme(false);
+      return undefined;
     }
 
-    root.classList.toggle("dark", settings.theme === "dark");
+    applyTheme(settings.theme === "dark");
     return undefined;
   }, [settings.theme]);
 

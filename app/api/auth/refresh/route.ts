@@ -5,6 +5,7 @@ import { buildLocalSessionForUser } from "@/lib/auth/sessionBuilder";
 import { createRefreshToken, hashRefreshToken } from "@/lib/auth/refreshToken";
 import { getRedis } from "@/lib/redis";
 import { shouldUseSecureCookies } from "@/lib/auth/cookies";
+import { getJwtSecret } from "@/lib/auth/jwtSecret";
 
 const DEFAULT_ACCESS_TTL_SECONDS = 60 * 60 * 8;
 const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -46,7 +47,7 @@ type RefreshRecord = {
 };
 
 export async function POST(req: Request) {
-  const secret = process.env.JWT_SECRET;
+  const secret = getJwtSecret();
   if (!secret) {
     return NextResponse.json({ error: "JWT_SECRET ausente; refresh desativado" }, { status: 501 });
   }

@@ -8,6 +8,7 @@ import { createRefreshToken, hashRefreshToken } from "@/lib/auth/refreshToken";
 import { buildLocalSessionForUser } from "@/lib/auth/sessionBuilder";
 import { getRedis } from "@/lib/redis";
 import { findLocalUserByEmailOrId } from "@/lib/auth/localStore";
+import { getJwtSecret } from "@/lib/auth/jwtSecret";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -31,7 +32,7 @@ function setCookie(res: NextResponse, name: string, value: string, maxAgeSeconds
 }
 
 function buildAuthToken(payload: Record<string, unknown>, ttlSeconds: number) {
-  const secret = process.env.JWT_SECRET;
+  const secret = getJwtSecret();
   if (!secret) return null;
   return jwt.sign(payload, secret, { expiresIn: `${ttlSeconds}s` });
 }

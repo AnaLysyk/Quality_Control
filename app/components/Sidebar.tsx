@@ -71,8 +71,15 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
   const companySlug = useMemo(() => {
     const match = pathname.match(/^\/empresas\/([^/]+)/);
-    return match?.[1] ?? activeClientSlug ?? user?.clientSlug ?? null;
-  }, [pathname, activeClientSlug, user?.clientSlug]);
+    if (match?.[1]) return match[1];
+    if (isGlobalAdmin) return activeClientSlug ?? null;
+    return activeClientSlug ?? user?.clientSlug ?? null;
+  }, [pathname, activeClientSlug, user?.clientSlug, isGlobalAdmin]);
+
+  const adminCompanyHref = useMemo(() => {
+    if (activeClientSlug) return `/empresas/${activeClientSlug}`;
+    return "/empresas";
+  }, [activeClientSlug]);
 
   const logoHref = useMemo(() => {
     if (isGlobalAdmin) return "/admin/home";
@@ -89,20 +96,22 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     [t]
   );
 
-  const adminNav: NavItem[] = useMemo(
-    () => [
+  const adminNav: NavItem[] = useMemo(() => {
+    const companyTarget = activeClientSlug ? adminCompanyHref : "/empresas";
+    return [
       { label: t("nav.adminPanel"), icon: FiCompass, href: "/admin/home" },
       { label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric" },
       { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
+      { label: "Empresas (acesso)", icon: FiUsers, href: "/empresas" },
+      { label: t("nav.apps"), icon: FiBriefcase, href: `${companyTarget}${activeClientSlug ? "/aplicacoes" : ""}` },
+      { label: t("nav.runs"), icon: FiList, href: `${companyTarget}${activeClientSlug ? "/runs" : ""}` },
+      { label: t("nav.defects"), icon: FiAlertTriangle, href: `${companyTarget}${activeClientSlug ? "/defeitos" : ""}` },
       { label: "Chamados", icon: FiMessageSquare, href: "/admin/chamados" },
       { label: "Benchmark", icon: FiBarChart2, href: "/admin/benchmark", roles: ["admin"] },
-      { label: t("nav.runsManagement"), icon: FiLayers, href: "/admin/runs" },
-      { label: t("nav.defects"), icon: FiShield, href: "/admin/defeitos" },
       { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
       { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
-    ],
-    [t]
-  );
+    ];
+  }, [t, activeClientSlug, adminCompanyHref]);
 
   const itDevNav: NavItem[] = useMemo(
     () => [
@@ -130,11 +139,11 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
   const navigation = useMemo(() => {
     if (!user) return publicNav;
-    if (appRole === "admin" && isAdminArea) return adminNav;
+    if (appRole === "admin") return adminNav;
     if (appRole === "it_dev") return itDevNav;
     if (companyNav.length) return companyNav;
-    return appRole === "admin" ? adminNav : publicNav;
-  }, [user, appRole, isAdminArea, adminNav, itDevNav, companyNav, publicNav]);
+    return publicNav;
+  }, [user, appRole, adminNav, itDevNav, companyNav, publicNav]);
 
   const renderNavLinks = (isMobile = false) =>
     navigation

@@ -91,6 +91,8 @@ export function ClientProvider({ children }: { children: ReactNode }) {
   const [activeClientSlug, setActiveClientSlugState] = useState<string | null>(null);
   const [loading, setLoading] = useState(authLoading);
   const [error, setError] = useState<string | null>(null);
+  const isGlobalAdmin =
+    user?.isGlobalAdmin === true || (typeof user?.role === "string" && user.role.toLowerCase() === "admin");
 
   const normalizedClients = useMemo(
     () =>
@@ -139,16 +141,20 @@ export function ClientProvider({ children }: { children: ReactNode }) {
 
     const preferredSlugs = [
       storedSlug,
-      typeof user.defaultClientSlug === "string" ? user.defaultClientSlug : null,
-      typeof user.clientSlug === "string" ? user.clientSlug : null,
-      ...(Array.isArray(user.clientSlugs)
-        ? user.clientSlugs.filter((item): item is string => typeof item === "string" && item.length > 0)
-        : []),
+      ...(isGlobalAdmin
+        ? []
+        : [
+            typeof user.defaultClientSlug === "string" ? user.defaultClientSlug : null,
+            typeof user.clientSlug === "string" ? user.clientSlug : null,
+            ...(Array.isArray(user.clientSlugs)
+              ? user.clientSlugs.filter((item): item is string => typeof item === "string" && item.length > 0)
+              : []),
+          ]),
     ].filter((value, index, self): value is string => Boolean(value) && self.indexOf(value) === index);
 
     const resolvedSlug =
       preferredSlugs.find((candidate) => normalizedClients.some((client) => client.slug === candidate)) ??
-      normalizedClients[0].slug;
+      (isGlobalAdmin ? null : normalizedClients[0].slug);
 
     setActiveClientSlugState(resolvedSlug ?? null);
     if (resolvedSlug) {
@@ -159,7 +165,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
 
     setLoading(false);
     setError(null);
-  }, [authLoading, normalizedClients, user]);
+  }, [authLoading, normalizedClients, user, isGlobalAdmin]);
 
   const refreshClients = useCallback(async () => {
     setLoading(true);

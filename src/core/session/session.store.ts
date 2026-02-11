@@ -169,8 +169,12 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
 
   // 5) Resolve papel global e se e admin global.
   const resolvedGlobalRole = normalizeGlobalRole(user.globalRole ?? session.globalRole ?? null);
+  const sessionRole = (session.role ?? "").toLowerCase();
   const isGlobalAdmin =
-    resolvedGlobalRole === "global_admin" || user.is_global_admin === true || session.isGlobalAdmin === true;
+    resolvedGlobalRole === "global_admin" ||
+    user.is_global_admin === true ||
+    session.isGlobalAdmin === true ||
+    sessionRole === "admin";
 
   // 6) Lista de empresas permitidas (todas para admin global, ou apenas as vinculadas).
   const allowedCompanies = isGlobalAdmin

@@ -87,6 +87,7 @@ let flushTimer: NodeJS.Timeout | null = null;
 let backupTimer: NodeJS.Timeout | null = null;
 let versionCounter = 0;
 let flushingPromise: Promise<void> | null = null;
+let warnedRedisFailure = false;
 
 async function ensureStore(): Promise<boolean> {
   try {
@@ -310,13 +311,22 @@ async function initStore() {
 
 async function readStore(): Promise<TicketsStore> {
   if (USE_REDIS) {
-    const redis = getRedis();
-    const raw = await redis.get<string>(STORE_KEY);
-    if (!raw) return { items: [], counter: 0 };
     try {
-      return normalizeStore(JSON.parse(raw));
-    } catch {
-      return { items: [], counter: 0 };
+      const redis = getRedis();
+      const raw = await redis.get<string>(STORE_KEY);
+      if (!raw) return { items: [], counter: 0 };
+      try {
+        return normalizeStore(JSON.parse(raw));
+      } catch {
+        return { items: [], counter: 0 };
+      }
+    } catch (err) {
+      if (!warnedRedisFailure) {
+        warnedRedisFailure = true;
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn("[TICKETS] Redis indisponivel; usando fallback em memoria.", msg);
+      }
+      return memoryStore;
     }
   }
   if (USE_MEMORY) {
@@ -332,10 +342,20 @@ async function readStore(): Promise<TicketsStore> {
 async function writeStore(next: TicketsStore) {
   const payload: TicketsStore = { counter: next.counter ?? 0, items: next.items ?? [] };
   if (USE_REDIS) {
-    const redis = getRedis();
-    await redis.set(STORE_KEY, JSON.stringify(payload));
-    await redis.set(STORE_COUNTER_KEY, String(payload.counter));
-    return;
+    try {
+      const redis = getRedis();
+      await redis.set(STORE_KEY, JSON.stringify(payload));
+      await redis.set(STORE_COUNTER_KEY, String(payload.counter));
+      return;
+    } catch (err) {
+      if (!warnedRedisFailure) {
+        warnedRedisFailure = true;
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn("[TICKETS] Redis indisponivel; gravando em memoria.", msg);
+      }
+      memoryStore = payload;
+      return;
+    }
   }
   if (USE_MEMORY) {
     memoryStore = payload;

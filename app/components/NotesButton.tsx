@@ -57,6 +57,73 @@ export default function NotesButton() {
   const boxRef = useRef<HTMLDivElement>(null);
 
   const isCreating = editingId === "new";
+  const storageKey = user ? `qc:user_notes:${user.id}` : null;
+
+  const readLocalNotes = useCallback((): NoteItem[] => {
+    if (!storageKey || typeof window === "undefined") return [];
+    try {
+      const raw = window.localStorage.getItem(storageKey);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter(Boolean) as NoteItem[];
+    } catch {
+      return [];
+    }
+  }, [storageKey]);
+
+  const writeLocalNotes = useCallback(
+    (items: NoteItem[]) => {
+      if (!storageKey || typeof window === "undefined") return;
+      try {
+        window.localStorage.setItem(storageKey, JSON.stringify(items));
+      } catch {
+        // ignore localStorage errors
+      }
+    },
+    [storageKey],
+  );
+
+  const mergeNotes = useCallback((serverItems: NoteItem[], localItems: NoteItem[]) => {
+    const map = new Map<string, NoteItem>();
+    serverItems.forEach((item) => {
+      if (item?.id) map.set(item.id, item);
+    });
+    localItems.forEach((item) => {
+      if (item?.id && !map.has(item.id)) map.set(item.id, item);
+    });
+    return Array.from(map.values()).sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+  }, []);
+
+  const upsertLocalNote = useCallback(
+    (note: NoteItem) => {
+      const current = readLocalNotes();
+      const next = [note, ...current.filter((item) => item.id !== note.id)];
+      writeLocalNotes(next);
+      setNotes(next);
+    },
+    [readLocalNotes, writeLocalNotes],
+  );
+
+  const removeLocalNote = useCallback(
+    (noteId: string) => {
+      const current = readLocalNotes();
+      const next = current.filter((item) => item.id !== noteId);
+      writeLocalNotes(next);
+      setNotes(next);
+    },
+    [readLocalNotes, writeLocalNotes],
+  );
+
+  useEffect(() => {
+    // Reset notes when user changes
+    setNotes([]);
+    setError(null);
+    setMessage(null);
+    setEditingId(null);
+    setExpandedId(null);
+    setDraft(null);
+  }, [storageKey]);
 
   useEffect(() => {
     function close(e: MouseEvent) {
@@ -77,23 +144,34 @@ export default function NotesButton() {
     if (!user) return;
     setLoading(true);
     setError(null);
+    const localItems = readLocalNotes();
+    if (localItems.length) {
+      setNotes(localItems);
+    }
     try {
       const res = await fetch("/api/notes", { credentials: "include", cache: "no-store" });
       const json = (await res.json().catch(() => ({}))) as { items?: NoteItem[]; error?: string };
       if (!res.ok) {
-        setNotes([]);
+        if (!localItems.length) {
+          setNotes([]);
+        }
         setError(json?.error || "Erro ao carregar notas");
         return;
       }
-      setNotes(Array.isArray(json.items) ? json.items : []);
+      const serverItems = Array.isArray(json.items) ? json.items : [];
+      const merged = mergeNotes(serverItems, localItems);
+      setNotes(merged);
+      writeLocalNotes(merged);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao carregar notas";
-      setNotes([]);
+      if (!localItems.length) {
+        setNotes([]);
+      }
       setError(msg);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, readLocalNotes, writeLocalNotes, mergeNotes]);
 
   useEffect(() => {
     if (open) {
@@ -146,6 +224,9 @@ export default function NotesButton() {
           setError(json?.error || "Erro ao criar nota");
           return;
         }
+        if (json?.item) {
+          upsertLocalNote(json.item as NoteItem);
+        }
         setMessage("Nota criada com sucesso.");
       } else if (editingId) {
         const res = await fetch(`/api/notes/${editingId}`, {
@@ -158,6 +239,9 @@ export default function NotesButton() {
         if (!res.ok) {
           setError(json?.error || "Erro ao atualizar nota");
           return;
+        }
+        if (json?.item) {
+          upsertLocalNote(json.item as NoteItem);
         }
         setMessage("Nota atualizada.");
       }
@@ -186,6 +270,7 @@ export default function NotesButton() {
         setError(json?.error || "Erro ao excluir nota");
         return;
       }
+      removeLocalNote(noteId);
       setMessage("Nota excluida.");
       if (expandedId === noteId) setExpandedId(null);
       if (editingId === noteId) cancelEdit();

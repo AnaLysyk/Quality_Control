@@ -8,6 +8,7 @@ type Msg = { id: string; from: "user" | "assistant"; text: string; ts: number };
 
 export default function ChatButton() {
   const { user } = useAuthUser();
+  const assistantEnabled = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -29,6 +30,7 @@ export default function ChatButton() {
     };
   }, []);
 
+  if (!assistantEnabled) return null;
   if (!user) return null;
 
   async function sendMessage() {

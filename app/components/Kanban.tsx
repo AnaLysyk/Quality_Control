@@ -996,16 +996,7 @@ export default function Kanban({
                         </button>
                       )}
 
-                      {editable && allowStatusChange && column.key !== "pass" && (
-                        <button
-                          type="button"
-                          data-testid="move-to-pass"
-                          onClick={() => moveItem(column.key, item, "pass")}
-                          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-600 transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
-                        >
-                          Mover p/ Pass
-                        </button>
-                      )}
+                      
                     </div>
 
                     {editable && allowStatusChange && (

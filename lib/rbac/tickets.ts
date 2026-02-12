@@ -9,6 +9,7 @@ export function isTicketAdmin(user: AuthUser | null) {
 
 export function isItDev(user: AuthUser | null) {
   if (!user) return false;
+  if (isTicketAdmin(user)) return true;
   const role = (user.role ?? "").toLowerCase();
   return role === "it_dev" || role === "itdev" || role === "developer" || role === "dev";
 }
@@ -27,7 +28,10 @@ function hasCompanyAccess(user: AuthUser, ticket: TicketRecord) {
 export function canViewTicket(user: AuthUser | null, ticket: TicketRecord) {
   if (!user) return false;
   if (isItDev(user)) return true;
-  return ticket.createdBy === user.id;
+  if (ticket.createdBy === user.id) return true;
+  const role = (user.role ?? "").toLowerCase();
+  if (role === "company" && hasCompanyAccess(user, ticket)) return true;
+  return false;
 }
 
 export function canCommentTicket(user: AuthUser | null, ticket: TicketRecord) {

@@ -126,7 +126,11 @@ export default function NotificationsButton() {
 
   const role = (user?.role ?? "").toLowerCase();
   const canManageTickets =
-    role === "it_dev" || role === "dev" || role === "developer";
+    role === "admin" ||
+    role === "global_admin" ||
+    role === "it_dev" ||
+    role === "dev" ||
+    role === "developer";
 
   const loadTicketDetails = useCallback(
     async (ticketId: string) => {

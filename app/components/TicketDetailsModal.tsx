@@ -148,7 +148,13 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     ticket?.assignedToEmail ||
     (ticket?.assignedToUserId ? `UID: ${ticket.assignedToUserId}` : "Nao atribuido");
   const role = (user?.role ?? "").toLowerCase();
-  const isDev = role === "it_dev" || role === "itdev" || role === "developer" || role === "dev";
+  const isDev =
+    role === "admin" ||
+    role === "global_admin" ||
+    role === "it_dev" ||
+    role === "itdev" ||
+    role === "developer" ||
+    role === "dev";
   const canAssign = Boolean(user && isDev);
   const canEditDetails = Boolean(user && isDev);
   const selectableStatusOptions = statusOptions ?? TICKET_STATUS_OPTIONS;

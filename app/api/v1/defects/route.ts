@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { isCompanyUser } from "@/lib/rbac/companyAccess";
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
@@ -83,6 +84,9 @@ export async function GET(request: Request) {
 
   const auth = await authenticateRequest(request);
   if (!auth) return NextResponse.json({ success: false, error: { message: "Nao autorizado" } }, { status: 401 });
+  if (!isCompanyUser(auth)) {
+    return NextResponse.json({ success: false, error: { message: "Sem permissao" } }, { status: 403 });
+  }
 
   const project = normalizeString(url.searchParams.get("project")) || "ALL";
 

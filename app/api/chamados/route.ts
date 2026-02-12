@@ -15,8 +15,10 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const scope = (url.searchParams.get("scope") ?? "mine").toLowerCase();
+  const role = (user.role ?? "").toLowerCase();
   const allowAll = isItDev(user);
-  if (scope === "all" && !allowAll) {
+  const allowCompanyScope = role === "company";
+  if (scope === "all" && !(allowAll || allowCompanyScope)) {
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
 

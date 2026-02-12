@@ -1,6 +1,7 @@
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 import { canCreateRun, getRunMockRole, resolveRunRole } from "@/lib/rbac/runs";
+import { isCompanyUser } from "@/lib/rbac/companyAccess";
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
@@ -31,6 +32,20 @@ export async function GET(request: Request) {
       status: 401,
       code: "AUTH_REQUIRED",
       extra: { error: { message: "Nao autorizado" } },
+    });
+  }
+  if (auth && !isCompanyUser(auth)) {
+    return apiFail(request, "Acesso proibido", {
+      status: 403,
+      code: "FORBIDDEN",
+      extra: { error: { message: "Acesso proibido" } },
+    });
+  }
+  if (!auth && mockRole && mockRole !== "company") {
+    return apiFail(request, "Acesso proibido", {
+      status: 403,
+      code: "FORBIDDEN",
+      extra: { error: { message: "Acesso proibido" } },
     });
   }
 
@@ -85,8 +100,22 @@ export async function POST(request: Request) {
       extra: { error: { message: "Nao autorizado" } },
     });
   }
-  const role = mockRole ?? (await resolveRunRole(effectiveAuth));
-  if (!canCreateRun(role)) {
+  if (auth && !isCompanyUser(auth)) {
+    return apiFail(request, "Acesso proibido", {
+      status: 403,
+      code: "FORBIDDEN",
+      extra: { error: { message: "Acesso proibido" } },
+    });
+  }
+  if (!auth && mockRole && mockRole !== "company") {
+    return apiFail(request, "Acesso proibido", {
+      status: 403,
+      code: "FORBIDDEN",
+      extra: { error: { message: "Acesso proibido" } },
+    });
+  }
+  const role = auth ? await resolveRunRole(effectiveAuth) : mockRole ?? "user";
+  if (role !== "company" || !canCreateRun(role)) {
     return apiFail(request, "Acesso proibido", {
       status: 403,
       code: "FORBIDDEN",

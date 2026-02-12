@@ -188,7 +188,13 @@ export default function TicketsButton() {
 
   if (!user) return null;
   const role = (user.role ?? "").toLowerCase();
-  const isDev = role === "it_dev" || role === "itdev" || role === "developer" || role === "dev";
+  const isDev =
+    role === "admin" ||
+    role === "global_admin" ||
+    role === "it_dev" ||
+    role === "itdev" ||
+    role === "developer" ||
+    role === "dev";
   if (isDev) return null;
 
   return (

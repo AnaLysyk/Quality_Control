@@ -6,7 +6,14 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 
 function isDevRole(role?: string | null) {
   const value = (role ?? "").toLowerCase();
-  return value === "it_dev" || value === "itdev" || value === "developer" || value === "dev";
+  return (
+    value === "admin" ||
+    value === "global_admin" ||
+    value === "it_dev" ||
+    value === "itdev" ||
+    value === "developer" ||
+    value === "dev"
+  );
 }
 
 export default function AdminChamadosPage() {

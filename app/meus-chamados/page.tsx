@@ -44,7 +44,14 @@ const TYPE_OPTIONS = [
 
 function isDevRole(role: string | null | undefined) {
   const value = (role ?? "").toLowerCase();
-  return value === "it_dev" || value === "itdev" || value === "developer" || value === "dev";
+  return (
+    value === "admin" ||
+    value === "global_admin" ||
+    value === "it_dev" ||
+    value === "itdev" ||
+    value === "developer" ||
+    value === "dev"
+  );
 }
 
 function shortText(value?: string | null, max = 120) {

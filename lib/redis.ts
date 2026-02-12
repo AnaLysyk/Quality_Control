@@ -132,3 +132,11 @@ export { redis };
 export function isRedisConfigured(): boolean {
   return resolveRedisEnv() !== null;
 }
+
+export function assertRedisConfigured(feature = "This feature") {
+  if (!isRedisConfigured()) {
+    throw new Error(
+      `[REDIS] ${feature} requires Redis. Configure KV_REST_API_URL/KV_REST_API_TOKEN or UPSTASH_REDIS_REST_URL/UPSTASH_REDIS_REST_TOKEN.`,
+    );
+  }
+}

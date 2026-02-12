@@ -3,7 +3,7 @@ import "server-only";
 import { randomUUID } from "crypto";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { getRedis, isRedisConfigured } from "@/lib/redis";
+import { assertRedisConfigured, getRedis, isRedisConfigured } from "@/lib/redis";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 
 export type TicketReactionType = "like";
@@ -23,8 +23,12 @@ type ReactionsStore = {
 
 const STORE_PATH = path.join(getJsonStoreDir(), "ticket-reactions.json");
 const STORE_KEY = "qc:ticket_reactions:v1";
-const USE_REDIS = process.env.TICKET_REACTIONS_STORE === "redis" || isRedisConfigured();
-const USE_MEMORY = process.env.TICKET_REACTIONS_IN_MEMORY === "true";
+const REQUIRE_REDIS =
+  process.env.TICKET_REACTIONS_STORE === "redis" ||
+  process.env.TICKET_REACTIONS_REQUIRE_REDIS === "true" ||
+  Boolean(process.env.VERCEL);
+const USE_REDIS = REQUIRE_REDIS || isRedisConfigured();
+const USE_MEMORY = !REQUIRE_REDIS && process.env.TICKET_REACTIONS_IN_MEMORY === "true";
 let memoryStore: ReactionsStore = { items: [] };
 let warnedFsFailure = false;
 
@@ -49,13 +53,18 @@ async function ensureStore(): Promise<boolean> {
 
 async function readStore(): Promise<ReactionsStore> {
   if (USE_REDIS) {
+    assertRedisConfigured("Ticket reactions");
     const redis = getRedis();
-    const raw = await redis.get<string>(STORE_KEY);
-    if (!raw) return { items: [] };
     try {
+      const raw = await redis.get<string>(STORE_KEY);
+      if (!raw) return { items: [] };
       const parsed = JSON.parse(raw) as ReactionsStore;
       return Array.isArray(parsed?.items) ? parsed : { items: [] };
-    } catch {
+    } catch (err) {
+      if (REQUIRE_REDIS) {
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`[TICKET_REACTIONS] Redis indisponivel: ${msg}`);
+      }
       return { items: [] };
     }
   }
@@ -75,9 +84,18 @@ async function readStore(): Promise<ReactionsStore> {
 
 async function writeStore(next: ReactionsStore) {
   if (USE_REDIS) {
+    assertRedisConfigured("Ticket reactions");
     const redis = getRedis();
-    await redis.set(STORE_KEY, JSON.stringify(next));
-    return;
+    try {
+      await redis.set(STORE_KEY, JSON.stringify(next));
+      return;
+    } catch (err) {
+      if (REQUIRE_REDIS) {
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`[TICKET_REACTIONS] Redis indisponivel: ${msg}`);
+      }
+      return;
+    }
   }
   if (USE_MEMORY) {
     memoryStore = next;

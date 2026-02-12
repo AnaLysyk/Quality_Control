@@ -3,7 +3,7 @@
 import { randomUUID } from "crypto";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { getRedis, isRedisConfigured } from "@/lib/redis";
+import { assertRedisConfigured, getRedis, isRedisConfigured } from "@/lib/redis";
 import { LEGACY_TICKET_STATUS_MAP, normalizeKanbanStatus, type TicketStatus } from "@/lib/ticketsStatus";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 
@@ -72,7 +72,11 @@ const STORE_COUNTER_KEY = "qc:support_tickets:counter:v1";
 const FORCE_FILE = process.env.TICKETS_STORE === "file";
 const FORCE_REDIS = process.env.TICKETS_STORE === "redis";
 const REDIS_AVAILABLE = isRedisConfigured();
-const USE_REDIS = !FORCE_FILE && REDIS_AVAILABLE;
+const REQUIRE_REDIS =
+  FORCE_REDIS ||
+  process.env.TICKETS_REQUIRE_REDIS === "true" ||
+  Boolean(process.env.VERCEL);
+const USE_REDIS = REQUIRE_REDIS || (!FORCE_FILE && REDIS_AVAILABLE);
 const SHOULD_FLUSH_ON_WRITE = Boolean(
   process.env.VERCEL ||
     process.env.AWS_LAMBDA_FUNCTION_NAME ||
@@ -100,12 +104,12 @@ let flushingPromise: Promise<void> | null = null;
 let warnedRedisFailure = false;
 let forceMemory = false;
 
-if (FORCE_REDIS && !REDIS_AVAILABLE) {
-  console.warn("[TICKETS] TICKETS_STORE=redis sem credenciais; usando filesystem.");
+if (REQUIRE_REDIS && !REDIS_AVAILABLE) {
+  console.warn("[TICKETS] Redis obrigatorio para chamados, mas nao foi configurado.");
 }
 
 function usingMemory() {
-  return USE_MEMORY || forceMemory;
+  return !REQUIRE_REDIS && (USE_MEMORY || forceMemory);
 }
 
 async function ensureStore(): Promise<boolean> {
@@ -341,6 +345,7 @@ async function initStore() {
 
 async function readStore(): Promise<TicketsStore> {
   if (USE_REDIS) {
+    assertRedisConfigured("Tickets");
     try {
       const redis = getRedis();
       const raw = await redis.get<string>(STORE_KEY);
@@ -351,6 +356,10 @@ async function readStore(): Promise<TicketsStore> {
         return { items: [], counter: 0 };
       }
     } catch (err) {
+      if (REQUIRE_REDIS) {
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`[TICKETS] Redis indisponivel: ${msg}`);
+      }
       if (!warnedRedisFailure) {
         warnedRedisFailure = true;
         const msg = err instanceof Error ? err.message : String(err);
@@ -372,12 +381,17 @@ async function readStore(): Promise<TicketsStore> {
 async function writeStore(next: TicketsStore) {
   const payload: TicketsStore = { counter: next.counter ?? 0, items: next.items ?? [] };
   if (USE_REDIS) {
+    assertRedisConfigured("Tickets");
     try {
       const redis = getRedis();
       await redis.set(STORE_KEY, JSON.stringify(payload));
       await redis.set(STORE_COUNTER_KEY, String(payload.counter));
       return;
     } catch (err) {
+      if (REQUIRE_REDIS) {
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`[TICKETS] Redis indisponivel: ${msg}`);
+      }
       if (!warnedRedisFailure) {
         warnedRedisFailure = true;
         const msg = err instanceof Error ? err.message : String(err);

@@ -124,13 +124,24 @@ export default function NotificationsButton() {
     [items],
   );
 
-  const role = (user?.role ?? "").toLowerCase();
-  const canManageTickets =
-    role === "admin" ||
-    role === "global_admin" ||
-    role === "it_dev" ||
-    role === "dev" ||
-    role === "developer";
+  const [canManageTickets, setCanManageTickets] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    if (!user) return;
+    import("@/lib/rbac/devAccess")
+      .then((mod) => {
+        if (!mounted) return;
+        setCanManageTickets(Boolean(mod.isDevRole?.(user?.role)));
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setCanManageTickets(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [user?.role, user]);
 
   const loadTicketDetails = useCallback(
     async (ticketId: string) => {

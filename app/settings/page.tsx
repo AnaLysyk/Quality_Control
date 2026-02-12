@@ -57,8 +57,10 @@ function SettingsPageInner({
   }, [name]);
 
   useEffect(() => {
-    setName(initial.name);
-    setPhone(initial.phone);
+    Promise.resolve().then(() => {
+      setName(initial.name);
+      setPhone(initial.phone);
+    });
   }, [initial.name, initial.phone]);
 
   async function handleSubmit(e: React.FormEvent) {

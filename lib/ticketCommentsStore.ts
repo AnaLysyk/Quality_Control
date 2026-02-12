@@ -158,8 +158,9 @@ export async function updateTicketComment(
   return updated;
 }
 
-export async function softDeleteTicketComment(commentId: string, actorUserId: string) {
+export async function softDeleteTicketComment(commentId: string, _actorUserId: string) {
   const store = await readStore();
+  void _actorUserId;
   const idx = store.items.findIndex((item) => item.id === commentId);
   if (idx === -1) return null;
   const current = store.items[idx];

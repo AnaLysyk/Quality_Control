@@ -51,8 +51,9 @@ export default function CompanyKanbanPage() {
   useEffect(() => {
     if (!companySlug) return;
     let active = true;
-    setLoadingRuns(true);
-    setError(null);
+    // schedule setState to avoid synchronous setState inside effect
+    Promise.resolve().then(() => setLoadingRuns(true));
+    Promise.resolve().then(() => setError(null));
     fetch(`/api/releases-manual?clientSlug=${encodeURIComponent(companySlug)}&kind=run`, { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {

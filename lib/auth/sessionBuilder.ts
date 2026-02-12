@@ -52,7 +52,11 @@ export async function buildLocalSessionForUser(
   ]);
 
   const isGlobalAdmin = user.globalRole === "global_admin" || user.is_global_admin === true;
-  const allowedCompanies = isGlobalAdmin
+  const hasDevRole =
+    normalizeLocalRole(user.role ?? null) === "it_dev" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "it_dev");
+  const hasFullCompanyAccess = isGlobalAdmin || hasDevRole;
+  const allowedCompanies = hasFullCompanyAccess
     ? companies
     : companies.filter((company) => links.some((link) => link.companyId === company.id));
 

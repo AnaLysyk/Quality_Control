@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { slugifyRelease } from "@/lib/slugifyRelease";
@@ -160,7 +160,7 @@ export default function CompanyDefectsPage() {
     }
   };
 
-  const mergeLocalLinks = (items: ManualDefect[]) => {
+  const mergeLocalLinks = useCallback((items: ManualDefect[]) => {
     if (!companySlug) return items;
     const map = readLocalLinks();
     const companyLinks = map[companySlug] ?? {};
@@ -169,7 +169,7 @@ export default function CompanyDefectsPage() {
       const localRun = companyLinks[item.slug];
       return localRun ? { ...item, runSlug: localRun } : item;
     });
-  };
+  }, [companySlug]);
 
   useEffect(() => {
     if (!companySlug) return;
@@ -202,7 +202,7 @@ export default function CompanyDefectsPage() {
     return () => {
       active = false;
     };
-  }, [companySlug]);
+  }, [companySlug, mergeLocalLinks]);
 
   const filteredDefects = useMemo(() => {
     if (!runFilter) return defects;

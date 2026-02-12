@@ -44,6 +44,24 @@ export default function TicketsButton() {
 
   const boxRef = useRef<HTMLDivElement>(null);
 
+  const [isDev, setIsDev] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    if (!user) return;
+    import("@/lib/rbac/devAccess")
+      .then((mod) => {
+        if (!mounted) return;
+        setIsDev(Boolean(mod.isDevRole?.(user?.role)));
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setIsDev(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [user?.role, user]);
+
   const isCreating = editingId === "new";
 
   useEffect(() => {
@@ -187,14 +205,6 @@ export default function TicketsButton() {
   }
 
   if (!user) return null;
-  const role = (user.role ?? "").toLowerCase();
-  const isDev =
-    role === "admin" ||
-    role === "global_admin" ||
-    role === "it_dev" ||
-    role === "itdev" ||
-    role === "developer" ||
-    role === "dev";
   if (isDev) return null;
 
   return (

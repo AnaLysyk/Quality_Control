@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     // Simple echo stub — replace with real AI integration later
     const reply = `Echo: ${String(message)}`;
     return NextResponse.json({ reply });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }

@@ -98,7 +98,7 @@ export default function AdminAuditLogsPage() {
       }
       return true;
     });
-  }, [items, action, actor, startDate, endDate]);
+  }, [items, action, actor, startDate, endDate, entityType, targetQuery]);
 
   const showSkeleton = loading && !items.length;
 

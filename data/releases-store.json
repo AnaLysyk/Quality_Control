@@ -42,5 +42,21 @@
     "source": "API",
     "clientId": "griaule",
     "clientName": "Griaule"
+  },
+  {
+    "slug": "run_proibida",
+    "title": "Run Proibida",
+    "summary": "Release cadastrada pelo painel.",
+    "runId": 9999,
+    "app": "sfq",
+    "project": "sfq",
+    "source": "API",
+    "qaseProject": "SFQ",
+    "createdAt": "2026-02-12T16:13:59.050Z",
+    "clientId": null,
+    "clientName": null,
+    "order": [
+      "sfq"
+    ]
   }
 ]

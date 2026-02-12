@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { isDevRole } from "@/lib/rbac/devAccess";
 import { FiHeart, FiMessageSquare, FiRefreshCw, FiX } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { TICKET_STATUS_OPTIONS, getTicketStatusLabel, type TicketStatus } from "@/lib/ticketsStatus";
@@ -147,14 +148,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     ticket?.assignedToName ||
     ticket?.assignedToEmail ||
     (ticket?.assignedToUserId ? `UID: ${ticket.assignedToUserId}` : "Nao atribuido");
-  const role = (user?.role ?? "").toLowerCase();
-  const isDev =
-    role === "admin" ||
-    role === "global_admin" ||
-    role === "it_dev" ||
-    role === "itdev" ||
-    role === "developer" ||
-    role === "dev";
+  const isDev = isDevRole(user?.role);
   const canAssign = Boolean(user && isDev);
   const canEditDetails = Boolean(user && isDev);
   const selectableStatusOptions = statusOptions ?? TICKET_STATUS_OPTIONS;
@@ -236,7 +230,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     };
   }, [open, canAssign, ticket?.companyId]);
 
-  async function loadComments() {
+  const loadComments = useCallback(async () => {
     if (!ticketId) return;
     setLoadingComments(true);
     setCommentError(null);
@@ -255,9 +249,9 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     } finally {
       setLoadingComments(false);
     }
-  }
+  }, [ticketId]);
 
-  async function loadEvents() {
+  const loadEvents = useCallback(async () => {
     if (!ticketId) return;
     setLoadingEvents(true);
     try {
@@ -271,9 +265,9 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     } finally {
       setLoadingEvents(false);
     }
-  }
+  }, [ticketId]);
 
-  async function loadTimeline() {
+  const loadTimeline = useCallback(async () => {
     if (!ticketId) return;
     setTimelineLoading(true);
     try {
@@ -288,14 +282,14 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     } finally {
       setTimelineLoading(false);
     }
-  }
+  }, [ticketId]);
 
   useEffect(() => {
     if (!open) return;
     loadComments();
     loadEvents();
     loadTimeline();
-  }, [open, ticketId]);
+  }, [open, loadComments, loadEvents, loadTimeline]);
 
   async function submitComment() {
     if (!ticketId) return;

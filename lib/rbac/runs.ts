@@ -14,7 +14,7 @@ export async function resolveRunRole(authUser: AuthUser | null, clientSlug?: str
 }
 
 export const canCreateRun = (role: Role) => role === "admin" || role === "company";
-export const canEditRun = (role: Role) => role === "admin" || role === "company";
+export const canEditRun = (role: Role) => role === "admin" || role === "company" || role === "user";
 export const canDeleteRun = (role: Role) => role === "admin";
 export const canLinkDefect = (role: Role) => role === "admin" || role === "company";
 export const getRunMockRole = getMockRole;

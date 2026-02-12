@@ -10,7 +10,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
   const allowAll = isItDev(user);
-  let items = allowAll ? await listAllTickets() : await listTicketsForUser(user.id);
+  const items = allowAll ? await listAllTickets() : await listTicketsForUser(user.id);
   const enriched = await attachAssigneeInfo(items);
   return NextResponse.json({ items: enriched }, { status: 200 });
 }

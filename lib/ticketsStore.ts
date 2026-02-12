@@ -77,7 +77,9 @@ const SHOULD_FLUSH_ON_WRITE = Boolean(
   process.env.VERCEL ||
     process.env.AWS_LAMBDA_FUNCTION_NAME ||
     process.env.NETLIFY ||
-    process.env.SERVERLESS,
+    process.env.SERVERLESS ||
+    process.env.TICKETS_FLUSH_ON_WRITE === "true" ||
+    process.env.NODE_ENV !== "production",
 );
 const USE_MEMORY = process.env.TICKETS_IN_MEMORY === "true";
 

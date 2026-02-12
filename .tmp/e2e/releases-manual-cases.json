@@ -1,1 +1,9 @@
-{}
+{
+  "run_g_benchmark": [],
+  "run_t_benchmark": [],
+  "run_pdf_export": [],
+  "run_bloqueada": [],
+  "run_gate_e2e": [],
+  "run_e2e_negocio": [],
+  "run_falha": []
+}

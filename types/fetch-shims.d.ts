@@ -1,12 +1,12 @@
 // Ambient module declarations for optional runtime fetch packages
 declare module "node-fetch" {
-  const fetch: any;
+  const fetch: unknown;
   export default fetch;
 }
 
 declare module "undici" {
-  export const fetch: any;
-  const undici: { fetch?: any } & any;
+  export const fetch: unknown;
+  const undici: { fetch?: unknown } & unknown;
   export default undici;
 }
 

@@ -48,9 +48,12 @@ async function ensureStoreFile(): Promise<boolean> {
       await fs.writeFile(STORE_PATH, JSON.stringify({}), "utf8");
       return true;
     } catch (err) {
-      if (!warnedFsFailure) {
+        if (!warnedFsFailure) {
         warnedFsFailure = true;
-        console.warn("[userNotesStore] Falha ao acessar filesystem; usando memoria.");
+        console.warn(
+          "[userNotesStore] Falha ao acessar filesystem; usando memoria.",
+          err instanceof Error ? err.message : String(err),
+        );
       }
       return false;
     }
@@ -64,8 +67,8 @@ async function readStoreFile(): Promise<NotesStore> {
     const raw = await fs.readFile(STORE_PATH, "utf8");
     const parsed = JSON.parse(raw);
     return parsed && typeof parsed === "object" ? (parsed as NotesStore) : {};
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+    } catch (_err) {
+      const msg = _err instanceof Error ? _err.message : String(_err);
     console.warn("[userNotesStore] Falha ao ler arquivo, usando memoria:", msg);
     return memoryStore;
   }
@@ -79,8 +82,8 @@ async function writeStoreFile(next: NotesStore) {
   }
   try {
     await fs.writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+    } catch (_err) {
+      const msg = _err instanceof Error ? _err.message : String(_err);
     console.warn("[userNotesStore] Falha ao escrever arquivo, usando memoria:", msg);
     memoryStore = next;
   }
@@ -97,8 +100,8 @@ async function readStoreRedis(userId?: string): Promise<NotesStore | UserNote[] 
     const raw = await redis.get<string>(key);
     if (!raw) return [];
     return JSON.parse(raw) as UserNote[];
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+    } catch (_err) {
+      const msg = _err instanceof Error ? _err.message : String(_err);
     console.warn("[userNotesStore] Redis read failed, falling back to memory:", msg);
     return null;
   }
@@ -205,7 +208,7 @@ export async function createUserNote(
     store[userId] = items;
     await writeStoreFile(store);
     return note;
-  } catch (err) {
+  } catch {
     // fallback to in-memory
     const items = Array.isArray(memoryStore[userId]) ? memoryStore[userId] : [];
     items.unshift(note);
@@ -266,7 +269,7 @@ export async function updateUserNote(
     store[userId] = items;
     await writeStoreFile(store);
     return updated;
-  } catch (err) {
+  } catch {
     const items = Array.isArray(memoryStore[userId]) ? memoryStore[userId] : [];
     const index = items.findIndex((note) => note.id === id);
     if (index === -1) return null;
@@ -310,7 +313,7 @@ export async function deleteUserNote(userId: string, id: string) {
     store[userId] = next;
     await writeStoreFile(store);
     return true;
-  } catch (err) {
+  } catch {
     const items = Array.isArray(memoryStore[userId]) ? memoryStore[userId] : [];
     const next = items.filter((note) => note.id !== id);
     if (next.length === items.length) return false;

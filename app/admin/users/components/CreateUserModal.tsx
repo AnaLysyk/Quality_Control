@@ -43,7 +43,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
   const requiresClient = true;
   const canSubmit = useMemo(
     () => !!open && (!requiresClient || !!localClientId) && !!name.trim() && !!email.trim(),
-    [open, requiresClient, localClientId, name, login, email],
+    [open, requiresClient, localClientId, name, email],
   );
 
   useEffect(() => {

@@ -115,7 +115,7 @@ export async function POST(request: Request) {
     });
   }
   const role = auth ? await resolveRunRole(effectiveAuth) : mockRole ?? "user";
-  if (role !== "company" || !canCreateRun(role)) {
+  if (!canCreateRun(role)) {
     return apiFail(request, "Acesso proibido", {
       status: 403,
       code: "FORBIDDEN",

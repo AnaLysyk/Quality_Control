@@ -177,7 +177,12 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     sessionRole === "admin";
 
   // 6) Lista de empresas permitidas (todas para admin global, ou apenas as vinculadas).
-  const allowedCompanies = isGlobalAdmin
+  const hasDevRole =
+    sessionRole === "it_dev" ||
+    normalizeLocalRole(user.role ?? null) === "it_dev" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "it_dev");
+  const hasFullCompanyAccess = isGlobalAdmin || hasDevRole;
+  const allowedCompanies = hasFullCompanyAccess
     ? companies
     : companies.filter((company) => links.some((link) => link.companyId === company.id));
   // Importante: usuarios sem empresa ainda podem entrar para solicitar acesso.

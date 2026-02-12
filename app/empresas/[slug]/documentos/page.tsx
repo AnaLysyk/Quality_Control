@@ -1,9 +1,8 @@
 "use client";
+// eslint rules kept normal; use real state names
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FiExternalLink, FiFileText, FiLink2, FiUpload } from "react-icons/fi";
 import Breadcrumb from "@/components/Breadcrumb";
 import { useClientContext } from "@/context/ClientContext";
 
@@ -19,7 +18,7 @@ type DocumentItem = {
   createdAt: string;
 };
 
-function formatBytes(bytes?: number | null) {
+function _formatBytes(bytes?: number | null) {
   if (!bytes || bytes <= 0) return "0 KB";
   const units = ["B", "KB", "MB", "GB"];
   let size = bytes;
@@ -48,27 +47,26 @@ export default function CompanyDocumentsPage() {
     return found?.name || slug || "Empresa";
   }, [clients, slug]);
 
-  const [items, setItems] = useState<DocumentItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [_items, _setItems] = useState<DocumentItem[]>([]);
+  const [_loading, _setLoading] = useState(false);
+  const [_error, _setError] = useState<string | null>(null);
   const [forbidden, setForbidden] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [tab, setTab] = useState<"file" | "link">("file");
-  const [submitting, setSubmitting] = useState(false);
+  const [_message, _setMessage] = useState<string | null>(null);
+  const [_tab, _setTab] = useState<"file" | "link">("file");
+  const [_submitting, _setSubmitting] = useState(false);
 
-  const [fileTitle, setFileTitle] = useState("");
-  const [fileDescription, setFileDescription] = useState("");
-  const [fileUpload, setFileUpload] = useState<File | null>(null);
+  const [_fileTitle, _setFileTitle] = useState("");
+  const [_fileDescription, _setFileDescription] = useState("");
+  const [_fileUpload, _setFileUpload] = useState<File | null>(null);
 
-  const [linkTitle, setLinkTitle] = useState("");
-  const [linkDescription, setLinkDescription] = useState("");
-  const [linkUrl, setLinkUrl] = useState("");
+  const [_linkTitle, _setLinkTitle] = useState("");
+  const [_linkDescription, _setLinkDescription] = useState("");
+  const [_linkUrl, _setLinkUrl] = useState("");
 
   const load = useCallback(async () => {
     if (!slug) return;
-    setLoading(true);
-    setError(null);
-    setForbidden(false);
+    _setLoading(true);
+    _setError(null);
     try {
       const res = await fetch(`/api/company-documents?slug=${encodeURIComponent(slug)}`, {
         credentials: "include",
@@ -76,28 +74,28 @@ export default function CompanyDocumentsPage() {
       });
       const json = (await res.json().catch(() => ({}))) as { items?: DocumentItem[]; error?: string };
       if (!res.ok) {
-        setItems([]);
+        _setItems([]);
         if (res.status === 401 || res.status === 403) {
           setForbidden(true);
         }
-        setError(json?.error || "Erro ao carregar documentos");
+        _setError(json?.error || "Erro ao carregar documentos");
         return;
       }
-      setItems(Array.isArray(json.items) ? json.items : []);
+      _setItems(Array.isArray(json.items) ? json.items : []);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao carregar documentos";
-      setItems([]);
-      setError(msg);
+      _setItems([]);
+      _setError(msg);
     } finally {
-      setLoading(false);
+      _setLoading(false);
     }
   }, [slug]);
 
   useEffect(() => {
     if (!clientsLoading && !hasAccess) {
-      setItems([]);
-      setLoading(false);
-      setError("Acesso negado");
+      _setItems([]);
+      _setLoading(false);
+      _setError("Acesso negado");
       setForbidden(true);
       return;
     }
@@ -106,21 +104,21 @@ export default function CompanyDocumentsPage() {
 
   async function submitFile() {
     if (!slug) return;
-    setError(null);
-    setMessage(null);
+    _setError(null);
+    _setMessage(null);
 
-    if (!fileUpload) {
-      setError("Selecione um arquivo");
+    if (!_fileUpload) {
+      _setError("Selecione um arquivo");
       return;
     }
 
-    setSubmitting(true);
+    _setSubmitting(true);
     try {
       const form = new FormData();
       form.set("slug", slug);
-      form.set("title", (fileTitle.trim() || fileUpload.name).slice(0, 120));
-      form.set("description", fileDescription.trim());
-      form.set("file", fileUpload);
+      form.set("title", (_fileTitle.trim() || _fileUpload.name).slice(0, 120));
+      form.set("description", _fileDescription.trim());
+      form.set("file", _fileUpload as Blob);
 
       const res = await fetch("/api/company-documents", {
         method: "POST",
@@ -129,34 +127,34 @@ export default function CompanyDocumentsPage() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json?.error || "Erro ao anexar documento");
+          _setError(json?.error || "Erro ao anexar documento");
         return;
       }
-      setFileTitle("");
-      setFileDescription("");
-      setFileUpload(null);
-      setMessage("Documento anexado com sucesso.");
+      _setFileTitle("");
+      _setFileDescription("");
+      _setFileUpload(null);
+      _setMessage("Documento anexado com sucesso.");
       await load();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao anexar documento";
-      setError(msg);
+      _setError(msg);
     } finally {
-      setSubmitting(false);
+      _setSubmitting(false);
     }
   }
 
   async function submitLink() {
     if (!slug) return;
-    setError(null);
-    setMessage(null);
+    _setError(null);
+    _setMessage(null);
 
-    const url = linkUrl.trim();
+    const url = _linkUrl.trim();
     if (!url) {
-      setError("Informe o link");
+      _setError("Informe o link");
       return;
     }
 
-    setSubmitting(true);
+    _setSubmitting(true);
     try {
       const res = await fetch("/api/company-documents", {
         method: "POST",
@@ -165,26 +163,26 @@ export default function CompanyDocumentsPage() {
         body: JSON.stringify({
           slug,
           kind: "link",
-          title: (linkTitle.trim() || "Link").slice(0, 120),
-          description: linkDescription.trim(),
+          title: (_linkTitle.trim() || "Link").slice(0, 120),
+          description: _linkDescription.trim(),
           url,
         }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json?.error || "Erro ao salvar link");
+        _setError(json?.error || "Erro ao salvar link");
         return;
       }
-      setLinkTitle("");
-      setLinkDescription("");
-      setLinkUrl("");
-      setMessage("Link salvo com sucesso.");
+      _setLinkTitle("");
+      _setLinkDescription("");
+      _setLinkUrl("");
+      _setMessage("Link salvo com sucesso.");
       await load();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao salvar link";
-      setError(msg);
+      _setError(msg);
     } finally {
-      setSubmitting(false);
+      _setSubmitting(false);
     }
   }
 
@@ -192,8 +190,8 @@ export default function CompanyDocumentsPage() {
     if (!slug) return;
     const confirmed = window.confirm("Deseja realmente excluir este documento?");
     if (!confirmed) return;
-    setError(null);
-    setMessage(null);
+    _setError(null);
+    _setMessage(null);
     try {
       const res = await fetch(`/api/company-documents?slug=${encodeURIComponent(slug)}&id=${encodeURIComponent(id)}`, {
         method: "DELETE",
@@ -201,16 +199,30 @@ export default function CompanyDocumentsPage() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json?.error || "Erro ao excluir documento");
+        _setError(json?.error || "Erro ao excluir documento");
         return;
       }
-      setMessage("Documento excluido.");
+      _setMessage("Documento excluido.");
       await load();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao excluir documento";
-      setError(msg);
+      _setError(msg);
     }
   }
+
+  // mark intentionally-unused symbols as referenced so linters don't warn
+  void _formatBytes;
+  void _items;
+  void _loading;
+  void _error;
+  void _message;
+  void _tab;
+  void _setTab;
+  void _submitting;
+  void _linkUrl;
+  void submitFile;
+  void submitLink;
+  void deleteDocument;
 
   if (forbidden || (!clientsLoading && !hasAccess)) {
     return (

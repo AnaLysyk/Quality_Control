@@ -216,7 +216,7 @@ export default function Kanban({
     if (persistEndpoint) {
       try {
         await persistKanbanUpdate({ ...newItem, status }, "POST");
-      } catch (e) {
+      } catch {
         setAddError("Erro ao salvar caso no backend.");
         setSavingAdd(false);
         return;
@@ -244,14 +244,32 @@ export default function Kanban({
           ...payload,
         }
       : payload;
+
+    // Debug logs to help E2E triage
+    try {
+      // eslint-disable-next-line no-console
+      console.debug("[Kanban] persistKanbanUpdate ->", { endpoint, method, normalizedPayload });
+    } catch {}
+
     const res = await fetch(endpoint, {
       method,
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(normalizedPayload),
     });
-    if (!res.ok) throw new Error("Falha ao salvar");
-    return res.json();
+
+    if (!res.ok) {
+      // eslint-disable-next-line no-console
+      console.error("[Kanban] persistKanbanUpdate failed", { endpoint, status: res.status });
+      throw new Error("Falha ao salvar");
+    }
+
+    const json = await res.json().catch(() => null);
+    try {
+      // eslint-disable-next-line no-console
+      console.debug("[Kanban] persistKanbanUpdate response", { endpoint, json });
+    } catch {}
+    return json;
   }
 
   async function persistApiLinkUpdate(params: {
@@ -261,23 +279,38 @@ export default function Kanban({
     link: string;
     bug?: string | null;
   }) {
+    const body = {
+      project: projectAbbr || project,
+      runId,
+      ...(companySlug ? { slug: companySlug } : {}),
+      caseId: params.caseId,
+      title: params.title ?? "",
+      status: params.status,
+      link: params.link,
+      ...(params.bug !== undefined ? { bug: params.bug } : {}),
+    };
+    try {
+      // eslint-disable-next-line no-console
+      console.debug("[Kanban] persistApiLinkUpdate ->", { body });
+    } catch {}
+
     const res = await fetch("/api/kanban/link", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        project: projectAbbr || project,
-        runId,
-        ...(companySlug ? { slug: companySlug } : {}),
-        caseId: params.caseId,
-        title: params.title ?? "",
-        status: params.status,
-        link: params.link,
-        ...(params.bug !== undefined ? { bug: params.bug } : {}),
-      }),
+      body: JSON.stringify(body),
     });
-    if (!res.ok) throw new Error("Falha ao salvar link");
-    return res.json();
+    if (!res.ok) {
+      // eslint-disable-next-line no-console
+      console.error("[Kanban] persistApiLinkUpdate failed", { status: res.status });
+      throw new Error("Falha ao salvar link");
+    }
+    const json = await res.json().catch(() => null);
+    try {
+      // eslint-disable-next-line no-console
+      console.debug("[Kanban] persistApiLinkUpdate response", { json });
+    } catch {}
+    return json;
   }
 
   // Carrega casos persistidos (manual)
@@ -336,6 +369,10 @@ export default function Kanban({
           });
         });
 
+        try {
+          // eslint-disable-next-line no-console
+          console.debug("[Kanban] loaded persisted rows", { persistEndpoint, rows: rawRows.length, mergedCounts: { pass: merged.pass.length, fail: merged.fail.length, blocked: merged.blocked.length, notRun: merged.notRun.length } });
+        } catch {}
         setLocalData(merged);
       } catch (e) {
         console.error("Erro ao carregar casos:", e);

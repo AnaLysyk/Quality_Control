@@ -14,10 +14,9 @@ import {
   FiColumns,
   FiGrid,
   FiHome,
-  FiLayers,
   FiList,
   FiMessageSquare,
-  FiShield,
+  
   FiUserPlus,
   FiUsers,
 } from "react-icons/fi";
@@ -48,7 +47,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const { activeClientSlug } = useClientContext();
   const { t } = useI18n();
 
-  const isAdminArea = pathname.startsWith("/admin");
+  
 
   const legacyUser = (user ?? null) as unknown as { is_global_admin?: boolean } | null;
 

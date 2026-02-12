@@ -6,6 +6,7 @@ import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketCreated } from "@/lib/notificationService";
 import { isItDev } from "@/lib/rbac/tickets";
 import { attachAssigneeInfo, attachAssigneeToTicket } from "@/lib/ticketsPresenter";
+import { withCompanyValidation } from "@/lib/middleware/withCompanyValidation";
 
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
@@ -14,10 +15,13 @@ export async function GET(req: Request) {
   }
 
   const url = new URL(req.url);
-  const scope = (url.searchParams.get("scope") ?? "mine").toLowerCase();
   const role = (user.role ?? "").toLowerCase();
   const allowAll = isItDev(user);
   const allowCompanyScope = role === "company";
+  let scope = (url.searchParams.get("scope") ?? "mine").toLowerCase();
+  if (scope === "mine" && allowCompanyScope) {
+    scope = "all";
+  }
   if (scope === "all" && !(allowAll || allowCompanyScope)) {
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
@@ -42,12 +46,7 @@ export async function GET(req: Request) {
   return NextResponse.json({ items: enriched }, { status: 200 });
 }
 
-export async function POST(req: Request) {
-  const user = await authenticateRequest(req);
-  if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
-  }
-
+export const POST = withCompanyValidation(async (user, companyId, req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const localUser = await getLocalUserById(user.id);
@@ -64,7 +63,7 @@ export async function POST(req: Request) {
       createdByName: localUser?.name ?? null,
       createdByEmail: localUser?.email ?? null,
       companySlug: user.companySlug ?? null,
-      companyId: user.companyId ?? null,
+      companyId: companyId ?? user.companyId ?? null,
     });
 
     if (!ticket) {
@@ -91,5 +90,5 @@ export async function POST(req: Request) {
     console.error("[chamados] Falha ao criar chamado:", err);
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
+});
 

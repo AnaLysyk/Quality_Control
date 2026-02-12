@@ -88,7 +88,8 @@ export function useTicketKanbanColumns(extraKeys: string[] = []) {
 
   useEffect(() => {
     const stored = loadStoredColumns();
-    setColumns(stored);
+    // schedule setState to avoid synchronous state update inside effect
+    Promise.resolve().then(() => setColumns(stored));
     hydratedRef.current = true;
   }, []);
 

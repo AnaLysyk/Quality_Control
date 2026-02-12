@@ -38,9 +38,7 @@ type DraftNote = {
   color: NoteColorKey;
 };
 
-function resolveColor(key?: string | null) {
-  return NOTE_COLORS.find((color) => color.key === key) ?? NOTE_COLORS[0];
-}
+// resolveColor removed; note color is applied via note.color where needed
 
 export default function NotesButton() {
   const { user } = useAuthUser();
@@ -372,7 +370,6 @@ export default function NotesButton() {
             )}
 
             {notes.map((note) => {
-              const color = resolveColor(note.color);
               const isExpanded = expandedId === note.id;
               const isEditing = editingId === note.id;
               const localDraft = isEditing && draft ? draft : null;

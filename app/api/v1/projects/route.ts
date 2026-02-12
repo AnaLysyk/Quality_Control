@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { isCompanyUser } from "@/lib/rbac/companyAccess";
+import { withCompanyValidation } from "@/lib/middleware/withCompanyValidation";
+import { ProjectsStore, type ProjectRecord } from "@/lib/projects/projectsStore";
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
@@ -45,3 +47,45 @@ export async function GET(request: Request) {
 
   return NextResponse.json({ data }, { status: 200 });
 }
+
+export const POST = withCompanyValidation(async (user, companyId, req) => {
+  const body = await req.json().catch(() => ({}));
+  const record = {
+    id: crypto.randomUUID(),
+    code: typeof body.code === "string" ? body.code : null,
+    title: typeof body.title === "string" ? body.title : String(body.title ?? "Untitled"),
+    description: typeof body.description === "string" ? body.description : null,
+    companyId,
+    createdBy: user.id,
+    createdAt: new Date().toISOString(),
+  };
+
+  await ProjectsStore.create(record as ProjectRecord);
+  return NextResponse.json({ success: true, project: record }, { status: 201 });
+});
+
+export const PUT = withCompanyValidation(async (user, companyId, req) => {
+  const body = await req.json().catch(() => ({}));
+  const id = typeof body.id === "string" ? body.id : null;
+  if (!id) return NextResponse.json({ error: "id ausente" }, { status: 400 });
+
+  const updates: Partial<ProjectRecord> = {
+    ...(typeof body.title === "string" ? { title: body.title } : {}),
+    ...(typeof body.description === "string" ? { description: body.description } : {}),
+    ...(typeof body.code === "string" ? { code: body.code } : {}),
+    companyId,
+  };
+
+  const updated = await ProjectsStore.update(id, updates);
+  if (!updated) return NextResponse.json({ error: "Nao encontrado" }, { status: 404 });
+  return NextResponse.json({ success: true, project: updated }, { status: 200 });
+});
+
+export const DELETE = withCompanyValidation(async (user, companyId, req) => {
+  const body = await req.json().catch(() => ({}));
+  const id = typeof body.id === "string" ? body.id : null;
+  if (!id) return NextResponse.json({ error: "id ausente" }, { status: 400 });
+
+  const ok = await ProjectsStore.delete(id, companyId);
+  return NextResponse.json({ success: ok }, { status: 200 });
+});

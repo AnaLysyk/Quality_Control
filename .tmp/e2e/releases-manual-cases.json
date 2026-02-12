@@ -5,15 +5,5 @@
   "run_bloqueada": [],
   "run_gate_e2e": [],
   "run_e2e_negocio": [],
-  "run_falha": [
-    {
-      "id": "k2",
-      "title": "Erro no login",
-      "bug": null,
-      "dbId": null,
-      "link": "",
-      "fromApi": false,
-      "status": "fail"
-    }
-  ]
+  "run_falha": []
 }

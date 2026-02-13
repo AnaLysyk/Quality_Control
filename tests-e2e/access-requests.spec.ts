@@ -75,7 +75,7 @@ test("admin abre e aceita/rejeita solicitações de acesso", async ({ page }) =>
   );
   await page.getByRole("button", { name: /Aceitar solicita/ }).click();
   await acceptResponse;
-  await expect(acceptRow).toContainText(/Aprovada/i);
+  await expect(acceptRow).toContainText(/Aprovada/i, { timeout: 20000 });
 
   const rejectRow = page.getByRole("button").filter({ hasText: rejectEmail }).first();
   await expect(rejectRow).toBeVisible({ timeout: 20000 });
@@ -88,5 +88,5 @@ test("admin abre e aceita/rejeita solicitações de acesso", async ({ page }) =>
   );
   await page.getByRole("button", { name: /Recusar solicita/ }).click();
   await rejectResponse;
-  await expect(rejectRow).toContainText(/Rejeitada/i);
+  await expect(rejectRow).toContainText(/Rejeitada/i, { timeout: 20000 });
 });

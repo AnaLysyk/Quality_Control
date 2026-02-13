@@ -82,6 +82,17 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     });
   }
 
+  // grava log auxiliar em disco para diagnostico E2E (prisma)
+  try {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
+    const debugPath = path.join(process.cwd(), "data", "access-requests-debug.log");
+    const line = `${new Date().toISOString()} ACCEPT prisma id=${id} admin=${admin?.email ?? "-"} status=${updated?.status}\n`;
+    await fs.appendFile(debugPath, line, "utf8");
+  } catch (e) {
+    // ignore write errors
+  }
+
   return NextResponse.json({
     ok: true,
     item: {

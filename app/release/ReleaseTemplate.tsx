@@ -213,6 +213,7 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
                 href={`/api/empresas/${encodeURIComponent(companySlug || "griaule")}/releases/${encodeURIComponent(
                   releaseData.slug,
                 )}/export?format=csv`}
+                download={`release-${releaseData.slug}.csv`}
                 className="inline-flex items-center rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280) hover:border-(--tc-accent,#ef0001)"
               >
                 Exportar
@@ -222,6 +223,7 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
                 href={`/api/empresas/${encodeURIComponent(companySlug || "griaule")}/releases/${encodeURIComponent(
                   releaseData.slug,
                 )}/export?format=pdf`}
+                download={`release-${releaseData.slug}.pdf`}
                 className="inline-flex items-center rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280) hover:border-(--tc-accent,#ef0001)"
               >
                 Exportar PDF

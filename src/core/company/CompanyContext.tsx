@@ -139,17 +139,26 @@ export function ClientProvider({ children }: { children: ReactNode }) {
       ? normalizedClients.find((client) => client.slug === stored || client.id === stored)?.slug ?? null
       : null;
 
+    const cookieMatch = typeof document !== "undefined" ? document.cookie.match(/(?:^|; )active_company_slug=([^;]+)/) : null;
+    const cookieActiveSlug = cookieMatch?.[1] ?? null;
+
+    // Order of preference for resolving active client slug:
+    // 1) explicit cookie set by login (represents user choosing a company)
+    // 2) for non-global-admin users: user.clientSlug, storedSlug, defaultClientSlug, clientSlugs
+    // For global admins we intentionally avoid inheriting a company from user.clientSlug or storage
+    // so the admin sees the global admin nav unless they explicitly requested a company via cookie.
     const preferredSlugs = [
-      storedSlug,
-      ...(isGlobalAdmin
-        ? []
-        : [
-            typeof user.defaultClientSlug === "string" ? user.defaultClientSlug : null,
-            typeof user.clientSlug === "string" ? user.clientSlug : null,
+      ...(cookieActiveSlug ? [cookieActiveSlug] : []),
+      ...(!isGlobalAdmin
+        ? [
+            ...(typeof user.clientSlug === "string" && user.clientSlug ? [user.clientSlug] : []),
+            storedSlug,
+            ...(typeof user.defaultClientSlug === "string" ? [user.defaultClientSlug] : []),
             ...(Array.isArray(user.clientSlugs)
               ? user.clientSlugs.filter((item): item is string => typeof item === "string" && item.length > 0)
               : []),
-          ]),
+          ]
+        : []),
     ].filter((value, index, self): value is string => Boolean(value) && self.indexOf(value) === index);
 
     const resolvedSlug =

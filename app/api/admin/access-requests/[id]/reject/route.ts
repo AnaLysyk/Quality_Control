@@ -28,6 +28,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     if (!existing) {
       return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
     }
+    console.debug(`[ACCESS-REQUESTS][REJECT] admin=${admin?.email ?? "-"} id=${id} comment=${Boolean(comment)} reason=${Boolean(reason)}`);
     const updatedMessage = applyAdminNotes(existing.message, reason || null);
     const updated = await updateAccessRequest(id, { status: "rejected", message: updatedMessage });
     if (comment || reason) {
@@ -53,6 +54,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   if (!existing) {
     return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
   }
+  console.debug(`[ACCESS-REQUESTS][REJECT] admin=${admin?.email ?? "-"} id=${id} comment=${Boolean(comment)} reason=${Boolean(reason)}`);
 
   const updated = await prisma.supportRequest.update({
     where: { id },

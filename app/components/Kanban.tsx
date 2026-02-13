@@ -247,7 +247,6 @@ export default function Kanban({
 
     // Debug logs to help E2E triage
     try {
-      // eslint-disable-next-line no-console
       console.debug("[Kanban] persistKanbanUpdate ->", { endpoint, method, normalizedPayload });
     } catch {}
 
@@ -259,14 +258,12 @@ export default function Kanban({
     });
 
     if (!res.ok) {
-      // eslint-disable-next-line no-console
       console.error("[Kanban] persistKanbanUpdate failed", { endpoint, status: res.status });
       throw new Error("Falha ao salvar");
     }
 
     const json = await res.json().catch(() => null);
     try {
-      // eslint-disable-next-line no-console
       console.debug("[Kanban] persistKanbanUpdate response", { endpoint, json });
     } catch {}
     return json;
@@ -290,7 +287,6 @@ export default function Kanban({
       ...(params.bug !== undefined ? { bug: params.bug } : {}),
     };
     try {
-      // eslint-disable-next-line no-console
       console.debug("[Kanban] persistApiLinkUpdate ->", { body });
     } catch {}
 
@@ -301,13 +297,11 @@ export default function Kanban({
       body: JSON.stringify(body),
     });
     if (!res.ok) {
-      // eslint-disable-next-line no-console
       console.error("[Kanban] persistApiLinkUpdate failed", { status: res.status });
       throw new Error("Falha ao salvar link");
     }
     const json = await res.json().catch(() => null);
     try {
-      // eslint-disable-next-line no-console
       console.debug("[Kanban] persistApiLinkUpdate response", { json });
     } catch {}
     return json;
@@ -344,21 +338,12 @@ export default function Kanban({
           const title = (row.title as string | null | undefined) ?? "";
           const dbId = typeof row.id === "number" ? row.id : Number.isFinite(Number(row.id)) ? Number(row.id) : null;
 
-          // Try to merge into existing card (by case id)
-          const list = merged[status];
-          const idx = list.findIndex((c) => String(c.id) === id);
-          if (idx >= 0) {
-            list[idx] = {
-              ...list[idx],
-              ...(title ? { title } : {}),
-              ...(link ? { link } : {}),
-              bug: bug ?? list[idx].bug ?? null,
-              dbId: dbId ?? list[idx].dbId ?? null,
-            };
-            return;
-          }
+          // Remove any existing copies of this case across all columns to avoid duplicates
+          (Object.keys(merged) as (keyof KanbanData)[]).forEach((k) => {
+            merged[k] = merged[k].filter((c) => String(c.id) !== id);
+          });
 
-          // Otherwise, treat it as an extra persisted card
+          // Push the persisted card into the target status (persisted rows are authoritative)
           merged[status].push({
             id,
             title,
@@ -370,7 +355,6 @@ export default function Kanban({
         });
 
         try {
-          // eslint-disable-next-line no-console
           console.debug("[Kanban] loaded persisted rows", { persistEndpoint, rows: rawRows.length, mergedCounts: { pass: merged.pass.length, fail: merged.fail.length, blocked: merged.blocked.length, notRun: merged.notRun.length } });
         } catch {}
         setLocalData(merged);
@@ -995,8 +979,18 @@ export default function Kanban({
                           Bug
                         </button>
                       )}
-
                       
+                      {editable && allowStatusChange && (
+                        <button
+                          type="button"
+                          data-testid="move-to-pass"
+                          data-card-move-testid="card-move-to-pass"
+                          onClick={() => moveItem(column.key, item, "pass")}
+                          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-600 transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                        >
+                          Mover p/ Pass
+                        </button>
+                      )}
                     </div>
 
                     {editable && allowStatusChange && (

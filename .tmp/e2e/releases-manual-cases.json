@@ -4,6 +4,20 @@
   "run_pdf_export": [],
   "run_bloqueada": [],
   "run_gate_e2e": [],
-  "run_e2e_negocio": [],
-  "run_falha": []
+  "run_e2e_negocio": [
+    {
+      "id": "k2",
+      "status": "pass",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "run_falha": [
+    {
+      "id": "k2",
+      "status": "pass",
+      "bug": null,
+      "fromApi": false
+    }
+  ]
 }

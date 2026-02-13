@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
       created_at: item.created_at,
       admin_notes: extractAdminNotes(item.message),
     }));
+    console.debug(`[ACCESS-REQUESTS][GET] admin=${admin?.email ?? "-"} jsonStore=true items=${mapped.length}`);
     return NextResponse.json({ items: mapped }, { status: 200 });
   }
 
@@ -48,6 +49,7 @@ export async function GET(req: NextRequest) {
       admin_notes: extractAdminNotes(item.message),
     }));
 
+    console.debug(`[ACCESS-REQUESTS][GET] admin=${admin?.email ?? "-"} jsonStore=false items=${mapped.length}`);
     return NextResponse.json({ items: mapped }, { status: 200 });
   } catch (error) {
     console.error("Falha ao listar access-requests (fallback JSON):", error);

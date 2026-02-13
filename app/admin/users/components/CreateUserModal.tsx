@@ -114,6 +114,10 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
       }
       if (!res.ok) {
         const err = await readApiError(res, "Erro ao salvar usuario");
+        try {
+          const bodyText = await res.text().catch(() => "");
+          console.error(`[ADMIN-USERS-CLIENT][CREATE] non-ok status=${res.status} body=${bodyText}`);
+        } catch {}
         setError(err.message);
         toast.error(err.displayMessage);
         return;
@@ -121,6 +125,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
       const okMsg = "Usuario criado. Convite enviado.";
       setMessage(okMsg);
       toast.success(okMsg);
+      console.error(`[ADMIN-USERS-CLIENT][CREATE] success name=${name} email=${email} clientId=${localClientId}`);
       resetForm();
       onClose();
       try {

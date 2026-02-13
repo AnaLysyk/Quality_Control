@@ -13,7 +13,7 @@ test.describe("kanban - persistência local", () => {
     await page.goto("/empresas/griaule/defeitos/kanban", { waitUntil: "networkidle" });
 
     const card = page.getByTestId("kanban-card-k2");
-    await card.getByTestId("move-to-pass").click();
+    await card.locator('[data-testid="move-to-pass"]').first().click();
     await expect(page.getByTestId("kanban-column-pass")).toContainText("Erro no login");
 
     await page.reload({ waitUntil: "networkidle" });

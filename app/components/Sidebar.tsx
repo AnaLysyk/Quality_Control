@@ -68,6 +68,12 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     return "user";
   }, [user, isGlobalAdmin]);
 
+  try {
+    // debug: expose context used by tests
+    // eslint-disable-next-line no-console
+    console.debug("[SIDEBAR] debug", { user, activeClientSlug, isGlobalAdmin, appRole, pathname });
+  } catch {}
+
   const companySlug = useMemo(() => {
     const match = pathname.match(/^\/empresas\/([^/]+)/);
     if (match?.[1]) return match[1];
@@ -97,17 +103,27 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
   const adminNav: NavItem[] = useMemo(() => {
     const companyTarget = activeClientSlug ? adminCompanyHref : "/empresas";
-    return [
+    const items: NavItem[] = [
       { label: t("nav.adminPanel"), icon: FiCompass, href: "/admin/home" },
       { label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric" },
       { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
-      { label: t("nav.apps"), icon: FiBriefcase, href: `${companyTarget}${activeClientSlug ? "/aplicacoes" : ""}` },
-      { label: t("nav.runs"), icon: FiList, href: `${companyTarget}${activeClientSlug ? "/runs" : ""}` },
-      { label: t("nav.defects"), icon: FiAlertTriangle, href: `${companyTarget}${activeClientSlug ? "/defeitos" : ""}` },
+    ];
+
+    if (activeClientSlug) {
+      items.push(
+        { label: t("nav.apps"), icon: FiBriefcase, href: `${companyTarget}/aplicacoes` },
+        { label: t("nav.runs"), icon: FiList, href: `${companyTarget}/runs` },
+        { label: t("nav.defects"), icon: FiAlertTriangle, href: `${companyTarget}/defeitos` },
+      );
+    }
+
+    items.push(
       { label: "Chamados", icon: FiMessageSquare, href: "/admin/chamados" },
       { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
       { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
-    ];
+    );
+
+    return items;
   }, [t, activeClientSlug, adminCompanyHref]);
 
   const itDevNav: NavItem[] = useMemo(
@@ -136,6 +152,8 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
   const navigation = useMemo(() => {
     if (!user) return publicNav;
+    // If the current path is inside a company, prefer the company navigation
+    if (pathname.startsWith("/empresas/") && companyNav.length) return companyNav;
     if (appRole === "admin") return adminNav;
     if (appRole === "it_dev") return itDevNav;
     if (companyNav.length) return companyNav;
@@ -192,6 +210,9 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const DesktopNav = (
     <aside
       className="hidden lg:flex fixed left-0 top-0 z-40 h-screen overflow-hidden border-r border-slate-200 text-slate-900 flex-col bg-white/70 backdrop-blur-2xl shadow-[0_12px_30px_rgba(15,23,42,0.12)] dark:border-white/10 dark:text-white dark:bg-[linear-gradient(180deg,#03123b_0%,#051a52_60%,#03123b_100%)] dark:shadow-[0_18px_40px_rgba(0,0,0,0.45)] sidebar-shell"
+      data-app-role={appRole ?? ""}
+      data-active-client={activeClientSlug ?? ""}
+      data-is-global-admin={isGlobalAdmin ? "1" : "0"}
     >
       <div className="flex items-center px-2 py-3 border-b border-slate-200/70 dark:border-white/5 relative">
         <Link
@@ -255,6 +276,9 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     onClose && (
       <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden dark:bg-black/60" onClick={onClose}>
         <aside
+          data-app-role={appRole ?? ""}
+          data-active-client={activeClientSlug ?? ""}
+          data-is-global-admin={isGlobalAdmin ? "1" : "0"}
           className="flex h-full w-72 bg-white text-slate-900 flex-col border-r border-slate-200 shadow-[0_12px_28px_rgba(15,23,42,0.16)] dark:bg-linear-to-b dark:from-[#0b1021]/95 dark:via-[#0f1830]/92 dark:to-[#0b1021]/95 dark:text-white dark:border-white/10 dark:shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >

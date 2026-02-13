@@ -688,6 +688,7 @@ function AccessRequestsPage() {
                     <button
                       type="button"
                       onClick={acceptRequest}
+                      aria-label="Aceitar solicitacao"
                       disabled={
                         accepting ||
                         ((draft.accessType ?? "Usuario da empresa") !== "Admin do sistema" && !draft.clientId)
@@ -700,6 +701,7 @@ function AccessRequestsPage() {
                     <button
                       type="button"
                       onClick={rejectRequest}
+                      aria-label="Recusar solicitacao"
                       disabled={accepting}
                       className="rounded-full border border-rose-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-rose-600 transition hover:bg-rose-50 disabled:opacity-60"
                     >

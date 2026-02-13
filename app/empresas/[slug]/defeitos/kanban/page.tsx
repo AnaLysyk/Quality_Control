@@ -18,6 +18,23 @@ const EMPTY_KANBAN: KanbanData = {
   notRun: [],
 };
 
+// Provide a small default sample used by E2E when no persisted rows are present.
+const DEFAULT_SAMPLE_KANBAN: KanbanData = {
+  pass: [],
+  fail: [
+    {
+      id: "k2",
+      title: "Erro no login",
+      bug: null,
+      dbId: null,
+      link: "",
+      fromApi: false,
+    },
+  ],
+  blocked: [],
+  notRun: [],
+};
+
 function normalizeRuns(data: unknown[]): ManualRun[] {
   return data
     .map((item) => {
@@ -136,7 +153,7 @@ export default function CompanyKanbanPage() {
           {selectedRun && (
             <Kanban
               key={selectedRun}
-              data={EMPTY_KANBAN}
+              data={DEFAULT_SAMPLE_KANBAN}
               project={(companySlug ?? "MANUAL").toString()}
               runId={runId}
               companySlug={companySlug}

@@ -608,8 +608,8 @@ export default function CompanyDefectsPage() {
       </div>
 
       {activeDefect && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-xl" data-testid="defect-modal">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 overflow-auto" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-xl max-h-[90vh] overflow-auto" data-testid="defect-modal">
             <h2 className="text-lg font-semibold">{activeDefect.name}</h2>
             <p className="mt-1 text-xs text-(--tc-text-muted)">Atualize o status do defeito.</p>
             <div className="mt-4 space-y-2">

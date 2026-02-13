@@ -128,7 +128,9 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
-  const login = normalizeLogin(typeof body?.user === "string" ? body.user : "");
+  const rawLogin = typeof body?.user === "string" ? body.user : "";
+  const inferredLogin = !rawLogin && typeof body?.email === "string" ? String(body.email).split("@")[0] : rawLogin;
+  const login = normalizeLogin(inferredLogin);
   const clientId = typeof body?.client_id === "string" ? body.client_id : null;
   const jobTitle = typeof body?.job_title === "string" ? body.job_title.trim() || null : null;
   const linkedinUrl = typeof body?.linkedin_url === "string" ? body.linkedin_url.trim() || null : null;
@@ -140,18 +142,24 @@ export async function POST(req: NextRequest) {
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
 
+  console.debug(`[ADMIN-USERS][POST] admin=${admin?.email ?? "-"} name=${name} email=${email} clientId=${clientId} role=${rawRole}`);
+
   if (!name || !email || !login) {
+    console.error(`[ADMIN-USERS][POST] missing-fields admin=${admin?.email ?? "-"} name='${name}' email='${email}' login='${login}'`);
     return NextResponse.json({ error: "Nome, usuario e email sao obrigatorios" }, { status: 400 });
   }
   if (!clientId) {
+    console.error(`[ADMIN-USERS][POST] missing-client admin=${admin?.email ?? "-"} clientId=${clientId}`);
     return NextResponse.json({ error: "Empresa obrigatoria para este perfil" }, { status: 400 });
   }
 
   const users = await listLocalUsers();
   if (users.some((user) => normalizeLogin(user.email) === email)) {
+    console.error(`[ADMIN-USERS][POST] duplicate-email admin=${admin?.email ?? "-"} email=${email}`);
     return NextResponse.json({ error: "E-mail ja existe" }, { status: 409 });
   }
   if (users.some((user) => normalizeLogin(user.user ?? user.email) === login)) {
+    console.error(`[ADMIN-USERS][POST] duplicate-user admin=${admin?.email ?? "-"} login=${login}`);
     return NextResponse.json({ error: "Usuario ja existe" }, { status: 409 });
   }
 
@@ -173,6 +181,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
+    console.error(`[ADMIN-USERS][POST] createLocalUser error admin=${admin?.email ?? "-"} code=${code} err=${String(err)}`);
     if (code === "DUPLICATE_EMAIL") {
       return NextResponse.json({ error: "E-mail ja existe" }, { status: 409 });
     }
@@ -194,6 +203,7 @@ export async function POST(req: NextRequest) {
     metadata: { companyId: clientId, role },
   });
 
+  console.error(`[ADMIN-USERS][POST] created admin=${admin?.email ?? "-"} user=${user?.email ?? user?.id}`);
   return NextResponse.json({ ok: true }, { status: 201 });
 }
 

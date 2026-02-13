@@ -92,7 +92,10 @@ export default function CompanyDocumentsPage() {
   }, [slug]);
 
   useEffect(() => {
-    if (!clientsLoading && !hasAccess) {
+    // Wait until client list is resolved to decide access. Avoid calling load() while clients are still loading,
+    // otherwise we may render documents for a company before access is determined (flaky in E2E).
+    if (clientsLoading) return;
+    if (!hasAccess) {
       _setItems([]);
       _setLoading(false);
       _setError("Acesso negado");
@@ -107,7 +110,14 @@ export default function CompanyDocumentsPage() {
     _setError(null);
     _setMessage(null);
 
-    if (!_fileUpload) {
+    // Try to read file from controlled state first, otherwise from the input element (ensures Playwright setInputFiles is respected)
+    let file = _fileUpload;
+    if (!file && typeof document !== "undefined") {
+      const input = document.querySelector('[data-testid="doc-file-input"]') as HTMLInputElement | null;
+      file = input?.files?.[0] ?? null;
+    }
+
+    if (!file) {
       _setError("Selecione um arquivo");
       return;
     }
@@ -116,9 +126,9 @@ export default function CompanyDocumentsPage() {
     try {
       const form = new FormData();
       form.set("slug", slug);
-      form.set("title", (_fileTitle.trim() || _fileUpload.name).slice(0, 120));
+      form.set("title", (_fileTitle.trim() || file.name).slice(0, 120));
       form.set("description", _fileDescription.trim());
-      form.set("file", _fileUpload as Blob);
+      form.set("file", file as Blob);
 
       const res = await fetch("/api/company-documents", {
         method: "POST",
@@ -127,12 +137,17 @@ export default function CompanyDocumentsPage() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-          _setError(json?.error || "Erro ao anexar documento");
+        _setError(json?.error || "Erro ao anexar documento");
         return;
       }
       _setFileTitle("");
       _setFileDescription("");
       _setFileUpload(null);
+      // also clear native input if present
+      try {
+        const input = document.querySelector('[data-testid="doc-file-input"]') as HTMLInputElement | null;
+        if (input) input.value = "";
+      } catch {}
       _setMessage("Documento anexado com sucesso.");
       await load();
     } catch (err) {
@@ -252,6 +267,96 @@ export default function CompanyDocumentsPage() {
             Anexe arquivos ou salve links com titulo e descricao.
           </p>
         </header>
+        <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-10">
+          <div className="space-y-4">
+            <div className="flex gap-3">
+              <button
+                data-testid="doc-tab-file"
+                className={`px-3 py-1 rounded ${_tab === "file" ? "bg-slate-100" : "bg-white"}`}
+                onClick={() => _setTab("file")}
+              >
+                Arquivo
+              </button>
+              <button
+                data-testid="doc-tab-link"
+                className={`px-3 py-1 rounded ${_tab === "link" ? "bg-slate-100" : "bg-white"}`}
+                onClick={() => _setTab("link")}
+              >
+                Link
+              </button>
+            </div>
+
+            {_tab === "file" ? (
+              <div className="space-y-2">
+                {_message && <div className="text-sm text-green-600">{_message}</div>}
+                {_error && <div className="text-sm text-red-600">{_error}</div>}
+                <input
+                  data-testid="doc-file-title"
+                  placeholder="Titulo"
+                  value={_fileTitle}
+                  onChange={(e) => _setFileTitle(e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                />
+                <input
+                  data-testid="doc-file-description"
+                  placeholder="Descricao"
+                  value={_fileDescription}
+                  onChange={(e) => _setFileDescription(e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                />
+                <input
+                  data-testid="doc-file-input"
+                  type="file"
+                  onChange={(e) => {
+                    const f = e.currentTarget.files?.[0] ?? null;
+                    _setFileUpload(f);
+                  }}
+                />
+                <button data-testid="doc-file-submit" onClick={() => submitFile()} className="px-4 py-2 bg-(--tc-accent,#ef0001) text-white rounded">
+                  Enviar
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {_message && <div className="text-sm text-green-600">{_message}</div>}
+                {_error && <div className="text-sm text-red-600">{_error}</div>}
+                <input
+                  data-testid="doc-link-title"
+                  placeholder="Titulo do link"
+                  value={_linkTitle}
+                  onChange={(e) => _setLinkTitle(e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                />
+                <input
+                  data-testid="doc-link-description"
+                  placeholder="Descricao"
+                  value={_linkDescription}
+                  onChange={(e) => _setLinkDescription(e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                />
+                <input
+                  data-testid="doc-link-url"
+                  placeholder="https://..."
+                  value={_linkUrl}
+                  onChange={(e) => _setLinkUrl(e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                />
+                <button data-testid="doc-link-submit" onClick={() => submitLink()} className="px-4 py-2 bg-(--tc-accent,#ef0001) text-white rounded">
+                  Salvar Link
+                </button>
+              </div>
+            )}
+
+            <div data-testid="document-list" className="space-y-2 mt-6">
+              {_items.map((it) => (
+                <div key={it.id} className="p-2 border rounded">
+                  <div className="font-semibold">{it.title}</div>
+                  <div className="text-sm text-slate-500">{it.description}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

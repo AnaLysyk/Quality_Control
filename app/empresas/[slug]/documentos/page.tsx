@@ -293,6 +293,8 @@ export default function CompanyDocumentsPage() {
                 <input
                   data-testid="doc-file-title"
                   placeholder="Titulo"
+                  aria-label="Titulo do documento"
+                  title="Titulo do documento"
                   value={_fileTitle}
                   onChange={(e) => _setFileTitle(e.target.value)}
                   className="w-full px-3 py-2 border rounded"
@@ -300,6 +302,8 @@ export default function CompanyDocumentsPage() {
                 <input
                   data-testid="doc-file-description"
                   placeholder="Descricao"
+                  aria-label="Descricao do documento"
+                  title="Descricao do documento"
                   value={_fileDescription}
                   onChange={(e) => _setFileDescription(e.target.value)}
                   className="w-full px-3 py-2 border rounded"
@@ -307,6 +311,8 @@ export default function CompanyDocumentsPage() {
                 <input
                   data-testid="doc-file-input"
                   type="file"
+                  aria-label="Selecionar arquivo para upload"
+                  title="Selecionar arquivo para upload"
                   onChange={(e) => {
                     const f = e.currentTarget.files?.[0] ?? null;
                     _setFileUpload(f);
@@ -323,6 +329,8 @@ export default function CompanyDocumentsPage() {
                 <input
                   data-testid="doc-link-title"
                   placeholder="Titulo do link"
+                  aria-label="Titulo do link"
+                  title="Titulo do link"
                   value={_linkTitle}
                   onChange={(e) => _setLinkTitle(e.target.value)}
                   className="w-full px-3 py-2 border rounded"
@@ -330,6 +338,8 @@ export default function CompanyDocumentsPage() {
                 <input
                   data-testid="doc-link-description"
                   placeholder="Descricao"
+                  aria-label="Descricao do link"
+                  title="Descricao do link"
                   value={_linkDescription}
                   onChange={(e) => _setLinkDescription(e.target.value)}
                   className="w-full px-3 py-2 border rounded"
@@ -337,6 +347,8 @@ export default function CompanyDocumentsPage() {
                 <input
                   data-testid="doc-link-url"
                   placeholder="https://..."
+                  aria-label="URL do link"
+                  title="URL do link"
                   value={_linkUrl}
                   onChange={(e) => _setLinkUrl(e.target.value)}
                   className="w-full px-3 py-2 border rounded"

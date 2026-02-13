@@ -566,6 +566,10 @@ function AccessRequestsPage() {
                       const id = e.target.value || null;
                       const match = clients.find((c) => c.id === id);
                       setDraft((d) => (d ? { ...d, clientId: id, company: match?.name ?? d.company ?? "" } : d));
+                      try {
+                        // eslint-disable-next-line no-console
+                        console.debug("[E2E][access-requests] select empresa -> id=", id, "match=", match?.name);
+                      } catch {}
                     }}
                     disabled={draft.accessType === "Admin do sistema"}
                     aria-label="Empresa"
@@ -699,18 +703,25 @@ function AccessRequestsPage() {
                     >
                       {saving ? "Salvando..." : "Salvar alteracoes"}
                     </button>
-                    <button
-                      type="button"
-                      onClick={acceptRequest}
-                      aria-label="Aceitar solicitacao"
-                      disabled={
-                        accepting ||
-                        ((draft.accessType ?? "Usuario da empresa") !== "Admin do sistema" && !draft.clientId)
-                      }
-                      className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:bg-emerald-600 disabled:opacity-60"
-                    >
-                      {accepting ? "Aceitando..." : "Aprovar"}
-                    </button>
+                    {(() => {
+                      const acceptDisabled =
+                        accepting || ((draft.accessType ?? "Usuario da empresa") !== "Admin do sistema" && !draft.clientId);
+                      try {
+                        // eslint-disable-next-line no-console
+                        console.debug("[E2E][access-requests] acceptDisabled=", acceptDisabled, "accessType=", draft.accessType, "clientId=", draft.clientId);
+                      } catch {}
+                      return (
+                        <button
+                          type="button"
+                          onClick={acceptRequest}
+                          aria-label="Aceitar solicitacao"
+                          disabled={acceptDisabled}
+                          className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:bg-emerald-600 disabled:opacity-60"
+                        >
+                          {accepting ? "Aceitando..." : "Aprovar"}
+                        </button>
+                      );
+                    })()}
 
                     <button
                       type="button"

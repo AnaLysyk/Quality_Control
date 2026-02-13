@@ -231,6 +231,11 @@ function AccessRequestsPage() {
 
       setClients(mappedClients);
       setItems(parsed);
+      // Log para debugar E2E: quantos itens e status carregados
+      try {
+        // eslint-disable-next-line no-console
+        console.debug("[E2E][access-requests] carregou itens:", parsed.length, parsed.map((p) => ({ id: p.id, status: p.status })));
+      } catch {}
       setSelectedId((prev) => (prev && parsed.some((p) => p.id === prev) ? prev : parsed[0]?.id ?? null));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao carregar");
@@ -372,6 +377,11 @@ function AccessRequestsPage() {
       });
 
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      // Log de resposta para diagnóstico E2E
+      try {
+        // eslint-disable-next-line no-console
+        console.debug("[E2E][access-requests][accept] res.ok=", res.ok, "status=", res.status, "body=", json);
+      } catch {}
       if (!res.ok) {
         setError((json.error as string) || (json.message as string) || "Falha ao aceitar");
         return;
@@ -400,6 +410,10 @@ function AccessRequestsPage() {
       });
 
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      try {
+        // eslint-disable-next-line no-console
+        console.debug("[E2E][access-requests][reject] res.ok=", res.ok, "status=", res.status, "body=", json);
+      } catch {}
       if (!res.ok) {
         setError((json.error as string) || (json.message as string) || "Falha ao recusar");
         return;

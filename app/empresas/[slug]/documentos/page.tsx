@@ -1,11 +1,11 @@
 "use client";
-// eslint rules kept normal; use real state names
 
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Breadcrumb from "@/components/Breadcrumb";
 import { useClientContext } from "@/context/ClientContext";
 
+// Tipos de documento
 type DocumentItem = {
   id: string;
   kind: "file" | "link";
@@ -18,7 +18,8 @@ type DocumentItem = {
   createdAt: string;
 };
 
-function _formatBytes(bytes?: number | null) {
+// Formata bytes em string legível
+function formatarBytes(bytes?: number | null) {
   if (!bytes || bytes <= 0) return "0 KB";
   const units = ["B", "KB", "MB", "GB"];
   let size = bytes;
@@ -30,43 +31,47 @@ function _formatBytes(bytes?: number | null) {
   return `${size.toFixed(size >= 10 || index === 0 ? 0 : 1)} ${units[index]}`;
 }
 
+// Página principal de documentos da empresa
 export default function CompanyDocumentsPage() {
   const params = useParams();
   const slugParam = params?.slug;
   const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam || "";
   const { clients, loading: clientsLoading } = useClientContext();
 
-  const hasAccess = useMemo(() => {
+  // Verifica se o usuário tem acesso à empresa
+  const temAcesso = useMemo(() => {
     if (!slug) return false;
     if (clientsLoading) return true;
     return clients.some((client) => client.slug === slug);
   }, [clients, clientsLoading, slug]);
 
-  const companyName = useMemo(() => {
+  const nomeEmpresa = useMemo(() => {
     const found = clients.find((client) => client.slug === slug);
     return found?.name || slug || "Empresa";
   }, [clients, slug]);
 
-  const [_items, _setItems] = useState<DocumentItem[]>([]);
-  const [_loading, _setLoading] = useState(false);
-  const [_error, _setError] = useState<string | null>(null);
-  const [forbidden, setForbidden] = useState(false);
-  const [_message, _setMessage] = useState<string | null>(null);
-  const [_tab, _setTab] = useState<"file" | "link">("file");
-  const [_submitting, _setSubmitting] = useState(false);
+  // Estados localizados em português
+  const [documentos, setDocumentos] = useState<DocumentItem[]>([]);
+  const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [proibido, setProibido] = useState(false);
+  const [mensagem, setMensagem] = useState<string | null>(null);
+  const [aba, setAba] = useState<"file" | "link">("file");
+  const [submetendo, setSubmetendo] = useState(false);
 
-  const [_fileTitle, _setFileTitle] = useState("");
-  const [_fileDescription, _setFileDescription] = useState("");
-  const [_fileUpload, _setFileUpload] = useState<File | null>(null);
+  const [tituloArquivo, setTituloArquivo] = useState("");
+  const [descricaoArquivo, setDescricaoArquivo] = useState("");
+  const [arquivoUpload, setArquivoUpload] = useState<File | null>(null);
 
-  const [_linkTitle, _setLinkTitle] = useState("");
-  const [_linkDescription, _setLinkDescription] = useState("");
-  const [_linkUrl, _setLinkUrl] = useState("");
+  const [tituloLink, setTituloLink] = useState("");
+  const [descricaoLink, setDescricaoLink] = useState("");
+  const [urlLink, setUrlLink] = useState("");
 
+  // Carrega documentos da API
   const load = useCallback(async () => {
     if (!slug) return;
-    _setLoading(true);
-    _setError(null);
+    setCarregando(true);
+    setErro(null);
     try {
       const res = await fetch(`/api/company-documents?slug=${encodeURIComponent(slug)}`, {
         credentials: "include",
@@ -74,60 +79,59 @@ export default function CompanyDocumentsPage() {
       });
       const json = (await res.json().catch(() => ({}))) as { items?: DocumentItem[]; error?: string };
       if (!res.ok) {
-        _setItems([]);
+        setDocumentos([]);
         if (res.status === 401 || res.status === 403) {
-          setForbidden(true);
+          setProibido(true);
         }
-        _setError(json?.error || "Erro ao carregar documentos");
+        setErro(json?.error || "Erro ao carregar documentos");
         return;
       }
-      _setItems(Array.isArray(json.items) ? json.items : []);
+      setDocumentos(Array.isArray(json.items) ? json.items : []);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao carregar documentos";
-      _setItems([]);
-      _setError(msg);
+      setDocumentos([]);
+      setErro(msg);
     } finally {
-      _setLoading(false);
+      setCarregando(false);
     }
   }, [slug]);
 
   useEffect(() => {
-    // Wait until client list is resolved to decide access. Avoid calling load() while clients are still loading,
-    // otherwise we may render documents for a company before access is determined (flaky in E2E).
+    // Aguarda lista de clientes ser carregada para decidir acesso; evita condições de corrida em E2E
     if (clientsLoading) return;
-    if (!hasAccess) {
-      _setItems([]);
-      _setLoading(false);
-      _setError("Acesso negado");
-      setForbidden(true);
+    if (!temAcesso) {
+      setDocumentos([]);
+      setCarregando(false);
+      setErro("Acesso negado");
+      setProibido(true);
       return;
     }
     load();
-  }, [load, clientsLoading, hasAccess]);
+  }, [load, clientsLoading, temAcesso]);
 
+  // Submete arquivo: suporta o state controlado e também leitura direta do input nativo (Playwright usa setInputFiles)
   async function submitFile() {
     if (!slug) return;
-    _setError(null);
-    _setMessage(null);
+    setErro(null);
+    setMensagem(null);
 
-    // Try to read file from controlled state first, otherwise from the input element (ensures Playwright setInputFiles is respected)
-    let file = _fileUpload;
+    let file = arquivoUpload;
     if (!file && typeof document !== "undefined") {
       const input = document.querySelector('[data-testid="doc-file-input"]') as HTMLInputElement | null;
       file = input?.files?.[0] ?? null;
     }
 
     if (!file) {
-      _setError("Selecione um arquivo");
+      setErro("Selecione um arquivo");
       return;
     }
 
-    _setSubmitting(true);
+    setSubmetendo(true);
     try {
       const form = new FormData();
       form.set("slug", slug);
-      form.set("title", (_fileTitle.trim() || file.name).slice(0, 120));
-      form.set("description", _fileDescription.trim());
+      form.set("title", (tituloArquivo.trim() || file.name).slice(0, 120));
+      form.set("description", descricaoArquivo.trim());
       form.set("file", file as Blob);
 
       const res = await fetch("/api/company-documents", {
@@ -137,39 +141,40 @@ export default function CompanyDocumentsPage() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        _setError(json?.error || "Erro ao anexar documento");
+        setErro(json?.error || "Erro ao anexar documento");
         return;
       }
-      _setFileTitle("");
-      _setFileDescription("");
-      _setFileUpload(null);
-      // also clear native input if present
+      setTituloArquivo("");
+      setDescricaoArquivo("");
+      setArquivoUpload(null);
+      // limpa input nativo se presente
       try {
         const input = document.querySelector('[data-testid="doc-file-input"]') as HTMLInputElement | null;
         if (input) input.value = "";
       } catch {}
-      _setMessage("Documento anexado com sucesso.");
+      setMensagem("Documento anexado com sucesso.");
       await load();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao anexar documento";
-      _setError(msg);
+      setErro(msg);
     } finally {
-      _setSubmitting(false);
+      setSubmetendo(false);
     }
   }
 
+  // Salva um link como documento
   async function submitLink() {
     if (!slug) return;
-    _setError(null);
-    _setMessage(null);
+    setErro(null);
+    setMensagem(null);
 
-    const url = _linkUrl.trim();
+    const url = urlLink.trim();
     if (!url) {
-      _setError("Informe o link");
+      setErro("Informe o link");
       return;
     }
 
-    _setSubmitting(true);
+    setSubmetendo(true);
     try {
       const res = await fetch("/api/company-documents", {
         method: "POST",
@@ -178,35 +183,36 @@ export default function CompanyDocumentsPage() {
         body: JSON.stringify({
           slug,
           kind: "link",
-          title: (_linkTitle.trim() || "Link").slice(0, 120),
-          description: _linkDescription.trim(),
+          title: (tituloLink.trim() || "Link").slice(0, 120),
+          description: descricaoLink.trim(),
           url,
         }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        _setError(json?.error || "Erro ao salvar link");
+        setErro(json?.error || "Erro ao salvar link");
         return;
       }
-      _setLinkTitle("");
-      _setLinkDescription("");
-      _setLinkUrl("");
-      _setMessage("Link salvo com sucesso.");
+      setTituloLink("");
+      setDescricaoLink("");
+      setUrlLink("");
+      setMensagem("Link salvo com sucesso.");
       await load();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao salvar link";
-      _setError(msg);
+      setErro(msg);
     } finally {
-      _setSubmitting(false);
+      setSubmetendo(false);
     }
   }
 
+  // Exclui documento via API
   async function deleteDocument(id: string) {
     if (!slug) return;
     const confirmed = window.confirm("Deseja realmente excluir este documento?");
     if (!confirmed) return;
-    _setError(null);
-    _setMessage(null);
+    setErro(null);
+    setMensagem(null);
     try {
       const res = await fetch(`/api/company-documents?slug=${encodeURIComponent(slug)}&id=${encodeURIComponent(id)}`, {
         method: "DELETE",
@@ -214,32 +220,32 @@ export default function CompanyDocumentsPage() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        _setError(json?.error || "Erro ao excluir documento");
+        setErro(json?.error || "Erro ao excluir documento");
         return;
       }
-      _setMessage("Documento excluido.");
+      setMensagem("Documento excluido.");
       await load();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao excluir documento";
-      _setError(msg);
+      setErro(msg);
     }
   }
 
-  // mark intentionally-unused symbols as referenced so linters don't warn
-  void _formatBytes;
-  void _items;
-  void _loading;
-  void _error;
-  void _message;
-  void _tab;
-  void _setTab;
-  void _submitting;
-  void _linkUrl;
+  // Referencias para evitar avisos do linter
+  void formatarBytes;
+  void documentos;
+  void carregando;
+  void erro;
+  void mensagem;
+  void aba;
+  void setAba;
+  void submetendo;
+  void urlLink;
   void submitFile;
   void submitLink;
   void deleteDocument;
 
-  if (forbidden || (!clientsLoading && !hasAccess)) {
+  if (proibido || (!clientsLoading && !temAcesso)) {
     return (
       <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c) flex items-center justify-center px-6">
         <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-6 text-center shadow-sm max-w-md">

@@ -83,18 +83,19 @@ export default function LoginClient() {
         styles.loginContainer +
         " " +
         styles.loginFixedTheme +
-        " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[--tc-primary,#011848] via-[--tc-surface,#f4f6fb] to-[--tc-accent,#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-8 sm:px-6 sm:py-10 md:px-10"
+        " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-[#011848] bg-gradient-to-br from-[#011848] via-[#0b1a3c] to-[#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-8 sm:px-6 sm:py-10 md:px-10"
       }
     >
+      {/* Animated bubbles background */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-6 left-6 w-32 h-32 bg-[--tc-primary,#011848] rounded-full opacity-20 blur-2xl animate-ping"></div>
-        <div className="absolute bottom-6 right-6 w-28 h-28 bg-[--tc-accent,#ef0001] rounded-full opacity-20 blur-2xl animate-pulse"></div>
-        <div className="absolute top-1/6 right-1/5 w-20 h-20 bg-[--tc-accent,#ef0001] rounded-full opacity-10 blur-lg animate-bounce delay-1000"></div>
-        <div className="absolute bottom-1/6 left-1/5 w-24 h-24 bg-[--tc-primary,#011848] rounded-full opacity-10 blur-lg animate-pulse delay-700"></div>
-        <div className="absolute top-10 left-44 w-16 h-16 bg-[--tc-accent,#ef0001] rounded-full opacity-10 blur animate-pulse delay-500"></div>
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-20 bg-[--tc-primary,#011848] rounded-full opacity-10 blur animate-bounce delay-200"></div>
-        <div className="absolute top-1/2 left-2 w-14 h-14 bg-[--tc-accent,#ef0001] rounded-full opacity-10 blur animate-pulse delay-800"></div>
-        <div className="absolute top-1/2 right-2 w-14 h-14 bg-[--tc-primary,#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
+        <div className="absolute top-6 left-6 w-32 h-32 bg-[#011848] rounded-full opacity-20 blur-2xl animate-ping"></div>
+        <div className="absolute bottom-6 right-6 w-28 h-28 bg-[#ef0001] rounded-full opacity-20 blur-2xl animate-pulse"></div>
+        <div className="absolute top-1/4 right-1/5 w-20 h-20 bg-[#ef0001] rounded-full opacity-10 blur-lg animate-bounce delay-1000"></div>
+        <div className="absolute bottom-1/4 left-1/5 w-24 h-24 bg-[#011848] rounded-full opacity-10 blur-lg animate-pulse delay-700"></div>
+        <div className="absolute top-10 left-44 w-16 h-16 bg-[#ef0001] rounded-full opacity-10 blur animate-pulse delay-500"></div>
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-20 bg-[#011848] rounded-full opacity-10 blur animate-bounce delay-200"></div>
+        <div className="absolute top-1/2 left-2 w-14 h-14 bg-[#ef0001] rounded-full opacity-10 blur animate-pulse delay-800"></div>
+        <div className="absolute top-1/2 right-2 w-14 h-14 bg-[#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
       </div>
 
       <div className="max-w-lg w-full space-y-6 sm:space-y-8 relative z-10 sm:max-w-xl md:max-w-2xl">

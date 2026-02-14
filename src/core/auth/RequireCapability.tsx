@@ -11,8 +11,7 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import { hasCapability } from "@/core/permissions/hasCapability";
 import { AuthSkeleton } from "@/components/AuthSkeleton";
 
-// Capability type is not exported from permissions, so define as string for now
-type Capability = string;
+import type { Capability } from "@/core/permissions/permissions.types";
 type RequireCapabilityProps = {
   capability: Capability;
   children: ReactNode;
@@ -30,7 +29,7 @@ export function RequireCapability({ capability, children, fallback }: RequireCap
   const router = useRouter();
   const pathname = usePathname();
 
-  const capabilities = (Array.isArray(user?.capabilities) ? user?.capabilities : []) as string[];
+  const capabilities = (Array.isArray(user?.capabilities) ? user?.capabilities : []) as Capability[];
   const allowed = hasCapability(capabilities, capability) || user?.isGlobalAdmin === true || user?.globalRole === "global_admin";
 
   useEffect(() => {

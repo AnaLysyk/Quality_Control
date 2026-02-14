@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { hasCapability } from "@/core/permissions/hasCapability";
+import type { Capability } from "@/core/permissions/permissions.types";
 import { useSystemMetrics } from "@/hooks/useSystemMetrics";
 
 export default function DashboardClient() {
@@ -48,7 +49,7 @@ export default function DashboardClient() {
   }
 
   const safeUser: Partial<AuthUser> = user ?? {};
-  const capabilities = (Array.isArray(safeUser.capabilities) ? safeUser.capabilities : []) as string[];
+  const capabilities = (Array.isArray(safeUser.capabilities) ? safeUser.capabilities : []) as Capability[];
   const isGlobalAdmin = safeUser?.isGlobalAdmin === true || safeUser?.globalRole === "global_admin";
 
   return (

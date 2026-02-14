@@ -22,6 +22,7 @@ import { resolveCapabilities } from "@/lib/permissions";
  * - companySlugs: todas as empresas permitidas
  */
 export type AuthUser = {
+
   id: string;
   email: string;
   isGlobalAdmin: boolean;

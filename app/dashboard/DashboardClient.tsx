@@ -4,7 +4,7 @@ import { useAuthUser, type AuthUser } from "@/hooks/useAuthUser";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { hasCapability } from "@/lib/permissions";
+import { hasCapability } from "@/core/permissions/hasCapability";
 import { useSystemMetrics } from "@/hooks/useSystemMetrics";
 
 export default function DashboardClient() {

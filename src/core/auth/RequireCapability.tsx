@@ -8,7 +8,7 @@
 import { ReactNode, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { hasCapability } from "@/lib/permissions";
+import { hasCapability } from "@/core/permissions/hasCapability";
 import { AuthSkeleton } from "@/components/AuthSkeleton";
 
 // Capability type is not exported from permissions, so define as string for now

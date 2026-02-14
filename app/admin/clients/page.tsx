@@ -10,7 +10,7 @@ import { getAccessToken } from "@/lib/api";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, readApiError, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import Image from "next/image";
-import { FiExternalLink, FiUsers, FiX, FiCheckCircle, FiXCircle } from "react-icons/fi";
+import { FiExternalLink, FiUsers, FiX, FiCheckCircle, FiXCircle, FiAlertTriangle, FiInfo } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import Breadcrumb from "@/components/Breadcrumb";
 
@@ -164,6 +164,7 @@ function AdminClientsPage() {
   const [items, setItems] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [messageTone, setMessageTone] = useState<"error" | "info" | "success">("info");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<Client>>({});
   const [isEditing, setIsEditing] = useState(false);
@@ -182,6 +183,7 @@ function AdminClientsPage() {
 
   const handleUnauthorized = useCallback(() => {
     const msg = "SessÃ£o expirada. FaÃ§a login novamente.";
+    setMessageTone("error");
     setMessage(msg);
     toast.error(msg);
     router.replace("/login");
@@ -189,6 +191,7 @@ function AdminClientsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setMessageTone("info");
     setMessage(null);
     try {
       const token = await getAccessToken();
@@ -200,6 +203,7 @@ function AdminClientsPage() {
         return;
       }
       if (res.status === 403) {
+        setMessageTone("error");
         setMessage("Acesso negado: use uma conta de admin global.");
         toast.error("Acesso negado: use uma conta de admin global.");
         setItems([]);
@@ -210,6 +214,7 @@ function AdminClientsPage() {
         const msg = extractMessageFromJson(raw) || "Erro ao carregar empresas";
         const requestId = extractRequestIdFromJson(raw) || res.headers.get("x-request-id") || null;
         const formatted = formatMessageWithRequestId(msg, requestId);
+        setMessageTone("error");
         setMessage(formatted);
         toast.error(formatted);
         setItems([]);
@@ -221,6 +226,7 @@ function AdminClientsPage() {
       setItems(items.map((row) => mapClient((row ?? {}) as Record<string, unknown>)));
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao carregar clientes";
+      setMessageTone("error");
       setMessage(msg);
       toast.error(msg);
       setItems([]);
@@ -233,6 +239,7 @@ function AdminClientsPage() {
     setSelectedId(id);
     setUserClientId(id);
     setIsEditing(false);
+    setMessageTone("info");
     setMessage(null);
     try {
       const token = await getAccessToken();
@@ -248,6 +255,7 @@ function AdminClientsPage() {
           setForm(fallback);
           return;
         }
+        setMessageTone("error");
         setMessage("Nao foi possivel carregar o cliente selecionado");
         return;
       }
@@ -261,6 +269,7 @@ function AdminClientsPage() {
         return;
       }
       const msg = err instanceof Error ? err.message : "Erro ao abrir o cliente";
+      setMessageTone("error");
       setMessage(msg);
     }
   }
@@ -275,6 +284,7 @@ function AdminClientsPage() {
   async function save() {
     if (!selectedId) return;
     setSaving(true);
+    setMessageTone("info");
     setMessage(null);
     try {
       const token = await getAccessToken();
@@ -313,6 +323,7 @@ function AdminClientsPage() {
         const msg = extractMessageFromJson(err) || "Erro ao salvar empresa";
         const requestId = extractRequestIdFromJson(err) || res.headers.get("x-request-id") || null;
         const formatted = formatMessageWithRequestId(msg, requestId);
+        setMessageTone("error");
         setMessage(formatted);
         toast.error(formatted);
         return;
@@ -326,6 +337,7 @@ function AdminClientsPage() {
       toast.success("Empresa atualizada");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao salvar cliente";
+      setMessageTone("error");
       setMessage(msg);
       toast.error(msg);
     } finally {
@@ -375,6 +387,7 @@ function AdminClientsPage() {
       }
       if (!res.ok) {
         const err = await readApiError(res, "Erro ao criar cliente");
+        setMessageTone("error");
         setMessage(err.message);
         toast.error(err.displayMessage);
         return null;
@@ -384,6 +397,7 @@ function AdminClientsPage() {
         setItems((prev) => [mapClient(created), ...prev]);
         setUserClientId(created.id);
         if (data.integrationMode === "manual") {
+          setMessageTone("info");
           setMessage(
             "Empresa criada sem integraÃ§Ã£o. VocÃª pode configurar Qase depois (token + project code) ou seguir em modo manual.",
           );
@@ -394,6 +408,7 @@ function AdminClientsPage() {
       return null;
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao criar cliente";
+      setMessageTone("error");
       setMessage(msg);
       toast.error(msg);
       return null;
@@ -444,9 +459,7 @@ function AdminClientsPage() {
         </div>
 
         {message && (
-          <p role="status" aria-live="polite" className="text-sm text-red-600">
-            {message}
-          </p>
+          <AlertBanner tone={messageTone} message={message} />
         )}
         {loading && (
           <p role="status" aria-live="polite" className="text-sm text-(--tc-text-muted,#6b7280)">
@@ -622,6 +635,10 @@ function AdminClientsPage() {
               </div>
             </div>
 
+            {message && messageTone === "error" && (
+              <AlertBanner tone="error" message={message} />
+            )}
+
             {/* Tabs */}
             <div role="tablist" aria-label="Detalhes da empresa" className="flex items-center gap-3 border-b border-(--tc-border) pb-2">
               <TabButton active={activeTab === "visao"} onClick={() => setActiveTab("visao")}>
@@ -771,9 +788,6 @@ function AdminClientsPage() {
                 />
               </div>
             )}
-
-            {message && <p className="text-sm text-red-600">{message}</p>}
-
             <div className="flex justify-end gap-2 pt-2">
               {isEditing ? (
                 <>
@@ -847,6 +861,38 @@ export default function AdminClientsPageWithGuard() {
     <RequireGlobalAdmin>
       <AdminClientsPage />
     </RequireGlobalAdmin>
+  );
+}
+
+type AlertBannerProps = {
+  tone: "error" | "info" | "success";
+  message: string;
+  className?: string;
+};
+
+function AlertBanner({ tone, message, className }: AlertBannerProps) {
+  const role = tone === "error" ? "alert" : "status";
+  const toneClasses: Record<AlertBannerProps["tone"], string> = {
+    error: "border-red-200 bg-red-50 text-red-800",
+    info: "border-blue-200 bg-blue-50 text-blue-800",
+    success: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  };
+  const icon =
+    tone === "error"
+      ? <FiAlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+      : tone === "success"
+        ? <FiCheckCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+        : <FiInfo className="h-4 w-4 shrink-0" aria-hidden="true" />;
+
+  return (
+    <div
+      role={role}
+      aria-live={tone === "error" ? "assertive" : "polite"}
+      className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-sm shadow-sm ${toneClasses[tone]} ${className ?? ""}`.trim()}
+    >
+      <span className="mt-0.5">{icon}</span>
+      <span className="flex-1 leading-5">{message}</span>
+    </div>
   );
 }
 

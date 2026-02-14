@@ -20,7 +20,7 @@ function json(data: unknown, init?: ResponseInit) {
   return res;
 }
 
-export async function PATCH(req: Request, { params }: RouteContext) {
+export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   const authUser = await authenticateRequest(req);
   if (!authUser) {
     return json({ message: "Nao autenticado" }, { status: 401 });
@@ -37,6 +37,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
     return json({ message: "Status invalido" }, { status: 400 });
   }
 
+  const params = await context.params;
   const id = `${params.id ?? ""}`.trim();
   if (!id) {
     return json({ message: "ID ausente" }, { status: 400 });

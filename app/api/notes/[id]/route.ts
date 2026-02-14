@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { deleteUserNote, updateUserNote } from "@/lib/userNotesStore";
 
-export async function PATCH(req: Request, context: { params: { id: string } }) {
+export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401, headers: { "Cache-Control": "no-store" } });
   }
 
-  const { id } = context.params;
+  const params = await context.params;
+  const { id } = params;
   if (!id || typeof id !== "string" || id.length < 6) {
     return NextResponse.json({ error: "Id invalido" }, { status: 400, headers: { "Cache-Control": "no-store" } });
   }
@@ -38,13 +39,14 @@ export async function PATCH(req: Request, context: { params: { id: string } }) {
   return NextResponse.json({ item: updated }, { status: 200, headers: { "Cache-Control": "no-store" } });
 }
 
-export async function DELETE(req: Request, context: { params: { id: string } }) {
+export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401, headers: { "Cache-Control": "no-store" } });
   }
 
-  const { id } = context.params;
+  const params = await context.params;
+  const { id } = params;
   if (!id || typeof id !== "string" || id.length < 6) {
     return NextResponse.json({ error: "Id invalido" }, { status: 400, headers: { "Cache-Control": "no-store" } });
   }

@@ -2,25 +2,24 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { updateNotificationStatus } from "@/lib/userNotificationsStore";
 
-export async function PATCH(
-  req: Request,
-  context: { params: { id: string } }
-) {
+export async function PATCH(req: Request, context: { params: Promise<{}> }) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  const { id } = context.params;
-  if (!id || id.length < 6) {
-    return NextResponse.json({ error: "Id invalido" }, { status: 400 });
-  }
+
 
   let body: any;
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "JSON invalido" }, { status: 400 });
+  }
+
+  const id = typeof body?.id === "string" ? body.id : null;
+  if (!id || id.length < 6) {
+    return NextResponse.json({ error: "Id invalido" }, { status: 400 });
   }
 
   const allowed = new Set(["closed"]);

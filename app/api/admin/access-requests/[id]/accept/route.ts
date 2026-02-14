@@ -40,7 +40,7 @@ function json(data: unknown, init?: ResponseInit) {
   return res;
 }
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { admin, status } = await requireGlobalAdminWithStatus(req);
     if (!admin) {
@@ -51,6 +51,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const comment = sanitizeText(body?.comment);
     const adminNotes = sanitizeText(body?.admin_notes);
 
+    const params = await context.params;
     const id = `${params.id ?? ""}`.trim();
     if (!id) {
       return json({ error: "ID invalido" }, { status: 400 });

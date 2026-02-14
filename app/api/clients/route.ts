@@ -87,9 +87,9 @@ export async function POST(req: NextRequest) {
   }
 
   const input = parsed.data;
-  const name = (input.company_name || input.name || "").trim();
+  const name = (input.companyName || input.name || "").trim();
   if (!name) {
-    return jsonError("Campo 'name' ou 'company_name' e obrigatorio", 400);
+    return jsonError("Campo 'name' ou 'companyName' e obrigatorio", 400);
   }
 
   const desiredSlug = (input.slug || "").trim();
@@ -102,24 +102,24 @@ export async function POST(req: NextRequest) {
   const integrationType = (input as { integration_type?: string | null }).integration_type ?? null;
   const resolvedNotes =
     input.notes ??
-    input.internal_notes ??
-    input.extra_notes ??
+    input.internalNotes ??
+    input.extraNotes ??
     input.description ??
-    input.short_description ??
+    input.shortDescription ??
     null;
   const company = await createLocalCompany({
     name,
     slug: slugBase,
-    company_name: input.company_name ?? input.name ?? name,
-    tax_id: input.tax_id ?? null,
+    company_name: input.companyName ?? input.name ?? name,
+    tax_id: input.taxId ?? null,
     address: input.address ?? null,
     phone: input.phone ?? null,
     website: input.website ?? null,
-    logo_url: input.logo_url ?? null,
-    docs_link: input.docs_link ?? input.docs_url ?? null,
+    logo_url: input.logoUrl ?? null,
+    docs_link: input.docsLink ?? input.docsUrl ?? null,
     notes: resolvedNotes,
     cep: input.cep ?? null,
-    address_detail: input.address_detail ?? null,
+    address_detail: input.addressDetail ?? null,
     linkedin_url: input.linkedin_url ?? null,
     short_description: input.short_description ?? input.description ?? null,
     internal_notes: input.internal_notes ?? input.notes ?? null,

@@ -111,7 +111,8 @@ async function ensureCompanyAccess(slug: string) {
   return { error: NextResponse.json({ error: "Empresa nao encontrada" }, { status: 404 }) } as const;
 }
 
-export async function GET(req: NextRequest, { params }: { params: { slug?: string } }) {
+export async function GET(req: NextRequest, context: { params: Promise<{ slug: string }> }) {
+  const params = await context.params;
   const slug = (params?.slug ?? "").trim();
   if (!slug) {
     return NextResponse.json({ error: "slug obrigatorio" }, { status: 400 });

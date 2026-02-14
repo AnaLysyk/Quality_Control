@@ -9,14 +9,15 @@ import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 
 export async function PATCH(
   req: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  const { id } = context.params;
+  const params = await context.params;
+  const { id } = params;
 
   let body: any;
   try {

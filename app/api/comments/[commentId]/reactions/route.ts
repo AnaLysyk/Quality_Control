@@ -13,7 +13,7 @@ type RouteContext = {
   };
 };
 
-export async function POST(req: Request, { params }: RouteContext) {
+export async function POST(req: Request, context: { params: Promise<{ commentId: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
@@ -29,6 +29,7 @@ export async function POST(req: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Payload muito grande" }, { status: 413 });
   }
 
+  const params = await context.params;
   const commentId = String(params.commentId ?? "").trim();
   if (!commentId) {
     return NextResponse.json({ error: "commentId ausente" }, { status: 400 });

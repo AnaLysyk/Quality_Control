@@ -11,7 +11,7 @@ type RouteContext = {
   };
 };
 
-export async function PATCH(req: Request, { params }: RouteContext) {
+export async function PATCH(req: Request, context: { params: Promise<{ commentId: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
@@ -26,6 +26,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Payload muito grande" }, { status: 413 });
   }
 
+  const params = await context.params;
   const commentId = String(params.commentId ?? "").trim();
   if (!commentId) {
     return NextResponse.json({ error: "commentId ausente" }, { status: 400 });
@@ -89,7 +90,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
   return NextResponse.json({ item: updated }, { status: 200, headers: { "Cache-Control": "no-store" } });
 }
 
-export async function DELETE(req: Request, { params }: RouteContext) {
+export async function DELETE(req: Request, context: { params: Promise<{ commentId: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
@@ -99,6 +100,7 @@ export async function DELETE(req: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Payload nao suportado" }, { status: 415 });
   }
 
+  const params = await context.params;
   const commentId = String(params.commentId ?? "").trim();
   if (!commentId) {
     return NextResponse.json({ error: "commentId ausente" }, { status: 400 });

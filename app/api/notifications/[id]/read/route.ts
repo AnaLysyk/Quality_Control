@@ -4,14 +4,15 @@ import { updateNotificationStatus } from "@/lib/userNotificationsStore";
 
 export async function POST(
   req: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  const { id } = context.params;
+  const params = await context.params;
+  const { id } = params;
   if (!id || id.length < 6) {
     return NextResponse.json({ error: "Id invalido" }, { status: 400 });
   }

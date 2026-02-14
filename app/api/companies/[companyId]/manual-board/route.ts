@@ -171,7 +171,8 @@ function assertCompanyAccessWithFallback(
   }
 }
 
-export async function GET(req: Request, { params }: RouteParams) {
+export async function GET(req: Request, context: { params: Promise<{ companyId: string }> }) {
+  const params = await context.params;
   const rawParam = params?.companyId;
   const companyRef = typeof rawParam === "string" ? decodeURIComponent(rawParam).trim() : "";
   if (!companyRef) {

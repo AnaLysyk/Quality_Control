@@ -38,7 +38,12 @@ type Client = {
   updatedAt?: string | null;
 };
 
-type LogoSource = Pick<Client, "logoUrl" | "slug" | "website" | "name">;
+type LogoSource = {
+  logoUrl?: string | null;
+  slug?: string | null;
+  website?: string | null;
+  name?: string | null;
+};
 
 const FALLBACK_LOGOS: Record<string, string> = {
   griaule: "/images/griaule.png",

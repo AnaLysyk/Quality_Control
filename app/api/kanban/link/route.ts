@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getNextId, readKanbanStore, writeKanbanStore } from "../store";
 import type { Status } from "../types";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
+import { authenticateRequest } from "@/lib/jwtAuth";
+import type { AuthUser } from "@/lib/jwtAuth";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ message }, { status });

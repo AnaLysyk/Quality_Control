@@ -11,13 +11,6 @@ type ManualRun = {
   name: string;
 };
 
-const EMPTY_KANBAN: KanbanData = {
-  pass: [],
-  fail: [],
-  blocked: [],
-  notRun: [],
-};
-
 // Provide a small default sample used by E2E when no persisted rows are present.
 const DEFAULT_SAMPLE_KANBAN: KanbanData = {
   pass: [],

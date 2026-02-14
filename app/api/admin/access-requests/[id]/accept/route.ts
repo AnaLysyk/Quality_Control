@@ -49,7 +49,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         const debugPath = path.join(process.cwd(), "data", "access-requests-debug.log");
         const line = `${new Date().toISOString()} ACCEPT id=${id} admin=${admin?.email ?? "-"} status=${updated?.status ?? "closed"}\n`;
         await fs.appendFile(debugPath, line, "utf8");
-      } catch (e) {
+      } catch {
         // ignore write errors
       }
       return NextResponse.json({
@@ -90,7 +90,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       const debugPath = path.join(process.cwd(), "data", "access-requests-debug.log");
       const line = `${new Date().toISOString()} ACCEPT prisma id=${id} admin=${admin?.email ?? "-"} status=${updated?.status}\n`;
       await fs.appendFile(debugPath, line, "utf8");
-    } catch (e) {
+    } catch {
       // ignore write errors
     }
 
@@ -110,7 +110,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       const debugPath = path.join(process.cwd(), "data", "access-requests-debug.log");
       const line = `${new Date().toISOString()} ERROR ACCEPT ${message}\n`;
       await fs.appendFile(debugPath, line, "utf8");
-    } catch (e) {
+    } catch {
       // ignore
     }
     return NextResponse.json({ error: "Internal Server Error", details: message }, { status: 500 });

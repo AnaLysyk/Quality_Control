@@ -1,6 +1,39 @@
 {
   "items": [
     {
+      "id": "b920b2d2-65c4-4653-b274-c697dac2cdae",
+      "companySlug": "testing-company",
+      "kind": "link",
+      "title": "Doc Testing Company",
+      "description": null,
+      "url": "https://example.com/testing",
+      "createdAt": "2026-02-14T01:23:10.298Z",
+      "createdBy": "usr_admin_griaule_test"
+    },
+    {
+      "id": "9af8ab44-9a34-4238-bcf3-2d025ea645b0",
+      "companySlug": "griaule",
+      "kind": "link",
+      "title": "Checklist Deploy",
+      "description": "Link de referencia",
+      "url": "https://example.com/docs",
+      "createdAt": "2026-02-14T01:23:06.445Z",
+      "createdBy": "usr_company_griaule_test"
+    },
+    {
+      "id": "fdba8ec8-af27-4f91-96fd-d6eab420073a",
+      "companySlug": "griaule",
+      "kind": "file",
+      "title": "Manual QA",
+      "description": "Documento de teste",
+      "fileName": "manual.txt",
+      "mimeType": "text/plain",
+      "sizeBytes": 21,
+      "storagePath": "local:griaule/fdba8ec8-af27-4f91-96fd-d6eab420073a-manual.txt",
+      "createdAt": "2026-02-14T01:23:05.663Z",
+      "createdBy": "usr_company_griaule_test"
+    },
+    {
       "id": "10d1cb81-b207-466e-9580-126e3ce80ad7",
       "companySlug": "testing-company",
       "kind": "link",

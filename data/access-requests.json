@@ -1,6 +1,28 @@
 {
   "items": [
     {
+      "id": "5bf6bb66-d824-464a-a780-23aaa1b332b5",
+      "email": "e2e.reject.899718@griaule.test",
+      "message": "ACCESS_REQUEST_V1 {\"v\":1,\"kind\":\"access_request\",\"email\":\"e2e.reject.899718@griaule.test\",\"name\":\"User Reject 899718\",\"jobRole\":\"QA\",\"company\":\"Griaule\",\"clientId\":null,\"accessType\":\"user\",\"mappedAppRole\":\"client_user\",\"notes\":\"Solicitação para acesso básico.\"}\nSolicitacao de acesso ao admin\nTipo de acesso: Usuário da empresa\nEmpresa: Griaule\nCargo: QA\nNome: User Reject 899718\nEmail: e2e.reject.899718@griaule.test\nObservacoes: Solicitação para acesso básico.\nADMIN_NOTES: Solicitação rejeitada.",
+      "status": "rejected",
+      "created_at": "2026-02-14T01:18:20.479Z",
+      "updated_at": "2026-02-14T01:18:35.221Z",
+      "user_id": null,
+      "ip_address": "::ffff:127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.7632.6 Safari/537.36"
+    },
+    {
+      "id": "4fe746e3-a176-4e6d-8ea4-d2259d137216",
+      "email": "e2e.accept.899718@griaule.test",
+      "message": "ACCESS_REQUEST_V1 {\"v\":1,\"kind\":\"access_request\",\"email\":\"e2e.accept.899718@griaule.test\",\"name\":\"User Accept 899718\",\"jobRole\":\"QA Lead\",\"company\":\"Griaule\",\"clientId\":null,\"accessType\":\"company\",\"mappedAppRole\":\"client_admin\",\"notes\":\"Solicitação para administrar a empresa.\"}\nSolicitacao de acesso ao admin\nTipo de acesso: Admin da empresa\nEmpresa: Griaule\nCargo: QA Lead\nNome: User Accept 899718\nEmail: e2e.accept.899718@griaule.test\nObservacoes: Solicitação para administrar a empresa.",
+      "status": "closed",
+      "created_at": "2026-02-14T01:18:20.157Z",
+      "updated_at": "2026-02-14T01:18:31.042Z",
+      "user_id": null,
+      "ip_address": "::ffff:127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.7632.6 Safari/537.36"
+    },
+    {
       "id": "0e825180-ef0a-4fbf-b032-5287a9515ae0",
       "email": "e2e.reject.507840@griaule.test",
       "message": "ACCESS_REQUEST_V1 {\"v\":1,\"kind\":\"access_request\",\"email\":\"e2e.reject.507840@griaule.test\",\"name\":\"User Reject 507840\",\"jobRole\":\"QA\",\"company\":\"Griaule\",\"clientId\":null,\"accessType\":\"user\",\"mappedAppRole\":\"client_user\",\"notes\":\"Solicitação para acesso básico.\"}\nSolicitacao de acesso ao admin\nTipo de acesso: Usuário da empresa\nEmpresa: Griaule\nCargo: QA\nNome: User Reject 507840\nEmail: e2e.reject.507840@griaule.test\nObservacoes: Solicitação para acesso básico.\nADMIN_NOTES: Solicitação rejeitada.",

@@ -237,7 +237,6 @@ function AccessRequestsPage() {
       setItems(parsed);
       // Log para debugar E2E: quantos itens e status carregados
       try {
-        // eslint-disable-next-line no-console
         console.debug("[E2E][access-requests] carregou itens:", parsed.length, parsed.map((p) => ({ id: p.id, status: p.status })));
       } catch {}
       setSelectedId((prev) => (prev && parsed.some((p) => p.id === prev) ? prev : parsed[0]?.id ?? null));
@@ -397,7 +396,6 @@ function AccessRequestsPage() {
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       // Log de resposta para diagnóstico E2E
       try {
-        // eslint-disable-next-line no-console
         console.debug("[E2E][access-requests][accept] res.ok=", res.ok, "status=", res.status, "body=", json);
       } catch {}
       if (!res.ok) {
@@ -431,7 +429,6 @@ function AccessRequestsPage() {
 
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       try {
-        // eslint-disable-next-line no-console
         console.debug("[E2E][access-requests][reject] res.ok=", res.ok, "status=", res.status, "body=", json);
       } catch {}
       if (!res.ok) {
@@ -591,7 +588,6 @@ function AccessRequestsPage() {
                       const match = clients.find((c) => c.id === id);
                       setDraft((d) => (d ? { ...d, clientId: id, company: match?.name ?? d.company ?? "" } : d));
                       try {
-                        // eslint-disable-next-line no-console
                         console.debug("[E2E][access-requests] select empresa -> id=", id, "match=", match?.name);
                       } catch {}
                     }}
@@ -731,7 +727,6 @@ function AccessRequestsPage() {
                       const acceptDisabled =
                         accepting || ((draft.accessType ?? "Usuario da empresa") !== "Admin do sistema" && !draft.clientId);
                       try {
-                        // eslint-disable-next-line no-console
                         console.debug("[E2E][access-requests] acceptDisabled=", acceptDisabled, "accessType=", draft.accessType, "clientId=", draft.clientId);
                       } catch {}
                       return (

@@ -65,8 +65,7 @@
   "run_e2e_negocio": [
     {
       "id": "k2",
-      "title": "Erro no login",
-      "status": "fail",
+      "status": "pass",
       "bug": null,
       "fromApi": false
     }

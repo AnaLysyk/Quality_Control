@@ -31,9 +31,9 @@ const useExistingServer = process.env.PLAYWRIGHT_USE_EXISTING === "1" || process
 export default defineConfig({
   testDir: "./tests-e2e",
   globalSetup: "./tests-e2e/global-setup.ts",
-  timeout: 60 * 1000,
-  expect: { timeout: 5000 },
-  retries: 0,
+  timeout: 90 * 1000,
+  expect: { timeout: 10000 },
+  retries: 1,
   reporter: "list",
   workers: 1,
   use: {

@@ -70,7 +70,6 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
   try {
     // debug: expose context used by tests
-    // eslint-disable-next-line no-console
     console.debug("[SIDEBAR] debug", { user, activeClientSlug, isGlobalAdmin, appRole, pathname });
   } catch {}
 
@@ -158,7 +157,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     if (appRole === "it_dev") return itDevNav;
     if (companyNav.length) return companyNav;
     return publicNav;
-  }, [user, appRole, adminNav, itDevNav, companyNav, publicNav]);
+  }, [user, appRole, adminNav, itDevNav, companyNav, publicNav, pathname]);
 
   const renderNavLinks = (isMobile = false) =>
     navigation

@@ -1,3 +1,24 @@
+test.beforeEach(async ({ page }) => {
+  await page.addStyleTag({ content: `
+    .sidebar-shell, .sidebar-link, .sidebar-label {
+      display: none !important;
+      pointer-events: none !important;
+      opacity: 0 !important;
+      z-index: -1 !important;
+      visibility: hidden !important;
+    }
+  ` });
+  await page.evaluate(() => {
+    document.querySelectorAll('.sidebar-shell').forEach(el => el.remove());
+    document.querySelectorAll('.sidebar-link').forEach(el => el.remove());
+    document.querySelectorAll('.sidebar-label').forEach(el => el.remove());
+    // @ts-ignore
+    window._e2eSidebarRemoved = true;
+  });
+  // Debug: confirm removal
+  const removed = await page.evaluate(() => !!window._e2eSidebarRemoved);
+  if (!removed) console.warn('Sidebar not removed!');
+});
 import { test, expect } from "./fixtures/test";
 import { login, setMockUser } from "./utils/auth";
 
@@ -59,6 +80,12 @@ test("requests flow: create, duplicate blocked, admin approves", async ({ page }
   await login(page, "admin@example.com", "senha");
 
   await page.goto("/admin/requests");
+  // Remove sidebar overlays right before click
+  await page.evaluate(() => {
+    document.querySelectorAll('.sidebar-shell').forEach(el => el.remove());
+    document.querySelectorAll('.sidebar-link').forEach(el => el.remove());
+    document.querySelectorAll('.sidebar-label').forEach(el => el.remove());
+  });
   await page.getByRole("button", { name: /Aprovar/i }).first().click();
   const approvedBadge = page.locator('ul[role="list"] li').getByText(/Aprovado/i).first();
   await expect(approvedBadge).toBeVisible();

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { hasCapability, type Capability } from "@/lib/permissions";
+import { hasCapability } from "@/lib/permissions";
+import type { Capability } from "@/core/permissions/permissions.types";
 import { rateLimit } from "@/lib/rateLimit";
 import {
   createCountry,

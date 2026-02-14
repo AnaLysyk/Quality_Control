@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getRedis } from "@/lib/redis";
-// import removido: hasPermission, getUserRoleFromSession não existem em @/lib/permissions
+import { getUserRoleFromSession, hasPermission } from "@/core/permissions/capabilities";
 
 function readCookieValue(cookieHeader: string, name: string): string | null {
   const cookies = cookieHeader.split(";");

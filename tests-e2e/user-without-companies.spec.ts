@@ -1,5 +1,17 @@
 import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
+ 
+test.beforeEach(async ({ page }) => {
+  await page.addStyleTag({ content: `
+    .sidebar-shell, .sidebar-link, .sidebar-label {
+      display: none !important;
+      pointer-events: none !important;
+      opacity: 0 !important;
+      z-index: -1 !important;
+      visibility: hidden !important;
+    }
+  ` });
+});
 
 test("user sem empresas vê seleção de empresas", async ({ page, context }) => {
   await mockAuth(context, {

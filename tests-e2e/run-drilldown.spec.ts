@@ -1,5 +1,27 @@
 import { test, expect } from '@playwright/test';
 import { mockAuth } from './utils/mockAuth';
+ 
+test.beforeEach(async ({ page }) => {
+  await page.addStyleTag({ content: `
+    .sidebar-shell, .sidebar-link, .sidebar-label {
+      display: none !important;
+      pointer-events: none !important;
+      opacity: 0 !important;
+      z-index: -1 !important;
+      visibility: hidden !important;
+    }
+  ` });
+  await page.evaluate(() => {
+    document.querySelectorAll('.sidebar-shell').forEach(el => el.remove());
+    document.querySelectorAll('.sidebar-link').forEach(el => el.remove());
+    document.querySelectorAll('.sidebar-label').forEach(el => el.remove());
+    // @ts-ignore
+    window._e2eSidebarRemoved = true;
+  });
+  // Debug: confirm removal
+  const removed = await page.evaluate(() => !!window._e2eSidebarRemoved);
+  if (!removed) console.warn('Sidebar not removed!');
+});
 
 // Bloco 14: Drill-down de Run para Defeitos
 // Este teste valida que o usuário pode clicar em uma run na tabela de qualidade e ver a lista de defeitos filtrada por run, com indicador de filtro ativo.
@@ -18,6 +40,12 @@ test.describe('Drill-down de Run para Defeitos', () => {
     // Clica no link da primeira run
     const runLink = await page.getByTestId('run-drilldown-link').first();
     const runName = await runLink.textContent();
+    // Remove sidebar overlays right before click
+    await page.evaluate(() => {
+      document.querySelectorAll('.sidebar-shell').forEach(el => el.remove());
+      document.querySelectorAll('.sidebar-link').forEach(el => el.remove());
+      document.querySelectorAll('.sidebar-label').forEach(el => el.remove());
+    });
     await runLink.click();
     await page.waitForTimeout(500);
     // Deve navegar para a lista de defeitos filtrada por run

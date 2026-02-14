@@ -70,5 +70,11 @@
       "fromApi": false
     }
   ],
-  "run_falha": []
+  "run_falha": [
+    {
+      "id": "k2",
+      "bug": null,
+      "fromApi": false
+    }
+  ]
 }

@@ -209,6 +209,36 @@
       "authorId": "usr_admin_griaule_test",
       "body": "Solicitação rejeitada.",
       "createdAt": "2026-02-14T02:18:31.593Z"
+    },
+    {
+      "id": "b30a5621-29a5-48eb-91a8-b478d47e7ffb",
+      "requestId": "b6e2b0c1-60bb-4e12-a3ac-dcbc0bbc5eef",
+      "authorRole": "admin",
+      "authorName": "admin@griaule.test",
+      "authorEmail": "admin@griaule.test",
+      "authorId": "usr_admin_griaule_test",
+      "body": "Solicitação rejeitada.",
+      "createdAt": "2026-02-14T15:21:56.616Z"
+    },
+    {
+      "id": "7f197b79-ca6b-4bcb-912a-5e0b0671e866",
+      "requestId": "66fe1220-a9d3-47aa-9848-ecb38ed62803",
+      "authorRole": "admin",
+      "authorName": "admin@griaule.test",
+      "authorEmail": "admin@griaule.test",
+      "authorId": "usr_admin_griaule_test",
+      "body": "Solicitação rejeitada.",
+      "createdAt": "2026-02-14T16:19:16.295Z"
+    },
+    {
+      "id": "02691676-28d7-4ef5-a72f-f2797a7731d5",
+      "requestId": "888fe848-6ec9-4eef-a88b-b7d6e71d2268",
+      "authorRole": "admin",
+      "authorName": "admin@griaule.test",
+      "authorEmail": "admin@griaule.test",
+      "authorId": "usr_admin_griaule_test",
+      "body": "Solicitação rejeitada.",
+      "createdAt": "2026-02-14T17:10:30.846Z"
     }
   ]
 }

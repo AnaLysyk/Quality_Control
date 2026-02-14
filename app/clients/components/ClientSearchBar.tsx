@@ -1,5 +1,6 @@
-import { FiSearch } from "react-icons/fi";
+
 "use client";
+import { FiSearch } from "react-icons/fi";
 
 type Props = {
   value: string;

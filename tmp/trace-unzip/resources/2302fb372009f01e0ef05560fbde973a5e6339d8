@@ -1,0 +1,581 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - link "Logo Plataforma Quality Control" [ref=e5] [cursor=pointer]:
+        - /url: /admin/home
+        - generic [ref=e6]:
+          - img "Logo"
+          - img
+        - generic:
+          - generic: Plataforma
+          - generic: Quality Control
+      - navigation [ref=e8]:
+        - generic [ref=e10]:
+          - generic [ref=e11]:
+            - paragraph: Navegacao
+          - generic [ref=e12]:
+            - link "Painel admin" [ref=e13] [cursor=pointer]:
+              - /url: /admin/home
+              - img [ref=e16]
+              - generic: Painel admin
+            - link "Métricas" [ref=e19] [cursor=pointer]:
+              - /url: /admin/test-metric
+              - img [ref=e22]
+              - generic: Métricas
+            - link "Empresas" [ref=e23] [cursor=pointer]:
+              - /url: /admin/clients
+              - img [ref=e26]
+              - generic: Empresas
+            - link "Chamados" [ref=e31] [cursor=pointer]:
+              - /url: /admin/chamados
+              - img [ref=e34]
+              - generic: Chamados
+            - link "Solicitações de acesso" [ref=e36] [cursor=pointer]:
+              - /url: /admin/access-requests
+              - img [ref=e39]
+              - generic: Solicitações de acesso
+            - link "Histórico" [ref=e42] [cursor=pointer]:
+              - /url: /admin/audit-logs
+              - img [ref=e45]
+              - generic: Histórico
+    - generic [ref=e48]:
+      - button "Abrir notificacoes" [ref=e50]:
+        - img [ref=e51]
+        - generic [ref=e54]: 9+
+      - button "Abrir bloco de notas" [ref=e56]:
+        - img [ref=e57]
+      - 'button "Abrir menu do usuario: Admin Griaule" [ref=e60]':
+        - generic [ref=e62]: 🚀
+    - button "Abrir assistente IA" [ref=e65]:
+      - img [ref=e66]
+    - main [ref=e70]:
+      - generic [ref=e72]:
+        - generic [ref=e73]:
+          - generic [ref=e74]:
+            - paragraph [ref=e75]: Admin
+            - heading "Solicitacoes de acesso" [level=1] [ref=e76]
+            - paragraph [ref=e77]: Acompanhe, revise e aprove solicitacoes em um unico lugar.
+          - button "Atualizar" [ref=e78]
+        - generic [ref=e79]: Falha ao aceitar
+        - generic [ref=e80]:
+          - generic [ref=e81]:
+            - generic [ref=e82]:
+              - heading "Solicitacoes" [level=2] [ref=e83]
+              - generic [ref=e84]: "46"
+            - generic [ref=e85]:
+              - button "User Reject 712810 e2e.reject.712810@griaule.test 13/02/2026 Aberta Copiar email" [ref=e86]:
+                - generic [ref=e87]:
+                  - generic [ref=e88]:
+                    - generic [ref=e89]: User Reject 712810
+                    - generic [ref=e90]: e2e.reject.712810@griaule.test
+                  - generic [ref=e91]: 13/02/2026
+                - generic [ref=e92]:
+                  - generic [ref=e93]: Aberta
+                  - button "Copiar email" [ref=e94]: Copiar
+              - button "User Accept 712810 e2e.accept.712810@griaule.test 13/02/2026 Aberta Copiar email" [ref=e95]:
+                - generic [ref=e96]:
+                  - generic [ref=e97]:
+                    - generic [ref=e98]: User Accept 712810
+                    - generic [ref=e99]: e2e.accept.712810@griaule.test
+                  - generic [ref=e100]: 13/02/2026
+                - generic [ref=e101]:
+                  - generic [ref=e102]: Aberta
+                  - button "Copiar email" [ref=e103]: Copiar
+              - button "User Reject 067164 e2e.reject.067164@griaule.test 13/02/2026 Aberta Copiar email" [ref=e104]:
+                - generic [ref=e105]:
+                  - generic [ref=e106]:
+                    - generic [ref=e107]: User Reject 067164
+                    - generic [ref=e108]: e2e.reject.067164@griaule.test
+                  - generic [ref=e109]: 13/02/2026
+                - generic [ref=e110]:
+                  - generic [ref=e111]: Aberta
+                  - button "Copiar email" [ref=e112]: Copiar
+              - button "User Accept 067164 e2e.accept.067164@griaule.test 13/02/2026 Aberta Copiar email" [ref=e113]:
+                - generic [ref=e114]:
+                  - generic [ref=e115]:
+                    - generic [ref=e116]: User Accept 067164
+                    - generic [ref=e117]: e2e.accept.067164@griaule.test
+                  - generic [ref=e118]: 13/02/2026
+                - generic [ref=e119]:
+                  - generic [ref=e120]: Aberta
+                  - button "Copiar email" [ref=e121]: Copiar
+              - button "User Reject 843734 e2e.reject.843734@griaule.test 13/02/2026 Aberta Copiar email" [ref=e122]:
+                - generic [ref=e123]:
+                  - generic [ref=e124]:
+                    - generic [ref=e125]: User Reject 843734
+                    - generic [ref=e126]: e2e.reject.843734@griaule.test
+                  - generic [ref=e127]: 13/02/2026
+                - generic [ref=e128]:
+                  - generic [ref=e129]: Aberta
+                  - button "Copiar email" [ref=e130]: Copiar
+              - button "User Accept 843734 e2e.accept.843734@griaule.test 13/02/2026 Aberta Copiar email" [ref=e131]:
+                - generic [ref=e132]:
+                  - generic [ref=e133]:
+                    - generic [ref=e134]: User Accept 843734
+                    - generic [ref=e135]: e2e.accept.843734@griaule.test
+                  - generic [ref=e136]: 13/02/2026
+                - generic [ref=e137]:
+                  - generic [ref=e138]: Aberta
+                  - button "Copiar email" [ref=e139]: Copiar
+              - button "User Reject 139451 e2e.reject.139451@griaule.test 13/02/2026 Aberta Copiar email" [ref=e140]:
+                - generic [ref=e141]:
+                  - generic [ref=e142]:
+                    - generic [ref=e143]: User Reject 139451
+                    - generic [ref=e144]: e2e.reject.139451@griaule.test
+                  - generic [ref=e145]: 13/02/2026
+                - generic [ref=e146]:
+                  - generic [ref=e147]: Aberta
+                  - button "Copiar email" [ref=e148]: Copiar
+              - button "User Accept 139451 e2e.accept.139451@griaule.test 13/02/2026 Aberta Copiar email" [ref=e149]:
+                - generic [ref=e150]:
+                  - generic [ref=e151]:
+                    - generic [ref=e152]: User Accept 139451
+                    - generic [ref=e153]: e2e.accept.139451@griaule.test
+                  - generic [ref=e154]: 13/02/2026
+                - generic [ref=e155]:
+                  - generic [ref=e156]: Aberta
+                  - button "Copiar email" [ref=e157]: Copiar
+              - button "User Reject 710132 e2e.reject.710132@griaule.test 13/02/2026 Aberta Copiar email" [ref=e158]:
+                - generic [ref=e159]:
+                  - generic [ref=e160]:
+                    - generic [ref=e161]: User Reject 710132
+                    - generic [ref=e162]: e2e.reject.710132@griaule.test
+                  - generic [ref=e163]: 13/02/2026
+                - generic [ref=e164]:
+                  - generic [ref=e165]: Aberta
+                  - button "Copiar email" [ref=e166]: Copiar
+              - button "User Accept 710132 e2e.accept.710132@griaule.test 13/02/2026 Aberta Copiar email" [ref=e167]:
+                - generic [ref=e168]:
+                  - generic [ref=e169]:
+                    - generic [ref=e170]: User Accept 710132
+                    - generic [ref=e171]: e2e.accept.710132@griaule.test
+                  - generic [ref=e172]: 13/02/2026
+                - generic [ref=e173]:
+                  - generic [ref=e174]: Aberta
+                  - button "Copiar email" [ref=e175]: Copiar
+              - button "User Reject 751462 e2e.reject.751462@griaule.test 13/02/2026 Aberta Copiar email" [ref=e176]:
+                - generic [ref=e177]:
+                  - generic [ref=e178]:
+                    - generic [ref=e179]: User Reject 751462
+                    - generic [ref=e180]: e2e.reject.751462@griaule.test
+                  - generic [ref=e181]: 13/02/2026
+                - generic [ref=e182]:
+                  - generic [ref=e183]: Aberta
+                  - button "Copiar email" [ref=e184]: Copiar
+              - button "User Accept 751462 e2e.accept.751462@griaule.test 13/02/2026 Aberta Copiar email" [ref=e185]:
+                - generic [ref=e186]:
+                  - generic [ref=e187]:
+                    - generic [ref=e188]: User Accept 751462
+                    - generic [ref=e189]: e2e.accept.751462@griaule.test
+                  - generic [ref=e190]: 13/02/2026
+                - generic [ref=e191]:
+                  - generic [ref=e192]: Aberta
+                  - button "Copiar email" [ref=e193]: Copiar
+              - button "User Reject 487810 e2e.reject.487810@griaule.test 13/02/2026 Aberta Copiar email" [ref=e194]:
+                - generic [ref=e195]:
+                  - generic [ref=e196]:
+                    - generic [ref=e197]: User Reject 487810
+                    - generic [ref=e198]: e2e.reject.487810@griaule.test
+                  - generic [ref=e199]: 13/02/2026
+                - generic [ref=e200]:
+                  - generic [ref=e201]: Aberta
+                  - button "Copiar email" [ref=e202]: Copiar
+              - button "User Accept 487810 e2e.accept.487810@griaule.test 13/02/2026 Aberta Copiar email" [ref=e203]:
+                - generic [ref=e204]:
+                  - generic [ref=e205]:
+                    - generic [ref=e206]: User Accept 487810
+                    - generic [ref=e207]: e2e.accept.487810@griaule.test
+                  - generic [ref=e208]: 13/02/2026
+                - generic [ref=e209]:
+                  - generic [ref=e210]: Aberta
+                  - button "Copiar email" [ref=e211]: Copiar
+              - button "User Reject 647636 e2e.reject.647636@griaule.test 13/02/2026 Aberta Copiar email" [ref=e212]:
+                - generic [ref=e213]:
+                  - generic [ref=e214]:
+                    - generic [ref=e215]: User Reject 647636
+                    - generic [ref=e216]: e2e.reject.647636@griaule.test
+                  - generic [ref=e217]: 13/02/2026
+                - generic [ref=e218]:
+                  - generic [ref=e219]: Aberta
+                  - button "Copiar email" [ref=e220]: Copiar
+              - button "User Accept 647636 e2e.accept.647636@griaule.test 13/02/2026 Aberta Copiar email" [ref=e221]:
+                - generic [ref=e222]:
+                  - generic [ref=e223]:
+                    - generic [ref=e224]: User Accept 647636
+                    - generic [ref=e225]: e2e.accept.647636@griaule.test
+                  - generic [ref=e226]: 13/02/2026
+                - generic [ref=e227]:
+                  - generic [ref=e228]: Aberta
+                  - button "Copiar email" [ref=e229]: Copiar
+              - button "User Reject 517183 e2e.reject.517183@griaule.test 13/02/2026 Rejeitada Copiar email" [ref=e230]:
+                - generic [ref=e231]:
+                  - generic [ref=e232]:
+                    - generic [ref=e233]: User Reject 517183
+                    - generic [ref=e234]: e2e.reject.517183@griaule.test
+                  - generic [ref=e235]: 13/02/2026
+                - generic [ref=e236]:
+                  - generic [ref=e237]: Rejeitada
+                  - button "Copiar email" [ref=e238]: Copiar
+              - button "User Accept 517183 e2e.accept.517183@griaule.test 13/02/2026 Aprovada Copiar email" [ref=e239]:
+                - generic [ref=e240]:
+                  - generic [ref=e241]:
+                    - generic [ref=e242]: User Accept 517183
+                    - generic [ref=e243]: e2e.accept.517183@griaule.test
+                  - generic [ref=e244]: 13/02/2026
+                - generic [ref=e245]:
+                  - generic [ref=e246]: Aprovada
+                  - button "Copiar email" [ref=e247]: Copiar
+              - button "User Reject 142963 e2e.reject.142963@griaule.test 13/02/2026 Rejeitada Copiar email" [ref=e248]:
+                - generic [ref=e249]:
+                  - generic [ref=e250]:
+                    - generic [ref=e251]: User Reject 142963
+                    - generic [ref=e252]: e2e.reject.142963@griaule.test
+                  - generic [ref=e253]: 13/02/2026
+                - generic [ref=e254]:
+                  - generic [ref=e255]: Rejeitada
+                  - button "Copiar email" [ref=e256]: Copiar
+              - button "User Accept 142963 e2e.accept.142963@griaule.test 13/02/2026 Aprovada Copiar email" [ref=e257]:
+                - generic [ref=e258]:
+                  - generic [ref=e259]:
+                    - generic [ref=e260]: User Accept 142963
+                    - generic [ref=e261]: e2e.accept.142963@griaule.test
+                  - generic [ref=e262]: 13/02/2026
+                - generic [ref=e263]:
+                  - generic [ref=e264]: Aprovada
+                  - button "Copiar email" [ref=e265]: Copiar
+              - button "User Reject 214252 e2e.reject.214252@griaule.test 12/02/2026 Rejeitada Copiar email" [ref=e266]:
+                - generic [ref=e267]:
+                  - generic [ref=e268]:
+                    - generic [ref=e269]: User Reject 214252
+                    - generic [ref=e270]: e2e.reject.214252@griaule.test
+                  - generic [ref=e271]: 12/02/2026
+                - generic [ref=e272]:
+                  - generic [ref=e273]: Rejeitada
+                  - button "Copiar email" [ref=e274]: Copiar
+              - button "User Accept 214252 e2e.accept.214252@griaule.test 12/02/2026 Aprovada Copiar email" [ref=e275]:
+                - generic [ref=e276]:
+                  - generic [ref=e277]:
+                    - generic [ref=e278]: User Accept 214252
+                    - generic [ref=e279]: e2e.accept.214252@griaule.test
+                  - generic [ref=e280]: 12/02/2026
+                - generic [ref=e281]:
+                  - generic [ref=e282]: Aprovada
+                  - button "Copiar email" [ref=e283]: Copiar
+              - button "User Reject 099792 e2e.reject.099792@griaule.test 12/02/2026 Rejeitada Copiar email" [ref=e284]:
+                - generic [ref=e285]:
+                  - generic [ref=e286]:
+                    - generic [ref=e287]: User Reject 099792
+                    - generic [ref=e288]: e2e.reject.099792@griaule.test
+                  - generic [ref=e289]: 12/02/2026
+                - generic [ref=e290]:
+                  - generic [ref=e291]: Rejeitada
+                  - button "Copiar email" [ref=e292]: Copiar
+              - button "User Accept 099792 e2e.accept.099792@griaule.test 12/02/2026 Aprovada Copiar email" [ref=e293]:
+                - generic [ref=e294]:
+                  - generic [ref=e295]:
+                    - generic [ref=e296]: User Accept 099792
+                    - generic [ref=e297]: e2e.accept.099792@griaule.test
+                  - generic [ref=e298]: 12/02/2026
+                - generic [ref=e299]:
+                  - generic [ref=e300]: Aprovada
+                  - button "Copiar email" [ref=e301]: Copiar
+              - button "User Reject 017620 e2e.reject.017620@griaule.test 12/02/2026 Rejeitada Copiar email" [ref=e302]:
+                - generic [ref=e303]:
+                  - generic [ref=e304]:
+                    - generic [ref=e305]: User Reject 017620
+                    - generic [ref=e306]: e2e.reject.017620@griaule.test
+                  - generic [ref=e307]: 12/02/2026
+                - generic [ref=e308]:
+                  - generic [ref=e309]: Rejeitada
+                  - button "Copiar email" [ref=e310]: Copiar
+              - button "User Accept 017620 e2e.accept.017620@griaule.test 12/02/2026 Aprovada Copiar email" [ref=e311]:
+                - generic [ref=e312]:
+                  - generic [ref=e313]:
+                    - generic [ref=e314]: User Accept 017620
+                    - generic [ref=e315]: e2e.accept.017620@griaule.test
+                  - generic [ref=e316]: 12/02/2026
+                - generic [ref=e317]:
+                  - generic [ref=e318]: Aprovada
+                  - button "Copiar email" [ref=e319]: Copiar
+              - button "User Reject 957269 e2e.reject.957269@griaule.test 12/02/2026 Rejeitada Copiar email" [ref=e320]:
+                - generic [ref=e321]:
+                  - generic [ref=e322]:
+                    - generic [ref=e323]: User Reject 957269
+                    - generic [ref=e324]: e2e.reject.957269@griaule.test
+                  - generic [ref=e325]: 12/02/2026
+                - generic [ref=e326]:
+                  - generic [ref=e327]: Rejeitada
+                  - button "Copiar email" [ref=e328]: Copiar
+              - button "User Accept 957269 e2e.accept.957269@griaule.test 12/02/2026 Aprovada Copiar email" [ref=e329]:
+                - generic [ref=e330]:
+                  - generic [ref=e331]:
+                    - generic [ref=e332]: User Accept 957269
+                    - generic [ref=e333]: e2e.accept.957269@griaule.test
+                  - generic [ref=e334]: 12/02/2026
+                - generic [ref=e335]:
+                  - generic [ref=e336]: Aprovada
+                  - button "Copiar email" [ref=e337]: Copiar
+              - button "User Reject 204837 e2e.reject.204837@griaule.test 12/02/2026 Rejeitada Copiar email" [ref=e338]:
+                - generic [ref=e339]:
+                  - generic [ref=e340]:
+                    - generic [ref=e341]: User Reject 204837
+                    - generic [ref=e342]: e2e.reject.204837@griaule.test
+                  - generic [ref=e343]: 12/02/2026
+                - generic [ref=e344]:
+                  - generic [ref=e345]: Rejeitada
+                  - button "Copiar email" [ref=e346]: Copiar
+              - button "User Accept 204837 e2e.accept.204837@griaule.test 12/02/2026 Aprovada Copiar email" [ref=e347]:
+                - generic [ref=e348]:
+                  - generic [ref=e349]:
+                    - generic [ref=e350]: User Accept 204837
+                    - generic [ref=e351]: e2e.accept.204837@griaule.test
+                  - generic [ref=e352]: 12/02/2026
+                - generic [ref=e353]:
+                  - generic [ref=e354]: Aprovada
+                  - button "Copiar email" [ref=e355]: Copiar
+              - button "User Reject 046287 e2e.reject.046287@griaule.test 12/02/2026 Rejeitada Copiar email" [ref=e356]:
+                - generic [ref=e357]:
+                  - generic [ref=e358]:
+                    - generic [ref=e359]: User Reject 046287
+                    - generic [ref=e360]: e2e.reject.046287@griaule.test
+                  - generic [ref=e361]: 12/02/2026
+                - generic [ref=e362]:
+                  - generic [ref=e363]: Rejeitada
+                  - button "Copiar email" [ref=e364]: Copiar
+              - button "User Accept 046287 e2e.accept.046287@griaule.test 12/02/2026 Aprovada Copiar email" [ref=e365]:
+                - generic [ref=e366]:
+                  - generic [ref=e367]:
+                    - generic [ref=e368]: User Accept 046287
+                    - generic [ref=e369]: e2e.accept.046287@griaule.test
+                  - generic [ref=e370]: 12/02/2026
+                - generic [ref=e371]:
+                  - generic [ref=e372]: Aprovada
+                  - button "Copiar email" [ref=e373]: Copiar
+              - button "User Reject 006621 e2e.reject.006621@griaule.test 12/02/2026 Rejeitada Copiar email" [ref=e374]:
+                - generic [ref=e375]:
+                  - generic [ref=e376]:
+                    - generic [ref=e377]: User Reject 006621
+                    - generic [ref=e378]: e2e.reject.006621@griaule.test
+                  - generic [ref=e379]: 12/02/2026
+                - generic [ref=e380]:
+                  - generic [ref=e381]: Rejeitada
+                  - button "Copiar email" [ref=e382]: Copiar
+              - button "User Accept 006621 e2e.accept.006621@griaule.test 12/02/2026 Aprovada Copiar email" [ref=e383]:
+                - generic [ref=e384]:
+                  - generic [ref=e385]:
+                    - generic [ref=e386]: User Accept 006621
+                    - generic [ref=e387]: e2e.accept.006621@griaule.test
+                  - generic [ref=e388]: 12/02/2026
+                - generic [ref=e389]:
+                  - generic [ref=e390]: Aprovada
+                  - button "Copiar email" [ref=e391]: Copiar
+              - button "User Reject 371315 e2e.reject.371315@griaule.test 12/02/2026 Aberta Copiar email" [ref=e392]:
+                - generic [ref=e393]:
+                  - generic [ref=e394]:
+                    - generic [ref=e395]: User Reject 371315
+                    - generic [ref=e396]: e2e.reject.371315@griaule.test
+                  - generic [ref=e397]: 12/02/2026
+                - generic [ref=e398]:
+                  - generic [ref=e399]: Aberta
+                  - button "Copiar email" [ref=e400]: Copiar
+              - button "User Accept 371315 e2e.accept.371315@griaule.test 12/02/2026 Aberta Copiar email" [ref=e401]:
+                - generic [ref=e402]:
+                  - generic [ref=e403]:
+                    - generic [ref=e404]: User Accept 371315
+                    - generic [ref=e405]: e2e.accept.371315@griaule.test
+                  - generic [ref=e406]: 12/02/2026
+                - generic [ref=e407]:
+                  - generic [ref=e408]: Aberta
+                  - button "Copiar email" [ref=e409]: Copiar
+              - button "User Reject 239761 e2e.reject.239761@griaule.test 12/02/2026 Aberta Copiar email" [ref=e410]:
+                - generic [ref=e411]:
+                  - generic [ref=e412]:
+                    - generic [ref=e413]: User Reject 239761
+                    - generic [ref=e414]: e2e.reject.239761@griaule.test
+                  - generic [ref=e415]: 12/02/2026
+                - generic [ref=e416]:
+                  - generic [ref=e417]: Aberta
+                  - button "Copiar email" [ref=e418]: Copiar
+              - button "User Accept 239761 e2e.accept.239761@griaule.test 12/02/2026 Aberta Copiar email" [ref=e419]:
+                - generic [ref=e420]:
+                  - generic [ref=e421]:
+                    - generic [ref=e422]: User Accept 239761
+                    - generic [ref=e423]: e2e.accept.239761@griaule.test
+                  - generic [ref=e424]: 12/02/2026
+                - generic [ref=e425]:
+                  - generic [ref=e426]: Aberta
+                  - button "Copiar email" [ref=e427]: Copiar
+              - button "User Reject 348809 e2e.reject.348809@griaule.test 12/02/2026 Aberta Copiar email" [ref=e428]:
+                - generic [ref=e429]:
+                  - generic [ref=e430]:
+                    - generic [ref=e431]: User Reject 348809
+                    - generic [ref=e432]: e2e.reject.348809@griaule.test
+                  - generic [ref=e433]: 12/02/2026
+                - generic [ref=e434]:
+                  - generic [ref=e435]: Aberta
+                  - button "Copiar email" [ref=e436]: Copiar
+              - button "User Accept 348809 e2e.accept.348809@griaule.test 12/02/2026 Aberta Copiar email" [ref=e437]:
+                - generic [ref=e438]:
+                  - generic [ref=e439]:
+                    - generic [ref=e440]: User Accept 348809
+                    - generic [ref=e441]: e2e.accept.348809@griaule.test
+                  - generic [ref=e442]: 12/02/2026
+                - generic [ref=e443]:
+                  - generic [ref=e444]: Aberta
+                  - button "Copiar email" [ref=e445]: Copiar
+              - button "User Reject 742158 e2e.reject.742158@griaule.test 12/02/2026 Aberta Copiar email" [ref=e446]:
+                - generic [ref=e447]:
+                  - generic [ref=e448]:
+                    - generic [ref=e449]: User Reject 742158
+                    - generic [ref=e450]: e2e.reject.742158@griaule.test
+                  - generic [ref=e451]: 12/02/2026
+                - generic [ref=e452]:
+                  - generic [ref=e453]: Aberta
+                  - button "Copiar email" [ref=e454]: Copiar
+              - button "User Accept 742158 e2e.accept.742158@griaule.test 12/02/2026 Aberta Copiar email" [ref=e455]:
+                - generic [ref=e456]:
+                  - generic [ref=e457]:
+                    - generic [ref=e458]: User Accept 742158
+                    - generic [ref=e459]: e2e.accept.742158@griaule.test
+                  - generic [ref=e460]: 12/02/2026
+                - generic [ref=e461]:
+                  - generic [ref=e462]: Aberta
+                  - button "Copiar email" [ref=e463]: Copiar
+              - button "User Reject 589182 e2e.reject.589182@griaule.test 12/02/2026 Aberta Copiar email" [ref=e464]:
+                - generic [ref=e465]:
+                  - generic [ref=e466]:
+                    - generic [ref=e467]: User Reject 589182
+                    - generic [ref=e468]: e2e.reject.589182@griaule.test
+                  - generic [ref=e469]: 12/02/2026
+                - generic [ref=e470]:
+                  - generic [ref=e471]: Aberta
+                  - button "Copiar email" [ref=e472]: Copiar
+              - button "User Accept 589182 e2e.accept.589182@griaule.test 12/02/2026 Aberta Copiar email" [ref=e473]:
+                - generic [ref=e474]:
+                  - generic [ref=e475]:
+                    - generic [ref=e476]: User Accept 589182
+                    - generic [ref=e477]: e2e.accept.589182@griaule.test
+                  - generic [ref=e478]: 12/02/2026
+                - generic [ref=e479]:
+                  - generic [ref=e480]: Aberta
+                  - button "Copiar email" [ref=e481]: Copiar
+              - button "User Reject 301334 e2e.reject.301334@griaule.test 03/02/2026 Rejeitada Copiar email" [ref=e482]:
+                - generic [ref=e483]:
+                  - generic [ref=e484]:
+                    - generic [ref=e485]: User Reject 301334
+                    - generic [ref=e486]: e2e.reject.301334@griaule.test
+                  - generic [ref=e487]: 03/02/2026
+                - generic [ref=e488]:
+                  - generic [ref=e489]: Rejeitada
+                  - button "Copiar email" [ref=e490]: Copiar
+              - button "User Accept 301334 e2e.accept.301334@griaule.test 03/02/2026 Aprovada Copiar email" [ref=e491]:
+                - generic [ref=e492]:
+                  - generic [ref=e493]:
+                    - generic [ref=e494]: User Accept 301334
+                    - generic [ref=e495]: e2e.accept.301334@griaule.test
+                  - generic [ref=e496]: 03/02/2026
+                - generic [ref=e497]:
+                  - generic [ref=e498]: Aprovada
+                  - button "Copiar email" [ref=e499]: Copiar
+          - generic [ref=e501]:
+            - generic [ref=e502]:
+              - generic [ref=e503]:
+                - paragraph [ref=e504]: Solicitante
+                - heading "User Accept 712810" [level=2] [ref=e505]
+                - paragraph [ref=e506]: e2e.accept.712810@griaule.test
+              - generic [ref=e507]:
+                - generic [ref=e508]: Aberta
+                - generic [ref=e509]: 13/02/2026, 11:25:13
+            - generic [ref=e510]:
+              - heading "Detalhes da solicitacao" [level=3] [ref=e511]
+              - paragraph [ref=e512]: Revise os dados e tome uma decisao.
+            - generic [ref=e513]:
+              - generic [ref=e514]:
+                - text: Tipo de acesso
+                - combobox "Tipo de acesso" [ref=e515]:
+                  - option "Usuario da empresa"
+                  - option "Admin da empresa" [selected]
+                  - option "Admin do sistema"
+              - generic [ref=e516]:
+                - text: Empresa
+                - combobox "Empresa" [ref=e517]:
+                  - option "Selecionar empresa"
+                  - option "Empresa E2E 029753"
+                  - option "Empresa E2E 044066"
+                  - option "Empresa E2E 089044"
+                  - option "Empresa E2E 124262"
+                  - option "Empresa E2E 132445"
+                  - option "Empresa E2E 169523"
+                  - option "Empresa E2E 239488"
+                  - option "Empresa E2E 291911"
+                  - option "Empresa E2E 351186"
+                  - option "Empresa E2E 356994"
+                  - option "Empresa E2E 370163"
+                  - option "Empresa E2E 371318"
+                  - option "Empresa E2E 392492"
+                  - option "Empresa E2E 470219"
+                  - option "Empresa E2E 576635"
+                  - option "Empresa E2E 594343"
+                  - option "Empresa E2E 594690"
+                  - option "Empresa E2E 613745"
+                  - option "Empresa E2E 635741"
+                  - option "Empresa E2E 677539"
+                  - option "Empresa E2E 720132"
+                  - option "Empresa E2E 756477"
+                  - option "Empresa E2E 756822"
+                  - option "Empresa E2E 771134"
+                  - option "Empresa E2E 798472"
+                  - option "Empresa E2E 869884"
+                  - option "Empresa E2E 947636"
+                  - option "Empresa E2E 976895"
+                  - option "Empresa E2E 981106"
+                  - option "Griaule" [selected]
+                  - option "Testing Company"
+              - generic [ref=e518]:
+                - text: Nome
+                - textbox "Nome" [ref=e519]: User Accept 712810
+              - generic [ref=e520]:
+                - text: Email
+                - textbox "Email" [ref=e521]: e2e.accept.712810@griaule.test
+              - generic [ref=e522]:
+                - text: Cargo
+                - textbox "Cargo" [ref=e523]: QA Lead
+              - generic [ref=e524]:
+                - text: Observacoes
+                - textbox "Observacoes" [ref=e525]: Solicitação para administrar a empresa.
+              - generic [ref=e526]:
+                - text: Notas do admin (motivo / observacao)
+                - textbox "Notas do admin (motivo / observacao)" [ref=e527]
+            - generic [ref=e528]:
+              - paragraph [ref=e530]: Comentarios
+              - generic [ref=e531]:
+                - paragraph [ref=e533]: Nenhum comentario ainda.
+                - generic [ref=e534]:
+                  - textbox "Responder comentario" [ref=e535]
+                  - button "Enviar comentario" [disabled] [ref=e537]
+            - generic [ref=e538]:
+              - generic [ref=e539]: Acoes
+              - generic [ref=e540]:
+                - button "Salvar alteracoes" [ref=e541]
+                - button "Aceitar solicitacao" [ref=e542]: Aprovar
+                - button "Recusar solicitacao" [ref=e543]: Recusar
+            - group [ref=e544]:
+              - generic "Ver mensagem bruta" [ref=e545] [cursor=pointer]
+  - generic [ref=e550] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e551]:
+      - img [ref=e552]
+    - generic [ref=e555]:
+      - button "Open issues overlay" [ref=e556]:
+        - generic [ref=e557]:
+          - generic [ref=e558]: "1"
+          - generic [ref=e559]: "2"
+        - generic [ref=e560]:
+          - text: Issue
+          - generic [ref=e561]: s
+      - button "Collapse issues badge" [ref=e562]:
+        - img [ref=e563]
+  - alert [ref=e565]
+```

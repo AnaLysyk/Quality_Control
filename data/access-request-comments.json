@@ -79,6 +79,116 @@
       "authorId": "usr_admin_griaule_test",
       "body": "Solicitação rejeitada.",
       "createdAt": "2026-02-13T10:39:23.766Z"
+    },
+    {
+      "id": "a6a622b5-451f-4035-b841-3872d238a4d1",
+      "requestId": "21d78015-59aa-4280-b34e-561035dd6413",
+      "authorRole": "admin",
+      "authorName": "admin@griaule.test",
+      "authorEmail": "admin@griaule.test",
+      "authorId": "usr_admin_griaule_test",
+      "body": "Solicitação rejeitada.",
+      "createdAt": "2026-02-13T11:36:47.599Z"
+    },
+    {
+      "id": "ba9bd600-4c7e-452d-896c-48e01071f1ce",
+      "requestId": "44edf948-b2c0-47d3-a4a8-5d871af46363",
+      "authorRole": "admin",
+      "authorName": "admin@griaule.test",
+      "authorEmail": "admin@griaule.test",
+      "authorId": "usr_admin_griaule_test",
+      "body": "Solicitação rejeitada.",
+      "createdAt": "2026-02-13T18:24:08.254Z"
+    },
+    {
+      "id": "228ec95d-b438-4135-bc1a-e46274ecfb93",
+      "requestId": "7a084e6e-97ff-4655-9b9a-361f768a03f7",
+      "authorRole": "admin",
+      "authorName": "admin@griaule.test",
+      "authorEmail": "admin@griaule.test",
+      "authorId": "usr_admin_griaule_test",
+      "body": "Solicitação rejeitada.",
+      "createdAt": "2026-02-13T18:36:03.408Z"
+    },
+    {
+      "id": "227e7e68-2050-4d78-bd1b-7cc8437a7c72",
+      "requestId": "76934a09-c362-4697-879e-83dd5ccd26cd",
+      "authorRole": "admin",
+      "authorName": "admin@griaule.test",
+      "authorEmail": "admin@griaule.test",
+      "authorId": "usr_admin_griaule_test",
+      "body": "Solicitação rejeitada.",
+      "createdAt": "2026-02-13T18:37:22.365Z"
+    },
+    {
+      "id": "118de746-3a9d-486a-9788-90dc1fbc0fa5",
+      "requestId": "5d85e8b1-2d11-4045-8264-3cb971cbce95",
+      "authorRole": "admin",
+      "authorName": "admin@griaule.test",
+      "authorEmail": "admin@griaule.test",
+      "authorId": "usr_admin_griaule_test",
+      "body": "Solicitação rejeitada.",
+      "createdAt": "2026-02-13T19:45:33.860Z"
+    },
+    {
+      "id": "b5af617d-6732-42e9-84e2-343b158e04be",
+      "requestId": "a6594bd0-f686-4c41-b570-378d41b23bfb",
+      "authorRole": "admin",
+      "authorName": "admin@griaule.test",
+      "authorEmail": "admin@griaule.test",
+      "authorId": "usr_admin_griaule_test",
+      "body": "Solicitação rejeitada.",
+      "createdAt": "2026-02-13T19:46:57.121Z"
+    },
+    {
+      "id": "734b86df-1d0e-40e6-8428-4ba11eb532d9",
+      "requestId": "3cd2e42f-0df1-401c-907c-d0a4c6d8d192",
+      "authorRole": "admin",
+      "authorName": "admin@griaule.test",
+      "authorEmail": "admin@griaule.test",
+      "authorId": "usr_admin_griaule_test",
+      "body": "Solicitação rejeitada.",
+      "createdAt": "2026-02-13T19:49:19.273Z"
+    },
+    {
+      "id": "490ce9dd-6fd7-4674-b9c7-1a75d90ddcb5",
+      "requestId": "039e5baf-a2ab-40b9-b3f9-5b6190249b9a",
+      "authorRole": "admin",
+      "authorName": "admin@griaule.test",
+      "authorEmail": "admin@griaule.test",
+      "authorId": "usr_admin_griaule_test",
+      "body": "Solicitação rejeitada.",
+      "createdAt": "2026-02-13T22:38:13.626Z"
+    },
+    {
+      "id": "0b8e5bff-ad59-47f4-96d8-c24cd3571497",
+      "requestId": "4d2f90df-6641-4abc-bf25-fd77ba89bd0e",
+      "authorRole": "admin",
+      "authorName": "admin@griaule.test",
+      "authorEmail": "admin@griaule.test",
+      "authorId": "usr_admin_griaule_test",
+      "body": "Solicitação rejeitada.",
+      "createdAt": "2026-02-13T23:07:46.573Z"
+    },
+    {
+      "id": "d4d3a92b-a620-40d7-85cb-131c953e01a6",
+      "requestId": "021f436f-a9e4-4120-9e6b-ea8a32e6c78e",
+      "authorRole": "admin",
+      "authorName": "admin@griaule.test",
+      "authorEmail": "admin@griaule.test",
+      "authorId": "usr_admin_griaule_test",
+      "body": "Solicitação rejeitada.",
+      "createdAt": "2026-02-13T23:13:18.346Z"
+    },
+    {
+      "id": "0f2a0bb5-4ac6-45a8-b27a-5b46cafbb6d7",
+      "requestId": "0e825180-ef0a-4fbf-b032-5287a9515ae0",
+      "authorRole": "admin",
+      "authorName": "admin@griaule.test",
+      "authorEmail": "admin@griaule.test",
+      "authorId": "usr_admin_griaule_test",
+      "body": "Solicitação rejeitada.",
+      "createdAt": "2026-02-13T23:48:49.047Z"
     }
   ]
 }

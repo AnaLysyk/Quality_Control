@@ -261,13 +261,13 @@ export default function CompanyDocumentsPage() {
 
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
-      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-10 space-y-6">
-        <Breadcrumb items={[{ label: "Documentacoes", href: "/documentos" }, { label: companyName }]} />
+        <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-10 space-y-6">
+        <Breadcrumb items={[{ label: "Documentacoes", href: "/documentos" }, { label: nomeEmpresa }]} />
 
         <header className="space-y-2">
           <p className="text-xs uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">Empresa</p>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">
-            Documentos de {companyName}
+            Documentos de {nomeEmpresa}
           </h1>
           <p className="text-sm text-(--tc-text-secondary,#4b5563)">
             Anexe arquivos ou salve links com titulo e descricao.
@@ -278,44 +278,46 @@ export default function CompanyDocumentsPage() {
             <div className="flex gap-3">
               <button
                 data-testid="doc-tab-file"
-                className={`px-3 py-1 rounded ${_tab === "file" ? "bg-slate-100" : "bg-white"}`}
-                onClick={() => _setTab("file")}
+                className={`px-3 py-1 rounded ${aba === "file" ? "bg-slate-100" : "bg-white"}`}
+                onClick={() => setAba("file")}
               >
                 Arquivo
               </button>
               <button
                 data-testid="doc-tab-link"
-                className={`px-3 py-1 rounded ${_tab === "link" ? "bg-slate-100" : "bg-white"}`}
-                onClick={() => _setTab("link")}
+                className={`px-3 py-1 rounded ${aba === "link" ? "bg-slate-100" : "bg-white"}`}
+                onClick={() => setAba("link")}
               >
                 Link
               </button>
             </div>
 
-            {_tab === "file" ? (
+            {aba === "file" ? (
               <div className="space-y-2">
-                {_message && <div className="text-sm text-green-600">{_message}</div>}
-                {_error && <div className="text-sm text-red-600">{_error}</div>}
+                {mensagem && <div className="text-sm text-green-600">{mensagem}</div>}
+                {erro && <div className="text-sm text-red-600">{erro}</div>}
                 <input
                   data-testid="doc-file-title"
                   placeholder="Titulo"
-                  value={_fileTitle}
-                  onChange={(e) => _setFileTitle(e.target.value)}
+                  value={tituloArquivo}
+                  onChange={(e) => setTituloArquivo(e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                 />
                 <input
                   data-testid="doc-file-description"
                   placeholder="Descricao"
-                  value={_fileDescription}
-                  onChange={(e) => _setFileDescription(e.target.value)}
+                  value={descricaoArquivo}
+                  onChange={(e) => setDescricaoArquivo(e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                 />
                 <input
                   data-testid="doc-file-input"
                   type="file"
+                  aria-label="Selecionar arquivo"
+                  title="Selecionar arquivo para upload"
                   onChange={(e) => {
                     const f = e.currentTarget.files?.[0] ?? null;
-                    _setFileUpload(f);
+                    setArquivoUpload(f);
                   }}
                 />
                 <button data-testid="doc-file-submit" onClick={() => submitFile()} className="px-4 py-2 bg-(--tc-accent,#ef0001) text-white rounded">
@@ -324,27 +326,27 @@ export default function CompanyDocumentsPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                {_message && <div className="text-sm text-green-600">{_message}</div>}
-                {_error && <div className="text-sm text-red-600">{_error}</div>}
+                {mensagem && <div className="text-sm text-green-600">{mensagem}</div>}
+                {erro && <div className="text-sm text-red-600">{erro}</div>}
                 <input
                   data-testid="doc-link-title"
                   placeholder="Titulo do link"
-                  value={_linkTitle}
-                  onChange={(e) => _setLinkTitle(e.target.value)}
+                  value={tituloLink}
+                  onChange={(e) => setTituloLink(e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                 />
                 <input
                   data-testid="doc-link-description"
                   placeholder="Descricao"
-                  value={_linkDescription}
-                  onChange={(e) => _setLinkDescription(e.target.value)}
+                  value={descricaoLink}
+                  onChange={(e) => setDescricaoLink(e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                 />
                 <input
                   data-testid="doc-link-url"
                   placeholder="https://..."
-                  value={_linkUrl}
-                  onChange={(e) => _setLinkUrl(e.target.value)}
+                  value={urlLink}
+                  onChange={(e) => setUrlLink(e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                 />
                 <button data-testid="doc-link-submit" onClick={() => submitLink()} className="px-4 py-2 bg-(--tc-accent,#ef0001) text-white rounded">
@@ -354,7 +356,7 @@ export default function CompanyDocumentsPage() {
             )}
 
             <div data-testid="document-list" className="space-y-2 mt-6">
-              {_items.map((it) => (
+              {documentos.map((it) => (
                 <div key={it.id} className="p-2 border rounded">
                   <div className="font-semibold">{it.title}</div>
                   <div className="text-sm text-slate-500">{it.description}</div>

@@ -1,5 +1,5 @@
 import { test, expect } from "./fixtures/test";
-import { login, setMockUser } from "./utils/auth";
+import { mockAuth } from "./helpers/mockAuth";
 
 type AccessType = "user" | "company";
 
@@ -59,8 +59,7 @@ test("admin abre e aceita/rejeita solicitações de acesso", async ({ page }) =>
     notes: "Solicitação para acesso básico.",
   });
 
-  await setMockUser(page, "admin");
-  await login(page, "admin@example.com", "senha");
+  await mockAuth(page.context(), { role: "admin" });
   await page.goto("/admin/access-requests", { waitUntil: "domcontentloaded" });
 
   const acceptRow = page.getByRole("button").filter({ hasText: acceptEmail }).first();
@@ -80,7 +79,8 @@ test("admin abre e aceita/rejeita solicitações de acesso", async ({ page }) =>
   const rejectRow = page.getByRole("button").filter({ hasText: rejectEmail }).first();
   await expect(rejectRow).toBeVisible({ timeout: 20000 });
   await rejectRow.click();
-  await expect(page.getByLabel(/^Email$/i)).toHaveValue(rejectEmail);
+  // Wait for the detail panel to update (draft state refresh after accept reload)
+  await expect(page.getByLabel(/^Email$/i)).toHaveValue(rejectEmail, { timeout: 15000 });
   await page.getByLabel(/Notas do admin/i).fill("Solicitação rejeitada.");
 
   const rejectResponse = page.waitForResponse(

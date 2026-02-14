@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import { getAccessToken } from "@/lib/api";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
@@ -156,6 +156,10 @@ function AccessRequestsPage() {
   const [commentSaving, setCommentSaving] = useState(false);
   const [commentError, setCommentError] = useState<string | null>(null);
 
+  // Track whether the user has modified the draft form since the last selection change.
+  // Prevents React Strict Mode double-invoke of load() from resetting user edits.
+  const draftTouchedRef = useRef(false);
+
   const selected = useMemo(
     () => (selectedId ? items.find((i) => i.id === selectedId) ?? null : null),
     [items, selectedId],
@@ -278,10 +282,22 @@ function AccessRequestsPage() {
   useEffect(() => {
     if (!selected) {
       setDraft(null);
+      draftTouchedRef.current = false;
       return;
     }
-    setDraft({ ...selected });
+    // Only reset draft from selected when the user hasn't modified it yet.
+    // This prevents a reload (or React Strict Mode double-invoke) from
+    // overwriting user changes (e.g. Empresa selection).
+    if (!draftTouchedRef.current) {
+      setDraft({ ...selected });
+    }
   }, [selected]);
+
+  // Reset the touched flag when the user picks a different row so
+  // the draft initializes fresh for the new selection.
+  useEffect(() => {
+    draftTouchedRef.current = false;
+  }, [selectedId]);
 
   useEffect(() => {
     loadComments(selectedId);
@@ -326,6 +342,8 @@ function AccessRequestsPage() {
         return;
       }
 
+      // Reset before reload so the [selected] effect can set draft from fresh data.
+      draftTouchedRef.current = false;
       await load();
     } finally {
       setSaving(false);
@@ -387,6 +405,8 @@ function AccessRequestsPage() {
         return;
       }
 
+      // Reset before reload so the [selected] effect can set draft from fresh data.
+      draftTouchedRef.current = false;
       await load();
       await loadComments(selected.id);
     } finally {
@@ -419,6 +439,8 @@ function AccessRequestsPage() {
         return;
       }
 
+      // Reset before reload so the [selected] effect can set draft from fresh data.
+      draftTouchedRef.current = false;
       await load();
       await loadComments(selected.id);
     } finally {
@@ -544,6 +566,7 @@ function AccessRequestsPage() {
                     className={inputBase}
                     value={(draft.accessType ?? "Usuario da empresa") as AccessTypeLabel}
                     onChange={(e) => {
+                      draftTouchedRef.current = true;
                       const v = e.target.value as AccessTypeLabel;
                       setDraft((d) => (d ? { ...d, accessType: v } : d));
                       if (v === "Admin do sistema") setDraft((d) => (d ? { ...d, clientId: null, company: "" } : d));
@@ -563,6 +586,7 @@ function AccessRequestsPage() {
                     className={inputBase}
                     value={draft.clientId ?? ""}
                     onChange={(e) => {
+                      draftTouchedRef.current = true;
                       const id = e.target.value || null;
                       const match = clients.find((c) => c.id === id);
                       setDraft((d) => (d ? { ...d, clientId: id, company: match?.name ?? d.company ?? "" } : d));
@@ -589,7 +613,7 @@ function AccessRequestsPage() {
                   <input
                     className={inputBase}
                     value={draft.name ?? ""}
-                    onChange={(e) => setDraft((d) => (d ? { ...d, name: e.target.value } : d))}
+                    onChange={(e) => { draftTouchedRef.current = true; setDraft((d) => (d ? { ...d, name: e.target.value } : d)); }}
                   />
                 </label>
 
@@ -599,7 +623,7 @@ function AccessRequestsPage() {
                     type="email"
                     className={inputBase}
                     value={draft.email ?? ""}
-                    onChange={(e) => setDraft((d) => (d ? { ...d, email: e.target.value } : d))}
+                    onChange={(e) => { draftTouchedRef.current = true; setDraft((d) => (d ? { ...d, email: e.target.value } : d)); }}
                   />
                 </label>
 
@@ -608,7 +632,7 @@ function AccessRequestsPage() {
                   <input
                     className={inputBase}
                     value={draft.jobRole ?? ""}
-                    onChange={(e) => setDraft((d) => (d ? { ...d, jobRole: e.target.value } : d))}
+                    onChange={(e) => { draftTouchedRef.current = true; setDraft((d) => (d ? { ...d, jobRole: e.target.value } : d)); }}
                   />
                 </label>
 
@@ -618,7 +642,7 @@ function AccessRequestsPage() {
                     className={inputBase}
                     rows={4}
                     value={draft.notes ?? ""}
-                    onChange={(e) => setDraft((d) => (d ? { ...d, notes: e.target.value } : d))}
+                    onChange={(e) => { draftTouchedRef.current = true; setDraft((d) => (d ? { ...d, notes: e.target.value } : d)); }}
                   />
                 </label>
 
@@ -628,7 +652,7 @@ function AccessRequestsPage() {
                     className={inputBase}
                     rows={3}
                     value={draft.adminNotes ?? ""}
-                    onChange={(e) => setDraft((d) => (d ? { ...d, adminNotes: e.target.value } : d))}
+                    onChange={(e) => { draftTouchedRef.current = true; setDraft((d) => (d ? { ...d, adminNotes: e.target.value } : d)); }}
                   />
                 </label>
                 </div>

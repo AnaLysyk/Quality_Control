@@ -1,4 +1,4 @@
-name: CI
+name: Integração Contínua (CI)
 
 on:
   pull_request:
@@ -10,27 +10,33 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout do código
+        uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Configurar Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Install Python deps
+      - name: Instalar dependências Python
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Run Python tests
+      - name: Executar testes Python
         run: |
           python -m pytest -q
 
-      - uses: actions/setup-node@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run test
-      - run: npm run build
+      - name: Instalar dependências Node
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Testes Unitários
+        run: npm run test
+      - name: Build
+        run: npm run build

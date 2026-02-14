@@ -1,23 +1,24 @@
-name: Playwright E2E
+name: Testes E2E Playwright
 
 on:
   push:
-    branches: [ main, 'e2e/**' ]
+    branches: [main, 'e2e/**']
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   e2e:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout do código
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Cache node modules
+      - name: Cache de módulos Node
         uses: actions/cache@v4
         with:
           path: ~/.npm
@@ -25,72 +26,67 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Install dependencies
+      - name: Instalar dependências
         run: npm ci
 
-      - name: Install Playwright browsers
+      - name: Instalar navegadores Playwright
         run: npx playwright install --with-deps
 
-      - name: Start dev server
+      - name: Iniciar servidor de desenvolvimento
         run: |
+          export E2E_USE_JSON=1
+          export SUPABASE_MOCK=true
           PORT=3100 npm run dev &
           npx wait-on http://127.0.0.1:3100 --timeout 120000
 
-      - name: Run Playwright tests
+      - name: Executar testes Playwright
         run: npx playwright test --reporter=github
         env:
           CI: true
           PORT: 3100
-name: Playwright E2E
 
-on:
-  pull_request:
-  push:
-    branches:
-      - main
-
-jobs:
-  e2e:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - run: npm ci
-
-      - run: npx playwright install --with-deps
-
-      - name: Run E2E with mock
-        run: |
-          export SUPABASE_MOCK=true
-          export PLAYWRIGHT_BASE_URL=http://localhost:3000
-          npm run dev -- --port 3000 &
-          npx wait-on http://localhost:3000
-          npx playwright test
-
-  prod-smoke:
-    runs-on: ubuntu-latest
-    if: ${{ secrets.PLAYWRIGHT_BASE_URL != '' }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm ci
-      - name: Run E2E on production
-        env:
-          PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
-          PLAYWRIGHT_EMAIL: ${{ secrets.PLAYWRIGHT_EMAIL }}
-          PLAYWRIGHT_PASSWORD: ${{ secrets.PLAYWRIGHT_PASSWORD }}
-        run: npm run test:e2e:prod
-
-      - name: Upload Playwright report
+      - name: Upload do relatório Playwright
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
+          path: playwright-report
+
+      - name: Upload dos resultados dos testes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results
+
+  prod-smoke:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Instalar navegadores Playwright
+        run: npx playwright install --with-deps
+
+      - name: Executar E2E em produção
+        env:
+          # Estes segredos devem ser adicionados nas Configurações do Repositório > Secrets > Actions
+          PLAYWRIGHT_EMAIL: ${{ secrets['PLAYWRIGHT_EMAIL'] }}
+          PLAYWRIGHT_PASSWORD: ${{ secrets['PLAYWRIGHT_PASSWORD'] }}
+        run: npm run test:e2e:prod
+
+      - name: Upload do relatório Playwright
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-prod
           path: playwright-report

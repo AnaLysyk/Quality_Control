@@ -1,4 +1,4 @@
-name: e2e-smoke
+name: Testes E2E Smoke
 
 on:
   pull_request:
@@ -10,11 +10,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "20"
           cache: "npm"
-      - run: npm ci
-      - run: npx playwright install --with-deps
-      - run: npm run test:e2e:smoke
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Instalar navegadores Playwright
+        run: npx playwright install --with-deps
+
+      - name: Executar testes E2E Smoke
+        run: npm run test:e2e:smoke

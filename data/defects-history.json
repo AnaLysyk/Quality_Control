@@ -1,0 +1,144 @@
+{
+  "defeito_mttr": [
+    {
+      "id": "8051b4db-a06a-43d2-ae9f-25b377c152b1",
+      "defectSlug": "defeito_mttr",
+      "action": "status_changed",
+      "createdAt": "2026-02-13T11:59:59.539Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": "open",
+      "toStatus": "done",
+      "fromRunSlug": null,
+      "toRunSlug": null,
+      "note": null
+    },
+    {
+      "id": "78dfc96e-3001-4739-90d7-92091ea9b60e",
+      "defectSlug": "defeito_mttr",
+      "action": "created",
+      "createdAt": "2026-02-13T11:59:53.103Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": null,
+      "toStatus": "open",
+      "fromRunSlug": null,
+      "toRunSlug": null,
+      "note": "Defeito MTTR"
+    },
+    {
+      "id": "5e2ff34b-2090-452e-8288-9faa476b88d5",
+      "defectSlug": "defeito_mttr",
+      "action": "status_changed",
+      "createdAt": "2026-02-13T11:57:11.876Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": "open",
+      "toStatus": "done",
+      "fromRunSlug": null,
+      "toRunSlug": null,
+      "note": null
+    },
+    {
+      "id": "51e1a122-903a-4fe5-804e-0825ffcc0c16",
+      "defectSlug": "defeito_mttr",
+      "action": "created",
+      "createdAt": "2026-02-13T11:57:11.113Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": null,
+      "toStatus": "open",
+      "fromRunSlug": null,
+      "toRunSlug": null,
+      "note": "Defeito MTTR"
+    }
+  ],
+  "defeito_encontrado_na_run": [
+    {
+      "id": "e857599d-59b5-40a7-8f78-e93ea49bcd6f",
+      "defectSlug": "defeito_encontrado_na_run",
+      "action": "created",
+      "createdAt": "2026-02-13T11:57:43.472Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": null,
+      "toStatus": "open",
+      "fromRunSlug": null,
+      "toRunSlug": "run_e2e_negocio",
+      "note": "Defeito encontrado na run"
+    }
+  ],
+  "defeito_com_run": [
+    {
+      "id": "d0ae1b1c-d4c4-45a5-ab40-c35421060160",
+      "defectSlug": "defeito_com_run",
+      "action": "run_linked",
+      "createdAt": "2026-02-13T11:58:11.369Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": null,
+      "toStatus": null,
+      "fromRunSlug": null,
+      "toRunSlug": "run-001",
+      "note": null
+    },
+    {
+      "id": "7048cbd6-9055-49d4-9ffc-d0ad32a23a50",
+      "defectSlug": "defeito_com_run",
+      "action": "created",
+      "createdAt": "2026-02-13T11:58:10.765Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": null,
+      "toStatus": "open",
+      "fromRunSlug": null,
+      "toRunSlug": null,
+      "note": "Defeito com run"
+    }
+  ],
+  "defeito_proibido": [
+    {
+      "id": "d9b813a0-ef1a-4ca5-82c8-f149b7c1358a",
+      "defectSlug": "defeito_proibido",
+      "action": "created",
+      "createdAt": "2026-02-13T11:59:04.289Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": null,
+      "toStatus": "open",
+      "fromRunSlug": null,
+      "toRunSlug": null,
+      "note": "Defeito proibido"
+    }
+  ],
+  "defeito_manual_company": [
+    {
+      "id": "60ebc1a0-3718-47ea-b55d-42e22dc74340",
+      "defectSlug": "defeito_manual_company",
+      "action": "created",
+      "createdAt": "2026-02-13T11:59:12.519Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": null,
+      "toStatus": "open",
+      "fromRunSlug": null,
+      "toRunSlug": null,
+      "note": "Defeito manual - company"
+    }
+  ],
+  "defeito_manual_admin": [
+    {
+      "id": "8f75f2f1-2e04-4eb1-bd4a-a1bd3e3760a3",
+      "defectSlug": "defeito_manual_admin",
+      "action": "created",
+      "createdAt": "2026-02-13T11:59:16.801Z",
+      "actorId": "usr_admin_griaule_test",
+      "actorName": "Admin Griaule",
+      "fromStatus": null,
+      "toStatus": "open",
+      "fromRunSlug": null,
+      "toRunSlug": null,
+      "note": "Defeito manual - admin"
+    }
+  ]
+}

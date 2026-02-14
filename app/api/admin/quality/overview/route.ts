@@ -21,6 +21,14 @@ import { listLocalCompanies, type LocalAuthCompany } from "@/lib/auth/localStore
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+type Client = { slug: string; name: string };
+
+const MOCK_CLIENTS: Client[] = [
+  { slug: "griaule", name: "Griaule" },
+  { slug: "testing-company", name: "Testing Company" },
+  { slug: "cliente-x", name: "Cliente X" },
+];
+
 type ClientRow = {
   id: string;
   company_name?: string | null;
@@ -30,6 +38,27 @@ type ClientRow = {
   qase_project_code?: string | null;
   active?: boolean | null;
 };
+
+async function fetchSummary(slug: string, origin: string) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2000);
+  try {
+    const res = await fetch(`${origin}/api/empresas/${slug}/metrics/summary`, {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!res.ok) return { score: 0, status: "unknown" as const };
+    const json = await res.json();
+    return {
+      score: typeof json.score === "number" ? json.score : 0,
+      status: typeof json.status === "string" ? json.status : "unknown",
+    };
+  } catch {
+    return { score: 0, status: "unknown" as const };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 type CompanyListResponse = {
   companies: ReturnType<typeof buildCompanyRows>;
@@ -77,6 +106,7 @@ function normalizeClients(items: ClientRow[]) {
 
 function mapManualRelease(release: ManualRelease): ReleaseEntry {
   const app = (release.app ?? "smart").toString();
+  const stats = release.stats ?? { pass: 0, fail: 0, blocked: 0, notRun: 0 };
   return {
     slug: release.slug,
     title: release.name,
@@ -89,10 +119,10 @@ function mapManualRelease(release: ManualRelease): ReleaseEntry {
     createdAt: release.createdAt,
     clientName: release.clientSlug ?? null,
     manualSummary: {
-      pass: release.stats.pass,
-      fail: release.stats.fail,
-      blocked: release.stats.blocked,
-      notRun: release.stats.notRun,
+      pass: stats.pass,
+      fail: stats.fail,
+      blocked: stats.blocked,
+      notRun: stats.notRun,
     },
   };
 }
@@ -112,7 +142,7 @@ export async function GET(request: NextRequest) {
       getAllReleases(),
       getAllManualReleases(),
     ]);
-    const clientRows = mapLocalCompanies(localCompanies);
+    const clientRows = mapLocalCompanies(localCompanies).filter((client) => client.active !== false);
 
     const manualReleaseEntries = manualReleases
       .filter((release) => resolveManualReleaseKind(release) === "run")
@@ -120,19 +150,20 @@ export async function GET(request: NextRequest) {
     const enrichedReleases = [...releases, ...manualReleaseEntries].map((release) => buildReleaseWithStats(release));
 
     const start = Date.now() - period * DAY_MS;
-    const periodReleases = enrichedReleases.filter((release) => release.createdAtValue >= start);
+    const periodReleases = enrichedReleases.filter(
+      (release) => Number.isFinite(release.createdAtValue) && release.createdAtValue >= start,
+    );
+    const releasesWithStats = periodReleases.filter((release) => release.stats !== null);
 
     const coverage = {
       total: periodReleases.length,
-      withStats: periodReleases.filter((release) => release.stats !== null).length,
+      withStats: releasesWithStats.length,
       percent:
-        periodReleases.length > 0
-          ? Math.round((periodReleases.filter((release) => release.stats !== null).length / periodReleases.length) * 100)
-          : 0,
+        periodReleases.length > 0 ? Math.round((releasesWithStats.length / periodReleases.length) * 100) : 0,
     };
 
     const globalStats: Stats = { pass: 0, fail: 0, blocked: 0, notRun: 0 };
-    periodReleases.forEach((release) => {
+    releasesWithStats.forEach((release) => {
       if (release.stats) {
         globalStats.pass += release.stats.pass;
         globalStats.fail += release.stats.fail;
@@ -156,7 +187,7 @@ export async function GET(request: NextRequest) {
       const aRank = gatePriority[a.gate.status] ?? 99;
       const bRank = gatePriority[b.gate.status] ?? 99;
       if (aRank !== bRank) return aRank - bRank;
-      return a.name.localeCompare(b.name);
+      return a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" });
     });
 
     const releaseGateCounts: Record<string, number> = {
@@ -214,7 +245,9 @@ export async function GET(request: NextRequest) {
       policy: QUALITY_THRESHOLDS,
     };
 
-    return apiOk(request, response, "OK", { extra: response });
+    const res = apiOk(request, response, "OK", { extra: response });
+    res.headers.set("Cache-Control", "no-store");
+    return res;
   } catch (error) {
     console.error("GET /api/admin/quality/overview error", error);
     const msg = "Erro ao gerar overview";

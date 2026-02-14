@@ -31,28 +31,34 @@ export async function GET(req: Request) {
         return links.some((link) => link.companyId === company.id);
       });
 
+  // Otimiza lookup de link por companyId
+  const linkByCompanyId = new Map(links.map((l) => [l.companyId, l]));
+
+  // Helper para pegar createdAt
+  function pickCreatedAt(c: any): string | null {
+    if (typeof c.createdAt === "string") return c.createdAt;
+    if (typeof c.created_at === "string") return c.created_at;
+    return null;
+  }
+
   const items = allowedCompanies.map((company) => {
-    const link = links.find((item) => item.companyId === company.id);
+    const link = linkByCompanyId.get(company.id);
     const normalized = normalizeLocalRole(link?.role ?? null);
-    const createdAt =
-      (typeof (company as { createdAt?: string | null }).createdAt === "string"
-        ? (company as { createdAt?: string | null }).createdAt
-        : null) ??
-      (typeof (company as { created_at?: string | null }).created_at === "string"
-        ? (company as { created_at?: string | null }).created_at
-        : null);
     return {
       client_id: company.id,
       client_name: company.name ?? company.company_name ?? "Empresa",
-      client_slug: company.slug,
-      client_active: company.active ?? true,
+      client_slug: company.slug ?? null,
+      client_active: company.active === true,
       role: hasPrivilegedAccess || normalized === "company_admin" ? "ADMIN" : "USER",
       link_active: true,
-      created_at: createdAt,
+      created_at: pickCreatedAt(company),
       companyRole: normalized ?? null,
       capabilities: link?.capabilities ?? undefined,
     };
   });
 
-  return NextResponse.json({ items });
+  return NextResponse.json(
+    { items },
+    { status: 200, headers: { "Cache-Control": "private, max-age=30" } }
+  );
 }

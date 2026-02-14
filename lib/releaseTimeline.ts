@@ -3,6 +3,9 @@ import fs from "fs/promises";
 import { readManualReleaseStore } from "@/data/manualData";
 import { getReleaseBySlug } from "@/release/data";
 
+/**
+ * Tipos de eventos possíveis na timeline de um release.
+ */
 export type TimelineType =
   | "release_created"
   | "run_created"
@@ -12,6 +15,9 @@ export type TimelineType =
   | "gate_evaluated"
   | "gate_override";
 
+/**
+ * Evento da timeline de um release, com tipo, label, data e metadados.
+ */
 export type TimelineEvent = {
   id: string;
   type: TimelineType;
@@ -71,6 +77,12 @@ function statusIsFail(value?: string | null) {
   return v === "fail" || v === "failed" || v === "falha";
 }
 
+/**
+ * Gera a timeline de eventos de um release, incluindo criação, runs e histórico de quality gate.
+ * @param companySlug Slug da empresa
+ * @param releaseSlug Slug do release
+ * @returns Lista de eventos ordenados por data
+ */
 export async function getReleaseTimeline(companySlug: string, releaseSlug: string): Promise<TimelineEvent[]> {
   const events: TimelineEvent[] = [];
 

@@ -1,9 +1,12 @@
 .progress {
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
   height: 0.5rem;
   border-radius: 9999px;
   overflow: hidden;
   background: #f1f5f9; /* slate-100 */
+  border: none;
 }
 
 .progress::-webkit-progress-bar {
@@ -13,24 +16,26 @@
 
 .progress::-webkit-progress-value {
   border-radius: 9999px;
+  transition: width 0.3s ease;
 }
 
 .progress::-moz-progress-bar {
   border-radius: 9999px;
+  transition: width 0.3s ease;
 }
 
-.progressPass {
+.progress[data-status="pass"] {
   accent-color: #10b981; /* emerald-500 */
 }
 
-.progressFail {
+.progress[data-status="fail"] {
   accent-color: #ef4444; /* red-500 */
 }
 
-.progressBlocked {
+.progress[data-status="blocked"] {
   accent-color: #f59e0b; /* amber-500 */
 }
 
-.progressNotRun {
+.progress[data-status="notrun"] {
   accent-color: #94a3b8; /* slate-400 */
 }

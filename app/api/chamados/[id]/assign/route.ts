@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getTicketById, updateTicket } from "@/lib/ticketsStore";
@@ -6,39 +7,67 @@ import { notifyTicketAssigned } from "@/lib/notificationService";
 import { canAssignTicket } from "@/lib/rbac/tickets";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 
-export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: Request,
+  context: { params: { id: string } }
+) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  const { id } = await context.params;
-  const body = await req.json().catch(() => ({}));
-  const assignedToUserId =
-    typeof body?.assignedToUserId === "string" ? body.assignedToUserId.trim() : null;
+  const { id } = context.params;
 
-  const current = await getTicketById(id);
-  if (!current) {
-    return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
-  }
-  if (!canAssignTicket(user, current)) {
-    return NextResponse.json({ error: "Sem permissao para atribuir" }, { status: 403 });
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "JSON invalido" }, { status: 400 });
   }
 
   if (body?.assignedToUserId === undefined) {
     return NextResponse.json({ error: "Responsavel nao informado" }, { status: 400 });
   }
 
-  const updated = await updateTicket(id, {
-    assignedToUserId: assignedToUserId || null,
-    updatedBy: user.id,
-  });
+  if (
+    typeof body.assignedToUserId === "string" &&
+    !body.assignedToUserId.trim()
+  ) {
+    return NextResponse.json({ error: "Responsavel invalido" }, { status: 400 });
+  }
 
-  if (!updated) {
+  const assignedToUserId =
+    typeof body.assignedToUserId === "string"
+      ? body.assignedToUserId.trim() || null
+      : null;
+
+  const current = await getTicketById(id);
+  if (!current) {
     return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
   }
 
-  appendTicketEvent({
+  if (!canAssignTicket(user, current)) {
+    return NextResponse.json({ error: "Sem permissao para atribuir" }, { status: 403 });
+  }
+
+  if (current.assignedToUserId === assignedToUserId) {
+    const enriched = await attachAssigneeToTicket(current);
+    return NextResponse.json({ item: enriched }, { status: 200 });
+  }
+
+  // Para controle de versão: passar expectedUpdatedAt futuramente
+  const updated = await updateTicket(id, {
+    assignedToUserId,
+    updatedBy: user.id,
+    // expectedUpdatedAt: current.updatedAt, // descomente se implementar controle de versão
+  });
+
+  if (!updated) {
+    // Pode ser conflito de versão se implementar expectedUpdatedAt
+    return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
+  }
+
+  await appendTicketEvent({
     ticketId: updated.id,
     type: "ASSIGNED",
     actorUserId: user.id,

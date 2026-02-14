@@ -74,6 +74,14 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   }
 
   const body = await req.json().catch(() => ({}));
+  let commentBody = typeof body?.body === "string" ? body.body.trim() : "";
+  if (!commentBody || commentBody.length < 2) {
+    return NextResponse.json({ error: "Comentario vazio ou muito curto" }, { status: 400 });
+  }
+  if (commentBody.length > 2000) {
+    commentBody = commentBody.slice(0, 2000);
+  }
+
   const recent = await listTicketComments(id, { limit: 5, offset: 0 });
   const lastMine = recent.find((item) => item.authorUserId === user.id);
   if (isRateLimited(lastMine?.createdAt)) {
@@ -85,7 +93,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     ticketId: id,
     authorUserId: user.id,
     authorName: localUser?.name ?? null,
-    body: body?.body,
+    body: commentBody,
   });
 
   if (!comment) {

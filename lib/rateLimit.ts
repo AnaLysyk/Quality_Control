@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { getRedis } from "@/lib/redis";
 
-// Simple IP-based rate limiter (30 req/min default)
+/**
+ * Limitador simples de requisições baseado em chave/IP usando Redis.
+ * @param req Request original
+ * @param key Chave única (ex: IP ou userId)
+ * @param limit Limite de requisições por janela (default: 30)
+ * @param windowSec Duração da janela em segundos (default: 60)
+ * @returns { limited: boolean, response?: NextResponse }
+ */
 export async function rateLimit(req: Request, key: string, limit = 30, windowSec = 60) {
   const redis = getRedis();
   const now = Math.floor(Date.now() / 1000);

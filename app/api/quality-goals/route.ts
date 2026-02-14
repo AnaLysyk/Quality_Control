@@ -18,9 +18,15 @@ type QualityGoal = {
 async function readGoals(): Promise<QualityGoal[]> {
   try {
     const raw = await fs.readFile(STORE_PATH, "utf8");
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? (parsed as QualityGoal[]) : [];
-  } catch {
+    if (!raw.trim()) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      console.warn("Formato inválido em quality_goal_status.json");
+      return [];
+    }
+    return parsed.filter((item) => typeof item === "object" && item !== null);
+  } catch (error) {
+    console.error("Erro ao ler metas de qualidade:", error);
     return [];
   }
 }

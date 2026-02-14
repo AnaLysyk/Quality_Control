@@ -58,7 +58,8 @@ export async function GET(_req: Request, context: { params: Promise<{ slug: stri
 
   if (!effectiveAuthUser.isGlobalAdmin) {
     const allowed = resolveAllowedSlugs(effectiveAuthUser as AuthUser);
-    if (release.clientSlug && !allowed.includes(release.clientSlug)) {
+    // Default deny: se não tem clientSlug, bloqueia
+    if (!release.clientSlug || !allowed.includes(release.clientSlug)) {
       return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
     }
   }
@@ -82,10 +83,12 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
   const index = releases.findIndex((r) => r.slug === targetSlug);
   if (index < 0) return NextResponse.json({ message: "Nao encontrado" }, { status: 404 });
 
+
   const current = releases[index];
   if (!effectiveAuthUser.isGlobalAdmin) {
     const allowed = resolveAllowedSlugs(effectiveAuthUser as AuthUser);
-    if (current.clientSlug && !allowed.includes(current.clientSlug)) {
+    // Default deny: se não tem clientSlug, bloqueia
+    if (!current.clientSlug || !allowed.includes(current.clientSlug)) {
       return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
     }
   }
@@ -196,16 +199,24 @@ export async function DELETE(req: Request, context: { params: Promise<{ slug: st
     return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
   }
 
-  const role = await resolveDefectRole(effectiveAuthUser as AuthUser, null);
-  if (!canDeleteManualDefect(role)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
   const { slug } = await context.params;
   const targetSlug = slugifyRelease(slug);
   const releases = await readManualReleases();
   const target = releases.find((r) => r.slug === targetSlug) ?? null;
   if (!target) return NextResponse.json({ message: "Nao encontrado" }, { status: 404 });
+
+  if (!effectiveAuthUser.isGlobalAdmin) {
+    const allowed = resolveAllowedSlugs(effectiveAuthUser as AuthUser);
+    // Default deny: se não tem clientSlug, bloqueia
+    if (!target.clientSlug || !allowed.includes(target.clientSlug)) {
+      return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
+    }
+  }
+
+  const role = await resolveDefectRole(effectiveAuthUser as AuthUser, target.clientSlug ?? null);
+  if (!canDeleteManualDefect(role)) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
 
   const filtered = releases.filter((r) => r.slug !== targetSlug);
   await writeManualReleases(filtered);

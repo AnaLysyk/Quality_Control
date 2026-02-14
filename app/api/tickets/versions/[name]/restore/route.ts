@@ -13,6 +13,19 @@ export async function POST(req: Request, context: { params: Promise<{ name: stri
   }
 
   const { name } = await context.params;
+
+  // Audit log
+  const ip_address = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+  const user_agent = req.headers.get("user-agent") || null;
+  console.info("[TICKET_VERSION_RESTORE]", {
+    userId: user.id,
+    email: user.email,
+    version: name,
+    ip_address,
+    user_agent,
+    timestamp: new Date().toISOString(),
+  });
+
   try {
     await restoreVersion(name);
     return NextResponse.json({ ok: true }, { status: 200 });

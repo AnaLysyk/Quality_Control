@@ -90,6 +90,18 @@ export async function GET(request: Request) {
 
   const project = normalizeString(url.searchParams.get("project")) || "ALL";
 
+  // Audit log
+  const ip_address = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+  const user_agent = request.headers.get("user-agent") || null;
+  console.info("[DEFECTS_GET]", {
+    userId: auth.id,
+    email: auth.email,
+    project,
+    ip_address,
+    user_agent,
+    timestamp: new Date().toISOString(),
+  });
+
   if (!QASE_TOKEN) {
     return NextResponse.json({ success: true, data: [], warning: "QASE_API_TOKEN ausente" }, { status: 200 });
   }

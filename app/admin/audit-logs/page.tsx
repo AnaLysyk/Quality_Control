@@ -18,7 +18,40 @@ const ACTION_BADGE: Record<string, string> = {
   CREATE: "bg-emerald-50 text-emerald-700",
   UPDATE: "bg-amber-50 text-amber-700",
   DELETE: "bg-rose-50 text-rose-700",
+  LOGIN: "bg-sky-50 text-sky-700",
+  ACCESS: "bg-violet-50 text-violet-700",
 };
+
+const DEFAULT_BADGE = "bg-slate-100 text-slate-900";
+
+function resolveActionBadge(action: string | null | undefined): string {
+  const normalized = (action ?? "").toUpperCase();
+  if (ACTION_BADGE[normalized]) return ACTION_BADGE[normalized];
+  if (normalized.includes("CREATE") || normalized.includes("ADD") || normalized.includes("INSERT")) {
+    return ACTION_BADGE.CREATE;
+  }
+  if (normalized.includes("DELETE") || normalized.includes("REMOVE") || normalized.includes("DESTROY")) {
+    return ACTION_BADGE.DELETE;
+  }
+  if (normalized.includes("UPDATE") || normalized.includes("EDIT") || normalized.includes("PATCH")) {
+    return ACTION_BADGE.UPDATE;
+  }
+  if (normalized.includes("LOGIN") || normalized.includes("AUTH")) {
+    return ACTION_BADGE.LOGIN;
+  }
+  return DEFAULT_BADGE;
+}
+
+function resolveSourceLabel(metadata: unknown): string {
+  if (metadata && typeof metadata === "object") {
+    const record = metadata as Record<string, unknown>;
+    const sourceCandidate = record.source ?? record.origin ?? record.trigger;
+    if (typeof sourceCandidate === "string" && sourceCandidate.trim().length > 0) {
+      return sourceCandidate;
+    }
+  }
+  return "Origem não informada";
+}
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -67,14 +100,30 @@ export default function AdminAuditLogsPage() {
   }, [load]);
 
   const actions = useMemo(() => {
-    const set = new Set(items.map((i) => i.action));
+    const set = new Set(items.map((i) => i.action).filter((value): value is string => typeof value === "string" && value.length > 0));
     return Array.from(set).sort();
   }, [items]);
 
   const entityTypes = useMemo(() => {
-    const set = new Set(items.map((i) => i.entity_type));
+    const set = new Set(
+      items.map((i) => i.entity_type).filter((value): value is string => typeof value === "string" && value.length > 0),
+    );
     return Array.from(set).sort();
   }, [items]);
+
+  const startBoundary = useMemo(() => {
+    if (!startDate) return null;
+    const iso = `${startDate}T00:00:00.000`;
+    const parsed = new Date(iso);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }, [startDate]);
+
+  const endBoundary = useMemo(() => {
+    if (!endDate) return null;
+    const iso = `${endDate}T23:59:59.999`;
+    const parsed = new Date(iso);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }, [endDate]);
 
   const filteredItems = useMemo(() => {
     return items.filter((log) => {
@@ -88,17 +137,17 @@ export default function AdminAuditLogsPage() {
         const type = (log.entity_type ?? "").toLowerCase();
         if (!label.includes(q) && !id.includes(q) && !type.includes(q)) return false;
       }
-      if (startDate) {
-        const date = new Date(log.created_at);
-        if (date < new Date(startDate)) return false;
+      if (startBoundary) {
+        const createdAt = new Date(log.created_at);
+        if (createdAt < startBoundary) return false;
       }
-      if (endDate) {
-        const date = new Date(log.created_at);
-        if (date > new Date(endDate)) return false;
+      if (endBoundary) {
+        const createdAt = new Date(log.created_at);
+        if (createdAt > endBoundary) return false;
       }
       return true;
     });
-  }, [items, action, actor, startDate, endDate, entityType, targetQuery]);
+  }, [items, action, actor, startBoundary, endBoundary, entityType, targetQuery]);
 
   const showSkeleton = loading && !items.length;
 
@@ -120,10 +169,10 @@ export default function AdminAuditLogsPage() {
 
         <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 space-y-4 shadow shadow-black/5">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-            <FilterSelect label="Acao" value={action} onChange={setAction} options={actions} />
+            <FilterSelect label="Ação" value={action} onChange={setAction} options={actions} />
             <FilterSelect label="Entidade" value={entityType} onChange={setEntityType} options={entityTypes} />
             <FilterInput label="Ator" value={actor} onChange={setActor} placeholder="email ou uid" />
-            <FilterInput label="Alvo" value={targetQuery} onChange={setTargetQuery} placeholder="empresa, usuario, id" />
+            <FilterInput label="Alvo" value={targetQuery} onChange={setTargetQuery} placeholder="empresa, usuário, id" />
             <FilterInput label="Data inicial" value={startDate} onChange={setStartDate} type="date" />
             <FilterInput label="Data final" value={endDate} onChange={setEndDate} type="date" />
           </div>
@@ -206,11 +255,11 @@ export default function AdminAuditLogsPage() {
                     </time>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-[0.3em] text-(--tc-text-muted) sm:hidden">AÃ§Ã£o</span>
+                    <span className="text-[10px] uppercase tracking-[0.3em] text-(--tc-text-muted) sm:hidden">Ação</span>
                     <span className="flex items-center">
                       <span
                         className={`rounded-full px-3 py-0.5 text-[11px] font-semibold tracking-[0.25em] uppercase ${
-                          ACTION_BADGE[item.action] ?? "bg-slate-100 text-slate-900"
+                          resolveActionBadge(item.action)
                         }`}
                       >
                         {item.action}
@@ -236,7 +285,7 @@ export default function AdminAuditLogsPage() {
                     <div className="grid gap-4 lg:grid-cols-3">
                       <div>
                         <p className="text-[10px] uppercase tracking-[0.35em] text-(--tc-text-muted)">Origem</p>
-                        <p className="text-sm text-(--tc-text)">UI · API · Sistema</p>
+                        <p className="text-sm text-(--tc-text)">{resolveSourceLabel(item.metadata)}</p>
                       </div>
                       <div>
                         <p className="text-[10px] uppercase tracking-[0.35em] text-(--tc-text-muted)">Entidade</p>

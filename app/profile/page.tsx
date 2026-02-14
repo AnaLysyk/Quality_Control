@@ -156,6 +156,15 @@ export default function ProfilePage() {
         ? "Administrador"
         : "Usuário";
 
+  // Melhoria: feedback visual de loading global
+  if (!user) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-(--page-bg,#0b1220) text-white">
+        <span className="text-lg text-(--tc-text-muted,#6b7280)">Carregando perfil...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen w-full bg-(--page-bg,#0b1220) text-white">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">

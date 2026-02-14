@@ -11,7 +11,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
   }
 
-  const isGlobalAdmin = access.isGlobalAdmin === true || (access.role ?? "").toLowerCase() === "admin";
+  const normalizedGlobalRole = (access.globalRole ?? "").toLowerCase();
+  const isGlobalAdmin = access.isGlobalAdmin === true || normalizedGlobalRole === "global_admin";
 
   if (isGlobalAdmin) {
     const companies = await listLocalCompanies();

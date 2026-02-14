@@ -255,31 +255,31 @@ export default function NotificationsButton() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Abrir notificacoes"
-        className="relative flex h-11 w-11 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-(--tc-accent,#ef0001)/60 hover:text-(--tc-accent,#ef0001)"
+        className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[--tc-border]/70 bg-[--tc-surface] text-[--tc-text] shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-[--tc-accent]/60 hover:text-[--tc-accent]"
       >
         <FiBell size={18} />
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-(--tc-accent,#ef0001) px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-[0_6px_16px_rgba(239,0,1,0.35)]">
+          <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-[--tc-accent] px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-[0_6px_16px_rgba(239,0,1,0.35)]">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-[min(28rem,calc(100vw-2rem))] rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_20px_45px_rgba(15,23,42,0.2)]">
-          <div className="flex items-center justify-between gap-3 border-b border-(--tc-border,#e5e7eb) px-4 py-3">
+        <div className="absolute right-0 mt-2 w-[min(28rem,calc(100vw-2rem))] rounded-2xl border border-[--tc-border] bg-[--tc-surface] shadow-[0_20px_45px_rgba(15,23,42,0.2)]">
+          <div className="flex items-center justify-between gap-3 border-b border-[--tc-border] px-4 py-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
+              <p className="text-xs uppercase tracking-[0.3em] text-[--tc-text-muted]">
                 Notificacoes
               </p>
-              <p className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">
+              <p className="text-sm font-semibold text-[--tc-text-primary]">
                 {unreadCount > 0 ? `${unreadCount} nao lida(s)` : "Tudo em dia"}
               </p>
             </div>
             <button
               type="button"
               onClick={() => loadNotifications()}
-              className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text,#0f172a) hover:border-(--tc-accent,#ef0001)/50"
+              className="rounded-lg border border-[--tc-border] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[--tc-text] hover:border-[--tc-accent]/50"
             >
               Atualizar
             </button>
@@ -289,9 +289,9 @@ export default function NotificationsButton() {
             ref={listRef}
             className="max-h-[70vh] overflow-auto px-4 py-3 space-y-3"
           >
-            {loading && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
+            {loading && <p className="text-sm text-[--tc-text-muted]">Carregando...</p>}
             {!loading && items.length === 0 && (
-              <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma notificacao por aqui.</p>
+              <p className="text-sm text-[--tc-text-muted]">Nenhuma notificacao por aqui.</p>
             )}
 
             {items.map((item) => (
@@ -301,22 +301,22 @@ export default function NotificationsButton() {
                 onClick={() => openDetails(item)}
                 className={`w-full rounded-xl border px-4 py-3 text-left transition ${
                   item.status === "closed"
-                    ? "border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) text-(--tc-text-muted,#6b7280)"
-                    : "border-(--tc-accent,#ef0001)/40 bg-(--tc-accent,#ef0001)/5 text-(--tc-text,#0f172a) hover:bg-(--tc-accent,#ef0001)/10"
+                    ? "border-[--tc-border] bg-[--tc-surface-2] text-[--tc-text-muted]"
+                    : "border-[--tc-accent]/40 bg-[--tc-accent]/5 text-[--tc-text] hover:bg-[--tc-accent]/10"
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold">{item.title}</p>
                     {item.description && (
-                      <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">{item.description}</p>
+                      <p className="mt-1 text-xs text-[--tc-text-muted]">{item.description}</p>
                     )}
                   </div>
-                  <span className="text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                  <span className="text-[10px] uppercase tracking-[0.25em] text-[--tc-text-muted]">
                     {item.status === "closed" ? "Fechada" : "Nova"}
                   </span>
                 </div>
-                <p className="mt-2 text-[11px] text-(--tc-text-muted,#6b7280)">
+                <p className="mt-2 text-[11px] text-[--tc-text-muted]">
                   {new Date(item.createdAt).toLocaleString("pt-BR")}
                 </p>
               </button>
@@ -329,53 +329,53 @@ export default function NotificationsButton() {
 
       {detailsOpen && selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_30px_60px_rgba(15,23,42,0.35)]">
-            <div className="flex items-start justify-between gap-4 border-b border-(--tc-border,#e5e7eb) px-5 py-4">
+          <div className="w-full max-w-2xl rounded-2xl border border-[--tc-border] bg-[--tc-surface] shadow-[0_30px_60px_rgba(15,23,42,0.35)]">
+            <div className="flex items-start justify-between gap-4 border-b border-[--tc-border] px-5 py-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Notificacao</p>
-                <p className="text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">{selected.title}</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-[--tc-text-muted]">Notificacao</p>
+                <p className="text-lg font-semibold text-[--tc-text-primary]">{selected.title}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setDetailsOpen(false)}
-                className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                className="rounded-lg border border-[--tc-border] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
               >
                 Fechar
               </button>
             </div>
             <div className="px-5 py-4 space-y-4">
               {selected.description && (
-                <p className="text-sm whitespace-pre-wrap text-(--tc-text-secondary,#4b5563)">
+                <p className="text-sm whitespace-pre-wrap text-[--tc-text-secondary]">
                   {selected.description}
                 </p>
               )}
 
-              <div className="grid gap-2 text-xs text-(--tc-text-muted,#6b7280)">
+              <div className="grid gap-2 text-xs text-[--tc-text-muted]">
                 <p>
-                  <span className="font-semibold text-(--tc-text,#0f172a)">Status:</span>{" "}
+                  <span className="font-semibold text-[--tc-text]">Status:</span>{" "}
                   {selected.status === "closed" ? "Fechada" : "Nova"}
                 </p>
                 <p>
-                  <span className="font-semibold text-(--tc-text,#0f172a)">Criada:</span>{" "}
+                  <span className="font-semibold text-[--tc-text]">Criada:</span>{" "}
                   {new Date(selected.createdAt).toLocaleString("pt-BR")}
                 </p>
                 {selected.companySlug && (
                   <p>
-                    <span className="font-semibold text-(--tc-text,#0f172a)">Empresa:</span>{" "}
+                    <span className="font-semibold text-[--tc-text]">Empresa:</span>{" "}
                     {selected.companySlug}
                   </p>
                 )}
               {canManageTickets && (
                 <>
                   <p>
-                    <span className="font-semibold text-(--tc-text,#0f172a)">Tipo:</span> {selected.type}
+                    <span className="font-semibold text-[--tc-text]">Tipo:</span> {selected.type}
                   </p>
                     <p>
-                      <span className="font-semibold text-(--tc-text,#0f172a)">ID:</span> {selected.id}
+                      <span className="font-semibold text-[--tc-text]">ID:</span> {selected.id}
                     </p>
                     {selected.ticketId && (
                       <p>
-                        <span className="font-semibold text-(--tc-text,#0f172a)">Chamado ID:</span>{" "}
+                        <span className="font-semibold text-[--tc-text]">Chamado ID:</span>{" "}
                         {selected.ticketId}
                       </p>
                     )}
@@ -391,42 +391,42 @@ export default function NotificationsButton() {
                     setDetailsOpen(false);
                     setOpen(false);
                   }}
-                  className="inline-flex items-center gap-2 rounded-lg bg-(--tc-surface-dark,#0b1a3c) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
+                  className="inline-flex items-center gap-2 rounded-lg bg-[--tc-surface-dark] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
                 >
                   Abrir link
                 </button>
               )}
 
               {canManageTickets && selected.ticketId && (
-                <div className="rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4 space-y-3">
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Chamado</p>
+                <div className="rounded-xl border border-[--tc-border] bg-[--tc-surface-2] p-4 space-y-3">
+                  <p className="text-xs uppercase tracking-[0.3em] text-[--tc-text-muted]">Chamado</p>
                   {ticketLoading && (
-                    <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando chamado...</p>
+                    <p className="text-sm text-[--tc-text-muted]">Carregando chamado...</p>
                   )}
                   {!ticketLoading && ticketInfo && (
                     <>
                       <div>
-                        <p className="text-sm font-semibold text-(--tc-text,#0f172a)">{ticketInfo.title}</p>
-                        <p className="text-xs text-(--tc-text-muted,#6b7280)">
+                        <p className="text-sm font-semibold text-[--tc-text]">{ticketInfo.title}</p>
+                        <p className="text-xs text-[--tc-text-muted]">
                           Criado em {new Date(ticketInfo.createdAt).toLocaleString("pt-BR")}
                           {ticketInfo.createdByName || ticketInfo.createdByEmail
                             ? ` por ${ticketInfo.createdByName || ticketInfo.createdByEmail}`
                             : ""}
                         </p>
                       </div>
-                      <p className="text-sm whitespace-pre-wrap text-(--tc-text-secondary,#4b5563)">
+                      <p className="text-sm whitespace-pre-wrap text-[--tc-text-secondary]">
                         {ticketInfo.description || "Sem descricao."}
                       </p>
                       <div className="flex flex-wrap items-center gap-2">
                         <label
                           htmlFor={`notification-ticket-status-${selected.ticketId ?? "current"}`}
-                          className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
+                          className="text-xs uppercase tracking-[0.3em] text-[--tc-text-muted]"
                         >
                           Status
                         </label>
                         <select
                           id={`notification-ticket-status-${selected.ticketId ?? "current"}`}
-                          className="rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
+                          className="rounded-lg border border-[--tc-border] bg-white px-3 py-2 text-xs"
                           value={ticketInfo.status}
                           onChange={(e) => updateTicketStatus(e.target.value as TicketStatus)}
                           disabled={ticketUpdating || !canManageTickets}
@@ -437,14 +437,14 @@ export default function NotificationsButton() {
                             </option>
                           ))}
                         </select>
-                        <span className="text-xs text-(--tc-text-muted,#6b7280)">
+                        <span className="text-xs text-[--tc-text-muted]">
                           Atual: {getTicketStatusLabel(ticketInfo.status)}
                         </span>
                       </div>
                     </>
                   )}
                   {!ticketLoading && !ticketInfo && !ticketError && (
-                    <p className="text-sm text-(--tc-text-muted,#6b7280)">Chamado nao encontrado.</p>
+                    <p className="text-sm text-[--tc-text-muted]">Chamado nao encontrado.</p>
                   )}
                   {ticketError && <p className="text-sm text-red-600">{ticketError}</p>}
                 </div>
@@ -455,14 +455,14 @@ export default function NotificationsButton() {
                   type="button"
                   onClick={() => closeNotification(selected.id)}
                   disabled={selected.status === "closed"}
-                  className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] disabled:opacity-60"
+                  className="rounded-lg border border-[--tc-border] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] disabled:opacity-60"
                 >
                   {selected.status === "closed" ? "Ja marcada" : "Marcar como lida"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setDetailsOpen(false)}
-                  className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                  className="rounded-lg border border-[--tc-border] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
                 >
                   Voltar
                 </button>

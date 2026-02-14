@@ -60,12 +60,27 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     return NextResponse.json({ error: "Sem permissao para editar" }, { status: 403 });
   }
 
-  const tags =
-    Array.isArray(body?.tags) ? body.tags : typeof body?.tags === "string" ? body.tags.split(",") : body?.tags;
+  // Sanitize and limit fields
+  let title = typeof body?.title === "string" ? body.title.trim() : undefined;
+  let description = typeof body?.description === "string" ? body.description.trim() : undefined;
+  if (title && (title.length < 2 || title.length > 200)) {
+    return NextResponse.json({ error: "Titulo deve ter entre 2 e 200 caracteres" }, { status: 400 });
+  }
+  if (description && (description.length < 2 || description.length > 2000)) {
+    return NextResponse.json({ error: "Descricao deve ter entre 2 e 2000 caracteres" }, { status: 400 });
+  }
+  let tags = Array.isArray(body?.tags)
+    ? body.tags.map((t: string) => t.trim()).filter(Boolean)
+    : typeof body?.tags === "string"
+    ? body.tags.split(",").map((t: string) => t.trim()).filter(Boolean)
+    : undefined;
+  if (tags && tags.length > 20) {
+    tags = tags.slice(0, 20);
+  }
 
   const updated = await updateTicket(id, {
-    title: body?.title,
-    description: body?.description,
+    title,
+    description,
     type: body?.type,
     priority: body?.priority,
     tags,

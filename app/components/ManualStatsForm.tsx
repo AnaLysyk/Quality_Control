@@ -49,14 +49,14 @@ export function ManualStatsForm({ slug, initialStats }: ManualStatsFormProps) {
   };
 
   return (
-    <div className="rounded-2xl border border-(--tc-border)/40 bg-(--tc-surface-dark,#0f1828) p-4 space-y-3">
+    <div className="rounded-2xl border border-[--tc-border]/40 bg-[--tc-surface-dark] p-4 space-y-3">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm font-semibold text-(--tc-text-inverse)">Resultados manuais</p>
+        <p className="text-sm font-semibold text-[--tc-text-inverse]">Resultados manuais</p>
         <button
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="rounded-lg bg-(--tc-accent) px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
+          className="rounded-lg bg-[--tc-accent] px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
         >
           {saving ? "Salvando..." : "Salvar"}
         </button>
@@ -64,19 +64,19 @@ export function ManualStatsForm({ slug, initialStats }: ManualStatsFormProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {(["pass", "fail", "blocked", "notRun"] as const).map((key) => (
           <div key={key} className="space-y-1">
-            <label className="text-[10px] uppercase tracking-wide text-(--tc-text-muted)">{key}</label>
+            <label className="text-[10px] uppercase tracking-wide text-[--tc-text-muted]">{key}</label>
             <input
               type="number"
               min={0}
               aria-label={`Total ${key}`}
               value={stats[key]}
               onChange={(e) => update(key, e.target.value)}
-              className="form-control-user w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg) px-3 py-2 text-sm text-(--tc-text) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/40"
+              className="form-control-user w-full rounded-lg border border-[--tc-border] bg-[--tc-input-bg] px-3 py-2 text-sm text-[--tc-text] focus:outline-none focus:ring-2 focus:ring-[--tc-accent]/40"
             />
           </div>
         ))}
       </div>
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between text-xs text-(--tc-text-muted)">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between text-xs text-[--tc-text-muted]">
         <span>Total: {total}</span>
         <span>Pass%: {total > 0 ? Math.round((stats.pass / total) * 100) : 0}%</span>
       </div>

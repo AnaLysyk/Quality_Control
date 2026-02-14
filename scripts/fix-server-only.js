@@ -7,8 +7,8 @@ const targets = [
 ];
 
 for (const filePath of targets) {
+  if (fs.existsSync(filePath)) continue;
   try {
-    if (fs.existsSync(filePath)) continue;
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, "module.exports = {};\n", "utf8");
     console.log(`fix-server-only: created ${filePath}`);

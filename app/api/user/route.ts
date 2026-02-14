@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { hashPassword } from "@/lib/passwordHash";
 import { createLocalUser, listLocalUsers, upsertLocalLink } from "@/lib/auth/localStore";
 
 // POST: Cria um novo usuario e vincula a uma empresa
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Usuario ja existe" }, { status: 409 });
   }
 
-  const hash = hashPasswordSha256(password);
+  const hash = await hashPassword(password);
   let user = null;
   try {
     user = await createLocalUser({

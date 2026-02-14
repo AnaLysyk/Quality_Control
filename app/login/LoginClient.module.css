@@ -8,18 +8,16 @@
 .loginFixedTheme {
   /* Keep login visuals consistent regardless of global theme */
   color-scheme: light;
-  --background: #ffffff;
-  --foreground: #0b1a3c;
-  --tc-border: rgba(15, 23, 42, 0.1);
-  --tc-input-bg: #eef4ff;
-  --tc-text: #0b1a3c;
-  --tc-text-primary: #0b1a3c;
-  --tc-text-secondary: #4b5563;
-  --tc-text-muted: #6b7280;
-  --tc-surface: #ffffff;
-  --tc-surface-2: #f8fafc;
-  --page-bg: #f4f6fb;
-  --page-text: #0b1a3c;
+  --tc-border: var(--tc-border, rgba(15,23,42,0.1));
+  --tc-input-bg: var(--tc-input-bg, #eef4ff);
+  --tc-text: var(--tc-text, #0b1a3c);
+  --tc-text-primary: var(--tc-text-primary, #0b1a3c);
+  --tc-text-secondary: var(--tc-text-secondary, #4b5563);
+  --tc-text-muted: var(--tc-text-muted, #6b7280);
+  --tc-surface: var(--tc-surface, #ffffff);
+  --tc-surface-variant: var(--tc-surface-variant, #f8fafc);
+  --page-bg: var(--page-bg, #f4f6fb);
+  --page-text: var(--page-text, #0b1a3c);
 }
 
 .logoWrapper {

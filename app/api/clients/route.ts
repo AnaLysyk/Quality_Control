@@ -95,7 +95,9 @@ export async function POST(req: NextRequest) {
   const desiredSlug = (input.slug || "").trim();
   const slugBase = toSlug(desiredSlug || name) || `empresa-${randomUUID().slice(0, 8)}`;
 
-  console.debug(`[CLIENTS][POST] admin=${admin?.email ?? "-"} name=${name} desiredSlug=${desiredSlug} slugBase=${slugBase}`);
+  console.debug(
+    `[CLIENTS][POST] admin=${admin?.email ?? "-"} name=${name} desiredSlug=${desiredSlug} slugBase=${slugBase}`,
+  );
 
   const integrationType = (input as { integration_type?: string | null }).integration_type ?? null;
   const resolvedNotes =

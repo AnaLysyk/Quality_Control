@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useRef } from 'react';
 
 export interface SystemMetrics {
   overview: {
@@ -23,16 +24,22 @@ export interface SystemMetrics {
   lastUpdated: string;
 }
 
+/**
+ * Hook para buscar e atualizar métricas globais do sistema.
+ * Faz fetch em /api/metrics/overview, tenta refresh automático se 401.
+ * Atualiza a cada 5 minutos e previne setState após unmount.
+ */
 export function useSystemMetrics() {
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Previne setState após unmount
+  const isMounted = useRef(true);
 
   const fetchMetrics = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-
       const fetchOverview = () =>
         fetch('/api/metrics/overview', { credentials: 'include', cache: 'no-store' });
 
@@ -52,21 +59,25 @@ export function useSystemMetrics() {
       }
 
       const data = await response.json();
-      setMetrics(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      if (isMounted.current) setMetrics(data);
+    } catch (err: unknown) {
+      if (isMounted.current) setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   };
 
   useEffect(() => {
+    isMounted.current = true;
     fetchMetrics();
 
     // Atualizar métricas a cada 5 minutos
     const interval = setInterval(fetchMetrics, 5 * 60 * 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      isMounted.current = false;
+      clearInterval(interval);
+    };
   }, []);
 
   return {

@@ -1,5 +1,6 @@
 import "server-only";
 
+// Este módulo só deve ser importado em server components ou rotas de API Next.js
 import type { RequestRecord } from "@/data/requestsStore";
 import type { Release } from "@/types/release";
 import type { TicketRecord } from "@/lib/ticketsStore";
@@ -15,10 +16,12 @@ import {
   listLocalMemberships,
 } from "@/lib/auth/localStore";
 
+// Retorna true se o usuário for admin global
 function isAdminUser(user: { is_global_admin?: boolean; globalRole?: string | null }) {
   return user.is_global_admin === true || user.globalRole === "global_admin";
 }
 
+// Retorna true se o usuário for desenvolvedor (it_dev)
 function isItDevUser(user: { role?: string | null }) {
   const role = (user.role ?? "").toLowerCase();
   return role === "it_dev" || role === "itdev" || role === "developer" || role === "dev";
@@ -29,6 +32,7 @@ async function resolveAdminUserIds() {
   return users.filter(isAdminUser).map((user) => user.id);
 }
 
+// Retorna lista de IDs de usuários admin global
 async function resolveItDevUserIds() {
   const [users, memberships] = await Promise.all([listLocalUsers(), listLocalMemberships()]);
   const ids = new Set<string>();
@@ -39,6 +43,7 @@ async function resolveItDevUserIds() {
   return Array.from(ids);
 }
 
+// Retorna lista de IDs de usuários vinculados a uma empresa (inclui admins globais)
 async function resolveCompanyUserIds(companySlug?: string | null) {
   const adminIds = await resolveAdminUserIds();
   if (!companySlug) return adminIds;
@@ -50,6 +55,9 @@ async function resolveCompanyUserIds(companySlug?: string | null) {
   return Array.from(new Set([...adminIds, ...memberIds]));
 }
 
+/**
+ * Notifica admins e usuário sobre solicitação de reset de senha.
+ */
 export async function notifyPasswordResetRequest(request: RequestRecord) {
   const adminIds = await resolveAdminUserIds();
   const userLabel = request.userName || request.userEmail || "Usuario";
@@ -70,6 +78,9 @@ export async function notifyPasswordResetRequest(request: RequestRecord) {
   });
 }
 
+/**
+ * Notifica usuário sobre aprovação ou rejeição do reset de senha.
+ */
 export async function notifyPasswordResetStatus(
   request: RequestRecord,
   status: "APPROVED" | "REJECTED",
@@ -90,6 +101,9 @@ export async function notifyPasswordResetStatus(
   });
 }
 
+/**
+ * Notifica usuários da empresa sobre criação de nova run manual.
+ */
 export async function notifyManualRunCreated(release: Release) {
   const companySlug = release.clientSlug ?? null;
   const recipients = await resolveCompanyUserIds(companySlug);
@@ -113,6 +127,9 @@ export async function notifyManualRunCreated(release: Release) {
   await notifyManualRunFailure(release, recipients, link);
 }
 
+/**
+ * Notifica usuários sobre falha(s) em uma run manual.
+ */
 export async function notifyManualRunFailure(
   release: Release,
   cachedRecipients?: string[],
@@ -140,6 +157,9 @@ export async function notifyManualRunFailure(
   });
 }
 
+/**
+ * Notifica admins e devs sobre novo chamado criado.
+ */
 export async function notifyTicketCreated(ticket: TicketRecord) {
   const recipients = Array.from(new Set([...(await resolveAdminUserIds()), ...(await resolveItDevUserIds())]));
   if (!recipients.length) return;
@@ -159,6 +179,9 @@ export async function notifyTicketCreated(ticket: TicketRecord) {
   });
 }
 
+/**
+ * Notifica criador e responsável por mudança de status do chamado.
+ */
 export async function notifyTicketStatusChanged(input: {
   ticket: TicketRecord;
   actorId: string;
@@ -187,6 +210,9 @@ export async function notifyTicketStatusChanged(input: {
   });
 }
 
+/**
+ * Notifica partes interessadas sobre novo comentário em chamado.
+ */
 export async function notifyTicketCommentAdded(input: {
   ticket: TicketRecord;
   comment: TicketCommentRecord;
@@ -217,6 +243,9 @@ export async function notifyTicketCommentAdded(input: {
   });
 }
 
+/**
+ * Notifica autor do comentário sobre reação recebida.
+ */
 export async function notifyTicketReactionAdded(input: {
   ticket: TicketRecord;
   comment: TicketCommentRecord;
@@ -234,6 +263,9 @@ export async function notifyTicketReactionAdded(input: {
   });
 }
 
+/**
+ * Notifica usuário atribuído a um chamado.
+ */
 export async function notifyTicketAssigned(input: {
   ticket: TicketRecord;
   assigneeId: string;
@@ -251,6 +283,9 @@ export async function notifyTicketAssigned(input: {
   });
 }
 
+/**
+ * Notifica admins sobre novo comentário em solicitação de acesso.
+ */
 export async function notifyAccessRequestComment(input: {
   requestId: string;
   commentId: string;

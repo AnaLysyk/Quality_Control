@@ -25,14 +25,14 @@ export default function Breadcrumb({ items, className }: Props) {
       <Link
         href={item.href}
         prefetch={false}
-        className={`${baseClass} hover:underline hover:text-(--tc-accent,#ef0001)`}
+        className={`${baseClass} hover:underline hover:text-[--tc-accent]`}
         title={item.title}
       >
         {item.label}
       </Link>
     ) : (
       <span
-        className={`${baseClass}${isLast ? " text-(--tc-text-secondary,#4b5563)" : ""}`}
+        className={`${baseClass}${isLast ? " text-[--tc-text-secondary]" : ""}`}
         aria-current={isLast ? "page" : undefined}
         title={item.title}
       >
@@ -58,7 +58,7 @@ export default function Breadcrumb({ items, className }: Props) {
   return (
     <nav
       aria-label="Breadcrumb"
-      className={className ?? "text-xs sm:text-sm text-(--tc-text-muted,#6b7280)"}
+      className={className ?? "text-xs sm:text-sm text-[--tc-text-muted]"}
     >
       <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">{breadcrumbElements}</ol>
     </nav>

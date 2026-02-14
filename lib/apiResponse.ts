@@ -46,6 +46,9 @@ export function getRequestId(req: Request): string {
   );
 }
 
+/**
+ * Gera resposta de sucesso padronizada para API (envelope).
+ */
 export function apiOk<T>(
   req: Request,
   data: T,
@@ -76,6 +79,9 @@ export function apiOk<T>(
   return res;
 }
 
+/**
+ * Gera resposta de erro padronizada para API (envelope).
+ */
 export function apiFail(
   req: Request,
   message: string,

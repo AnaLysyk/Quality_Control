@@ -14,11 +14,13 @@ export async function GET(req: Request) {
   }
 
   const user = await getLocalUserById(access.userId);
-  if (!user) {
-    return errorResponse(401, "USER_NOT_FOUND", "Usuario nao encontrado");
+  if (!user || user.active === false || user.status === "blocked") {
+    return errorResponse(401, "USER_INVALID", "Usuario indisponivel");
   }
 
-  return NextResponse.json({
+  const capabilities = Array.isArray(access.capabilities) ? access.capabilities : [];
+
+  const res = NextResponse.json({
     user: {
       id: user.id,
       email: user.email,
@@ -26,12 +28,16 @@ export async function GET(req: Request) {
       role: access.role ?? null,
       globalRole: access.globalRole ?? null,
       companyRole: access.companyRole ?? null,
-      capabilities: access.capabilities ?? [],
+      capabilities,
       companyId: access.companyId ?? null,
+      // Mantem campos client* por compatibilidade com clientes legados.
       clientId: access.companyId ?? null,
       companySlug: access.companySlug ?? null,
       clientSlug: access.companySlug ?? null,
       isGlobalAdmin: access.isGlobalAdmin === true,
     },
   });
+
+  res.headers.set("Cache-Control", "no-store");
+  return res;
 }

@@ -36,13 +36,13 @@ const DOCS = [
 
 export default function DocsIndexPage() {
   return (
-    <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
+    <div className="min-h-screen bg-(--page-bg) text-(--page-text)">
       <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-10 space-y-4">
         <Breadcrumb items={[{ label: "Documentações" }]} />
 
         <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Documentações</h1>
-          <p className="text-sm sm:text-base text-(--tc-text-secondary,#4b5563)">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary)">Documentações</h1>
+          <p className="text-sm sm:text-base text-(--tc-text-secondary)">
             Materiais internos do projeto (renderizados direto do repositório).
           </p>
         </div>
@@ -52,15 +52,15 @@ export default function DocsIndexPage() {
             <Link
               key={doc.slug}
               href={`/docs/${doc.slug}`}
-              className="rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 transition hover:border-(--tc-accent,#ef0001)/50 focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+              className="rounded-xl border border-(--tc-border) bg-(--tc-surface) p-4 transition hover:border-(--tc-accent)/50 focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30"
             >
-              <div className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{doc.title}</div>
-              <div className="mt-1 text-sm text-(--tc-text-muted,#6b7280)">{doc.description}</div>
+              <div className="text-sm font-semibold text-(--tc-text-primary)">{doc.title}</div>
+              <div className="mt-1 text-sm text-(--tc-text-muted)">{doc.description}</div>
             </Link>
           ))}
         </div>
 
-        <div className="text-sm text-(--tc-text-muted,#6b7280)">
+        <div className="text-sm text-(--tc-text-muted)">
           Dica: para docs por empresa, use “Documentações” no menu do perfil.
         </div>
       </div>

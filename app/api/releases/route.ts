@@ -8,7 +8,19 @@ import { addAuditLogSafe } from "@/data/auditLogRepository";
 // Garantir ambiente Node para fs
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Exige autenticação e role mínima para listar releases
+  const actor = await authenticateRequest(request).catch(() => null);
+  const mockRole = await getRunMockRole();
+  const effectiveActor = actor ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "admin" } : null);
+  if (!effectiveActor) {
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+  }
+  const role = mockRole ?? (await resolveRunRole(effectiveActor));
+  // Permite listar releases se pode criar ou deletar (ajuste conforme política desejada)
+  if (!canCreateRun(role) && !canDeleteRun(role)) {
+    return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+  }
   const releases = await getAllReleases();
   // normaliza payload com id/title/status consistente para o Kanban/listas
   const normalized = releases.map((r) => ({

@@ -1,3 +1,7 @@
+/**
+ * JsonDataSource: Implementação padrão de DataSource usando fetch para API REST.
+ * Inclui fallback automático de refresh de sessão e tratamento de erro.
+ */
 import type { DataSource, AuthLoginInput, AuthLoginResult, AuthMeResult, CompanyCreateInput } from "./DataSource";
 
 function canAttemptRefresh(input: RequestInfo | URL): boolean {
@@ -9,6 +13,13 @@ function canAttemptRefresh(input: RequestInfo | URL): boolean {
   return true;
 }
 
+/**
+ * Realiza requisição fetch e retorna JSON tipado, com fallback de refresh de sessão.
+ * @param input - URL ou RequestInfo
+ * @param init - RequestInit opcional
+ * @returns JSON tipado
+ * @throws Error se a resposta não for ok
+ */
 async function json<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
   let res = await fetch(input, init);
   if (res.status === 401 && canAttemptRefresh(input)) {

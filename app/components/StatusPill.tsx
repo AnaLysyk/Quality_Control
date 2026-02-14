@@ -22,7 +22,7 @@ export default function StatusPill({
   return (
     <div
       className={clsx(
-        "flex items-center gap-2 rounded-full bg-white/5 border border-(--tc-border)/20 px-3 py-2",
+        "flex items-center gap-2 rounded-full bg-(--tc-surface) border border-(--tc-border)/20 px-3 py-2",
         styles.pill,
         colorClass,
         className,

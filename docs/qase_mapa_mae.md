@@ -1,34 +1,29 @@
 # Qase API – mapa mestre (v1 + extras)
 
-Referência única para produto e integração. Este documento segue o modo como o repositório consome a Qase.
+Referência central para integração e produto, conforme o consumo do repositório.
 
 ## Base e autenticação
-
 - Base: `https://api.qase.io/v1`
-- Autenticação (apenas no backend):
-  - Cabeçalho `Token: QASE_API_TOKEN`
+- Autenticação (backend): cabeçalho `Token: QASE_API_TOKEN`
 - JSON enviado com `Content-Type: application/json`
-- Nunca exponha o token no navegador; use chamadas server-only ou rotas de API.
+- Nunca exponha o token no navegador; use chamadas server-only ou rotas de API
 
 Notas do repositório:
-- SDK interno: `lib/qaseSdk.ts` (envia o header `Token` por padrão).
-- Integração de servidor: rotas `app/api/*` e utilitários em `lib/qaseConfig.ts` e `lib/qaseRuns.ts`.
+- SDK interno: `lib/qaseSdk.ts` (header `Token` por padrão)
+- Integração servidor: rotas `app/api/*`, utilitários em `lib/qaseConfig.ts` e `lib/qaseRuns.ts`
 
 ## Arquitetura do produto (camadas)
-
-1. Camada BFF (app/api)
-   - O front chama rotas `/api/*`.
-   - O backend se comunica com a Qase, normaliza payloads, trata cache, retry e rate limit.
-2. Modelo de dados (raw vs derivado)
-   - Raw: `qase_projects`, `qase_suites`, `qase_cases_raw`, `qase_runs`, `qase_run_cases_raw`, `qase_results_raw`.
-   - Derivado: `kanban_cases`, `run_metrics`, `releases`, `release_runs`.
-   - ETL completo em SQL: `docs/qase_etl.sql`.
-3. Fluxo consolidado
-   - Sincroniza projetos → suítes → casos (raw).
-   - Executa ETL para popular kanban e métricas.
-   - Cria um run quando o pipeline inicia ou uma release abre.
-   - Cada `afterEach` do Playwright envia os resultados.
-   - O dashboard lê métricas em tempo real.
+1. **BFF (app/api)**: front chama `/api/*`, backend comunica com Qase, normaliza payloads, trata cache, retry e rate limit
+2. **Modelo de dados**:
+   - Raw: `qase_projects`, `qase_suites`, `qase_cases_raw`, `qase_runs`, `qase_run_cases_raw`, `qase_results_raw`
+   - Derivado: `kanban_cases`, `run_metrics`, `releases`, `release_runs`
+   - ETL completo em SQL: `docs/qase_etl.sql`
+3. **Fluxo consolidado**:
+   - Sincroniza projetos → suítes → casos (raw)
+   - Executa ETL para popular kanban e métricas
+   - Cria run ao iniciar pipeline ou abrir release
+   - Cada `afterEach` do Playwright envia resultados
+   - Dashboard lê métricas em tempo real
 
 ## Endpoints por domínio (v1)
 
@@ -45,4 +40,4 @@ Notas do repositório:
 - `GET /case/{id}`: detalhes do caso
 - `GET /case/{id}/result`: resultados associados
 
-> Use o header `Token` em todas as chamadas e trate erros de rate limit com retries exponenciais.
+> Use sempre o header `Token` e trate erros de rate limit com retries exponenciais.

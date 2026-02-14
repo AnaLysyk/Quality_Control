@@ -35,14 +35,14 @@ export default function CreateCompanyForm({ onCreated }: { onCreated?: () => voi
     <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 space-y-2">
       <h2 className="text-lg font-bold mb-2">Criar nova empresa</h2>
       <input
-        className="form-control-user border rounded px-2 py-1 w-full"
+        className="form-control-user border border-[--tc-border] rounded px-2 py-1 w-full bg-white text-[--page-text] focus:border-[--tc-accent] focus:ring-2 focus:ring-[--tc-accent]/20"
         placeholder="Nome da empresa"
         value={name}
         onChange={e => setName(e.target.value)}
         required
       />
       <input
-        className="form-control-user border rounded px-2 py-1 w-full"
+        className="form-control-user border border-[--tc-border] rounded px-2 py-1 w-full bg-white text-[--page-text] focus:border-[--tc-accent] focus:ring-2 focus:ring-[--tc-accent]/20"
         placeholder="Slug (identificador único)"
         value={slug}
         onChange={e => setSlug(e.target.value)}
@@ -50,13 +50,13 @@ export default function CreateCompanyForm({ onCreated }: { onCreated?: () => voi
       />
       <button
         type="submit"
-        className="bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
+        className="bg-[--tc-accent] text-white px-4 py-2 rounded disabled:opacity-50 hover:bg-[--tc-accent]/90 focus:ring-2 focus:ring-[--tc-accent]/20"
         disabled={loading || !name || !slug}
       >
         {loading ? "Salvando..." : "Criar Empresa"}
       </button>
-      {error && <div className="text-red-600">{error}</div>}
-      {success && <div className="text-green-600">Empresa criada com sucesso!</div>}
+      {error && <div className="text-[--tc-error]">{error}</div>}
+      {success && <div className="text-[--tc-success]">Empresa criada com sucesso!</div>}
     </form>
   );
 }

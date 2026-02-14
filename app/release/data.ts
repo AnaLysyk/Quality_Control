@@ -23,6 +23,8 @@ export type ReleaseEntry = {
   created_at?: string;
   clientId?: string | null;
   clientName?: string | null;
+  clientSlug?: string | null;
+  name?: string | null;
   assignees?: string[];
   assigneeNames?: string[];
 };
@@ -220,6 +222,36 @@ export async function getReleaseBySlug(slug: string): Promise<ReleaseEntry | und
   const all = await getAllReleases();
   const target = slugifyRelease(slug);
   return all.find((release) => release.slug === target);
+}
+
+export async function getReleasesByCompany(
+  slug: string,
+  options: { periodDays?: number | null } = {},
+): Promise<ReleaseEntry[]> {
+  const periodDays = options.periodDays ?? null;
+  const cutoff = periodDays == null ? null : Date.now() - periodDays * 24 * 60 * 60 * 1000;
+  const normalizedSlug = slugifyRelease(slug);
+  const all = await getAllReleases();
+  return all.filter((release) => {
+    const matchesSlug = [release.clientSlug, release.project, release.app]
+      .map((value) => (value ? slugifyRelease(String(value)) : null))
+      .some((value) => value === normalizedSlug);
+    if (!matchesSlug) {
+      return false;
+    }
+    if (cutoff == null) {
+      return true;
+    }
+    const createdAt = release.createdAt ?? release.created_at ?? null;
+    if (!createdAt) {
+      return true;
+    }
+    const createdTime = Date.parse(createdAt);
+    if (!Number.isFinite(createdTime)) {
+      return true;
+    }
+    return createdTime >= cutoff;
+  });
 }
 
 export async function upsertRelease(entry: Omit<ReleaseEntry, "slug"> & { slug?: string }) {

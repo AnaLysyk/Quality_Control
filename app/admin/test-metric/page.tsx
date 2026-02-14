@@ -134,8 +134,8 @@ function formatDateTime(iso?: string) {
 }
 
 function gateLabel(status: GateStatus) {
-  if (status === "approved") return "Estavel";
-  if (status === "warning") return "Atencao";
+  if (status === "approved") return "Estável";
+  if (status === "warning") return "Atenção";
   if (status === "failed") return "Risco";
   return "Sem dados";
 }
@@ -160,8 +160,8 @@ function actionLabel(action: string) {
   if (a === "client.deleted") return "Empresa removida";
   if (a === "run.created") return "Nova run executada";
   if (a === "run.deleted") return "Run removida";
-  if (a === "user.created") return "Usuario criado";
-  if (a === "user.updated") return "Usuario atualizado";
+  if (a === "user.created") return "Usuário criado";
+  if (a === "user.updated") return "Usuário atualizado";
   return a;
 }
 
@@ -209,7 +209,7 @@ export default function TestMetricPage() {
   const [period, setPeriod] = useState<7 | 30 | 90>(30);
 
   const handleUnauthorized = useCallback(() => {
-    setError("Sessao expirada. Faca login novamente.");
+    setError("Sessão expirada. Faça login novamente.");
     router.replace("/login");
   }, [router]);
 
@@ -243,14 +243,14 @@ export default function TestMetricPage() {
         const raw = await res.json().catch(() => null);
         const json = unwrapEnvelopeData<OverviewResponse>(raw);
         if (!res.ok || !json) {
-          const message = extractMessageFromJson(raw) || `Erro ao carregar metricas (${res.status})`;
+          const message = extractMessageFromJson(raw) || `Erro ao carregar métricas (${res.status})`;
           const requestId = extractRequestIdFromJson(raw) || res.headers.get("x-request-id") || null;
           throw new Error(formatMessageWithRequestId(message, requestId));
         }
         setOverview(json);
         setActiveIndex(0);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro ao carregar metricas");
+        setError(err instanceof Error ? err.message : "Erro ao carregar métricas");
         setOverview(null);
       } finally {
         setLoading(false);

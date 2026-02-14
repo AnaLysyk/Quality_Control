@@ -1,3 +1,6 @@
+/**
+ * Parâmetros de entrada para cálculo do Quality Score.
+ */
 export type QualityScoreInput = {
   gate_status?: "approved" | "warning" | "failed" | string | null;
   mttr_hours?: number | null;
@@ -38,6 +41,11 @@ function scoreFailRate(rate?: number | null) {
   return 30;
 }
 
+/**
+ * Calcula o Quality Score ponderado de acordo com gate, MTTR, defeitos abertos e fail rate.
+ * @param input Parâmetros de entrada
+ * @returns Score de 0 a 100
+ */
 export function calculateQualityScore(input: QualityScoreInput): number {
   const gateWeight = 0.4;
   const mttrWeight = 0.25;

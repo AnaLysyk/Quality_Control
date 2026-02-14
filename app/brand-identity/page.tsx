@@ -90,17 +90,21 @@ export default function BrandIdentityPage() {
         <section className="bg-white rounded-2xl p-8 shadow-lg mb-8 border border-[#011848]/10">
           <h2 className="text-2xl font-bold text-[#011848] mb-6">Paleta de Cores</h2>
           <div className="grid md:grid-cols-3 gap-6">
-            {colors.map((color) => (
-              <div key={color.name} className="border border-[#011848]/10 rounded-lg p-4">
-                <div
-                  className={`w-full h-20 rounded-lg mb-3 shadow-sm ${styles[`color-swatch-${color.name.replace(/\s+/g, '-').toLowerCase()}`]}`}
-                ></div>
-                <h3 className="font-semibold text-[#011848]">{color.name}</h3>
-                <p className="text-sm text-[#4b5563] mb-1">{color.hex}</p>
-                <p className="text-xs text-[#6b7280] mb-2">{color.css}</p>
-                <p className="text-xs text-[#4b5563]">{color.usage}</p>
-              </div>
-            ))}
+            {colors.map((color) => {
+              // Gera o nome da classe no padrão brand-swatch--*
+              const swatchClass = `brand-swatch--${color.name.replace(/\s+/g, '-').toLowerCase()}`;
+              return (
+                <div key={color.name} className="border border-[#011848]/10 rounded-lg p-4">
+                  <div
+                    className={`w-full h-20 rounded-lg mb-3 shadow-sm ${styles[swatchClass]}`}
+                  ></div>
+                  <h3 className="font-semibold text-[#011848]">{color.name}</h3>
+                  <p className="text-sm text-[#4b5563] mb-1">{color.hex}</p>
+                  <p className="text-xs text-[#6b7280] mb-2">{color.css}</p>
+                  <p className="text-xs text-[#4b5563]">{color.usage}</p>
+                </div>
+              );
+            })}
           </div>
         </section>
 

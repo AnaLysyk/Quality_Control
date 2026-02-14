@@ -32,15 +32,15 @@ export default function EmpresasIndexPage() {
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#eef2f7) text-(--page-text,#0b1a3c) px-4 py-12">
+    <div className="min-h-screen bg-(--page-bg) text-(--page-text) px-4 py-12">
       <div className="mx-auto max-w-5xl space-y-10">
         <header className="space-y-2 text-center">
-          <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent,#ef0001)">Empresas</p>
+          <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent)">Empresas</p>
           <h1 className="text-3xl font-bold">{headerCopy.title}</h1>
-          <p className="text-sm text-(--tc-text-muted,#6b7280)">{headerCopy.description}</p>
+          <p className="text-sm text-(--tc-text-muted)">{headerCopy.description}</p>
         </header>
 
-        <div className="rounded-[28px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-8 shadow-[0_20px_55px_rgba(15,23,42,0.12)]">
+        <div className="rounded-[28px] border border-(--tc-border) bg-(--tc-surface) p-8 shadow-[0_20px_55px_rgba(15,23,42,0.12)]">
           <CompanySelector
             title="Empresas disponíveis"
             description="Acesse o hub completo de cada empresa, incluindo releases, runs e defeitos."
@@ -49,13 +49,13 @@ export default function EmpresasIndexPage() {
           />
 
           {!loading && user && !isPrivileged && (
-            <p className="mt-6 text-xs text-(--tc-text-secondary,#4b5563)">
+            <p className="mt-6 text-xs text-(--tc-text-secondary)">
               Precisa de acesso a outra empresa? Solicite a um administrador para ser vinculado.
             </p>
           )}
 
           {!loading && !user && (
-            <p className="mt-6 text-xs text-(--tc-text-secondary,#4b5563)">
+            <p className="mt-6 text-xs text-(--tc-text-secondary)">
               Faça login para visualizar as empresas disponíveis para o seu perfil.
             </p>
           )}

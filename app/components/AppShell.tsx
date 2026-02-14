@@ -27,19 +27,19 @@ export default function AppShell({ children }: AppShellProps) {
 
   if (isLogin) {
     return (
-      <div className="min-h-screen w-full overflow-y-auto bg-(--page-bg) text-(--page-text)">
+      <div className="min-h-screen w-full overflow-y-auto bg-[--page-bg] text-[--page-text]">
         {children}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full bg-(--page-bg) text-(--page-text) app-shell">
+    <div className="min-h-screen w-full bg-[--page-bg] text-[--page-text] app-shell">
       <SidebarVisibility mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
       <button
         type="button"
-        className="fixed top-4 left-4 z-50 rounded-lg border border-(--tc-border) bg-(--tc-surface) p-2 text-(--tc-text) shadow-sm transition-colors hover:bg-(--tc-surface-2) lg:hidden"
+        className="fixed top-4 left-4 z-50 rounded-lg border border-[--tc-border] bg-[--tc-surface] p-2 text-[--tc-text] shadow-sm transition-colors hover:bg-[--tc-surface-2] lg:hidden"
         onClick={() => setMobileOpen(true)}
         aria-label="Abrir menu"
       >

@@ -24,10 +24,10 @@ type DraftTicket = {
 };
 
 function statusStyle(status: TicketStatus) {
-  if (status === "done") return "bg-emerald-100 text-emerald-700";
-  if (status === "review") return "bg-violet-100 text-violet-700";
-  if (status === "doing") return "bg-amber-100 text-amber-700";
-  return "bg-slate-100 text-slate-700";
+  if (status === "done") return "bg-(--tc-success) text-(--tc-success-text)";
+  if (status === "review") return "bg-(--tc-info) text-(--tc-info-text)";
+  if (status === "doing") return "bg-(--tc-warning) text-(--tc-warning-text)";
+  return "bg-(--tc-text-muted-bg) text-(--tc-text-muted)";
 }
 
 export default function TicketsButton() {
@@ -213,22 +213,22 @@ export default function TicketsButton() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Abrir chamados"
-        className="flex h-11 w-11 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-(--tc-accent,#ef0001)/60 hover:text-(--tc-accent,#ef0001)"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-(--tc-border)/70 bg-(--tc-surface) text-(--tc-text) shadow-(--tc-shadow-md) transition hover:border-(--tc-accent)/60 hover:text-(--tc-accent)"
       >
         <FiMessageSquare size={18} />
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-[min(28rem,calc(100vw-2rem))] rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_20px_45px_rgba(15,23,42,0.2)]">
-          <div className="flex items-center justify-between gap-3 border-b border-(--tc-border,#e5e7eb) px-4 py-3">
+        <div className="absolute right-0 mt-2 w-[min(28rem,calc(100vw-2rem))] rounded-2xl border border-(--tc-border) bg-(--tc-surface) shadow-(--tc-shadow-lg)">
+          <div className="flex items-center justify-between gap-3 border-b border-(--tc-border) px-4 py-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Chamados</p>
-              <p className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{countLabel}</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">Chamados</p>
+              <p className="text-sm font-semibold text-(--tc-text-primary)">{countLabel}</p>
             </div>
             <button
               type="button"
               onClick={startCreate}
-              className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white hover:bg-(--tc-accent-hover,#c80001)"
+              className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white hover:bg-(--tc-accent-hover)"
             >
               <FiPlus size={14} /> Criar
             </button>
@@ -236,20 +236,20 @@ export default function TicketsButton() {
 
           <div className="max-h-[70vh] overflow-auto px-4 py-3 space-y-3">
             {isCreating && draft && (
-              <div className="rounded-xl border border-(--tc-border,#e5e7eb) p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
+              <div className="rounded-xl border border-(--tc-border) p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted)">
                   Novo chamado
                 </p>
                 <div className="mt-2 space-y-2">
                   <input
-                    className="form-control-user w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                    className="form-control-user w-full rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30"
                     placeholder="Titulo"
                     value={draft.title}
                     onChange={(e) => setDraft((prev) => (prev ? { ...prev, title: e.target.value } : prev))}
                   />
                   <textarea
-                            rows={4}
-                            className="form-control-user w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                    rows={4}
+                    className="form-control-user w-full rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30"
                     placeholder="Descreva o chamado..."
                     value={draft.description}
                     onChange={(e) => setDraft((prev) => (prev ? { ...prev, description: e.target.value } : prev))}
@@ -260,14 +260,14 @@ export default function TicketsButton() {
                     type="button"
                     onClick={saveDraft}
                     disabled={saving}
-                    className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:bg-(--tc-accent-hover,#c80001) disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:bg-(--tc-accent-hover) disabled:opacity-60"
                   >
                     <FiSave size={14} /> {saving ? "Salvando" : "Salvar"}
                   </button>
                   <button
                     type="button"
                     onClick={cancelEdit}
-                    className="inline-flex items-center gap-2 rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                    className="inline-flex items-center gap-2 rounded-lg border border-(--tc-border) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
                   >
                     <FiX size={14} /> Fechar
                   </button>
@@ -275,9 +275,9 @@ export default function TicketsButton() {
               </div>
             )}
 
-            {loading && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
+            {loading && <p className="text-sm text-(--tc-text-muted)">Carregando...</p>}
             {!loading && items.length === 0 && (
-              <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhum chamado criado ainda.</p>
+              <p className="text-sm text-(--tc-text-muted)">Nenhum chamado criado ainda.</p>
             )}
 
             {items.map((ticket) => {
@@ -290,7 +290,7 @@ export default function TicketsButton() {
               return (
                 <div
                   key={ticket.id}
-                  className="rounded-xl border border-(--tc-border,#e5e7eb) p-3 transition"
+                  className="rounded-xl border border-(--tc-border) p-3 transition"
                 >
                   <button
                     type="button"
@@ -299,11 +299,11 @@ export default function TicketsButton() {
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-semibold">{ticket.title || "Sem titulo"}</p>
-                      <p className="text-xs text-(--tc-text-muted,#6b7280)">
+                      <p className="text-xs text-(--tc-text-muted)">
                         Atualizado em {new Date(ticket.updatedAt).toLocaleString("pt-BR")}
                       </p>
                       {user?.isGlobalAdmin && creatorLabel && (
-                        <p className="text-xs text-(--tc-text-muted,#6b7280)">
+                        <p className="text-xs text-(--tc-text-muted)">
                           Criado por {creatorLabel}
                           {ticket.companySlug ? ` · ${ticket.companySlug}` : ""}
                         </p>
@@ -324,7 +324,7 @@ export default function TicketsButton() {
                       {isEditing && localDraft ? (
                         <>
                           <input
-                            className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                            className="w-full rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30"
                             placeholder="Titulo"
                             aria-label="Editar titulo do chamado"
                             value={localDraft.title}
@@ -334,7 +334,7 @@ export default function TicketsButton() {
                           />
                           <textarea
                             rows={4}
-                            className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                            className="w-full rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30"
                             placeholder="Descreva o chamado..."
                             aria-label="Editar descricao do chamado"
                             value={localDraft.description}
@@ -347,21 +347,21 @@ export default function TicketsButton() {
                               type="button"
                               onClick={saveDraft}
                               disabled={saving}
-                              className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:bg-(--tc-accent-hover,#c80001) disabled:opacity-60"
+                              className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:bg-(--tc-accent-hover) disabled:opacity-60"
                             >
                               <FiSave size={14} /> {saving ? "Salvando" : "Salvar"}
                             </button>
                             <button
                               type="button"
                               onClick={() => deleteTicket(ticket.id)}
-                              className="inline-flex items-center gap-2 rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                              className="inline-flex items-center gap-2 rounded-lg border border-(--tc-border) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
                             >
                               <FiTrash2 size={14} /> Excluir
                             </button>
                             <button
                               type="button"
                               onClick={cancelEdit}
-                              className="inline-flex items-center gap-2 rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                              className="inline-flex items-center gap-2 rounded-lg border border-(--tc-border) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
                             >
                               <FiX size={14} /> Fechar
                             </button>
@@ -369,7 +369,7 @@ export default function TicketsButton() {
                         </>
                       ) : (
                         <>
-                          <p className="text-sm whitespace-pre-wrap text-(--tc-text-secondary,#4b5563)">
+                          <p className="text-sm whitespace-pre-wrap text-(--tc-text-secondary)">
                             {ticket.description || "Sem descricao."}
                           </p>
                           <div className="flex flex-wrap gap-2">

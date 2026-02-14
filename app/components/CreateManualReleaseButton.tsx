@@ -278,20 +278,20 @@ export function CreateManualReleaseButton({
           setSubmitError(null);
           setOpen(true);
         }}
-        className="rounded-xl bg-(--tc-accent) px-4 py-2 text-sm font-semibold text-white shadow hover:brightness-110"
+        className="rounded-xl bg-[--tc-accent] px-4 py-2 text-sm font-semibold text-white shadow hover:brightness-110"
       >
         <span data-testid="run-create">Criar run manual</span>
       </button>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6 backdrop-blur-sm" role="dialog" aria-modal="true">
-          <div className="w-full max-w-5xl max-h-[85vh] overflow-y-auto space-y-6 rounded-3xl border border-(--tc-border)/30 bg-white text-(--tc-text,#0f172a) shadow-[0_25px_80px_rgba(15,23,42,0.4)] dark:border-white/10 dark:bg-(--tc-surface-dark,#0f1828) dark:text-(--tc-text-inverse,#fff) p-6">
+          <div className="w-full max-w-5xl max-h-[85vh] overflow-y-auto space-y-6 rounded-3xl border border-[--tc-border]/30 bg-white text-[--tc-text] shadow-[0_25px_80px_rgba(15,23,42,0.4)] dark:border-white/10 dark:bg-[--tc-surface-dark] dark:text-[--tc-text-inverse] p-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-(--tc-text-primary,#0b1a3c) dark:text-(--tc-text-inverse,#fff)">Nova run manual</h2>
+              <h2 className="text-lg font-bold text-[--tc-text-primary] dark:text-[--tc-text-inverse]">Nova run manual</h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="text-sm font-semibold text-(--tc-text-muted) transition hover:text-(--tc-text-primary,#0b1a3c) dark:hover:text-white"
+                className="text-sm font-semibold text-[--tc-text-muted] transition hover:text-[--tc-text-primary] dark:hover:text-white"
               >
                 fechar
               </button>
@@ -302,9 +302,9 @@ export function CreateManualReleaseButton({
                 <div className="min-w-0 space-y-6">
                   <div className="grid gap-4 sm:grid-cols-3">
                     <div className="space-y-1">
-                      <label className="text-sm font-semibold text-(--tc-text-muted)">Título</label>
+                      <label className="text-sm font-semibold text-[--tc-text-muted]">Título</label>
                       <input
-                        className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
+                        className="w-full rounded-2xl border border-[--tc-border] bg-[--tc-surface] px-3 py-2 text-sm text-[--tc-text] shadow-sm outline-none transition focus:border-[--tc-accent] focus:ring-2 focus:ring-[--tc-accent]/40 dark:border-white/20 dark:bg-[--tc-surface-darker] dark:text-[--tc-text-inverse]"
                         data-testid="run-title"
                         value={form.name}
                         onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
@@ -321,10 +321,10 @@ export function CreateManualReleaseButton({
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-sm font-semibold text-(--tc-text-muted)">Aplicação</label>
+                      <label className="text-sm font-semibold text-[--tc-text-muted]">Aplicação</label>
                       <select
                         aria-label="Selecionar aplicação"
-                        className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
+                        className="w-full rounded-2xl border border-[--tc-border] bg-[--tc-surface] px-3 py-2 text-sm text-[--tc-text] shadow-sm outline-none transition focus:border-[--tc-accent] focus:ring-2 focus:ring-[--tc-accent]/40 dark:border-white/20 dark:bg-[--tc-surface-darker] dark:text-[--tc-text-inverse]"
                         value={form.app}
                         onChange={(e) => setForm((prev) => ({ ...prev, app: e.target.value }))}
                       >
@@ -334,33 +334,33 @@ export function CreateManualReleaseButton({
                           </option>
                         ))}
                       </select>
-                      <div className="text-xs text-(--tc-text-muted)">
+                      <div className="text-xs text-[--tc-text-muted]">
                         {appMeta.label} • cor aplicada automaticamente
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-sm font-semibold text-(--tc-text-muted)">Release (slug)</label>
+                      <label className="text-sm font-semibold text-[--tc-text-muted]">Release (slug)</label>
                       <input
-                        className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
+                        className="w-full rounded-2xl border border-[--tc-border] bg-[--tc-surface] px-3 py-2 text-sm text-[--tc-text] shadow-sm outline-none transition focus:border-[--tc-accent] focus:ring-2 focus:ring-[--tc-accent]/40 dark:border-white/20 dark:bg-[--tc-surface-darker] dark:text-[--tc-text-inverse]"
                         data-testid="run-slug"
                         value={form.slug}
                         onChange={(e) => setForm((prev) => ({ ...prev, slug: e.target.value }))}
                         placeholder="Ex: v1_8_0_reg"
                       />
-                      <div className="text-xs text-(--tc-text-muted)">Slug da release a ser impactada (ex: v1_8_0_reg)</div>
+                      <div className="text-xs text-[--tc-text-muted]">Slug da release a ser impactada (ex: v1_8_0_reg)</div>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     {(["pass", "fail", "blocked", "notRun"] as const).map((key) => (
                       <div key={key} className="space-y-1">
-                        <label className="text-xs uppercase tracking-wide text-(--tc-text-muted)">{key}</label>
+                        <label className="text-xs uppercase tracking-wide text-[--tc-text-muted]">{key}</label>
                         <input
                           type="number"
                           min={0}
                           aria-label={`Total ${key}`}
-                          className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
+                          className="w-full rounded-2xl border border-[--tc-border] bg-[--tc-surface] px-3 py-2 text-sm text-[--tc-text] shadow-sm outline-none transition focus:border-[--tc-accent] focus:ring-2 focus:ring-[--tc-accent]/40 dark:border-white/20 dark:bg-[--tc-surface-darker] dark:text-[--tc-text-inverse]"
                           data-testid={
                             key === "pass"
                               ? "run-stat-pass"
@@ -379,7 +379,7 @@ export function CreateManualReleaseButton({
                             type="button"
                             data-testid="run-status-fail"
                             onClick={handleFailClick}
-                            className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-accent,#ef0001)"
+                            className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[--tc-accent]"
                           >
                             Marcar falha
                           </button>
@@ -388,7 +388,7 @@ export function CreateManualReleaseButton({
                     ))}
                   </div>
 
-                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between text-xs text-(--tc-text-muted)">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between text-xs text-[--tc-text-muted]">
                     <span>Total: {total}</span>
                     <span>
                       Pass%: {total > 0 ? Math.round((form.pass / total) * 100) : 0}%
@@ -396,9 +396,9 @@ export function CreateManualReleaseButton({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-sm font-semibold text-(--tc-text-muted)">Observações</label>
+                    <label className="text-sm font-semibold text-[--tc-text-muted]">Observações</label>
                     <textarea
-                      className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
+                      className="w-full rounded-2xl border border-[--tc-border] bg-[--tc-surface] px-3 py-2 text-sm text-[--tc-text] shadow-sm outline-none transition focus:border-[--tc-accent] focus:ring-2 focus:ring-[--tc-accent]/40 dark:border-white/20 dark:bg-[--tc-surface-darker] dark:text-[--tc-text-inverse]"
                       rows={3}
                       value={form.observations}
                       onChange={(e) => setForm((prev) => ({ ...prev, observations: e.target.value }))}
@@ -410,53 +410,53 @@ export function CreateManualReleaseButton({
                 <div className="min-w-0 space-y-4 pt-2">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-sm font-semibold uppercase tracking-wide text-(--tc-text-muted)">Casos vinculados</p>
-                      <p className="text-xs text-(--tc-text-muted)">{cases.length} caso(s) adicionados</p>
+                      <p className="text-sm font-semibold uppercase tracking-wide text-[--tc-text-muted]">Casos vinculados</p>
+                      <p className="text-xs text-[--tc-text-muted]">{cases.length} caso(s) adicionados</p>
                     </div>
-                    <div className="text-xs text-(--tc-text-muted)">Inclua ID, título e link antes de salvar</div>
+                    <div className="text-xs text-[--tc-text-muted]">Inclua ID, título e link antes de salvar</div>
                   </div>
 
-                  <div className="rounded-2xl border border-(--tc-border)/60 bg-(--tc-surface,#f8fafc) p-5 shadow-sm dark:border-white/10 dark:bg-(--tc-surface-darker,#0c1120)">
+                  <div className="rounded-2xl border border-[--tc-border]/60 bg-[--tc-surface] p-5 shadow-sm dark:border-white/10 dark:bg-[--tc-surface-darker]">
                     <div className="grid gap-4 lg:grid-cols-4">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted)">ID do caso</label>
+                        <label className="text-xs font-semibold uppercase tracking-[0.3em] text-[--tc-text-muted]">ID do caso</label>
                         <input
                           type="text"
                           autoFocus
                           value={caseDraft.id}
                           onChange={(e) => handleCaseDraftChange("id", e.target.value)}
-                          className="w-full rounded-[18px] border border-(--tc-border) bg-white px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface,#0f1728) dark:text-(--tc-text-inverse,#fff)"
+                          className="w-full rounded-[18px] border border-[--tc-border] bg-white px-3 py-2 text-sm text-[--tc-text] shadow-sm outline-none transition focus:border-[--tc-accent] focus:ring-2 focus:ring-[--tc-accent]/40 dark:border-white/20 dark:bg-[--tc-surface] dark:text-[--tc-text-inverse]"
                           placeholder="Ex: 12345"
                         />
                       </div>
                       <div className="space-y-1 lg:col-span-2">
-                        <label className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted)">Título</label>
+                        <label className="text-xs font-semibold uppercase tracking-[0.3em] text-[--tc-text-muted]">Título</label>
                         <input
                           type="text"
                           value={caseDraft.title}
                           onChange={(e) => handleCaseDraftChange("title", e.target.value)}
-                          className="w-full rounded-[18px] border border-(--tc-border) bg-white px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface,#0f1728) dark:text-(--tc-text-inverse,#fff)"
+                          className="w-full rounded-[18px] border border-[--tc-border] bg-white px-3 py-2 text-sm text-[--tc-text] shadow-sm outline-none transition focus:border-[--tc-accent] focus:ring-2 focus:ring-[--tc-accent]/40 dark:border-white/20 dark:bg-[--tc-surface] dark:text-[--tc-text-inverse]"
                           placeholder="Nome do caso"
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted)">Link (opcional)</label>
+                        <label className="text-xs font-semibold uppercase tracking-[0.3em] text-[--tc-text-muted]">Link (opcional)</label>
                         <input
                           type="url"
                           value={caseDraft.link}
                           onChange={(e) => handleCaseDraftChange("link", e.target.value)}
-                          className="w-full rounded-[18px] border border-(--tc-border) bg-white px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface,#0f1728) dark:text-(--tc-text-inverse,#fff)"
+                          className="w-full rounded-[18px] border border-[--tc-border] bg-white px-3 py-2 text-sm text-[--tc-text] shadow-sm outline-none transition focus:border-[--tc-accent] focus:ring-2 focus:ring-[--tc-accent]/40 dark:border-white/20 dark:bg-[--tc-surface] dark:text-[--tc-text-inverse]"
                           placeholder="https://app.qase.io/case/..."
                         />
                       </div>
                       <div className="space-y-1">
-                      <label htmlFor="case-status-select" className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted)">Status</label>
+                      <label htmlFor="case-status-select" className="text-xs font-semibold uppercase tracking-[0.3em] text-[--tc-text-muted]">Status</label>
                       <select
                         id="case-status-select"
                         aria-label="Status do caso"
                         value={caseDraft.status}
                         onChange={(e) => handleCaseDraftChange("status", e.target.value as CaseStatus)}
-                        className="w-full rounded-[18px] border border-(--tc-border) bg-white px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface,#0f1728) dark:text-(--tc-text-inverse,#fff)"
+                        className="w-full rounded-[18px] border border-[--tc-border] bg-white px-3 py-2 text-sm text-[--tc-text] shadow-sm outline-none transition focus:border-[--tc-accent] focus:ring-2 focus:ring-[--tc-accent]/40 dark:border-white/20 dark:bg-[--tc-surface] dark:text-[--tc-text-inverse]"
                       >
                           {CASE_COLUMNS.map((column) => (
                             <option key={column.key} value={column.key}>
@@ -470,12 +470,12 @@ export function CreateManualReleaseButton({
                       <button
                         type="button"
                         onClick={handleAddCase}
-                        className="rounded-[26px] bg-(--tc-accent) px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.25em] text-white shadow transition hover:brightness-110 disabled:opacity-60"
+                        className="rounded-[26px] bg-[--tc-accent] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.25em] text-white shadow transition hover:brightness-110 disabled:opacity-60"
                         disabled={!caseDraft.id.trim() || !caseDraft.title.trim()}
                       >
                         Adicionar ao Kanban
                       </button>
-                      <span className="text-xs text-(--tc-text-muted)">Os campos ID e título são obrigatórios.</span>
+                      <span className="text-xs text-[--tc-text-muted]">Os campos ID e título são obrigatórios.</span>
                     </div>
                   </div>
                 </div>
@@ -504,14 +504,14 @@ export function CreateManualReleaseButton({
                           </div>
                           <div className="mt-3 space-y-3">
                             {batch.length === 0 ? (
-                              <p className="text-xs italic text-(--tc-text-muted)">Nenhum caso nesta coluna</p>
+                              <p className="text-xs italic text-[--tc-text-muted]">Nenhum caso nesta coluna</p>
                             ) : (
                               batch.map((item) => (
                                 <div
                                   key={`case-${column.key}-${item.id}`}
-                                  className={`relative rounded-2xl border ${column.cardBorder} ${column.cardBg} px-3 py-3 text-sm text-(--tc-text,#0f172a) shadow-[0_10px_25px_rgba(15,23,42,0.12)] transition hover:-translate-y-0.5`}
+                                  className={`relative rounded-2xl border ${column.cardBorder} ${column.cardBg} px-3 py-3 text-sm text-[--tc-text] shadow-[0_10px_25px_rgba(15,23,42,0.12)] transition hover:-translate-y-0.5`}
                                 >
-                                  <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.3em] text-(--tc-text-muted)">
+                                  <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.3em] text-[--tc-text-muted]">
                                     <span>ID</span>
                                     <strong className={`dark:text-white ${column.accentText}`}>{item.id}</strong>
                                   </div>
@@ -521,12 +521,12 @@ export function CreateManualReleaseButton({
                                       href={item.link}
                                       target="_blank"
                                       rel="noreferrer"
-                                      className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-(--tc-accent,#ef0001)"
+                                      className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[--tc-accent]"
                                     >
                                       Ver link
                                     </a>
                                   ) : (
-                                    <p className="mt-2 text-[11px] text-(--tc-text-muted)">Sem link</p>
+                                    <p className="mt-2 text-[11px] text-[--tc-text-muted]">Sem link</p>
                                   )}
                                   <button
                                     type="button"
@@ -556,7 +556,7 @@ export function CreateManualReleaseButton({
                   setSubmitError(null);
                   setOpen(false);
                 }}
-                className="rounded-2xl border border-(--tc-border)/60 px-4 py-2 text-sm font-semibold text-(--tc-text,#0f172a) transition hover:border-(--tc-text-primary,#0b1a3c) hover:text-(--tc-text-primary,#0b1a3c) dark:border-white/20 dark:text-(--tc-text-inverse,#fff)"
+                className="rounded-2xl border border-[--tc-border]/60 px-4 py-2 text-sm font-semibold text-[--tc-text] transition hover:border-[--tc-text-primary] hover:text-[--tc-text-primary] dark:border-white/20 dark:text-[--tc-text-inverse]"
               >
                 Cancelar
               </button>
@@ -565,7 +565,7 @@ export function CreateManualReleaseButton({
                 onClick={handleSubmit}
                 disabled={saving || !form.name.trim()}
                 data-testid="run-submit"
-                className="rounded-2xl bg-(--tc-accent) px-4 py-2 text-sm font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
+                className="rounded-2xl bg-[--tc-accent] px-4 py-2 text-sm font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
               >
                 {saving ? "Salvando..." : <span data-testid="run-save">Salvar e abrir</span>}
               </button>

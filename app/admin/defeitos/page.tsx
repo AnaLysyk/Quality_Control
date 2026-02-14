@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiAlertTriangle, FiTrendingDown, FiZap } from "react-icons/fi";
@@ -34,6 +35,8 @@ type Aggregated = {
   items: DefectItem[];
   error?: string;
 };
+
+type NormalizedStatus = "fail" | "blocked" | "pending" | "done";
 
 function pctWidthClass(pct: number) {
   const clamped = Math.max(0, Math.min(100, Math.round(pct)));
@@ -90,12 +93,33 @@ const FALLBACK_DEFECTS: DefectItem[] = [
   },
 ];
 
-const STATUS_LABEL: Record<string, string> = {
+const STATUS_LABEL: Record<NormalizedStatus, string> = {
   fail: "Em falha",
   blocked: "Bloqueado",
   pending: "Aguardando teste",
   done: "Concluído",
 };
+
+function normalizeStatus(status?: string | null): NormalizedStatus {
+  const value = (status ?? "").trim().toLowerCase();
+  if (!value) return "pending";
+  if (["fail", "failed", "erro", "error", "failing"].includes(value)) return "fail";
+  if (["blocked", "block", "bloqueado"].includes(value)) return "blocked";
+  if (["done", "passed", "resolved", "concluido", "closed"].includes(value)) return "done";
+  if (["pending", "todo", "to_do", "in_progress", "in-progress"].includes(value)) return "pending";
+  return "pending";
+}
+
+function getStatusLabel(status?: string | null) {
+  const normalized = normalizeStatus(status);
+  return STATUS_LABEL[normalized] ?? STATUS_LABEL.pending;
+}
+
+function parseTimestamp(value?: string | null) {
+  if (!value) return 0;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
 
 export default function AdminDefeitosPage() {
   const router = useRouter();
@@ -171,6 +195,25 @@ export default function AdminDefeitosPage() {
     return allowFallback ? FALLBACK_DEFECTS : [];
   }, [payload, authBlocked, allowFallback]);
 
+  const normalizedDefects = useMemo(
+    () => defects.map((item) => ({ ...item, normalizedStatus: normalizeStatus(item.status) })),
+    [defects],
+  );
+
+  const openDefects = useMemo(
+    () => normalizedDefects.filter((defect) => defect.normalizedStatus !== "done"),
+    [normalizedDefects],
+  );
+
+  const recentDefects = useMemo(() => {
+    const sorted = [...normalizedDefects].sort((a, b) => {
+      const timeB = Math.max(parseTimestamp(b.updated_at), parseTimestamp(b.created_at));
+      const timeA = Math.max(parseTimestamp(a.updated_at), parseTimestamp(a.created_at));
+      return timeB - timeA;
+    });
+    return sorted.slice(0, 6);
+  }, [normalizedDefects]);
+
   const companyCards = useMemo(() => {
     const map = new Map<
       string,
@@ -178,10 +221,10 @@ export default function AdminDefeitosPage() {
         name: string;
         slug: string | null;
         total: number;
-        statuses: Record<string, number>;
+        statuses: Record<NormalizedStatus, number>;
       }
     >();
-    defects.forEach((d) => {
+    normalizedDefects.forEach((d) => {
       const slug = d.companySlug || d.companyName?.toLowerCase().replace(/\s+/g, "-") || "empresa";
       const name = d.companyName || d.projectCode || "Empresa";
       const key = slug;
@@ -190,19 +233,29 @@ export default function AdminDefeitosPage() {
       }
       const item = map.get(key)!;
       item.total += 1;
-      const status = (d.status || "pending").toLowerCase();
-      if (item.statuses[status] !== undefined) item.statuses[status] += 1;
+      const status = d.normalizedStatus;
+      item.statuses[status] += 1;
     });
     return Array.from(map.values());
-  }, [defects]);
+  }, [normalizedDefects]);
 
   const defectsByRun = useMemo(() => {
-    return (payload?.byRun ?? []).map((r) => ({ slug: r.runId, count: r.count, app: r.app, client: null }));
+    return (payload?.byRun ?? []).map((r) => ({ slug: r.runId ? String(r.runId) : "", count: r.count, app: r.app, client: null }));
   }, [payload]);
 
   const defectsByApp = useMemo(() => {
     return (payload?.byApplication ?? []).map((a) => ({ app: a.name, count: a.count }));
   }, [payload]);
+
+  const maxRunCount = useMemo(
+    () => defectsByRun.reduce((acc, current) => Math.max(acc, current.count), 0),
+    [defectsByRun],
+  );
+
+  const maxAppCount = useMemo(
+    () => defectsByApp.reduce((acc, current) => Math.max(acc, current.count), 0),
+    [defectsByApp],
+  );
 
   return (
     <RequireGlobalAdmin>
@@ -239,9 +292,9 @@ export default function AdminDefeitosPage() {
           <>
             {/* visão macro por empresa */}
             <section className="grid gap-4 md:grid-cols-3">
-              <MetricCard label="Defeitos abertos" value={defects.length} color="text-red-600" icon={<FiAlertTriangle />} />
+              <MetricCard label="Defeitos abertos" value={openDefects.length} color="text-red-600" icon={<FiAlertTriangle />} />
               <MetricCard label="Empresas com defeitos" value={companyCards.length} icon={<FiTrendingDown />} />
-              <MetricCard label="Defeitos (Qase + manuais)" value={defects.length} icon={<FiZap />} />
+              <MetricCard label="Defeitos (Qase + manuais)" value={normalizedDefects.length} icon={<FiZap />} />
             </section>
 
             <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-4">
@@ -271,12 +324,12 @@ export default function AdminDefeitosPage() {
                             <p className="text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">{c.name}</p>
                             <p className="text-xs text-(--tc-text-muted,#6b7280)">{total} defeitos</p>
                           </div>
-                          <a
+                          <Link
                             href={`/admin/defeitos/${c.slug || "empresa"}`}
                             className="text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
                           >
                             Ver defeitos
-                          </a>
+                          </Link>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-(--tc-text-secondary,#4b5563)">
                           <StatusPill label={STATUS_LABEL.fail} value={fail} colorClass="text-red-600" />
@@ -296,18 +349,18 @@ export default function AdminDefeitosPage() {
                 <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Defeitos recentes</h2>
                 <span className="text-sm text-(--tc-text-muted,#6b7280)">Top 6</span>
               </div>
-              {defects.length === 0 ? (
+              {normalizedDefects.length === 0 ? (
                 <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhum defeito encontrado.</p>
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
-                  {defects.slice(0, 6).map((d) => (
+                  {recentDefects.map((d) => (
                     <div
                       key={d.id}
                       className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm space-y-2 hover:shadow-md transition"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <p className="font-semibold text-(--tc-text-primary,#0b1a3c)">{d.title}</p>
-                        <span className="text-xs text-red-600">{d.status || "status"}</span>
+                        <span className="text-xs text-red-600">{getStatusLabel(d.normalizedStatus)}</span>
                       </div>
                       <p className="text-xs text-(--tc-text-secondary,#4b5563)">Projeto: {d.projectCode}</p>
                       {d.run_id ? (
@@ -337,18 +390,20 @@ export default function AdminDefeitosPage() {
               ) : (
                 <div className="space-y-2">
                   {defectsByRun.map((r, idx) => {
-                    const barWidth = Math.min(100, r.count * 12);
+                    const barWidth = maxRunCount > 0 ? (r.count / maxRunCount) * 100 : 0;
                     const widthClass = pctWidthClass(barWidth);
                     return (
-                      <div key={r.slug ?? idx} className="space-y-1">
+                      <div key={r.slug || idx} className="space-y-1">
                         <div className="flex items-center justify-between text-sm">
                           <span className="font-semibold text-(--tc-text-primary,#0b1a3c)">{r.slug}</span>
-                          <a
-                            href={`/runs/${r.slug}`}
-                            className="text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
-                          >
-                            Abrir run
-                          </a>
+                          {r.slug ? (
+                            <Link
+                              href={`/runs/${r.slug}`}
+                              className="text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
+                            >
+                              Abrir run
+                            </Link>
+                          ) : null}
                         </div>
                         <div className="h-2 rounded-full bg-(--tc-input-bg,#eef4ff)">
                           <div className={`h-full rounded-full bg-red-500 ${widthClass}`} />
@@ -371,7 +426,7 @@ export default function AdminDefeitosPage() {
               ) : (
                 <div className="space-y-2">
                   {defectsByApp.map((a, idx) => {
-                    const barWidth = Math.min(100, a.count * 10);
+                    const barWidth = maxAppCount > 0 ? (a.count / maxAppCount) * 100 : 0;
                     const widthClass = pctWidthClass(barWidth);
                     return (
                       <div key={idx} className="space-y-1">

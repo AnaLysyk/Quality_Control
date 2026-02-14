@@ -1,3 +1,9 @@
+/**
+ * CompanyContext: Provides client/company selection, theming, and access state for multi-tenant UI.
+ * - Persists active company in localStorage and cookie.
+ * - Applies dynamic theme based on company slug.
+ * - Used by all company-aware pages/components.
+ */
 "use client";
 
 import {
@@ -85,6 +91,10 @@ const ClientContext = createContext<ClientContextValue | undefined>(undefined);
 const storageKey = (userId: string) => `activeClient:${userId}`;
 const getLocalStorage = () => (typeof window === "undefined" ? null : window.localStorage);
 
+/**
+ * Provides company/client context for multi-tenant UI.
+ * Handles active company selection, theming, and access state.
+ */
 export function ClientProvider({ children }: { children: ReactNode }) {
   const { user, companies, loading: authLoading, refreshUser } = useAuth();
   const [clients, setClients] = useState<ClientAccess[]>([]);
@@ -262,6 +272,10 @@ export function ClientProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Hook para acessar o contexto de empresa/cliente.
+ * @throws se usado fora de <ClientProvider>
+ */
 export function useClientContext() {
   const ctx = useContext(ClientContext);
   if (!ctx) throw new Error("useClientContext deve ser usado dentro de ClientProvider");

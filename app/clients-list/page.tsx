@@ -173,7 +173,7 @@ function ClientesPage() {
           return (
             <div key={client.id} className="w-full rounded-lg border border-[#e5e7eb] p-4 bg-white shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded bg-gray-100 overflow-hidden flex items-center justify-center">
+                <div className="h-12 w-12 rounded bg-gray-100 overflow-hidden flex items-center justify-center shrink-0">
                   {client.logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={client.logoUrl} alt={client.name} className="h-full w-full object-contain" />

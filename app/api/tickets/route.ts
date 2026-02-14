@@ -90,12 +90,27 @@ export const POST = withCompanyValidation(async (user, companyId, req) => {
     const localUser = await getLocalUserById(user.id);
     const assignedToUserId =
       canAssignTicket(user) && typeof body?.assignedToUserId === "string" ? body.assignedToUserId : null;
-    const tags =
-      Array.isArray(body?.tags) ? body.tags : typeof body?.tags === "string" ? body.tags.split(",") : undefined;
+
+    // Sanitize and limit fields
+    let title = typeof body?.title === "string" ? body.title.trim() : undefined;
+    let description = typeof body?.description === "string" ? body.description.trim() : undefined;
+    if ((!title || title.length < 2 || title.length > 200) && (!description || description.length < 2 || description.length > 2000)) {
+      return NextResponse.json({ error: "Informe titulo ou descricao válidos" }, { status: 400 });
+    }
+    if (title && (title.length < 2 || title.length > 200)) title = undefined;
+    if (description && (description.length < 2 || description.length > 2000)) description = undefined;
+    let tags = Array.isArray(body?.tags)
+      ? body.tags.map((t: string) => t.trim()).filter(Boolean)
+      : typeof body?.tags === "string"
+      ? body.tags.split(",").map((t: string) => t.trim()).filter(Boolean)
+      : undefined;
+    if (tags && tags.length > 20) {
+      tags = tags.slice(0, 20);
+    }
 
     const ticket = await createTicket({
-      title: body?.title,
-      description: body?.description,
+      title,
+      description,
       type: body?.type,
       priority: body?.priority,
       tags,

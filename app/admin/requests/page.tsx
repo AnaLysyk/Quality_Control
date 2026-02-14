@@ -31,7 +31,7 @@ export default function AdminRequestsPage() {
   const [message, setMessage] = useState<string | null>(null);
 
   const handleUnauthorized = useCallback(() => {
-    const msg = "SessÃ£o expirada. FaÃ§a login novamente.";
+    const msg = "Sessão expirada. Faça login novamente.";
     setMessage(msg);
     toast.error(msg);
     router.push("/login");
@@ -61,14 +61,14 @@ export default function AdminRequestsPage() {
       }
 
       if (res.status === 403) {
-        setMessage("Sem permissÃ£o (faÃ§a login como admin)");
+        setMessage("Sem permissão (faça login como admin)");
         setItems([]);
         return;
       }
       const json = await res.json();
       setItems(json.items ?? []);
     } catch {
-      setMessage("Erro ao carregar solicitaÃ§Ãµes");
+      setMessage("Erro ao carregar solicitações");
       setItems([]);
     } finally {
       setLoading(false);
@@ -80,49 +80,52 @@ export default function AdminRequestsPage() {
   }, [load]);
 
   async function update(id: string, next: "APPROVED" | "REJECTED") {
-    setMessage(null);
-    const res = await fetch(`/api/admin/requests/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: next }),
-      credentials: "include",
-      cache: "no-store",
-    });
+    try {
+      setMessage(null);
 
-    if (res.status === 401) {
-      handleUnauthorized();
-      return;
-    }
+      const res = await fetch(`/api/admin/requests/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: next }),
+        credentials: "include",
+        cache: "no-store",
+      });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      const msg = err.message || "Erro ao atualizar";
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Erro ao atualizar");
+      }
+
+      const payload = (await res.json().catch(() => null)) as { item?: RequestRecord } | null;
+
+      setItems((prev) =>
+        prev.map((req) =>
+          req.id === id ? { ...req, ...(payload?.item ?? { status: next }) } : req,
+        ),
+      );
+
+      toast.success(next === "APPROVED" ? "Solicitação aprovada" : "Solicitação rejeitada");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Erro inesperado";
       setMessage(msg);
       toast.error(msg);
-      return;
     }
-    const payload = (await res.json().catch(() => null)) as { item?: RequestRecord } | null;
-    if (payload?.item) {
-      setItems((prev) =>
-        prev.map((req) => (req.id === payload.item?.id ? { ...req, ...payload.item } : req)),
-      );
-    } else {
-      setItems((prev) =>
-        prev.map((req) => (req.id === id ? { ...req, status: next } : req)),
-      );
-    }
-    toast.success(next === "APPROVED" ? "SolicitaÃ§Ã£o aprovada" : "SolicitaÃ§Ã£o rejeitada");
   }
 
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
       <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-10 space-y-4">
-        <Breadcrumb items={[{ label: "Admin", href: "/admin/home" }, { label: "SolicitaÃ§Ãµes" }]} />
+        <Breadcrumb items={[{ label: "Admin", href: "/admin/home" }, { label: "Solicitações" }]} />
 
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">SolicitaÃ§Ãµes</h1>
-            <p className="text-sm sm:text-base text-(--tc-text-muted,#6b7280)">Aprovar ou rejeitar pedidos de alteraÃ§Ã£o</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Solicitações</h1>
+            <p className="text-sm sm:text-base text-(--tc-text-muted,#6b7280)">Aprovar ou rejeitar pedidos de alteração</p>
           </div>
           <button
             type="button"
@@ -136,7 +139,7 @@ export default function AdminRequestsPage() {
 
         <div className="flex gap-3 flex-wrap" role="group" aria-label="Filtros">
           <label className="sr-only" htmlFor="requests-filter-status">
-            Filtrar solicitaÃ§Ãµes por status
+            Filtrar solicitações por status
           </label>
           <select
             id="requests-filter-status"
@@ -151,7 +154,7 @@ export default function AdminRequestsPage() {
           </select>
 
           <label className="sr-only" htmlFor="requests-filter-type">
-            Filtrar solicitaÃ§Ãµes por tipo
+            Filtrar solicitações por tipo
           </label>
           <select
             id="requests-filter-type"
@@ -174,7 +177,7 @@ export default function AdminRequestsPage() {
         {loading && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
 
         <ul className="space-y-2" role="list" aria-busy={loading}>
-          {filtered.length === 0 && !loading && <li className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma solicitaÃ§Ã£o.</li>}
+          {filtered.length === 0 && !loading && <li className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma solicitação.</li>}
           {filtered.map((req) => (
             <li key={req.id} className="rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-3 flex flex-col gap-2">
               <div className="flex flex-wrap justify-between gap-2">

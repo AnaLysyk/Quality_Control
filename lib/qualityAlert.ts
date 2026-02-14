@@ -14,6 +14,8 @@ const ALERT_TYPES = [
   "mttr",
   "release_failed",
   "gate_failed",
+  "low_pass_rate",
+  "trend_drop",
   "override",
   "mttr_exceeded",
   "run_failed",
@@ -24,7 +26,7 @@ export type QualityAlertType = typeof ALERT_TYPES[number];
 export type QualityAlert = {
   companySlug: string;
   type: QualityAlertType;
-  severity: "critical" | "warning";
+  severity: "info" | "warning" | "critical";
   message: string;
   metadata?: Record<string, unknown>;
   timestamp: string;
@@ -86,6 +88,10 @@ function isFailedStatus(value?: string | null) {
   return normalized === "failed" || normalized === "fail" || normalized === "falha";
 }
 
+/**
+ * Lê o store de alertas de qualidade do filesystem ou memória.
+ * @returns Lista de alertas
+ */
 export async function readAlertsStore(): Promise<QualityAlert[]> {
   // Impede execução em edge/build/ambiente sem fs
   if (typeof process !== "object" || process.env.NEXT_RUNTIME === "edge") {
@@ -104,6 +110,10 @@ export async function readAlertsStore(): Promise<QualityAlert[]> {
   }
 }
 
+/**
+ * Persiste a lista de alertas de qualidade no filesystem ou memória.
+ * @param alerts Lista de alertas
+ */
 export async function writeAlertsStore(alerts: QualityAlert[]): Promise<void> {
   if (USE_MEMORY_ALERTS) {
     memoryAlerts = alerts as QualityAlert[];
@@ -128,6 +138,11 @@ async function safeFetch(input: RequestInfo, init?: RequestInit) {
   return fetch(input, init);
 }
 
+/**
+ * Envia e registra um alerta de qualidade, com anti-spam e webhook opcional.
+ * @param input Dados do alerta
+ * @returns true se alerta foi registrado
+ */
 export async function sendQualityAlert({ companySlug, type, severity, message, metadata, timestamp }: QualityAlertInput): Promise<boolean> {
   const now = timestamp ?? new Date().toISOString();
   if (!ALERT_TYPES.includes(type)) {
@@ -159,6 +174,11 @@ export async function sendQualityAlert({ companySlug, type, severity, message, m
   return true;
 }
 
+/**
+ * Garante que alertas críticos de summary (score, SLA, MTTR, release) sejam enviados.
+ * @param params Parâmetros de summary e releases
+ * @returns Array de booleanos indicando alertas enviados
+ */
 export async function ensureSummaryAlerts(params: {
   companySlug: string;
   summary: SummaryInput;

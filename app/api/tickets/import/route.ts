@@ -42,6 +42,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
 
+
   const body = (await req.json().catch(() => ({}))) as ImportBody;
   const mode = body.mode ?? "merge";
   const data = body.data;
@@ -51,6 +52,22 @@ export async function POST(req: Request) {
 
   const companyId = user.companyId ?? null;
   const companySlug = user.companySlug ?? null;
+
+  // Audit log
+  const ip_address = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+  const user_agent = req.headers.get("user-agent") || null;
+  console.info("[TICKET_IMPORT]", {
+    userId: user.id,
+    email: user.email,
+    companyId,
+    companySlug,
+    ip_address,
+    user_agent,
+    mode,
+    items: data.items.length,
+    timestamp: new Date().toISOString(),
+  });
+
   const foreign = data.items.find((item) => {
     const sameCompany =
       (companyId && item.companyId === companyId) ||

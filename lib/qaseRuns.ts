@@ -1,5 +1,11 @@
+
+// Importa o cliente Qase e erro customizado
 import { QaseError, createQaseClient } from "@/lib/qaseSdk";
 
+
+/**
+ * Representa um run (execução) Qase simplificado.
+ */
 type QaseRun = {
   id: number;
   name?: string;
@@ -8,10 +14,19 @@ type QaseRun = {
   createdAt?: string;
 };
 
+
+/**
+ * Resultado da listagem de runs Qase.
+ * ok: true => sucesso, ok: false => erro ou warning.
+ */
 type ListRunsResult =
   | { ok: true; data: QaseRun[] }
   | { ok: false; data: QaseRun[]; warning?: string };
 
+
+/**
+ * Estrutura bruta de run retornada pela API Qase.
+ */
 type RawRun = {
   id?: number;
   name?: string;
@@ -22,6 +37,11 @@ type RawRun = {
   createdAt?: string;
 };
 
+
+/**
+ * Normaliza um objeto RawRun da API Qase para o formato QaseRun.
+ * Retorna null se o id não for válido.
+ */
 function normalizeRun(run: RawRun): QaseRun | null {
   const id = Number(run.id ?? 0);
   if (!Number.isFinite(id) || id <= 0) return null;
@@ -34,6 +54,13 @@ function normalizeRun(run: RawRun): QaseRun | null {
   };
 }
 
+
+/**
+ * Lista os runs (execuções) de um projeto Qase.
+ * @param projectCode Código do projeto Qase
+ * @param token Token de API Qase
+ * @returns Lista de runs ou warning de erro
+ */
 export async function listQaseRuns(projectCode: string, token: string): Promise<ListRunsResult> {
   if (!token || !projectCode) {
     return { ok: false, data: [], warning: "Qase nao configurado (token/projeto ausente)" };

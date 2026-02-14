@@ -18,6 +18,8 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
 
-  const timeline = await listTicketTimeline(id);
-  return NextResponse.json({ items: timeline ?? [] }, { status: 200 });
+  let timeline = await listTicketTimeline(id);
+  if (!Array.isArray(timeline)) timeline = [];
+  if (timeline.length > 200) timeline = timeline.slice(0, 200);
+  return NextResponse.json({ items: timeline }, { status: 200 });
 }

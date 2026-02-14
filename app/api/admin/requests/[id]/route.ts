@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
+
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getRequestById, updateRequestStatus, type RequestStatus } from "@/data/requestsStore";
 import { getRedis } from "@/lib/redis";
@@ -11,59 +12,89 @@ function isFinalStatus(value: string | null): value is Exclude<RequestStatus, "P
   return value === "APPROVED" || value === "REJECTED";
 }
 
-export async function PATCH(
-  req: Request,
-  context: { params: Promise<{ id: string }> }
-) {
+type RouteContext = { params: { id: string } };
+
+function json(data: unknown, init?: ResponseInit) {
+  const res = NextResponse.json(data, init);
+  res.headers.set("Cache-Control", "no-store");
+  return res;
+}
+
+export async function PATCH(req: Request, { params }: RouteContext) {
   const authUser = await authenticateRequest(req);
   if (!authUser) {
-    return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
+    return json({ message: "Nao autenticado" }, { status: 401 });
   }
   if (!authUser.isGlobalAdmin) {
-    return NextResponse.json({ message: "Sem permissao" }, { status: 403 });
+    return json({ message: "Sem permissao" }, { status: 403 });
   }
 
-  const body = (await req.json().catch(() => null)) as { status?: string; reviewNote?: string } | null;
-  const rawStatus = body?.status ?? null;
+  const body = await req.json().catch(() => null);
+  const rawStatus =
+    typeof body?.status === "string" ? body.status.toUpperCase() : null;
   const nextStatus: Exclude<RequestStatus, "PENDING"> | null = isFinalStatus(rawStatus) ? rawStatus : null;
   if (!nextStatus) {
-    return NextResponse.json({ message: "Status invalido" }, { status: 400 });
+    return json({ message: "Status invalido" }, { status: 400 });
   }
 
-  const { id } = await context.params;
+  const id = `${params.id ?? ""}`.trim();
+  if (!id) {
+    return json({ message: "ID ausente" }, { status: 400 });
+  }
+
+  const reviewNoteValue = typeof body?.reviewNote === "string" ? body.reviewNote.trim() : "";
+  const reviewNote = reviewNoteValue.length > 0 ? reviewNoteValue : undefined;
+
   const requestRecord = await getRequestById(id);
   if (!requestRecord) {
-    return NextResponse.json({ message: "Solicitacao nao encontrada" }, { status: 404 });
+    return json({ message: "Solicitacao nao encontrada" }, { status: 404 });
   }
   if (requestRecord.status !== "PENDING") {
-    return NextResponse.json({ item: requestRecord });
+    return json({ item: requestRecord });
   }
 
-  if (nextStatus === "APPROVED" && requestRecord.type === "PASSWORD_RESET") {
-    const user = await getLocalUserById(requestRecord.userId);
+  const updated = await updateRequestStatus(id, nextStatus, { id: authUser.id }, reviewNote);
+  if (!updated) {
+    return json({ message: "Falha ao atualizar status" }, { status: 500 });
+  }
+  if (updated.status !== nextStatus) {
+    return json({ message: "Solicitacao ja processada", item: updated }, { status: 409 });
+  }
+
+  console.info("[admin/requests] status atualizado", {
+    id: updated.id,
+    reviewer: authUser.id,
+    status: updated.status,
+  });
+
+  if (nextStatus === "APPROVED" && updated.type === "PASSWORD_RESET") {
+    const user = await getLocalUserById(updated.userId);
     if (!user) {
-      return NextResponse.json({ message: "Usuario nao encontrado" }, { status: 404 });
+      return json({ message: "Usuario nao encontrado" }, { status: 404 });
     }
-    const token = randomUUID();
-    const redis = getRedis();
-    await redis.set(`reset:${token}`, user.id, { ex: 15 * 60 });
-    const targetEmail = user.email || requestRecord.userEmail;
+
+    const targetEmail = user.email || updated.userEmail;
     if (!targetEmail) {
-      return NextResponse.json({ message: "Email do usuario nao encontrado" }, { status: 400 });
+      return json({ message: "Email do usuario nao encontrado" }, { status: 400 });
     }
+
+    const token = randomUUID();
+    const redisKey = `reset:${token}`;
+    const redis = getRedis();
+    await redis.set(redisKey, user.id, { ex: 15 * 60 });
+
     const emailSent = await emailService.sendPasswordResetEmail(targetEmail, token);
     if (!emailSent) {
-      return NextResponse.json({ message: "Falha ao enviar email de reset" }, { status: 500 });
+      await redis.del(redisKey);
+      return json({ message: "Falha ao enviar email de reset" }, { status: 500 });
     }
   }
 
-  const updated = await updateRequestStatus(id, nextStatus, { id: authUser.id }, body?.reviewNote);
-  if (updated && updated.type === "PASSWORD_RESET") {
-    try {
-      await notifyPasswordResetStatus(updated, nextStatus);
-    } catch (err) {
+  if (updated.type === "PASSWORD_RESET") {
+    notifyPasswordResetStatus(updated, nextStatus).catch((err) => {
       console.error("Falha ao notificar status de reset", err);
-    }
+    });
   }
-  return NextResponse.json({ item: updated });
+
+  return json({ item: updated });
 }

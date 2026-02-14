@@ -21,8 +21,11 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
   }
 
   const url = new URL(req.url);
-  const limit = Number(url.searchParams.get("limit") ?? 50);
-  const offset = Number(url.searchParams.get("offset") ?? 0);
+  let limit = Number(url.searchParams.get("limit") ?? 50);
+  let offset = Number(url.searchParams.get("offset") ?? 0);
+  if (!Number.isFinite(limit) || limit < 1) limit = 1;
+  if (limit > 200) limit = 200;
+  if (!Number.isFinite(offset) || offset < 0) offset = 0;
   const items = await listTicketEvents(id, { limit, offset });
 
   const uniqueActors = Array.from(

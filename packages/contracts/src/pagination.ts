@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+/**
+ * Schema de paginação para respostas de API.
+ */
 export const PaginationSchema = z
   .object({
     page: z.number().int().min(1),
@@ -10,6 +13,9 @@ export const PaginationSchema = z
 
 export type Pagination = z.infer<typeof PaginationSchema>;
 
+/**
+ * Schema para query de paginação (parâmetros de busca).
+ */
 export const PaginationQuerySchema = z
   .object({
     page: z.coerce.number().int().min(1).default(1),

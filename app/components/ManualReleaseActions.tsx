@@ -87,7 +87,7 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
         type="button"
         onClick={editTitle}
         disabled={loading}
-        className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/15 disabled:opacity-60"
+        className="rounded-xl border border-[--tc-border]/20 bg-[--tc-surface]/10 px-3 py-2 text-xs font-semibold text-[--tc-text] hover:bg-[--tc-surface]/15 disabled:opacity-60"
       >
         {loading ? "Salvando..." : "Editar título"}
       </button>
@@ -96,7 +96,7 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
           type="button"
           onClick={reopen}
           disabled={loading}
-          className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/15 disabled:opacity-60"
+          className="rounded-xl border border-[--tc-border]/20 bg-[--tc-surface]/10 px-4 py-2 text-sm font-semibold text-[--tc-text] hover:bg-[--tc-surface]/15 disabled:opacity-60"
         >
           {loading ? "..." : "Reabrir"}
         </button>
@@ -113,7 +113,7 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
         </button>
       )}
       {gateBlocked && !finalized && (
-        <p className="text-xs text-rose-200" data-testid="quality-gate-blocked-message">
+        <p className="text-xs text-[--tc-accent-soft]" data-testid="quality-gate-blocked-message">
           Qualidade insuficiente para aprovação
         </p>
       )}

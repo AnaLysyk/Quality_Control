@@ -12,6 +12,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
 
+  // Audit log
+  const ip_address = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+  const user_agent = req.headers.get("user-agent") || null;
+  console.info("[TICKET_BACKUP]", {
+    userId: user.id,
+    email: user.email,
+    ip_address,
+    user_agent,
+    timestamp: new Date().toISOString(),
+  });
+
   try {
     await createBackup();
     return NextResponse.json({ ok: true }, { status: 200 });

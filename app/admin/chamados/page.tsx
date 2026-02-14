@@ -1,39 +1,17 @@
-"use client";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthUser } from "@/hooks/useAuthUser";
+import { getAccessContextFromStores } from "@/lib/auth/session";
+import { isDevRole } from "@/lib/rbac/devAccess";
 
-function isDevRole(role?: string | null) {
-  const value = (role ?? "").toLowerCase();
-  return (
-    value === "admin" ||
-    value === "global_admin" ||
-    value === "it_dev" ||
-    value === "itdev" ||
-    value === "developer" ||
-    value === "dev"
-  );
-}
+export default async function AdminChamadosRedirect() {
+  const cookieStore = await cookies();
+  const access = await getAccessContextFromStores(undefined, cookieStore);
 
-export default function AdminChamadosPage() {
-  const router = useRouter();
-  const { user, loading } = useAuthUser();
-  const isDev = isDevRole(user?.role ?? null);
-
-  useEffect(() => {
-    if (!loading && user) {
-      router.replace(isDev ? "/kanban-it" : "/meus-chamados");
-    }
-  }, [loading, user, isDev, router]);
-
-  if (loading) {
-    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Carregando...</div>;
+  if (!access) {
+    redirect("/login");
   }
 
-  if (!user) {
-    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Acesso restrito.</div>;
-  }
-
-  return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Redirecionando...</div>;
+  const isDev = access.isGlobalAdmin || isDevRole(access.role ?? undefined) || access.capabilities?.includes("*");
+  redirect(isDev ? "/kanban-it" : "/meus-chamados");
 }

@@ -18,12 +18,12 @@ export default async function CompanyHomePage({ params }: PageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#f5f6fa) text-(--page-text,#0b1a3c) px-4 py-10 sm:px-6 lg:px-10">
+    <div className="min-h-screen bg-(--page-bg) text-(--page-text) px-4 py-10 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-5xl space-y-8">
-        <header className="rounded-3xl bg-white/90 p-6 shadow-sm">
-          <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">Quality Control</p>
+        <header className="rounded-3xl bg-(--tc-surface)/90 p-6 shadow-sm">
+          <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent)">Quality Control</p>
           <h1 className="mt-2 text-3xl font-extrabold">Hub da empresa: {slug}</h1>
-          <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
+          <p className="mt-2 text-sm text-(--tc-text-secondary)">
             Acesse os modulos essenciais para acompanhar qualidade, runs, releases e defeitos.
           </p>
         </header>
@@ -33,11 +33,11 @@ export default async function CompanyHomePage({ params }: PageProps) {
             <Link
               key={card.title}
               href={card.href}
-              className="flex h-full flex-col gap-3 rounded-3xl border border-(--tc-border,#e5e7eb) bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="flex h-full flex-col gap-3 rounded-3xl border border-(--tc-border) bg-(--tc-surface) p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
-              <h2 className="text-lg font-semibold text-(--page-text,#0b1a3c)">{card.title}</h2>
-              <p className="text-sm text-(--tc-text-secondary,#4b5563)">{card.description}</p>
-              <span className="mt-auto text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-accent,#ef0001)">
+              <h2 className="text-lg font-semibold text-(--page-text)">{card.title}</h2>
+              <p className="text-sm text-(--tc-text-secondary)">{card.description}</p>
+              <span className="mt-auto text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-accent)">
                 Abrir
               </span>
             </Link>

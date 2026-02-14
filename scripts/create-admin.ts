@@ -2,9 +2,17 @@ import "./loadEnv";
 import { prisma } from '../lib/prismaClient';
 import { hashPasswordSha256 } from '../lib/passwordHash';
 
+function getArgOrEnv(key: string, envKey: string, fallback?: string): string {
+  const idx = process.argv.findIndex((a) => a === `--${key}`);
+  if (idx !== -1 && process.argv[idx + 1]) return process.argv[idx + 1];
+  if (process.env[envKey]) return process.env[envKey]!;
+  if (fallback) return fallback;
+  throw new Error(`Missing required argument/env: ${key}`);
+}
+
 async function createAdmin() {
-  const email = 'admin@test.com';
-  const password = '123456';
+  const email = getArgOrEnv("email", "ADMIN_EMAIL", "admin@test.com");
+  const password = getArgOrEnv("password", "ADMIN_PASSWORD", "123456");
   const hashedPassword = hashPasswordSha256(password);
 
   try {
@@ -46,9 +54,10 @@ async function createAdmin() {
       },
     });
 
-    console.log('Admin user and company created:', { user, company });
+    console.log('Admin user and company created or updated:', { email, company: company.slug });
   } catch (error) {
     console.error('Error creating admin:', error);
+    process.exit(1);
   } finally {
     await prisma.$disconnect();
   }

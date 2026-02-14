@@ -1,3 +1,8 @@
+/**
+ * RequireClient: Client-side guard for company-specific routes.
+ * Redirects to login if not authenticated, or to user's company if mismatched.
+ * Shows fallback while loading.
+ */
 "use client";
 
 import { ReactNode, useEffect } from "react";
@@ -10,6 +15,12 @@ type RequireClientProps = {
   fallback?: ReactNode;
 };
 
+/**
+ * Auth guard for company routes. Redirects if user is not allowed for the company.
+ * @param slug - Expected company slug for the route
+ * @param children - Content to render if allowed
+ * @param fallback - Optional fallback while loading or if denied
+ */
 export function RequireClient({ slug, children, fallback }: RequireClientProps) {
   const { user, loading } = useAuthUser();
   const router = useRouter();

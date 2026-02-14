@@ -109,12 +109,12 @@ export default function CompanyKanbanPage() {
   };
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#f5f6fa) text-(--page-text,#0b1a3c) px-4 py-8 sm:px-6 lg:px-10">
+    <div className="min-h-screen bg-(--page-bg) text-(--page-text) px-4 py-8 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-6xl space-y-6">
-        <header className="rounded-3xl bg-white p-6 shadow-sm space-y-2">
-          <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">Kanban</p>
+        <header className="rounded-3xl bg-(--tc-surface) p-6 shadow-sm space-y-2">
+          <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent)">Kanban</p>
           <h1 className="text-3xl font-extrabold">Kanban de defeitos</h1>
-          <p className="text-sm text-(--tc-text-secondary,#4b5563)">
+          <p className="text-sm text-(--tc-text-secondary)">
             Visualize o fluxo de defeitos por run e exporte o CSV.
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -124,7 +124,7 @@ export default function CompanyKanbanPage() {
             <select
               value={selectedRun ?? ""}
               onChange={(e) => handleRunChange(e.target.value)}
-              className="rounded-full border border-(--tc-border,#e5e7eb) bg-white px-4 py-2 text-sm"
+              className="rounded-full border border-(--tc-border) bg-(--tc-surface) px-4 py-2 text-sm"
               aria-label="Selecionar run"
             >
               <option value="">Selecione uma run</option>
@@ -139,7 +139,7 @@ export default function CompanyKanbanPage() {
           {error && <p className="text-sm text-red-600">{error}</p>}
         </header>
 
-        <div className="rounded-3xl bg-white p-6 shadow-sm">
+        <div className="rounded-3xl bg-(--tc-surface) p-6 shadow-sm">
           {!selectedRun && !loadingRuns && (
             <p className="text-sm text-(--tc-text-muted)">Selecione uma run para visualizar o Kanban.</p>
           )}

@@ -179,22 +179,22 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                 : "px-3 justify-start gap-3"
             } ${
               isActive
-                ? "bg-slate-100 ring-1 ring-[#4e8df5]/40 shadow-[0_10px_24px_rgba(78,141,245,0.18)] text-slate-900 dark:bg-white/10 dark:ring-[#4e8df5]/50 dark:shadow-[0_12px_30px_rgba(78,141,245,0.35)] dark:text-white"
-                : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-white/80 dark:hover:bg-white/7 dark:hover:text-white"
+                ? "bg-[--tc-surface-2] ring-1 ring-[--tc-primary]/40 shadow-[0_10px_24px_rgba(78,141,245,0.18)] text-[--tc-text] dark:bg-[--tc-surface-dark]/10 dark:ring-[--tc-primary]/50 dark:shadow-[0_12px_30px_rgba(78,141,245,0.35)] dark:text-[--tc-text-inverse]"
+                : "text-[--tc-text-muted] hover:bg-[--tc-surface-2] hover:text-[--tc-text] dark:text-[--tc-text-inverse]/80 dark:hover:bg-[--tc-surface-dark]/7 dark:hover:text-[--tc-text-inverse]"
             }`}
             onClick={isMobile && onClose ? onClose : undefined}
           >
             <span
               aria-hidden
-              className={`absolute left-1 top-2 bottom-2 w-0.75 rounded-full bg-[#4e8df5] transition-all ${
+              className={`absolute left-1 top-2 bottom-2 w-0.75 rounded-full bg-[--tc-primary] transition-all ${
                 isActive ? "opacity-100" : "opacity-0 group-hover/link:opacity-60"
               }`}
             />
             <div
               className={`flex items-center justify-center w-11 h-11 rounded-[14px] border transition-all duration-200 shrink-0 backdrop-blur-sm sidebar-icon ${
                 isActive
-                  ? "border-[#4e8df5]/50 bg-[#4e8df5]/10 text-[#2563eb] shadow-[0_10px_22px_rgba(78,141,245,0.2)] dark:border-[#4e8df5]/60 dark:bg-[#4e8df5]/12 dark:text-[#4e8df5] dark:shadow-[0_12px_28px_rgba(78,141,245,0.25)]"
-                  : "border-slate-200 bg-white text-[#2563eb] group-hover/link:border-[#4e8df5]/35 group-hover/link:bg-slate-100 dark:border-white/12 dark:bg-white/6 dark:text-[#4e8df5] dark:group-hover/link:bg-white/10"
+                  ? "border-[--tc-primary]/50 bg-[--tc-primary]/10 text-[--tc-primary] shadow-[0_10px_22px_rgba(78,141,245,0.2)] dark:border-[--tc-primary]/60 dark:bg-[--tc-primary]/12 dark:text-[--tc-primary] dark:shadow-[0_12px_28px_rgba(78,141,245,0.25)]"
+                  : "border-[--tc-border] bg-[--tc-surface] text-[--tc-primary] group-hover/link:border-[--tc-primary]/35 group-hover/link:bg-[--tc-surface-2] dark:border-[--tc-border]/12 dark:bg-[--tc-surface-dark]/6 dark:text-[--tc-primary] dark:group-hover/link:bg-[--tc-surface-dark]/10"
               }`}
             >
               <item.icon size={20} />

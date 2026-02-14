@@ -1,5 +1,15 @@
+
+// Serviço de envio de emails usando Nodemailer
 import nodemailer from 'nodemailer';
 
+
+/**
+ * Opções para envio de email.
+ * - to: destinatário
+ * - subject: assunto
+ * - html: corpo em HTML
+ * - text: corpo em texto puro (opcional)
+ */
 export interface EmailOptions {
   to: string;
   subject: string;
@@ -7,9 +17,18 @@ export interface EmailOptions {
   text?: string;
 }
 
+
+/**
+ * Serviço de email para envio transacional e notificações.
+ * Usa SMTP configurado via variáveis de ambiente.
+ */
 class EmailService {
   private transporter: nodemailer.Transporter | null = null;
 
+  /**
+   * Inicializa (lazy) e retorna o transporter SMTP.
+   * @returns nodemailer.Transporter
+   */
   private getTransporter() {
     if (!this.transporter) {
       this.transporter = nodemailer.createTransport({
@@ -25,6 +44,13 @@ class EmailService {
     return this.transporter;
   }
 
+
+  /**
+   * Envia um email genérico.
+   * Em dev/teste, apenas loga no console.
+   * @param options EmailOptions
+   * @returns true se enviado/logado com sucesso, false se erro
+   */
   async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
       // Evita chamadas de rede em ambientes de dev/teste.
@@ -55,9 +81,17 @@ class EmailService {
     }
   }
 
+
+  /**
+   * Envia email de redefinição de senha para o usuário.
+   * @param email Destinatário
+   * @param resetToken Token de redefinição
+   * @returns true se enviado/logado com sucesso, false se erro
+   */
   async sendPasswordResetEmail(email: string, resetToken: string): Promise<boolean> {
     const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/login/reset-password?token=${resetToken}`;
 
+    // Corpo HTML do email
     const html = `
       <!DOCTYPE html>
       <html>
@@ -100,6 +134,7 @@ class EmailService {
       </html>
     `;
 
+    // Corpo texto puro do email
     const text = `
       Quality Control - Redefinicao de senha
 
@@ -127,4 +162,6 @@ class EmailService {
   }
 }
 
+
+// Instância única do serviço de email para uso global
 export const emailService = new EmailService();

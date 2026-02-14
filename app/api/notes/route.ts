@@ -1,33 +1,49 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { createUserNote, listUserNotes } from "@/lib/userNotesStore";
+import { updateNotificationStatus } from "@/lib/userNotificationsStore";
 
-export async function GET(req: Request) {
+export async function PATCH(
+  req: Request,
+  context: { params: { id: string } }
+) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  const items = await listUserNotes(user.id);
-  return NextResponse.json({ items }, { status: 200 });
-}
-
-export async function POST(req: Request) {
-  const user = await authenticateRequest(req);
-  if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+  const { id } = context.params;
+  if (!id || id.length < 6) {
+    return NextResponse.json({ error: "Id invalido" }, { status: 400 });
   }
 
-  const body = await req.json().catch(() => ({}));
-  const note = await createUserNote(user.id, {
-    title: body?.title,
-    content: body?.content,
-    color: body?.color,
-  });
-
-  if (!note) {
-    return NextResponse.json({ error: "Informe titulo ou conteudo" }, { status: 400 });
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "JSON invalido" }, { status: 400 });
   }
 
-  return NextResponse.json({ item: note }, { status: 201 });
+  const allowed = new Set(["closed"]);
+  const status = allowed.has(body?.status) ? body.status : null;
+
+  if (!status) {
+    return NextResponse.json({ error: "Status invalido" }, { status: 400 });
+  }
+
+  const updated = await updateNotificationStatus(user.id, id, status);
+
+  if (!updated) {
+    return NextResponse.json(
+      { error: "Notificacao nao encontrada" },
+      { status: 404 }
+    );
+  }
+
+  return NextResponse.json(
+    { item: updated },
+    {
+      status: 200,
+      headers: { "Cache-Control": "no-store" }
+    }
+  );
 }

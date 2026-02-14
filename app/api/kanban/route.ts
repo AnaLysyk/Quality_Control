@@ -4,6 +4,7 @@ import { getNextId, readKanbanStore, writeKanbanStore } from "./store";
 import type { Status } from "./types";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 
+
 function jsonError(message: string, status: number) {
   return NextResponse.json({ message }, { status });
 }
@@ -39,10 +40,14 @@ function normalizeStatus(value: unknown): Status | null {
   return null;
 }
 
+function normSlug(s: string): string {
+  return s.trim().toLowerCase();
+}
+
 function asSlug(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
-  return trimmed ? trimmed : null;
+  return trimmed ? normSlug(trimmed) : null;
 }
 
 function asProject(value: unknown): string | null {
@@ -80,6 +85,7 @@ export async function GET(request: NextRequest) {
   const project = asProject(searchParams.get("project"));
   const runId = asRunId(searchParams.get("runId"));
   const requestedSlug = asSlug(searchParams.get("slug"));
+  const statusFilter = normalizeStatus(searchParams.get("status"));
 
   if (!project || runId === null) {
     return jsonError("project e runId sao obrigatorios", 400);
@@ -92,18 +98,26 @@ export async function GET(request: NextRequest) {
   if (isAdmin(user)) {
     effectiveSlug = requestedSlug;
   } else {
-    const allowed = resolveAllowedSlugs(user);
+    const allowed = resolveAllowedSlugs(user).map(normSlug);
     if (!allowed.length) return jsonError("Usuario sem empresa vinculada", 403);
     if (requestedSlug && !allowed.includes(requestedSlug)) return jsonError("Acesso proibido", 403);
-    effectiveSlug = requestedSlug ?? user.companySlug ?? allowed[0] ?? null;
+    effectiveSlug = requestedSlug ?? (user.companySlug ? normSlug(user.companySlug) : null) ?? allowed[0] ?? null;
   }
 
-  const { items: allItems } = await readKanbanStore();
+  let allItems;
+  try {
+    ({ items: allItems } = await readKanbanStore());
+  } catch (e) {
+    console.error("kanban read fail", e);
+    return jsonError("Falha ao ler store", 500);
+  }
+
   const items = allItems
     .filter((c) => {
       if (c.project !== project || c.run_id !== runId) return false;
+      if (statusFilter && c.status !== statusFilter) return false;
       if (!effectiveSlug) return true;
-      return c.client_slug === effectiveSlug;
+      return normSlug(c.client_slug ?? "") === effectiveSlug;
     })
     .sort((a, b) => {
       const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
@@ -111,13 +125,18 @@ export async function GET(request: NextRequest) {
       return ta - tb;
     });
 
-  if (!items.length) return new NextResponse(null, { status: 204 });
+  // Retorna 200 + [] para compatibilidade frontend
   return NextResponse.json({ items });
 }
 
+
 export async function POST(request: NextRequest) {
-  const body = await request.json().catch(() => null);
-  if (!body) return jsonError("JSON invalido", 400);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonError("JSON invalido", 400);
+  }
 
   const user = await authenticateRequest(request);
   if (!user) return jsonError("Nao autorizado", 401);
@@ -131,24 +150,36 @@ export async function POST(request: NextRequest) {
   const requestedSlug = asSlug(record.slug);
   let effectiveSlug: string | null = null;
   if (isAdmin(user)) {
-    effectiveSlug = requestedSlug ?? user.companySlug ?? null;
+    effectiveSlug = requestedSlug ?? (user.companySlug ? normSlug(user.companySlug) : null);
   } else {
-    const allowed = resolveAllowedSlugs(user);
+    const allowed = resolveAllowedSlugs(user).map(normSlug);
     if (!allowed.length) return jsonError("Usuario sem empresa vinculada", 403);
     if (requestedSlug && !allowed.includes(requestedSlug)) return jsonError("Acesso proibido", 403);
-    effectiveSlug = requestedSlug ?? user.companySlug ?? allowed[0] ?? null;
+    effectiveSlug = requestedSlug ?? (user.companySlug ? normSlug(user.companySlug) : null) ?? allowed[0] ?? null;
   }
 
   if (!effectiveSlug) return jsonError("slug e obrigatorio", 400);
   if (!project || runId === null || !title || !status) {
     return jsonError("Campos obrigatorios: project, runId, title, status valido", 400);
   }
+  if (title.length < 3 || title.length > 200) {
+    return jsonError("Title deve ter entre 3 e 200 caracteres", 400);
+  }
 
   const caseId = asOptionalCaseId(record.case_id ?? record.caseId ?? record.id);
   const bug = asOptionalString(record.bug);
   const link = asOptionalString(record.link);
 
-  const store = await readKanbanStore();
+  // TODO: lock de escrita para evitar race condition
+  let store;
+  try {
+    store = await readKanbanStore();
+  } catch (e) {
+    console.error("kanban read fail", e);
+    return jsonError("Falha ao ler store", 500);
+  }
+
+  const now = new Date();
   const card = {
     id: getNextId(store),
     client_slug: effectiveSlug,
@@ -159,9 +190,16 @@ export async function POST(request: NextRequest) {
     status,
     bug,
     link,
-    created_at: new Date().toISOString(),
+    created_at: now.toISOString(),
+    created_ts: now.getTime(),
+    created_by: user.id,
   };
   store.items.push(card);
-  await writeKanbanStore(store);
+  try {
+    await writeKanbanStore(store);
+  } catch (e) {
+    console.error("kanban write fail", e);
+    return jsonError("Falha ao gravar store", 500);
+  }
   return NextResponse.json(card, { status: 201 });
 }

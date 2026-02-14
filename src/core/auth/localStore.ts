@@ -1,8 +1,17 @@
+/**
+ * LocalAuthStore: Flexible local/ephemeral user/company store for dev/test/CI.
+ *
+ * - Supports Redis, in-memory, and file-based storage (auto-detects best option).
+ * - Used for local authentication, user/company CRUD, and membership management.
+ * - Not for production use—intended for development, testing, and CI environments.
+ * - See README for environment variable options and storage fallback order.
+ */
 import "server-only";
 
 import path from "node:path";
 import fs from "node:fs/promises";
 import { randomUUID } from "crypto";
+import type { Capability } from "../permissions/permissions.types";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
 export type LocalAuthUser = {
@@ -99,6 +108,40 @@ function normalizeMembershipRole(role?: string | null) {
   if (normalized === "admin" || normalized === "client_admin" || normalized === "company") return "company_admin";
   if (normalized === "read_only") return "viewer";
   return "user";
+}
+
+const CAPABILITY_ALLOWLIST: readonly Capability[] = [
+  "company:read",
+  "company:write",
+  "user:read",
+  "user:write",
+  "metrics:read",
+  "metrics:write",
+  "release:read",
+  "release:write",
+  "run:read",
+  "run:write",
+  "defect:read",
+  "defect:write",
+  "*",
+];
+
+const CAPABILITY_SET = new Set(CAPABILITY_ALLOWLIST);
+
+function sanitizeCapabilities(input?: string[] | null): Capability[] | undefined {
+  if (!Array.isArray(input) || input.length === 0) {
+    return undefined;
+  }
+  const normalized = input
+    .map((value) => (typeof value === "string" ? value.trim() : ""))
+    .filter((value): value is string => value.length > 0 && CAPABILITY_SET.has(value as Capability));
+  if (normalized.length === 0) {
+    return undefined;
+  }
+  if (normalized.includes("*")) {
+    return ["*"];
+  }
+  return Array.from(new Set(normalized)) as Capability[];
 }
 
 function normalizeMemberships(store: LocalAuthStore) {
@@ -366,6 +409,20 @@ export async function listLocalLinksForCompany(companyId: string): Promise<Local
   return (store.memberships ?? []).filter((m) => m.companyId === companyId).map((m) => ({ ...m }));
 }
 
+export async function pruneOrphanMemberships(): Promise<number> {
+  const store = await loadStoreForWrite();
+  const memberships = store.memberships ?? [];
+  if (memberships.length === 0) return 0;
+  const validUserIds = new Set(store.users.map((user) => user.id));
+  const filtered = memberships.filter((link) => validUserIds.has(link.userId));
+  if (filtered.length === memberships.length) {
+    return 0;
+  }
+  store.memberships = filtered;
+  await writeLocalAuthStore(store);
+  return memberships.length - filtered.length;
+}
+
 export async function createLocalUser(input: {
   name: string;
   email: string;
@@ -513,19 +570,23 @@ export async function upsertLocalLink(input: {
     (link) => link.userId === input.userId && link.companyId === input.companyId,
   );
   const role = normalizeMembershipRole(input.role ?? "user");
+  const capabilities = sanitizeCapabilities(input.capabilities ?? null);
   if (idx >= 0) {
     memberships[idx] = {
       ...memberships[idx],
       role,
-      ...(input.capabilities ? { capabilities: input.capabilities } : {}),
+      ...(capabilities ? { capabilities } : {}),
     };
+    if (!capabilities && memberships[idx].capabilities) {
+      delete memberships[idx].capabilities;
+    }
   } else {
     memberships.push({
       id: `mbr_${randomUUID().slice(0, 8)}`,
       userId: input.userId,
       companyId: input.companyId,
       role,
-      capabilities: input.capabilities ?? undefined,
+      capabilities: capabilities ?? undefined,
       createdAt: new Date().toISOString(),
     });
   }

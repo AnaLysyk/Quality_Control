@@ -7,6 +7,12 @@ import { readManualReleaseStore } from "@/data/manualData";
 
 export async function GET() {
   try {
+    // Helper para unificar acesso a createdAt/created_at
+    function pickCreatedAt(c: any): string | null {
+      if (typeof c.createdAt === "string") return c.createdAt;
+      if (typeof c.created_at === "string") return c.created_at;
+      return null;
+    }
     const [users, companies, releases, manualReleases, activeSessions] = await Promise.all([
       listLocalUsers(),
       listLocalCompanies(),
@@ -68,4 +74,21 @@ export async function GET() {
     console.error("Error fetching metrics:", error);
     return NextResponse.json({ error: "Erro ao buscar metricas" }, { status: 500 });
   }
+}
+
+// Funções utilitárias (mantidas para PATCH futuro)
+function sanitizeText(value: unknown, max = 255): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
+}
+
+function normalizeEmail(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) return null;
+  // Regex leve para validar formato de email
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return null;
+  return trimmed;
 }

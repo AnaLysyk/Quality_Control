@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import { listAllRequests, type RequestStatus, type RequestType } from "@/data/requestsStore";
 import { authenticateRequest } from "@/lib/jwtAuth";
 
@@ -24,15 +25,18 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  const statusParam = searchParams.get("status");
-  const typeParam = searchParams.get("type");
+  const statusParam = searchParams.get("status")?.toUpperCase() ?? null;
+  const typeParam = searchParams.get("type")?.toUpperCase() ?? null;
   const status = isRequestStatus(statusParam) ? statusParam : undefined;
   const type = isRequestType(typeParam) ? typeParam : undefined;
-  const companyId = searchParams.get("companyId") || undefined;
+  const companyIdRaw = searchParams.get("companyId");
+  const companyId = typeof companyIdRaw === "string" && companyIdRaw.trim().length > 0 ? companyIdRaw.trim() : undefined;
   const sortParam = searchParams.get("sort");
   const sort = isSort(sortParam) ? sortParam : "createdAt_desc";
 
   const items = await listAllRequests({ status, type, companyId, sort });
 
-  return NextResponse.json({ items, total: items.length });
+  const res = NextResponse.json({ items, total: items.length });
+  res.headers.set("Cache-Control", "no-store");
+  return res;
 }

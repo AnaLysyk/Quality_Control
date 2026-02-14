@@ -12,6 +12,17 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
 
+  // Audit log
+  const ip_address = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+  const user_agent = req.headers.get("user-agent") || null;
+  console.info("[TICKET_VERSION_LIST]", {
+    userId: user.id,
+    email: user.email,
+    ip_address,
+    user_agent,
+    timestamp: new Date().toISOString(),
+  });
+
   const items = await listVersions();
   return NextResponse.json({ items }, { status: 200 });
 }

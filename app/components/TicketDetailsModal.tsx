@@ -489,24 +489,24 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-3xl rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_30px_80px_rgba(15,23,42,0.35)]">
-        <div className="flex items-start justify-between gap-4 border-b border-(--tc-border,#e5e7eb) px-6 py-4">
+      <div className="w-full max-w-3xl rounded-3xl border border-(--tc-border) bg-(--tc-surface) shadow-(--tc-shadow-3xl)">
+        <div className="flex items-start justify-between gap-4 border-b border-(--tc-border) px-6 py-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Chamado</p>
-            <h2 className="text-lg font-semibold text-(--tc-text,#0f172a)">{ticket.title}</h2>
+            <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">Chamado</p>
+            <h2 className="text-lg font-semibold text-(--tc-text)">{ticket.title}</h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Fechar modal"
             title="Fechar"
-            className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+            className="rounded-full border border-(--tc-border) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
           >
             <FiX />
           </button>
         </div>
 
-        <div className="flex items-center gap-2 border-b border-(--tc-border,#e5e7eb) px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em]">
+        <div className="flex items-center gap-2 border-b border-(--tc-border) px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em]">
           {(["details", "comments", "history", "timeline"] as const).map((key) => {
             const label = key === "details" ? "Detalhes" : key === "comments" ? "Comentarios" : key === "history" ? "Historico" : "Timeline";
             return (
@@ -517,7 +517,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                 aria-label={`Ir para ${label}`}
                 title={`Ir para ${label}`}
                 className={`rounded-full px-3 py-1 ${
-                  tab === key ? "bg-(--tc-accent,#ef0001) text-white" : "text-(--tc-text-muted,#6b7280)"
+                  tab === key ? "bg-(--tc-accent) text-white" : "text-(--tc-text-muted)"
                 }`}
               >
                 {label}
@@ -531,33 +531,33 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
             <>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Codigo</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">Codigo</p>
                   <p className="text-sm font-semibold">{codeLabel ?? "CH-000000"}</p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Status</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">Status</p>
                   <p className="text-sm font-semibold">{getTicketStatusLabel(ticket.status, selectableStatusOptions)}</p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Prioridade</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">Prioridade</p>
                   <p className="text-sm font-semibold">{ticket.priority ?? "medium"}</p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Tipo</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">Tipo</p>
                   <p className="text-sm font-semibold">{ticket.type || "Nao informado"}</p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Atribuido</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">Atribuido</p>
                   <p className="text-sm font-semibold">{assignedLabel}</p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Tags</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">Tags</p>
                   <p className="text-sm font-semibold">{tagsLabel}</p>
                 </div>
               </div>
               {canAssign && (
-                <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4 space-y-2">
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
+                <div className="rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) p-4 space-y-2">
+                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">
                     Responsavel pelo ticket
                   </p>
                   <div className="flex flex-wrap items-center gap-2">
@@ -590,21 +590,21 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                         Assumir
                       </button>
                     )}
-                    {assigneesLoading && <span className="text-xs text-(--tc-text-muted,#6b7280)">Carregando...</span>}
+                    {assigneesLoading && <span className="text-xs text-(--tc-text-muted)">Carregando...</span>}
                   </div>
                   {assigneeError && <p className="text-xs text-red-600">{assigneeError}</p>}
                   {!assigneesLoading && assignees.length === 0 && (
-                    <p className="text-xs text-(--tc-text-muted,#6b7280)">Nenhum desenvolvedor disponivel.</p>
+                    <p className="text-xs text-(--tc-text-muted)">Nenhum desenvolvedor disponivel.</p>
                   )}
                 </div>
               )}
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Descricao</p>
-                <p className="mt-2 text-sm whitespace-pre-wrap text-(--tc-text-secondary,#4b5563)">
+                <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">Descricao</p>
+                <p className="mt-2 text-sm whitespace-pre-wrap text-(--tc-text-secondary)">
                   {ticket.description || "Sem descricao."}
                 </p>
               </div>
-              <div className="grid gap-2 text-xs text-(--tc-text-muted,#6b7280)">
+              <div className="grid gap-2 text-xs text-(--tc-text-muted)">
                 <p>
                   Criado em {new Date(ticket.createdAt).toLocaleString("pt-BR")}
                   {ticket.createdByName || ticket.createdByEmail
@@ -686,7 +686,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                       type="button"
                       onClick={saveDetails}
                       disabled={detailsSaving}
-                      className="rounded-lg bg-(--tc-surface-dark,#0b1a3c) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
+                      className="rounded-lg bg-(--tc-surface-dark) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
                     >
                       {detailsSaving ? "Salvando" : "Salvar"}
                     </button>
@@ -702,8 +702,8 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                 </div>
               )}
               {canEditStatus && (
-                <div className="mt-4 rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4 space-y-2">
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
+                <div className="mt-4 rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) p-4 space-y-2">
+                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">
                     Atualizar status
                   </p>
                   <div className="flex flex-wrap items-center gap-2">
@@ -725,7 +725,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                         </option>
                       ))}
                     </select>
-                    {statusUpdating && <span className="text-xs text-(--tc-text-muted,#6b7280)">Salvando...</span>}
+                    {statusUpdating && <span className="text-xs text-(--tc-text-muted)">Salvando...</span>}
                   </div>
                   {statusError && <p className="text-xs text-red-600">{statusError}</p>}
                 </div>
@@ -735,7 +735,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
 
           {tab === "comments" && (
             <div className="space-y-4">
-              <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-4 space-y-2">
+              <div className="rounded-2xl border border-(--tc-border) bg-(--tc-surface) p-4 space-y-2">
                 <textarea
                   rows={4}
                   className="w-full rounded-xl border border-(--tc-border,#e5e7eb) px-3 py-2 text-sm"
@@ -748,7 +748,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                     type="button"
                     onClick={submitComment}
                     disabled={commentSaving || !commentBody.trim()}
-                    className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
                   >
                     <FiMessageSquare size={14} /> {commentSaving ? "Enviando" : "Comentar"}
                   </button>
@@ -765,20 +765,20 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                 {commentError && <p className="text-xs text-red-600">{commentError}</p>}
               </div>
 
-              {loadingComments && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
+              {loadingComments && <p className="text-sm text-(--tc-text-muted)">Carregando...</p>}
               {!loadingComments && comments.length === 0 && (
-                <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhum comentario ainda.</p>
+                <p className="text-sm text-(--tc-text-muted)">Nenhum comentario ainda.</p>
               )}
 
               <div className="space-y-3">
                 {comments.map((comment) => (
-                  <div key={comment.id} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-3">
+                  <div key={comment.id} className="rounded-2xl border border-(--tc-border) bg-(--tc-surface) p-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-xs font-semibold text-(--tc-text,#0f172a)">
+                        <p className="text-xs font-semibold text-(--tc-text)">
                           {comment.authorName || comment.authorUserId}
                         </p>
-                        <p className="text-[11px] text-(--tc-text-muted,#6b7280)">
+                        <p className="text-[11px] text-(--tc-text-muted)">
                           {new Date(comment.createdAt).toLocaleString("pt-BR")}
                         </p>
                       </div>
@@ -790,7 +790,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                           className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] ${
                             comment.viewerHasLiked
                               ? "border-rose-200 bg-rose-50 text-rose-600"
-                              : "border-(--tc-border,#e5e7eb) text-(--tc-text-muted,#6b7280)"
+                              : "border-(--tc-border) text-(--tc-text-muted)"
                           }`}
                         >
                           <FiHeart size={12} />
@@ -801,7 +801,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                             <button
                               type="button"
                               onClick={() => startEditComment(comment)}
-                              className="rounded-full border border-(--tc-border,#e5e7eb) px-2 py-1 text-[11px] text-(--tc-text-muted,#6b7280)"
+                              className="rounded-full border border-(--tc-border) px-2 py-1 text-[11px] text-(--tc-text-muted)"
                             >
                               Editar
                             </button>
@@ -845,7 +845,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
                         </div>
                       </div>
                     ) : (
-                      <p className="mt-2 text-sm whitespace-pre-wrap text-(--tc-text-secondary,#4b5563)">
+                      <p className="mt-2 text-sm whitespace-pre-wrap text-(--tc-text-secondary)">
                         {comment.deletedAt ? "Comentario removido." : comment.body}
                       </p>
                     )}
@@ -875,9 +875,9 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
               )}
               <div className="space-y-2">
                 {events.map((event) => (
-                  <div key={event.id} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3">
-                    <p className="text-sm font-semibold text-(--tc-text,#0f172a)">{formatEventLabel(event, selectableStatusOptions)}</p>
-                    <p className="text-[11px] text-(--tc-text-muted,#6b7280)">
+                  <div key={event.id} className="rounded-xl border border-(--tc-border) bg-(--tc-surface) p-3">
+                    <p className="text-sm font-semibold text-(--tc-text)">{formatEventLabel(event, selectableStatusOptions)}</p>
+                    <p className="text-[11px] text-(--tc-text-muted)">
                       {event.actorName || event.actorEmail || event.actorUserId || "Sistema"} •{" "}
                       {new Date(event.createdAt).toLocaleString("pt-BR")}
                     </p>
@@ -907,11 +907,11 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
               )}
               <div className="space-y-2">
                 {timelineItems.map((item, idx) => (
-                  <div key={`${item.at}-${idx}`} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3">
-                    <p className="text-sm font-semibold text-(--tc-text,#0f172a)">
+                  <div key={`${item.at}-${idx}`} className="rounded-xl border border-(--tc-border) bg-(--tc-surface) p-3">
+                    <p className="text-sm font-semibold text-(--tc-text)">
                       {getTicketStatusLabel(item.from, selectableStatusOptions)}{" -> "}{getTicketStatusLabel(item.to, selectableStatusOptions)}
                     </p>
-                    <p className="text-[11px] text-(--tc-text-muted,#6b7280)">
+                    <p className="text-[11px] text-(--tc-text-muted)">
                       {item.changedById} • {new Date(item.at).toLocaleString("pt-BR")}
                     </p>
                   </div>

@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
-import { hasCapability, type Capability } from "@/lib/permissions";
+import { hasCapability } from "@/lib/permissions";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 
 type ManualRelease = {
@@ -29,7 +29,7 @@ function hasRole(user: AuthUser, roles: string[]) {
 function canRead(user: AuthUser) {
   return (
     user.isGlobalAdmin ||
-    hasCapability((user.capabilities ?? []) as Capability[], "release:read") ||
+    hasCapability((user.capabilities ?? []) as string[], "release:read") ||
     hasRole(user, ["admin", "company", "user", "viewer"])
   );
 }
@@ -37,7 +37,7 @@ function canRead(user: AuthUser) {
 function canWrite(user: AuthUser) {
   return (
     user.isGlobalAdmin ||
-    hasCapability((user.capabilities ?? []) as Capability[], "release:write") ||
+    hasCapability((user.capabilities ?? []) as string[], "release:write") ||
     hasRole(user, ["admin", "company"])
   );
 }
@@ -104,11 +104,15 @@ export async function POST(req: NextRequest) {
     createdAt: new Date().toISOString(),
   };
 
-  const releases = await readStore();
-  releases.unshift(release);
-  await writeStore(releases);
-
-  return NextResponse.json(release, { status: 201 });
+  try {
+    const releases = await readStore();
+    releases.unshift(release);
+    await writeStore(releases);
+    return NextResponse.json(release, { status: 201 });
+  } catch (error) {
+    console.error("Erro ao salvar release manual:", error);
+    return NextResponse.json({ error: "Erro ao salvar release" }, { status: 500 });
+  }
 }
 
 // GET: Lista todos os releases manuais de uma empresa

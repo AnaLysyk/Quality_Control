@@ -24,10 +24,11 @@ type MotionProps = {
   className?: string;
 };
 
+
 export function MotionFade({ children, delay = 0, className }: MotionProps) {
   return (
     <motion.div
-      className={className}
+      className={className ? className + " bg-[--tc-surface] text-[--tc-text]" : "bg-[--tc-surface] text-[--tc-text]"}
       initial="hidden"
       animate="visible"
       variants={fadeUp}
@@ -38,10 +39,11 @@ export function MotionFade({ children, delay = 0, className }: MotionProps) {
   );
 }
 
+
 export function MotionScale({ children, delay = 0, className }: MotionProps) {
   return (
     <motion.div
-      className={className}
+      className={className ? className + " bg-[--tc-surface] text-[--tc-text]" : "bg-[--tc-surface] text-[--tc-text]"}
       initial="hidden"
       animate="visible"
       variants={scaleIn}
@@ -52,10 +54,11 @@ export function MotionScale({ children, delay = 0, className }: MotionProps) {
   );
 }
 
+
 export function MotionSlideX({ children, delay = 0, className }: MotionProps) {
   return (
     <motion.div
-      className={className}
+      className={className ? className + " bg-[--tc-surface] text-[--tc-text]" : "bg-[--tc-surface] text-[--tc-text]"}
       initial="hidden"
       animate="visible"
       variants={slideInX}

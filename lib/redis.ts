@@ -5,6 +5,9 @@ type RedisValue = {
   expiresAt?: number;
 };
 
+/**
+ * Implementação in-memory de um cliente Redis (para fallback local/teste).
+ */
 class InMemoryRedis {
   private store = new Map<string, RedisValue>();
 
@@ -102,6 +105,10 @@ function resolveRedisEnv(): { url: string; token: string } | null {
   return null;
 }
 
+/**
+ * Obtém uma instância de Redis (Upstash/KV) ou fallback in-memory se não configurado.
+ * @returns RedisClient
+ */
 export function getRedis() {
   if (redis) return redis;
 
@@ -129,10 +136,18 @@ export function getRedis() {
 // For compatibility with old imports
 export { redis };
 
+/**
+ * Verifica se as variáveis de ambiente de Redis estão configuradas.
+ * @returns true se Redis está configurado
+ */
 export function isRedisConfigured(): boolean {
   return resolveRedisEnv() !== null;
 }
 
+/**
+ * Lança erro se Redis não estiver configurado, com mensagem customizada.
+ * @param feature Nome do recurso/feature para mensagem de erro
+ */
 export function assertRedisConfigured(feature = "This feature") {
   if (!isRedisConfigured()) {
     throw new Error(

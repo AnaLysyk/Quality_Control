@@ -1,7 +1,20 @@
 import type { AuthUser } from "@/lib/jwtAuth";
 
+export type CompanyAccessErrorCode = "MISSING_COMPANY_ID" | "FORBIDDEN_COMPANY_ACCESS";
+
+export class CompanyAccessError extends Error {
+  constructor(public code: CompanyAccessErrorCode) {
+    super(code);
+    this.name = "CompanyAccessError";
+  }
+}
+
+export function isCompanyAccessError(error: unknown): error is CompanyAccessError {
+  return error instanceof CompanyAccessError;
+}
+
 export function assertCompanyAccess(user: AuthUser | null, companyId?: string | null) {
-  if (!user || !companyId) throw new Error("MISSING_COMPANY_ID");
+  if (!user || !companyId) throw new CompanyAccessError("MISSING_COMPANY_ID");
 
   const role = (user.role ?? "").toLowerCase();
 
@@ -17,9 +30,9 @@ export function assertCompanyAccess(user: AuthUser | null, companyId?: string | 
     if (Array.isArray(user.companySlugs) && user.companySlugs.includes(companyId)) return;
   }
 
-  throw new Error("FORBIDDEN_COMPANY_ACCESS");
+  throw new CompanyAccessError("FORBIDDEN_COMPANY_ACCESS");
 }
 
 export function requireCompanyIdPresent(companyId?: string | null) {
-  if (!companyId) throw new Error("MISSING_COMPANY_ID");
+  if (!companyId) throw new CompanyAccessError("MISSING_COMPANY_ID");
 }

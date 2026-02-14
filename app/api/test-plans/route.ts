@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
+import { authenticateRequest } from "@/lib/jwtAuth";
 
 // Mock simples de planos de teste; em produção, troque pela chamada ao Qase.
-export async function GET() {
+export async function GET(req: Request) {
+  const user = await authenticateRequest(req);
+  if (!user) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+
   const plans = [
     {
       id: "plan-aceitacao",
@@ -34,5 +40,5 @@ export async function GET() {
 
   const totalTests = plans.reduce((sum, p) => sum + p.tests, 0);
 
-  return NextResponse.json({ plans, totalTests });
+  return NextResponse.json({ plans, totalTests, mock: true });
 }

@@ -20,9 +20,25 @@ export async function POST(req: Request) {
   const role = (body.role || "").trim();
   const name = (body.name || "").trim();
 
-  if (!email || !company || !role || !name) {
+  // Simple email format validation
+  const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  if (!email || !emailRegex.test(email)) {
     return NextResponse.json(
-      { message: "Empresa, cargo, nome e e-mail sao obrigatorios" },
+      { message: "E-mail inválido ou ausente" },
+      { status: 400 },
+    );
+  }
+  if (!company || !role || !name) {
+    return NextResponse.json(
+      { message: "Empresa, cargo e nome são obrigatórios" },
+      { status: 400 },
+    );
+  }
+
+  // Block obvious abuse (e.g., too short/long fields)
+  if (company.length < 2 || company.length > 255 || name.length < 2 || name.length > 255) {
+    return NextResponse.json(
+      { message: "Nome e empresa devem ter entre 2 e 255 caracteres" },
       { status: 400 },
     );
   }
@@ -43,6 +59,8 @@ export async function POST(req: Request) {
   const ip_address = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
   const user_agent = req.headers.get("user-agent") || null;
 
+  // Audit log
+  console.info("[FORGOT_PASSWORD_REQUEST]", { email, company, name, ip_address, user_agent, userId });
 
   try {
     if (prisma) {

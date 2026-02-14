@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import crypto from "node:crypto";
-import fs from "node:fs/promises";
+import fs, { type FileHandle } from "node:fs/promises";
 import path from "node:path";
 import jwt from "jsonwebtoken";
 
@@ -49,6 +49,11 @@ type AuthContext = {
 const STORE_PATH = path.join(getJsonStoreDir(), "company-documents-store.json");
 const HISTORY_PATH = path.join(getJsonStoreDir(), "company-documents-history.json");
 const LOCAL_UPLOAD_ROOT = path.join(getJsonStoreDir(), "company-documents-files");
+const STORE_LOCK_PATH = `${STORE_PATH}.lock`;
+const HISTORY_LOCK_PATH = `${HISTORY_PATH}.lock`;
+const AUTHZ_CACHE_TTL_SECONDS = 60;
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+const ALLOWED_URL_PROTOCOLS = new Set(["http:", "https:"]);
 
 function sanitizeSlug(raw: string) {
   return raw.trim().toLowerCase().replace(/[^a-z0-9-_]/g, "-").slice(0, 80);
@@ -57,6 +62,48 @@ function sanitizeSlug(raw: string) {
 function sanitizeFilename(raw: string) {
   const trimmed = raw.trim().slice(0, 160);
   return trimmed.replace(/[\\/\0]/g, "_");
+}
+
+function safeJoin(root: string, target: string) {
+  const rootAbs = path.resolve(root);
+  const targetAbs = path.resolve(root, target);
+  const relative = path.relative(rootAbs, targetAbs);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error("Path traversal");
+  }
+  return targetAbs;
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function acquireLock(lockPath: string, retries = 25, delayMs = 20): Promise<FileHandle> {
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await fs.open(lockPath, "wx");
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException)?.code;
+      if (code === "EEXIST" && attempt < retries) {
+        await wait(delayMs);
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error(`Could not acquire lock at ${lockPath}`);
+}
+
+async function withFileLock<T>(lockPath: string, fn: () => Promise<T>): Promise<T> {
+  const handle = await acquireLock(lockPath);
+  try {
+    return await fn();
+  } finally {
+    await handle.close();
+    await fs.unlink(lockPath).catch(() => {});
+  }
 }
 
 async function ensureStore() {
@@ -68,7 +115,7 @@ async function ensureStore() {
   }
 }
 
-async function readStore(): Promise<{ items: CompanyDocumentItem[] }> {
+async function readStoreFromDisk(): Promise<{ items: CompanyDocumentItem[] }> {
   await ensureStore();
   try {
     const raw = await fs.readFile(STORE_PATH, "utf8");
@@ -80,9 +127,21 @@ async function readStore(): Promise<{ items: CompanyDocumentItem[] }> {
   }
 }
 
-async function writeStore(next: { items: CompanyDocumentItem[] }) {
+async function writeStoreToDisk(next: { items: CompanyDocumentItem[] }) {
   await ensureStore();
   await fs.writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
+}
+
+async function readStore(): Promise<{ items: CompanyDocumentItem[] }> {
+  return readStoreFromDisk();
+}
+
+async function mutateStore(mutator: (store: { items: CompanyDocumentItem[] }) => Promise<void> | void) {
+  await withFileLock(STORE_LOCK_PATH, async () => {
+    const store = await readStoreFromDisk();
+    await mutator(store);
+    await writeStoreToDisk(store);
+  });
 }
 
 async function ensureHistoryStore() {
@@ -94,7 +153,7 @@ async function ensureHistoryStore() {
   }
 }
 
-async function readHistory(): Promise<{ items: DocumentHistoryEvent[] }> {
+async function readHistoryFromDisk(): Promise<{ items: DocumentHistoryEvent[] }> {
   await ensureHistoryStore();
   try {
     const raw = await fs.readFile(HISTORY_PATH, "utf8");
@@ -106,9 +165,21 @@ async function readHistory(): Promise<{ items: DocumentHistoryEvent[] }> {
   }
 }
 
-async function writeHistory(next: { items: DocumentHistoryEvent[] }) {
+async function writeHistoryToDisk(next: { items: DocumentHistoryEvent[] }) {
   await ensureHistoryStore();
   await fs.writeFile(HISTORY_PATH, JSON.stringify(next, null, 2), "utf8");
+}
+
+async function readHistory(): Promise<{ items: DocumentHistoryEvent[] }> {
+  return readHistoryFromDisk();
+}
+
+async function mutateHistory(mutator: (history: { items: DocumentHistoryEvent[] }) => Promise<void> | void) {
+  await withFileLock(HISTORY_LOCK_PATH, async () => {
+    const history = await readHistoryFromDisk();
+    await mutator(history);
+    await writeHistoryToDisk(history);
+  });
 }
 
 async function appendHistoryEvent(
@@ -116,22 +187,22 @@ async function appendHistoryEvent(
   item: CompanyDocumentItem,
   actorId?: string | null,
 ) {
-  const history = await readHistory();
-  const event: DocumentHistoryEvent = {
-    id: crypto.randomUUID(),
-    companySlug: item.companySlug,
-    documentId: item.id,
-    action,
-    kind: item.kind,
-    title: item.title,
-    description: item.description ?? null,
-    url: item.url ?? null,
-    fileName: item.fileName ?? null,
-    createdAt: new Date().toISOString(),
-    actorId: actorId ?? null,
-  };
-  history.items.unshift(event);
-  await writeHistory(history);
+  await mutateHistory((history) => {
+    const event: DocumentHistoryEvent = {
+      id: crypto.randomUUID(),
+      companySlug: item.companySlug,
+      documentId: item.id,
+      action,
+      kind: item.kind,
+      title: item.title,
+      description: item.description ?? null,
+      url: item.url ?? null,
+      fileName: item.fileName ?? null,
+      createdAt: new Date().toISOString(),
+      actorId: actorId ?? null,
+    };
+    history.items.unshift(event);
+  });
 }
 
 function readCookieValue(cookieHeader: string, name: string): string | null {
@@ -147,16 +218,43 @@ function readCookieValue(cookieHeader: string, name: string): string | null {
   return null;
 }
 
+async function resolveAuthorizedCompanySlugs(userId: string, isGlobalAdmin: boolean): Promise<string[]> {
+  const cacheKey = `authz:${userId}:${isGlobalAdmin ? "1" : "0"}`;
+  const redis = getRedis();
+  const cached = await redis.get<string>(cacheKey);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached) as string[];
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+    } catch {
+      /* ignore parse errors */
+    }
+  }
+
+  const [links, companies] = await Promise.all([
+    listLocalLinksForUser(userId),
+    listLocalCompanies(),
+  ]);
+  const allowed = isGlobalAdmin
+    ? companies
+    : companies.filter((company) => links.some((link) => link.companyId === company.id));
+  const slugs = allowed.map((company) => company.slug);
+  await redis.set(cacheKey, JSON.stringify(slugs), { ex: AUTHZ_CACHE_TTL_SECONDS });
+  return slugs;
+}
+
 async function getAuthContext(req: Request): Promise<AuthContext | null> {
   const cookieHeader = req.headers.get("cookie") ?? "";
   const authHeader = req.headers.get("authorization");
   const bearer = authHeader?.toLowerCase().startsWith("bearer ") ? authHeader.slice(7) : "";
   const cookieToken = readCookieValue(cookieHeader, "access_token") ?? readCookieValue(cookieHeader, "auth_token");
   const token = bearer || cookieToken;
+  const redis = getRedis();
   if (token) {
     const secret = getJwtSecret();
     if (!secret) {
-      const redis = getRedis();
       const raw = await redis.get<string>(`session:${token}`);
       if (!raw) return null;
       try {
@@ -164,14 +262,8 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
         const userId = (parsed as { userId?: string; id?: string }).userId ?? (parsed as { id?: string }).id;
         if (!userId) return null;
         const isGlobalAdmin = (parsed as { isGlobalAdmin?: boolean }).isGlobalAdmin === true;
-        const [links, companies] = await Promise.all([
-          listLocalLinksForUser(userId),
-          listLocalCompanies(),
-        ]);
-        const allowed = isGlobalAdmin
-          ? companies
-          : companies.filter((company) => links.some((link) => link.companyId === company.id));
-        return { userId, companySlugs: allowed.map((c) => c.slug) };
+        const companySlugs = await resolveAuthorizedCompanySlugs(userId, isGlobalAdmin);
+        return { userId, companySlugs };
       } catch {
         return null;
       }
@@ -181,14 +273,8 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
       const userId = typeof payload.sub === "string" ? payload.sub : null;
       if (!userId) return null;
       const isGlobalAdmin = payload.isGlobalAdmin === true;
-      const [links, companies] = await Promise.all([
-        listLocalLinksForUser(userId),
-        listLocalCompanies(),
-      ]);
-      const allowed = isGlobalAdmin
-        ? companies
-        : companies.filter((company) => links.some((link) => link.companyId === company.id));
-      return { userId, companySlugs: allowed.map((c) => c.slug) };
+      const companySlugs = await resolveAuthorizedCompanySlugs(userId, isGlobalAdmin);
+      return { userId, companySlugs };
     } catch {
       // Token exists but is invalid/expired: do not fall back to session_id.
       return null;
@@ -198,7 +284,6 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
   const sessionId = readCookieValue(cookieHeader, "session_id");
   if (!sessionId) return null;
 
-  const redis = getRedis();
   const raw = await redis.get<string>(`session:${sessionId}`);
   if (!raw) return null;
 
@@ -207,14 +292,8 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
     const userId = (parsed as { userId?: string; id?: string }).userId ?? (parsed as { id?: string }).id;
     if (!userId) return null;
     const isGlobalAdmin = (parsed as { isGlobalAdmin?: boolean }).isGlobalAdmin === true;
-    const [links, companies] = await Promise.all([
-      listLocalLinksForUser(userId),
-      listLocalCompanies(),
-    ]);
-    const allowed = isGlobalAdmin
-      ? companies
-      : companies.filter((company) => links.some((link) => link.companyId === company.id));
-    return { userId, companySlugs: allowed.map((c) => c.slug) };
+    const companySlugs = await resolveAuthorizedCompanySlugs(userId, isGlobalAdmin);
+    return { userId, companySlugs };
   } catch {
     return null;
   }
@@ -252,7 +331,12 @@ export async function GET(req: NextRequest) {
     if (item.kind !== "file" || !item.storagePath) return NextResponse.json({ error: "Documento invalido" }, { status: 400 });
 
     const relative = item.storagePath.replace(/^local:/, "");
-    const absolute = path.join(LOCAL_UPLOAD_ROOT, relative);
+    let absolute: string;
+    try {
+      absolute = safeJoin(LOCAL_UPLOAD_ROOT, relative);
+    } catch {
+      return NextResponse.json({ error: "Documento invalido" }, { status: 400 });
+    }
     try {
       const buf = await fs.readFile(absolute);
       const headers = new Headers();
@@ -273,7 +357,7 @@ export async function GET(req: NextRequest) {
     .map((item) => {
       if (item.kind === "file") {
         const downloadUrl = `/api/company-documents?slug=${encodeURIComponent(companySlug)}&id=${encodeURIComponent(
-          item.id
+          item.id,
         )}&download=1`;
         return { ...item, url: downloadUrl };
       }
@@ -299,13 +383,16 @@ export async function POST(req: NextRequest) {
     if (!companySlug) return NextResponse.json({ error: "slug obrigatorio" }, { status: 400 });
     if (!canAccessCompany(auth, companySlug)) return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     if (!(file instanceof File)) return NextResponse.json({ error: "arquivo obrigatorio" }, { status: 400 });
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return NextResponse.json({ error: "Arquivo muito grande (max 10MB)" }, { status: 413 });
+    }
 
     const id = crypto.randomUUID();
     const createdAt = new Date().toISOString();
     const fileName = sanitizeFilename(file.name || "documento");
-    const folder = path.join(LOCAL_UPLOAD_ROOT, companySlug);
+    const folder = safeJoin(LOCAL_UPLOAD_ROOT, companySlug);
     await fs.mkdir(folder, { recursive: true });
-    const filePath = path.join(folder, `${id}-${fileName}`);
+    const filePath = safeJoin(folder, `${id}-${fileName}`);
     const arrayBuffer = await file.arrayBuffer();
     await fs.writeFile(filePath, Buffer.from(arrayBuffer));
     const storagePath = `local:${companySlug}/${id}-${fileName}`;
@@ -324,13 +411,13 @@ export async function POST(req: NextRequest) {
       createdBy: auth.userId,
     };
 
-    const store = await readStore();
-    store.items.unshift(item);
-    await writeStore(store);
+    await mutateStore((store) => {
+      store.items.unshift(item);
+    });
     await appendHistoryEvent("created", item, auth.userId);
 
     const downloadUrl = `/api/company-documents?slug=${encodeURIComponent(companySlug)}&id=${encodeURIComponent(
-      item.id
+      item.id,
     )}&download=1`;
     return NextResponse.json({ ok: true, item: { ...item, url: downloadUrl } }, { status: 200 });
   }
@@ -349,6 +436,16 @@ export async function POST(req: NextRequest) {
   const description = (typeof record?.description === "string" ? record.description : "").trim().slice(0, 280) || null;
   const url = (typeof record?.url === "string" ? record.url : "").trim();
   if (!url) return NextResponse.json({ error: "url obrigatoria" }, { status: 400 });
+  let normalizedUrl: string;
+  try {
+    const parsedUrl = new URL(url);
+    if (!ALLOWED_URL_PROTOCOLS.has(parsedUrl.protocol)) {
+      return NextResponse.json({ error: "url invalida" }, { status: 400 });
+    }
+    normalizedUrl = parsedUrl.toString();
+  } catch {
+    return NextResponse.json({ error: "url invalida" }, { status: 400 });
+  }
 
   const id = crypto.randomUUID();
   const createdAt = new Date().toISOString();
@@ -358,14 +455,14 @@ export async function POST(req: NextRequest) {
     kind: "link",
     title,
     description,
-    url,
+    url: normalizedUrl,
     createdAt,
     createdBy: auth.userId,
   };
 
-  const store = await readStore();
-  store.items.unshift(item);
-  await writeStore(store);
+  await mutateStore((store) => {
+    store.items.unshift(item);
+  });
   await appendHistoryEvent("created", item, auth.userId);
 
   return NextResponse.json({ ok: true, item }, { status: 200 });
@@ -381,11 +478,15 @@ export async function DELETE(req: NextRequest) {
   if (!id || !companySlug) return NextResponse.json({ error: "id e slug obrigatorios" }, { status: 400 });
   if (!canAccessCompany(auth, companySlug)) return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
 
-  const store = await readStore();
-  const idx = store.items.findIndex((i) => i.id === id && i.companySlug === companySlug);
-  if (idx === -1) return NextResponse.json({ ok: true }, { status: 200 });
-  const [removed] = store.items.splice(idx, 1);
-  await writeStore(store);
+  let removed: CompanyDocumentItem | undefined;
+  await mutateStore((store) => {
+    const idx = store.items.findIndex((i) => i.id === id && i.companySlug === companySlug);
+    if (idx === -1) {
+      return;
+    }
+    [removed] = store.items.splice(idx, 1);
+  });
+  if (!removed) return NextResponse.json({ ok: true }, { status: 200 });
   if (removed) {
     await appendHistoryEvent("deleted", removed, auth.userId);
   }
@@ -393,7 +494,7 @@ export async function DELETE(req: NextRequest) {
   if (removed?.kind === "file" && removed.storagePath?.startsWith("local:")) {
     try {
       const relative = removed.storagePath.slice("local:".length);
-      const absolute = path.join(LOCAL_UPLOAD_ROOT, relative);
+      const absolute = safeJoin(LOCAL_UPLOAD_ROOT, relative);
       await fs.unlink(absolute);
     } catch {
       /* ignore */

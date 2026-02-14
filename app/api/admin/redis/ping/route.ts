@@ -16,25 +16,34 @@ export async function GET(req: NextRequest) {
   }
 
   if (!isRedisConfigured()) {
-    return apiOk(
+    const payload = { ok: false, configured: false };
+    const res = apiOk(
       req,
-      { ok: false, configured: false },
+      payload,
       "Redis não configurado (defina UPSTASH_REDIS_REST_URL e UPSTASH_REDIS_REST_TOKEN; ou KV_REST_API_URL/KV_REST_API_TOKEN)",
-      { extra: { ok: false, configured: false } },
+      { extra: payload },
     );
+    res.headers.set("Cache-Control", "no-store");
+    return res;
   }
 
   try {
     const redis = getRedis();
-    const key = `health:ping:${Date.now()}`;
+    const key = `health:ping:${Date.now()}:${Math.random().toString(36).slice(2)}`;
     await redis.set(key, "pong", { ex: 30 });
     const value = await redis.get<string>(key);
+    await redis.del(key);
 
     const payload = { ok: value === "pong", configured: true };
-    return apiOk(req, payload, payload.ok ? "OK" : "Falha no ping do Redis", { extra: payload });
+    const res = apiOk(req, payload, payload.ok ? "OK" : "Falha no ping do Redis", { extra: payload });
+    res.headers.set("Cache-Control", "no-store");
+    return res;
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Erro no Redis";
-    const payload = { ok: false, configured: true, error: msg };
-    return apiOk(req, payload, "Erro no Redis", { extra: payload });
+    return apiFail(req, "Redis indisponível", {
+      status: 503,
+      code: "REDIS_UNAVAILABLE",
+      extra: { ok: false, configured: true, error: msg },
+    });
   }
 }

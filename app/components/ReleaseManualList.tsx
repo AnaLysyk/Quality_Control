@@ -60,33 +60,33 @@ export default function ReleaseManualList({ companyId }: { companyId: string }) 
       <h2 className="text-xl font-bold mb-4">Releases Manuais</h2>
       <form onSubmit={handleSubmit} className="mb-6 space-y-2">
         <input
-          className="border rounded px-2 py-1 w-full"
+          className="border border-[--tc-border] rounded px-2 py-1 w-full bg-[--tc-surface] text-[--tc-text] focus:border-[--tc-accent] focus:outline-none"
           placeholder="Titulo"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
         />
         <textarea
-          className="border rounded px-2 py-1 w-full"
+          className="border border-[--tc-border] rounded px-2 py-1 w-full bg-[--tc-surface] text-[--tc-text] focus:border-[--tc-accent] focus:outline-none"
           placeholder="Descricao"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          className="bg-[--tc-accent] text-[--tc-surface-dark] px-4 py-2 rounded disabled:opacity-50"
           disabled={loading || !title}
         >
           {loading ? "Salvando..." : "Adicionar Release"}
         </button>
       </form>
-      {error && <div className="text-red-600 mb-2">{error}</div>}
+      {error && <div className="text-[--tc-error] mb-2">{error}</div>}
       <ul className="space-y-2">
         {releases.map((r) => (
-          <li key={r.id} className="border rounded p-2">
-            <div className="font-semibold">{r.title ?? "Sem titulo"}</div>
-            <div className="text-sm text-gray-600">{r.description ?? ""}</div>
-            <div className="text-xs text-gray-400">
+          <li key={r.id} className="border border-[--tc-border] rounded p-2 bg-[--tc-surface]">
+            <div className="font-semibold text-[--tc-text]">{r.title ?? "Sem titulo"}</div>
+            <div className="text-sm text-[--tc-text-muted]">{r.description ?? ""}</div>
+            <div className="text-xs text-[--tc-text-secondary]">
               Status: {r.status ?? "N/A"} | Criado em: {r.createdAt ? new Date(r.createdAt).toLocaleString() : "-"}
             </div>
           </li>

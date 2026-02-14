@@ -1,23 +1,9 @@
-import { NextResponse } from "next/server";
-import { getAllReleases } from "@/release/data";
-import { readManualReleaseStore } from "@/data/manualData";
+
+// --- Quality Engine ---
 import { appendQualityGateHistory } from "@/lib/qualityGateHistory";
 import { sendQualityAlert } from "@/lib/qualityAlert";
 import { calculateQualityScore } from "@/lib/qualityScore";
 import { randomUUID } from "crypto";
-
-// Helper: get all runs for a release (manual + Qase)
-async function getRunsForRelease(releaseSlug: string, clientKey?: string | null) {
-  // Manual runs
-  const manualRuns = await readManualReleaseStore();
-  const runs = manualRuns.filter((r) => r.slug === releaseSlug);
-  if (runs.length) return runs;
-  if (clientKey) {
-    return manualRuns.filter((r) => (r.clientSlug ?? null) === clientKey);
-  }
-  // TODO: Add Qase runs if needed
-  return runs;
-}
 
 type RunLike = {
   stats?: { fail?: number | string };
@@ -25,7 +11,19 @@ type RunLike = {
   status?: string | null;
 };
 
-export async function GET() {
+async function getRunsForRelease(releaseSlug: string, clientKey?: string | null) {
+  const { readManualReleaseStore } = await import("@/data/manualData");
+  const manualRuns = await readManualReleaseStore();
+  const runs = manualRuns.filter((r) => r.slug === releaseSlug);
+  if (runs.length) return runs;
+  if (clientKey) {
+    return manualRuns.filter((r) => (r.clientSlug ?? null) === clientKey);
+  }
+  return runs;
+}
+
+async function evaluateQualityGates() {
+  const { getAllReleases } = await import("@/release/data");
   const releases = await getAllReleases();
   const result = [];
   for (const rel of releases) {
@@ -44,8 +42,6 @@ export async function GET() {
     // TODO: Add logic for "blocked" if needed
 
     // --- Quality Gate snapshot logic ---
-    // Exemplo de metricas: mttr_hours, open_defects, fail_rate
-    // (mock simples: valores ficticios, pois so temos runs)
     const mttr_hours = 24; // TODO: calcular real se disponivel
     const open_defects = 0; // TODO: calcular real se disponivel
     const totalRuns = runs.length;
@@ -56,13 +52,10 @@ export async function GET() {
       gate_status = "failed";
       reasons.push("Run falhou");
     }
-    // Exemplo: warning se fail_rate > 0 mas nao "risk"
-    // (ajuste conforme regras reais)
 
-    // Salvar snapshot (imutavel)
     const snapshot = {
       id: randomUUID(),
-      company_slug: rel.clientId || "griaule", // fallback
+      company_slug: rel.clientId || "griaule",
       release_slug: rel.slug,
       gate_status,
       mttr_hours,
@@ -73,7 +66,6 @@ export async function GET() {
     };
     await appendQualityGateHistory(snapshot);
 
-    // Disparar alertas automaticos
     const companySlug = rel.clientId || "griaule";
     if (gate_status === "failed") {
       await sendQualityAlert({
@@ -120,5 +112,20 @@ export async function GET() {
       quality_score: qualityScore,
     });
   }
-  return NextResponse.json({ releases: result });
+  return result;
+}
+
+import { NextResponse } from "next/server";
+
+// GET: apenas consulta releases avaliadas (mock: reusa engine, mas sem side effects)
+export async function GET() {
+  // Em produção, leria snapshots do histórico, não reavaliaria
+  const releases = await evaluateQualityGates();
+  return NextResponse.json({ releases });
+}
+
+// POST: executa avaliação, snapshot e alertas
+export async function POST() {
+  const releases = await evaluateQualityGates();
+  return NextResponse.json({ ok: true, releases });
 }

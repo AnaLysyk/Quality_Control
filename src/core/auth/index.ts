@@ -1,3 +1,4 @@
+// Barrel file: re-exports all auth-related modules for easier imports.
 export * from "./AuthProvider";
 export * from "./RequireAuth";
 export * from "./RequireCapability";

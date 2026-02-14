@@ -1,9 +1,9 @@
 import clsx from "clsx";
 
 const STATUS_MAP = {
-  healthy: { color: "bg-emerald-100 text-emerald-700", label: "Saudável", emoji: "🟢" },
-  attention: { color: "bg-amber-100 text-amber-700", label: "Atenção", emoji: "🟡" },
-  risk: { color: "bg-red-100 text-red-700", label: "Em risco", emoji: "🔴" },
+  healthy: { color: "bg-[--badge-healthy-bg] text-[--badge-healthy-text]", label: "Saudável", emoji: "🟢" },
+  attention: { color: "bg-[--badge-attention-bg] text-[--badge-attention-text]", label: "Atenção", emoji: "🟡" },
+  risk: { color: "bg-[--badge-risk-bg] text-[--badge-risk-text]", label: "Em risco", emoji: "🔴" },
 };
 
 type BadgeProps = {

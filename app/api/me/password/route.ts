@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getAccessContext } from "@/lib/auth/session";
 import { getLocalUserById, updateLocalUser } from "@/lib/auth/localStore";
-import { hashPasswordSha256, safeEqualHex } from "@/lib/passwordHash";
+import { hashPassword, verifyPassword } from "@/lib/passwordHash";
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 128;
@@ -42,12 +42,12 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
   }
 
-  const currentHash = hashPasswordSha256(currentPassword);
-  if (!safeEqualHex(currentHash, user.password_hash)) {
+  const validPassword = await verifyPassword(currentPassword, user.password_hash);
+  if (!validPassword) {
     return NextResponse.json({ error: "Senha atual incorreta" }, { status: 400 });
   }
 
-  const newHash = hashPasswordSha256(newPassword);
+  const newHash = await hashPassword(newPassword);
   await updateLocalUser(user.id, { password_hash: newHash });
 
   return NextResponse.json({ ok: true }, { status: 200 });

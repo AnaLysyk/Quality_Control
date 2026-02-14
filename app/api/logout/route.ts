@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { shouldUseSecureCookies } from "@/lib/auth/cookies";
 
 export async function POST(req: Request) {
-  const response = NextResponse.json({ ok: true });
+  const response = NextResponse.json(
+    { ok: true, loggedOut: true },
+    { headers: { "Cache-Control": "no-store" } }
+  );
 
   response.cookies.set("auth", "", {
     httpOnly: true,

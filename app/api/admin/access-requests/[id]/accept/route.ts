@@ -1,37 +1,78 @@
 import { NextResponse } from "next/server";
+
 import { prisma } from "@/lib/prismaClient";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
 import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
 
+const MAX_TEXT_LENGTH = 2000;
+
+function sanitizeText(value: string | undefined | null) {
+  if (typeof value !== "string") return "";
+  return value.trim().slice(0, MAX_TEXT_LENGTH);
+}
+
 function applyAdminNotes(message: string, notes: string | null) {
-  if (!notes || !notes.trim()) return message;
-  const lines = message.split("\n").filter((line) => !line.startsWith("ADMIN_NOTES:"));
-  lines.push(`ADMIN_NOTES: ${notes.trim()}`);
+  const sanitizedNotes = sanitizeText(notes);
+  if (!sanitizedNotes) return message;
+  const baseMessage = typeof message === "string" ? message : "";
+  const lines = baseMessage.split("\n").filter((line) => !line.startsWith("ADMIN_NOTES:"));
+  lines.push(`ADMIN_NOTES: ${sanitizedNotes}`);
   return lines.join("\n");
 }
 
-export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
+async function appendDebugLog(line: string) {
+  try {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
+    const dir = path.join(process.cwd(), "data");
+    await fs.mkdir(dir, { recursive: true });
+    await fs.appendFile(path.join(dir, "access-requests-debug.log"), line, "utf8");
+  } catch {
+    // ignore
+  }
+}
+
+function json(data: unknown, init?: ResponseInit) {
+  const res = NextResponse.json(data, init);
+  res.headers.set("Cache-Control", "no-store");
+  return res;
+}
+
+export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
     const { admin, status } = await requireGlobalAdminWithStatus(req);
     if (!admin) {
-      return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+      return json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
     }
 
     const body = (await req.json().catch(() => null)) as { comment?: string; admin_notes?: string } | null;
-    const comment = typeof body?.comment === "string" ? body.comment.trim() : "";
-    const adminNotes = typeof body?.admin_notes === "string" ? body.admin_notes.trim() : "";
+    const comment = sanitizeText(body?.comment);
+    const adminNotes = sanitizeText(body?.admin_notes);
 
-    const { id } = await context.params;
+    const id = `${params.id ?? ""}`.trim();
+    if (!id) {
+      return json({ error: "ID invalido" }, { status: 400 });
+    }
+
     if (shouldUseJsonStore()) {
       const existing = await getAccessRequestById(id);
       if (!existing) {
-        return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+        return json({ error: "Solicitacao nao encontrada" }, { status: 404 });
       }
-      console.debug(`[ACCESS-REQUESTS][ACCEPT] admin=${admin?.email ?? "-"} id=${id} comment=${Boolean(comment)} adminNotes=${Boolean(adminNotes)}`);
-      const nextMessage = adminNotes ? applyAdminNotes(existing.message, adminNotes) : existing.message;
+      if (existing.status === "closed") {
+        return json({ error: "Solicitacao ja encerrada" }, { status: 409 });
+      }
+      console.debug(
+        `[ACCESS-REQUESTS][ACCEPT][JSON] admin=${admin.email ?? "-"} id=${id} comment=${Boolean(comment)} adminNotes=${Boolean(adminNotes)}`,
+      );
+      const baseMessage = typeof existing.message === "string" ? existing.message : "";
+      const nextMessage = applyAdminNotes(baseMessage, adminNotes);
       const updated = await updateAccessRequest(id, { status: "closed", message: nextMessage });
+      if (!updated) {
+        return json({ error: "Falha ao atualizar solicitacao" }, { status: 500 });
+      }
       if (comment) {
         await createAccessRequestComment({
           requestId: id,
@@ -42,34 +83,33 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
           body: comment,
         });
       }
-      // grava um log auxiliar em disco para diagnostico E2E local
-      try {
-        const fs = await import("node:fs/promises");
-        const path = await import("node:path");
-        const debugPath = path.join(process.cwd(), "data", "access-requests-debug.log");
-        const line = `${new Date().toISOString()} ACCEPT id=${id} admin=${admin?.email ?? "-"} status=${updated?.status ?? "closed"}\n`;
-        await fs.appendFile(debugPath, line, "utf8");
-      } catch {
-        // ignore write errors
-      }
-      return NextResponse.json({
+      await appendDebugLog(`${new Date().toISOString()} ACCEPT json id=${id} admin=${admin.email ?? "-"} status=${updated.status}\n`);
+      return json({
         ok: true,
         item: {
-          id: updated?.id ?? id,
-          status: updated?.status ?? "closed",
+          id: updated.id,
+          status: updated.status,
         },
       });
     }
 
     const existing = await prisma.supportRequest.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+      return json({ error: "Solicitacao nao encontrada" }, { status: 404 });
     }
-    console.debug(`[ACCESS-REQUESTS][ACCEPT] admin=${admin?.email ?? "-"} id=${id} comment=${Boolean(comment)} adminNotes=${Boolean(adminNotes)}`);
+    if (existing.status === "closed") {
+      return json({ error: "Solicitacao ja encerrada" }, { status: 409 });
+    }
+    console.debug(
+      `[ACCESS-REQUESTS][ACCEPT][PRISMA] admin=${admin.email ?? "-"} id=${id} comment=${Boolean(comment)} adminNotes=${Boolean(adminNotes)}`,
+    );
 
     const updated = await prisma.supportRequest.update({
       where: { id },
-      data: { status: "closed", message: adminNotes ? applyAdminNotes(existing.message, adminNotes) : existing.message },
+      data: {
+        status: "closed",
+        message: applyAdminNotes(existing.message ?? "", adminNotes),
+      },
     });
 
     if (comment) {
@@ -83,18 +123,9 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       });
     }
 
-    // grava log auxiliar em disco para diagnostico E2E (prisma)
-    try {
-      const fs = await import("node:fs/promises");
-      const path = await import("node:path");
-      const debugPath = path.join(process.cwd(), "data", "access-requests-debug.log");
-      const line = `${new Date().toISOString()} ACCEPT prisma id=${id} admin=${admin?.email ?? "-"} status=${updated?.status}\n`;
-      await fs.appendFile(debugPath, line, "utf8");
-    } catch {
-      // ignore write errors
-    }
+    await appendDebugLog(`${new Date().toISOString()} ACCEPT prisma id=${id} admin=${admin.email ?? "-"} status=${updated.status}\n`);
 
-    return NextResponse.json({
+    return json({
       ok: true,
       item: {
         id: updated.id,
@@ -104,15 +135,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(`[ACCESS-REQUESTS][ACCEPT][ERROR]`, err);
-    try {
-      const fs = await import("node:fs/promises");
-      const path = await import("node:path");
-      const debugPath = path.join(process.cwd(), "data", "access-requests-debug.log");
-      const line = `${new Date().toISOString()} ERROR ACCEPT ${message}\n`;
-      await fs.appendFile(debugPath, line, "utf8");
-    } catch {
-      // ignore
-    }
-    return NextResponse.json({ error: "Internal Server Error", details: message }, { status: 500 });
+    await appendDebugLog(`${new Date().toISOString()} ERROR ACCEPT ${message}\n`);
+    return json({ error: "Internal Server Error", details: message }, { status: 500 });
   }
 }

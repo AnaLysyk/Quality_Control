@@ -26,6 +26,23 @@ function readExistingPid() {
   }
 }
 
+function cleanup() {
+  try {
+    fs.unlinkSync(pidFile);
+    console.log("[dev-daemon] .dev.pid removido.");
+  } catch {}
+}
+
+process.on("SIGINT", () => {
+  cleanup();
+  process.exit(0);
+});
+process.on("SIGTERM", () => {
+  cleanup();
+  process.exit(0);
+});
+process.on("exit", cleanup);
+
 const existing = readExistingPid();
 if (existing && isRunning(existing)) {
   console.log(`Dev server already running (pid ${existing}).`);

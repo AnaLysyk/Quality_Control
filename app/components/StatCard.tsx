@@ -16,7 +16,7 @@ export default function StatCard({ label, value, percent, tone = "inverse", clas
   return (
     <div
       className={clsx(
-        "rounded-xl border border-(--tc-border)/20 bg-white/5 px-4 py-3 shadow-[0_12px_30px_rgba(0,0,0,0.25)]",
+        "rounded-xl border border-(--tc-border)/20 bg-(--tc-surface) px-4 py-3 shadow-(--tc-shadow-lg)",
         className
       )}
     >

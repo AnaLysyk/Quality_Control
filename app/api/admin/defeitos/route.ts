@@ -1,4 +1,5 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 
@@ -56,6 +57,11 @@ function normalizeSlug(value: unknown): string | null {
 }
 
 type ProjectEntry = { slug: string; projectCode: string };
+
+function noStore<T extends NextResponse>(res: T): T {
+  res.headers.set("Cache-Control", "no-store");
+  return res;
+}
 
 function parseProjectCodesFromEnv(): string[] {
   const raw = normalizeEnvString(
@@ -130,15 +136,23 @@ async function fetchAllDefects(projectCode: string): Promise<QaseDefect[]> {
   const limit = 100;
   let offset = 0;
   const all: QaseDefect[] = [];
+  let guard = 0;
 
-  while (true) {
-    const res = await fetch(`${QASE_BASE_URL}/v1/defect/${projectCode}?limit=${limit}&offset=${offset}`, {
-      headers: {
-        Token: QASE_TOKEN,
-        Accept: "application/json",
-      },
-      cache: "no-store",
-    });
+  while (guard++ < 50) {
+    const endpoint = `${QASE_BASE_URL}/v1/defect/${projectCode}?limit=${limit}&offset=${offset}`;
+    let res: Response;
+    try {
+      res = await fetch(endpoint, {
+        headers: {
+          Token: QASE_TOKEN,
+          Accept: "application/json",
+        },
+        cache: "no-store",
+      });
+    } catch (err) {
+      console.warn("[admin/defeitos] Qase fetch failed", { projectCode, offset, error: err instanceof Error ? err.message : String(err) });
+      break;
+    }
 
     if (!res.ok) break;
     const json = (await res.json().catch(() => null)) as unknown;
@@ -146,10 +160,11 @@ async function fetchAllDefects(projectCode: string): Promise<QaseDefect[]> {
     const entities = Array.isArray(result?.entities) ? (result?.entities as unknown[]) : [];
     if (!Array.isArray(entities) || entities.length === 0) break;
 
-    entities.forEach((d) => {
+    entities.forEach((d, index) => {
       const rec = asRecord(d) ?? {};
+      const fallbackId = `defect-${projectCode}-${offset + index}`;
       all.push({
-        id: String(rec.id ?? rec.defect_id ?? `defect-${offset}`),
+        id: String(rec.id ?? rec.defect_id ?? fallbackId),
         title: (typeof rec.title === "string" ? rec.title : null) ?? (typeof rec.name === "string" ? rec.name : null) ?? "Defeito",
         status: String(rec.status ?? "open"),
         severity: (typeof rec.severity === "string" ? rec.severity : null) ?? (typeof rec.severity_name === "string" ? rec.severity_name : null) ?? "medium",
@@ -196,7 +211,8 @@ function aggregate(defects: QaseDefect[], projectCodeToSlug: Map<string, string>
     const st = d.status ?? "open";
     byStatus.set(st, (byStatus.get(st) ?? 0) + 1);
 
-    const monthKey = d.created_at ? new Date(d.created_at).toISOString().slice(0, 7) : "sem-data";
+    const ts = Date.parse(d.created_at ?? "");
+    const monthKey = Number.isFinite(ts) ? new Date(ts).toISOString().slice(0, 7) : "sem-data";
     timeline.set(monthKey, (timeline.get(monthKey) ?? 0) + 1);
   });
 
@@ -218,7 +234,7 @@ export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
     const msg = status === 401 ? "Nao autenticado" : "Sem permissao";
-    return apiFail(req, msg, { status, code: status === 401 ? "AUTH_REQUIRED" : "FORBIDDEN", extra: { error: msg } });
+    return noStore(apiFail(req, msg, { status, code: status === 401 ? "AUTH_REQUIRED" : "FORBIDDEN", extra: { error: msg } }));
   }
 
   if (!QASE_TOKEN) {
@@ -232,7 +248,7 @@ export async function GET(req: NextRequest) {
       timeline: [],
       items: [],
     };
-    return apiOk(req, payload, "OK", { extra: payload });
+    return noStore(apiOk(req, payload, "OK", { extra: payload }));
   }
 
   const envMap = parseProjectMapFromEnv();
@@ -254,12 +270,13 @@ export async function GET(req: NextRequest) {
     if (entry.projectCode && entry.slug) projectCodeToSlug.set(entry.projectCode, entry.slug);
   }
 
-  let uniqueProjects = Array.from(
+  const baseProjects = Array.from(
     new Set([
       ...projectMap.map((p) => p.projectCode).filter(Boolean),
       ...envProjectCodes,
     ])
   );
+  let uniqueProjects = [...baseProjects];
 
   if (companyFilter) {
     const scoped = projectMap
@@ -270,7 +287,17 @@ export async function GET(req: NextRequest) {
   }
 
   if (projectFilter) {
-    uniqueProjects = [projectFilter.toUpperCase()];
+    const normalizedProject = projectFilter.toUpperCase();
+    if (!baseProjects.includes(normalizedProject)) {
+      return noStore(
+        apiFail(req, "Projeto Qase desconhecido", {
+          status: 400,
+          code: "INVALID_PROJECT",
+          extra: { project: normalizedProject },
+        }),
+      );
+    }
+    uniqueProjects = [normalizedProject];
   }
 
   if (!uniqueProjects.length) {
@@ -298,18 +325,35 @@ export async function GET(req: NextRequest) {
       timeline: [],
       items: [],
     };
-    return apiOk(req, payload, "OK", { extra: payload });
+    return noStore(apiOk(req, payload, "OK", { extra: payload }));
   }
 
-  const allDefects: QaseDefect[] = [];
-  for (const projectCode of uniqueProjects) {
-    const defects = await fetchAllDefects(projectCode);
-    defects.forEach((d) => {
-      d.companySlug = projectCodeToSlug.get(projectCode) ?? null;
-    });
-    allDefects.push(...defects);
-  }
+  const defectsByProject = await Promise.all(
+    uniqueProjects.map(async (projectCode) => {
+      const defects = await fetchAllDefects(projectCode).catch((err) => {
+        console.warn("[admin/defeitos] Falha ao obter defeitos", {
+          projectCode,
+          error: err instanceof Error ? err.message : String(err),
+        });
+        return [] as QaseDefect[];
+      });
+      defects.forEach((d) => {
+        d.companySlug = projectCodeToSlug.get(projectCode) ?? null;
+      });
+      return defects;
+    }),
+  );
+
+  const allDefects = defectsByProject.flat();
 
   const aggregated = aggregate(allDefects, projectCodeToSlug);
-  return apiOk(req, aggregated, "OK", { extra: aggregated });
+  const itemsLimitRaw = url.searchParams.get("itemsLimit");
+  const itemsLimitValue = itemsLimitRaw ? Number(itemsLimitRaw) : NaN;
+  const itemsLimit = Number.isFinite(itemsLimitValue) ? Math.min(Math.max(Math.trunc(itemsLimitValue), 0), 1000) : undefined;
+  const responsePayload =
+    typeof itemsLimit === "number"
+      ? { ...aggregated, items: aggregated.items.slice(0, itemsLimit) }
+      : aggregated;
+
+  return noStore(apiOk(req, responsePayload, "OK", { extra: responsePayload }));
 }

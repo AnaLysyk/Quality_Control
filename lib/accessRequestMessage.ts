@@ -1,28 +1,57 @@
+
+// Utilitários para parsing e normalização de pedidos de acesso
 import "server-only";
 
+/**
+ * Tipos de acesso possíveis em pedidos de acesso.
+ */
 export type AccessType = "user" | "admin" | "company";
+
+/**
+ * Labels legíveis para tipos de acesso.
+ */
 export type AccessTypeLabel = "Usuário da empresa" | "Admin da empresa" | "Admin do sistema";
 
+/**
+ * Estrutura de um pedido de acesso parseado.
+ */
 export type ParsedAccessRequest = {
+  /** Email do solicitante */
   email: string;
+  /** Nome do solicitante */
   name: string;
+  /** Cargo do solicitante */
   jobRole: string;
+  /** Empresa */
   company: string;
+  /** ID do cliente (opcional) */
   clientId: string | null;
+  /** Tipo de acesso solicitado */
   accessType: AccessType;
+  /** Observações */
   notes: string;
 };
 
-function normalizeText(value: string) {
+
+/**
+ * Normaliza texto para comparação (trim + lower).
+ */
+function normalizeText(value: string): string {
   return value.trim().toLowerCase();
 }
 
+/**
+ * Converte tipo de acesso em label legível.
+ */
 export function toAccessTypeLabel(accessType: AccessType): AccessTypeLabel {
   if (accessType === "admin") return "Admin do sistema";
   if (accessType === "company") return "Admin da empresa";
   return "Usuário da empresa";
 }
 
+/**
+ * Normaliza string para tipo de acesso canônico.
+ */
 export function normalizeAccessType(value: string | null | undefined): AccessType | null {
   if (!value) return null;
   const v = normalizeText(value);
@@ -45,6 +74,9 @@ export function normalizeAccessType(value: string | null | undefined): AccessTyp
   return null;
 }
 
+/**
+ * Extrai observações administrativas de uma mensagem de acesso.
+ */
 export function extractAdminNotes(message: string): string | null {
   const line = message.split("\n").find((l) => l.startsWith("ADMIN_NOTES:"));
   if (!line) return null;
@@ -52,6 +84,9 @@ export function extractAdminNotes(message: string): string | null {
   return notes || null;
 }
 
+/**
+ * Faz o parsing de uma mensagem de pedido de acesso, extraindo campos estruturados.
+ */
 export function parseAccessRequestMessage(message: string, fallbackEmail: string): ParsedAccessRequest {
   const prefix = "ACCESS_REQUEST_V1 ";
   const line = message.split("\n").find((l) => l.startsWith(prefix));

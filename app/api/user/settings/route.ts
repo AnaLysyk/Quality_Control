@@ -164,6 +164,16 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
+  // Audit log
+  const ip_address = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+  const user_agent = req.headers.get("user-agent") || null;
+  console.info("[USER_SETTINGS_GET]", {
+    userId,
+    ip_address,
+    user_agent,
+    timestamp: new Date().toISOString(),
+  });
+
   const stored = await fetchSettingsFromStore(userId);
   return NextResponse.json({ settings: normalizeSettings(stored) }, { status: 200 });
 }
@@ -173,6 +183,16 @@ export async function PATCH(req: Request) {
   if (!userId) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
+
+  // Audit log
+  const ip_address = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+  const user_agent = req.headers.get("user-agent") || null;
+  console.info("[USER_SETTINGS_PATCH]", {
+    userId,
+    ip_address,
+    user_agent,
+    timestamp: new Date().toISOString(),
+  });
 
   const body = await req.json().catch(() => ({}));
   const rawTheme = body?.theme ? String(body.theme) : null;

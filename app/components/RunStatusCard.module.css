@@ -1,15 +1,15 @@
-.card {
-  --run-status-color: var(--tc-accent, #ef0001);
-  background-color: var(--run-status-color);
-  border-color: var(--run-status-color);
+.info {
+  --run-status-color: var(--tc-info);
 }
-
-.icon {
-  background-color: var(--run-status-color);
-  color: var(--run-status-color);
+.success {
+  --run-status-color: var(--tc-success);
 }
-
-.label {
+.warning {
+  --run-status-color: var(--tc-warning);
+}
+.danger {
+  --run-status-color: var(--tc-danger);
+}
   color: var(--run-status-color);
 }
 
@@ -25,7 +25,7 @@
 }
 
 .accent {
-  --run-status-color: var(--tc-accent, #ef0001);
+  --run-status-color: var(--tc-accent);
 }
 
 .info {

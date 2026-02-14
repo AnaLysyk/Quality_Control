@@ -1,3 +1,8 @@
+/**
+ * RequireAuth: Client-side auth guard for protected routes/components.
+ * Redirects to /login if not authenticated, preserving intended destination.
+ * Shows loading fallback or AuthSkeleton while validating session.
+ */
 "use client";
 
 import { ReactNode, useEffect } from "react";
@@ -10,6 +15,11 @@ type RequireAuthProps = {
   fallback?: ReactNode;
 };
 
+/**
+ * Auth guard component. Redirects to login if not authenticated.
+ * @param children - Content to render if authenticated
+ * @param fallback - Optional fallback while loading or if unauthenticated
+ */
 export function RequireAuth({ children, fallback }: RequireAuthProps) {
   const { user, loading } = useAuthUser();
   const router = useRouter();

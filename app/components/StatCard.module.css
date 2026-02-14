@@ -11,14 +11,22 @@
 }
 
 .blocked {
-  --stat-card-color: #facc15;
+  color: var(--stat-card-color, var(--tc-text-inverse));
 }
 
+.pass {
+  --stat-card-color: var(--tc-success);
+}
+.fail {
+  --stat-card-color: var(--tc-fail);
+}
+.blocked {
+  --stat-card-color: var(--tc-warning);
+}
 .notRun {
-  --stat-card-color: #64748b;
+  --stat-card-color: var(--tc-text-muted);
 }
-
 .total,
 .inverse {
-  --stat-card-color: var(--tc-text-inverse, #ffffff);
+  --stat-card-color: var(--tc-text-inverse);
 }

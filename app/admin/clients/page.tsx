@@ -182,7 +182,7 @@ function AdminClientsPage() {
   };
 
   const handleUnauthorized = useCallback(() => {
-    const msg = "SessÃ£o expirada. FaÃ§a login novamente.";
+    const msg = "Sessão expirada. Faça login novamente.";
     setMessageTone("error");
     setMessage(msg);
     toast.error(msg);
@@ -256,7 +256,7 @@ function AdminClientsPage() {
           return;
         }
         setMessageTone("error");
-        setMessage("Nao foi possivel carregar o cliente selecionado");
+        setMessage("Não foi possível carregar o cliente selecionado");
         return;
       }
       const raw = await res.json().catch(() => null);
@@ -399,7 +399,7 @@ function AdminClientsPage() {
         if (data.integrationMode === "manual") {
           setMessageTone("info");
           setMessage(
-            "Empresa criada sem integraÃ§Ã£o. VocÃª pode configurar Qase depois (token + project code) ou seguir em modo manual.",
+            "Empresa criada sem integração. Você pode configurar Qase depois (token + project code) ou seguir em modo manual.",
           );
         }
         toast.success("Empresa cadastrada");
@@ -427,7 +427,7 @@ function AdminClientsPage() {
         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Empresas</h1>
-            <p className="text-sm sm:text-base text-(--tc-text-muted,#6b7280)">Gerencie clientes e usuÃ¡rios</p>
+            <p className="text-sm sm:text-base text-(--tc-text-muted,#6b7280)">Gerencie clientes e usuários</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
           {isGlobalAdmin && (
@@ -444,7 +444,7 @@ function AdminClientsPage() {
               href="/admin/users"
               className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-300"
             >
-              Gerenciar usuÃ¡rios
+              Gerenciar usuários
             </a>
           )}
             <button
@@ -507,13 +507,13 @@ function AdminClientsPage() {
             <div className="text-sm text-(--tc-text-muted,#6b7280)">
               {isGlobalAdmin ? (
                 <div className="mt-2 rounded-xl border border-dashed border-(--tc-border,#e5e7eb) p-4 text-center">
-                  <p className="text-sm text-(--tc-text-secondary,#4b5563)">VocÃª ainda nÃ£o criou nenhum cliente.</p>
+                  <p className="text-sm text-(--tc-text-secondary,#4b5563)">Você ainda não criou nenhum cliente.</p>
                   <button
                     type="button"
                     onClick={() => setOpenCreate(true)}
                     className="mt-3 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   >
-                    + Cadastrar instituiÃ§Ã£o ou empresa
+                    + Cadastrar instituição ou empresa
                   </button>
                 </div>
               ) : (
@@ -642,7 +642,7 @@ function AdminClientsPage() {
             {/* Tabs */}
             <div role="tablist" aria-label="Detalhes da empresa" className="flex items-center gap-3 border-b border-(--tc-border) pb-2">
               <TabButton active={activeTab === "visao"} onClick={() => setActiveTab("visao")}>
-                Visao Geral
+                Visão Geral
               </TabButton>
               <TabButton active={activeTab === "pessoas"} onClick={() => setActiveTab("pessoas")}>
                 Pessoas
@@ -654,12 +654,12 @@ function AdminClientsPage() {
               <div className="space-y-4">
                 <div className="grid gap-3 md:grid-cols-2">
                   <InfoCard label="CNPJ" value={form.taxId ?? selected.taxId} />
-                  <InfoCard label="CEP / Endereco" value={form.address ?? selected.address} />
+                  <InfoCard label="CEP / Endereço" value={form.address ?? selected.address} />
                   <InfoCard label="Telefone" value={form.phone ?? selected.phone} />
                   <InfoCard label="Website" value={form.website ?? selected.website} isLink />
                   <InfoCard label="LinkedIn / Docs" value={form.docsLink ?? selected.docsLink} isLink />
                   <InfoCard
-                    label="Integracao"
+                    label="Integração"
                     value={(form.integrationMode ?? selected.integrationMode) === "qase" ? "Qase" : "Manual"}
                   />
                   <InfoCard label="Qase Project" value={form.qaseProjectCode ?? selected.qaseProjectCode} />
@@ -670,28 +670,28 @@ function AdminClientsPage() {
                   <InfoCard label="Jira URL" value={form.jiraBaseUrl ?? selected.jiraBaseUrl} isLink />
                   <InfoCard label="Jira Email" value={form.jiraEmail ?? selected.jiraEmail} />
                   <InfoCard label="Notas" value={form.notes ?? selected.notes} full />
-                  <InfoCard label="Descricao" value={form.description ?? selected.description} full />
+                  <InfoCard label="Descrição" value={form.description ?? selected.description} full />
                 </div>
 
                 {isEditing && (
                   <div className="rounded-xl border border-(--tc-border) bg-(--tc-surface-2) p-4 space-y-3">
                     <EditField label="Nome" value={form.name ?? ""} onChange={(v) => setForm((f) => ({ ...f, name: v }))} />
                     <EditField label="CNPJ" value={form.taxId ?? ""} onChange={(v) => setForm((f) => ({ ...f, taxId: v }))} />
-                    <EditField label="CEP / Endereco" value={form.address ?? ""} onChange={(v) => setForm((f) => ({ ...f, address: v }))} />
+                    <EditField label="CEP / Endereço" value={form.address ?? ""} onChange={(v) => setForm((f) => ({ ...f, address: v }))} />
                     <EditField label="Telefone" value={form.phone ?? ""} onChange={(v) => setForm((f) => ({ ...f, phone: v }))} />
                     <EditField label="Website" value={form.website ?? ""} onChange={(v) => setForm((f) => ({ ...f, website: v }))} />
                     <EditField label="LinkedIn / Docs" value={form.docsLink ?? ""} onChange={(v) => setForm((f) => ({ ...f, docsLink: v }))} />
-                    <EditTextArea label="Descricao" value={form.description ?? ""} onChange={(v) => setForm((f) => ({ ...f, description: v }))} />
+                    <EditTextArea label="Descrição" value={form.description ?? ""} onChange={(v) => setForm((f) => ({ ...f, description: v }))} />
                     <EditTextArea label="Notas" value={form.notes ?? ""} onChange={(v) => setForm((f) => ({ ...f, notes: v }))} />
 
                     <div className="rounded-lg border border-(--tc-border) bg-(--tc-surface) p-3">
-                      <p className="text-sm font-semibold text-(--tc-text-primary)">Integracoes (Qase / Jira)</p>
+                      <p className="text-sm font-semibold text-(--tc-text-primary)">Integrações (Qase / Jira)</p>
                       <p className="mt-1 text-xs text-(--tc-text-muted)">
-                        Tokens nao aparecem por seguranca. Para trocar, informe um novo token e salve.
+                        Tokens não aparecem por segurança. Para trocar, informe um novo token e salve.
                       </p>
 
                       <label className="block text-sm mt-3">
-                        Modo de integracao
+                        Modo de integração
                         <select
                           className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm"
                           value={(form.integrationMode ?? "manual") as string}
@@ -1095,7 +1095,7 @@ function CompanyUsers({ clientId, onAddUser, disabled = false }: CompanyUsersPro
       try {
         const res = await fetch(`/api/admin/users?client_id=${clientId}`, { credentials: "include", cache: "no-store" });
         if (res.status === 401) {
-          toast.error("SessÃ£o expirada. FaÃ§a login novamente.");
+          toast.error("Sessão expirada. Faça login novamente.");
           router.replace("/login");
           setUsers([]);
           return;
@@ -1120,7 +1120,7 @@ function CompanyUsers({ clientId, onAddUser, disabled = false }: CompanyUsersPro
   return (
     <div className="space-y-2">
       {loading && <p className="text-sm text-gray-500">Carregando pessoas...</p>}
-      {!loading && users.length === 0 && <p className="text-sm text-gray-500">Nenhum responsavel vinculado.</p>}
+      {!loading && users.length === 0 && <p className="text-sm text-gray-500">Nenhum responsável vinculado.</p>}
       <div className="flex items-center gap-2 text-xs">
         <span className="text-(--tc-text-muted)">Modo</span>
         <button
@@ -1169,7 +1169,7 @@ function CompanyUsers({ clientId, onAddUser, disabled = false }: CompanyUsersPro
                   onAddUser();
                 }}
               >
-                Editar usuario
+                Editar usuário
               </button>
             )}
           </div>
@@ -1184,7 +1184,7 @@ function CompanyUsers({ clientId, onAddUser, disabled = false }: CompanyUsersPro
             onAddUser();
           }}
         >
-          Adicionar responsavel
+          Adicionar responsável
         </button>
       )}
     </div>

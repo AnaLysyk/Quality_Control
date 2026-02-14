@@ -1,6 +1,50 @@
 {
   "items": [
     {
+      "id": "5983ee72-0e7e-4f9a-af98-a1dc0e1e5dc9",
+      "created_at": "2026-02-14T08:04:15.408Z",
+      "actor_user_id": "usr_admin",
+      "actor_email": "admin",
+      "action": "user.updated",
+      "entity_type": "user",
+      "entity_id": "usr_e18ad87e",
+      "entity_label": "e2e.user.869884@griaule.test",
+      "metadata": {
+        "companyId": "cmp_a53bfe5c",
+        "role": "user",
+        "active": false
+      }
+    },
+    {
+      "id": "1b4ae9bc-8815-4eea-a006-d9989c2295de",
+      "created_at": "2026-02-14T08:04:10.046Z",
+      "actor_user_id": "usr_admin",
+      "actor_email": "admin",
+      "action": "user.updated",
+      "entity_type": "user",
+      "entity_id": "usr_e18ad87e",
+      "entity_label": "e2e.user.869884@griaule.test",
+      "metadata": {
+        "companyId": "cmp_041c54a7",
+        "role": "user",
+        "active": true
+      }
+    },
+    {
+      "id": "95591ae4-ec9a-48b9-9a4a-753df6e2db31",
+      "created_at": "2026-02-14T08:03:50.246Z",
+      "actor_user_id": "usr_admin",
+      "actor_email": "admin",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_f5d8b52c",
+      "entity_label": "xcccv",
+      "metadata": {
+        "slug": "xcccv",
+        "active": true
+      }
+    },
+    {
       "id": "6870c9f1-e950-47ec-a873-c509032a2572",
       "created_at": "2026-02-14T02:18:39.647Z",
       "actor_user_id": "usr_admin_griaule_test",

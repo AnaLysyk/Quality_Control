@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { randomUUID } from "crypto";
 
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { generateTempPassword, hashPassword } from "@/lib/passwordHash";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAccessContext } from "@/lib/auth/session";
@@ -11,6 +10,7 @@ import {
   listLocalLinksForUser,
   listLocalUsers,
   normalizeLocalRole,
+  pruneOrphanMemberships,
   updateLocalUser,
   upsertLocalLink,
 } from "@/lib/auth/localStore";
@@ -90,6 +90,13 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const clientId = searchParams.get("client_id");
 
+  if (isGlobalAdmin) {
+    const pruned = await pruneOrphanMemberships().catch(() => 0);
+    if (pruned > 0) {
+      console.warn(`[ADMIN-USERS][GET] pruned ${pruned} orphan membership(s)`);
+    }
+  }
+
   if (!isGlobalAdmin) {
     if (!access.companyId) {
       return NextResponse.json({ error: "Sem empresa vinculada" }, { status: 403 });
@@ -97,7 +104,12 @@ export async function GET(req: NextRequest) {
     const links = await listLocalLinksForCompany(access.companyId);
     const users = await listLocalUsers();
     const byId = new Map(users.map((user) => [user.id, user]));
-    const items: UserItem[] = links.map((link) => mapUser(byId.get(link.userId) ?? { id: link.userId, name: "", email: "", active: true }, { role: link.role, companyId: link.companyId }));
+    const items: UserItem[] = [];
+    for (const link of links) {
+      const target = byId.get(link.userId);
+      if (!target) continue;
+      items.push(mapUser(target, { role: link.role, companyId: link.companyId }));
+    }
     return NextResponse.json({ items }, { status: 200 });
   }
 
@@ -105,7 +117,12 @@ export async function GET(req: NextRequest) {
     const links = await listLocalLinksForCompany(clientId);
     const users = await listLocalUsers();
     const byId = new Map(users.map((user) => [user.id, user]));
-    const items: UserItem[] = links.map((link) => mapUser(byId.get(link.userId) ?? { id: link.userId, name: "", email: "", active: true }, { role: link.role, companyId: link.companyId }));
+    const items: UserItem[] = [];
+    for (const link of links) {
+      const target = byId.get(link.userId);
+      if (!target) continue;
+      items.push(mapUser(target, { role: link.role, companyId: link.companyId }));
+    }
     return NextResponse.json({ items }, { status: 200 });
   }
 
@@ -141,6 +158,7 @@ export async function POST(req: NextRequest) {
   const capabilities = Array.isArray(body?.capabilities)
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
+  const requiresCompanyLink = !wantsGlobalAdmin;
 
   console.debug(`[ADMIN-USERS][POST] admin=${admin?.email ?? "-"} name=${name} email=${email} clientId=${clientId} role=${rawRole}`);
 
@@ -148,7 +166,7 @@ export async function POST(req: NextRequest) {
     console.error(`[ADMIN-USERS][POST] missing-fields admin=${admin?.email ?? "-"} name='${name}' email='${email}' login='${login}'`);
     return NextResponse.json({ error: "Nome, usuario e email sao obrigatorios" }, { status: 400 });
   }
-  if (!clientId) {
+  if (requiresCompanyLink && !clientId) {
     console.error(`[ADMIN-USERS][POST] missing-client admin=${admin?.email ?? "-"} clientId=${clientId}`);
     return NextResponse.json({ error: "Empresa obrigatoria para este perfil" }, { status: 400 });
   }
@@ -163,14 +181,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Usuario ja existe" }, { status: 409 });
   }
 
-  const tempPassword = hashPasswordSha256(`${Date.now()}-${randomUUID()}`);
+  const tempPasswordPlain = generateTempPassword();
+  const tempPasswordHash = await hashPassword(tempPasswordPlain);
   let user = null;
   try {
     user = await createLocalUser({
       name,
       email,
       user: login,
-      password_hash: tempPassword,
+      password_hash: tempPasswordHash,
       active: true,
       role: "user",
       globalRole: wantsGlobalAdmin ? "global_admin" : null,
@@ -191,7 +210,9 @@ export async function POST(req: NextRequest) {
     throw err;
   }
 
-  await upsertLocalLink({ userId: user.id, companyId: clientId, role, capabilities });
+  if (clientId) {
+    await upsertLocalLink({ userId: user.id, companyId: clientId, role, capabilities });
+  }
 
   await addAuditLogSafe({
     actorUserId: admin.id,
@@ -200,11 +221,11 @@ export async function POST(req: NextRequest) {
     entityType: "user",
     entityId: user.id,
     entityLabel: user.email,
-    metadata: { companyId: clientId, role },
+    metadata: { companyId: clientId, role, globalAdmin: wantsGlobalAdmin },
   });
 
-  console.error(`[ADMIN-USERS][POST] created admin=${admin?.email ?? "-"} user=${user?.email ?? user?.id}`);
-  return NextResponse.json({ ok: true }, { status: 201 });
+  console.info(`[ADMIN-USERS][POST] created admin=${admin?.email ?? "-"} user=${user?.email ?? user?.id} globalAdmin=${wantsGlobalAdmin}`);
+  return NextResponse.json({ ok: true, temp_password: tempPasswordPlain }, { status: 201 });
 }
 
 export async function PATCH(req: NextRequest) {

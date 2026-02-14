@@ -10,10 +10,24 @@ fi
 SENSITIVE_TABLES="${SENSITIVE_TABLES:-public.global_admins}"
 SENSITIVE_VIEWS="${SENSITIVE_VIEWS:-}"
 
+CHECKS=(
+  "Views with SECURITY DEFINER"
+  "Sensitive tables without RLS"
+  "Sensitive views accessible by PUBLIC"
+)
+
+OK_COUNT=0
+TOTAL_COUNT=0
+
 run_check() {
   local name="$1"
   local sql="$2"
 
+  if [[ -n "${ONLY_CHECK:-}" && "$name" != "$ONLY_CHECK" ]]; then
+    return
+  fi
+
+  ((TOTAL_COUNT++))
   echo "🔍 ${name}"
 
   local result
@@ -29,7 +43,13 @@ run_check() {
   fi
 
   echo "✅ OK: ${name}"
+  ((OK_COUNT++))
 }
+
+ONLY_CHECK=""
+if [[ "${1:-}" == "--only" && -n "${2:-}" ]]; then
+  ONLY_CHECK="$2"
+fi
 
 run_check "Views with SECURITY DEFINER" "
 SELECT format('%s.%s', n.nspname, c.relname)
@@ -83,5 +103,5 @@ WHERE table_schema = 'public'
   AND table_name IN (SELECT view_name FROM effective_views);
 "
 
-echo "🎉 Security checks passed"
+echo "🎉 Security checks passed: $OK_COUNT/$TOTAL_COUNT"
 exit 0

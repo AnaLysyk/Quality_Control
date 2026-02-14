@@ -106,7 +106,7 @@ export function useTicketKanbanColumns(extraKeys: string[] = []) {
   }, [columns]);
 
   const statusOptions = useMemo<TicketStatusOption[]>(
-    () => mergedColumns.map((col) => ({ value: col.key, label: col.label })),
+    () => mergedColumns.map((col) => ({ value: col.key as any, label: col.label })),
     [mergedColumns],
   );
 

@@ -5,12 +5,17 @@ import { shouldUseSecureCookies } from "@/lib/auth/cookies";
 
 function readCookieValue(cookieHeader: string, name: string): string | null {
   if (!cookieHeader) return null;
-  const cookies = cookieHeader.split(";").map((segment) => segment.trim());
+  const cookies = cookieHeader.split(";");
   for (const cookie of cookies) {
-    const [key, ...rest] = cookie.split("=");
-    if (key === name) {
+    const [rawKey, ...rest] = cookie.split("=");
+    if (rawKey.trim() === name) {
       const value = rest.join("=").trim();
-      return value.length ? decodeURIComponent(value) : "";
+      if (!value.length) return "";
+      try {
+        return decodeURIComponent(value);
+      } catch {
+        return value;
+      }
     }
   }
   return null;
@@ -23,11 +28,15 @@ export async function POST(req: Request) {
 
   if (sessionId || refreshToken) {
     const redis = getRedis();
-    if (sessionId) {
-    await redis.del(`session:${sessionId}`);
-    }
-    if (refreshToken) {
-      await redis.del(`refresh:${hashRefreshToken(refreshToken)}`);
+    try {
+      if (sessionId) {
+        await redis.del(`session:${sessionId}`);
+      }
+      if (refreshToken) {
+        await redis.del(`refresh:${hashRefreshToken(refreshToken)}`);
+      }
+    } catch (err) {
+      console.error("[LOGOUT REDIS ERROR]", err);
     }
   }
 
@@ -47,6 +56,8 @@ export async function POST(req: Request) {
   clear("access_token");
   clear("refresh_token");
   clear("active_company_slug");
+
+  res.headers.set("Cache-Control", "no-store");
 
   return res;
 }

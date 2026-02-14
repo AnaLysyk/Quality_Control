@@ -6,24 +6,36 @@ import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequests
 
 type AccessType = "user" | "admin" | "company";
 
+const MAX_FIELD_LENGTH = 200;
+const MAX_NOTES_LENGTH = 2000;
+const MAX_JSON_BYTES = 16 * 1024;
+
+const ACCESS_TYPE_MAP: Record<string, AccessType> = {
+  usuario: "user",
+  "usuário": "user",
+  "usuario da empresa": "user",
+  "usuário da empresa": "user",
+  "usuÃ¡rio da empresa": "user",
+  "usuÃ¡rio": "user",
+  user: "user",
+  admin: "admin",
+  administrador: "admin",
+  "admin do sistema": "admin",
+  empresa: "company",
+  "admin da empresa": "company",
+  company: "company",
+};
+
+function cleanString(value: unknown, max = MAX_FIELD_LENGTH) {
+  if (typeof value !== "string") return "";
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (!normalized) return "";
+  return normalized.length > max ? normalized.slice(0, max) : normalized;
+}
+
 function normalizeAccessType(value?: string | null): AccessType | null {
   if (!value) return null;
-  const v = value.trim().toLowerCase();
-  if (
-    v === "usuario da empresa" ||
-    v === "usuÃ¡rio da empresa" ||
-    v === "usuario" ||
-    v === "user"
-  ) {
-    return "user";
-  }
-  if (v === "admin do sistema" || v === "administrador" || v === "admin") {
-    return "admin";
-  }
-  if (v === "admin da empresa" || v === "empresa" || v === "company") {
-    return "company";
-  }
-  return null;
+  return ACCESS_TYPE_MAP[value.trim().toLowerCase()] ?? null;
 }
 
 function composeAccessRequestMessage(input: {
@@ -51,7 +63,7 @@ function composeAccessRequestMessage(input: {
   const lines = [
     `ACCESS_REQUEST_V1 ${JSON.stringify(payload)}`,
     "Solicitacao de acesso ao admin",
-    `Tipo de acesso: ${input.accessType === "admin" ? "Admin do sistema" : input.accessType === "company" ? "Admin da empresa" : "UsuÃ¡rio da empresa"}`,
+    `Tipo de acesso: ${input.accessType === "admin" ? "Admin do sistema" : input.accessType === "company" ? "Admin da empresa" : "Usuário da empresa"}`,
     `Empresa: ${input.company}${input.clientId ? ` (id: ${input.clientId})` : ""}`,
     `Cargo: ${input.role}`,
     `Nome: ${input.name}`,
@@ -66,10 +78,40 @@ function composeAccessRequestMessage(input: {
   return lines.join("\n");
 }
 
+function json(data: unknown, init?: ResponseInit) {
+  const res = NextResponse.json(data, init);
+  res.headers.set("Cache-Control", "no-store");
+  return res;
+}
+
+function validateJsonRequest(req: Request) {
+  const contentType = req.headers.get("content-type")?.toLowerCase() ?? "";
+  if (!contentType.includes("application/json")) {
+    throw new Error("UNSUPPORTED_MEDIA");
+  }
+
+  const contentLength = Number(req.headers.get("content-length") ?? "0");
+  if (Number.isFinite(contentLength) && contentLength > MAX_JSON_BYTES) {
+    throw new Error("PAYLOAD_TOO_LARGE");
+  }
+}
+
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+  }
+
+  try {
+    validateJsonRequest(req);
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNSUPPORTED_MEDIA") {
+      return json({ error: "Content-Type invalido" }, { status: 415 });
+    }
+    if (error instanceof Error && error.message === "PAYLOAD_TOO_LARGE") {
+      return json({ error: "Payload muito grande" }, { status: 413 });
+    }
+    return json({ error: "Requisicao invalida" }, { status: 400 });
   }
 
   const body = (await req.json().catch(() => null)) as {
@@ -84,25 +126,27 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   } | null;
 
   if (!body) {
-    return NextResponse.json({ error: "Payload invalido" }, { status: 400 });
+    return json({ error: "Payload invalido" }, { status: 400 });
   }
 
   const { id } = await context.params;
   if (shouldUseJsonStore()) {
     const existing = await getAccessRequestById(id);
     if (!existing) {
-      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+      return json({ error: "Solicitacao nao encontrada" }, { status: 404 });
     }
 
-    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : existing.email;
-    const name = typeof body.name === "string" ? body.name.trim() : "";
-    const role = typeof body.role === "string" ? body.role.trim() : "";
-    const company = typeof body.company === "string" ? body.company.trim() : "";
-    const clientId =
-      typeof body.client_id === "string" && body.client_id.trim() ? body.client_id.trim() : null;
+    const emailInput = cleanString(body.email, 320);
+    const email = emailInput ? emailInput.toLowerCase() : existing.email;
+    const name = cleanString(body.name);
+    const role = cleanString(body.role);
+    const company = cleanString(body.company);
+    const clientIdValue = cleanString(body.client_id, MAX_FIELD_LENGTH);
+    const clientId = clientIdValue || null;
     const accessType = normalizeAccessType(body.access_type) ?? "user";
-    const notes = typeof body.notes === "string" ? body.notes.trim() : "";
-    const adminNotes = typeof body.admin_notes === "string" ? body.admin_notes.trim() : null;
+    const notes = cleanString(body.notes, MAX_NOTES_LENGTH);
+    const adminNotesValue = cleanString(body.admin_notes, MAX_NOTES_LENGTH);
+    const adminNotes = adminNotesValue || null;
 
     const message = composeAccessRequestMessage({
       email,
@@ -117,10 +161,10 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 
     const updated = await updateAccessRequest(id, { email, message });
     if (!updated) {
-      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+      return json({ error: "Solicitacao nao encontrada" }, { status: 404 });
     }
 
-    return NextResponse.json({
+    return json({
       item: {
         id: updated.id,
         email: updated.email,
@@ -133,18 +177,20 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 
   const existing = await prisma.supportRequest.findUnique({ where: { id } });
   if (!existing) {
-    return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+    return json({ error: "Solicitacao nao encontrada" }, { status: 404 });
   }
 
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : existing.email;
-  const name = typeof body.name === "string" ? body.name.trim() : "";
-  const role = typeof body.role === "string" ? body.role.trim() : "";
-  const company = typeof body.company === "string" ? body.company.trim() : "";
-  const clientId =
-    typeof body.client_id === "string" && body.client_id.trim() ? body.client_id.trim() : null;
+  const emailInput = cleanString(body.email, 320);
+  const email = emailInput ? emailInput.toLowerCase() : existing.email;
+  const name = cleanString(body.name);
+  const role = cleanString(body.role);
+  const company = cleanString(body.company);
+  const clientIdValue = cleanString(body.client_id, MAX_FIELD_LENGTH);
+  const clientId = clientIdValue || null;
   const accessType = normalizeAccessType(body.access_type) ?? "user";
-  const notes = typeof body.notes === "string" ? body.notes.trim() : "";
-  const adminNotes = typeof body.admin_notes === "string" ? body.admin_notes.trim() : null;
+  const notes = cleanString(body.notes, MAX_NOTES_LENGTH);
+  const adminNotesValue = cleanString(body.admin_notes, MAX_NOTES_LENGTH);
+  const adminNotes = adminNotesValue || null;
 
   const message = composeAccessRequestMessage({
     email,
@@ -165,7 +211,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     },
   });
 
-  return NextResponse.json({
+  return json({
     item: {
       id: updated.id,
       email: updated.email,

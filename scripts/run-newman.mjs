@@ -51,6 +51,17 @@ if (password) {
   args.push("--env-var", `password=${password}`);
 }
 
+// Permite passar --env-var foo=bar via argumento
+const extraEnvVars = process.argv.slice(2).filter((a) => a.startsWith("--env-var"));
+for (const arg of extraEnvVars) {
+  const eqIdx = arg.indexOf("=");
+  if (eqIdx > 0) {
+    args.push("--env-var", arg.slice(eqIdx + 1));
+  }
+}
+
+console.log("[newman] Executing:", isWindows ? "npx.cmd" : "npx", args.join(" "));
+
 const cmd = isWindows ? "npx.cmd" : "npx";
 const child = spawn(cmd, args, { stdio: "inherit", shell: isWindows });
 

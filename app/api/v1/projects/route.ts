@@ -13,9 +13,23 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 }
 
 export async function GET(request: Request) {
-  const auth = await authenticateRequest(request);
-  if (!auth) return NextResponse.json({ error: { message: "Nao autorizado" } }, { status: 401 });
-  if (!isCompanyUser(auth)) {
+  const user = await authenticateRequest(request);
+  if (!user) {
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+  }
+
+  // Audit log
+  const ip_address = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+  const user_agent = request.headers.get("user-agent") || null;
+  console.info("[PROJECTS_GET]", {
+    userId: user.id,
+    email: user.email,
+    ip_address,
+    user_agent,
+    timestamp: new Date().toISOString(),
+  });
+
+  if (!isCompanyUser(user)) {
     return NextResponse.json({ error: { message: "Sem permissao" } }, { status: 403 });
   }
 

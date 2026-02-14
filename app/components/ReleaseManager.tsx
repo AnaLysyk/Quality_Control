@@ -81,9 +81,9 @@ export default function ReleaseManager() {
   };
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#0f1320] p-6 text-white space-y-4 w-full max-w-2xl">
+    <div className="rounded-2xl border border-[--tc-border]/10 bg-[--tc-surface-dark] p-6 text-[--tc-text-inverse] space-y-4 w-full max-w-2xl">
       <div>
-        <p className="text-xs uppercase tracking-[0.35em] text-[#7CD343]">Gerenciar</p>
+        <p className="text-xs uppercase tracking-[0.35em] text-[--tc-accent]">Gerenciar</p>
         <h2 className="text-2xl font-bold">Nova Run</h2>
       </div>
 
@@ -93,7 +93,7 @@ export default function ReleaseManager() {
           <select
             value={project}
             onChange={(e) => setProject(e.target.value)}
-            className="w-full rounded-lg bg-[#0b1020] border border-white/10 px-3 py-2 text-white focus:border-[#7CD343] focus:outline-none"
+            className="w-full rounded-lg bg-[--tc-surface] border border-[--tc-border]/10 px-3 py-2 text-[--tc-text] focus:border-[--tc-accent] focus:outline-none"
           >
             <option value="">Selecione...</option>
             {projects.map((p) => (
@@ -106,22 +106,22 @@ export default function ReleaseManager() {
         </label>
 
         <label className="grid gap-1 text-sm">
-          <span>TÃ­tulo</span>
+          <span>Título</span>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full rounded-lg bg-[#0b1020] border border-white/10 px-3 py-2 text-white focus:border-[#7CD343] focus:outline-none"
+            className="w-full rounded-lg bg-[--tc-surface] border border-[--tc-border]/10 px-3 py-2 text-[--tc-text] focus:border-[--tc-accent] focus:outline-none"
             placeholder="Ex.: Run 1.0 PRINT"
           />
         </label>
 
         <label className="grid gap-1 text-sm">
-          <span>DescriÃ§Ã£o</span>
+          <span>Descrição</span>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full min-h-24 rounded-lg bg-[#0b1020] border border-white/10 px-3 py-2 text-white focus:border-[#7CD343] focus:outline-none"
+            className="w-full min-h-24 rounded-lg bg-[--tc-surface] border border-[--tc-border]/10 px-3 py-2 text-[--tc-text] focus:border-[--tc-accent] focus:outline-none"
             placeholder="Detalhes da run"
           />
         </label>
@@ -131,22 +131,22 @@ export default function ReleaseManager() {
           <select
             value={type}
             onChange={(e) => setType(e.target.value as "aceitacao" | "regressao")}
-            className="w-full rounded-lg bg-[#0b1020] border border-white/10 px-3 py-2 text-white focus:border-[#7CD343] focus:outline-none"
+            className="w-full rounded-lg bg-[--tc-surface] border border-[--tc-border]/10 px-3 py-2 text-[--tc-text] focus:border-[--tc-accent] focus:outline-none"
           >
-            <option value="aceitacao">AceitaÃ§Ã£o</option>
-            <option value="regressao">RegressÃ£o</option>
+            <option value="aceitacao">Aceitação</option>
+            <option value="regressao">Regressão</option>
           </select>
         </label>
 
         <button
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className="inline-flex justify-center rounded-lg bg-[#7CD343] px-4 py-2 font-semibold text-[#0b1305] shadow-lg shadow-[#7CD343]/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex justify-center rounded-lg bg-[--tc-accent] px-4 py-2 font-semibold text-[--tc-surface-dark] shadow-lg shadow-[--tc-accent]/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Criando..." : "Criar Run"}
         </button>
 
-        {status && <p className="text-sm text-gray-200">{status}</p>}
+        {status && <p className="text-sm text-[--tc-text-muted]">{status}</p>}
       </div>
     </div>
   );

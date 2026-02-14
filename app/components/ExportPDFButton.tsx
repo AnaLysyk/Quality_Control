@@ -230,19 +230,19 @@ export default function ExportPDFButton({ fileName, targetId = "pdf-summary" }: 
         onClick={handleExport}
         disabled={exporting}
         aria-disabled={exporting}
-        className="inline-flex items-center justify-center rounded-full bg-white text-[#0b1a3c] border border-white/60 px-3 py-2 hover:shadow-md hover:scale-[1.02] transition focus:outline-none disabled:opacity-60"
+        className="inline-flex items-center justify-center rounded-full bg-[--tc-surface] text-[--tc-accent] border border-[--tc-border]/60 px-3 py-2 hover:shadow-md hover:scale-[1.02] transition focus:outline-none disabled:opacity-60"
         aria-label="Exportar PDF"
         title="Baixar PDF desta run"
       >
         <span className="text-lg font-bold leading-none">{String.fromCharCode(0x2193)}</span>
       </button>
       {exporting && (
-        <span data-testid="export-loading" className="text-xs text-white/80">
+        <span data-testid="export-loading" className="text-xs text-[--tc-text-muted]">
           Gerando...
         </span>
       )}
       {!exporting && exported && (
-        <span data-testid="export-success" className="text-xs text-white/80">
+        <span data-testid="export-success" className="text-xs text-[--tc-text-muted]">
           Exportado
         </span>
       )}

@@ -1,97 +1,128 @@
 import os
 import time
-from typing import List, Dict, Generator, Optional
+from typing import Any, Dict, Generator, Iterable, List, Optional
 
 try:
     from openai import OpenAI
+
     _HAS_OPENAI = True
-except Exception:
+except Exception:  # pragma: no cover - defensive import
     OpenAI = None  # type: ignore
     _HAS_OPENAI = False
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-_client = None
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-5-mini")
+MAX_RETRIES = int(os.getenv("OPENAI_MAX_RETRIES", "3"))
+DEFAULT_TIMEOUT = float(os.getenv("OPENAI_TIMEOUT", "45"))
+
+_client: Optional[OpenAI] = None
 if _HAS_OPENAI and OPENAI_API_KEY:
     try:
         _client = OpenAI(api_key=OPENAI_API_KEY)
-    except Exception:
+    except Exception:  # pragma: no cover - initialization guard
         _client = None
 
 
-def generate_text(prompt: str, model: str = "gpt-4o-mini") -> str:
-    """Synchronous single-response generator using OpenAI Responses API when available.
-    Falls back to a deterministic placeholder when no key is configured.
-    """
+def _mock_text(prefix: str) -> str:
+    return f"[mock] {prefix[:200]}"
+
+
+def _extract_text(resp: Any) -> str:
+    if hasattr(resp, "output_text") and resp.output_text:
+        return str(resp.output_text)
+
+    parts: List[str] = []
+    for item in getattr(resp, "output", []) or []:
+        content = getattr(item, "content", None)
+        if isinstance(content, Iterable):
+            for chunk in content:
+                if hasattr(chunk, "text") and chunk.text:
+                    parts.append(str(chunk.text))
+    return "".join(parts) if parts else str(resp)
+
+
+def _retry(fn, retries: int = MAX_RETRIES, base_delay: float = 0.5):
+    for attempt in range(retries):
+        try:
+            return fn()
+        except Exception:  # pragma: no cover - best effort resilience
+            if attempt == retries - 1:
+                raise
+            time.sleep(base_delay * (2 ** attempt))
+
+
+def generate_text(
+    prompt: str,
+    model: str = DEFAULT_MODEL,
+    timeout: float = DEFAULT_TIMEOUT,
+) -> str:
+    """Generate a single response. Falls back to mock output when SDK/key missing."""
+
     if _client is None:
-        return f"[mock] {prompt[:200]}"
+        return _mock_text(prompt)
+
+    start = time.time()
+
+    def _call():
+        return _client.responses.create(model=model, input=prompt, timeout=timeout)
 
     try:
-        resp = _client.responses.create(model=model, input=prompt)
-        # best-effort extraction of text
-        out = getattr(resp, "output_text", None)
-        if out:
-            return out
-        # fallback: join content elements
-        if hasattr(resp, "output"):
-            parts = []
-            for item in resp.output:
-                if isinstance(item, dict):
-                    for k in ("content", "text"):
-                        v = item.get(k)
-                        if isinstance(v, str):
-                            parts.append(v)
-                        elif isinstance(v, list):
-                            for chunk in v:
-                                if isinstance(chunk, dict) and "text" in chunk:
-                                    parts.append(chunk["text"]) 
-                elif hasattr(item, "text"):
-                    parts.append(item.text)
-            if parts:
-                return "".join(parts)
-        return str(resp)
-    except Exception as e:
-        return f"[error] {e}"
+        resp = _retry(_call)
+        text = _extract_text(resp).strip()
+        latency = round(time.time() - start, 3)
+        return text or f"[empty-response] {latency}s"
+    except Exception as exc:
+        return f"[error] {type(exc).__name__}: {exc}"
 
 
-def chat(messages: List[Dict[str, str]], model: str = "gpt-4o-mini") -> str:
-    """Simple chat wrapper. `messages` is a list of {"role": "user|assistant|system", "content": "..."}
-    """
+def chat(messages: List[Dict[str, str]], model: str = DEFAULT_MODEL) -> str:
+    """Chat helper that accepts OpenAI Responses API style message list."""
+
+    if not isinstance(messages, list):
+        raise ValueError("messages must be a list of chat dicts")
+
     if _client is None:
         joined = "\n".join(m.get("content", "") for m in messages)
-        return f"[mock-chat] {joined[:300]}"
+        return _mock_text(joined)
 
     try:
-        # Responses API accepts input as list of messages or string depending on SDK version
-        resp = _client.responses.create(model=model, input=messages)
-        return getattr(resp, "output_text", str(resp))
-    except Exception as e:
-        return f"[error] {e}"
+        resp = _retry(lambda: _client.responses.create(model=model, input=messages))
+        return _extract_text(resp)
+    except Exception as exc:
+        return f"[error] {exc}"
 
 
-def stream_text(prompt: str, model: str = "gpt-4o-mini") -> Generator[str, None, None]:
-    """Yield text deltas. If OpenAI client not available, yield a mock stream.
-    """
+def generate_json(prompt: str, schema_hint: str = "", model: str = DEFAULT_MODEL) -> str:
+    """Request JSON payloads by augmenting the prompt."""
+
+    full_prompt = f"{prompt}\nReturn ONLY valid JSON.\n{schema_hint}".strip()
+    return generate_text(full_prompt, model=model)
+
+
+def stream_text(prompt: str, model: str = DEFAULT_MODEL) -> Generator[str, None, None]:
+    """Yield streamed chunks; mock mode emits deterministic fragments."""
+
     if _client is None:
-        for i in range(1, 4):
-            yield f"[mock chunk {i}] " + prompt[:50]
+        for idx in range(1, 4):
+            yield f"[mock chunk {idx}] {prompt[:50]}"
             time.sleep(0.05)
         return
 
     try:
-        # Some SDKs support streaming via `stream=True` or via an `iter` result.
-        # We'll attempt a best-effort streaming call and fall back to a single response.
         stream = _client.responses.stream(model=model, input=prompt)
         for event in stream:
-            # event may be bytes or dict-like
-            text = None
-            if hasattr(event, "get"):
-                text = event.get("delta") or event.get("output_text") or event.get("text")
-            else:
-                text = str(event)
-            if text:
-                yield text
-        return
+            delta = getattr(event, "delta", None)
+            if delta:
+                yield str(delta)
     except Exception:
-        # fallback single response
         yield generate_text(prompt, model=model)
+
+
+def agent_call(prompt: str, tools: Optional[List[Dict[str, Any]]] = None, model: str = DEFAULT_MODEL):
+    """Trigger a tool-enabled call; returns raw response for advanced flows."""
+
+    if _client is None:
+        return {"mock": True, "prompt": prompt, "tools": tools}
+
+    return _client.responses.create(model=model, input=prompt, tools=tools or [])

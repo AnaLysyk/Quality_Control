@@ -1,54 +1,104 @@
-import { NextResponse } from "next/server";
-import { listClients } from "@/data/clientsRepository";
+import { NextRequest, NextResponse } from "next/server";
+
+import { listClients, type ClientEntry } from "@/data/clientsRepository";
 import { getAccessContext } from "@/lib/auth/session";
 
-const MOCK_CLIENTS = [
-  { slug: "griaule", name: "Griaule" },
-  { slug: "testing-company", name: "Testing Company" },
-  { slug: "cliente-x", name: "Cliente X" },
+type SummaryStatus = "healthy" | "warning" | "critical" | "unknown";
+type Summary = { score: number; status: SummaryStatus };
+
+const FALLBACK_SUMMARY: Summary = { score: 0, status: "unknown" };
+
+const MOCK_CLIENTS: ClientEntry[] = [
+  { slug: "griaule", name: "Griaule", active: true },
+  { slug: "testing-company", name: "Testing Company", active: true },
+  { slug: "cliente-x", name: "Cliente X", active: true },
 ];
-// Helper to fetch summary for a company
-async function fetchSummary(slug: string) {
+
+function resolveBaseUrl(origin: string) {
+  const envBase = process.env.NEXT_PUBLIC_BASE_URL?.trim();
+  if (envBase) return envBase;
+  return origin;
+}
+
+async function fetchSummary(slug: string, origin: string): Promise<Summary> {
+  const base = resolveBaseUrl(origin);
+  if (!base) return FALLBACK_SUMMARY;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2000);
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/empresas/${slug}/metrics/summary`, { cache: "no-store" });
-    if (!res.ok) return { score: 100, status: "healthy" };
-    const json = await res.json();
-    return { score: typeof json.score === "number" ? json.score : 100, status: json.status || "healthy" };
+    const url = new URL(`/api/empresas/${encodeURIComponent(slug)}/metrics/summary`, base);
+    const res = await fetch(url, {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!res.ok) return FALLBACK_SUMMARY;
+    const json = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+    const score = typeof json?.score === "number" ? json.score : 0;
+    const status = typeof json?.status === "string" ? json.status : "unknown";
+    if (status === "healthy" || status === "warning" || status === "critical") {
+      return { score, status };
+    }
+    return { score, status: "unknown" };
   } catch {
-    return { score: 100, status: "healthy" };
+    return FALLBACK_SUMMARY;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
-export async function GET(req: Request) {
-  // RBAC: only admin
+export async function GET(req: NextRequest) {
   const access = await getAccessContext(req);
-  const role = typeof access?.role === "string" ? access.role.toLowerCase() : "";
-  const isAdmin = Boolean(access?.isGlobalAdmin || role === "admin");
-  if (!isAdmin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!access) {
+    return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
   }
 
-  let clients = [];
+  const role = typeof access.role === "string" ? access.role.toLowerCase() : "";
+  const isAdmin = access.isGlobalAdmin || role === "admin";
+
+  let clients: ClientEntry[] = [];
   try {
     clients = await listClients();
   } catch {
-    // fallback para ambiente de dev/teste
     clients = MOCK_CLIENTS;
   }
-  if (!clients || clients.length === 0) {
+  if (!clients.length) {
     clients = MOCK_CLIENTS;
   }
+
+  const sanitized = clients
+    .filter((client) => typeof client?.slug === "string" && client.slug.trim().length > 0 && client.active !== false)
+    .map((client) => ({
+      slug: client.slug.trim(),
+      name: client.name || "Empresa",
+    }));
+
+  const allowedSlugs = new Set((access.companySlugs ?? []).map((slug) => slug.toLowerCase()));
+  const visibleClients = isAdmin
+    ? sanitized
+    : sanitized.filter((client) => allowedSlugs.has(client.slug.toLowerCase()));
+
+  if (!visibleClients.length) {
+    const res = NextResponse.json({ companies: [] }, { status: 200 });
+    res.headers.set("Cache-Control", "no-store");
+    return res;
+  }
+
+  const origin = req.nextUrl.origin;
   const results = await Promise.all(
-    clients.map(async (c) => {
-      const summary = await fetchSummary(c.slug);
+    visibleClients.map(async (client) => {
+      const summary = await fetchSummary(client.slug, origin);
       return {
-        slug: c.slug,
-        name: c.name,
+        slug: client.slug,
+        name: client.name,
         score: summary.score,
         status: summary.status,
       };
-    })
+    }),
   );
+
   results.sort((a, b) => b.score - a.score);
-  return NextResponse.json({ companies: results }, { status: 200 });
+  const res = NextResponse.json({ companies: results }, { status: 200 });
+  res.headers.set("Cache-Control", "no-store");
+  return res;
 }

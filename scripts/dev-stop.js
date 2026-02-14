@@ -15,6 +15,7 @@ function readPid() {
   }
 }
 
+let stoppedAny = false;
 const pid = readPid();
 if (!pid) {
   console.log("No .dev.pid found (nothing to stop). ");
@@ -22,19 +23,19 @@ if (!pid) {
 }
 
 function tryTaskkill(targetPid) {
-  execFileSync("taskkill", ["/PID", String(targetPid), "/T", "/F"], { stdio: "inherit" });
+  try {
+    execFileSync("taskkill", ["/PID", String(targetPid), "/T", "/F"], { stdio: "inherit" });
+    stoppedAny = true;
+    console.log(`[dev-stop] Killed process ${targetPid}`);
+  } catch {
+    // PID may already be gone; continue with fallback discovery below.
+  }
 }
 
 try {
   if (process.platform === "win32") {
-    try {
-      tryTaskkill(pid);
-    } catch {
-      // PID may already be gone; continue with fallback discovery below.
-    }
-
+    tryTaskkill(pid);
     // Fallback: stop any "next dev" processes for THIS repo.
-    // This covers cases where Next spawns a different PID that actually owns port 3000.
     try {
       const escapedRoot = root.replace(/'/g, "''");
       const cmd = [
@@ -59,18 +60,20 @@ try {
 
       for (const otherPid of pids) {
         if (otherPid === pid) continue;
-        try {
-          tryTaskkill(otherPid);
-        } catch {
-          // ignore
-        }
+        tryTaskkill(otherPid);
       }
     } catch {
       // ignore
     }
   } else {
     // kill the whole process group
-    process.kill(-pid, "SIGTERM");
+    try {
+      process.kill(-pid, "SIGTERM");
+      stoppedAny = true;
+      console.log(`[dev-stop] Sent SIGTERM to process group -${pid}`);
+    } catch {
+      // ignore
+    }
   }
 } catch {
   // ignore
@@ -89,4 +92,10 @@ try {
   // ignore
 }
 
-console.log(`Stopped dev server (pid ${pid}).`);
+if (stoppedAny) {
+  console.log(`Stopped dev server (pid ${pid}).`);
+  process.exit(0);
+} else {
+  console.error(`[dev-stop] Could not stop any process for pid ${pid}. It may already be stopped.`);
+  process.exit(1);
+}

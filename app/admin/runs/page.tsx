@@ -57,8 +57,8 @@ export default function AdminRunsPage() {
     setLoading(true);
     try {
       const [apiRes, manualRes] = await Promise.all([
-        fetch("/api/releases", { cache: "no-store" }),
-        fetch("/api/releases-manual", { cache: "no-store" }),
+        fetch("/api/releases", { cache: "no-store", credentials: "include" }),
+        fetch("/api/releases-manual", { cache: "no-store", credentials: "include" }),
       ]);
 
       const apiJson = await apiRes.json().catch(() => ({}));
@@ -117,7 +117,7 @@ export default function AdminRunsPage() {
     const cleanedTitle = trimmedTitle.replace(/^run\s*/i, "");
 
     if (!cleanedTitle || !trimmedRun || Number.isNaN(runNumber) || runNumber <= 0 || !trimmedApp) {
-      const msg = "Preencha nome, runId (numero) e selecione o projeto.";
+      const msg = "Preencha nome, runId (número) e selecione o projeto.";
       setFeedback(msg);
       setFeedbackType("error");
       setToast({ message: msg, type: "error" });
@@ -135,6 +135,7 @@ export default function AdminRunsPage() {
           summary: summary.trim() || "Run cadastrada pelo painel.",
           radis: trimmedRadis,
         }),
+        credentials: "include",
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -176,6 +177,7 @@ export default function AdminRunsPage() {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ slug }),
+        credentials: "include",
       });
     }
     setItems((prev) => prev.filter((item) => item.slug !== slug));
@@ -312,7 +314,7 @@ export default function AdminRunsPage() {
             <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Runs cadastradas</h2>
             <div className="flex items-center gap-2 text-sm text-(--tc-text-secondary,#4b5563)">
               <label className="flex items-center gap-1">
-                <span className="text-xs">por pagina</span>
+                <span className="text-xs">por página</span>
                 <select
                   value={pageSize}
                   onChange={(e) => {
@@ -345,7 +347,7 @@ export default function AdminRunsPage() {
                 disabled={currentPage >= Math.ceil(sortedItems.length / pageSize)}
                 className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-1 text-xs text-(--page-text,#0b1a3c) hover:bg-(--tc-accent,#ef0001)/8 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Proxima
+                Próxima
               </button>
             </div>
           </div>

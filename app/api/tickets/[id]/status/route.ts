@@ -15,8 +15,14 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 
   const { id } = await context.params;
   const body = await req.json().catch(() => ({}));
-  const nextStatus = typeof body?.status === "string" ? body.status : "";
+  const nextStatus = typeof body?.status === "string" ? body.status.trim().toUpperCase() : "";
   const reason = typeof body?.reason === "string" ? body.reason.trim() : null;
+
+  // Validate nextStatus
+  const allowedStatuses = ["OPEN","IN_PROGRESS","WAITING","RESOLVED","CLOSED","CANCELLED"];
+  if (!allowedStatuses.includes(nextStatus)) {
+    return NextResponse.json({ error: "Status invalido" }, { status: 400 });
+  }
 
   const current = await getTicketById(id);
   if (!current) {

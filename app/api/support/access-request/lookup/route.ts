@@ -86,18 +86,28 @@ export async function GET(req: Request) {
   const parsed = parseAccessRequestMessage(String(match.message ?? ""), String(match.email ?? ""));
   const comments = await listAccessRequestComments(match.id);
 
+  // Normalize status and accessType to enums (uppercase, validated)
+  const validStatuses = ["PENDING","APPROVED","REJECTED","CANCELLED"];
+  const validTypes = ["ACCESS","EMAIL_CHANGE","COMPANY_CHANGE"];
+  const status = (typeof match.status === "string" && validStatuses.includes(match.status.toUpperCase()))
+    ? match.status.toUpperCase()
+    : undefined;
+  const accessType = (typeof parsed.accessType === "string" && validTypes.includes(parsed.accessType.toUpperCase()))
+    ? parsed.accessType.toUpperCase()
+    : undefined;
+
   return NextResponse.json(
     {
       item: {
         id: match.id,
-        status: match.status,
+        status,
         createdAt: normalizeCreatedAt(match.created_at),
         email: parsed.email || match.email,
         name: parsed.name,
         jobRole: parsed.jobRole,
         company: parsed.company,
         clientId: parsed.clientId,
-        accessType: parsed.accessType,
+        accessType,
         notes: parsed.notes,
         adminNotes: extractAdminNotes(String(match.message ?? "")),
       },

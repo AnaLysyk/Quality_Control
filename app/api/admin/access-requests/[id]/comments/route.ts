@@ -7,11 +7,14 @@ import { createAccessRequestComment, listAccessRequestComments } from "@/data/ac
 
 export const runtime = "nodejs";
 
-function sanitizeBody(value: unknown, max = 2000) {
+const MAX_BODY = 2000;
+const MAX_BYTES = 16 * 1024;
+
+function sanitizeBody(value: unknown) {
   if (typeof value !== "string") return "";
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-  return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
+  const clean = value.replace(/\s+/g, " ").trim();
+  if (!clean) return "";
+  return clean.length > MAX_BODY ? clean.slice(0, MAX_BODY) : clean;
 }
 
 async function ensureRequestExists(id: string): Promise<boolean> {
@@ -29,38 +32,68 @@ async function ensureRequestExists(id: string): Promise<boolean> {
   }
 }
 
+function json(data: unknown, init?: ResponseInit) {
+  const res = NextResponse.json(data, init);
+  res.headers.set("Cache-Control", "no-store");
+  return res;
+}
+
+function validateJsonRequest(req: Request) {
+  const contentType = req.headers.get("content-type")?.toLowerCase() ?? "";
+  if (!contentType.includes("application/json")) {
+    throw new Error("UNSUPPORTED_MEDIA");
+  }
+
+  const contentLength = Number(req.headers.get("content-length") ?? "0");
+  if (Number.isFinite(contentLength) && contentLength > MAX_BYTES) {
+    throw new Error("PAYLOAD_TOO_LARGE");
+  }
+}
+
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
   }
 
   const { id } = await context.params;
   try {
     const comments = await listAccessRequestComments(id);
-    return NextResponse.json({ items: comments }, { status: 200 });
+    return json({ items: comments }, { status: 200 });
   } catch (error) {
     console.error("Falha ao carregar comentarios (access-requests):", error);
-    return NextResponse.json({ items: [], error: "Falha ao carregar comentarios" }, { status: 200 });
+    return json({ items: [], degraded: true }, { status: 200 });
   }
 }
 
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+  }
+
+  try {
+    validateJsonRequest(req);
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNSUPPORTED_MEDIA") {
+      return json({ error: "Content-Type invalido" }, { status: 415 });
+    }
+    if (error instanceof Error && error.message === "PAYLOAD_TOO_LARGE") {
+      return json({ error: "Payload muito grande" }, { status: 413 });
+    }
+    return json({ error: "Requisicao invalida" }, { status: 400 });
   }
 
   const { id } = await context.params;
   const body = (await req.json().catch(() => null)) as { body?: string; comment?: string } | null;
-  const comment = sanitizeBody(body?.comment ?? body?.body ?? "");
+  const comment = sanitizeBody(body?.comment ?? body?.body);
   if (!comment) {
-    return NextResponse.json({ error: "Comentario obrigatorio." }, { status: 400 });
+    return json({ error: "Comentario obrigatorio." }, { status: 400 });
   }
 
   const exists = await ensureRequestExists(id);
   if (!exists) {
-    return NextResponse.json({ error: "Solicitacao nao encontrada." }, { status: 404 });
+    return json({ error: "Solicitacao nao encontrada." }, { status: 404 });
   }
 
   const record = await createAccessRequestComment({
@@ -72,5 +105,5 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     body: comment,
   });
 
-  return NextResponse.json({ item: record }, { status: 200 });
+  return json({ item: record }, { status: 201 });
 }

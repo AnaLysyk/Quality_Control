@@ -9,9 +9,9 @@ export default function ToasterProvider() {
       toastOptions={{
         duration: 3500,
         style: {
-          background: "var(--tc-surface-dark, #0f1828)",
-          color: "var(--tc-text-inverse, #fff)",
-          border: "1px solid var(--surface-border, rgba(255,255,255,0.10))",
+          background: "var(--tc-surface-dark)",
+          color: "var(--tc-text-inverse)",
+          border: "1px solid var(--tc-border)",
         },
       }}
     />

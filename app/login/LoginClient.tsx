@@ -83,18 +83,18 @@ export default function LoginClient() {
         styles.loginContainer +
         " " +
         styles.loginFixedTheme +
-        " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-8 sm:px-6 sm:py-10 md:px-10"
+        " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[--tc-primary,#011848] via-[--tc-surface,#f4f6fb] to-[--tc-accent,#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-8 sm:px-6 sm:py-10 md:px-10"
       }
     >
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-6 left-6 w-32 h-32 bg-[#011848] rounded-full opacity-20 blur-2xl animate-ping"></div>
-        <div className="absolute bottom-6 right-6 w-28 h-28 bg-[#ef0001] rounded-full opacity-20 blur-2xl animate-pulse"></div>
-        <div className="absolute top-1/6 right-1/5 w-20 h-20 bg-[#ef0001] rounded-full opacity-10 blur-lg animate-bounce delay-1000"></div>
-        <div className="absolute bottom-1/6 left-1/5 w-24 h-24 bg-[#011848] rounded-full opacity-10 blur-lg animate-pulse delay-700"></div>
-        <div className="absolute top-10 left-44 w-16 h-16 bg-[#ef0001] rounded-full opacity-10 blur animate-pulse delay-500"></div>
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-20 bg-[#011848] rounded-full opacity-10 blur animate-bounce delay-200"></div>
-        <div className="absolute top-1/2 left-2 w-14 h-14 bg-[#ef0001] rounded-full opacity-10 blur animate-pulse delay-800"></div>
-        <div className="absolute top-1/2 right-2 w-14 h-14 bg-[#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
+        <div className="absolute top-6 left-6 w-32 h-32 bg-[--tc-primary,#011848] rounded-full opacity-20 blur-2xl animate-ping"></div>
+        <div className="absolute bottom-6 right-6 w-28 h-28 bg-[--tc-accent,#ef0001] rounded-full opacity-20 blur-2xl animate-pulse"></div>
+        <div className="absolute top-1/6 right-1/5 w-20 h-20 bg-[--tc-accent,#ef0001] rounded-full opacity-10 blur-lg animate-bounce delay-1000"></div>
+        <div className="absolute bottom-1/6 left-1/5 w-24 h-24 bg-[--tc-primary,#011848] rounded-full opacity-10 blur-lg animate-pulse delay-700"></div>
+        <div className="absolute top-10 left-44 w-16 h-16 bg-[--tc-accent,#ef0001] rounded-full opacity-10 blur animate-pulse delay-500"></div>
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-20 bg-[--tc-primary,#011848] rounded-full opacity-10 blur animate-bounce delay-200"></div>
+        <div className="absolute top-1/2 left-2 w-14 h-14 bg-[--tc-accent,#ef0001] rounded-full opacity-10 blur animate-pulse delay-800"></div>
+        <div className="absolute top-1/2 right-2 w-14 h-14 bg-[--tc-primary,#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
       </div>
 
       <div className="max-w-lg w-full space-y-6 sm:space-y-8 relative z-10 sm:max-w-xl md:max-w-2xl">
@@ -102,7 +102,7 @@ export default function LoginClient() {
           <div
             className={`relative mx-auto w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 mb-4 sm:mb-6 ${styles.logoWrapper}`}
           >
-            <div className="absolute inset-0 rounded-full bg-linear-to-r from-[#011848] to-[#ef0001] shadow-lg"></div>
+            <div className="absolute inset-0 rounded-full bg-linear-to-r from-[--tc-primary,#011848] to-[--tc-accent,#ef0001] shadow-lg"></div>
             <div className="absolute inset-1 rounded-full bg-transparent flex items-center justify-center overflow-hidden">
               <div className="relative w-[85%] h-[85%]">
                 <Image
@@ -115,19 +115,19 @@ export default function LoginClient() {
               </div>
             </div>
           </div>
-          <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-bold text-[#011848] mb-2 leading-tight drop-shadow-sm">
+          <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-bold text-[--tc-primary,#011848] mb-2 leading-tight drop-shadow-sm">
             Quality Control
           </h2>
-          <p className="text-[#011848] font-medium drop-shadow-sm">Bem-vindo, entre na sua conta</p>
+          <p className="text-[--tc-primary,#011848] font-medium drop-shadow-sm">Bem-vindo, entre na sua conta</p>
         </div>
 
         <form
-          className="bg-white/90 backdrop-blur-sm p-5 sm:p-8 rounded-2xl shadow-2xl border border-[#011848]/10 w-full max-w-sm sm:max-w-md mx-auto min-w-0"
+          className="bg-[--tc-surface,#fff]/90 backdrop-blur-sm p-5 sm:p-8 rounded-2xl shadow-2xl border border-[--tc-primary,#011848]/10 w-full max-w-sm sm:max-w-md mx-auto min-w-0"
           onSubmit={handleSubmit}
         >
           <div className="space-y-4">
             <div>
-              <label htmlFor="user" className="block text-sm font-medium text-[#011848] mb-1">
+              <label htmlFor="user" className="block text-sm font-medium text-[--tc-primary,#011848] mb-1">
                 Usuario
               </label>
               <input
@@ -135,7 +135,7 @@ export default function LoginClient() {
                 name="user"
                 type="text"
                 required
-                className="form-control-user w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
+                className="form-control-user w-full px-4 py-3 border border-[--tc-primary,#011848]/20 rounded-lg focus:ring-2 focus:ring-[--tc-accent,#ef0001] focus:border-transparent transition-all duration-200 bg-[--tc-surface,#fff] text-[--tc-primary,#011848] placeholder:text-[--tc-text-muted,#9aa3b2] caret-[--tc-accent,#ef0001]"
                 placeholder="usuario"
                 autoComplete="username"
                 value={user}
@@ -144,7 +144,7 @@ export default function LoginClient() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[#011848] mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-[--tc-primary,#011848] mb-1">
                 Senha
               </label>
               <div className="relative">
@@ -153,7 +153,7 @@ export default function LoginClient() {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   required
-                  className="form-control-user w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white pr-11 text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
+                  className="form-control-user w-full px-4 py-3 border border-[--tc-primary,#011848]/20 rounded-lg focus:ring-2 focus:ring-[--tc-accent,#ef0001] focus:border-transparent transition-all duration-200 bg-[--tc-surface,#fff] pr-11 text-[--tc-primary,#011848] placeholder:text-[--tc-text-muted,#9aa3b2] caret-[--tc-accent,#ef0001]"
                   placeholder="********"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -161,7 +161,7 @@ export default function LoginClient() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute inset-y-0 right-3 flex items-center text-[#64748b] hover:text-[#011848]"
+                  className="absolute inset-y-0 right-3 flex items-center text-[--tc-text-muted,#64748b] hover:text-[--tc-primary,#011848]"
                   aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
                 >
                   {showPassword ? <FiEyeOff aria-hidden /> : <FiEye aria-hidden />}
@@ -171,7 +171,7 @@ export default function LoginClient() {
           </div>
 
           {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-center">
+            <div className="mt-4 p-3 bg-[--tc-error-bg,#fef2f2] border border-[--tc-error-border,#fecaca] rounded-lg text-[--tc-error,#b91c1c] text-sm text-center">
               {error}
             </div>
           )}
@@ -179,11 +179,11 @@ export default function LoginClient() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-6 w-full bg-linear-to-r from-[#011848] to-[#ef0001] text-white py-3 px-4 rounded-lg font-medium hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:ring-2 focus:ring-[#ef0001] focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-6 w-full bg-linear-to-r from-[--tc-primary,#011848] to-[--tc-accent,#ef0001] text-[--tc-on-accent,#fff] py-3 px-4 rounded-lg font-medium hover:from-[--tc-primary,#011848]/90 hover:to-[--tc-accent,#ef0001]/90 focus:ring-2 focus:ring-[--tc-accent,#ef0001] focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <div className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-[--tc-on-accent,#fff]" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path
                     className="opacity-75"
@@ -198,17 +198,17 @@ export default function LoginClient() {
             )}
           </button>
 
-          <div className="mt-6 text-sm text-[#4b5563]">
+          <div className="mt-6 text-sm text-[--tc-text,#4b5563]">
             <div className="flex flex-col items-center gap-2">
-              <Link href="/login/forgot-password" className="font-semibold text-[#011848]/90 hover:text-[#011848]">
+              <Link href="/login/forgot-password" className="font-semibold text-[--tc-primary,#011848]/90 hover:text-[--tc-primary,#011848]">
                 Esqueci minha senha
               </Link>
-              <div className="flex w-full items-center gap-3 text-xs uppercase tracking-[0.4em] text-[#c1c5d1]">
-                <span className="flex-1 h-px bg-linear-to-r from-[#E5E7EB]/0 via-[#E5E7EB] to-[#E5E7EB]/0" />
-                <span className="px-1 text-[10px] tracking-[0.35em] text-[#c1c5d1]">OU</span>
-                <span className="flex-1 h-px bg-linear-to-r from-[#E5E7EB]/0 via-[#E5E7EB] to-[#E5E7EB]/0" />
+              <div className="flex w-full items-center gap-3 text-xs uppercase tracking-[0.4em] text-[--tc-divider,#c1c5d1]">
+                <span className="flex-1 h-px bg-linear-to-r from-[--tc-divider,#E5E7EB]/0 via-[--tc-divider,#E5E7EB] to-[--tc-divider,#E5E7EB]/0" />
+                <span className="px-1 text-[10px] tracking-[0.35em] text-[--tc-divider,#c1c5d1]">OU</span>
+                <span className="flex-1 h-px bg-linear-to-r from-[--tc-divider,#E5E7EB]/0 via-[--tc-divider,#E5E7EB] to-[--tc-divider,#E5E7EB]/0" />
               </div>
-              <Link href="/login/access-request" className="font-semibold text-[#ef0001] hover:text-[#c70000]">
+              <Link href="/login/access-request" className="font-semibold text-[--tc-accent,#ef0001] hover:text-[--tc-accent-dark,#c70000]">
                 Solicitar acesso
               </Link>
             </div>

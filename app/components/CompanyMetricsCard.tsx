@@ -138,15 +138,15 @@ function MiniStatusBar({ stats }: { stats: Stats }) {
 
   return (
     <div className="w-full">
-      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 border border-(--tc-border)/40">
+      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 border border-[--tc-border]/40">
         <div className="h-full flex">
-          <div className={`h-full ${w(pass)} bg-(--tc-pass,#22c55e)`} />
-          <div className={`h-full ${w(fail)} bg-(--tc-fail,#ef4444)`} />
-          <div className={`h-full ${w(blocked)} bg-(--tc-blocked,#facc15)`} />
-          <div className={`h-full ${w(notRun)} bg-(--tc-notrun,#64748b)`} />
+          <div className={`h-full ${w(pass)} bg-[--tc-pass]`} />
+          <div className={`h-full ${w(fail)} bg-[--tc-fail]`} />
+          <div className={`h-full ${w(blocked)} bg-[--tc-blocked]`} />
+          <div className={`h-full ${w(notRun)} bg-[--tc-notrun]`} />
         </div>
       </div>
-      <div className="mt-2 flex items-center justify-between text-[11px] text-(--tc-text-muted)">
+      <div className="mt-2 flex items-center justify-between text-[11px] text-[--tc-text-muted]">
         <span>Pass {pass}%</span>
         <span>Fail {fail}%</span>
         <span>Blocked {blocked}%</span>
@@ -159,7 +159,7 @@ function MiniStatusBar({ stats }: { stats: Stats }) {
 function Sparkline({ points }: { points: Array<number | null> }) {
   const data = points.filter((p): p is number => typeof p === "number" && Number.isFinite(p));
   if (!data.length) {
-    return <div className="h-10 rounded-xl bg-slate-50 border border-(--tc-border)/40" />;
+    return <div className="h-10 rounded-xl bg-slate-50 border border-[--tc-border]/40" />;
   }
 
   const min = Math.min(...data);
@@ -190,8 +190,8 @@ function Sparkline({ points }: { points: Array<number | null> }) {
     .join(" ");
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="h-10 w-full rounded-xl bg-slate-50 border border-(--tc-border)/40">
-      <path d={path} fill="none" stroke="var(--tc-accent,#ef0001)" strokeWidth="2" />
+    <svg viewBox={`0 0 ${w} ${h}`} className="h-10 w-full rounded-xl bg-slate-50 border border-[--tc-border]/40">
+      <path d={path} fill="none" stroke="var(--tc-accent)" strokeWidth="2" />
     </svg>
   );
 }
@@ -261,14 +261,14 @@ export function CompanyMetricsCard(props: {
   return (
     <div
       className={`rounded-[28px] border bg-white shadow-sm transition ${
-        focused ? "border-(--tc-accent)/50 shadow-[0_18px_40px_rgba(239,0,1,0.12)]" : "border-(--tc-border)/60"
+        focused ? "border-[--tc-accent]/50 shadow-[0_18px_40px_rgba(239,0,1,0.12)]" : "border-[--tc-border]/60"
       }`}
     >
       <div className="p-6 md:p-7 space-y-5">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-[0.28em] text-(--tc-text-muted)">Empresa</p>
-            <h2 className="mt-1 text-xl md:text-2xl font-extrabold text-(--tc-text-primary,#0b1a3c) truncate" title={company.name}>
+            <p className="text-[11px] uppercase tracking-[0.28em] text-[--tc-text-muted]">Empresa</p>
+            <h2 className="mt-1 text-xl md:text-2xl font-extrabold text-[--tc-text-primary] truncate" title={company.name}>
               {company.name}
             </h2>
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -279,7 +279,7 @@ export function CompanyMetricsCard(props: {
               >
                 {tone.label}
               </span>
-              <span className="text-[11px] text-(--tc-text-muted)">Janela: {periodDays}d</span>
+              <span className="text-[11px] text-[--tc-text-muted]">Janela: {periodDays}d</span>
               {company.active === false && (
                 <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-700">
                   Inativa
@@ -290,8 +290,8 @@ export function CompanyMetricsCard(props: {
 
           <div className="shrink-0 flex flex-col items-end gap-2">
             <div className="text-right">
-              <div className="text-[11px] uppercase tracking-[0.24em] text-(--tc-text-muted)">Pass rate</div>
-              <div className="text-3xl font-extrabold text-(--tc-accent,#ef0001)">{passRate == null ? "—" : `${passRate}%`}</div>
+              <div className="text-[11px] uppercase tracking-[0.24em] text-[--tc-text-muted]">Pass rate</div>
+              <div className="text-3xl font-extrabold text-[--tc-accent]">{passRate == null ? "—" : `${passRate}%`}</div>
             </div>
           </div>
         </div>
@@ -303,8 +303,8 @@ export function CompanyMetricsCard(props: {
               onClick={() => onSelectApp(null)}
               className={`rounded-full border px-3 py-1 text-[12px] font-semibold transition ${
                 !activeApp
-                  ? "border-(--tc-accent)/50 bg-(--tc-accent)/10 text-(--tc-accent)"
-                  : "border-(--tc-border)/60 bg-white text-(--tc-text-muted) hover:bg-slate-50"
+                  ? "border-[--tc-accent]/50 bg-[--tc-accent]/10 text-[--tc-accent]"
+                  : "border-[--tc-border]/60 bg-white text-[--tc-text-muted] hover:bg-slate-50"
               }`}
             >
               Todas
@@ -316,8 +316,8 @@ export function CompanyMetricsCard(props: {
                 onClick={() => onSelectApp(app)}
                 className={`rounded-full border px-3 py-1 text-[12px] font-semibold transition ${
                   isActiveApp(app)
-                    ? "border-(--tc-accent)/50 bg-(--tc-accent)/10 text-(--tc-accent)"
-                    : "border-(--tc-border)/60 bg-white text-(--tc-text-muted) hover:bg-slate-50"
+                    ? "border-[--tc-accent]/50 bg-[--tc-accent]/10 text-[--tc-accent]"
+                    : "border-[--tc-border]/60 bg-white text-[--tc-text-muted] hover:bg-slate-50"
                 }`}
               >
                 {app}
@@ -327,27 +327,27 @@ export function CompanyMetricsCard(props: {
         )}
 
         <div className="grid gap-3 md:grid-cols-4">
-          <div className="rounded-2xl border border-(--tc-border)/50 bg-slate-50 p-4">
-            <div className="text-[11px] uppercase tracking-[0.24em] text-(--tc-text-muted)">Runs</div>
-            <div className="mt-1 text-2xl font-extrabold text-(--tc-text-primary,#0b1a3c)">{releases.length}</div>
-            <div className="text-[11px] text-(--tc-text-muted)">no período</div>
+          <div className="rounded-2xl border border-[--tc-border]/50 bg-slate-50 p-4">
+            <div className="text-[11px] uppercase tracking-[0.24em] text-[--tc-text-muted]">Runs</div>
+            <div className="mt-1 text-2xl font-extrabold text-[--tc-text-primary]">{releases.length}</div>
+            <div className="text-[11px] text-[--tc-text-muted]">no período</div>
           </div>
-          <div className="rounded-2xl border border-(--tc-border)/50 bg-slate-50 p-4">
-            <div className="text-[11px] uppercase tracking-[0.24em] text-(--tc-text-muted)">Releases em risco</div>
-            <div className="mt-1 text-2xl font-extrabold text-(--tc-text-primary,#0b1a3c)">{releasesAtRisk}</div>
-            <div className="text-[11px] text-(--tc-text-muted)">gate quebrado</div>
+          <div className="rounded-2xl border border-[--tc-border]/50 bg-slate-50 p-4">
+            <div className="text-[11px] uppercase tracking-[0.24em] text-[--tc-text-muted]">Releases em risco</div>
+            <div className="mt-1 text-2xl font-extrabold text-[--tc-text-primary]">{releasesAtRisk}</div>
+            <div className="text-[11px] text-[--tc-text-muted]">gate quebrado</div>
           </div>
-          <div className="rounded-2xl border border-(--tc-border)/50 bg-slate-50 p-4">
-            <div className="text-[11px] uppercase tracking-[0.24em] text-(--tc-text-muted)">Defeitos abertos</div>
-            <div className="mt-1 text-2xl font-extrabold text-(--tc-text-primary,#0b1a3c)">{openDefects == null ? "—" : openDefects}</div>
-            <div className="text-[11px] text-(--tc-text-muted)">{defects?.loaded ? "Qase" : "carregando…"}</div>
+          <div className="rounded-2xl border border-[--tc-border]/50 bg-slate-50 p-4">
+            <div className="text-[11px] uppercase tracking-[0.24em] text-[--tc-text-muted]">Defeitos abertos</div>
+            <div className="mt-1 text-2xl font-extrabold text-[--tc-text-primary]">{openDefects == null ? "—" : openDefects}</div>
+            <div className="text-[11px] text-[--tc-text-muted]">{defects?.loaded ? "Qase" : "carregando…"}</div>
           </div>
-          <div className="rounded-2xl border border-(--tc-border)/50 bg-slate-50 p-4">
-            <div className="text-[11px] uppercase tracking-[0.24em] text-(--tc-text-muted)">Última execução</div>
-            <div className="mt-1 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) truncate" title={latest?.title ?? latest?.slug ?? ""}>
+          <div className="rounded-2xl border border-[--tc-border]/50 bg-slate-50 p-4">
+            <div className="text-[11px] uppercase tracking-[0.24em] text-[--tc-text-muted]">Última execução</div>
+            <div className="mt-1 text-sm font-semibold text-[--tc-text-primary] truncate" title={latest?.title ?? latest?.slug ?? ""}>
               {latest?.title ?? latest?.slug ?? "—"}
             </div>
-            <div className="text-[11px] text-(--tc-text-muted)">{formatDate(latest?.createdAt)}</div>
+            <div className="text-[11px] text-[--tc-text-muted]">{formatDate(latest?.createdAt)}</div>
           </div>
         </div>
 
@@ -380,19 +380,19 @@ export function CompanyMetricsCard(props: {
             <div className="flex items-center gap-2">
               <Link
                 href={`/empresas/${encodeURIComponent(companySlug)}/home`}
-                className="rounded-xl border border-(--tc-border)/60 bg-white px-4 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-slate-50"
+                className="rounded-xl border border-[--tc-border]/60 bg-white px-4 py-2 text-sm font-semibold text-[--tc-text-primary] hover:bg-slate-50"
               >
                 Abrir empresa
               </Link>
               <Link
                 href={`/empresas/${encodeURIComponent(companySlug)}/releases`}
-                className="rounded-xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white hover:bg-(--tc-accent,#d30001)"
+                className="rounded-xl bg-[--tc-accent] px-4 py-2 text-sm font-semibold text-white hover:bg-[--tc-accent]"
               >
                 Ver releases
               </Link>
             </div>
           ) : (
-            <div className="text-sm text-(--tc-text-muted)">Empresa sem slug</div>
+            <div className="text-sm text-[--tc-text-muted]">Empresa sem slug</div>
           )}
         </div>
       </div>

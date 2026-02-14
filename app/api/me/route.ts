@@ -36,6 +36,8 @@ export async function GET(req: Request) {
   const isGlobalAdmin = access.isGlobalAdmin === true;
   const normalizedRole = (access.role ?? "").toLowerCase();
   const normalizedCompanyRole = (access.companyRole ?? "").toLowerCase();
+  // Precedência de roles: global > company > link
+  // it_dev ⇒ ADMIN? Confirmar regra de produto!
   const hasDeveloperPrivileges = normalizedRole === "it_dev" || normalizedCompanyRole === "it_dev";
   const hasPrivilegedAccess = isGlobalAdmin || hasDeveloperPrivileges;
   const allowedSlugSet = new Set(
@@ -51,47 +53,58 @@ export async function GET(req: Request) {
         return links.some((link) => link.companyId === company.id);
       });
 
+  // O(1) lookup de link por companyId
+  const linkByCompanyId = new Map(links.map((l) => [l.companyId, l]));
+
   const companiesResponse: AuthCompany[] = allowedCompanies.map((company) => {
-    const link = links.find((item) => item.companyId === company.id);
+    const link = linkByCompanyId.get(company.id);
     const rawRole = normalizeLocalRole(link?.role ?? null);
+    // it_dev ⇒ ADMIN? Confirmar regra de produto!
     const role = hasPrivilegedAccess || rawRole === "company_admin" ? "ADMIN" : "USER";
-    const createdAt =
-      (typeof (company as { createdAt?: string | null }).createdAt === "string"
-        ? (company as { createdAt?: string | null }).createdAt
-        : null) ??
-      (typeof (company as { created_at?: string | null }).created_at === "string"
-        ? (company as { created_at?: string | null }).created_at
-        : null);
     return {
       id: company.id,
       name: company.name ?? company.company_name ?? "Empresa",
       slug: company.slug,
       role,
       active: company.active ?? true,
-      createdAt,
+      createdAt: pickCreatedAt(company),
       companyRole: rawRole ?? null,
       capabilities: link?.capabilities ?? undefined,
     };
   });
 
-  return NextResponse.json({
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      phone: user.phone ?? null,
-      role: access.role ?? null,
-      globalRole: access.globalRole ?? null,
-      companyRole: access.companyRole ?? null,
-      capabilities: access.capabilities ?? [],
-      clientId: access.companyId ?? null,
-      clientSlug: access.companySlug ?? null,
-      defaultClientSlug: user.default_company_slug ?? access.companySlug ?? null,
-      clientSlugs: access.companySlugs ?? [],
-      isGlobalAdmin: access.isGlobalAdmin === true,
+  return NextResponse.json(
+    {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone ?? null,
+        role: access.role ?? null,
+        globalRole: access.globalRole ?? null,
+        companyRole: access.companyRole ?? null,
+        capabilities: access.capabilities ?? [],
+        clientId: access.companyId ?? null,
+        clientSlug: access.companySlug ?? null,
+        defaultClientSlug: user.default_company_slug ?? access.companySlug ?? null,
+        clientSlugs: access.companySlugs ?? [],
+        isGlobalAdmin: access.isGlobalAdmin === true,
+      },
+      companies: companiesResponse,
     },
-    companies: companiesResponse,
-  });
+    {
+      status: 200,
+      headers: {
+        "Cache-Control": "private, max-age=20",
+      },
+    },
+  );
+}
+// Helper para unificar acesso a createdAt/created_at
+function pickCreatedAt(c: any): string | null {
+  if (typeof c.createdAt === "string") return c.createdAt;
+  if (typeof c.created_at === "string") return c.created_at;
+  return null;
 }
 
 function sanitizeText(value: unknown, max = 255): string | null {
@@ -104,13 +117,16 @@ function sanitizeText(value: unknown, max = 255): string | null {
 function normalizeEmail(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim().toLowerCase();
-  return trimmed || null;
+  if (!trimmed) return null;
+  // Regex leve para validar formato de email
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return null;
+  return trimmed;
 }
 
 export async function PATCH(req: Request) {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return errorResponse(401, "NO_SESSION", "Nao autorizado");
   }
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
@@ -118,30 +134,31 @@ export async function PATCH(req: Request) {
   const hasEmail = typeof body?.email === "string";
   const hasPhone = typeof body?.phone === "string";
 
-  const name = hasName ? sanitizeText(body?.name, 120) : null;
-  const email = hasEmail ? normalizeEmail(body?.email) : null;
+  // Só passar string ou undefined, nunca null
+  const name = hasName ? sanitizeText(body?.name, 120) || undefined : undefined;
+  const email = hasEmail ? normalizeEmail(body?.email) || undefined : undefined;
   const phone = (() => {
-    if (!hasPhone) return null;
+    if (!hasPhone) return undefined;
     const trimmed = String(body?.phone ?? "").trim();
-    return trimmed ? trimmed : null;
+    return trimmed ? trimmed.slice(0, 30) : undefined;
   })();
 
   if (hasName && !name) {
-    return NextResponse.json({ error: "Nome invalido" }, { status: 400 });
+    return errorResponse(400, "INVALID_NAME", "Nome invalido");
   }
   if (!name && !email && !hasPhone) {
-    return NextResponse.json({ error: "Nenhuma alteracao informada" }, { status: 400 });
+    return errorResponse(400, "NO_CHANGES", "Nenhuma alteracao informada");
   }
 
   const user = await getLocalUserById(access.userId);
   if (!user) {
-    return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+    return errorResponse(404, "USER_NOT_FOUND", "Usuario nao encontrado");
   }
 
   if (email && email !== user.email) {
     const existing = await findLocalUserByEmailOrId(email);
     if (existing && existing.id !== user.id) {
-      return NextResponse.json({ error: "E-mail ja em uso" }, { status: 409 });
+      return errorResponse(409, "EMAIL_IN_USE", "E-mail ja em uso");
     }
   }
 
@@ -152,7 +169,7 @@ export async function PATCH(req: Request) {
   });
 
   if (!updated) {
-    return NextResponse.json({ error: "Nao foi possivel atualizar" }, { status: 500 });
+    return errorResponse(500, "UPDATE_FAILED", "Nao foi possivel atualizar");
   }
 
   return NextResponse.json(

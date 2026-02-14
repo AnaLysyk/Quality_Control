@@ -53,13 +53,36 @@ export async function GET(req: Request) {
     if (clientSlug && !allowed.includes(clientSlug)) {
       return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
     }
+    // Default deny: só retorna releases com clientSlug permitido
+    let filtered = clientSlug
+      ? releases.filter((r) => r.clientSlug === clientSlug)
+      : releases.filter((r) => r.clientSlug && allowed.includes(r.clientSlug));
+    if (kindFilter) {
+      filtered = filtered.filter((r) => resolveManualReleaseKind(r) === kindFilter);
+    }
+    const normalized = filtered.map((r) => ({
+      ...r,
+      kind: resolveManualReleaseKind(r),
+      id: r.slug ?? r.id,
+      metrics: {
+        pass: r.stats.pass,
+        fail: r.stats.fail,
+        blocked: r.stats.blocked,
+        not_run: r.stats.notRun,
+        total: r.stats.pass + r.stats.fail + r.stats.blocked + r.stats.notRun,
+        passRate:
+          r.stats.pass + r.stats.fail + r.stats.blocked + r.stats.notRun > 0
+            ? Math.round((r.stats.pass / (r.stats.pass + r.stats.fail + r.stats.blocked + r.stats.notRun)) * 100)
+            : 0,
+      },
+    }));
+    return NextResponse.json(normalized);
   }
-
-  let filtered = clientSlug
-    ? releases.filter((r) => (r.clientSlug ?? null) === clientSlug)
-    : effectiveAuthUser.isGlobalAdmin
-      ? releases
-      : releases.filter((r) => !r.clientSlug || resolveAllowedSlugs(effectiveAuthUser as AuthUser).includes(r.clientSlug));
+  // Admin: pode ver tudo
+  let filtered = releases;
+  if (clientSlug) {
+    filtered = filtered.filter((r) => r.clientSlug === clientSlug);
+  }
   if (kindFilter) {
     filtered = filtered.filter((r) => resolveManualReleaseKind(r) === kindFilter);
   }
@@ -95,6 +118,9 @@ export async function POST(req: Request) {
     const app = (body.app ?? "").toString().trim() || "SMART";
     const environments = Array.isArray(body.environments) ? body.environments.map((env: unknown) => String(env)) : [];
     const clientSlug = body.clientSlug ? String(body.clientSlug).trim() : null;
+    if (!effectiveAuthUser.isGlobalAdmin && !clientSlug) {
+      return NextResponse.json({ message: "clientSlug obrigatorio" }, { status: 400 });
+    }
     const role = await resolveDefectRole(effectiveAuthUser, clientSlug);
     if (!canCreateManualDefect(role)) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
@@ -113,9 +139,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Nome obrigatorio" }, { status: 400 });
     }
 
+    const releases = await readManualReleases();
+    // Não sobrescrever slug existente
+    const slug = body.slug ? slugifyRelease(body.slug) : slugifyRelease(name);
+    if (releases.some((r) => r.slug === slug)) {
+      return NextResponse.json({ message: "Slug já existe" }, { status: 409 });
+    }
+
     const release: Release = {
       id: crypto.randomUUID(),
-      slug: body.slug ? slugifyRelease(body.slug) : slugifyRelease(name),
+      slug,
       name,
       app,
       kind,
@@ -138,7 +171,6 @@ export async function POST(req: Request) {
       updatedAt: now,
     };
 
-    const releases = await readManualReleases();
     const filtered = releases.filter((r) => r.slug !== release.slug);
     filtered.unshift(release);
     await writeManualReleases(filtered);

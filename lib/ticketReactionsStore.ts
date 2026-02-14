@@ -6,8 +6,14 @@ import fs from "node:fs/promises";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 
+/**
+ * Tipos de reação possíveis em comentários de ticket.
+ */
 export type TicketReactionType = "like";
 
+/**
+ * Registro de reação em comentário de ticket.
+ */
 export type TicketReactionRecord = {
   id: string;
   ticketId: string;
@@ -95,16 +101,31 @@ async function writeStore(next: ReactionsStore) {
   }
 }
 
+/**
+ * Lista todas as reações de um ticket.
+ * @param ticketId ID do ticket
+ * @returns Lista de reações
+ */
 export async function listReactionsByTicket(ticketId: string) {
   const store = await readStore();
   return store.items.filter((item) => item.ticketId === ticketId);
 }
 
+/**
+ * Lista todas as reações de um comentário.
+ * @param commentId ID do comentário
+ * @returns Lista de reações
+ */
 export async function listReactionsByComment(commentId: string) {
   const store = await readStore();
   return store.items.filter((item) => item.commentId === commentId);
 }
 
+/**
+ * Adiciona uma reação a um comentário de ticket.
+ * @param input Dados da reação
+ * @returns Objeto com reação criada e flag created
+ */
 export async function addReaction(input: {
   ticketId: string;
   commentId: string;
@@ -129,6 +150,11 @@ export async function addReaction(input: {
   return { reaction, created: true };
 }
 
+/**
+ * Remove uma reação de um comentário de ticket.
+ * @param input Dados da reação a remover
+ * @returns true se removeu, false se não existia
+ */
 export async function removeReaction(input: {
   commentId: string;
   userId: string;

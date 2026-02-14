@@ -1,29 +1,45 @@
+/**
+ * scripts/seed-griaule.ts
+ * Uso: npx tsx scripts/seed-griaule.ts
+ *
+ * - Permite override de dados via variáveis de ambiente
+ * - Adiciona JSDoc e type safety
+ * - Melhora logs de erro e comentários
+ */
+
 import "./loadEnv";
 import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
 import { hashPasswordSha256 } from "../lib/passwordHash";
 
+const prisma = new PrismaClient();
+
 const COMPANY = {
-  name: "Griaule",
-  slug: "griaule",
+  name: process.env.SEED_COMPANY_NAME || "Griaule",
+  slug: process.env.SEED_COMPANY_SLUG || "griaule",
 };
 
 const USERS = {
   admin: {
-    email: "admin@griaule.test",
-    name: "Griaule Admin",
-    role: "admin",
+    email: process.env.SEED_ADMIN_EMAIL || "admin@griaule.test",
+    name: process.env.SEED_ADMIN_NAME || "Griaule Admin",
+    role: "admin" as const,
   },
   user: {
-    email: "user@griaule.test",
-    name: "Griaule User",
-    role: "user",
+    email: process.env.SEED_USER_EMAIL || "user@griaule.test",
+    name: process.env.SEED_USER_NAME || "Griaule User",
+    role: "user" as const,
   },
 };
 
-const PASSWORD = "Griaule@123";
+const PASSWORD = process.env.SEED_PASSWORD || "Griaule@123";
 
+
+/**
+ * Upsert a user by email.
+ * @param email User email
+ * @param name User name
+ * @param passwordHash Hashed password
+ */
 async function upsertUser(email: string, name: string, passwordHash: string) {
   return prisma.user.upsert({
     where: { email },
@@ -32,7 +48,14 @@ async function upsertUser(email: string, name: string, passwordHash: string) {
   });
 }
 
-async function upsertLink(userId: string, companyId: string, role: string) {
+
+/**
+ * Upsert a user-company link with role.
+ * @param userId User ID
+ * @param companyId Company ID
+ * @param role Role string
+ */
+async function upsertLink(userId: string, companyId: string, role: "admin" | "user") {
   return prisma.userCompany.upsert({
     where: { user_id_company_id: { user_id: userId, company_id: companyId } },
     update: { role },
@@ -40,6 +63,10 @@ async function upsertLink(userId: string, companyId: string, role: string) {
   });
 }
 
+
+/**
+ * Main seeding routine.
+ */
 async function main() {
   const passwordHash = hashPasswordSha256(PASSWORD);
 
@@ -62,11 +89,14 @@ async function main() {
   });
 }
 
+
 main()
   .catch((err) => {
-    console.error("Seed Griaule failed:", err);
+    console.error("Seed Griaule failed:", err instanceof Error ? err.stack || err.message : err);
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await prisma.$disconnect().catch((e) => {
+      console.error("Error disconnecting Prisma:", e);
+    });
   });

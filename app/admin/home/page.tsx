@@ -299,10 +299,10 @@ export default function AdminHomePage() {
   const runStats = selectedRun?.stats ?? { pass: 0, fail: 0, blocked: 0, notRun: 0 };
   const runTotal = Object.values(runStats).reduce((sum, value) => sum + value, 0);
   const runStatEntries = [
-    { id: "pass", label: "Pass", value: runStats.pass, progressClass: styles.progressPass },
-    { id: "fail", label: "Fail", value: runStats.fail, progressClass: styles.progressFail },
-    { id: "blocked", label: "Blocked", value: runStats.blocked, progressClass: styles.progressBlocked },
-    { id: "notRun", label: "Not run", value: runStats.notRun, progressClass: styles.progressNotRun },
+    { id: "pass", label: "Pass", value: runStats.pass, status: "pass" as const },
+    { id: "fail", label: "Fail", value: runStats.fail, status: "fail" as const },
+    { id: "blocked", label: "Blocked", value: runStats.blocked, status: "blocked" as const },
+    { id: "notRun", label: "Not run", value: runStats.notRun, status: "notrun" as const },
   ].filter((entry) => entry.value > 0);
 
   const companyRiskText = selectedCompany?.gate?.status ?? "no_data";
@@ -550,7 +550,8 @@ export default function AdminHomePage() {
                       <span>{entry.value}</span>
                     </div>
                     <progress
-                      className={`${styles.progress} ${entry.progressClass}`}
+                      className={styles.progress}
+                      data-status={entry.status}
                       value={entry.value}
                       max={Math.max(runTotal, 1)}
                       aria-label={`${entry.label} (${entry.value} de ${Math.max(runTotal, 1)})`}

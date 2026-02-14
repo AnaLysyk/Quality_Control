@@ -57,8 +57,8 @@ function asRunId(value: unknown): number | null {
 
 function csvEscape(value: unknown) {
   const s = value === null || value === undefined ? "" : String(value);
-  if (!/[\n\r,\"]/g.test(s)) return s;
-  return `"${s.replace(/\"/g, '""')}"`;
+  if (!/[\n\r,"]/.test(s)) return s;
+  return `"${s.replace(/"/g, '""')}"`;
 }
 
 function toCsv(rows: ExportRow[]) {

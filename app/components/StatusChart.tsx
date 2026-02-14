@@ -31,7 +31,7 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
   const data =
     hasValidData && chartEntries.length
       ? chartEntries
-      : [{ name: "Sem execucoes", value: 1, color: "var(--tc-border,#94a3b8)" }];
+      : [{ name: "Sem execucoes", value: 1, color: "var(--tc-border)" }];
 
   const pct = (value: number) => (total > 0 ? Math.round((value / total) * 100) : 0);
   const passPct = total > 0 ? Math.round((stats.pass / total) * 100) : 0;
@@ -108,7 +108,7 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
                     color: "var(--tc-text-inverse)",
                     fontSize: "14px",
                     padding: "10px 14px",
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+                    boxShadow: "var(--tc-shadow-lg)",
                   }}
                   labelStyle={{ color: "var(--tc-text-inverse)" }}
                   itemStyle={{ color: "var(--tc-text-inverse)" }}
@@ -118,14 +118,14 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
           </ResponsiveContainer>
         </div>
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="flex flex-col items-center justify-center rounded-full bg-white px-5 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.18)] border border-(--tc-border,#e5e7eb) min-w-30 text-(--tc-chart-center,#0b1a3c)">
+          <div className="flex flex-col items-center justify-center rounded-full bg-(--tc-surface) px-5 py-4 shadow-(--tc-shadow-md) border border-(--tc-border) min-w-30 text-(--tc-chart-center)">
             <span className="text-3xl font-extrabold leading-none">
               {hasValidData ? `${passPct}%` : "–"}
             </span>
-            <span className="text-[11px] uppercase tracking-[0.22em] text-[#475569] mt-1">
+            <span className="text-[11px] uppercase tracking-[0.22em] text-(--tc-chart-label) mt-1">
               {hasValidData ? "Pass" : emptyLabel ?? "Sem execucoes"}
             </span>
-            <span className="text-xs text-(--tc-chart-subtext,#475569)">Total {hasValidData ? total : 0}</span>
+            <span className="text-xs text-(--tc-chart-subtext)">Total {hasValidData ? total : 0}</span>
           </div>
         </div>
       </div>
@@ -138,10 +138,10 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
             { name: "Blocked", value: stats.blocked, color: COLORS.blocked },
             { name: "Not Run", value: stats.notRun, color: COLORS.notRun },
           ].map((item) => (
-            <div
-              key={item.name}
-              className="flex items-center gap-3 rounded-xl border border-(--tc-border)/20 bg-(--tc-surface-dark) px-4 py-3 shadow-[0_12px_30px_rgba(0,0,0,0.25)] justify-between"
-            >
+              <div
+                key={item.name}
+                className="flex items-center gap-3 rounded-xl border border-(--tc-border)/20 bg-(--tc-surface-dark) px-4 py-3 shadow-(--tc-shadow-lg) justify-between"
+              >
               <div className="flex items-center gap-2">
                 <span
                   className={`inline-flex h-3.5 w-3.5 rounded-full ring-2 ring-(--tc-primary) legend-dot-${item.name.toLowerCase().replace(/\s+/g, "-")}`}

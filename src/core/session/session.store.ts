@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 
 import { getRedis } from "@/lib/redis";
 import {
+  LocalAuthCompany,
   getLocalUserById,
   listLocalCompanies,
   listLocalLinksForUser,
@@ -43,6 +44,19 @@ const SESSION_COOKIE = "session_id";
 const ACCESS_COOKIE = "access_token";
 const LEGACY_AUTH_COOKIE = "auth_token";
 
+type HeaderStore = Pick<Headers, "get">;
+type CookieStore = {
+  get(name: string): { value: string } | undefined;
+};
+
+function isCompanyActive(company: LocalAuthCompany): boolean {
+  const booleanFlag = company.active !== false;
+  const status = typeof company.status === "string" ? company.status.trim().toLowerCase() : null;
+  if (!booleanFlag) return false;
+  if (!status) return true;
+  return status === "active" || status === "ativa" || status === "ativo";
+}
+
 function readCookieValue(cookieHeader: string, name: string): string | null {
   if (!cookieHeader) return null;
   const cookies = cookieHeader.split(";").map((cookie) => cookie.trim());
@@ -56,13 +70,16 @@ function readCookieValue(cookieHeader: string, name: string): string | null {
   return null;
 }
 
-function extractBearerToken(req: Request): string | null {
-  const authHeader = req.headers.get("authorization");
-  if (authHeader?.toLowerCase().startsWith("bearer ")) {
+function extractBearerTokenFromHeaderValue(authHeader: string | null | undefined): string | null {
+  if (typeof authHeader === "string" && authHeader.toLowerCase().startsWith("bearer ")) {
     const token = authHeader.slice("bearer ".length).trim();
     return token.length ? token : null;
   }
   return null;
+}
+
+function extractBearerToken(req: Request): string | null {
+  return extractBearerTokenFromHeaderValue(req.headers.get("authorization"));
 }
 
 function safeJsonParse<T>(raw: unknown): T | null {
@@ -148,26 +165,50 @@ export async function getSessionPayload(req: Request): Promise<SessionPayload | 
   return null;
 }
 
-export async function getAccessContext(req: Request): Promise<AccessContext | null> {
-  // 1) Resgata o payload da sessao.
-  const session = await getSessionPayload(req);
+function readCookieFromStore(store: CookieStore, name: string): string | null {
+  const value = store.get(name)?.value;
+  return typeof value === "string" ? value : null;
+}
+
+export async function getSessionPayloadFromStores(
+  headerStore: HeaderStore | undefined,
+  cookieStore: CookieStore,
+): Promise<SessionPayload | null> {
+  const bearer = headerStore ? extractBearerTokenFromHeaderValue(headerStore.get("authorization")) : null;
+  const accessCookie = readCookieFromStore(cookieStore, ACCESS_COOKIE);
+  const legacyCookie = readCookieFromStore(cookieStore, LEGACY_AUTH_COOKIE);
+  const token = bearer || accessCookie || legacyCookie;
+  if (token) {
+    const secret = getJwtSecret();
+    if (!secret) {
+      return await readSessionFromRedis(token);
+    }
+    return parseJwtSession(token, secret);
+  }
+
+  const sessionId = readCookieFromStore(cookieStore, SESSION_COOKIE);
+  if (sessionId) {
+    const fromRedis = await readSessionFromRedis(sessionId);
+    if (fromRedis) return fromRedis;
+  }
+
+  return null;
+}
+
+async function resolveAccessContext(session: SessionPayload | null): Promise<AccessContext | null> {
   if (!session) return null;
 
-  // 2) Resolve o userId (pode vir em userId ou sub).
   const userId = session.userId ?? session.id;
   if (!userId) return null;
 
-  // 3) Carrega usuario, vinculos e empresas locais em paralelo.
   const [user, links, companies] = await Promise.all([
     getLocalUserById(userId),
     listLocalLinksForUser(userId),
     listLocalCompanies(),
   ]);
 
-  // 4) Regras de bloqueio basicas.
   if (!user || user.active === false || user.status === "blocked") return null;
 
-  // 5) Resolve papel global e se e admin global.
   const resolvedGlobalRole = normalizeGlobalRole(user.globalRole ?? session.globalRole ?? null);
   const sessionRole = (session.role ?? "").toLowerCase();
   const isGlobalAdmin =
@@ -176,22 +217,20 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     session.isGlobalAdmin === true ||
     sessionRole === "admin";
 
-  // 6) Lista de empresas permitidas (todas para admin global, ou apenas as vinculadas).
   const hasDevRole =
     sessionRole === "it_dev" ||
     normalizeLocalRole(user.role ?? null) === "it_dev" ||
     links.some((link) => normalizeLocalRole(link.role ?? null) === "it_dev");
+  const activeCompanies = companies.filter(isCompanyActive);
   const hasFullCompanyAccess = isGlobalAdmin || hasDevRole;
   const allowedCompanies = hasFullCompanyAccess
-    ? companies
-    : companies.filter((company) => links.some((link) => link.companyId === company.id));
-  // Importante: usuarios sem empresa ainda podem entrar para solicitar acesso.
+    ? activeCompanies
+    : activeCompanies.filter((company) => links.some((link) => link.companyId === company.id));
 
   const companySlugs = allowedCompanies
     .map((company) => company.slug)
     .filter((slug): slug is string => typeof slug === "string" && slug.length > 0);
 
-  // 7) Define empresa primaria com fallback inteligente.
   const primaryCompany =
     allowedCompanies.find((company) => company.id === session.companyId) ??
     allowedCompanies.find((company) => company.slug === session.companySlug) ??
@@ -201,7 +240,6 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
 
   const primaryLink = primaryCompany ? links.find((link) => link.companyId === primaryCompany.id) ?? null : null;
 
-  // 8) Resolve papel de empresa e capacidades efetivas.
   const rawRole = session.companyRole ?? primaryLink?.role ?? user.role ?? null;
   const companyRole = normalizeLocalRole(rawRole);
   const capabilities = resolveCapabilities({
@@ -218,7 +256,6 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
   });
   const effectiveRole = toLegacyRole(companyRole, isGlobalAdmin);
 
-  // 9) Retorna o contexto final consumido pelo restante do app.
   return {
     userId: user.id,
     email: user.email,
@@ -231,4 +268,17 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     companySlug: session.companySlug ?? primaryCompany?.slug ?? null,
     companySlugs,
   };
+}
+
+export async function getAccessContext(req: Request): Promise<AccessContext | null> {
+  const session = await getSessionPayload(req);
+  return resolveAccessContext(session);
+}
+
+export async function getAccessContextFromStores(
+  headerStore: HeaderStore | undefined,
+  cookieStore: CookieStore,
+): Promise<AccessContext | null> {
+  const session = await getSessionPayloadFromStores(headerStore, cookieStore);
+  return resolveAccessContext(session);
 }

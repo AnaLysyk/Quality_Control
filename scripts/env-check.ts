@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
-function fail(message: string): never {
+function fail(message: string, code = 1): never {
   console.error(message);
-  process.exit(1);
+  process.exit(code);
 }
 
 function loadEnvFile(filePath: string) {
@@ -37,13 +37,20 @@ if (legacy.length) {
   console.warn(
     `ENV_LEGACY_PREFIX_PRESENT: variaveis painelQa_* detectadas no ambiente (ignoradas). Encontradas: ${legacy.join(", ")}`,
   );
+  process.exit(2);
 }
 
-const required = ["DATABASE_URL", "JWT_SECRET"];
+// Permite passar variáveis obrigatórias via argumento: --require VAR1,VAR2
+let required = ["DATABASE_URL", "JWT_SECRET"];
+const reqIdx = process.argv.indexOf("--require");
+if (reqIdx !== -1 && process.argv[reqIdx + 1]) {
+  required = process.argv[reqIdx + 1].split(",").map((s) => s.trim()).filter(Boolean);
+}
 
 const missing = required.filter((k) => !process.env[k] || !String(process.env[k]).trim());
 if (missing.length) {
   fail(`ENV_MISSING_REQUIRED: ${missing.join(", ")}`);
 }
 
-console.log("ENV_OK");
+const loaded = required.filter((k) => process.env[k]);
+console.log(`ENV_OK. Loaded: ${loaded.join(", ")}`);

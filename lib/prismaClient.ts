@@ -1,3 +1,4 @@
+
 // Fallback Prisma client loader.
 // Tenta inicializar o PrismaClient se disponível; caso contrário exporta um proxy
 // que lança um erro claro quando utilizado. Isso permite que builds (ex.: Vercel)

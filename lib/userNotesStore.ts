@@ -89,19 +89,19 @@ async function writeStoreFile(next: NotesStore) {
   }
 }
 
-async function readStoreRedis(userId?: string): Promise<NotesStore | UserNote[] | null> {
+// Simplificado: só retorna UserNote[] | null
+async function readStoreRedis(userId?: string): Promise<UserNote[] | null> {
   const redis = getRedis();
   if (!userId) {
-    // Not used in current code, keep for completeness
-    return {};
+    return [];
   }
   try {
     const key = `${STORE_KEY_PREFIX}:${userId}`;
     const raw = await redis.get<string>(key);
     if (!raw) return [];
     return JSON.parse(raw) as UserNote[];
-    } catch (_err) {
-      const msg = _err instanceof Error ? _err.message : String(_err);
+  } catch (_err) {
+    const msg = _err instanceof Error ? _err.message : String(_err);
     console.warn("[userNotesStore] Redis read failed, falling back to memory:", msg);
     return null;
   }

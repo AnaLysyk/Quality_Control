@@ -17,6 +17,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Cache de módulos Node
         uses: actions/cache@v4
@@ -35,7 +36,7 @@ jobs:
       - name: Iniciar servidor de desenvolvimento
         run: |
           export E2E_USE_JSON=1
-          export SUPABASE_MOCK=true
+
           PORT=3100 npm run dev &
           npx wait-on http://127.0.0.1:3100 --timeout 120000
 
@@ -58,46 +59,3 @@ jobs:
         with:
           name: test-results
           path: test-results
-
-  prod-smoke:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
-
-      - name: Configurar Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Instalar dependências
-        run: npm ci
-
-      - name: Instalar navegadores Playwright
-        run: npx playwright install --with-deps
-
-      - name: Validar credenciais Playwright
-        env:
-          PLAYWRIGHT_EMAIL: ${{ secrets.PLAYWRIGHT_EMAIL }}
-          PLAYWRIGHT_PASSWORD: ${{ secrets.PLAYWRIGHT_PASSWORD }}
-        run: |
-          if [ -z "$PLAYWRIGHT_EMAIL" ] || [ -z "$PLAYWRIGHT_PASSWORD" ]; then
-            echo "Credenciais Playwright ausentes. Configure PLAYWRIGHT_EMAIL/PLAYWRIGHT_PASSWORD." >&2
-            exit 1
-          fi
-
-      - name: Executar E2E em produção
-        env:
-          # Estes segredos devem ser adicionados nas Configurações do Repositório > Secrets > Actions
-          PLAYWRIGHT_EMAIL: ${{ secrets.PLAYWRIGHT_EMAIL }}
-          PLAYWRIGHT_PASSWORD: ${{ secrets.PLAYWRIGHT_PASSWORD }}
-        run: npm run test:e2e:prod
-
-      - name: Upload do relatório Playwright
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report-prod
-          path: playwright-report

@@ -45,10 +45,10 @@ function MenuItem(props: {
         type="button"
         onClick={onClick}
         autoFocus={autoFocus}
-        className="group flex w-full items-start gap-3 px-4 py-2.5 text-left transition-colors hover:bg-(--tc-primary,#4e8df5)/10 dark:hover:bg-(--tc-primary,#4e8df5)/12"
+        className="group flex w-full items-start gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[--tc-primary]/10 dark:hover:bg-[--tc-primary]/12"
       >
         <span
-          className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-primary,#4e8df5)/25 bg-(--tc-primary,#4e8df5)/10 text-(--tc-primary,#4e8df5) group-hover:bg-(--tc-primary,#4e8df5)/16 dark:border-(--tc-primary,#4e8df5)/30"
+          className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[--tc-primary]/25 bg-[--tc-primary]/10 text-[--tc-primary] group-hover:bg-[--tc-primary]/16 dark:border-[--tc-primary]/30"
           aria-hidden
         >
           {icon}
@@ -56,7 +56,7 @@ function MenuItem(props: {
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-medium">{label}</span>
           {hint ? (
-            <span className="block text-xs text-(--tc-text-muted,#64748b) dark:text-(--tc-text-muted,#cbd5e1) truncate">
+            <span className="block text-xs text-[--tc-text-muted] dark:text-[--tc-text-muted] truncate">
               {hint}
             </span>
           ) : null}
@@ -243,9 +243,9 @@ export default function ProfileButton() {
         aria-expanded={open}
         aria-controls={open ? "profile-menu" : undefined}
         onClick={() => setOpen((v) => !v)}
-        className="relative flex h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-(--tc-surface-dark,#0f1828) text-white shadow-[0_10px_22px_rgba(0,0,0,0.28)] transition hover:border-(--tc-primary,#4e8df5) hover:shadow-[0_12px_26px_rgba(78,141,245,0.25)] focus:outline-none focus:ring-2 focus:ring-(--tc-primary,#4e8df5) focus:ring-offset-2 focus:ring-offset-transparent"
+        className="relative flex h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-[--tc-surface-dark] text-white shadow-[0_10px_22px_rgba(0,0,0,0.28)] transition hover:border-[--tc-primary] hover:shadow-[0_12px_26px_rgba(78,141,245,0.25)] focus:outline-none focus:ring-2 focus:ring-[--tc-primary] focus:ring-offset-2 focus:ring-offset-transparent"
       >
-        <div className="relative h-full w-full overflow-hidden rounded-full bg-linear-to-br from-(--tc-primary,#4e8df5) to-(--tc-surface-dark,#0f1828)">
+        <div className="relative h-full w-full overflow-hidden rounded-full bg-linear-to-br from-[--tc-primary] to-[--tc-surface-dark]">
           <span className="flex h-full w-full items-center justify-center text-2xl" aria-hidden>
             {avatarDisplay}
           </span>

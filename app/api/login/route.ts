@@ -4,64 +4,69 @@ import { shouldUseSecureCookies } from "@/lib/auth/cookies";
 export async function POST(request: Request) {
   const secureCookies = shouldUseSecureCookies(request);
   const isProd =
-    process.env.NODE_ENV === "production" || process.env.VERCEL === "1" || typeof process.env.VERCEL_ENV === "string";
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL_ENV === "production";
+
   if (isProd) {
-    const response = NextResponse.json(
+    const r = NextResponse.json(
       { error: "Rota desativada. Use /api/auth/login." },
-      { status: 410 },
+      { status: 410 }
     );
-    response.cookies.set("auth", "", {
+    r.cookies.set("auth", "", {
       httpOnly: true,
       maxAge: 0,
       path: "/",
       sameSite: "lax",
       secure: secureCookies,
     });
-    return response;
+    return r;
   }
 
-  const { user, password } = await request.json();
+  let body: any;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "JSON invalido" }, { status: 400 });
+  }
+
+  const { user, password } = body ?? {};
+
+  if (!user || !password) {
+    const r = NextResponse.json(
+      { error: "Credenciais obrigatórias" },
+      { status: 400 }
+    );
+    r.cookies.set("auth", "", {
+      httpOnly: true,
+      maxAge: 0,
+      path: "/",
+      sameSite: "lax",
+      secure: secureCookies,
+    });
+    return r;
+  }
 
   const adminUser = process.env.ADMIN_USER || "admin";
   const adminPassword = process.env.ADMIN_PASSWORD || "";
 
-  if (!user || !password) {
-    const response = NextResponse.json(
-      { error: "Login e senha são obrigatórios" },
-      { status: 400 }
-    );
-
-    response.cookies.set("auth", "", {
-      httpOnly: true,
-      maxAge: 0,
-      path: "/",
-      sameSite: "lax",
-      secure: secureCookies,
-    });
-
-    return response;
-  }
-
   if (user !== adminUser || password !== adminPassword) {
-    const response = NextResponse.json(
-      { error: "Senha incorreta" },
+    const r = NextResponse.json(
+      { error: "Credenciais inválidas" },
       { status: 401 }
     );
-
-    response.cookies.set("auth", "", {
+    r.cookies.set("auth", "", {
       httpOnly: true,
       maxAge: 0,
       path: "/",
       sameSite: "lax",
       secure: secureCookies,
     });
-
-    return response;
+    return r;
   }
 
-  const response = NextResponse.json({ ok: true });
+  const r = NextResponse.json({ ok: true });
 
-  response.cookies.set("auth", adminUser, {
+  r.cookies.set("auth", adminUser, {
     httpOnly: true,
     maxAge: 60 * 60 * 8, // 8 horas
     path: "/",
@@ -69,5 +74,5 @@ export async function POST(request: Request) {
     secure: secureCookies,
   });
 
-  return response;
+  return r;
 }

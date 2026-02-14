@@ -15,12 +15,12 @@ type ColorOption = {
 };
 
 const NOTE_COLORS: ColorOption[] = [
-  { key: "amber", label: "Amarelo", bg: "#FEF3C7", border: "#FDE68A", text: "#92400E" },
-  { key: "sky", label: "Azul", bg: "#DBEAFE", border: "#BFDBFE", text: "#1E3A8A" },
-  { key: "emerald", label: "Verde", bg: "#DCFCE7", border: "#BBF7D0", text: "#065F46" },
-  { key: "rose", label: "Rosa", bg: "#FCE7F3", border: "#FBCFE8", text: "#9D174D" },
-  { key: "violet", label: "Violeta", bg: "#EDE9FE", border: "#DDD6FE", text: "#5B21B6" },
-  { key: "orange", label: "Laranja", bg: "#FFEDD5", border: "#FED7AA", text: "#9A3412" },
+  { key: "amber", label: "Amarelo", bg: "var(--note-amber-bg)", border: "var(--note-amber-border)", text: "var(--note-amber-text)" },
+  { key: "sky", label: "Azul", bg: "var(--note-sky-bg)", border: "var(--note-sky-border)", text: "var(--note-sky-text)" },
+  { key: "emerald", label: "Verde", bg: "var(--note-emerald-bg)", border: "var(--note-emerald-border)", text: "var(--note-emerald-text)" },
+  { key: "rose", label: "Rosa", bg: "var(--note-rose-bg)", border: "var(--note-rose-border)", text: "var(--note-rose-text)" },
+  { key: "violet", label: "Violeta", bg: "var(--note-violet-bg)", border: "var(--note-violet-border)", text: "var(--note-violet-text)" },
+  { key: "orange", label: "Laranja", bg: "var(--note-orange-bg)", border: "var(--note-orange-border)", text: "var(--note-orange-text)" },
 ];
 
 type NoteItem = {
@@ -289,22 +289,22 @@ export default function NotesButton() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Abrir bloco de notas"
-        className="flex h-11 w-11 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-(--tc-accent,#ef0001)/60 hover:text-(--tc-accent,#ef0001)"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-[--tc-border]/70 bg-[--tc-surface] text-[--tc-text] shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-[--tc-accent]/60 hover:text-[--tc-accent]"
       >
         <FiEdit3 size={18} />
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-[min(28rem,calc(100vw-2rem))] rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_20px_45px_rgba(15,23,42,0.2)]">
-          <div className="flex items-center justify-between gap-3 border-b border-(--tc-border,#e5e7eb) px-4 py-3">
+        <div className="absolute right-0 mt-2 w-[min(28rem,calc(100vw-2rem))] rounded-2xl border border-[--tc-border] bg-[--tc-surface] shadow-[0_20px_45px_rgba(15,23,42,0.2)]">
+          <div className="flex items-center justify-between gap-3 border-b border-[--tc-border] px-4 py-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Bloco de notas</p>
-              <p className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{noteCountLabel}</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-[--tc-text-muted]">Bloco de notas</p>
+              <p className="text-sm font-semibold text-[--tc-text-primary]">{noteCountLabel}</p>
             </div>
             <button
               type="button"
               onClick={startCreate}
-              className="rounded-lg bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white hover:bg-(--tc-accent-hover,#c80001)"
+              className="rounded-lg bg-[--tc-accent] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white hover:bg-[--tc-accent-hover]"
             >
               Criar nota
             </button>
@@ -364,9 +364,9 @@ export default function NotesButton() {
               </div>
             )}
 
-            {loading && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
+            {loading && <p className="text-sm text-[--tc-text-muted]">Carregando...</p>}
             {!loading && notes.length === 0 && (
-              <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma nota criada ainda.</p>
+              <p className="text-sm text-[--tc-text-muted]">Nenhuma nota criada ainda.</p>
             )}
 
             {notes.map((note) => {
@@ -395,7 +395,7 @@ export default function NotesButton() {
                       {isEditing && localDraft ? (
                         <>
                           <input
-                            className="form-control-user w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                            className="form-control-user w-full rounded-lg border border-[--tc-border] bg-[--tc-surface] px-3 py-2 text-sm text-[--tc-text] focus:outline-none focus:ring-2 focus:ring-[--tc-accent]/30"
                             placeholder="Titulo"
                             aria-label="Editar titulo da nota"
                             value={localDraft.title}
@@ -405,7 +405,7 @@ export default function NotesButton() {
                           />
                           <textarea
                             rows={5}
-                            className="form-control-user w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
+                            className="form-control-user w-full rounded-lg border border-[--tc-border] bg-[--tc-surface] px-3 py-2 text-sm text-[--tc-text] focus:outline-none focus:ring-2 focus:ring-[--tc-accent]/30"
                             placeholder="Escreva sua nota..."
                             aria-label="Editar conteudo da nota"
                             value={localDraft.content}
@@ -424,8 +424,7 @@ export default function NotesButton() {
                                     prev ? { ...prev, color: option.key } : prev
                                   )
                                 }
-                                className={`h-7 w-7 rounded-full border note-swatch-${option.key} ${localDraft.color === option.key ? "ring-2 ring-(--tc-accent,#ef0001)/40" : ""}`}
-                                
+                                className={`h-7 w-7 rounded-full border note-swatch-${option.key} ${localDraft.color === option.key ? "ring-2 ring-[--tc-accent]/40" : ""}`}
                               />
                             ))}
                           </div>
@@ -434,21 +433,21 @@ export default function NotesButton() {
                               type="button"
                               onClick={saveDraft}
                               disabled={saving}
-                              className="inline-flex items-center gap-2 rounded-lg bg-(--tc-surface-dark,#0b1a3c) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
+                              className="inline-flex items-center gap-2 rounded-lg bg-[--tc-surface-dark] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
                             >
                               <FiSave size={14} /> {saving ? "Salvando" : "Salvar"}
                             </button>
                             <button
                               type="button"
                               onClick={() => deleteNote(note.id)}
-                              className="inline-flex items-center gap-2 rounded-lg border border-white/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                              className="inline-flex items-center gap-2 rounded-lg border border-[--tc-border] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
                             >
                               <FiTrash2 size={14} /> Excluir
                             </button>
                             <button
                               type="button"
                               onClick={cancelEdit}
-                              className="inline-flex items-center gap-2 rounded-lg border border-white/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                              className="inline-flex items-center gap-2 rounded-lg border border-[--tc-border] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
                             >
                               <FiX size={14} /> Fechar
                             </button>
@@ -456,28 +455,28 @@ export default function NotesButton() {
                         </>
                       ) : (
                         <>
-                          <p className="text-sm whitespace-pre-wrap text-slate-900/90">
+                          <p className="text-sm whitespace-pre-wrap text-[--tc-text]">
                             {note.content || "Sem conteudo."}
                           </p>
                           <div className="flex flex-wrap gap-2">
                             <button
                               type="button"
                               onClick={() => startEdit(note)}
-                              className="inline-flex items-center gap-2 rounded-lg bg-(--tc-surface-dark,#0b1a3c) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
+                              className="inline-flex items-center gap-2 rounded-lg bg-[--tc-surface-dark] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
                             >
                               <FiEdit3 size={14} /> Editar
                             </button>
                             <button
                               type="button"
                               onClick={() => deleteNote(note.id)}
-                              className="inline-flex items-center gap-2 rounded-lg border border-white/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                              className="inline-flex items-center gap-2 rounded-lg border border-[--tc-border] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
                             >
                               <FiTrash2 size={14} /> Excluir
                             </button>
                             <button
                               type="button"
                               onClick={() => setExpandedId(null)}
-                              className="inline-flex items-center gap-2 rounded-lg border border-white/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                              className="inline-flex items-center gap-2 rounded-lg border border-[--tc-border] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
                             >
                               <FiX size={14} /> Fechar
                             </button>
@@ -490,8 +489,8 @@ export default function NotesButton() {
               );
             })}
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            {message && <p className="text-sm text-green-600">{message}</p>}
+            {error && <p className="text-sm text-[--tc-accent]">{error}</p>}
+            {message && <p className="text-sm text-[--success]">{message}</p>}
           </div>
         </div>
       )}

@@ -1,17 +1,23 @@
 import { z } from "zod";
 
+/**
+ * Identificador de login: login, email ou user.
+ */
 const LoginIdentifierSchema = z.string().trim().min(1).max(255);
 
+/**
+ * Schema para requisição de login.
+ */
 export const AuthLoginRequestSchema = z
   .object({
     login: LoginIdentifierSchema.optional(),
-    email: LoginIdentifierSchema.optional(),
+    email: z.string().email().optional(),
     user: LoginIdentifierSchema.optional(),
     password: z.string().min(1).max(128),
   })
   .strip()
   .refine((data) => Boolean(data.login || data.email || data.user), {
-    message: "login identifier is required",
+    message: "Identificador de login é obrigatório",
   })
   .transform((data) => ({
     login: data.login ?? data.email ?? data.user ?? "",
@@ -21,10 +27,13 @@ export const AuthLoginRequestSchema = z
 export type AuthLoginRequestInput = z.input<typeof AuthLoginRequestSchema>;
 export type AuthLoginRequest = z.infer<typeof AuthLoginRequestSchema>;
 
+/**
+ * Usuário da sessão autenticada.
+ */
 export const AuthSessionUserSchema = z
   .object({
     id: z.string().min(1),
-    email: z.string().optional().nullable(),
+    email: z.string().email().optional().nullable(),
     name: z.string().optional().nullable(),
   })
   .strip();
@@ -39,10 +48,13 @@ export const AuthCookieLoginResponseSchema = z
 
 export type AuthCookieLoginResponse = z.infer<typeof AuthCookieLoginResponseSchema>;
 
+/**
+ * Usuário autenticado (completo).
+ */
 export const AuthUserSchema = z
   .object({
     id: z.string().min(1),
-    email: z.string().optional().nullable(),
+    email: z.string().email().optional().nullable(),
     name: z.string().optional().nullable(),
     avatarUrl: z.string().optional().nullable(),
     role: z.string().optional().nullable(),
@@ -54,12 +66,15 @@ export const AuthUserSchema = z
     defaultClientSlug: z.string().optional().nullable(),
     clientSlugs: z.array(z.string().min(1)).optional(),
     isGlobalAdmin: z.boolean().optional(),
-    is_global_admin: z.boolean().optional(),
+    isGlobalAdminLegacy: z.boolean().optional(),
   })
   .passthrough();
 
 export type AuthUser = z.infer<typeof AuthUserSchema>;
 
+/**
+ * Empresa do usuário autenticado.
+ */
 export const AuthCompanySchema = z
   .object({
     id: z.string().min(1),
@@ -75,6 +90,9 @@ export const AuthCompanySchema = z
 
 export type AuthCompany = z.infer<typeof AuthCompanySchema>;
 
+/**
+ * Erro retornado pelo endpoint /me.
+ */
 export const AuthMeErrorSchema = z
   .object({
     code: z.string().trim().min(1).max(64),
@@ -84,6 +102,9 @@ export const AuthMeErrorSchema = z
 
 export type AuthMeError = z.infer<typeof AuthMeErrorSchema>;
 
+/**
+ * Resposta do endpoint /me.
+ */
 export const AuthMeResponseSchema = z
   .object({
     user: AuthUserSchema.nullable(),

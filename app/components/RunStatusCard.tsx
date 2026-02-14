@@ -24,10 +24,10 @@ export default function RunStatusCard({ label, value, percent = 0, tone = "accen
         </div>
         <div className="flex flex-col leading-tight">
           <span className={`text-xs font-semibold uppercase tracking-wide ${styles.label}`}>{label}</span>
-          <span className="text-sm text-(--tc-text-muted,#94a3b8)">{pctLabel}%</span>
+          <span className="text-sm text-[--tc-text-muted]">{pctLabel}%</span>
         </div>
       </div>
-      <div className="text-2xl font-extrabold text-(--tc-text-inverse,#ffffff)">{value}</div>
+      <div className="text-2xl font-extrabold text-[--tc-text-inverse]">{value}</div>
     </div>
   );
 }

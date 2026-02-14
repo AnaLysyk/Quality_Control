@@ -45,16 +45,16 @@ export default function MetricasPage() {
   if (activeClientSlug) return null;
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
+    <div className="min-h-screen bg-[--tc-surface,#fff] text-[--tc-text,#0b1a3c]">
       <div className="mx-auto w-full max-w-3xl px-4 pt-6 sm:px-6 sm:pt-10">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Métricas</h1>
-        <p className="mt-2 text-sm sm:text-base text-(--tc-text-secondary,#4b5563)">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[--tc-text-primary,#0b1a3c]">Métricas</h1>
+        <p className="mt-2 text-sm sm:text-base text-[--tc-text-secondary,#4b5563]">
           Selecione uma empresa para ver as métricas por aplicação.
         </p>
 
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="mt-6 rounded-2xl border border-[--tc-border,#e5e7eb] bg-[--tc-surface,#fff] p-4 shadow-sm">
           {clients.length === 0 ? (
-            <p className="text-sm text-(--tc-text-secondary,#4b5563)">
+            <p className="text-sm text-[--tc-text-secondary,#4b5563]">
               Nenhuma empresa vinculada/selecionável para este usuário.
             </p>
           ) : (
@@ -63,17 +63,17 @@ export default function MetricasPage() {
                 <button
                   key={client.slug}
                   type="button"
-                  className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-left hover:bg-slate-50"
+                  className="flex items-center justify-between rounded-xl border border-[--tc-border,#e5e7eb] px-4 py-3 text-left hover:bg-[--tc-surface-hover,#f8fafc]"
                   onClick={() => {
                     setActiveClientSlug(client.slug);
                     router.push(`/empresas/${encodeURIComponent(client.slug)}/metrics`);
                   }}
                 >
                   <div className="min-w-0">
-                    <div className="font-semibold text-slate-900 truncate">{client.name}</div>
-                    <div className="text-xs text-slate-500 truncate">{client.slug}</div>
+                    <div className="font-semibold text-[--tc-text,#0b1a3c] truncate">{client.name}</div>
+                    <div className="text-xs text-[--tc-text-secondary,#4b5563] truncate">{client.slug}</div>
                   </div>
-                  <div className="text-xs font-semibold text-[#2563eb]">Abrir</div>
+                  <div className="text-xs font-semibold text-[--tc-link,#2563eb]">Abrir</div>
                 </button>
               ))}
             </div>

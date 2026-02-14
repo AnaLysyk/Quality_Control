@@ -1,3 +1,8 @@
+/**
+ * RequireGlobalAdmin: Client-side guard for global admin-only routes.
+ * Redirects to login if not authenticated, or to company home if not admin.
+ * Shows fallback or message if denied.
+ */
 "use client";
 
 import { ReactNode, useEffect } from "react";
@@ -10,6 +15,11 @@ type RequireGlobalAdminProps = {
   fallback?: ReactNode;
 };
 
+/**
+ * Auth guard for global admin routes. Redirects if user is not a global admin.
+ * @param children - Content to render if allowed
+ * @param fallback - Optional fallback while loading or if denied
+ */
 export function RequireGlobalAdmin({ children, fallback }: RequireGlobalAdminProps) {
   const { user, loading } = useAuthUser();
   const router = useRouter();

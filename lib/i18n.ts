@@ -1,14 +1,38 @@
+
+/**
+ * Códigos de idioma suportados.
+ */
 export type Locale = "pt-BR" | "en-US";
+
+/**
+ * Parâmetros para interpolação em traduções.
+ */
 export type TranslateParams = Record<string, string | number>;
+
+/**
+ * Assinatura de função de tradução.
+ */
 export type TranslateFn = (key: string, params?: TranslateParams) => string;
 
+
+/**
+ * Idioma padrão e lista de idiomas suportados.
+ */
 export const DEFAULT_LOCALE: Locale = "pt-BR";
 export const LOCALES: Locale[] = ["pt-BR", "en-US"];
 
+
+/**
+ * Estrutura recursiva para dicionário de traduções.
+ */
 interface Dictionary {
   [key: string]: string | Dictionary;
 }
 
+/**
+ * Dicionário de traduções para cada idioma suportado.
+ * Chaves aninhadas por contexto/tela.
+ */
 const DICTIONARY: Record<Locale, Dictionary> = {
   "pt-BR": {
     nav: {
@@ -308,6 +332,8 @@ const DICTIONARY: Record<Locale, Dictionary> = {
   },
 };
 
+
+// Busca valor aninhado no dicionário a partir de um path (ex: "adminHome.headerTitle")
 function getValue(dictionary: Dictionary, path: string[]) {
   let node: Dictionary | string | undefined = dictionary;
   for (const key of path) {
@@ -317,11 +343,25 @@ function getValue(dictionary: Dictionary, path: string[]) {
   return typeof node === "string" ? node : undefined;
 }
 
+
+/**
+ * Normaliza o código de idioma recebido, retornando sempre um Locale suportado.
+ * @param locale string ou null
+ * @returns Locale válido
+ */
 export function normalizeLocale(locale?: string | null): Locale {
   if (locale && LOCALES.includes(locale as Locale)) return locale as Locale;
   return DEFAULT_LOCALE;
 }
 
+
+/**
+ * Traduz uma chave para o idioma informado, interpolando parâmetros se necessário.
+ * @param locale Idioma alvo
+ * @param key Caminho da chave (ex: "adminHome.headerTitle")
+ * @param params Parâmetros para interpolação (opcional)
+ * @returns String traduzida ou a própria chave se não encontrada
+ */
 export function translate(locale: Locale, key: string, params?: TranslateParams) {
   const dict = DICTIONARY[locale] ?? DICTIONARY[DEFAULT_LOCALE];
   const value = getValue(dict, key.split("."));

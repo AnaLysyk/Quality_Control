@@ -11,10 +11,26 @@ SENSITIVE_TABLES="${SENSITIVE_TABLES:-public.global_admins}"
 SENSITIVE_VIEWS="${SENSITIVE_VIEWS:-}"
 ALLOWED_SECURITY_DEFINER_FUNCTIONS="${ALLOWED_SECURITY_DEFINER_FUNCTIONS:-}"
 
+# Lista de checagens
+CHECKS=(
+  "Views with SECURITY DEFINER"
+  "Sensitive tables without RLS"
+  "Sensitive views accessible by PUBLIC"
+  "SECURITY DEFINER functions allowlist"
+)
+
+OK_COUNT=0
+TOTAL_COUNT=0
+
 run_check() {
   local name="$1"
   local sql="$2"
 
+  if [[ -n "${ONLY_CHECK:-}" && "$name" != "$ONLY_CHECK" ]]; then
+    return
+  fi
+
+  ((TOTAL_COUNT++))
   echo "🔍 ${name}"
 
   local result
@@ -34,7 +50,14 @@ run_check() {
   fi
 
   echo "✅ OK: ${name}"
+  ((OK_COUNT++))
 }
+
+# Permite rodar apenas uma checagem: ./script.sh --only "Sensitive tables without RLS"
+ONLY_CHECK=""
+if [[ "${1:-}" == "--only" && -n "${2:-}" ]]; then
+  ONLY_CHECK="$2"
+fi
 
 run_check "Views with SECURITY DEFINER" "
 SELECT format('%s.%s', n.nspname, c.relname)
@@ -108,5 +131,5 @@ WHERE (
 );
 "
 
-echo "🎉 Security checks passed"
+echo "🎉 Security checks passed: $OK_COUNT/$TOTAL_COUNT"
 exit 0

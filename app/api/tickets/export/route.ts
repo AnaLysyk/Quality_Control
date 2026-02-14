@@ -13,6 +13,19 @@ export async function GET(req: Request) {
   const companyId = user.companyId ?? null;
   const companySlug = user.companySlug ?? null;
 
+  // Audit log
+  const ip_address = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+  const user_agent = req.headers.get("user-agent") || null;
+  console.info("[TICKET_EXPORT]", {
+    userId: user.id,
+    email: user.email,
+    companyId,
+    companySlug,
+    ip_address,
+    user_agent,
+    timestamp: new Date().toISOString(),
+  });
+
   const filter = (item: TicketRecord) => {
     const sameCompany =
       (companyId && item.companyId === companyId) ||

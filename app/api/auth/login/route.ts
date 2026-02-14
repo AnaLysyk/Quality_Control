@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
 
-import { hashPasswordSha256, safeEqualHex } from "@/lib/passwordHash";
+import { verifyPassword } from "@/lib/passwordHash";
 import { shouldUseSecureCookies } from "@/lib/auth/cookies";
 import { createRefreshToken, hashRefreshToken } from "@/lib/auth/refreshToken";
 import { buildLocalSessionForUser } from "@/lib/auth/sessionBuilder";
@@ -10,8 +10,20 @@ import { getRedis } from "@/lib/redis";
 import { findLocalUserByEmailOrId } from "@/lib/auth/localStore";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
 
+type LoginRequest = {
+  login?: string;
+  user?: string;
+  usuario?: string;
+  password?: string;
+  clientSlug?: string;
+  companySlug?: string;
+};
+
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
+const MAX_REQUEST_BYTES = 16 * 1024;
+const MAX_IDENTIFIER_LENGTH = 320;
+const MAX_PASSWORD_LENGTH = 1024;
 
 function readPositiveIntEnv(name: string, fallback: number): number {
   const raw = process.env[name];
@@ -39,24 +51,58 @@ function buildAuthToken(payload: Record<string, unknown>, ttlSeconds: number) {
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json().catch(() => null);
-    const login = typeof body?.login === "string" ? body.login.trim() : "";
-    const userInput = typeof body?.user === "string" ? body.user.trim() : "";
-    const usuarioInput = typeof body?.usuario === "string" ? body.usuario.trim() : "";
-    const password = typeof body?.password === "string" ? body.password : "";
-    const identifier = userInput || usuarioInput || login;
+    const contentType = req.headers.get("content-type")?.toLowerCase() ?? "";
+    if (!contentType.includes("application/json")) {
+      return NextResponse.json({ error: "Content-Type invalido" }, { status: 415 });
+    }
 
-    if (!identifier || !password) {
+    const contentLengthHeader = req.headers.get("content-length");
+    if (contentLengthHeader) {
+      const parsedLength = Number.parseInt(contentLengthHeader, 10);
+      if (Number.isFinite(parsedLength) && parsedLength > MAX_REQUEST_BYTES) {
+        return NextResponse.json({ error: "Payload muito grande" }, { status: 413 });
+      }
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = await req.json();
+    } catch {
+      return NextResponse.json({ error: "JSON invalido" }, { status: 400 });
+    }
+
+    if (!parsed || typeof parsed !== "object") {
+      return NextResponse.json({ error: "Payload invalido" }, { status: 400 });
+    }
+
+    const body = parsed as LoginRequest;
+
+    const login = typeof body.login === "string" ? body.login.trim() : "";
+    const userInput = typeof body.user === "string" ? body.user.trim() : "";
+    const usuarioInput = typeof body.usuario === "string" ? body.usuario.trim() : "";
+    const password = typeof body.password === "string" ? body.password : "";
+    const identifierRaw = userInput || usuarioInput || login || "";
+    const normalizedIdentifier = identifierRaw.includes("@") ? identifierRaw.toLowerCase() : identifierRaw;
+
+    if (!normalizedIdentifier || !password) {
       return NextResponse.json({ error: "Usuario e senha obrigatorios" }, { status: 400 });
     }
 
-    const user = await findLocalUserByEmailOrId(identifier);
+    if (normalizedIdentifier.length > MAX_IDENTIFIER_LENGTH) {
+      return NextResponse.json({ error: "Usuario invalido" }, { status: 400 });
+    }
+
+    if (password.length === 0 || password.length > MAX_PASSWORD_LENGTH) {
+      return NextResponse.json({ error: "Senha invalida" }, { status: 400 });
+    }
+
+    const user = await findLocalUserByEmailOrId(normalizedIdentifier);
     if (!user || user.active === false || user.status === "blocked") {
       return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
     }
 
-    const hashedInput = hashPasswordSha256(password);
-    if (!safeEqualHex(hashedInput, user.password_hash)) {
+    const validPassword = await verifyPassword(password, user.password_hash);
+    if (!validPassword) {
       return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
     }
 
@@ -75,7 +121,8 @@ export async function POST(req: Request) {
 
     const sessionId = randomUUID();
     const redis = getRedis();
-    await redis.set(`session:${sessionId}`, JSON.stringify(built.session), { ex: SESSION_TTL_SECONDS });
+    const sessionTtlSeconds = accessTtlSeconds;
+    await redis.set(`session:${sessionId}`, JSON.stringify(built.session), { ex: sessionTtlSeconds });
 
     const accessToken = buildAuthToken(built.jwt, accessTtlSeconds);
     const tokenToExpose = accessToken ?? sessionId;
@@ -98,7 +145,9 @@ export async function POST(req: Request) {
         expires_in: accessTtlSeconds,
       },
     });
-    setCookie(res, "session_id", sessionId, refreshToken ? accessTtlSeconds : SESSION_TTL_SECONDS, secureCookies);
+    res.headers.set("Cache-Control", "no-store");
+
+    setCookie(res, "session_id", sessionId, sessionTtlSeconds, secureCookies);
     // Sempre expõe um token para manter compatibilidade no middleware.
     setCookie(res, "access_token", tokenToExpose, accessTtlSeconds, secureCookies);
     setCookie(res, "auth_token", tokenToExpose, accessTtlSeconds, secureCookies);
@@ -120,7 +169,7 @@ export async function POST(req: Request) {
         res,
         "active_company_slug",
         built.requestedCompanySlug,
-        refreshToken ? refreshTtlSeconds : SESSION_TTL_SECONDS,
+        refreshToken ? refreshTtlSeconds : sessionTtlSeconds,
         secureCookies,
       );
     } else {

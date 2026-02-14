@@ -1,4 +1,6 @@
 
+
+// Este módulo só deve ser importado em server components ou rotas de API Next.js
 import "server-only";
 
 import { getAccessContext } from "@/lib/auth/session";
@@ -6,6 +8,19 @@ import { findUserByEmailOrId } from "@/lib/simpleAuth";
 import { listLocalCompanies, listLocalLinksForUser, normalizeLocalRole } from "@/lib/auth/localStore";
 import { resolveCapabilities } from "@/lib/permissions";
 
+
+/**
+ * Representa o usuário autenticado e seu contexto de acesso.
+ * - id: identificador único
+ * - email: email do usuário
+ * - isGlobalAdmin: se é admin global
+ * - role: papel efetivo ("admin", "company", "it_dev", "user")
+ * - globalRole: papel global ("global_admin" ou null)
+ * - companyRole: papel na empresa
+ * - capabilities: permissões efetivas
+ * - companyId/companySlug: empresa primária
+ * - companySlugs: todas as empresas permitidas
+ */
 export type AuthUser = {
   id: string;
   email: string;
@@ -19,12 +34,17 @@ export type AuthUser = {
   companySlugs?: string[];
 };
 
+
 /**
- * Auth helper used by API routes.
- * - Prefer access_token (JWT) / session_id / auth_token (legacy) cookies.
- * - Fallback: Authorization Bearer <email|id> or ?user= for local tooling.
+ * Autentica uma requisição de API, retornando o contexto do usuário autenticado.
+ * - Prioriza cookies de sessão/JWT (access_token, session_id, auth_token).
+ * - Fallback: Authorization Bearer <email|id> ou ?user= para ferramentas locais/dev.
+ *
+ * @param req Request (Next.js API Route ou Edge)
+ * @returns AuthUser ou null se não autenticado
  */
 export async function authenticateRequest(req: Request): Promise<AuthUser | null> {
+  // Tenta autenticação padrão (JWT/session/cookie)
   const access = await getAccessContext(req);
   if (access) {
     return {
@@ -41,6 +61,7 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
     };
   }
 
+  // Fallback: Authorization Bearer <email|id> ou ?user= (para ferramentas locais/dev)
   const headerAuth = req.headers.get("authorization");
   let identifier: string | null = null;
   if (headerAuth?.toLowerCase().startsWith("bearer ")) {
@@ -52,10 +73,15 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   }
   if (!identifier) return null;
 
+  // Busca usuário localmente
   const user = await findUserByEmailOrId(identifier);
   if (!user) return null;
 
-  const [links, companies] = await Promise.all([listLocalLinksForUser(user.id), listLocalCompanies()]);
+  // Busca vínculos e empresas permitidas
+  const [links, companies] = await Promise.all([
+    listLocalLinksForUser(user.id),
+    listLocalCompanies(),
+  ]);
   const isGlobalAdmin =
     (user as { is_global_admin?: boolean; globalRole?: string | null }).is_global_admin === true ||
     (user as { globalRole?: string | null }).globalRole === "global_admin";
@@ -91,6 +117,7 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
     membershipCapabilities: primaryLink?.capabilities ?? null,
   });
 
+  // Monta contexto AuthUser
   return {
     id: user.id,
     email: user.email,

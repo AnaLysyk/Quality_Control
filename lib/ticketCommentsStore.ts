@@ -6,6 +6,9 @@ import fs from "node:fs/promises";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 
+/**
+ * Registro de comentário de ticket.
+ */
 export type TicketCommentRecord = {
   id: string;
   ticketId: string;
@@ -100,6 +103,12 @@ function sanitizeBody(value: unknown, max: number) {
   return value.trim().slice(0, max);
 }
 
+/**
+ * Lista comentários de um ticket, ordenados do mais recente para o mais antigo.
+ * @param ticketId ID do ticket
+ * @param opts Limite e offset opcionais
+ * @returns Lista de comentários
+ */
 export async function listTicketComments(ticketId: string, opts?: { limit?: number; offset?: number }) {
   const store = await readStore();
   const limit = Math.max(1, Math.min(200, Number(opts?.limit ?? 100)));
@@ -110,6 +119,11 @@ export async function listTicketComments(ticketId: string, opts?: { limit?: numb
   return items.slice(offset, offset + limit);
 }
 
+/**
+ * Cria um novo comentário para um ticket.
+ * @param input Dados do comentário
+ * @returns Comentário criado ou null
+ */
 export async function createTicketComment(input: {
   ticketId: string;
   authorUserId: string;
@@ -135,6 +149,14 @@ export async function createTicketComment(input: {
   return comment;
 }
 
+/**
+ * Atualiza o corpo de um comentário de ticket.
+ * @param commentId ID do comentário
+ * @param body Novo texto
+ * @param actorUserId Usuário que está editando
+ * @param opts Opções (permitir editar deletado)
+ * @returns Comentário atualizado ou null
+ */
 export async function updateTicketComment(
   commentId: string,
   body: unknown,
@@ -158,6 +180,12 @@ export async function updateTicketComment(
   return updated;
 }
 
+/**
+ * Marca um comentário como deletado (soft delete).
+ * @param commentId ID do comentário
+ * @param _actorUserId Usuário que está deletando (não usado)
+ * @returns Comentário atualizado ou null
+ */
 export async function softDeleteTicketComment(commentId: string, _actorUserId: string) {
   const store = await readStore();
   void _actorUserId;
@@ -175,8 +203,37 @@ export async function softDeleteTicketComment(commentId: string, _actorUserId: s
   return updated;
 }
 
+/**
+ * Busca um comentário pelo ID.
+ * @param commentId ID do comentário
+ * @returns Comentário encontrado ou null
+ */
 export async function findTicketCommentById(commentId: string) {
   const store = await readStore();
   const item = store.items.find((comment) => comment.id === commentId);
   return item ? { ...item } : null;
+}
+
+/**
+ * Busca o comentário mais recente de um usuário em um ticket.
+ * @param ticketId ID do ticket
+ * @param userId ID do usuário
+ * @returns Comentário mais recente ou null
+ */
+export async function getLastCommentByUser(ticketId: string, userId: string) {
+  const store = await readStore();
+  let latest: TicketCommentRecord | null = null;
+  let latestTime = -Infinity;
+  for (const comment of store.items) {
+    if (comment.ticketId !== ticketId) continue;
+    if (comment.authorUserId !== userId) continue;
+    if (comment.deletedAt) continue;
+    const created = Date.parse(comment.createdAt ?? "");
+    if (!Number.isFinite(created)) continue;
+    if (created > latestTime) {
+      latest = comment;
+      latestTime = created;
+    }
+  }
+  return latest ? { ...latest } : null;
 }

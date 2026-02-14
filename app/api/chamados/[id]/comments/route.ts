@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { getTicketById, touchTicket } from "@/lib/ticketsStore";
-import { listTicketComments, createTicketComment } from "@/lib/ticketCommentsStore";
+import { listTicketComments, createTicketComment, getLastCommentByUser } from "@/lib/ticketCommentsStore";
 import { listReactionsByTicket } from "@/lib/ticketReactionsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketCommentAdded } from "@/lib/notificationService";
@@ -14,6 +14,8 @@ function isRateLimited(lastCreatedAt?: string | null) {
   if (!Number.isFinite(last)) return false;
   return Date.now() - last < 4000;
 }
+
+const MAX_COMMENT_LENGTH = 2000;
 
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
@@ -33,33 +35,45 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
   }
 
   const url = new URL(req.url);
-  const limit = Number(url.searchParams.get("limit") ?? 100);
-  const offset = Number(url.searchParams.get("offset") ?? 0);
-  const comments = await listTicketComments(id, { limit, offset });
-  const reactions = await listReactionsByTicket(id);
+  const rawLimit = Number(url.searchParams.get("limit") ?? 100);
+  const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.min(200, Math.floor(rawLimit))) : 100;
+  const rawOffset = Number(url.searchParams.get("offset") ?? 0);
+  const offset = Number.isFinite(rawOffset) ? Math.max(0, Math.floor(rawOffset)) : 0;
 
-  const reactionMap = new Map<string, { like: number; viewerHasLiked: boolean }>();
-  for (const reaction of reactions) {
-    const current = reactionMap.get(reaction.commentId) ?? { like: 0, viewerHasLiked: false };
-    if (reaction.type === "like") {
-      current.like += 1;
-      if (reaction.userId === user.id) {
-        current.viewerHasLiked = true;
+  try {
+    const [comments, reactions] = await Promise.all([
+      listTicketComments(id, { limit, offset }),
+      listReactionsByTicket(id),
+    ]);
+
+    const reactionMap = new Map<string, { like: number; viewerHasLiked: boolean }>();
+    for (const reaction of reactions) {
+      const current = reactionMap.get(reaction.commentId) ?? { like: 0, viewerHasLiked: false };
+      if (reaction.type === "like") {
+        current.like += 1;
+        if (reaction.userId === user.id) {
+          current.viewerHasLiked = true;
+        }
       }
+      reactionMap.set(reaction.commentId, current);
     }
-    reactionMap.set(reaction.commentId, current);
+
+    const items = comments.map((comment) => {
+      const reactionInfo = reactionMap.get(comment.id) ?? { like: 0, viewerHasLiked: false };
+      return {
+        ...comment,
+        reactions: { like: reactionInfo.like },
+        viewerHasLiked: reactionInfo.viewerHasLiked,
+      };
+    });
+
+    const res = NextResponse.json({ items }, { status: 200 });
+    res.headers.set("Cache-Control", "no-store");
+    return res;
+  } catch (err) {
+    console.error("[chamados][comments][GET] falha ao carregar comentarios", err);
+    return NextResponse.json({ error: "Falha ao carregar comentarios" }, { status: 500 });
   }
-
-  const items = comments.map((comment) => {
-    const reactionInfo = reactionMap.get(comment.id) ?? { like: 0, viewerHasLiked: false };
-    return {
-      ...comment,
-      reactions: { like: reactionInfo.like },
-      viewerHasLiked: reactionInfo.viewerHasLiked,
-    };
-  });
-
-  return NextResponse.json({ items }, { status: 200 });
 }
 
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
@@ -79,40 +93,59 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
 
-  const body = await req.json().catch(() => ({}));
-  const recent = await listTicketComments(id, { limit: 5, offset: 0 });
-  const lastMine = recent.find((item) => item.authorUserId === user.id);
+  const contentType = req.headers.get("content-type")?.toLowerCase() ?? "";
+  if (!contentType.includes("application/json")) {
+    return NextResponse.json({ error: "Content-Type invalido" }, { status: 415 });
+  }
+
+  const body = await req.json().catch(() => null);
+  const commentBody = typeof body?.body === "string" ? body.body.trim() : "";
+  if (!commentBody) {
+    return NextResponse.json({ error: "Comentario invalido" }, { status: 400 });
+  }
+  if (commentBody.length > MAX_COMMENT_LENGTH) {
+    return NextResponse.json({ error: "Comentario muito longo" }, { status: 413 });
+  }
+
+  const lastMine = await getLastCommentByUser(id, user.id);
   if (isRateLimited(lastMine?.createdAt)) {
     return NextResponse.json({ error: "Aguarde alguns segundos para comentar novamente." }, { status: 429 });
   }
 
   const localUser = await getLocalUserById(user.id);
-  const comment = await createTicketComment({
-    ticketId: id,
-    authorUserId: user.id,
-    authorName: localUser?.name ?? null,
-    body: body?.body,
-  });
+  try {
+    const comment = await createTicketComment({
+      ticketId: id,
+      authorUserId: user.id,
+      authorName: localUser?.name ?? null,
+      body: commentBody,
+    });
 
-  if (!comment) {
-    return NextResponse.json({ error: "Comentario invalido" }, { status: 400 });
+    if (!comment) {
+      return NextResponse.json({ error: "Comentario invalido" }, { status: 400 });
+    }
+
+    touchTicket(id, user.id).catch(() => null);
+
+    appendTicketEvent({
+      ticketId: id,
+      type: "COMMENT_ADDED",
+      actorUserId: user.id,
+      payload: { commentId: comment.id },
+    }).catch((err) => console.error("Falha ao registrar comentario:", err));
+
+    notifyTicketCommentAdded({
+      ticket,
+      comment,
+      actorId: user.id,
+      actorName: localUser?.name ?? null,
+    }).catch((err) => console.error("Falha ao notificar comentario:", err));
+
+    const res = NextResponse.json({ item: comment }, { status: 201 });
+    res.headers.set("Cache-Control", "no-store");
+    return res;
+  } catch (err) {
+    console.error("[chamados][comments][POST] erro ao criar comentario", err);
+    return NextResponse.json({ error: "Erro ao criar comentario" }, { status: 500 });
   }
-
-  touchTicket(id, user.id).catch(() => null);
-
-  appendTicketEvent({
-    ticketId: id,
-    type: "COMMENT_ADDED",
-    actorUserId: user.id,
-    payload: { commentId: comment.id },
-  }).catch((err) => console.error("Falha ao registrar comentario:", err));
-
-  notifyTicketCommentAdded({
-    ticket,
-    comment,
-    actorId: user.id,
-    actorName: localUser?.name ?? null,
-  }).catch((err) => console.error("Falha ao notificar comentario:", err));
-
-  return NextResponse.json({ item: comment }, { status: 201 });
 }

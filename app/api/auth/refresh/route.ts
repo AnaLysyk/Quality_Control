@@ -58,15 +58,21 @@ export async function POST(req: Request) {
   const cookieHeader = req.headers.get("cookie") ?? "";
   const refreshToken = readCookieValue(cookieHeader, "refresh_token");
   if (!refreshToken) {
-    return NextResponse.json({ error: "Refresh token ausente" }, { status: 401 });
+    return NextResponse.json({ error: "Refresh token invalido" }, { status: 401 });
   }
 
   const redis = getRedis();
   const refreshHash = hashRefreshToken(refreshToken);
   const refreshKey = `refresh:${refreshHash}`;
-  const stored = await redis.get<string>(refreshKey);
+  let stored: string | null = null;
+  try {
+    stored = await redis.get<string>(refreshKey);
+  } catch (err) {
+    console.error("[REFRESH REDIS GET ERROR]", err);
+    return NextResponse.json({ error: "Servico de autenticacao indisponivel" }, { status: 503 });
+  }
   if (!stored) {
-    return NextResponse.json({ error: "Refresh token invalido ou expirado" }, { status: 401 });
+    return NextResponse.json({ error: "Refresh token invalido" }, { status: 401 });
   }
 
   let record: RefreshRecord | null = null;
@@ -78,28 +84,48 @@ export async function POST(req: Request) {
 
   const userId = record && typeof record.userId === "string" ? record.userId : null;
   if (!userId) {
-    await redis.del(refreshKey);
+    try {
+      await redis.del(refreshKey);
+    } catch (err) {
+      console.error("[REFRESH REDIS DEL ERROR]", err);
+    }
     return NextResponse.json({ error: "Refresh token invalido" }, { status: 401 });
   }
 
   const requestedCompanySlug = readCookieValue(cookieHeader, "active_company_slug");
   const built = await buildLocalSessionForUser(userId, { requestedSlug: requestedCompanySlug });
   if (!built) {
-    await redis.del(refreshKey);
-    return NextResponse.json({ error: "Sessao invalida" }, { status: 401 });
+    try {
+      await redis.del(refreshKey);
+    } catch (err) {
+      console.error("[REFRESH REDIS DEL ERROR]", err);
+    }
+    return NextResponse.json({ error: "Refresh token invalido" }, { status: 401 });
   }
 
   // Rotation: invalidate old refresh, create new one.
-  await redis.del(refreshKey);
+  try {
+    await redis.del(refreshKey);
+  } catch (err) {
+    console.error("[REFRESH REDIS DEL ERROR]", err);
+  }
   const nextRefreshToken = createRefreshToken();
   const nextRefreshHash = hashRefreshToken(nextRefreshToken);
-  await redis.set(
-    `refresh:${nextRefreshHash}`,
-    JSON.stringify({ v: 1, userId, createdAt: Date.now() }),
-    { ex: refreshTtlSeconds },
-  );
+  try {
+    await redis.set(
+      `refresh:${nextRefreshHash}`,
+      JSON.stringify({ v: 1, userId, createdAt: Date.now() }),
+      { ex: refreshTtlSeconds },
+    );
+  } catch (err) {
+    console.error("[REFRESH REDIS SET ERROR]", err);
+    return NextResponse.json({ error: "Servico de autenticacao indisponivel" }, { status: 503 });
+  }
 
-  const accessToken = jwt.sign(built.jwt, secret, { expiresIn: `${accessTtlSeconds}s` });
+  const accessToken = jwt.sign(built.jwt, secret, {
+    expiresIn: `${accessTtlSeconds}s`,
+    algorithm: "HS256",
+  });
 
   const secureCookies = shouldUseSecureCookies(req);
   const res = NextResponse.json({
@@ -110,6 +136,8 @@ export async function POST(req: Request) {
       expires_in: accessTtlSeconds,
     },
   });
+
+  res.headers.set("Cache-Control", "no-store");
 
   setCookie(res, "access_token", accessToken, accessTtlSeconds, secureCookies);
   // Legacy alias.

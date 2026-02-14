@@ -22,7 +22,7 @@ export default function AdminSupportPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const handleUnauthorized = useCallback(() => {
-    const msg = "Sessao expirada. Faca login novamente.";
+    const msg = "Sessão expirada. Faça login novamente.";
     setError(msg);
     toast.error(msg);
     router.push("/login");
@@ -41,13 +41,13 @@ export default function AdminSupportPage() {
       }
       if (res.status === 403) {
         setItems([]);
-        setError("Sem permissao");
+        setError("Sem permissão");
         return;
       }
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        setError(body.message || "Erro ao carregar solicitacoes");
+        setError(body.message || "Erro ao carregar solicitações");
         return;
       }
       const body = await res.json();
@@ -75,7 +75,7 @@ export default function AdminSupportPage() {
         return;
       }
       if (res.status === 403) {
-        setError("Sem permissao");
+        setError("Sem permissão");
         return;
       }
 
@@ -101,7 +101,7 @@ export default function AdminSupportPage() {
       <div className="p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold">Solicitacoes de Acesso/Suporte</h1>
+            <h1 className="text-2xl font-semibold">Solicitações de Acesso/Suporte</h1>
             <p className="text-sm text-gray-600">Apenas admins visualizam este painel.</p>
           </div>
           <button
@@ -120,7 +120,7 @@ export default function AdminSupportPage() {
         {loading ? (
           <div className="text-sm text-gray-600">Carregando...</div>
         ) : items.length === 0 ? (
-          <div className="text-sm text-gray-600">Nenhuma solicitacao encontrada.</div>
+          <div className="text-sm text-gray-600">Nenhuma solicitação encontrada.</div>
         ) : (
           <div className="space-y-3">
             {items.map((item) => (

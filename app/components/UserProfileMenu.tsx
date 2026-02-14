@@ -67,7 +67,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
     return (
       <button
         type="button"
-        className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface-dark,#0f1828) px-3 py-2 text-sm text-white hover:bg-(--tc-surface-hover,#111a2a)"
+        className="rounded-full border border-(--tc-border) bg-(--tc-surface-dark) px-3 py-2 text-sm text-white hover:bg-(--tc-surface-hover)"
         onClick={() => router.push("/login")}
       >
         {t("profileMenu.signIn")}
@@ -82,7 +82,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
         aria-label="Menu do usuario"
         aria-haspopup="menu"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center justify-center h-11 w-11 rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface-dark,#0f1828) text-white shadow-[0_8px_20px_rgba(0,0,0,0.2)] hover:border-(--tc-primary,#4e8df5) hover:bg-(--tc-surface-hover,#111a2a) transition-all"
+        className="flex items-center justify-center h-11 w-11 rounded-full border border-(--tc-border)/70 bg-(--tc-surface-dark) text-white shadow-(--tc-shadow-md) hover:border-(--tc-primary) hover:bg-(--tc-surface-hover) transition-all"
       >
         {/* Apenas ícone de perfil */}
         <span className="sr-only">{displayName}</span>
@@ -110,30 +110,30 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-(--tc-border,#e5e7eb)/40 bg-(--tc-surface-dark,#0f1828) text-(--tc-text-inverse,#fff) shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
+          className="absolute right-0 mt-2 w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-(--tc-border)/40 bg-(--tc-surface-dark) text-(--tc-text-inverse) shadow-(--tc-shadow-lg)"
         >
           <div className="px-4 py-3 space-y-1">
             <div className="font-semibold leading-tight">{user?.name ?? t("profileMenu.userFallback")}</div>
             {user?.email ? (
-              <div className="text-xs text-(--tc-text-muted,#cbd5e1) truncate">{user.email}</div>
+              <div className="text-xs text-(--tc-text-muted) truncate">{user.email}</div>
             ) : (
-              <div className="text-xs text-(--tc-text-muted,#cbd5e1)">{t("profileMenu.notAuthenticated")}</div>
+              <div className="text-xs text-(--tc-text-muted)">{t("profileMenu.notAuthenticated")}</div>
             )}
             {activeClientName && (
               <div className="text-sm">
                 {isAdmin && onEditCompany ? (
-                  <button className="text-(--tc-accent,#4f46e5) underline" onClick={onEditCompany}>
+                  <button className="text-(--tc-accent) underline" onClick={onEditCompany}>
                     {activeClientName}
                   </button>
                 ) : (
-                  <span className="text-(--tc-text-muted,#cbd5e1)">{activeClientName}</span>
+                  <span className="text-(--tc-text-muted)">{activeClientName}</span>
                 )}
               </div>
             )}
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="mt-2 text-xs text-(--tc-primary,#4f46e5) hover:underline"
+              className="mt-2 text-xs text-(--tc-primary) hover:underline"
               disabled={uploading || !user}
             >
               {uploading ? t("profileMenu.uploadingPhoto") : t("profileMenu.editPhoto")}
@@ -149,7 +149,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
             />
           </div>
 
-          <div className="border-t border-(--tc-border,#e5e7eb)/40" />
+          <div className="border-t border-(--tc-border)/40" />
 
           <div className="py-2">
             {onOpenTeam && (
@@ -159,7 +159,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
                   setOpen(false);
                   onOpenTeam();
                 }}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-(--tc-surface-hover,#111a2a)"
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-(--tc-surface-hover)"
               >
                 {t("profileMenu.team")}
               </button>
@@ -174,13 +174,13 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
                   router.push("/settings");
                 }
               }}
-              className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-(--tc-surface-hover,#111a2a)"
+              className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-(--tc-surface-hover)"
             >
               {t("profileMenu.settings")}
             </button>
           </div>
 
-          <div className="border-t border-(--tc-border,#e5e7eb)/40" />
+          <div className="border-t border-(--tc-border)/40" />
 
           <button
             role="menuitem"

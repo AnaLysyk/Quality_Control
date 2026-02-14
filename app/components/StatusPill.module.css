@@ -14,18 +14,21 @@
   --pill-color: var(--stat-blocked, #ffa73a);
 }
 
+.pill {
+  --pill-color: var(--tc-accent);
+}
+.pass {
+  --pill-color: var(--tc-success);
+}
+.fail {
+  --pill-color: var(--tc-fail);
+}
+.blocked {
+  --pill-color: var(--tc-warning);
+}
 .notRun {
-  --pill-color: var(--stat-notrun, #94a3b8);
+  --pill-color: var(--tc-text-muted);
 }
-
 .total {
-  --pill-color: #0f172a;
-}
-
-.dot {
-  background-color: var(--pill-color);
-}
-
-.label {
-  color: var(--pill-color);
+  --pill-color: var(--tc-text-inverse);
 }

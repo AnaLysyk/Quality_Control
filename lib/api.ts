@@ -1,10 +1,19 @@
+
+// Utilitários para requisições autenticadas à API
 import { getClientAuthToken } from "@/lib/session/token";
+
+
+// Base da API, removendo barra final se presente
+
 
 const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 const API_BASE = RAW_API_BASE.endsWith("/")
   ? RAW_API_BASE.slice(0, -1)
   : RAW_API_BASE;
 
+/**
+ * Monta a URL absoluta da API a partir do path.
+ */
 export function apiUrl(path: string): string {
   if (!path) return API_BASE;
   if (API_BASE) {
@@ -13,10 +22,19 @@ export function apiUrl(path: string): string {
   return path.startsWith("/") ? path : `/${path}`;
 }
 
+
+
+/**
+ * Obtém o token de acesso do cliente (browser).
+ */
 export async function getAccessToken() {
   return getClientAuthToken();
 }
 
+
+/**
+ * Obtém o token de acesso do lado do servidor (SSR/API).
+ */
 async function getServerAccessToken() {
   try {
     const { cookies }: typeof import("next/headers") = await import("next/headers");
@@ -27,7 +45,11 @@ async function getServerAccessToken() {
   }
 }
 
-// fetch helper que adiciona Authorization: Bearer <jwt> quando disponível
+
+/**
+ * fetchApi: helper que adiciona Authorization: Bearer <jwt> quando disponível.
+ * Faz refresh automático do token no client se necessário.
+ */
 export async function fetchApi(path: string, init: RequestInit = {}) {
   const url = apiUrl(path);
   const headers = new Headers(init.headers as HeadersInit | undefined);
@@ -40,10 +62,10 @@ export async function fetchApi(path: string, init: RequestInit = {}) {
 
   const doFetch = () =>
     fetch(url, {
-    ...init,
-    headers,
-    credentials: init.credentials ?? "include",
-    cache: init.cache ?? "no-store",
+      ...init,
+      headers,
+      credentials: init.credentials ?? "include",
+      cache: init.cache ?? "no-store",
     });
 
   let res = await doFetch();

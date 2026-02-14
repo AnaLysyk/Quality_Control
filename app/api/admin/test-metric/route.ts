@@ -9,6 +9,7 @@ import { buildCompanyRows, buildReleaseWithStats, sumStats, toPercent, type Stat
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const PERIOD_OPTIONS = new Set([7, 30, 90]);
 
 type ClientRow = {
   id: string;
@@ -59,10 +60,10 @@ function mapManualRelease(release: ManualRelease): ReleaseEntry {
     createdAt: release.createdAt,
     clientName: release.clientSlug ?? null,
     manualSummary: {
-      pass: release.stats.pass,
-      fail: release.stats.fail,
-      blocked: release.stats.blocked,
-      notRun: release.stats.notRun,
+      pass: release.stats?.pass ?? 0,
+      fail: release.stats?.fail ?? 0,
+      blocked: release.stats?.blocked ?? 0,
+      notRun: release.stats?.notRun ?? 0,
     },
   };
 }
@@ -77,89 +78,118 @@ export async function GET(req: NextRequest) {
       extra: legacy,
     });
   }
-  const periodParam = Number(req.nextUrl.searchParams.get("period") ?? 30);
-  const period = [7, 30, 90].includes(periodParam) ? periodParam : 30;
+  try {
+    const periodParam = Number(req.nextUrl.searchParams.get("period") ?? 30);
+    const period = PERIOD_OPTIONS.has(periodParam) ? periodParam : 30;
+    const start = Date.now() - period * DAY_MS;
 
-  const [localCompanies, releases, manualReleases] = await Promise.all([
-    listLocalCompanies(),
-    getAllReleases(),
-    getAllManualReleases(),
-  ]);
+    const [localCompanies, releases, manualReleases] = await Promise.all([
+      listLocalCompanies(),
+      getAllReleases(),
+      getAllManualReleases(),
+    ]);
 
-  const clientRows = mapLocalCompanies(localCompanies);
-  const manualReleaseEntries = manualReleases
-    .filter((release) => resolveManualReleaseKind(release) === "run")
-    .map(mapManualRelease);
+    const clientRows = mapLocalCompanies(localCompanies);
+    const manualReleaseEntries = manualReleases
+      .filter((release) => resolveManualReleaseKind(release) === "run")
+      .map(mapManualRelease);
 
-  const enrichedReleases = [...releases, ...manualReleaseEntries].map((release) => buildReleaseWithStats(release));
+    const mergedReleases = [...releases, ...manualReleaseEntries]
+      .map((release) => buildReleaseWithStats(release))
+      .filter((release) => Number.isFinite(release.createdAtValue) && release.createdAtValue >= start);
 
-  const start = Date.now() - period * DAY_MS;
-  const periodReleases = enrichedReleases.filter((release) => release.createdAtValue >= start);
-
-  const coverage = {
-    total: periodReleases.length,
-    withStats: periodReleases.filter((release) => release.stats !== null).length,
-    percent:
-      periodReleases.length > 0
-        ? Math.round((periodReleases.filter((release) => release.stats !== null).length / periodReleases.length) * 100)
-        : 0,
-  };
-
-  const globalStats: Stats = { pass: 0, fail: 0, blocked: 0, notRun: 0 };
-  periodReleases.forEach((release) => {
-    if (release.stats) {
-      globalStats.pass += release.stats.pass;
-      globalStats.fail += release.stats.fail;
-      globalStats.blocked += release.stats.blocked;
-      globalStats.notRun += release.stats.notRun;
+    let releasesWithStats = 0;
+    const globalStats: Stats = { pass: 0, fail: 0, blocked: 0, notRun: 0 };
+    for (const release of mergedReleases) {
+      if (!release.stats) continue;
+      releasesWithStats += 1;
+      globalStats.pass += release.stats.pass ?? 0;
+      globalStats.fail += release.stats.fail ?? 0;
+      globalStats.blocked += release.stats.blocked ?? 0;
+      globalStats.notRun += release.stats.notRun ?? 0;
     }
-  });
 
-  const totalStats = sumStats(globalStats);
-  const globalPassRate = totalStats > 0 ? toPercent(globalStats.pass, totalStats) : null;
+    const coverage = {
+      total: mergedReleases.length,
+      withStats: releasesWithStats,
+      percent: mergedReleases.length ? Math.round((releasesWithStats / mergedReleases.length) * 100) : 0,
+    };
 
-  const companies = buildCompanyRows(normalizeClients(clientRows), periodReleases);
+    const totalStats = sumStats(globalStats);
+    const globalPassRate = totalStats > 0 ? toPercent(globalStats.pass, totalStats) : null;
 
-  const gateCounts = {
-    approved: 0,
-    warning: 0,
-    failed: 0,
-    no_data: 0,
-  };
-  companies.forEach((row) => {
-    gateCounts[row.gate.status] = (gateCounts[row.gate.status] ?? 0) + 1;
-  });
+    const companies = buildCompanyRows(normalizeClients(clientRows), mergedReleases);
 
-  const mapped = companies.map((company) => ({
-    id: company.id,
-    name: company.name ?? "Empresa",
-    slug: company.slug ?? null,
-    status: company.active === false ? "inativo" : "ativo",
-    releases: company.releases?.length ?? 0,
-    approval: company.gate.status,
-    passRate: company.passRate,
-    stats: company.stats,
-    latestRelease: company.latestRelease ?? null,
-  }));
+    const gateCounts = {
+      approved: 0,
+      warning: 0,
+      failed: 0,
+      no_data: 0,
+    };
 
-  const payload = {
-    totals: {
-      approved: gateCounts.approved,
-      failed: gateCounts.failed,
-      neutral: gateCounts.warning + gateCounts.no_data,
-      quality: globalPassRate ?? 0,
-      pass: globalStats.pass,
-      fail: globalStats.fail,
-      blocked: globalStats.blocked,
-      notRun: globalStats.notRun,
-      total: totalStats,
-    },
-    clients: mapped,
-    period,
-    coverage,
-    releaseCount: periodReleases.length,
-    gateCounts,
-  };
+    for (const row of companies) {
+      gateCounts[row.gate.status] = (gateCounts[row.gate.status] ?? 0) + 1;
+    }
 
-  return apiOk(req, payload, "OK", { extra: payload });
+    const mapped = companies.map((company) => ({
+      id: company.id,
+      name: company.name ?? "Empresa",
+      slug: company.slug ?? null,
+      status: company.active === false ? "inativo" : "ativo",
+      releases: company.releases?.length ?? 0,
+      approval: company.gate.status,
+      passRate: company.passRate,
+      stats: company.stats,
+      latestRelease: company.latestRelease ?? null,
+    }));
+
+    const payload = {
+      totals: {
+        approved: gateCounts.approved,
+        failed: gateCounts.failed,
+        neutral: gateCounts.warning + gateCounts.no_data,
+        quality: globalPassRate ?? 0,
+        pass: globalStats.pass,
+        fail: globalStats.fail,
+        blocked: globalStats.blocked,
+        notRun: globalStats.notRun,
+        total: totalStats,
+      },
+      clients: mapped,
+      period,
+      coverage,
+      releaseCount: mergedReleases.length,
+      gateCounts,
+      degraded: false,
+    };
+
+    const response = apiOk(req, payload, "OK", { extra: payload });
+    response.headers.set("Cache-Control", "no-store");
+    return response;
+  } catch (error) {
+    console.error("[ADMIN][TEST-METRIC] Falha ao gerar metricas globais", error);
+    const degradedPayload = {
+      totals: {
+        approved: 0,
+        failed: 0,
+        neutral: 0,
+        quality: 0,
+        pass: 0,
+        fail: 0,
+        blocked: 0,
+        notRun: 0,
+        total: 0,
+      },
+      clients: [],
+      period: null,
+      coverage: { total: 0, withStats: 0, percent: 0 },
+      releaseCount: 0,
+      gateCounts: { approved: 0, warning: 0, failed: 0, no_data: 0 },
+      degraded: true,
+    };
+
+    const response = apiOk(req, degradedPayload, "DEGRADED", { extra: degradedPayload });
+    response.headers.set("Cache-Control", "no-store");
+    return response;
+  }
 }

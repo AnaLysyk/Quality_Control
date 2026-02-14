@@ -1,5 +1,5 @@
-import { JsonDataSource } from "./datasource/JsonDataSource";
-import type { CompanyCreateInput } from "./datasource/DataSource";
+import { JsonDataSource } from "@/services/datasource/JsonDataSource";
+import type { CompanyCreateInput } from "@/services/datasource/DataSource";
 
 export async function listCompanies() {
   return JsonDataSource.companies.list();

@@ -266,38 +266,38 @@ export default function AccessRequestClient() {
     );
 
   const inputBase =
-    "form-control-user w-full rounded-xl border border-[#011848]/15 bg-white px-4 py-3 text-sm text-[#011848] placeholder:text-[#94a3b8] focus:ring-2 focus:ring-[#ef0001]/40 focus:border-[#ef0001]/60 transition-all duration-200";
+    "form-control-user w-full rounded-xl border border-[--tc-border] bg-[--tc-surface] px-4 py-3 text-sm text-[--tc-text] placeholder:text-[--tc-text-muted] focus:ring-2 focus:ring-[--tc-accent]/40 focus:border-[--tc-accent]/60 transition-all duration-200";
 
   const textareaBase =
-    "form-control-user w-full rounded-xl border border-[#011848]/15 bg-white px-4 py-3 text-sm text-[#011848] placeholder:text-[#94a3b8] focus:ring-2 focus:ring-[#ef0001]/40 focus:border-[#ef0001]/60 transition-all duration-200";
+    "form-control-user w-full rounded-xl border border-[--tc-border] bg-[--tc-surface] px-4 py-3 text-sm text-[--tc-text] placeholder:text-[--tc-text-muted] focus:ring-2 focus:ring-[--tc-accent]/40 focus:border-[--tc-accent]/60 transition-all duration-200";
 
-  const labelClass = "space-y-2 text-sm font-semibold text-[#011848]";
+  const labelClass = "space-y-2 text-sm font-semibold text-[--tc-text]";
 
   return (
     <div
       className={
         `${loginStyles.loginContainer} ${loginStyles.loginFixedTheme} min-h-svh flex items-start sm:items-center ` +
-        "justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] " +
+        "justify-start sm:justify-center bg-linear-to-br from-[--tc-surface] via-[--tc-surface-variant] to-[--tc-accent] " +
         "relative overflow-x-hidden overflow-y-auto px-4 py-10 sm:px-6 md:px-10"
       }
     >
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-6 left-6 w-32 h-32 bg-[#011848] rounded-full opacity-20 blur-2xl animate-ping"></div>
-        <div className="absolute bottom-6 right-6 w-28 h-28 bg-[#ef0001] rounded-full opacity-20 blur-2xl animate-pulse"></div>
-        <div className="absolute top-1/6 right-1/5 w-20 h-20 bg-[#ef0001] rounded-full opacity-10 blur-lg animate-bounce delay-1000"></div>
-        <div className="absolute bottom-1/6 left-1/5 w-24 h-24 bg-[#011848] rounded-full opacity-10 blur-lg animate-pulse delay-700"></div>
-        <div className="absolute top-10 left-44 w-16 h-16 bg-[#ef0001] rounded-full opacity-10 blur animate-pulse delay-500"></div>
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-20 bg-[#011848] rounded-full opacity-10 blur animate-bounce delay-200"></div>
-        <div className="absolute top-1/2 left-2 w-14 h-14 bg-[#ef0001] rounded-full opacity-10 blur animate-pulse delay-800"></div>
-        <div className="absolute top-1/2 right-2 w-14 h-14 bg-[#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
+        <div className="absolute top-6 left-6 w-32 h-32 bg-[--tc-surface] rounded-full opacity-20 blur-2xl animate-ping"></div>
+        <div className="absolute bottom-6 right-6 w-28 h-28 bg-[--tc-accent] rounded-full opacity-20 blur-2xl animate-pulse"></div>
+        <div className="absolute top-1/6 right-1/5 w-20 h-20 bg-[--tc-accent] rounded-full opacity-10 blur-lg animate-bounce delay-1000"></div>
+        <div className="absolute bottom-1/6 left-1/5 w-24 h-24 bg-[--tc-surface] rounded-full opacity-10 blur-lg animate-pulse delay-700"></div>
+        <div className="absolute top-10 left-44 w-16 h-16 bg-[--tc-accent] rounded-full opacity-10 blur animate-pulse delay-500"></div>
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-20 bg-[--tc-surface] rounded-full opacity-10 blur animate-bounce delay-200"></div>
+        <div className="absolute top-1/2 left-2 w-14 h-14 bg-[--tc-accent] rounded-full opacity-10 blur animate-pulse delay-800"></div>
+        <div className="absolute top-1/2 right-2 w-14 h-14 bg-[--tc-surface] rounded-full opacity-10 blur animate-ping delay-600"></div>
       </div>
 
       <div className="max-w-3xl w-full space-y-8 relative z-10">
         <div className={`text-center ${styles.introBase} ${styles.introDelay1}`}>
-          <h2 className="mt-5 text-3xl sm:text-4xl font-bold text-[#011848] mb-2 leading-tight drop-shadow-sm">
+          <h2 className="mt-5 text-3xl sm:text-4xl font-bold text-[--tc-text] mb-2 leading-tight drop-shadow-sm">
             Solicitações de acesso
           </h2>
-          <p className="text-[#0b1a3c] font-medium">
+          <p className="text-[--tc-text-muted] font-medium">
             Consulte uma solicitação existente ou envie um novo pedido de acesso ao painel.
           </p>
         </div>
@@ -309,8 +309,8 @@ export default function AccessRequestClient() {
             } ${styles.introDelay2}`}
           >
             <div>
-              <h3 className="text-lg font-semibold text-[#011848]">Consultar solicitação</h3>
-              <p className="text-sm text-[#475569]">
+              <h3 className="text-lg font-semibold text-[--tc-text]">Consultar solicitação</h3>
+              <p className="text-sm text-[--tc-text-muted]">
                 Acompanhe o status e os comentários da sua solicitação em tempo real.
               </p>
             </div>
@@ -334,8 +334,8 @@ export default function AccessRequestClient() {
             } ${styles.introDelay3}`}
           >
             <div>
-              <h3 className="text-lg font-semibold text-[#011848]">Solicitar acesso</h3>
-              <p className="text-sm text-[#475569]">
+              <h3 className="text-lg font-semibold text-[--tc-text]">Solicitar acesso</h3>
+              <p className="text-sm text-[--tc-text-muted]">
                 Envie um novo pedido de acesso e nossa equipe vai orientar o próximo passo.
               </p>
             </div>
@@ -355,8 +355,8 @@ export default function AccessRequestClient() {
           </div>
         </div>
 
-        <div className="text-center text-sm text-[#475569]">
-          <Link href="/login" className="font-semibold text-[#011848]/80 hover:text-[#011848]">
+        <div className="text-center text-sm text-[--tc-text-muted]">
+          <Link href="/login" className="font-semibold text-[--tc-text] hover:text-[--tc-accent]">
             Voltar ao login
           </Link>
         </div>
@@ -381,17 +381,17 @@ export default function AccessRequestClient() {
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 id="request-title" className="text-xl font-semibold text-[#011848]">
+                <h3 id="request-title" className="text-xl font-semibold text-[--tc-text]">
                   Solicitar acesso
                 </h3>
-                <p className="text-sm text-[#475569]">
+                <p className="text-sm text-[--tc-text-muted]">
                   Preencha os dados abaixo para abrir uma nova solicitação.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsRequestOpen(false)}
-                className="rounded-full border border-[#011848]/10 bg-white p-2 text-[#475569] transition hover:text-[#011848]"
+                className="rounded-full border border-[--tc-border] bg-[--tc-surface] p-2 text-[--tc-text-muted] transition hover:text-[--tc-accent]"
                 aria-label="Fechar modal"
               >
                 <span className="text-lg leading-none">×</span>
@@ -400,13 +400,13 @@ export default function AccessRequestClient() {
 
             <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
               {error && (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                <div className="rounded-xl border border-[--tc-error] bg-[--tc-error-bg] px-4 py-3 text-sm text-[--tc-error-text]">
                   {error}
                 </div>
               )}
 
               {success && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="rounded-xl border border-[--tc-success] bg-[--tc-success-bg] px-4 py-3 text-sm text-[--tc-success-text]">
                   {success}
                 </div>
               )}
@@ -472,11 +472,11 @@ export default function AccessRequestClient() {
                 </label>
               </div>
 
-              <div className="space-y-2 text-sm font-semibold text-[#011848]">
-                <div className="flex items-center justify-between">
-                  <span>Tipo de acesso</span>
-                  <span className="text-xs font-medium text-[#6b7280]">Escolha conforme seu papel</span>
-                </div>
+                <div className="space-y-2 text-sm font-semibold text-[--tc-text]">
+                  <div className="flex items-center justify-between">
+                    <span>Tipo de acesso</span>
+                    <span className="text-xs font-medium text-[--tc-text-muted]">Escolha conforme seu papel</span>
+                  </div>
                 <label className="sr-only" htmlFor="access-type-select">
                   Tipo de acesso
                 </label>
@@ -494,7 +494,7 @@ export default function AccessRequestClient() {
                   ))}
                 </select>
                 {currentOption && (
-                  <p className="text-xs font-medium text-[#475569]">{currentOption.description}</p>
+                  <p className="text-xs font-medium text-[--tc-text-muted]">{currentOption.description}</p>
                 )}
               </div>
 
@@ -513,7 +513,7 @@ export default function AccessRequestClient() {
                 type="submit"
                 title="Enviar solicitação"
                 disabled={loading}
-                className="w-full flex items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center rounded-xl bg-linear-to-r from-[--tc-surface] to-[--tc-accent] px-4 py-3 text-sm font-semibold text-white transition hover:from-[--tc-surface]/90 hover:to-[--tc-accent]/90 focus:outline-none focus:ring-2 focus:ring-[--tc-accent]/60 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? "Enviando..." : "Enviar solicitação"}
               </button>
@@ -541,17 +541,17 @@ export default function AccessRequestClient() {
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 id="lookup-title" className="text-xl font-semibold text-[#011848]">
+                <h3 id="lookup-title" className="text-xl font-semibold text-[--tc-text]">
                   Consultar solicitação
                 </h3>
-                <p className="text-sm text-[#475569]">
+                <p className="text-sm text-[--tc-text-muted]">
                   Informe nome e e-mail para ver o andamento e os comentários.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsLookupOpen(false)}
-                className="rounded-full border border-[#011848]/10 bg-white p-2 text-[#475569] transition hover:text-[#011848]"
+                className="rounded-full border border-[--tc-border] bg-[--tc-surface] p-2 text-[--tc-text-muted] transition hover:text-[--tc-accent]"
                 aria-label="Fechar modal"
               >
                 <span className="text-lg leading-none">×</span>
@@ -560,7 +560,7 @@ export default function AccessRequestClient() {
 
             <form className="mt-6 space-y-4" onSubmit={handleLookup}>
               {lookupError && (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                <div className="rounded-xl border border-[--tc-error] bg-[--tc-error-bg] px-4 py-3 text-sm text-[--tc-error-text]">
                   {lookupError}
                 </div>
               )}
@@ -602,11 +602,11 @@ export default function AccessRequestClient() {
             </form>
 
             {lookupItem && (
-              <div className="mt-6 rounded-2xl border border-[#e5e7eb] bg-[#f8fafc] p-5 space-y-4">
+              <div className="mt-6 rounded-2xl border border-[--tc-border] bg-[--tc-surface-variant] p-5 space-y-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-[#011848]">Solicitação encontrada</p>
-                    <p className="text-xs text-[#64748b]">
+                    <p className="text-sm font-semibold text-[--tc-text]">Solicitação encontrada</p>
+                    <p className="text-xs text-[--tc-text-muted]">
                       Criada em {new Date(lookupItem.createdAt).toLocaleString("pt-BR")}
                     </p>
                   </div>
@@ -618,7 +618,7 @@ export default function AccessRequestClient() {
                 </div>
 
                 {showAdminNote && (
-                  <div className="rounded-lg border bg-white px-3 py-2 text-sm text-[#0b1a3c]">
+                  <div className="rounded-lg border bg-[--tc-surface] px-3 py-2 text-sm text-[--tc-text]">
                     <strong>Comentário do admin:</strong> {adminNote}
                   </div>
                 )}

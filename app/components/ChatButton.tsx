@@ -65,11 +65,11 @@ export default function ChatButton() {
       <div className="fixed bottom-6 right-6 z-50">
         <div className="flex items-end">
           {open && (
-            <div className="mr-3 w-88 max-w-[calc(100vw-2rem)] rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_20px_45px_rgba(15,23,42,0.2)]">
-              <div className="flex items-center justify-between gap-3 border-b border-(--tc-border,#e5e7eb) px-4 py-3">
+            <div className="mr-3 w-88 max-w-[calc(100vw-2rem)] rounded-2xl border border-[--tc-border] bg-[--tc-surface] shadow-[0_20px_45px_rgba(15,23,42,0.2)]">
+              <div className="flex items-center justify-between gap-3 border-b border-[--tc-border] px-4 py-3">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Assistente</p>
-                  <p className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Chat de IA</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-[--tc-text-muted]">Assistente</p>
+                  <p className="text-sm font-semibold text-[--tc-text-primary]">Chat de IA</p>
                 </div>
                 <button type="button" onClick={() => setOpen(false)} aria-label="Fechar chat" title="Fechar chat" className="rounded-full p-1">
                   <FiX />
@@ -77,24 +77,24 @@ export default function ChatButton() {
               </div>
 
               <div className="max-h-[45vh] overflow-auto px-3 py-3 space-y-3">
-                {messages.length === 0 && <p className="text-sm text-(--tc-text-muted,#6b7280)">Diga olá ao assistente.</p>}
+                {messages.length === 0 && <p className="text-sm text-[--tc-text-muted]">Diga olá ao assistente.</p>}
                 {messages.map((m) => (
                   <div key={m.id} className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${m.from === "user" ? "bg-(--tc-accent,#ef0001) text-white" : "bg-slate-100 text-slate-800"}`}>
+                    <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${m.from === "user" ? "bg-[--tc-accent] text-white" : "bg-slate-100 text-slate-800"}`}>
                       {m.text}
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="border-t border-(--tc-border,#e5e7eb) px-3 py-2">
+              <div className="border-t border-[--tc-border] px-3 py-2">
                 <div className="flex gap-2">
                   <input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                     placeholder="Escreva uma mensagem..."
-                    className="flex-1 rounded-lg border border-(--tc-border,#e5e7eb) bg-white/80 px-3 py-2 text-sm focus:outline-none"
+                    className="flex-1 rounded-lg border border-[--tc-border] bg-white/80 px-3 py-2 text-sm focus:outline-none"
                   />
                   <button
                     type="button"
@@ -102,7 +102,7 @@ export default function ChatButton() {
                     disabled={sending}
                     aria-label="Enviar mensagem"
                     title="Enviar mensagem"
-                    className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-lg bg-[--tc-accent] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
                   >
                     <FiSend />
                   </button>
@@ -115,7 +115,7 @@ export default function ChatButton() {
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-label="Abrir assistente IA"
-            className="flex h-14 w-14 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/80 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-(--tc-accent,#ef0001)/60 hover:text-(--tc-accent,#ef0001)"
+            className="flex h-14 w-14 items-center justify-center rounded-full border border-[--tc-border]/80 bg-[--tc-surface] text-[--tc-text] shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-[--tc-accent]/60 hover:text-[--tc-accent]"
           >
             <FiZap size={20} />
           </button>

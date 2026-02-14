@@ -23,8 +23,15 @@ export default function DefectList({ companyId, releaseManualId }: { companyId: 
       let url = `/api/defect?companyId=${companyId}`;
       if (releaseManualId) url += `&releaseManualId=${releaseManualId}`;
       const res = await fetch(url);
-      const data = (await res.json()) as Defect[];
-      setDefects(Array.isArray(data) ? data : []);
+      const data = await res.json();
+      const list = Array.isArray(data)
+        ? data
+        : Array.isArray((data as { defects?: unknown })?.defects)
+          ? ((data as { defects: unknown[] }).defects as Defect[])
+          : Array.isArray((data as { data?: unknown })?.data)
+            ? ((data as { data: unknown[] }).data as Defect[])
+            : [];
+      setDefects(list);
     } catch {
       setError("Erro ao buscar defeitos");
     } finally {

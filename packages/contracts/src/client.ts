@@ -1,53 +1,69 @@
 import { z } from "zod";
 
+/**
+ * String opcional, vazia vira undefined.
+ */
 const OptionalStringSchema = z.preprocess((value) => {
   if (typeof value !== "string") return value;
   const trimmed = value.trim();
   return trimmed === "" ? undefined : trimmed;
 }, z.string().min(1));
 
+/**
+ * Aceita string ou array de string, normaliza para array.
+ */
 const OptionalStringOrStringArraySchema = z
   .union([OptionalStringSchema, z.array(z.string().min(1))])
-  .optional();
+  .optional()
+  .transform((val) => {
+    if (Array.isArray(val)) return val;
+    if (typeof val === "string" && val.length > 0) return [val];
+    return [];
+  });
 
+/**
+ * Schema de cliente (camelCase, campos normalizados).
+ */
 export const ClientSchema = z
   .object({
     id: z.string().min(1),
     name: z.string().min(1),
-    company_name: z.string().optional().nullable(),
+    companyName: z.string().optional().nullable(),
     slug: z.string().optional().nullable(),
-    tax_id: z.string().optional().nullable(),
+    taxId: z.string().optional().nullable(),
     address: z.string().optional().nullable(),
     phone: z.string().optional().nullable(),
     website: z.string().optional().nullable(),
-    logo_url: z.string().optional().nullable(),
-    docs_link: z.string().optional().nullable(),
+    logoUrl: z.string().optional().nullable(),
+    docsUrl: z.string().optional().nullable(),
     notes: z.string().optional().nullable(),
     cep: z.string().optional().nullable(),
-    address_detail: z.string().optional().nullable(),
-    linkedin_url: z.string().optional().nullable(),
-    qase_project_code: z.string().optional().nullable(),
-    qase_project_codes: z.array(z.string().min(1)).optional().nullable(),
-    qase_token: z.string().optional().nullable(),
-    jira_base_url: z.string().optional().nullable(),
-    jira_email: z.string().optional().nullable(),
-    jira_username: z.string().optional().nullable(),
-    jira_api_token: z.string().optional().nullable(),
-    integration_mode: z.enum(["none", "qase", "jira", "manual", "other"]).optional().nullable(),
-    integration_type: z.enum(["none", "qase", "jira", "manual", "other"]).optional().nullable(),
-    short_description: z.string().optional().nullable(),
-    internal_notes: z.string().optional().nullable(),
-    extra_notes: z.string().optional().nullable(),
+    addressDetail: z.string().optional().nullable(),
+    linkedinUrl: z.string().optional().nullable(),
+    qaseProjectCode: z.string().optional().nullable(),
+    qaseProjectCodes: z.array(z.string().min(1)).optional().nullable(),
+    qaseToken: z.string().optional().nullable(),
+    jiraBaseUrl: z.string().optional().nullable(),
+    jiraEmail: z.string().email().optional().nullable(),
+    jiraUsername: z.string().optional().nullable(),
+    jiraApiToken: z.string().optional().nullable(),
+    integrationMode: z.enum(["none", "qase", "jira", "manual", "other"]).optional().nullable(),
+    shortDescription: z.string().optional().nullable(),
+    internalNotes: z.string().optional().nullable(),
+    extraNotes: z.string().optional().nullable(),
     status: z.enum(["active", "inactive", "archived"]).optional().nullable(),
     active: z.boolean().optional(),
-    updated_at: z.string().optional().nullable(),
-    created_at: z.string().optional().nullable(),
-    created_by: z.string().optional().nullable(),
+    updatedAt: z.string().optional().nullable(),
+    createdAt: z.string().optional().nullable(),
+    createdBy: z.string().optional().nullable(),
   })
   .strip();
 
 export type Client = z.infer<typeof ClientSchema>;
 
+/**
+ * Resposta de listagem de clientes.
+ */
 export const ClientListResponseSchema = z
   .object({
     items: z.array(ClientSchema),
@@ -56,35 +72,37 @@ export const ClientListResponseSchema = z
 
 export type ClientListResponse = z.infer<typeof ClientListResponseSchema>;
 
+/**
+ * Requisição para criação de cliente.
+ */
 export const ClientCreateRequestSchema = z
   .object({
     name: OptionalStringSchema.optional(),
-    company_name: OptionalStringSchema.optional(),
-    tax_id: OptionalStringSchema.optional(),
+    companyName: OptionalStringSchema.optional(),
+    taxId: OptionalStringSchema.optional(),
     address: OptionalStringSchema.optional(),
     phone: OptionalStringSchema.optional(),
     website: OptionalStringSchema.optional(),
-    logo_url: OptionalStringSchema.optional(),
-    docs_link: OptionalStringSchema.optional(),
-    docs_url: OptionalStringSchema.optional(),
+    logoUrl: OptionalStringSchema.optional(),
+    docsUrl: OptionalStringSchema.optional(),
     notes: OptionalStringSchema.optional(),
     description: OptionalStringSchema.optional(),
-    qase_project_code: OptionalStringSchema.optional(),
-    qase_project_codes: OptionalStringOrStringArraySchema,
-    qase_token: OptionalStringSchema.optional(),
-    jira_base_url: OptionalStringSchema.optional(),
-    jira_email: OptionalStringSchema.optional(),
-    jira_api_token: OptionalStringSchema.optional(),
-    integration_mode: z.enum(["none", "qase", "jira", "manual", "other"]).optional(),
+    qaseProjectCode: OptionalStringSchema.optional(),
+    qaseProjectCodes: OptionalStringOrStringArraySchema,
+    qaseToken: OptionalStringSchema.optional(),
+    jiraBaseUrl: OptionalStringSchema.optional(),
+    jiraEmail: z.string().email().optional(),
+    jiraApiToken: OptionalStringSchema.optional(),
+    integrationMode: z.enum(["none", "qase", "jira", "manual", "other"]).optional(),
     status: z.enum(["active", "inactive", "archived"]).optional(),
     slug: OptionalStringSchema.optional(),
     active: z.boolean().optional(),
     cep: OptionalStringSchema.optional(),
-    address_detail: OptionalStringSchema.optional(),
-    linkedin_url: OptionalStringSchema.optional(),
-    short_description: OptionalStringSchema.optional(),
-    internal_notes: OptionalStringSchema.optional(),
-    extra_notes: OptionalStringSchema.optional(),
+    addressDetail: OptionalStringSchema.optional(),
+    linkedinUrl: OptionalStringSchema.optional(),
+    shortDescription: OptionalStringSchema.optional(),
+    internalNotes: OptionalStringSchema.optional(),
+    extraNotes: OptionalStringSchema.optional(),
   })
   .strip();
 

@@ -57,7 +57,7 @@ export default function CreateUserForm({
       <label className="block">
         <span className="text-sm">E-mail</span>
         <input
-          className="form-control-user border rounded px-2 py-1 w-full mt-1"
+          className="form-control-user border border-[--tc-border] rounded px-2 py-1 w-full mt-1 bg-white text-[--page-text] focus:border-[--tc-accent] focus:ring-2 focus:ring-[--tc-accent]/20"
           placeholder="E-mail"
           value={email}
           onChange={e => setEmail(e.target.value)}
@@ -69,7 +69,7 @@ export default function CreateUserForm({
       <label className="block">
         <span className="text-sm">Usuario (login)</span>
         <input
-          className="form-control-user border rounded px-2 py-1 w-full mt-1"
+          className="form-control-user border border-[--tc-border] rounded px-2 py-1 w-full mt-1 bg-white text-[--page-text] focus:border-[--tc-accent] focus:ring-2 focus:ring-[--tc-accent]/20"
           placeholder="usuario"
           value={login}
           onChange={e => setLogin(e.target.value)}
@@ -80,7 +80,7 @@ export default function CreateUserForm({
       <label className="block">
         <span className="text-sm">Nome</span>
         <input
-          className="form-control-user border rounded px-2 py-1 w-full mt-1"
+          className="form-control-user border border-[--tc-border] rounded px-2 py-1 w-full mt-1 bg-white text-[--page-text] focus:border-[--tc-accent] focus:ring-2 focus:ring-[--tc-accent]/20"
           placeholder="Nome"
           value={name}
           onChange={e => setName(e.target.value)}
@@ -91,7 +91,7 @@ export default function CreateUserForm({
       <label className="block">
         <span className="text-sm">Senha</span>
         <input
-          className="form-control-user border rounded px-2 py-1 w-full mt-1"
+          className="form-control-user border border-[--tc-border] rounded px-2 py-1 w-full mt-1 bg-white text-[--page-text] focus:border-[--tc-accent] focus:ring-2 focus:ring-[--tc-accent]/20"
           placeholder="Senha"
           value={password}
           onChange={e => setPassword(e.target.value)}
@@ -103,7 +103,7 @@ export default function CreateUserForm({
       <label className="block">
         <span className="text-sm">Empresa</span>
         <select
-          className="form-control-user border rounded px-2 py-1 w-full mt-1"
+          className="form-control-user border border-[--tc-border] rounded px-2 py-1 w-full mt-1 bg-white text-[--page-text] focus:border-[--tc-accent] focus:ring-2 focus:ring-[--tc-accent]/20"
           value={companyId}
           onChange={e => setCompanyId(e.target.value)}
           required
@@ -117,7 +117,7 @@ export default function CreateUserForm({
       </label>
       <button
         type="submit"
-        className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+        className="bg-[--tc-accent] text-white px-4 py-2 rounded disabled:opacity-50 hover:bg-[--tc-accent]/90 focus:ring-2 focus:ring-[--tc-accent]/20"
         disabled={loading || !email || !login || !name || !password || !companyId}
         aria-busy={loading}
         aria-disabled={loading || !email || !login || !name || !password || !companyId}
@@ -126,12 +126,12 @@ export default function CreateUserForm({
         {loading ? <span className="animate-pulse">Salvando...</span> : "Criar Usuario"}
       </button>
       {error && (
-        <div className="text-red-600" role="alert">
+        <div className="text-[--tc-error]" role="alert">
           {error}
         </div>
       )}
       {success && (
-        <div className="text-green-600" role="status">
+        <div className="text-[--tc-success]" role="status">
           Usuario criado com sucesso!
         </div>
       )}

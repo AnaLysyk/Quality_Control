@@ -250,11 +250,11 @@ export default function MeusChamadosPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-[--tc-surface,#fff] text-[--tc-text,#0b1a3c]">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Chamados</h1>
-          <p className="text-sm text-(--tc-text-muted,#6b7280)">
+          <h1 className="text-2xl font-semibold text-[--tc-text-primary,#0b1a3c]">Chamados</h1>
+          <p className="text-sm text-[--tc-text-secondary,#6b7280]">
             Acompanhe seus chamados e converse com o time.
           </p>
         </div>
@@ -262,22 +262,22 @@ export default function MeusChamadosPage() {
           <button
             type="button"
             onClick={loadTickets}
-            className="inline-flex items-center gap-2 rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+            className="inline-flex items-center gap-2 rounded-lg border border-[--tc-border,#e5e7eb] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] bg-[--tc-surface,#fff] text-[--tc-text,#0b1a3c] hover:bg-[--tc-surface-variant,#f8fafc]"
           >
             <FiRefreshCw size={14} /> Atualizar
           </button>
           <button
             type="button"
             onClick={() => setCreateOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
+            className="inline-flex items-center gap-2 rounded-full bg-[--tc-accent,#ef0001] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[--tc-on-accent,#fff] hover:bg-[--tc-accent-dark,#c70000]"
           >
             <FiPlus size={14} /> Chamado
           </button>
         </div>
       </header>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {loadingTickets && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
+      {error && <p className="text-sm text-[--tc-error,#b91c1c]">{error}</p>}
+      {loadingTickets && <p className="text-sm text-[--tc-text-secondary,#6b7280]">Carregando...</p>}
 
       {canManage && (
         <div className="flex flex-wrap items-center gap-2">
@@ -285,7 +285,7 @@ export default function MeusChamadosPage() {
             <button
               type="button"
               onClick={startAddColumn}
-              className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+              className="rounded-full border border-[--tc-border,#e5e7eb] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] bg-[--tc-surface,#fff] text-[--tc-text,#0b1a3c] hover:bg-[--tc-surface-variant,#f8fafc]"
             >
               + Coluna
             </button>
@@ -307,18 +307,20 @@ export default function MeusChamadosPage() {
                   setNewColumnLabel("");
                 }
               }}
-              className="w-56 rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
+              className="w-56 rounded-full border border-[--tc-border,#e5e7eb] bg-[--tc-surface,#fff] px-3 py-2 text-xs text-[--tc-text,#0b1a3c]"
               placeholder="Nome da coluna"
+              title="Nome da nova coluna"
+              aria-label="Nome da nova coluna"
             />
           )}
         </div>
       )}
 
-      <section className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+      <section className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(240px,1fr))]">
         {columns.map((column) => (
           <div
             key={column.key}
-            className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-3 min-h-80"
+            className="rounded-2xl border border-[--tc-border,#e5e7eb] bg-[--tc-surface,#fff] p-3 min-h-80"
             onDragOver={
               canManage
                 ? (e) => {
@@ -327,7 +329,7 @@ export default function MeusChamadosPage() {
                   }
                 : undefined
             }
-            onDrop={canManage ? () => handleDrop(column.key) : undefined}
+            onDrop={canManage ? () => handleDrop(column.key as TicketStatus) : undefined}
           >
             <div className="flex items-center justify-between">
               {editingColumnKey === column.key ? (
@@ -346,18 +348,21 @@ export default function MeusChamadosPage() {
                       cancelEditColumn();
                     }
                   }}
-                  className="w-full rounded-md border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
+                  className="w-full rounded-md border border-[--tc-border,#e5e7eb] bg-[--tc-surface,#fff] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-[--tc-text-secondary,#6b7280]"
+                  placeholder="Editar nome da coluna"
+                  title="Editar nome da coluna"
+                  aria-label="Editar nome da coluna"
                 />
               ) : (
                 <button
                   type="button"
                   onClick={() => (canManage ? startEditColumn(column.key, column.label) : undefined)}
-                  className="text-left text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
+                  className="text-left text-xs font-semibold uppercase tracking-[0.3em] text-[--tc-text-secondary,#6b7280]"
                 >
                   {column.label}
                 </button>
               )}
-              <span className="text-xs text-(--tc-text-muted,#6b7280)">
+              <span className="text-xs text-[--tc-text-secondary,#6b7280]">
                 {grouped[column.key]?.length ?? 0}
               </span>
             </div>
@@ -365,7 +370,7 @@ export default function MeusChamadosPage() {
               {(grouped[column.key] ?? []).map((ticket) => {
                 const creatorLabel = ticket.createdByName || ticket.createdByEmail || ticket.createdBy || "-";
                 return (
-                  <div key={ticket.id} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 text-left shadow-sm">
+                  <div key={ticket.id} className="rounded-xl border border-[--tc-border,#e5e7eb] bg-[--tc-surface,#fff] p-3 text-left shadow-sm">
                     <button
                       type="button"
                       draggable={canManage}
@@ -380,22 +385,22 @@ export default function MeusChamadosPage() {
                       className="w-full text-left"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[--tc-text-secondary,#6b7280]">
                           {ticket.code || `CH-${ticket.id.slice(0, 6).toUpperCase()}`}
                         </p>
-                        <span className="text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                        <span className="text-[10px] uppercase tracking-[0.25em] text-[--tc-text-secondary,#6b7280]">
                           {getTicketStatusLabel(normalizeKanbanStatus(ticket.status), statusOptions)}
                         </span>
                       </div>
                       <p className="mt-2 text-sm font-semibold">{ticket.title || "Sem titulo"}</p>
-                      <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">
+                      <p className="mt-1 text-xs text-[--tc-text-secondary,#6b7280]">
                         {shortText(ticket.description, 100)}
                       </p>
-                      <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                      <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.25em] text-[--tc-text-secondary,#6b7280]">
                         <span>Tipo: {ticket.type || "tarefa"}</span>
                         <span>Prioridade: {ticket.priority || "medium"}</span>
                       </div>
-                      <div className="mt-2 text-[11px] text-(--tc-text-muted,#6b7280) space-y-1">
+                      <div className="mt-2 text-[11px] text-[--tc-text-secondary,#6b7280] space-y-1">
                         <p>Criador: {creatorLabel}</p>
                         <p>Data: {formatDate(ticket.createdAt)}</p>
                       </div>
@@ -409,7 +414,7 @@ export default function MeusChamadosPage() {
                           id={`status-${ticket.id}`}
                           aria-label="Status do chamado"
                           title="Status do chamado"
-                          className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[11px]"
+                          className="w-full rounded-lg border border-[--tc-border,#e5e7eb] bg-[--tc-surface,#fff] px-2 py-1 text-[11px] text-[--tc-text,#0b1a3c]"
                           value={normalizeKanbanStatus(ticket.status)}
                           onChange={(e) => updateStatus(ticket.id, e.target.value as TicketStatus)}
                         >
@@ -425,7 +430,7 @@ export default function MeusChamadosPage() {
                 );
               })}
               {(grouped[column.key] ?? []).length === 0 && (
-                <p className="text-xs text-(--tc-text-muted,#6b7280)">Sem chamados</p>
+                <p className="text-xs text-[--tc-text-secondary,#6b7280]">Sem chamados</p>
               )}
             </div>
           </div>
@@ -448,34 +453,34 @@ export default function MeusChamadosPage() {
 
       {createOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_30px_80px_rgba(15,23,42,0.35)]">
-            <div className="flex items-center justify-between border-b border-(--tc-border,#e5e7eb) px-6 py-4">
+          <div className="w-full max-w-lg rounded-3xl border border-[--tc-border,#e5e7eb] bg-[--tc-surface,#fff] shadow-[0_30px_80px_rgba(15,23,42,0.35)]">
+            <div className="flex items-center justify-between border-b border-[--tc-border,#e5e7eb] px-6 py-4">
               <h2 className="text-lg font-semibold">Novo chamado</h2>
               <button
                 type="button"
                 onClick={() => setCreateOpen(false)}
-                className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                className="rounded-full border border-[--tc-border,#e5e7eb] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] bg-[--tc-surface,#fff] text-[--tc-text,#0b1a3c] hover:bg-[--tc-surface-variant,#f8fafc]"
               >
                 Fechar
               </button>
             </div>
             <div className="px-6 py-4 space-y-3">
               <input
-                className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-[--tc-border,#e5e7eb] bg-[--tc-surface,#fff] px-3 py-2 text-sm text-[--tc-text,#0b1a3c]"
                 placeholder="Titulo"
                 value={createDraft.title}
                 onChange={(e) => setCreateDraft((prev) => ({ ...prev, title: e.target.value }))}
               />
               <textarea
                 rows={4}
-                className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-[--tc-border,#e5e7eb] bg-[--tc-surface,#fff] px-3 py-2 text-sm text-[--tc-text,#0b1a3c]"
                 placeholder="Descreva o chamado..."
                 value={createDraft.description}
                 onChange={(e) => setCreateDraft((prev) => ({ ...prev, description: e.target.value }))}
               />
               <div className="grid gap-2 sm:grid-cols-2">
                 <select
-                  className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-[--tc-border,#e5e7eb] bg-[--tc-surface,#fff] px-3 py-2 text-sm text-[--tc-text,#0b1a3c]"
                   title="Tipo do chamado"
                   aria-label="Tipo do chamado"
                   value={createDraft.type}
@@ -488,7 +493,7 @@ export default function MeusChamadosPage() {
                   ))}
                 </select>
                 <select
-                  className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-[--tc-border,#e5e7eb] bg-[--tc-surface,#fff] px-3 py-2 text-sm text-[--tc-text,#0b1a3c]"
                   title="Prioridade do chamado"
                   aria-label="Prioridade do chamado"
                   value={createDraft.priority}
@@ -501,13 +506,13 @@ export default function MeusChamadosPage() {
                   ))}
                 </select>
               </div>
-              {createError && <p className="text-sm text-red-600">{createError}</p>}
+              {createError && <p className="text-sm text-[--tc-error,#b91c1c]">{createError}</p>}
             </div>
-            <div className="flex items-center justify-end gap-2 border-t border-(--tc-border,#e5e7eb) px-6 py-4">
+            <div className="flex items-center justify-end gap-2 border-t border-[--tc-border,#e5e7eb] px-6 py-4">
               <button
                 type="button"
                 onClick={() => setCreateOpen(false)}
-                className="rounded-lg border border-(--tc-border,#e5e7eb) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                className="rounded-lg border border-[--tc-border,#e5e7eb] px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] bg-[--tc-surface,#fff] text-[--tc-text,#0b1a3c] hover:bg-[--tc-surface-variant,#f8fafc]"
               >
                 Cancelar
               </button>
@@ -515,7 +520,7 @@ export default function MeusChamadosPage() {
                 type="button"
                 onClick={submitCreate}
                 disabled={creating}
-                className="rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
+                className="rounded-lg bg-[--tc-accent,#ef0001] px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[--tc-on-accent,#fff] hover:bg-[--tc-accent-dark,#c70000] disabled:opacity-60"
               >
                 {creating ? "Criando..." : "Criar"}
               </button>

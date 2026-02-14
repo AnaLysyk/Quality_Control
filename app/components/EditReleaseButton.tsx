@@ -44,7 +44,7 @@ export function EditReleaseButton({ slug, currentTitle, currentRunId }: EditRele
       type="button"
       onClick={handleEdit}
       disabled={loading}
-      className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold hover:bg-white/15 disabled:opacity-60"
+      className="rounded-xl border border-[--tc-border]/20 bg-[--tc-surface]/10 px-3 py-2 text-xs font-semibold hover:bg-[--tc-surface]/15 disabled:opacity-60"
     >
       {loading ? "Salvando..." : "Editar run"}
     </button>

@@ -8,29 +8,35 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 }
 
 export async function POST(request: Request) {
-  const authUser = await authenticateRequest(request);
-  if (!authUser) {
-    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
-  }
-  const body = (await request.json().catch(() => null)) as unknown;
-  const rec = asRecord(body);
-  const newEmail = typeof rec?.newEmail === "string" ? rec.newEmail : undefined;
-
-  if (!newEmail) {
-    return NextResponse.json({ message: "newEmail é obrigatório" }, { status: 400 });
-  }
-
   try {
+    const authUser = await authenticateRequest(request);
+    if (!authUser) {
+      return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+    }
+
+    const body = await request.json().catch(() => null);
+    const rec = asRecord(body);
+    const newEmail =
+      typeof rec?.newEmail === "string"
+        ? rec.newEmail.trim().toLowerCase()
+        : "";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!newEmail || !emailRegex.test(newEmail) || newEmail.length > 160) {
+      return NextResponse.json({ message: "Email inválido" }, { status: 400 });
+    }
+    if (newEmail === authUser.email?.toLowerCase()) {
+      return NextResponse.json({ message: "Novo email deve ser diferente do atual" }, { status: 400 });
+    }
+
     const record = await addRequest(
-      {
-        id: authUser.id,
-        email: authUser.email,
-      },
+      { id: authUser.id, email: authUser.email },
       "EMAIL_CHANGE",
       { newEmail }
     );
     return NextResponse.json(record, { status: 201 });
   } catch (err: unknown) {
+    console.error("Erro ao criar solicitação EMAIL_CHANGE", err);
     const code = asRecord(err)?.code;
     if (code === "DUPLICATE") {
       return NextResponse.json({ message: "Já existe uma solicitação pendente" }, { status: 409 });

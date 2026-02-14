@@ -6,6 +6,9 @@ import fs from "node:fs/promises";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 
+/**
+ * Tipos de eventos possíveis em tickets.
+ */
 export type TicketEventType =
   | "CREATED"
   | "STATUS_CHANGED"
@@ -16,6 +19,9 @@ export type TicketEventType =
   | "ASSIGNED"
   | "UPDATED";
 
+/**
+ * Registro de evento de ticket.
+ */
 export type TicketEventRecord = {
   id: string;
   ticketId: string;
@@ -103,6 +109,12 @@ async function writeStore(next: EventsStore) {
   }
 }
 
+/**
+ * Lista eventos de um ticket, ordenados do mais recente para o mais antigo.
+ * @param ticketId ID do ticket
+ * @param opts Limite e offset opcionais
+ * @returns Lista de eventos
+ */
 export async function listTicketEvents(ticketId: string, opts?: { limit?: number; offset?: number }) {
   const store = await readStore();
   const limit = Math.max(1, Math.min(200, Number(opts?.limit ?? 50)));
@@ -113,6 +125,11 @@ export async function listTicketEvents(ticketId: string, opts?: { limit?: number
   return items.slice(offset, offset + limit);
 }
 
+/**
+ * Adiciona um novo evento ao ticket.
+ * @param input Dados do evento
+ * @returns Evento criado ou null
+ */
 export async function appendTicketEvent(input: {
   ticketId: string;
   type: TicketEventType;

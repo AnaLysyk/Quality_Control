@@ -183,18 +183,39 @@ export async function GET(req: Request) {
 
   const useJson = shouldUseJsonStore();
   if (useJson) {
-    const items = await listAccessRequests();
+    const itemsRaw = await listAccessRequests();
+    const validStatuses = ["PENDING","APPROVED","REJECTED","CANCELLED","OPEN"];
+    const items = itemsRaw.map((item: any) => ({
+      ...item,
+      status: (typeof item.status === "string" && validStatuses.includes(item.status.toUpperCase()))
+        ? item.status.toUpperCase()
+        : undefined,
+    }));
     return NextResponse.json({ items });
   }
 
   try {
-    const items = await prisma.supportRequest.findMany({
+    const itemsRaw = await prisma.supportRequest.findMany({
       orderBy: { created_at: "desc" },
     });
+    const validStatuses = ["PENDING","APPROVED","REJECTED","CANCELLED","OPEN"];
+    const items = itemsRaw.map((item: any) => ({
+      ...item,
+      status: (typeof item.status === "string" && validStatuses.includes(item.status.toUpperCase()))
+        ? item.status.toUpperCase()
+        : undefined,
+    }));
     return NextResponse.json({ items });
   } catch (error) {
     console.error("Erro ao listar support_requests:", error);
-    const items = await listAccessRequests();
+    const itemsRaw = await listAccessRequests();
+    const validStatuses = ["PENDING","APPROVED","REJECTED","CANCELLED","OPEN"];
+    const items = itemsRaw.map(item => ({
+      ...item,
+      status: (typeof item.status === "string" && validStatuses.includes(item.status.toUpperCase()))
+        ? item.status.toUpperCase()
+        : undefined,
+    }));
     return NextResponse.json({ items });
   }
 }

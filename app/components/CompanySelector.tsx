@@ -60,20 +60,20 @@ export function CompanySelector({
     return ctaLabel;
   }, [ctaLabel]);
 
-  const tone = accent === "dark" ? "text-(--tc-text-inverse)" : "text-(--page-text,#0b1a3c)";
+  const tone = accent === "dark" ? "text-[--tc-text-inverse]" : "text-[--page-text]";
   const hasCompanies = companies.length > 0;
 
   return (
     <div data-testid="company-selector" className={`space-y-6 ${tone}`}>
       <div className="space-y-2">
         <h1 className="text-2xl sm:text-3xl font-extrabold">{title}</h1>
-        {description && <p className="text-sm text-(--tc-text-secondary,#4b5563)">{description}</p>}
+        {description && <p className="text-sm text-[--tc-text-secondary]">{description}</p>}
       </div>
 
       {loading && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, index) => (
-            <div key={index} className="rounded-2xl border border-(--tc-border)/40 bg-white">
+            <div key={index} className="rounded-2xl border border-[--tc-border]/40 bg-white">
               <ClientSkeleton message="Carregando empresa" />
             </div>
           ))}
@@ -94,7 +94,7 @@ export function CompanySelector({
       )}
 
       {!loading && !error && !hasCompanies && (
-        <p className="text-sm text-(--tc-text-secondary,#4b5563)">{emptyMessage}</p>
+        <p className="text-sm text-[--tc-text-secondary]">{emptyMessage}</p>
       )}
 
       {!loading && !error && hasCompanies && (
@@ -122,22 +122,22 @@ export function CompanySelector({
                 }
                 setActiveClientSlug(company.clientSlug);
               }}
-              className={`group relative rounded-2xl border border-(--tc-border)/40 bg-white p-5 shadow-sm transition ${
+              className={`group relative rounded-2xl border border-[--tc-border]/40 bg-white p-5 shadow-sm transition ${
                 isDisabled
                   ? "cursor-not-allowed opacity-60"
-                  : "cursor-pointer hover:-translate-y-1 hover:border-(--tc-accent)/60 hover:shadow-[0_18px_38px_rgba(15,23,42,0.12)]"
-              } ${isActive ? "border-(--tc-accent)/70 ring-2 ring-(--tc-accent,#ef0001)/30" : ""}`}
+                  : "cursor-pointer hover:-translate-y-1 hover:border-[--tc-accent]/60 hover:shadow-[0_18px_38px_rgba(15,23,42,0.12)]"
+              } ${isActive ? "border-[--tc-accent]/70 ring-2 ring-[--tc-accent]/30" : ""}`}
             >
                 {isActive && (
-                  <span className="absolute right-4 top-4 inline-flex items-center rounded-full bg-(--tc-accent,#ef0001)/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">
+                  <span className="absolute right-4 top-4 inline-flex items-center rounded-full bg-[--tc-accent]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.32em] text-[--tc-accent]">
                     Atual
                   </span>
                 )}
                 <div className="space-y-2">
-                  <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted)">
+                  <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[--tc-text-muted]">
                     {company.role === "ADMIN" ? "Admin" : "Usuario"}
                     {!company.clientActive && (
-                      <span className="rounded-full bg-(--tc-surface,#f1f5f9) px-2 py-0.5 text-[10px] font-semibold text-(--tc-text-muted)">
+                      <span className="rounded-full bg-[--tc-surface] px-2 py-0.5 text-[10px] font-semibold text-[--tc-text-muted]">
                         Inativo
                       </span>
                     )}
@@ -147,10 +147,10 @@ export function CompanySelector({
                       </span>
                     )}
                   </span>
-                  <h2 className="text-lg font-semibold text-(--page-text,#0b1a3c)">{company.clientName}</h2>
-                  <p className="text-xs text-(--tc-text-secondary,#4b5563)">/{company.clientSlug}</p>
+                  <h2 className="text-lg font-semibold text-[--page-text]">{company.clientName}</h2>
+                  <p className="text-xs text-[--tc-text-secondary]">/{company.clientSlug}</p>
                   {createdAtLabel && (
-                    <p className="text-xs text-(--tc-text-secondary,#4b5563)">
+                    <p className="text-xs text-[--tc-text-secondary]">
                       Inicio do projeto: {createdAtLabel}
                     </p>
                   )}
@@ -158,7 +158,7 @@ export function CompanySelector({
 
                 <span
                   className={`mt-6 inline-flex items-center gap-2 text-sm font-semibold transition group-hover:gap-3 ${
-                    isDisabled ? "text-(--tc-text-secondary,#4b5563)" : "text-(--tc-accent)"
+                    isDisabled ? "text-[--tc-text-secondary]" : "text-[--tc-accent]"
                   }`}
                 >
                   {cta(company)} <FiArrowRight size={16} />

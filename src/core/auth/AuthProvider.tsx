@@ -1,3 +1,11 @@
+/**
+ * AuthProvider and useAuth hook for authentication context.
+ * Handles user/company state, refresh, and logout logic.
+ *
+ * Usage:
+ *   <AuthProvider>...</AuthProvider>
+ *   const { user, companies, ... } = useAuth();
+ */
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
@@ -122,13 +130,31 @@ async function fetchMe(): Promise<MeResult> {
   return parsed ?? { user: null, companies: [] };
 }
 
+/**
+ * Provides authentication context to children components.
+ * Warns if mounted multiple times.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [companies, setCompanies] = useState<AuthCompany[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refreshUser = async () => {
+  // Warn if AuthProvider is mounted more than once
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if ((window as any).__hasAuthProvider) {
+        // eslint-disable-next-line no-console
+        console.warn("[AuthProvider] Atenção: múltiplos AuthProvider montados. Isso pode causar bugs de contexto.");
+      }
+      (window as any).__hasAuthProvider = true;
+      return () => {
+        (window as any).__hasAuthProvider = false;
+      };
+    }
+  }, []);
+
+  const refreshUser = async (): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
@@ -145,7 +171,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = async () => {
+  /**
+   * Realiza logout e limpa contexto de autenticação.
+   */
+  const logout = async (): Promise<void> => {
     bootstrapAttempts.clear();
     try {
       await fetch("/api/auth/logout", {
@@ -178,8 +207,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Hook para acessar o contexto de autenticação.
+ * @throws se usado fora de <AuthProvider>
+ */
+/**
+ * Hook para acessar o contexto de autenticação.
+ * @throws se usado fora de <AuthProvider>
+ */
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth deve ser usado dentro de AuthProvider");
+  if (!ctx) {
+    // Melhora mensagem para debug e testes
+    throw new Error("useAuth deve ser usado dentro de <AuthProvider>. Certifique-se de que o componente está corretamente aninhado.");
+  }
   return ctx;
 }
+
+/**
+ * Expose AuthContext for testing/debug (não usar em produção).
+ */
+export const __INTERNAL_AuthContext = AuthContext;

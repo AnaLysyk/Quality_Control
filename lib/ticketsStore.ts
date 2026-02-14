@@ -4,7 +4,7 @@ import { randomUUID } from "crypto";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
-import { LEGACY_TICKET_STATUS_MAP, normalizeKanbanStatus, type TicketStatus } from "@/lib/ticketsStatus";
+import { LEGACY_TICKET_STATUS_MAP, normalizeKanbanStatus, type TicketStatus, getAllTicketStatuses } from "@/lib/ticketsStatus";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 
 export type TicketPriority = "low" | "medium" | "high";
@@ -152,7 +152,12 @@ function normalizeStatus(value?: string | null): TicketStatus | null {
   if (!value) return null;
   const normalized = value.trim().toLowerCase();
   const mapped = normalized in LEGACY_TICKET_STATUS_MAP ? LEGACY_TICKET_STATUS_MAP[normalized] : normalized;
-  return normalizeKanbanStatus(mapped);
+  const status = normalizeKanbanStatus(mapped);
+  // Garante que status é válido
+  if (getAllTicketStatuses().includes(status)) {
+    return status;
+  }
+  return "backlog";
 }
 
 function normalizePriority(value?: unknown): TicketPriority {

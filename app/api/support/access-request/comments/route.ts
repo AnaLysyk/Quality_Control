@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { shouldUseJsonStore } from "@/lib/storeMode";
@@ -5,6 +6,7 @@ import { getAccessRequestById, listAccessRequests } from "@/data/accessRequestsS
 import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
 import { notifyAccessRequestComment } from "@/lib/notificationService";
 import { parseAccessRequestMessage } from "@/lib/accessRequestMessage";
+import { authenticateRequest } from "@/lib/jwtAuth";
 
 type SupportRequestRow = {
   id: string;
@@ -122,6 +124,12 @@ async function findRequestByLookup(email: string, name: string): Promise<Support
 }
 
 export async function POST(req: Request) {
+  // Authenticate user (JWT, etc.)
+  const user = await authenticateRequest(req);
+  if (!user) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
   const body = (await req.json().catch(() => null)) as {
     requestId?: string;
     name?: string;
@@ -143,30 +151,37 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Informe nome, e-mail e comentario." }, { status: 400 });
   }
 
-  const request = requestId ? await findRequestById(requestId) : await findRequestByLookup(email, name);
-  if (!request) {
-    return NextResponse.json({ error: "Solicitacao nao encontrada." }, { status: 404 });
+  // TODO: Add rate limiting/abuse prevention here if endpoint is public
+
+  try {
+    const request = requestId ? await findRequestById(requestId) : await findRequestByLookup(email, name);
+    if (!request) {
+      return NextResponse.json({ error: "Solicitacao nao encontrada." }, { status: 404 });
+    }
+
+    const parsed = parseAccessRequestMessage(String(request.message ?? ""), String(request.email ?? ""));
+    if (normalizeLookup(parsed.name ?? "") !== normalizeLookup(name) || normalizeLookup(request.email ?? "") !== normalizeLookup(email)) {
+      return NextResponse.json({ error: "Dados nao conferem com a solicitacao." }, { status: 403 });
+    }
+
+    const record = await createAccessRequestComment({
+      requestId: request.id,
+      authorRole: "requester",
+      authorName: name,
+      authorEmail: email,
+      body: comment,
+    });
+
+    await notifyAccessRequestComment({
+      requestId: request.id,
+      commentId: record.id,
+      authorName: name,
+      body: comment,
+    });
+
+    return NextResponse.json({ item: record }, { status: 200 });
+  } catch (err) {
+    console.error("POST access-request comment error", err);
+    return NextResponse.json({ error: "Falha ao registrar comentario." }, { status: 500 });
   }
-
-  const parsed = parseAccessRequestMessage(String(request.message ?? ""), String(request.email ?? ""));
-  if (normalizeLookup(parsed.name ?? "") !== normalizeLookup(name) || normalizeLookup(request.email ?? "") !== normalizeLookup(email)) {
-    return NextResponse.json({ error: "Dados nao conferem com a solicitacao." }, { status: 403 });
-  }
-
-  const record = await createAccessRequestComment({
-    requestId: request.id,
-    authorRole: "requester",
-    authorName: name,
-    authorEmail: email,
-    body: comment,
-  });
-
-  await notifyAccessRequestComment({
-    requestId: request.id,
-    commentId: record.id,
-    authorName: name,
-    body: comment,
-  });
-
-  return NextResponse.json({ item: record }, { status: 200 });
 }

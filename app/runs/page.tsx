@@ -1,5 +1,7 @@
 "use client";
 
+
+import { Suspense } from "react";
 import { CompanySelector } from "../components/CompanySelector";
 
 export default function RunsIndexPage() {
@@ -14,12 +16,14 @@ export default function RunsIndexPage() {
           </p>
         </header>
 
-        <CompanySelector
-          title="Empresas com runs"
-          description="Acesso rápido às execuções mais recentes, métricas e histórico de resultados."
-          buildHref={(company) => `/empresas/${encodeURIComponent(company.clientSlug)}/runs`}
-          ctaLabel={(company) => (company.role === "ADMIN" ? "Gerenciar runs" : "Ver runs")}
-        />
+        <Suspense fallback={<div className="text-sm text-(--tc-text-muted) mt-4">Carregando empresas...</div>}>
+          <CompanySelector
+            title="Empresas com runs"
+            description="Acesso rápido às execuções mais recentes, métricas e histórico de resultados."
+            buildHref={(company) => `/empresas/${encodeURIComponent(company.clientSlug)}/runs`}
+            ctaLabel={(company) => (company.role === "ADMIN" ? "Gerenciar runs" : "Ver runs")}
+          />
+        </Suspense>
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import { getJwtSecret } from "@/lib/auth/jwtSecret";
 type AdminSession = {
   id: string;
   email: string;
+  // Middleware e helpers para exigir autenticação de admin global (RBAC)
   token: string;
 };
 
@@ -16,6 +17,10 @@ type SessionUser = {
   userId?: string;
   id?: string;
   email?: string;
+
+  /**
+   * Estrutura de sessão de admin global autenticado.
+   */
   role?: string;
   isGlobalAdmin?: boolean;
   globalRole?: string | null;
@@ -24,6 +29,10 @@ type SessionUser = {
 export async function extractAccessToken(req: Request): Promise<string | null> {
   const auth = req.headers.get("authorization");
   if (auth?.toLowerCase().startsWith("bearer ")) {
+
+  /**
+   * Estrutura mínima de usuário autenticado para RBAC global.
+   */
     const token = auth.slice("bearer ".length).trim();
     if (token) return token;
   }
@@ -35,6 +44,9 @@ export async function extractAccessToken(req: Request): Promise<string | null> {
 async function readSessionUser(req: Request): Promise<SessionUser | null> {
   const token = await extractAccessToken(req);
   if (token) {
+  /**
+   * Lê o usuário da sessão a partir do token JWT ou session_id (Redis).
+   */
     const secret = getJwtSecret();
     if (!secret) {
       const redis = getRedis();
@@ -87,11 +99,17 @@ async function readSessionUser(req: Request): Promise<SessionUser | null> {
 function isAdminRole(role?: string | null) {
   const normalized = (role ?? "").toLowerCase();
   return normalized === "admin" || normalized === "super-admin" || normalized === "global_admin";
+  /**
+   * Verifica se o papel informado é considerado admin global.
+   */
 }
 
 export async function requireGlobalAdmin(
   req: Request,
   opts?: { token?: string | null },
+  /**
+   * Exige autenticação de admin global. Retorna sessão se autorizado, senão null.
+   */
 ): Promise<AdminSession | null> {
   const session = await readSessionUser(req);
   if (!session) return null;
@@ -111,6 +129,9 @@ export async function requireGlobalAdmin(
 export async function requireGlobalAdminWithStatus(
   req: Request,
   opts?: { token?: string | null },
+  /**
+   * Exige admin global e retorna status HTTP apropriado (200, 401, 403).
+   */
 ): Promise<{ admin: AdminSession | null; status: 200 | 401 | 403 }>
 {
   const admin = await requireGlobalAdmin(req, opts);

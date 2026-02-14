@@ -1,15 +1,20 @@
-console.log('DATABASE_URL:', process.env.DATABASE_URL);
-
 import "./loadEnv";
 import { hashPasswordSha256 } from "../lib/passwordHash";
-// PrismaClient deve ser importado após o carregamento das variáveis de ambiente
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+function getArgOrEnv(key: string, envKey: string, fallback?: string): string {
+  const idx = process.argv.findIndex((a) => a === `--${key}`);
+  if (idx !== -1 && process.argv[idx + 1]) return process.argv[idx + 1];
+  if (process.env[envKey]) return process.env[envKey]!;
+  if (fallback) return fallback;
+  throw new Error(`Missing required argument/env: ${key}`);
+}
+
 async function createAnaAdmin() {
-  const email = "ana.testing.company@gmail.com";
-  const password = "griaule4096PD$";
+  const email = getArgOrEnv("email", "ANA_ADMIN_EMAIL", "ana.testing.company@gmail.com");
+  const password = getArgOrEnv("password", "ANA_ADMIN_PASSWORD", "griaule4096PD$");
   const hashedPassword = hashPasswordSha256(password);
 
   try {
@@ -55,6 +60,7 @@ async function createAnaAdmin() {
     console.log("Usuário admin criado ou atualizado:", { email, company: company.slug });
   } catch (error) {
     console.error("Erro ao criar admin:", error);
+    process.exit(1);
   } finally {
     await prisma.$disconnect();
   }

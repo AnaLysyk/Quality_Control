@@ -36,7 +36,7 @@ export default function ExpandableDescription({ html, limit = 150 }: ExpandableD
       {shouldTruncate && (
         <button
           type="button"
-          className="text-[#7CD343] text-sm font-medium hover:underline"
+          className="text-[--tc-accent] text-sm font-medium hover:underline"
           onClick={() => setExpanded((v) => !v)}
         >
           {expanded ? "Ver menos ↑" : "Ver mais ↓"}

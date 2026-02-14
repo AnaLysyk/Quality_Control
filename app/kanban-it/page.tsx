@@ -254,11 +254,11 @@ export default function KanbanItPage() {
   }
 
   if (loading) {
-    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Carregando...</div>;
+    return <div className="p-6 text-sm text-[--tc-text-muted]">Carregando...</div>;
   }
 
   if (!isAllowed) {
-    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Acesso restrito.</div>;
+    return <div className="p-6 text-sm text-[--tc-text-muted]">Acesso restrito.</div>;
   }
 
   return (
@@ -266,7 +266,7 @@ export default function KanbanItPage() {
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">Chamados</h1>
-          <p className="text-sm text-(--tc-text-muted,#6b7280)">
+          <p className="text-sm text-[--tc-text-muted]">
             Visão completa do fluxo de chamados para desenvolvimento.
           </p>
         </div>
@@ -274,22 +274,22 @@ export default function KanbanItPage() {
           <button
             type="button"
             onClick={loadTickets}
-            className="inline-flex items-center gap-2 rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+            className="inline-flex items-center gap-2 rounded-lg border border-[--tc-border] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
           >
             <FiRefreshCw size={14} /> Atualizar
           </button>
           <button
             type="button"
             onClick={() => setCreateOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
+            className="inline-flex items-center gap-2 rounded-full bg-[--tc-accent] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
           >
             <FiPlus size={14} /> Chamado
           </button>
         </div>
       </header>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {loadingTickets && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
+      {error && <p className="text-sm text-[--tc-error]">{error}</p>}
+      {loadingTickets && <p className="text-sm text-[--tc-text-muted]">Carregando...</p>}
 
       {isAllowed && (
         <div className="flex flex-wrap items-center gap-2">
@@ -297,7 +297,7 @@ export default function KanbanItPage() {
             <button
               type="button"
               onClick={startAddColumn}
-              className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+              className="rounded-full border border-[--tc-border] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
             >
               + Coluna
             </button>
@@ -319,7 +319,7 @@ export default function KanbanItPage() {
                   setNewColumnLabel("");
                 }
               }}
-              className="w-56 rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
+              className="w-56 rounded-full border border-[--tc-border] bg-[--tc-surface-variant] px-3 py-2 text-xs"
               placeholder="Nome da coluna"
             />
           )}
@@ -330,12 +330,12 @@ export default function KanbanItPage() {
         {columns.map((column) => (
           <div
             key={column.key}
-            className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-3 min-h-80"
+            className="rounded-2xl border border-[--tc-border] bg-[--tc-surface] p-3 min-h-80"
             onDragOver={(e) => {
               e.preventDefault();
               e.dataTransfer.dropEffect = "move";
             }}
-            onDrop={() => handleDrop(column.key)}
+            onDrop={() => handleDrop(column.key as TicketStatus)}
           >
             <div className="flex items-center justify-between">
               {editingColumnKey === column.key ? (
@@ -357,18 +357,18 @@ export default function KanbanItPage() {
                   placeholder="Nome da coluna"
                   title="Editar nome da coluna"
                   aria-label="Editar nome da coluna"
-                  className="w-full rounded-md border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
+                  className="w-full rounded-md border border-[--tc-border] bg-[--tc-surface-variant] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-[--tc-text-muted]"
                 />
               ) : (
                 <button
                   type="button"
                   onClick={() => startEditColumn(column.key, column.label)}
-                  className="text-left text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
+                  className="text-left text-xs font-semibold uppercase tracking-[0.3em] text-[--tc-text-muted]"
                 >
                   {column.label}
                 </button>
               )}
-              <span className="text-xs text-(--tc-text-muted,#6b7280)">
+              <span className="text-xs text-[--tc-text-muted]">
                 {grouped[column.key]?.length ?? 0}
               </span>
             </div>
@@ -376,7 +376,7 @@ export default function KanbanItPage() {
               {(grouped[column.key] ?? []).map((ticket) => {
                 const creatorLabel = ticket.createdByName || ticket.createdByEmail || ticket.createdBy || "-";
                 return (
-                  <div key={ticket.id} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 text-left shadow-sm">
+                  <div key={ticket.id} className="rounded-xl border border-[--tc-border] bg-[--tc-surface-variant] p-3 text-left shadow-[0_2px_8px_var(--tc-shadow)]">
                     <button
                       type="button"
                       draggable
@@ -390,22 +390,22 @@ export default function KanbanItPage() {
                       className="w-full text-left"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[--tc-text-muted]">
                           {ticket.code || `CH-${ticket.id.slice(0, 6).toUpperCase()}`}
                         </p>
-                        <span className="text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                        <span className="text-[10px] uppercase tracking-[0.25em] text-[--tc-text-muted]">
                           {getTicketStatusLabel(normalizeKanbanStatus(ticket.status), statusOptions)}
                         </span>
                       </div>
                       <p className="mt-2 text-sm font-semibold">{ticket.title || "Sem titulo"}</p>
-                      <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">
+                      <p className="mt-1 text-xs text-[--tc-text-muted]">
                         {shortText(ticket.description, 100)}
                       </p>
-                      <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                      <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.25em] text-[--tc-text-muted]">
                         <span>Tipo: {ticket.type || "tarefa"}</span>
                         <span>Prioridade: {ticket.priority || "medium"}</span>
                       </div>
-                      <div className="mt-2 text-[11px] text-(--tc-text-muted,#6b7280) space-y-1">
+                      <div className="mt-2 text-[11px] text-[--tc-text-muted] space-y-1">
                         <p>Criador: {creatorLabel}</p>
                         <p>Data: {formatDate(ticket.createdAt)}</p>
                       </div>
@@ -418,7 +418,7 @@ export default function KanbanItPage() {
                         id={`status-${ticket.id}`}
                         aria-label="Status do chamado"
                         title="Status do chamado"
-                        className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[11px]"
+                        className="w-full rounded-lg border border-[--tc-border] bg-[--tc-surface-variant] px-2 py-1 text-[11px]"
                         value={normalizeKanbanStatus(ticket.status)}
                         onChange={(e) => updateStatus(ticket.id, e.target.value as TicketStatus)}
                       >
@@ -433,7 +433,7 @@ export default function KanbanItPage() {
                 );
               })}
               {(grouped[column.key] ?? []).length === 0 && (
-                <p className="text-xs text-(--tc-text-muted,#6b7280)">Sem chamados</p>
+                <p className="text-xs text-[--tc-text-muted]">Sem chamados</p>
               )}
             </div>
           </div>
@@ -456,27 +456,27 @@ export default function KanbanItPage() {
 
       {createOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_30px_80px_rgba(15,23,42,0.35)]">
-            <div className="flex items-center justify-between border-b border-(--tc-border,#e5e7eb) px-6 py-4">
+          <div className="w-full max-w-lg rounded-3xl border border-[--tc-border] bg-[--tc-surface] shadow-[0_30px_80px_var(--tc-shadow)]">
+            <div className="flex items-center justify-between border-b border-[--tc-border] px-6 py-4">
               <h2 className="text-lg font-semibold">Novo chamado</h2>
               <button
                 type="button"
                 onClick={() => setCreateOpen(false)}
-                className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                className="rounded-full border border-[--tc-border] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
               >
                 Fechar
               </button>
             </div>
             <div className="px-6 py-4 space-y-3">
               <input
-                className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-[--tc-border] bg-[--tc-surface-variant] px-3 py-2 text-sm"
                 placeholder="Titulo"
                 value={createDraft.title}
                 onChange={(e) => setCreateDraft((prev) => ({ ...prev, title: e.target.value }))}
               />
               <textarea
                 rows={4}
-                className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-[--tc-border] bg-[--tc-surface-variant] px-3 py-2 text-sm"
                 placeholder="Descreva o chamado..."
                 value={createDraft.description}
                 onChange={(e) => setCreateDraft((prev) => ({ ...prev, description: e.target.value }))}
@@ -489,7 +489,7 @@ export default function KanbanItPage() {
                   id="create-ticket-type"
                   aria-label="Tipo do chamado"
                   title="Tipo do chamado"
-                  className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-[--tc-border] bg-[--tc-surface-variant] px-3 py-2 text-sm"
                   value={createDraft.type}
                   onChange={(e) => setCreateDraft((prev) => ({ ...prev, type: e.target.value }))}
                 >
@@ -506,7 +506,7 @@ export default function KanbanItPage() {
                   id="create-ticket-priority"
                   aria-label="Prioridade do chamado"
                   title="Prioridade do chamado"
-                  className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-[--tc-border] bg-[--tc-surface-variant] px-3 py-2 text-sm"
                   value={createDraft.priority}
                   onChange={(e) => setCreateDraft((prev) => ({ ...prev, priority: e.target.value }))}
                 >
@@ -517,13 +517,13 @@ export default function KanbanItPage() {
                   ))}
                 </select>
               </div>
-              {createError && <p className="text-sm text-red-600">{createError}</p>}
+              {createError && <p className="text-sm text-[--tc-error]">{createError}</p>}
             </div>
-            <div className="flex items-center justify-end gap-2 border-t border-(--tc-border,#e5e7eb) px-6 py-4">
+            <div className="flex items-center justify-end gap-2 border-t border-[--tc-border] px-6 py-4">
               <button
                 type="button"
                 onClick={() => setCreateOpen(false)}
-                className="rounded-lg border border-(--tc-border,#e5e7eb) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                className="rounded-lg border border-[--tc-border] px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
               >
                 Cancelar
               </button>
@@ -531,7 +531,7 @@ export default function KanbanItPage() {
                 type="button"
                 onClick={submitCreate}
                 disabled={creating}
-                className="rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
+                className="rounded-lg bg-[--tc-accent] px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
               >
                 {creating ? "Criando..." : "Criar"}
               </button>

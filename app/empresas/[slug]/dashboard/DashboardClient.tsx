@@ -118,13 +118,13 @@ export default function DashboardClient({
         : "health-score-critical";
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#f5f6fa) text-(--page-text,#0b1a3c) px-4 py-8 sm:px-6 lg:px-10">
+    <div className="min-h-screen bg-(--page-bg) text-(--page-text) px-4 py-8 sm:px-6 lg:px-10">
       <div className="mx-auto flex max-w-6xl flex-col gap-8">
-        <header className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
+        <header className="flex flex-col gap-4 rounded-3xl bg-(--tc-surface) p-6 shadow-sm md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">Dashboard</p>
+            <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent)">Dashboard</p>
             <h1 className="mt-2 text-3xl font-extrabold">Qualidade da empresa</h1>
-            <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
+            <p className="mt-2 text-sm text-(--tc-text-secondary)">
               Visao geral de risco, SLA e execucoes recentes.
             </p>
           </div>
@@ -132,7 +132,7 @@ export default function DashboardClient({
             <a
               data-testid="export-quality"
               href={`/api/empresas/${encodeURIComponent(companySlug)}/quality/export`}
-              className="rounded-full border border-(--tc-border,#e5e7eb) bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text,#0b1a3c)"
+              className="rounded-full border border-(--tc-border) bg-(--tc-surface) px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text)"
             >
               Exportar CSV
             </a>
@@ -170,20 +170,20 @@ export default function DashboardClient({
         </header>
 
         <section className="grid gap-4 md:grid-cols-4">
-          <div className="rounded-3xl bg-white p-5 shadow-sm">
+          <div className="rounded-3xl bg-(--tc-surface) p-5 shadow-sm">
             <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">Quality Score</p>
-            <div className="mt-2 text-4xl font-extrabold text-(--tc-accent,#ef0001)" data-testid="quality-score">
+            <div className="mt-2 text-4xl font-extrabold text-(--tc-accent)" data-testid="quality-score">
               {summary.qualityScore}
             </div>
             <div
               data-testid={healthTestId}
-              className="mt-2 inline-flex rounded-full border border-(--tc-border,#e5e7eb) px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]"
+              className="mt-2 inline-flex rounded-full border border-(--tc-border) px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]"
             >
               {healthStatus === "healthy" ? "Saudavel" : healthStatus === "attention" ? "Atencao" : "Critico"}
             </div>
           </div>
 
-          <div className="rounded-3xl bg-white p-5 shadow-sm" data-testid="mttr-card">
+          <div className="rounded-3xl bg-(--tc-surface) p-5 shadow-sm" data-testid="mttr-card">
             <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">MTTR medio</p>
             <div className="mt-2 text-3xl font-extrabold" data-testid="mttr">
               {mttrDisplay}
@@ -196,13 +196,13 @@ export default function DashboardClient({
             </div>
           </div>
 
-          <div className="rounded-3xl bg-white p-5 shadow-sm" data-testid="sla-card">
+          <div className="rounded-3xl bg-(--tc-surface) p-5 shadow-sm" data-testid="sla-card">
             <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">SLA</p>
             <div className="mt-2 text-3xl font-extrabold">{summary.slaOverdue}</div>
             <p className="text-xs text-(--tc-text-muted)">Defeitos fora do SLA</p>
           </div>
 
-          <div className="rounded-3xl bg-white p-5 shadow-sm">
+          <div className="rounded-3xl bg-(--tc-surface) p-5 shadow-sm">
             <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">Defeitos</p>
             <div className="mt-2 text-3xl font-extrabold">{summary.openDefects}</div>
             <div className="text-xs text-(--tc-text-muted)" data-testid="metric-defects-closed">
@@ -212,7 +212,7 @@ export default function DashboardClient({
         </section>
 
         <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
-          <div className="rounded-3xl bg-white p-6 shadow-sm" data-testid="runs-quality-table">
+          <div className="rounded-3xl bg-(--tc-surface) p-6 shadow-sm" data-testid="runs-quality-table">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Qualidade por run</h2>
               <div
@@ -233,12 +233,12 @@ export default function DashboardClient({
                 </thead>
                 <tbody>
                   {localRuns.slice(0, 8).map((run) => (
-                    <tr key={run.slug} className="border-t border-(--tc-border,#e5e7eb)">
+                    <tr key={run.slug} className="border-t border-(--tc-border)">
                       <td className="py-2">
                         <Link
                           data-testid="run-drilldown-link"
                           href={`/empresas/${encodeURIComponent(companySlug)}/defeitos?run=${encodeURIComponent(run.slug)}`}
-                          className="font-semibold text-(--tc-accent,#ef0001)"
+                          className="font-semibold text-(--tc-accent)"
                         >
                           {run.name}
                         </Link>
@@ -259,7 +259,7 @@ export default function DashboardClient({
             </div>
           </div>
 
-          <div className="rounded-3xl bg-white p-6 shadow-sm" data-testid="releases-status">
+          <div className="rounded-3xl bg-(--tc-surface) p-6 shadow-sm" data-testid="releases-status">
             <h2 className="text-lg font-semibold">Status das releases</h2>
             <div className="mt-4 grid gap-3 text-sm">
               <div className="flex items-center justify-between">
@@ -278,14 +278,14 @@ export default function DashboardClient({
           </div>
         </section>
 
-        <section className="rounded-3xl bg-white p-6 shadow-sm" data-testid="alerts">
+        <section className="rounded-3xl bg-(--tc-surface) p-6 shadow-sm" data-testid="alerts">
           <h2 className="text-lg font-semibold">Alertas recentes</h2>
           <div className="mt-4 grid gap-3">
             {alerts.length === 0 && <p className="text-sm text-(--tc-text-muted)">Nenhum alerta recente.</p>}
             {alerts.map((alert, index) => (
-              <div key={`${alert.type}-${index}`} className="rounded-2xl border border-(--tc-border,#e5e7eb) px-4 py-3 text-sm">
+              <div key={`${alert.type}-${index}`} className="rounded-2xl border border-(--tc-border) px-4 py-3 text-sm">
                 <div className="flex items-center justify-between">
-                  <strong className="text-(--tc-text-primary,#0b1a3c)">{alert.message}</strong>
+                  <strong className="text-(--tc-text-primary)">{alert.message}</strong>
                   <span className="text-xs uppercase text-(--tc-text-muted)">{alert.severity}</span>
                 </div>
                 <p className="text-xs text-(--tc-text-muted)">{new Date(alert.timestamp).toLocaleString("pt-BR")}</p>
@@ -295,7 +295,7 @@ export default function DashboardClient({
         </section>
 
         <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
-          <div className="rounded-3xl bg-white p-6 shadow-sm">
+          <div className="rounded-3xl bg-(--tc-surface) p-6 shadow-sm">
             <h2 className="text-lg font-semibold">Releases em destaque</h2>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               {localRuns.slice(0, 4).map((run) => {
@@ -305,9 +305,9 @@ export default function DashboardClient({
                   <div
                     key={run.slug}
                     data-testid="release-card"
-                    className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-4"
+                    className="rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) p-4"
                   >
-                    <Link href={`/empresas/${encodeURIComponent(companySlug)}/runs/${encodeURIComponent(run.slug)}`} className="text-sm font-semibold text-(--tc-accent,#ef0001)">
+                    <Link href={`/empresas/${encodeURIComponent(companySlug)}/runs/${encodeURIComponent(run.slug)}`} className="text-sm font-semibold text-(--tc-accent)">
                       {run.name}
                     </Link>
                     <div className="mt-2 text-xs text-(--tc-text-muted)">
@@ -330,12 +330,12 @@ export default function DashboardClient({
             </div>
           </div>
 
-          <div className="rounded-3xl bg-white p-6 shadow-sm">
+          <div className="rounded-3xl bg-(--tc-surface) p-6 shadow-sm">
             <h2 className="text-lg font-semibold">Metas de qualidade</h2>
             <div className="mt-4 grid gap-3">
               {goals.length === 0 && <p className="text-sm text-(--tc-text-muted)">Sem metas registradas.</p>}
               {goals.map((goal, index) => (
-                <div key={`${goal.goal}-${index}`} data-testid="quality-goal-item" className="rounded-2xl border border-(--tc-border,#e5e7eb) px-4 py-3 text-sm">
+                <div key={`${goal.goal}-${index}`} data-testid="quality-goal-item" className="rounded-2xl border border-(--tc-border) px-4 py-3 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold">{goal.goal}</span>
                     <span data-testid="quality-goal-status" className="text-xs uppercase text-(--tc-text-muted)">

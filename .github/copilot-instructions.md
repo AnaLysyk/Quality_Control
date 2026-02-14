@@ -10,7 +10,7 @@ Resumo prático para agentes:
   - E2E: `npm run test:e2e` (Playwright). Smoke: `npm run test:e2e:smoke`
   - Lint: `npm run lint`
 - Regras importantes:
-  - `lib/` contém clientes e helpers server-only (ex.: `getSupabaseServer()` in `lib/supabaseServer.ts`). Importar esses módulos apenas em server components ou API routes.
+  - `lib/` contém clientes e helpers server-only. Importar esses módulos apenas em server components ou API routes.
   - Não vazar chaves/tokens de serviço para o cliente (service role, Qase tokens, etc.).
   - Styling: Tailwind v4 + CSS modules. Preferir CSS modules para cores dinâmicas (ex.: `app/components/StatusPill.tsx`).
   - Tests: há dois arquivos de config do Jest — escolha um (`--config`) ou remova o duplicado em CI.
@@ -19,7 +19,7 @@ Pontos de verificação (onde olhar primeiro): `package.json`, `next.config.ts`,
 
 Próximo passo proposto: aplicar reorganização de pastas para reduzir duplicação e facilitar manutenção. O plano detalhado está em `REORG_PLAN.md`. Confirme para eu executar os movimentos e atualizar imports automaticamente.
 
-Se quiser exemplos imediatos, posso mostrar a maneira correta de usar `getSupabaseServer()` em um API route ou script de servidor.
+
 # Copilot Instructions for painel-qa
 
 ## Project overview

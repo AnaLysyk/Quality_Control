@@ -1,5 +1,26 @@
 [
   {
+    "id": "1b2ed966-25d3-4e85-8a46-8133b5c3c4c1",
+    "slug": "xvxcvcx",
+    "name": "xvxcvcx",
+    "app": "SMART",
+    "kind": "defect",
+    "environments": [],
+    "clientSlug": "griaule",
+    "runSlug": "cvcvxcv",
+    "source": "MANUAL",
+    "status": "done",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": "2026-02-14T08:05:54.454Z",
+    "createdAt": "2026-02-14T08:05:42.053Z",
+    "updatedAt": "2026-02-14T08:05:54.454Z"
+  },
+  {
     "id": "f00cf340-ab26-4b7d-89e8-302af7d52ec9",
     "slug": "run_falha",
     "name": "run-falha",

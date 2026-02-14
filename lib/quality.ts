@@ -2,6 +2,18 @@ import { readManualReleaseStore } from "@/data/manualData";
 import { calcMTTR } from "@/lib/mttr";
 import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
+import { ReleaseEntry } from "@/release/data";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function readEnvNumber(name: string, fallback: number) {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const parsed = Number.parseFloat(raw);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+const DEFAULT_SLA_HOURS = readEnvNumber("NEXT_PUBLIC_QUALITY_SLA_HOURS", 48);
 
 type ManualReleaseRecord = {
   status?: string | null;
@@ -18,9 +30,35 @@ type ManualReleaseRecord = {
   severity?: string | null;
 };
 
+type QualitySummaryOptions = {
+  periodDays?: number | null;
+  slaHours?: number | null;
+};
+
+function resolveSlaMs(hours?: number | null) {
+  const finalHours = hours && hours > 0 ? hours : DEFAULT_SLA_HOURS;
+  return finalHours * 60 * 60 * 1000;
+}
+
+function isWithinPeriod(status: string, openedAt: string | null, closedAt: string | null, periodDays: number | null) {
+  if (periodDays == null) return true;
+  const cutoff = Date.now() - periodDays * DAY_MS;
+  const opened = openedAt ? Date.parse(openedAt) : Number.NaN;
+  const closed = closedAt ? Date.parse(closedAt) : Number.NaN;
+
+  if (status === "done") {
+    const closedInWindow = Number.isFinite(closed) && closed >= cutoff;
+    const openedInWindow = Number.isFinite(opened) && opened >= cutoff;
+    return closedInWindow || openedInWindow;
+  }
+
+  return true;
+}
+
 // Resumo de qualidade para exportacao executiva
-export async function getCompanyQualitySummary(slug: string, _period: string = "30d") {
-  void _period;
+export async function getCompanyQualitySummary(slug: string, options: QualitySummaryOptions = {}) {
+  const periodDays = options.periodDays ?? null;
+  const slaMs = resolveSlaMs(options.slaHours ?? null);
   // Apenas defeitos manuais disponiveis (Qase removido)
   const manualReleases = await readManualReleaseStore();
   const manualDefects = manualReleases.map((r) => {
@@ -32,6 +70,9 @@ export async function getCompanyQualitySummary(slug: string, _period: string = "
     const status = normalizeDefectStatus(rec.status);
     const openedAt = resolveOpenedAt(rec.openedAt ?? rec.createdAt);
     const closedAt = resolveClosedAt(status, rec.closedAt ?? null, rec.updatedAt ?? null);
+    if (!isWithinPeriod(status, openedAt, closedAt, periodDays)) {
+      return null;
+    }
     return {
       id: rec.slug ?? rec.id ?? "",
       title: rec.name ?? rec.title ?? "Defeito manual",
@@ -52,11 +93,10 @@ export async function getCompanyQualitySummary(slug: string, _period: string = "
   const mttrClosed = closedDefects.filter((d) => d.mttrMs != null);
   const mttrAvg = mttrClosed.length ? Math.round((mttrClosed.reduce((acc, d) => acc + (d.mttrMs || 0), 0) / mttrClosed.length) / 360000) / 10 : null;
   // SLA: abertos ha mais de 48h
-  const SLA_MS = 172800000;
   const now = Date.now();
   const slaOverdue = openDefects.filter((d) => {
     const opened = new Date(d.openedAt).getTime();
-    return Number.isFinite(opened) && now - opened > SLA_MS;
+    return Number.isFinite(opened) && now - opened > slaMs;
   }).length;
 
   // Quality Score: usar lógica do summary (pode ser ajustado)
@@ -77,9 +117,13 @@ export async function getCompanyQualitySummary(slug: string, _period: string = "
   };
 }
 
+type CompanyDefectsOptions = {
+  periodDays?: number | null;
+};
+
 // Lista de defeitos flat para exportacao
-export async function getCompanyDefects(slug: string, _period: string = "30d") {
-  void _period;
+export async function getCompanyDefects(slug: string, options: CompanyDefectsOptions = {}) {
+  const periodDays = options.periodDays ?? null;
   // Reutiliza a mesma lógica do summary
   // Manual + Qase
   const manualReleases = await readManualReleaseStore();
@@ -92,6 +136,9 @@ export async function getCompanyDefects(slug: string, _period: string = "30d") {
     const status = normalizeDefectStatus(rec.status);
     const openedAt = resolveOpenedAt(rec.openedAt ?? rec.createdAt);
     const closedAt = resolveClosedAt(status, rec.closedAt ?? null, rec.updatedAt ?? null);
+    if (!isWithinPeriod(status, openedAt, closedAt, periodDays)) {
+      return null;
+    }
     return {
       id: rec.slug ?? rec.id ?? "",
       title: rec.name ?? rec.title ?? "Defeito manual",
@@ -113,12 +160,11 @@ export async function getCompanyDefects(slug: string, _period: string = "30d") {
     status: d.status,
     openedAt: d.openedAt,
     closedAt: d.closedAt,
-    mttrHours: d.mttrMs != null ? Math.round((d.mttrMs / 360000) ) / 10 : "",
+    mttrHours: d.mttrMs != null ? Math.round((d.mttrMs / 3600000) * 10) / 10 : "",
     run: d.runSlug || "",
     severity: d.severity || "",
   }));
 }
-import { ReleaseEntry } from "@/release/data";
 export type Stats = { pass: number; fail: number; blocked: number; notRun: number };
 
 export type ReleaseWithStats = ReleaseEntry & {
@@ -170,14 +216,7 @@ export const QUALITY_THRESHOLDS = {
   minTotal: readEnvNumber("NEXT_PUBLIC_QUALITY_GATE_MIN_TOTAL", 1),
 } as const;
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-function readEnvNumber(name: string, fallback: number) {
-  const raw = process.env[name];
-  if (!raw) return fallback;
-  const parsed = Number.parseFloat(raw);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
+// NOTE: DAY_MS defined near top
 
 function toNumber(value: unknown): number {
   const num = Number(value ?? 0);

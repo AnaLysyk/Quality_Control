@@ -11,6 +11,9 @@ const USE_MEMORY_ALERTS =
 
 const STORE_PATH = path && path.join(process.cwd(), "data", "quality_gate_history.json");
 let memoryStore: QualityGateHistoryEntry[] = [];
+/**
+ * Entrada de histórico de avaliação do quality gate de um release.
+ */
 export type QualityGateHistoryEntry = {
   id: string;
   company_slug: string;
@@ -41,6 +44,10 @@ async function ensureStore() {
   }
 }
 
+/**
+ * Adiciona uma entrada ao histórico do quality gate (persistente ou em memória).
+ * @param entry Entrada de histórico
+ */
 export async function appendQualityGateHistory(entry: QualityGateHistoryEntry) {
   if (USE_MEMORY_ALERTS) {
     memoryStore = [...memoryStore, entry];
@@ -62,6 +69,12 @@ export async function appendQualityGateHistory(entry: QualityGateHistoryEntry) {
   }
 }
 
+/**
+ * Lê o histórico do quality gate, filtrando por empresa e/ou release.
+ * @param companySlug Slug da empresa (opcional)
+ * @param releaseSlug Slug do release (opcional)
+ * @returns Lista de entradas do histórico
+ */
 export async function readQualityGateHistory(companySlug?: string, releaseSlug?: string): Promise<QualityGateHistoryEntry[]> {
   if (USE_MEMORY_ALERTS) {
     let arr = [...memoryStore];

@@ -80,9 +80,14 @@ jobs:
       - name: Executar E2E em produção
         env:
           # Estes segredos devem ser adicionados nas Configurações do Repositório > Secrets > Actions
-          PLAYWRIGHT_EMAIL: ${{ secrets['PLAYWRIGHT_EMAIL'] }}
-          PLAYWRIGHT_PASSWORD: ${{ secrets['PLAYWRIGHT_PASSWORD'] }}
-        run: npm run test:e2e:prod
+          PLAYWRIGHT_EMAIL: ${{ secrets.PLAYWRIGHT_EMAIL || '' }}
+          PLAYWRIGHT_PASSWORD: ${{ secrets.PLAYWRIGHT_PASSWORD || '' }}
+        run: |
+          if [ -z "$PLAYWRIGHT_EMAIL" ] || [ -z "$PLAYWRIGHT_PASSWORD" ]; then
+            echo "Credenciais Playwright ausentes. Configure PLAYWRIGHT_EMAIL/PLAYWRIGHT_PASSWORD." >&2
+            exit 1
+          fi
+          npm run test:e2e:prod
 
       - name: Upload do relatório Playwright
         if: always()

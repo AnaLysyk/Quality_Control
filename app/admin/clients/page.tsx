@@ -38,6 +38,68 @@ type Client = {
   updatedAt?: string | null;
 };
 
+type LogoSource = Pick<Client, "logoUrl" | "slug" | "website" | "name">;
+
+const FALLBACK_LOGOS: Record<string, string> = {
+  griaule: "/images/griaule.png",
+  "testing-company": "/images/testing-company.png",
+};
+
+function resolveLogoCandidates(source: LogoSource): string[] {
+  const candidates: string[] = [];
+  const addCandidate = (value: string | null | undefined) => {
+    const trimmed = typeof value === "string" ? value.trim() : "";
+    if (!trimmed) return;
+    if (!candidates.includes(trimmed)) candidates.push(trimmed);
+  };
+
+  const rawLogo = typeof source.logoUrl === "string" ? source.logoUrl.trim() : "";
+  if (rawLogo) {
+    if (/^(https?:|data:|blob:)/i.test(rawLogo)) {
+      addCandidate(rawLogo);
+    } else if (rawLogo.startsWith("//")) {
+      addCandidate(`https:${rawLogo}`);
+    } else if (rawLogo.startsWith("/")) {
+      addCandidate(rawLogo);
+    } else if (rawLogo.toLowerCase().startsWith("local:") && source.slug) {
+      const relative = rawLogo.slice("local:".length);
+      addCandidate(`/api/company-documents?slug=${encodeURIComponent(source.slug)}&path=${encodeURIComponent(relative)}`);
+    } else if (rawLogo.includes(".")) {
+      addCandidate(rawLogo.startsWith("images/") ? `/${rawLogo}` : `/images/${rawLogo}`);
+    }
+  }
+
+  const slug = typeof source.slug === "string" ? source.slug.trim().toLowerCase() : "";
+  if (slug) {
+    addCandidate(FALLBACK_LOGOS[slug]);
+    addCandidate(`/images/${slug}.png`);
+    addCandidate(`/images/${slug}.svg`);
+    addCandidate(`/images/${slug}.jpg`);
+    addCandidate(`/images/${slug}.jpeg`);
+  }
+
+  const website = typeof source.website === "string" ? source.website.trim() : "";
+  if (website) {
+    try {
+      const hostname = new URL(website).hostname;
+      if (hostname) addCandidate(`https://logo.clearbit.com/${hostname}`);
+    } catch {
+      /* ignore invalid URL */
+    }
+  }
+
+  return candidates;
+}
+
+function getInitials(value: string | null | undefined) {
+  const trimmed = (value ?? "").trim();
+  if (!trimmed) return "?";
+  const parts = trimmed.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0].slice(0, 1) + parts[parts.length - 1].slice(0, 1)).toUpperCase();
+}
+
 function mapClient(row: Record<string, unknown>): Client {
   const name =
     typeof row.name === "string"
@@ -397,16 +459,13 @@ function AdminClientsPage() {
             >
                 <div className="flex flex-row flex-wrap items-center gap-3">
                   <div className="h-12 w-12 rounded logo-background overflow-hidden flex items-center justify-center">
-                  {client.logoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={client.logoUrl}
-                      alt={client.name}
-                      className="h-full w-full object-contain logo-image"
-                    />
-                  ) : (
-                    <span className="text-xs text-(--tc-text-muted,#6b7280)">Sem logo</span>
-                  )}
+                  <CompanyLogo
+                    logoUrl={client.logoUrl}
+                    slug={client.slug}
+                    website={client.website}
+                    name={client.name}
+                    className="logo-image"
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold truncate" title={client.name}>
@@ -463,16 +522,13 @@ function AdminClientsPage() {
                   <p className="text-[11px] uppercase tracking-[0.35em] text-white/80">Painel da empresa</p>
                   <div className="flex items-center gap-3">
                     <div className="h-12 w-12 rounded-xl logo-background border border-white/20 flex items-center justify-center overflow-hidden shadow-inner">
-                      {form.logoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={form.logoUrl as string}
-                          alt={form.name || selected.name}
-                          className="h-full w-full object-contain logo-image"
-                        />
-                      ) : (
-                        <span className="text-xs text-white/80">Logo</span>
-                      )}
+                      <CompanyLogo
+                        logoUrl={(form.logoUrl ?? selected.logoUrl) ?? null}
+                        slug={(form.slug ?? selected.slug) ?? null}
+                        website={(form.website ?? selected.website) ?? null}
+                        name={(form.name ?? selected.name) ?? ""}
+                        className="logo-image"
+                      />
                     </div>
                     <div className="min-w-45">
                       <h2
@@ -786,6 +842,64 @@ export default function AdminClientsPageWithGuard() {
     <RequireGlobalAdmin>
       <AdminClientsPage />
     </RequireGlobalAdmin>
+  );
+}
+
+type CompanyLogoProps = {
+  logoUrl?: string | null;
+  slug?: string | null;
+  website?: string | null;
+  name?: string | null;
+  className?: string;
+};
+
+function CompanyLogo({ logoUrl, slug, website, name, className }: CompanyLogoProps) {
+  const candidates = useMemo(
+    () => resolveLogoCandidates({ logoUrl: logoUrl ?? null, slug: slug ?? null, website: website ?? null, name: name ?? null }),
+    [logoUrl, slug, website, name],
+  );
+  const [index, setIndex] = useState(0);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setIndex(0);
+    setFailed(false);
+  }, [candidates]);
+
+  const normalizedClass = className ? className.trim() : "";
+  const alt = (name && name.trim()) || "Logo da empresa";
+  const currentSrc = candidates[index] ?? null;
+
+  if (!currentSrc || failed) {
+    const initials = getInitials(name);
+    return (
+      <span
+        role="img"
+        aria-label={alt}
+        className={`inline-flex h-full w-full items-center justify-center rounded bg-(--tc-surface-2,#f3f4f6) text-xs font-semibold uppercase text-(--tc-text-muted,#6b7280) ${normalizedClass}`.trim()}
+      >
+        {initials}
+      </span>
+    );
+  }
+
+  const handleError = () => {
+    if (index < candidates.length - 1) {
+      setIndex((prev) => prev + 1);
+    } else {
+      setFailed(true);
+    }
+  };
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={currentSrc}
+      alt={alt}
+      loading="lazy"
+      className={`h-full w-full object-contain ${normalizedClass}`.trim()}
+      onError={handleError}
+    />
   );
 }
 

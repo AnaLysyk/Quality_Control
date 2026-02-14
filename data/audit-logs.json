@@ -1,6 +1,62 @@
 {
   "items": [
     {
+      "id": "6870c9f1-e950-47ec-a873-c509032a2572",
+      "created_at": "2026-02-14T02:18:39.647Z",
+      "actor_user_id": "usr_admin_griaule_test",
+      "actor_email": "admin@griaule.test",
+      "action": "user.created",
+      "entity_type": "user",
+      "entity_id": "usr_ce4ce29b",
+      "entity_label": "e2e.user.514230@griaule.test",
+      "metadata": {
+        "companyId": "cmp_336e1809",
+        "role": "user"
+      }
+    },
+    {
+      "id": "41efa738-6fdd-47c0-9bd3-34b3d4c3e2c3",
+      "created_at": "2026-02-14T02:18:36.448Z",
+      "actor_user_id": "usr_admin_griaule_test",
+      "actor_email": "admin@griaule.test",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_336e1809",
+      "entity_label": "Empresa E2E 514230",
+      "metadata": {
+        "slug": "empresa-e2e-514230",
+        "active": true
+      }
+    },
+    {
+      "id": "b4720cf2-ad1b-4839-bda4-509ad3ee57c6",
+      "created_at": "2026-02-14T02:06:21.985Z",
+      "actor_user_id": "usr_admin_griaule_test",
+      "actor_email": "admin@griaule.test",
+      "action": "user.created",
+      "entity_type": "user",
+      "entity_id": "usr_f843b71e",
+      "entity_label": "e2e.user.772985@griaule.test",
+      "metadata": {
+        "companyId": "cmp_8a9c9b21",
+        "role": "user"
+      }
+    },
+    {
+      "id": "41652d59-e0b2-40ed-a689-9dadc9cea57d",
+      "created_at": "2026-02-14T02:06:18.187Z",
+      "actor_user_id": "usr_admin_griaule_test",
+      "actor_email": "admin@griaule.test",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_8a9c9b21",
+      "entity_label": "Empresa E2E 772985",
+      "metadata": {
+        "slug": "empresa-e2e-772985",
+        "active": true
+      }
+    },
+    {
       "id": "fe696061-cc1f-4470-963b-89752363827f",
       "created_at": "2026-02-14T01:18:49.848Z",
       "actor_user_id": "usr_admin_griaule_test",

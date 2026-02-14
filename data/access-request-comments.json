@@ -199,6 +199,16 @@
       "authorId": "usr_admin_griaule_test",
       "body": "Solicitação rejeitada.",
       "createdAt": "2026-02-14T01:18:35.226Z"
+    },
+    {
+      "id": "893b3e91-0867-4d52-8d66-e5565d6ffa91",
+      "requestId": "fc0e3c4d-6f68-43bd-a6d3-b02979c769c2",
+      "authorRole": "admin",
+      "authorName": "admin@griaule.test",
+      "authorEmail": "admin@griaule.test",
+      "authorId": "usr_admin_griaule_test",
+      "body": "Solicitação rejeitada.",
+      "createdAt": "2026-02-14T02:18:31.593Z"
     }
   ]
 }

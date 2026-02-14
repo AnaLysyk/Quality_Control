@@ -1,42 +1,43 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 
 import { CompanySelector } from "../components/CompanySelector";
 
 export default function EmpresasIndexPage() {
-  const router = useRouter();
   const { user, loading } = useAuthUser();
 
-  const isAdmin = useMemo(() => {
-    const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
-    return user?.isGlobalAdmin === true || role === "admin" || role === "global_admin";
+  const { isPrivileged, headerCopy } = useMemo(() => {
+    const normalizedRole = typeof user?.role === "string" ? user.role.toLowerCase() : "";
+    const normalizedGlobalRole = typeof user?.globalRole === "string" ? user.globalRole.toLowerCase() : "";
+    const privileged =
+      user?.isGlobalAdmin === true ||
+      normalizedRole === "admin" ||
+      normalizedRole === "global_admin" ||
+      normalizedRole === "it_dev" ||
+      normalizedGlobalRole === "global_admin";
+
+    const description = privileged
+      ? "Admin e Dev podem alternar entre todas as empresas cadastradas."
+      : "Visualize e acesse apenas as empresas vinculadas ao seu perfil.";
+
+    return {
+      isPrivileged: privileged,
+      headerCopy: {
+        title: privileged ? "Selecione a empresa para gerenciar" : "Selecione uma empresa vinculada",
+        description,
+      },
+    } as const;
   }, [user]);
-
-  useEffect(() => {
-    if (loading) return;
-    if (!user) return;
-    if (isAdmin) return;
-    const slug = typeof user.clientSlug === "string" ? user.clientSlug.trim() : "";
-    if (!slug) return;
-    router.replace(`/empresas/${encodeURIComponent(slug)}/home`);
-  }, [loading, user, isAdmin, router]);
-
-  if (!loading && user && !isAdmin && (user.clientSlug ?? "")) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-(--page-bg,#eef2f7) text-(--page-text,#0b1a3c) px-4 py-12">
       <div className="mx-auto max-w-5xl space-y-10">
         <header className="space-y-2 text-center">
           <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent,#ef0001)">Empresas</p>
-          <h1 className="text-3xl font-bold">Selecione a empresa ativa</h1>
-          <p className="text-sm text-(--tc-text-muted,#6b7280)">
-            Os módulos do painel só carregam dados para empresas vinculadas. Escolha uma empresa para continuar.
-          </p>
+          <h1 className="text-3xl font-bold">{headerCopy.title}</h1>
+          <p className="text-sm text-(--tc-text-muted,#6b7280)">{headerCopy.description}</p>
         </header>
 
         <div className="rounded-[28px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-8 shadow-[0_20px_55px_rgba(15,23,42,0.12)]">
@@ -46,6 +47,18 @@ export default function EmpresasIndexPage() {
             buildHref={(company) => `/empresas/${encodeURIComponent(company.clientSlug)}/home`}
             ctaLabel={(company) => (company.role === "ADMIN" ? "Gerenciar" : "Entrar")}
           />
+
+          {!loading && user && !isPrivileged && (
+            <p className="mt-6 text-xs text-(--tc-text-secondary,#4b5563)">
+              Precisa de acesso a outra empresa? Solicite a um administrador para ser vinculado.
+            </p>
+          )}
+
+          {!loading && !user && (
+            <p className="mt-6 text-xs text-(--tc-text-secondary,#4b5563)">
+              Faça login para visualizar as empresas disponíveis para o seu perfil.
+            </p>
+          )}
         </div>
       </div>
     </div>

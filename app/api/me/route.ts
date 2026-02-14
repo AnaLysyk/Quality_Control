@@ -34,14 +34,27 @@ export async function GET(req: Request) {
     listLocalCompanies(),
   ]);
   const isGlobalAdmin = access.isGlobalAdmin === true;
-  const allowedCompanies = isGlobalAdmin
+  const normalizedRole = (access.role ?? "").toLowerCase();
+  const normalizedCompanyRole = (access.companyRole ?? "").toLowerCase();
+  const hasDeveloperPrivileges = normalizedRole === "it_dev" || normalizedCompanyRole === "it_dev";
+  const hasPrivilegedAccess = isGlobalAdmin || hasDeveloperPrivileges;
+  const allowedSlugSet = new Set(
+    (access.companySlugs ?? [])
+      .map((slug) => (typeof slug === "string" ? slug.trim().toLowerCase() : ""))
+      .filter((slug): slug is string => slug.length > 0),
+  );
+  const allowedCompanies = hasPrivilegedAccess
     ? companies
-    : companies.filter((company) => links.some((link) => link.companyId === company.id));
+    : companies.filter((company) => {
+        const slug = typeof company.slug === "string" ? company.slug.trim().toLowerCase() : "";
+        if (slug && allowedSlugSet.has(slug)) return true;
+        return links.some((link) => link.companyId === company.id);
+      });
 
   const companiesResponse: AuthCompany[] = allowedCompanies.map((company) => {
     const link = links.find((item) => item.companyId === company.id);
     const rawRole = normalizeLocalRole(link?.role ?? null);
-    const role = isGlobalAdmin || rawRole === "company_admin" ? "ADMIN" : "USER";
+    const role = hasPrivilegedAccess || rawRole === "company_admin" ? "ADMIN" : "USER";
     const createdAt =
       (typeof (company as { createdAt?: string | null }).createdAt === "string"
         ? (company as { createdAt?: string | null }).createdAt

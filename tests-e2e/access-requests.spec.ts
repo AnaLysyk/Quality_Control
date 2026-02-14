@@ -14,6 +14,7 @@ async function createAccessRequest(
     notes,
   }: {
     name: string;
+    /** Email do usuário solicitante */
     email: string;
     role: string;
     company: string;

@@ -1,71 +1,38 @@
 "use client";
 
+
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuthUser } from "@/hooks/useAuthUser";
+import { useState, FormEvent } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import styles from "./LoginClient.module.css";
-import { FormEvent, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useAuthUser } from "@/hooks/useAuthUser";
-import { FiEye, FiEyeOff } from "react-icons/fi";
-
-type AuthUserShape = {
-  role?: string | null;
-  globalRole?: string | null;
-  isGlobalAdmin?: boolean;
-  clientSlug?: string | null;
-  companySlug?: string | null;
-};
+import logo from "@/public/logo.svg";
 
 export default function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { refreshUser } = useAuthUser();
-
   const [user, setUser] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-
-  function resolvePostLoginRedirect(nextParam: string | null, authUser: AuthUserShape | null) {
-    const safeNext = typeof nextParam === "string" && nextParam.startsWith("/") ? nextParam : "";
-    if (safeNext) return safeNext;
-    const normalizedRole = typeof authUser?.role === "string" ? authUser.role.toLowerCase() : "";
-    const isAdmin =
-      authUser?.isGlobalAdmin === true ||
-      authUser?.globalRole === "global_admin" ||
-      normalizedRole === "admin";
-    const clientSlug =
-      typeof authUser?.clientSlug === "string"
-        ? authUser.clientSlug
-        : typeof authUser?.companySlug === "string"
-          ? authUser.companySlug
-          : null;
-    if (isAdmin) return "/admin/home";
-    if (clientSlug) return `/empresas/${encodeURIComponent(clientSlug)}/home`;
-    return "/empresas";
-  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user, password }),
       });
-
       if (res.ok) {
-        const meRes = await fetch("/api/me", { credentials: 'include' });
-        const meJson = await meRes.json().catch(() => null);
-        const authUser = meJson?.user ?? null;
         await refreshUser();
         const nextParam = searchParams?.get("next") ?? null;
-        const redirectTo = resolvePostLoginRedirect(nextParam, authUser);
-        router.push(redirectTo);
+        // Redirecionamento simplificado
+        router.push("/empresas");
       } else {
         const data = await res.json().catch(() => null);
         setError((data?.error as string) || "Erro ao autenticar");
@@ -78,144 +45,50 @@ export default function LoginClient() {
   }
 
   return (
-    <div
-      className={
-        styles.loginContainer +
-        " " +
-        styles.loginFixedTheme +
-        " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-[#011848] bg-gradient-to-br from-[#011848] via-[#0b1a3c] to-[#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-8 sm:px-6 sm:py-10 md:px-10"
-      }
-    >
-      {/* Animated bubbles background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-6 left-6 w-32 h-32 bg-[#011848] rounded-full opacity-20 blur-2xl animate-ping"></div>
-        <div className="absolute bottom-6 right-6 w-28 h-28 bg-[#ef0001] rounded-full opacity-20 blur-2xl animate-pulse"></div>
-        <div className="absolute top-1/4 right-1/5 w-20 h-20 bg-[#ef0001] rounded-full opacity-10 blur-lg animate-bounce delay-1000"></div>
-        <div className="absolute bottom-1/4 left-1/5 w-24 h-24 bg-[#011848] rounded-full opacity-10 blur-lg animate-pulse delay-700"></div>
-        <div className="absolute top-10 left-44 w-16 h-16 bg-[#ef0001] rounded-full opacity-10 blur animate-pulse delay-500"></div>
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-20 bg-[#011848] rounded-full opacity-10 blur animate-bounce delay-200"></div>
-        <div className="absolute top-1/2 left-2 w-14 h-14 bg-[#ef0001] rounded-full opacity-10 blur animate-pulse delay-800"></div>
-        <div className="absolute top-1/2 right-2 w-14 h-14 bg-[#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
+    <div className={styles.wall}>
+      {/* Animated bubbles */}
+      <div className={styles.bubble + ' ' + styles.bubble1}></div>
+      <div className={styles.bubble + ' ' + styles.bubble2}></div>
+      <div className={styles.bubble + ' ' + styles.bubble3}></div>
+      <div className={styles.bubble + ' ' + styles.bubble4}></div>
+
+      {/* Centered spinning logo */}
+      <div className={styles.logoSpin}>
+        <Image src={logo} alt="Logo" width={120} height={120} priority />
       </div>
 
-      <div className="max-w-lg w-full space-y-6 sm:space-y-8 relative z-10 sm:max-w-xl md:max-w-2xl">
-        <div className="text-center">
-          <div
-            className={`relative mx-auto w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 mb-4 sm:mb-6 ${styles.logoWrapper}`}
-          >
-            <div className="absolute inset-0 rounded-full bg-linear-to-r from-[--tc-primary,#011848] to-[--tc-accent,#ef0001] shadow-lg"></div>
-            <div className="absolute inset-1 rounded-full bg-transparent flex items-center justify-center overflow-hidden">
-              <div className="relative w-[85%] h-[85%]">
-                <Image
-                  src="/images/tc.png"
-                  alt="Logo Quality Control"
-                  fill
-                  priority
-                  className="select-none pointer-events-none object-contain object-center animate-spin-slower"
-                />
-              </div>
-            </div>
-          </div>
-          <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-bold text-[--tc-primary,#011848] mb-2 leading-tight drop-shadow-sm">
-            Quality Control
-          </h2>
-          <p className="text-[--tc-primary,#011848] font-medium drop-shadow-sm">Bem-vindo, entre na sua conta</p>
+      {/* Login form */}
+      <form className={styles.form} onSubmit={handleSubmit} autoComplete="off">
+        <h1 className={styles.title}>Login</h1>
+        <label className={styles.label} htmlFor="user">Usuário</label>
+        <input
+          className={styles.input}
+          id="user"
+          type="text"
+          value={user}
+          onChange={e => setUser(e.target.value)}
+          autoFocus
+          autoComplete="username"
+          disabled={loading}
+        />
+        <label className={styles.label} htmlFor="password">Senha</label>
+        <input
+          className={styles.input}
+          id="password"
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          autoComplete="current-password"
+          disabled={loading}
+        />
+        {error && <div className={styles.error}>{error}</div>}
+        <button className={styles.button} type="submit" disabled={loading}>
+          {loading ? "Entrando..." : "Entrar"}
+        </button>
+        <div className={styles.links}>
+          <Link href="/reset-password" className={styles.link}>Esqueceu a senha?</Link>
         </div>
-
-        <form
-          className="bg-[--tc-surface,#fff]/90 backdrop-blur-sm p-5 sm:p-8 rounded-2xl shadow-2xl border border-[--tc-primary,#011848]/10 w-full max-w-sm sm:max-w-md mx-auto min-w-0"
-          onSubmit={handleSubmit}
-        >
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="user" className="block text-sm font-medium text-[--tc-primary,#011848] mb-1">
-                Usuario
-              </label>
-              <input
-                id="user"
-                name="user"
-                type="text"
-                required
-                className="form-control-user w-full px-4 py-3 border border-[--tc-primary,#011848]/20 rounded-lg focus:ring-2 focus:ring-[--tc-accent,#ef0001] focus:border-transparent transition-all duration-200 bg-[--tc-surface,#fff] text-[--tc-primary,#011848] placeholder:text-[--tc-text-muted,#9aa3b2] caret-[--tc-accent,#ef0001]"
-                placeholder="usuario"
-                autoComplete="username"
-                value={user}
-                onChange={(e) => setUser(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[--tc-primary,#011848] mb-1">
-                Senha
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  className="form-control-user w-full px-4 py-3 border border-[--tc-primary,#011848]/20 rounded-lg focus:ring-2 focus:ring-[--tc-accent,#ef0001] focus:border-transparent transition-all duration-200 bg-[--tc-surface,#fff] pr-11 text-[--tc-primary,#011848] placeholder:text-[--tc-text-muted,#9aa3b2] caret-[--tc-accent,#ef0001]"
-                  placeholder="********"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute inset-y-0 right-3 flex items-center text-[--tc-text-muted,#64748b] hover:text-[--tc-primary,#011848]"
-                  aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
-                >
-                  {showPassword ? <FiEyeOff aria-hidden /> : <FiEye aria-hidden />}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {error && (
-            <div className="mt-4 p-3 bg-[--tc-error-bg,#fef2f2] border border-[--tc-error-border,#fecaca] rounded-lg text-[--tc-error,#b91c1c] text-sm text-center">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-6 w-full bg-linear-to-r from-[--tc-primary,#011848] to-[--tc-accent,#ef0001] text-[--tc-on-accent,#fff] py-3 px-4 rounded-lg font-medium hover:from-[--tc-primary,#011848]/90 hover:to-[--tc-accent,#ef0001]/90 focus:ring-2 focus:ring-[--tc-accent,#ef0001] focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <div className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-[--tc-on-accent,#fff]" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Entrando...
-              </div>
-            ) : (
-              "Entrar"
-            )}
-          </button>
-
-          <div className="mt-6 text-sm text-[--tc-text,#4b5563]">
-            <div className="flex flex-col items-center gap-2">
-              <Link href="/login/forgot-password" className="font-semibold text-[--tc-primary,#011848]/90 hover:text-[--tc-primary,#011848]">
-                Esqueci minha senha
-              </Link>
-              <div className="flex w-full items-center gap-3 text-xs uppercase tracking-[0.4em] text-[--tc-divider,#c1c5d1]">
-                <span className="flex-1 h-px bg-linear-to-r from-[--tc-divider,#E5E7EB]/0 via-[--tc-divider,#E5E7EB] to-[--tc-divider,#E5E7EB]/0" />
-                <span className="px-1 text-[10px] tracking-[0.35em] text-[--tc-divider,#c1c5d1]">OU</span>
-                <span className="flex-1 h-px bg-linear-to-r from-[--tc-divider,#E5E7EB]/0 via-[--tc-divider,#E5E7EB] to-[--tc-divider,#E5E7EB]/0" />
-              </div>
-              <Link href="/login/access-request" className="font-semibold text-[--tc-accent,#ef0001] hover:text-[--tc-accent-dark,#c70000]">
-                Solicitar acesso
-              </Link>
-            </div>
-          </div>
-        </form>
-      </div>
+      </form>
     </div>
   );
 }

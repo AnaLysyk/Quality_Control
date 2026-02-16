@@ -1,0 +1,33 @@
+# .codex/config.toml — Exemplo básico
+
+# Modelo padrão usado pelo Codex
+model = "gpt-5.2"
+
+# Política de aprovação para comandos gerados
+approval_policy = "on-request"
+
+# Nível de sandbox (acesso ao sistema de arquivos/rede)
+sandbox_mode = "workspace-write"
+
+# Modo de busca web: "cached", "live" ou "disabled"
+web_search = "cached"
+
+# Esforço de raciocínio do modelo
+model_reasoning_effort = "high"
+
+# Estilo de comunicação
+personality = "friendly"
+
+# Variáveis de ambiente permitidas para comandos
+[shell_environment_policy]
+include_only = ["PATH", "HOME"]
+
+# Diretório de logs
+log_dir = "./.codex-log"
+
+# Flags de recursos experimentais/opcionais
+[features]
+shell_snapshot = true
+apps = false
+collaboration_modes = true
+undo = true

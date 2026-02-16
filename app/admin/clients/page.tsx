@@ -25,6 +25,7 @@ type Client = {
   phone?: string | null;
   logoUrl?: string | null;
   docsLink?: string | null;
+  docsUrl?: string | null;
   notes?: string | null;
   integrationMode?: "qase" | "manual" | null;
   qaseProjectCode?: string | null;
@@ -297,7 +298,7 @@ function AdminClientsPage() {
         phone: form.phone,
         website: form.website,
         logo_url: form.logoUrl,
-        docs_link: form.docsLink,
+        docs_link: form.docsLink ?? form.docsUrl ?? null,
         notes: form.notes,
         active: form.active,
         integration_mode: form.integrationMode,

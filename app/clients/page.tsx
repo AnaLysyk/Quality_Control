@@ -30,6 +30,7 @@ type Client = {
   phone?: string | null;
   logoUrl?: string | null;
   docsLink?: string | null;
+  docsUrl?: string | null;
   linkedin?: string | null;
   notes?: string | null;
   active: boolean;
@@ -67,6 +68,7 @@ function mapClient(row: Record<string, unknown>): Client {
     phone: readNullableString(row.phone),
     logoUrl: readNullableString(row.logo_url),
     docsLink: readNullableString((row as { docs_link?: unknown; docs_url?: unknown }).docs_link ?? row.docs_url),
+    docsUrl: readNullableString((row as { docs_url?: unknown }).docs_url),
     linkedin: readNullableString(row.linkedin_url),
     notes:
       readNullableString(row.internal_notes) ??

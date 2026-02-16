@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
     phone: input.phone ?? null,
     website: input.website ?? null,
     logo_url: input.logoUrl ?? null,
-    docs_link: input.docsLink ?? input.docsUrl ?? null,
+    docs_link: input.docsUrl ?? null,
     notes: resolvedNotes,
     cep: input.cep ?? null,
     address_detail: input.addressDetail ?? null,

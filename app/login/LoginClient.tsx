@@ -7,7 +7,7 @@ import { useState, FormEvent } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import styles from "./LoginClient.module.css";
-import logo from "@/public/logo.svg";
+import logo from "/logo.svg";
 
 export default function LoginClient() {
   const router = useRouter();

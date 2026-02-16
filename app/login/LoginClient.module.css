@@ -163,6 +163,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: logoBreath 6s ease-in-out infinite;
 }
 .logoGradientAnimated {
   position: absolute;
@@ -279,9 +280,7 @@
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-.logoEnergyPremium {
-  animation: logoBreath 6s ease-in-out infinite;
-}
+
 @keyframes logoBreath {
   0%,100% { transform: scale(1); }
   50% { transform: scale(1.035); }
@@ -385,7 +384,7 @@
 }
 
 /* High zoom accessibility: ensure min width and readable font */
-@media (max-width: 400px), (max-zoom: 2.5) {
+@media (max-width: 400px) {
   .loginContainer {
     min-width: 0;
     font-size: 1.25rem;

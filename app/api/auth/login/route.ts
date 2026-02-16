@@ -9,15 +9,34 @@ import { buildLocalSessionForUser } from "@/lib/auth/sessionBuilder";
 import { getRedis } from "@/lib/redis";
 import { findLocalUserByEmailOrId } from "@/lib/auth/localStore";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
+import { checkLoginRateLimit } from "@/lib/auth/rateLimitLogin";
+import { authLog } from "@/lib/auth/authLog";
+import { hasMinRole, Role } from "@/lib/rbac/roleLevels";
 
-type LoginRequest = {
-  login?: string;
-  user?: string;
-  usuario?: string;
-  password?: string;
-  clientSlug?: string;
-  companySlug?: string;
+
+type RawLoginBody = {
+  login?: unknown;
+  user?: unknown;
+  usuario?: unknown;
+  password?: unknown;
+  clientSlug?: unknown;
+  companySlug?: unknown;
 };
+
+function normalizeLoginBody(body: RawLoginBody) {
+  const loginRaw = body.login ?? body.user ?? body.usuario ?? null;
+  if (typeof loginRaw !== "string" || typeof body.password !== "string") {
+    return { ok: false as const, error: "CREDENCIAIS_OBRIGATORIAS" };
+  }
+  const login = loginRaw.trim();
+  if (!login || !body.password) {
+    return { ok: false as const, error: "CREDENCIAIS_OBRIGATORIAS" };
+  }
+  if (login.length > 120 || body.password.length > 200) {
+    return { ok: false as const, error: "CREDENCIAIS_TAMANHO_INVALIDO" };
+  }
+  return { ok: true as const, login, password: body.password, clientSlug: body.clientSlug, companySlug: body.companySlug };
+}
 
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -49,18 +68,19 @@ function buildAuthToken(payload: Record<string, unknown>, ttlSeconds: number) {
   return jwt.sign(payload, secret, { expiresIn: `${ttlSeconds}s` });
 }
 
+
 export async function POST(req: Request) {
   try {
     const contentType = req.headers.get("content-type")?.toLowerCase() ?? "";
     if (!contentType.includes("application/json")) {
-      return NextResponse.json({ error: "Content-Type invalido" }, { status: 415 });
+      return NextResponse.json({ error: "CONTENT_TYPE_INVALIDO" }, { status: 415 });
     }
 
     const contentLengthHeader = req.headers.get("content-length");
     if (contentLengthHeader) {
       const parsedLength = Number.parseInt(contentLengthHeader, 10);
       if (Number.isFinite(parsedLength) && parsedLength > MAX_REQUEST_BYTES) {
-        return NextResponse.json({ error: "Payload muito grande" }, { status: 413 });
+        return NextResponse.json({ error: "PAYLOAD_MUITO_GRANDE" }, { status: 413 });
       }
     }
 
@@ -68,52 +88,89 @@ export async function POST(req: Request) {
     try {
       parsed = await req.json();
     } catch {
-      return NextResponse.json({ error: "JSON invalido" }, { status: 400 });
+      return NextResponse.json({ error: "JSON_INVALIDO" }, { status: 400 });
     }
 
     if (!parsed || typeof parsed !== "object") {
-      return NextResponse.json({ error: "Payload invalido" }, { status: 400 });
+      return NextResponse.json({ error: "PAYLOAD_INVALIDO" }, { status: 400 });
     }
 
-    const body = parsed as LoginRequest;
-
-    const login = typeof body.login === "string" ? body.login.trim() : "";
-    const userInput = typeof body.user === "string" ? body.user.trim() : "";
-    const usuarioInput = typeof body.usuario === "string" ? body.usuario.trim() : "";
-    const password = typeof body.password === "string" ? body.password : "";
-    const identifierRaw = userInput || usuarioInput || login || "";
-    const normalizedIdentifier = identifierRaw.includes("@") ? identifierRaw.toLowerCase() : identifierRaw;
-
-    if (!normalizedIdentifier || !password) {
-      return NextResponse.json({ error: "Usuario e senha obrigatorios" }, { status: 400 });
+    // Normaliza e valida payload
+    const norm = normalizeLoginBody(parsed as RawLoginBody);
+    if (!norm.ok) {
+      authLog("login_failure", {
+        login_normalizado: norm.login ?? null,
+        motivo: norm.error,
+        ip_hash: req.headers.get("x-forwarded-for") || null,
+        user_agent_hash: req.headers.get("user-agent") || null,
+      });
+      return NextResponse.json({ error: norm.error }, { status: 400 });
+    }
+    const login = norm.login;
+    const password = norm.password;
+    // Hash IP para rate limit (pode customizar para hash real)
+    const ipHash = req.headers.get("x-forwarded-for") || "local";
+    // Rate limit por IP+login
+    const rl = await checkLoginRateLimit(ipHash, login);
+    if (rl.blocked) {
+      authLog("login_rate_limited", {
+        login_normalizado: login,
+        ip_hash: ipHash,
+        motivo: "rate_limit_excedido"
+      });
+      return NextResponse.json(
+        { error: "MUITAS_TENTATIVAS" },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
+      );
     }
 
-    if (normalizedIdentifier.length > MAX_IDENTIFIER_LENGTH) {
-      return NextResponse.json({ error: "Usuario invalido" }, { status: 400 });
-    }
-
-    if (password.length === 0 || password.length > MAX_PASSWORD_LENGTH) {
-      return NextResponse.json({ error: "Senha invalida" }, { status: 400 });
-    }
-
-    const user = await findLocalUserByEmailOrId(normalizedIdentifier);
+    const user = await findLocalUserByEmailOrId(login);
     if (!user || user.active === false || user.status === "blocked") {
-      return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
+      authLog("login_failure", {
+        login_normalizado: login,
+        motivo: "CREDENCIAIS_INVALIDAS",
+        ip_hash: ipHash,
+        user_agent_hash: req.headers.get("user-agent") || null,
+      });
+      return NextResponse.json({ error: "CREDENCIAIS_INVALIDAS" }, { status: 401 });
     }
 
     const validPassword = await verifyPassword(password, user.password_hash);
     if (!validPassword) {
-      return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
+      authLog("login_failure", {
+        login_normalizado: login,
+        motivo: "CREDENCIAIS_INVALIDAS",
+        ip_hash: ipHash,
+        user_agent_hash: req.headers.get("user-agent") || null,
+      });
+      return NextResponse.json({ error: "CREDENCIAIS_INVALIDAS" }, { status: 401 });
     }
 
+    // RBAC: Exemplo de uso (bloqueia login de EMPRESA em endpoint só para USUARIO+)
+    // if (!hasMinRole(user.role as Role, "USUARIO")) {
+    //   authLog("login_failure", {
+    //     login_normalizado: login,
+    //     motivo: "ACESSO_NEGADO",
+    //     ip_hash: ipHash,
+    //     user_agent_hash: req.headers.get("user-agent") || null,
+    //   });
+    //   return NextResponse.json({ error: "ACESSO_NEGADO" }, { status: 403 });
+    // }
+
     const requestedSlug =
-      (typeof body?.clientSlug === "string" && body.clientSlug.trim()) ||
-      (typeof body?.companySlug === "string" && body.companySlug.trim()) ||
+      (typeof norm?.clientSlug === "string" && norm.clientSlug.trim()) ||
+      (typeof norm?.companySlug === "string" && norm.companySlug.trim()) ||
       "";
 
     const built = await buildLocalSessionForUser(user.id, { requestedSlug });
     if (!built) {
-      return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
+      authLog("login_failure", {
+        login_normalizado: login,
+        motivo: "CREDENCIAIS_INVALIDAS",
+        ip_hash: ipHash,
+        user_agent_hash: req.headers.get("user-agent") || null,
+      });
+      return NextResponse.json({ error: "CREDENCIAIS_INVALIDAS" }, { status: 401 });
     }
 
     const accessTtlSeconds = readPositiveIntEnv("ACCESS_TOKEN_TTL_SECONDS", SESSION_TTL_SECONDS);
@@ -148,7 +205,6 @@ export async function POST(req: Request) {
     res.headers.set("Cache-Control", "no-store");
 
     setCookie(res, "session_id", sessionId, sessionTtlSeconds, secureCookies);
-    // Sempre expõe um token para manter compatibilidade no middleware.
     setCookie(res, "access_token", tokenToExpose, accessTtlSeconds, secureCookies);
     setCookie(res, "auth_token", tokenToExpose, accessTtlSeconds, secureCookies);
     if (refreshToken) {
@@ -164,7 +220,6 @@ export async function POST(req: Request) {
     }
 
     if (built.requestedCompanySlug) {
-      // Mantem o contexto de empresa escolhido (admin ou company) apos login.
       setCookie(
         res,
         "active_company_slug",
@@ -173,7 +228,6 @@ export async function POST(req: Request) {
         secureCookies,
       );
     } else {
-      // Limpa o contexto salvo quando o login nao especifica empresa.
       res.cookies.set("active_company_slug", "", {
         httpOnly: true,
         sameSite: "lax",
@@ -183,10 +237,17 @@ export async function POST(req: Request) {
       });
     }
 
+    authLog("login_success", {
+      login_normalizado: login,
+      ip_hash: ipHash,
+      user_agent_hash: req.headers.get("user-agent") || null,
+      resultado: "ok"
+    });
+
     return res;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[LOGIN ERROR]", err);
-    return NextResponse.json({ error: "Erro interno: " + message }, { status: 500 });
+    authLog("login_error", { motivo: message });
+    return NextResponse.json({ error: "ERRO_INTERNO" }, { status: 500 });
   }
 }

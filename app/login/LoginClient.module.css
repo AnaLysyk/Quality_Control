@@ -1,3 +1,34 @@
+@media (prefers-reduced-motion: reduce) {
+  .bubblePremium,
+  .logoGradientAnimated,
+  .logoEnergyPremium,
+  .bgLoginPremium {
+    animation: none !important;
+  }
+}
+.bubble1 { animation-delay: 0s; }
+.bubble2 { animation-delay: 4s; animation-duration: 22s; }
+.bubble3 { animation-delay: 9s; animation-duration: 17s; }
+.bubble4 { animation-delay: 13s; animation-duration: 25s; }
+.spinner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  border: 3px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: spin 0.7s linear infinite;
+  z-index: 3;
+}
+.buttonTextHidden {
+  opacity: 0;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 /* Bolhas coloridas animadas para fundo da tela de login */
 .relative {
   position: relative;
@@ -192,51 +223,11 @@
   border-color: #4b1a8a;
   box-shadow: 0 0 0 2px #4b1a8a44, 0 2px 8px 0 rgba(30,40,60,0.18);
 }
-.inputLabelPremium {
-  display: block;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #b3b9c9;
-  margin-bottom: 0.5rem;
-}
-.inputIconPremium {
-  position: absolute;
-  top: 50%;
-  left: 1rem;
-  transform: translateY(-50%);
-  color: #4b1a8a;
-  font-size: 1.2rem;
-  pointer-events: none;
-}
-.inputWrapperPremium {
-  position: relative;
-  margin-bottom: 1.2rem;
-}
-.loginButtonPremium {
-  width: 100%;
-  padding: 1rem 0;
-  border-radius: 16px;
-  font-weight: 700;
-  font-size: 1.15rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #fff;
-  background: linear-gradient(135deg, #1a2a4d 0%, #3a0a2a 40%, #4b1a8a 60%, #ef0001 100%);
-  box-shadow: 0 4px 24px 0 rgba(80,120,200,0.18), 0 1.5px 8px 0 rgba(239,0,1,0.12);
-  position: relative;
-  overflow: hidden;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-  transition: transform 0.18s cubic-bezier(.4,0,.2,1), box-shadow 0.18s, filter 0.18s;
-}
-.loginButtonPremium::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, rgba(255,255,255,0.18) 0%, rgba(80,120,200,0.12) 100%);
-  border-radius: 16px;
-  z-index: 1;
-  pointer-events: none;
+.inputPremium:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(122,26,255,0.35),
+    0 0 0 6px rgba(122,26,255,0.12);
 }
 .loginButtonPremium::after {
   content: '';
@@ -258,7 +249,7 @@
   filter: brightness(0.98);
 }
 .loginButtonPremium[disabled] {
-  opacity: 0.5;
+  filter: saturate(0.6) brightness(0.8);
   cursor: not-allowed;
 }
 .loginButtonPremium .spinner {
@@ -272,13 +263,28 @@
   position: fixed;
   inset: 0;
   z-index: 0;
-  background: linear-gradient(120deg, #0a1836 0%, #1a2a4d 60%, #3a0a2a 100%);
-  animation: bgShift 16s linear infinite alternate;
+  background: linear-gradient(
+    120deg,
+    #08142c 0%,
+    #1a2a4d 35%,
+    #2a1a4d 65%,
+    #3a0a2a 100%
+  );
+  background-size: 200% 200%;
+  animation: bgShift 20s ease-in-out infinite;
 }
 
 @keyframes bgShift {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.logoEnergyPremium {
+  animation: logoBreath 6s ease-in-out infinite;
+}
+@keyframes logoBreath {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.035); }
 }
 
 .bubblePremium {
@@ -287,6 +293,7 @@
   filter: blur(8px);
   opacity: 0.18;
   animation: bubbleFloat 12s ease-in-out infinite alternate;
+  pointer-events: none;
 }
 .bubbleGlow {
   filter: blur(16px) drop-shadow(0 0 24px #ef0001);

@@ -7,7 +7,7 @@ import { useState, FormEvent } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import styles from "./LoginClient.module.css";
-import logo from "/logo.svg";
+
 
 export default function LoginClient() {
   const router = useRouter();
@@ -54,7 +54,7 @@ export default function LoginClient() {
 
       {/* Centered spinning logo */}
       <div className={styles.logoSpin}>
-        <Image src={logo} alt="Logo" width={120} height={120} priority />
+        <Image src="/logo.svg" alt="Logo" width={120} height={120} priority />
       </div>
 
       {/* Login form */}

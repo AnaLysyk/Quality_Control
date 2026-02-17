@@ -103,7 +103,6 @@ export const POST = withCompanyValidation(async (user, companyId, req) => {
       createdBy: user.id,
       createdByName: localUser?.name ?? null,
       createdByEmail: localUser?.email ?? null,
-      createdByRole: user.role ?? null,
       companySlug: user.companySlug ?? null,
       companyId: companyId ?? user.companyId ?? null,
     });

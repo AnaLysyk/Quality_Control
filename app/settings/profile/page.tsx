@@ -55,6 +55,34 @@ export default function ProfilePage() {
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [deleteUserLoading, setDeleteUserLoading] = useState(false);
+  const [deleteUserError, setDeleteUserError] = useState<string | null>(null);
+  const [deleteUserSuccess, setDeleteUserSuccess] = useState<string | null>(null);
+  async function handleDeleteUser() {
+    setDeleteUserError(null);
+    setDeleteUserSuccess(null);
+    if (!window.confirm("Tem certeza que deseja deletar seu usuário? Esta ação não pode ser desfeita.")) return;
+    setDeleteUserLoading(true);
+    try {
+      const res = await fetch("/api/user", {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        setDeleteUserError(json?.error || "Erro ao deletar usuário.");
+        return;
+      }
+      setDeleteUserSuccess("Usuário deletado com sucesso. Saindo...");
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 2000);
+    } catch (err) {
+      setDeleteUserError(err instanceof Error ? err.message : "Erro ao deletar usuário.");
+    } finally {
+      setDeleteUserLoading(false);
+    }
+  }
 
   const name = (typeof asRecord(user)?.name === "string" ? String(asRecord(user)?.name) : "") || "usuario";
   const email = (typeof asRecord(user)?.email === "string" ? String(asRecord(user)?.email) : "") || "";
@@ -191,6 +219,24 @@ export default function ProfilePage() {
     }
   }
 
+  // Função para deletar empresa vinculada (apenas admin/dev)
+  async function handleDeleteCompany(client_slug: string) {
+    if (!window.confirm("Tem certeza que deseja deletar esta empresa? Esta ação não pode ser desfeita.")) return;
+    try {
+      const res = await fetch(`/api/empresas/${encodeURIComponent(client_slug)}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        alert("Erro ao deletar empresa.");
+        return;
+      }
+      setCompanies((prev) => prev.filter((c) => c.client_slug !== client_slug));
+    } catch (err) {
+      alert("Erro ao deletar empresa.");
+    }
+  }
+
   return (
     <div className="min-h-screen bg-(--page-bg) text-(--page-text)">
       <div className="max-w-4xl mx-auto px-4 py-10 space-y-6">
@@ -260,7 +306,7 @@ export default function ProfilePage() {
             {profileError && <p className="text-sm text-red-600">{profileError}</p>}
             {profileSuccess && <p className="text-sm text-green-600">{profileSuccess}</p>}
 
-            <div className="flex justify-end">
+            <div className="flex flex-col gap-2 items-end">
               <button
                 type="submit"
                 className="rounded bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
@@ -268,6 +314,16 @@ export default function ProfilePage() {
               >
                 {profileLoading ? "Salvando..." : "Salvar dados"}
               </button>
+              <button
+                type="button"
+                className="rounded bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60 mt-2"
+                disabled={deleteUserLoading}
+                onClick={handleDeleteUser}
+              >
+                {deleteUserLoading ? "Deletando..." : "Deletar usuário"}
+              </button>
+              {deleteUserError && <p className="text-sm text-red-600 mt-1">{deleteUserError}</p>}
+              {deleteUserSuccess && <p className="text-sm text-green-600 mt-1">{deleteUserSuccess}</p>}
             </div>
           </form>
         </div>
@@ -351,7 +407,17 @@ export default function ProfilePage() {
                       </div>
                       <div className="text-xs text-(--tc-text-muted) truncate">{c.client_slug}</div>
                     </div>
-                    <div className="text-xs font-semibold text-(--tc-text-muted)">{c.role}</div>
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="text-xs font-semibold text-(--tc-text-muted)">{c.role}</div>
+                      {(role === "ADMIN" || role === "DEV" || user?.isGlobalAdmin) && (
+                        <button
+                          className="rounded bg-red-500 px-2 py-1 text-xs font-semibold text-white mt-1"
+                          onClick={() => handleDeleteCompany(c.client_slug)}
+                        >
+                          Deletar empresa
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="mt-3 flex items-center justify-between">
                     <span className="text-xs text-(--tc-text-muted)">

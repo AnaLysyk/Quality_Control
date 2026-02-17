@@ -113,7 +113,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
           className="absolute right-0 mt-2 w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-(--tc-border,#e5e7eb)/40 bg-(--tc-surface-dark,#0f1828) text-(--tc-text-inverse,#fff) shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
         >
           <div className="px-4 py-3 space-y-1">
-            <div className="font-semibold leading-tight">{user?.name ?? t("profileMenu.userFallback")}</div>
+            <div className="font-semibold leading-tight text-[#0b1a3c]">{user?.name ?? t("profileMenu.userFallback")}</div>
             {user?.email ? (
               <div className="text-xs text-(--tc-text-muted,#cbd5e1) truncate">{user.email}</div>
             ) : (
@@ -126,7 +126,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
                     {activeClientName}
                   </button>
                 ) : (
-                  <span className="text-(--tc-text-muted,#cbd5e1)">{activeClientName}</span>
+                  <span className="text-[#0b1a3c]">{activeClientName}</span>
                 )}
               </div>
             )}
@@ -159,11 +159,15 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
                   setOpen(false);
                   onOpenTeam();
                 }}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-(--tc-surface-hover,#111a2a)"
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-[#0b1a3c] hover:bg-(--tc-surface-hover,#111a2a)"
               >
                 {t("profileMenu.team")}
               </button>
             )}
+              {/* Universal support ticket button */}
+              <div className="my-2">
+                <CreateSupportTicketButton />
+              </div>
             <button
               type="button"
               onClick={() => {
@@ -174,7 +178,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
                   router.push("/settings");
                 }
               }}
-              className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-(--tc-surface-hover,#111a2a)"
+              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-[#0b1a3c] hover:bg-(--tc-surface-hover,#111a2a)"
             >
               {t("profileMenu.settings")}
             </button>

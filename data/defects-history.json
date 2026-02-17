@@ -257,5 +257,76 @@
       "toRunSlug": null,
       "note": "Defeito manual - admin"
     }
+  ],
+  "zddsadas": [
+    {
+      "id": "0dbecd26-8eaa-475c-bbe9-ef31c6848a5b",
+      "defectSlug": "zddsadas",
+      "action": "deleted",
+      "createdAt": "2026-02-17T05:58:06.783Z",
+      "actorId": "usr_admin",
+      "actorName": "Admin",
+      "fromStatus": null,
+      "toStatus": null,
+      "fromRunSlug": null,
+      "toRunSlug": null,
+      "note": "zddsadas"
+    },
+    {
+      "id": "de087441-fd8b-4458-82e1-ac1a5a682b94",
+      "defectSlug": "zddsadas",
+      "action": "status_changed",
+      "createdAt": "2026-02-17T05:58:03.008Z",
+      "actorId": "usr_admin",
+      "actorName": "Admin",
+      "fromStatus": "open",
+      "toStatus": "in_progress",
+      "fromRunSlug": null,
+      "toRunSlug": null,
+      "note": null
+    },
+    {
+      "id": "1b937410-5934-496f-9380-36e8694e60d8",
+      "defectSlug": "zddsadas",
+      "action": "created",
+      "createdAt": "2026-02-17T05:57:54.241Z",
+      "actorId": "usr_admin",
+      "actorName": "Admin",
+      "fromStatus": null,
+      "toStatus": "open",
+      "fromRunSlug": null,
+      "toRunSlug": "dsadsdsa",
+      "note": "zddsadas"
+    }
+  ],
+  "sasas": [
+    {
+      "id": "97b1dccf-46a4-4361-98ba-0c30f1cb9951",
+      "defectSlug": "sasas",
+      "action": "created",
+      "createdAt": "2026-02-17T05:58:11.063Z",
+      "actorId": "usr_admin",
+      "actorName": "Admin",
+      "fromStatus": null,
+      "toStatus": "open",
+      "fromRunSlug": null,
+      "toRunSlug": "aaadasd",
+      "note": "sasas"
+    }
+  ],
+  "zcxzcxzczxc": [
+    {
+      "id": "0aae32ed-c04b-4432-977d-423d6a8c4855",
+      "defectSlug": "zcxzcxzczxc",
+      "action": "created",
+      "createdAt": "2026-02-17T06:34:19.120Z",
+      "actorId": "usr_dev",
+      "actorName": "Dev",
+      "fromStatus": null,
+      "toStatus": "open",
+      "fromRunSlug": null,
+      "toRunSlug": "zxczxczxc",
+      "note": "zcxzcxzczxc"
+    }
   ]
 }

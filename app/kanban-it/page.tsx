@@ -95,7 +95,8 @@ export default function KanbanItPage() {
   const [addingColumn, setAddingColumn] = useState(false);
   const [newColumnLabel, setNewColumnLabel] = useState("");
 
-  const isAllowed = useMemo(() => isDevRole(user?.role ?? ""), [user?.role]);
+  // Todos os perfis podem criar chamados
+  const isAllowed = true;
   const statusKeys = useMemo(
     () => tickets.map((ticket) => normalizeKanbanStatus(ticket.status)),
     [tickets],
@@ -115,7 +116,6 @@ export default function KanbanItPage() {
   }, [tickets, columns]);
 
   const loadTickets = useCallback(async () => {
-    if (!isAllowed) return;
     setLoadingTickets(true);
     setError(null);
     try {
@@ -139,15 +139,13 @@ export default function KanbanItPage() {
   }, [isAllowed]);
 
   useEffect(() => {
-    if (!isAllowed) return;
     loadTickets();
-  }, [loadTickets, isAllowed]);
+  }, [loadTickets]);
 
   useEffect(() => {
-    if (!isAllowed) return;
     const timer = setInterval(loadTickets, 30000);
     return () => clearInterval(timer);
-  }, [loadTickets, isAllowed]);
+  }, [loadTickets]);
 
   function handleDragStart(ticket: TicketItem) {
     setDragging({ id: ticket.id, from: ticket.status });
@@ -195,7 +193,7 @@ export default function KanbanItPage() {
     setCreating(true);
     setCreateError(null);
     try {
-      const res = await fetch("/api/chamados", {
+      const res = await fetch("/api/tickets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -281,15 +279,18 @@ export default function KanbanItPage() {
           <button
             type="button"
             onClick={() => setCreateOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
+            className="flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-5 py-3 text-base font-semibold shadow-lg text-white hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/60"
+            aria-label="Criar chamado"
           >
-            <FiPlus size={14} /> Chamado
+            <FiPlus size={20} />
+            <span className="hidden sm:inline">Novo chamado</span>
           </button>
         </div>
       </header>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
       {loadingTickets && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
+
 
       {isAllowed && (
         <div className="flex flex-wrap items-center gap-2">

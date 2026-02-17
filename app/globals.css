@@ -4,7 +4,6 @@
 }
 @import "tailwindcss";
 /* PostCSS custom-variant directive (handled by postcss/tailwind plugin) */
-@custom-variant dark (&:where(.dark, .dark *));
 
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {
@@ -29,16 +28,16 @@ input[type="password"]::-ms-clear {
 
   /* BACKGROUND / SURFACE */
   --tc-bg: #011848;
-  --tc-surface: #ffffff;
-  --tc-surface-2: #f5f7fb;
-  --tc-surface-dark: #eef1f8;
-  --tc-surface-muted: #e9edf5;
+  --tc-surface: #fff;
+  --tc-surface-2: #e9edf5;
+  --tc-surface-dark: #d1dbee;
+  --tc-surface-muted: #cbd5e1;
 
   /* TEXT */
-  --tc-text: #0b1a3c;
-  --tc-text-primary: #0b1a3c;
-  --tc-text-secondary: #4b5563;
-  --tc-text-muted: #6b7280;
+  --tc-text: #011848;
+  --tc-text-primary: #011848;
+  --tc-text-secondary: #ef0001;
+  --tc-text-muted: #4b5563;
   --tc-text-inverse: #ffffff;
   --page-bg: #eef2f7;
   --page-text: #0b1a3c;
@@ -560,10 +559,11 @@ video {
 /* UTILITÁRIOS DE TEMA */
 .btn-tc {
   background: var(--tc-accent);
-  color: var(--tc-text-inverse);
-  border: 1px solid var(--tc-accent);
+  color: #fff;
+  border: 2px solid var(--tc-accent);
   border-radius: 999px;
-  font-weight: 600;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(239, 0, 1, 0.18);
   transition: background 0.2s, border-color 0.2s, transform 0.2s;
 }
 .btn-tc:hover { background: var(--tc-accent-hover); border-color: var(--tc-accent-hover); }
@@ -572,21 +572,48 @@ video {
 
 .input-tc {
   background: var(--tc-input-bg);
-  border: 1px solid var(--tc-border);
+  border: 2px solid var(--tc-accent);
   color: var(--tc-text-primary);
   border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 8px rgba(239, 0, 1, 0.08);
 }
 .input-tc:focus {
   outline: none;
-  border-color: var(--tc-focus);
+  border-color: var(--tc-accent-hover);
   box-shadow: 0 0 0 3px var(--tc-accent-soft);
+}
+
+.modal-label {
+  color: var(--tc-text-primary);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+.modal-dark-bg {
+  background: #0b1a3c !important;
+  color: #fff !important;
+}
+.modal-dark-bg input,
+.modal-dark-bg select,
+.modal-dark-bg textarea {
+  background: #1a223a !important;
+  color: #fff !important;
+  border: 2px solid var(--tc-accent);
+  font-weight: 600;
+}
+.modal-dark-bg label {
+  color: #fff !important;
+  font-weight: 700;
 }
 
 .card-tc {
   background: var(--tc-surface);
-  border: 1px solid var(--tc-border);
+  border: 2px solid var(--tc-accent);
   border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 12px 32px rgba(239, 0, 1, 0.18);
 }
 
 /* Sidebar hover expand */

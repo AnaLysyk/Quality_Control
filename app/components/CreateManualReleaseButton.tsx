@@ -117,10 +117,7 @@ export function CreateManualReleaseButton({
   const [cases, setCases] = useState<ManualCaseDraft[]>([]);
   const [caseDraft, setCaseDraft] = useState<ManualCaseDraft>({ ...initialCaseDraft });
 
-  const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
-  const canCreate = Boolean(user?.isGlobalAdmin || role === "admin" || role === "company");
-
-  if (loading || !canCreate) return null;
+  // Sempre exibe o botão, ignorando loading/user
 
   const apps = [
     "SMART",

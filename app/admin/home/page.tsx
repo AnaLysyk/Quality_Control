@@ -358,15 +358,13 @@ export default function AdminHomePage() {
                 <span>Arraste para ver</span>
               </div>
               <div
-                className="overflow-x-auto scrollbar-hide"
-                style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch', overflowY: 'hidden' }}
+                 className="w-full overflow-x-auto scrollbar-hide scroll-snap-x touch-scroll-x py-2"
               >
-                <div className="flex flex-row gap-6 pb-2" style={{ scrollSnapType: 'x mandatory' }}>
+                <div className="flex flex-row gap-8 min-w-max pb-4 scroll-snap-x">
                   <button
                     type="button"
                     onClick={() => setSelectedCompanySlug(null)}
-                    className="min-w-[220px] max-w-[220px] aspect-square flex flex-col gap-3 border p-6 shadow-md transition border-slate-200 bg-slate-50 text-slate-600 ring-2 ring-offset-2 ring-(--tc-border,#e5e7eb)"
-                    style={{ flex: '0 0 220px', height: '220px', scrollSnapAlign: 'start' }}
+                    className="w-[320px] h-80 shrink-0 flex flex-col gap-4 border p-6 shadow-md transition border-slate-200 bg-slate-50 text-slate-600 ring-2 ring-offset-2 ring-(--tc-border,#e5e7eb) company-card"
                   >
                     <div className="text-base font-bold text-(--page-text,#0b1a3c)">Contexto global</div>
                     <div className="text-xs text-(--tc-text-muted,#6b7280)">Ver todos os clientes</div>
@@ -395,10 +393,9 @@ export default function AdminHomePage() {
                         type="button"
                         onClick={() => setSelectedCompanySlug(selectedKey)}
                         data-testid={testSlug ? `benchmark-row-${testSlug}` : "benchmark-row"}
-                        className={`min-w-[220px] max-w-[220px] aspect-square flex flex-col gap-3 border p-6 shadow-md transition ${tone} ${
+                        className={`w-[320px] h-80 shrink-0 flex flex-col gap-4 border p-6 shadow-md transition ${tone} ${
                           isSelected ? "ring-2 ring-offset-2 ring-(--tc-border,#e5e7eb)" : "opacity-80 hover:opacity-100"
-                        }`}
-                        style={{ flex: '0 0 220px', height: '220px', scrollSnapAlign: 'start' }}
+                        } company-card`}
                       >
                         <div className="text-base font-bold text-(--page-text,#0b1a3c)">{company.name}</div>
                         <div className="text-xs text-(--tc-text-muted,#6b7280)">Criado em: {createdAt}</div>
@@ -581,10 +578,10 @@ export default function AdminHomePage() {
                       <span>{entry.value}</span>
                     </div>
                     <progress
-                      className={`${styles.progress} ${entry.progressClass}`}
-                      value={Number(entry.value)}
-                      max={Math.max(runTotal, 1)}
-                      aria-label={`${entry.label} (${Number(entry.value)} de ${Math.max(runTotal, 1)})`}
+                       className={`${styles.progress} ${entry.progressClass}`}
+                       value={Number(entry.value)}
+                       max={Math.max(Number(runTotal), 1)}
+                       aria-label={`${entry.label} (${Number(entry.value)} de ${Math.max(Number(runTotal), 1)})`}
                     />
                   </div>
                 ))}

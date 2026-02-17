@@ -12,5 +12,12 @@
     "theme": "dark",
     "created_at": "2026-02-17T01:41:19.019Z",
     "updated_at": "2026-02-17T01:41:19.019Z"
+  },
+  "usr_admin": {
+    "user_id": "usr_admin",
+    "language": "pt-BR",
+    "theme": "light",
+    "created_at": "2026-02-17T05:53:56.204Z",
+    "updated_at": "2026-02-17T05:53:56.204Z"
   }
 }

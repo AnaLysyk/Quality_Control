@@ -1,57 +1,57 @@
 "use client";
 
-
 import { useEffect, useState } from "react";
+
+interface Defeito {
+  id: string;
+  titulo: string;
+  descricao: string;
+  runId: string;
+}
 
 interface Run {
   id: string;
   nome: string;
-  planoId: string;
 }
 
-interface PlanoTeste {
-  id: string;
-  nome: string;
-}
-
-export default function RunsPage() {
+export default function DefeitosPage() {
+  const [defeitos, setDefeitos] = useState<Defeito[]>([]);
   const [runs, setRuns] = useState<Run[]>([]);
-  const [planos, setPlanos] = useState<PlanoTeste[]>([]);
-  const [editing, setEditing] = useState<Run | null>(null);
-  const [form, setForm] = useState({ nome: "", planoId: "" });
+  const [editing, setEditing] = useState<Defeito | null>(null);
+  const [form, setForm] = useState({ titulo: "", descricao: "", runId: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function fetchRuns() {
+  async function fetchDefeitos() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/runs");
+      const res = await fetch("/api/defeitos");
       const data = await res.json();
-      setRuns(data.runs || []);
+      setDefeitos(data.defects || []);
     } catch (err) {
-      setError("Erro ao carregar runs");
+      setError("Erro ao carregar defeitos");
     } finally {
       setLoading(false);
     }
   }
 
-  async function fetchPlanos() {
+  async function fetchRuns() {
     try {
-      const res = await fetch("/api/planos-de-teste");
+      const res = await fetch("/api/runs");
       const data = await res.json();
-      setPlanos(data.testPlans || []);
+      setRuns(data.runs || []);
     } catch {}
   }
 
   useEffect(() => {
+    fetchDefeitos();
     fetchRuns();
-    fetchPlanos();
   }, []);
 
   function limpar() {
     setEditing(null);
-    setForm({ nome: "", planoId: "" });
+    setForm({ titulo: "", descricao: "", runId: "" });
     setError(null);
   }
 
@@ -59,25 +59,25 @@ export default function RunsPage() {
     limpar();
   }
 
-  function editar(run: Run) {
-    setEditing(run);
-    setForm({ nome: run.nome, planoId: run.planoId });
+  function editar(defeito: Defeito) {
+    setEditing(defeito);
+    setForm({ titulo: defeito.titulo, descricao: defeito.descricao, runId: defeito.runId });
   }
 
   async function deletar(id: string) {
-    if (!window.confirm("Deseja deletar esta run?")) return;
+    if (!window.confirm("Deseja deletar este defeito?")) return;
     setLoading(true);
     setError(null);
     try {
-      await fetch("/api/runs", {
+      await fetch("/api/defeitos", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       });
-      fetchRuns();
+      fetchDefeitos();
       limpar();
     } catch {
-      setError("Erro ao deletar run");
+      setError("Erro ao deletar defeito");
     } finally {
       setLoading(false);
     }
@@ -89,22 +89,22 @@ export default function RunsPage() {
     setError(null);
     try {
       if (editing) {
-        await fetch("/api/runs", {
+        await fetch("/api/defeitos", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...editing, ...form }),
         });
       } else {
-        await fetch("/api/runs", {
+        await fetch("/api/defeitos", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
         });
       }
-      fetchRuns();
+      fetchDefeitos();
       limpar();
     } catch {
-      setError("Erro ao salvar run");
+      setError("Erro ao salvar defeito");
     } finally {
       setLoading(false);
     }
@@ -112,25 +112,31 @@ export default function RunsPage() {
 
   return (
     <div className="max-w-2xl mx-auto py-10">
-      <h1 className="text-2xl font-bold mb-4">Runs</h1>
+      <h1 className="text-2xl font-bold mb-4">Defeitos</h1>
       <form className="space-y-3 mb-6" onSubmit={salvar}>
         <input
           className="w-full border rounded px-3 py-2"
-          placeholder="Nome da run"
-          value={form.nome}
-          onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
+          placeholder="Título do defeito"
+          value={form.titulo}
+          onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
           required
+        />
+        <textarea
+          className="w-full border rounded px-3 py-2"
+          placeholder="Descrição"
+          value={form.descricao}
+          onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))}
         />
         <select
           className="w-full border rounded px-3 py-2"
-          value={form.planoId}
-          onChange={e => setForm(f => ({ ...f, planoId: e.target.value }))}
-          aria-label="Plano de teste"
+          value={form.runId}
+          onChange={e => setForm(f => ({ ...f, runId: e.target.value }))}
+          aria-label="Run relacionada"
           required
         >
-          <option value="">Selecione o plano de teste</option>
-          {planos.map(plano => (
-            <option key={plano.id} value={plano.id}>{plano.nome}</option>
+          <option value="">Selecione a run</option>
+          {runs.map(run => (
+            <option key={run.id} value={run.id}>{run.nome}</option>
           ))}
         </select>
         {error && <div className="text-red-600 text-sm">{error}</div>}
@@ -147,17 +153,18 @@ export default function RunsPage() {
         </div>
       </form>
       <ul className="space-y-2">
-        {runs.map(run => (
-          <li key={run.id} className="border rounded p-3 flex justify-between items-center">
+        {defeitos.map(defeito => (
+          <li key={defeito.id} className="border rounded p-3 flex justify-between items-center">
             <div>
-              <div className="font-semibold">{run.nome}</div>
-              <div className="text-sm text-gray-600">Plano: {planos.find(p => p.id === run.planoId)?.nome || 'Desconhecido'}</div>
+              <div className="font-semibold">{defeito.titulo}</div>
+              <div className="text-sm text-gray-600">{defeito.descricao}</div>
+              <div className="text-xs text-gray-500">Run: {runs.find(r => r.id === defeito.runId)?.nome || 'Desconhecida'}</div>
             </div>
             <div className="flex gap-2">
-              <button className="bg-green-600 text-white px-3 py-1 rounded" onClick={() => editar(run)} disabled={loading}>
+              <button className="bg-green-600 text-white px-3 py-1 rounded" onClick={() => editar(defeito)} disabled={loading}>
                 Editar
               </button>
-              <button className="bg-red-600 text-white px-3 py-1 rounded" onClick={() => deletar(run.id)} disabled={loading}>
+              <button className="bg-red-600 text-white px-3 py-1 rounded" onClick={() => deletar(defeito.id)} disabled={loading}>
                 Deletar
               </button>
             </div>

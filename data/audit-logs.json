@@ -1,6 +1,36 @@
 {
   "items": [
     {
+      "id": "99097701-a707-4d92-be36-a68ec7badaea",
+      "created_at": "2026-02-17T06:25:00.780Z",
+      "actor_user_id": "usr_admin",
+      "actor_email": "admin",
+      "action": "user.updated",
+      "entity_type": "user",
+      "entity_id": "usr_admin_griaule_test",
+      "entity_label": "admin@griaule.test",
+      "metadata": {
+        "companyId": "griaule",
+        "role": "company_admin",
+        "active": false
+      }
+    },
+    {
+      "id": "2e51ad6b-da81-43a3-b37b-a3724895728e",
+      "created_at": "2026-02-17T06:24:52.768Z",
+      "actor_user_id": "usr_admin",
+      "actor_email": "admin",
+      "action": "user.updated",
+      "entity_type": "user",
+      "entity_id": "usr_admin_griaule_test",
+      "entity_label": "admin@griaule.test",
+      "metadata": {
+        "companyId": "griaule",
+        "role": "company_admin",
+        "active": false
+      }
+    },
+    {
       "id": "e6ba06e5-9886-48db-8fc4-eda61246cb70",
       "created_at": "2026-02-17T03:12:49.380Z",
       "actor_user_id": "usr_admin",

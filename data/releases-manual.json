@@ -1,5 +1,47 @@
 [
   {
+    "id": "3b57d7ba-888b-436e-a4f2-94b233910c0f",
+    "slug": "zcxzcxzczxc",
+    "name": "zcxzcxzczxc",
+    "app": "SMART",
+    "kind": "defect",
+    "environments": [],
+    "clientSlug": "asdasds",
+    "runSlug": "zxczxczxc",
+    "source": "MANUAL",
+    "status": "open",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": null,
+    "createdAt": "2026-02-17T06:34:19.107Z",
+    "updatedAt": "2026-02-17T06:34:37.386Z"
+  },
+  {
+    "id": "3c19b538-03f6-4d2f-b1fc-1256b4ef68a7",
+    "slug": "sasas",
+    "name": "sasas",
+    "app": "SMART",
+    "kind": "defect",
+    "environments": [],
+    "clientSlug": "asdasds",
+    "runSlug": "aaadasd",
+    "source": "MANUAL",
+    "status": "open",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "closedAt": null,
+    "createdAt": "2026-02-17T05:58:11.039Z",
+    "updatedAt": "2026-02-17T05:58:11.039Z"
+  },
+  {
     "id": "6073f0a5-3e8e-4828-b7d3-653e0903015c",
     "slug": "dsadassasd",
     "name": "zdsdsd",

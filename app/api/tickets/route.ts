@@ -103,6 +103,7 @@ export const POST = withCompanyValidation(async (user, companyId, req) => {
       createdBy: user.id,
       createdByName: localUser?.name ?? null,
       createdByEmail: localUser?.email ?? null,
+      createdByRole: user.role ?? null,
       companySlug: user.companySlug ?? null,
       companyId: companyId ?? user.companyId ?? null,
     });
@@ -115,7 +116,8 @@ export const POST = withCompanyValidation(async (user, companyId, req) => {
       ticketId: ticket.id,
       type: "CREATED",
       actorUserId: user.id,
-      payload: { title: ticket.title },
+      actorRole: user.role ?? null,
+      payload: { title: ticket.title, role: user.role ?? null },
     }).catch((err) => {
       console.error("Falha ao registrar evento de chamado:", err);
     });

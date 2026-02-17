@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
+
+import CreateSupportTicketButton from "@/components/CreateSupportTicketButton";
 import { useI18n } from "@/hooks/useI18n";
 
 type Props = {

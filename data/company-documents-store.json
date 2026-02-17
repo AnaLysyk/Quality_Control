@@ -1,6 +1,19 @@
 {
   "items": [
     {
+      "id": "f2a079da-1cd1-4715-a3e6-4bff67c9f108",
+      "companySlug": "griaule",
+      "kind": "file",
+      "title": "baixados.jpg",
+      "description": null,
+      "fileName": "baixados.jpg",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 80492,
+      "storagePath": "local:griaule/f2a079da-1cd1-4715-a3e6-4bff67c9f108-baixados.jpg",
+      "createdAt": "2026-02-17T01:34:02.819Z",
+      "createdBy": "usr_admin"
+    },
+    {
       "id": "d372b966-0759-42e6-bf3a-7fa97842ac17",
       "companySlug": "testing-company",
       "kind": "link",

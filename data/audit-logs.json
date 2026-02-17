@@ -1,6 +1,62 @@
 {
   "items": [
     {
+      "id": "e6ba06e5-9886-48db-8fc4-eda61246cb70",
+      "created_at": "2026-02-17T03:12:49.380Z",
+      "actor_user_id": "usr_admin",
+      "actor_email": "admin",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_68db7a9b",
+      "entity_label": "ANA PAULA DE LIMA LYSYK",
+      "metadata": {
+        "slug": "ana-paula-de-lima-lysyk",
+        "active": true
+      }
+    },
+    {
+      "id": "07474cfd-136e-4c59-890e-ebc76831be60",
+      "created_at": "2026-02-17T02:18:14.461Z",
+      "actor_user_id": "usr_admin",
+      "actor_email": "admin",
+      "action": "user.created",
+      "entity_type": "user",
+      "entity_id": "usr_1d7f16a6",
+      "entity_label": "bla@bla.com",
+      "metadata": {
+        "companyId": "cmp_1feea7a7",
+        "role": "company_admin"
+      }
+    },
+    {
+      "id": "806ba583-7fed-4d6d-af66-b9d1fa0984c0",
+      "created_at": "2026-02-17T01:38:43.284Z",
+      "actor_user_id": "usr_admin",
+      "actor_email": "admin",
+      "action": "user.created",
+      "entity_type": "user",
+      "entity_id": "usr_dc750884",
+      "entity_label": "teste@teste.com",
+      "metadata": {
+        "companyId": "cmp_1feea7a7",
+        "role": "it_dev"
+      }
+    },
+    {
+      "id": "c9ed371a-51e2-451b-83e5-0b5f21de263c",
+      "created_at": "2026-02-17T01:38:00.552Z",
+      "actor_user_id": "usr_admin",
+      "actor_email": "admin",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_1feea7a7",
+      "entity_label": "asdasds",
+      "metadata": {
+        "slug": "asdasds",
+        "active": true
+      }
+    },
+    {
       "id": "6870c9f1-e950-47ec-a873-c509032a2572",
       "created_at": "2026-02-14T02:18:39.647Z",
       "actor_user_id": "usr_admin_griaule_test",

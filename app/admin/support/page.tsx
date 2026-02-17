@@ -123,11 +123,11 @@ export default function AdminSupportPage() {
           <div className="text-sm text-gray-600">Nenhuma solicitacao encontrada.</div>
         ) : (
           <div className="space-y-3">
-            {items.map((item) => (
-              <div key={item.id} className="rounded-lg border p-3 shadow-sm">
+            {items.map((item, idx) => (
+              <div key={item.id + '-' + idx} className="rounded-lg border p-3 shadow-sm">
                 <div className="flex items-center justify-between">
                   <div className="text-xs text-gray-500">
-                    {new Date(item.created_at).toLocaleString()} - {item.email}
+                    <span suppressHydrationWarning={true}>{new Date(item.created_at).toLocaleString()}</span> - {item.email}
                   </div>
                   <span
                     className={`text-xs px-2 py-1 rounded ${

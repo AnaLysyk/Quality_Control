@@ -1,5 +1,26 @@
 [
   {
+    "id": "6073f0a5-3e8e-4828-b7d3-653e0903015c",
+    "slug": "dsadassasd",
+    "name": "zdsdsd",
+    "app": "PRINT",
+    "kind": "run",
+    "environments": [],
+    "clientSlug": "empresa-e2e-291911",
+    "source": "MANUAL",
+    "status": "done",
+    "stats": {
+      "pass": 4,
+      "fail": 4,
+      "blocked": 4,
+      "notRun": 4
+    },
+    "observations": "asdasdsadas",
+    "closedAt": "2026-02-17T01:27:03.746Z",
+    "createdAt": "2026-02-17T01:27:03.746Z",
+    "updatedAt": "2026-02-17T01:28:19.980Z"
+  },
+  {
     "id": "bc44d6e1-eb13-4a10-9c56-d38813d93f58",
     "slug": "run_falha",
     "name": "run-falha",

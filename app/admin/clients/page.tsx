@@ -429,7 +429,7 @@ function AdminClientsPage() {
               href="/admin/users"
               className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-300"
             >
-              Gerenciar usuÃ¡rios
+              Gerenciar Usuários
             </a>
           )}
             <button

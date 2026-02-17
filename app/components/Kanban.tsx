@@ -745,37 +745,33 @@ export default function Kanban({
         </div>
       )}
       <div className="col-span-full flex items-center gap-3">
-        {editable && (
-          <>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="text-xs text-white bg-(--tc-primary-dark,#000f2e) px-3 py-2 rounded hover:bg-(--tc-primary,#011848) transition"
-            >
-              Importar CSV
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv"
-              className="hidden"
-              aria-label="Importar CSV para o Kanban"
-              title="Importar CSV para o Kanban"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleImportCSV(file);
-                e.target.value = "";
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => handleAdd("notRun")}
-              className="text-xs text-white bg-(--tc-accent,#ef0001) px-3 py-2 rounded hover:bg-(--tc-accent-hover,#c80001) transition"
-            >
-              + Adicionar Caso
-            </button>
-          </>
-        )}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="text-xs text-white bg-(--tc-primary-dark,#000f2e) px-3 py-2 rounded hover:bg-(--tc-primary,#011848) transition"
+        >
+          Importar CSV
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv"
+          className="hidden"
+          aria-label="Importar CSV para o Kanban"
+          title="Importar CSV para o Kanban"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleImportCSV(file);
+            e.target.value = "";
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => handleAdd("notRun")}
+          className="text-xs text-white bg-(--tc-accent,#ef0001) px-3 py-2 rounded hover:bg-(--tc-accent-hover,#c80001) transition font-bold border border-(--tc-accent,#ef0001) shadow-lg"
+        >
+          + Adicionar Caso Manual
+        </button>
         <button
           type="button"
           onClick={handleExportCSV}

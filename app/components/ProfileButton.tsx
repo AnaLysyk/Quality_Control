@@ -246,7 +246,7 @@ export default function ProfileButton() {
         className="relative flex h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-(--tc-surface-dark,#0f1828) text-white shadow-[0_10px_22px_rgba(0,0,0,0.28)] transition hover:border-(--tc-primary,#4e8df5) hover:shadow-[0_12px_26px_rgba(78,141,245,0.25)] focus:outline-none focus:ring-2 focus:ring-(--tc-primary,#4e8df5) focus:ring-offset-2 focus:ring-offset-transparent"
       >
         <div className="relative h-full w-full overflow-hidden rounded-full bg-linear-to-br from-(--tc-primary,#4e8df5) to-(--tc-surface-dark,#0f1828)">
-          <span className="flex h-full w-full items-center justify-center text-2xl" aria-hidden>
+          <span className="flex h-full w-full items-center justify-center text-2xl" aria-hidden suppressHydrationWarning={true}>
             {avatarDisplay}
           </span>
         </div>
@@ -269,7 +269,7 @@ export default function ProfileButton() {
                     onClick={() => setShowAvatarPicker((v) => !v)}
                     className="group relative flex h-14 w-14 items-center justify-center rounded-full border border-(--tc-primary,#4e8df5)/28 bg-(--tc-primary,#4e8df5)/12 text-2xl shadow-[0_0_18px_rgba(78,142,245,0.30)] focus:outline-none focus:ring-2 focus:ring-(--tc-primary,#4e8df5) overflow-visible dark:border-(--tc-primary,#4e8df5)/25 dark:bg-black/20"
                   >
-                    <span className="text-2xl" aria-hidden>
+                    <span className="text-2xl" aria-hidden suppressHydrationWarning={true}>
                       {avatarDisplay}
                     </span>
                     <span

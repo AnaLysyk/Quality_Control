@@ -84,7 +84,8 @@ export default function TicketsButton() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/tickets?scope=mine", { credentials: "include", cache: "no-store" });
+      const scope = isDev ? "all" : "mine";
+      const res = await fetch(`/api/tickets?scope=${scope}`, { credentials: "include", cache: "no-store" });
       const json = (await res.json().catch(() => ({}))) as { items?: TicketItem[]; error?: string };
       if (!res.ok) {
         setItems([]);
@@ -99,7 +100,7 @@ export default function TicketsButton() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, isDev]);
 
   useEffect(() => {
     if (open) {
@@ -284,7 +285,8 @@ export default function TicketsButton() {
               const isExpanded = expandedId === ticket.id;
               const isEditing = editingId === ticket.id;
               const localDraft = isEditing && draft ? draft : null;
-              const canEdit = false;
+              // Devs can edit/delete any ticket, users only their own
+              const canEdit = isDev || (ticket.createdBy === user?.id);
               const creatorLabel = ticket.createdByName || ticket.createdByEmail || ticket.createdBy || "";
 
               return (

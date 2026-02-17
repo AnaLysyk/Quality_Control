@@ -1,0 +1,297 @@
+[33mdf85343[m ajuste
+[33mf0c583e[m ajusta playwright secrets guard
+[33m8afebdf[m ajustes
+[33mc5d6bd6[m chore(e2e): log company select and accept button disabled state for debugging
+[33m18f38f7[m chore(e2e): always write accept debug log (prisma + JSON)
+[33md4b406e[m chore(e2e): write debug log on access-request accept to data/access-requests-debug.log
+[33m516359e[m chore(e2e): add Playwright CI workflow; instrument access-requests logs; traduzir documentos page para pt-BR
+[33m427d5d1[m test(e2e): increase timeout for access-requests accept/reject assertions
+[33m44eab2d[m e2e: stabilize tests  dedupe Kanban, modal scroll, documents upload robustness, release export download attribute, CompanyContext fixes
+[33m04551d3[m test(seed): revert k2 seed in .tmp/e2e
+[33ma586399[m chore(Kanban): remove test-only move-to-pass button
+[33md25e448[m feat(Kanban): add move-to-pass button for E2E compatibility
+[33m7933576[m test(seed): add k2 case to run_falha for Kanban E2E
+[33m0f1cfe7[m instrument(Kanban): add debug logs for persisted rows and persist endpoints
+[33m317cc3b[m feat: enforce qase access and ticket roles
+[33m72126cb[m revert: allow json store for chamados
+[33m474fdd0[m fix: require redis for chamados persistence
+[33mc32bfef[m chore: remove empresas acesso from admin nav
+[33m27428fc[m fix: use theme colors on empresas page
+[33m96041e1[m chore: remove benchmark module
+[33mf4861a9[m[33m ([m[1;31morigin/chore/accessibility-lint-fixes[m[33m, [m[1;32mchore/accessibility-lint-fixes[m[33m)[m fix: align collapsed sidebar logo
+[33m0fcb2ab[m chore(userNotes): replace @ts-ignore with @ts-expect-error
+[33m13df178[m fix(kanban): remove stray char and add a11y labels
+[33m99bc4f0[m chore: accessibility and lint fixes
+[33mdabfaec[m fix: vercel build errors
+[33maeab748[m chore: sync pending updates
+[33m0df91d9[m feat: improve ticket kanban columns
+[33m0970e2f[m fix: ensure admin sees global companies and selectors
+[33m2e74ddb[m fix: chat-like access request comments and ticket routes
+[33m301b837[m fix: persist tickets and restrict edits
+[33m76ab873[m feat: refine access requests details layout
+[33mfbc305b[m feat: tidy access requests layout
+[33md2fd011[m fix: ensure access request comments run in node
+[33m33e7411[m fix: relax company key typing in admin home
+[33m8590bd5[m fix: persist manual defects via redis/json store
+[33m85f92e3[m fix: persist company documents and remove history
+[33mdb138e1[m feat: refresh access requests UI and persist stores
+[33mc5268e5[m fix: adjust sidebar logo fit
+[33m43e2412[m fix: avoid top-right overlay on content
+[33m06c6659[m fix: refine collapsed sidebar layout
+[33mf947531[m fix: enable drag and dev-wide chamados
+[33m1b426c3[m feat: paper background and hover sidebar
+[33medfc92f[m fix: persist user settings and profile on serverless
+[33m6a5fd21[m fix: fallback tickets storage on serverless
+[33m420ef97[m fix: persist kanban updates for api endpoint
+[33m68f0daa[m fix: persist notes in local storage fallback
+[33m45cb23a[m fix: harden ticket creation and redis config
+[33md38131a[m feat: improve kanban UX and chamados visibility
+[33m31d5b65[m fix: fallback to memory when Redis fails in tickets
+[33m59bce98[m fix: show Chamados for admin in sidebar
+[33mc6ced42[m fix: add incr to in-memory redis
+[33m65ce87d[m fix: remove unused ts-expect-error
+[33mf009676[m chore: speed up e2e webServer startup
+[33m9eceeff[m chore: add tailwind postcss plugin
+[33m8ddd0e4[m Update package.json and package-lock.json
+[33m7678ab2[m Fix: Make login optional in CreateUserModal and send user only if present
+[33m1f04c24[m Update .gitignore: add editor, turbopack and log patterns
+[33me97db95[m Apply npm audit fix --force (resolve vulnerabilities)
+[33m562b361[m Update dependencies (npm update)
+[33m6abab14[m Add missing deps: clsx, ai
+[33me4b0425[m Remove unused dependencies reported by depcheck
+[33m9fe9722[m[33m ([m[1;31morigin/pr/salvar-mudancas-2026-02-11[m[33m, [m[1;32mpr/salvar-mudancas-2026-02-11[m[33m)[m Corrige checagem nula em canAssignTicket e canMoveTicket
+[33mf2ca448[m Salvar mudanças locais
+[33m9556558[m chore: auto commit by Copilot
+[33mad45702[m chore: auto commit by Copilot
+[33m0266fa0[m chore: auto commit by Copilot
+[33mc81a649[m chore: auto commit by Copilot
+[33mea8826e[m chore: auto commit by Copilot
+[33m812773c[m Atualizações
+[33m76e815a[m Repeat: sync changes
+[33m9a7ba2a[m Repeat: apply latest fixes to LoginClient and styles
+[33m067f6f9[m Update LoginClient: small fix (again)
+[33m49bcea0[m Update LoginClient: small fix (repeat)
+[33m64f8428[m Update LoginClient: small fix
+[33m5cbbdc2[m Atualiza arquivos
+[33meb188e9[m Atualiza arquivos
+[33mc0c2906[m Atualiza arquivos
+[33m50a2cbb[m Atualiza arquivos
+[33maacf241[m Add git status report
+[33mdc144fb[m Atualiza defeitos page.tsx
+[33m153ceae[m fix: lock login theme and center logo
+[33mfff36bd[m fix: persist user profile and settings
+[33m2642e26[m fix: handle unknown errors in user notes store
+[33mac58827[m feat: persist tickets/notes and notify admins
+[33mb55156c[m chore: update sample auth users
+[33m5145b7b[m chore: ignore npm cache
+[33m5198f12[m fix: add react-is dependency
+[33mae0344c[m Merge pull request #2 from AnaLysyk/fix/create-user-modal-single-client
+[33md811066[m Update files
+[33md0ef35f[m fix(users): auto-select single client in CreateUserModal and add unit test
+[33m7caaf4e[m[33m ([m[1;31morigin/i18n/translate-to-pt[m[33m, [m[1;32mi18n/translate-to-pt[m[33m)[m a11y(tickets): add placeholders and aria-labels to edit inputs
+[33m960b8ad[m a11y(chat): add aria-label/title to icon buttons; use w-88
+[33m2da4fcf[m a11y(notes): add placeholders/aria-labels and remove inline styles; move note colors to CSS
+[33mace7a16[m a11y(chamados): add aria-label to select elements
+[33md0c4ba4[m style(inputs): dark-mode for form-control-user
+[33ma66a832[m style(inputs): apply form-control-user to key forms for improved contrast
+[33m4583ae8[m feat(chat): add ChatButton and AI API stub; fix duplicate ticket route blocks
+[33m0842eba[m fix(auth): include credentials when fetching /api/me to preserve session cookies
+[33m192fc9c[m style(login): ajustar cores dos campos e subtítulo para melhor contraste
+[33mdc403ae[m chore(i18n): aplicar ajustes de UI e traduções
+[33ma17a3a6[m chore: save work
+[33m5a4218a[m chore(i18n): atualizar amostra local-auth-store
+[33m0bee794[m chore(i18n): ajustar userNotificationsStore
+[33m3bab517[m chore(i18n): aplicar traduções finais e scripts
+[33m90f400e[m chore(i18n): ajustar access-requests route
+[33mf16b45e[m chore(i18n): aplicar traduções pendentes e ajustes de build; adicionar fallback prismaClient
+[33mbdd1316[m chore(build): add fallback lib/prismaClient to avoid missing import during build
+[33mfa8bbc9[m chore(build): skip prisma generate if schema missing
+[33m80250ec[m i18n: traduzir docs, comentários e mensagens para PT-BR
+[33m04d9074[m[33m ([m[1;31morigin/chore/remove-prisma-backendclient[m[33m, [m[1;32mchore/remove-prisma-backendclient[m[33m)[m test: add unit test for BackendClient (respx); ci: run Python tests
+[33mac14da5[m chore: remove prisma; add BackendClient, test and httpx
+[33m0bff94e[m chore(deploy): trigger vercel rebuild (empty commit)
+[33mdc7f015[m test(session): add session.store unit tests and server-only mock
+[33m5062bf2[m chore(deploy): trigger vercel rebuild
+[33mce55333[m fix(types): remove duplicate export in src/types/user.ts
+[33maa83e6a[m chore: commit pendente  atualizações de seed e testes e2e
+[33m059d320[m fix(types): normalize src/types filenames to lowercase
+[33m162db40[m fix: resolve TypeScript build errors and runtime typings
+[33m202e484[m fix(rbac): accept Request in requireGlobalAdmin
+[33ma9e3b4a[m chore: enviar alterações
+[33m6da4e15[m Cleanup: ensure no empty files/dirs remain
+[33m3061ce5[m Remove zero-byte files and empty directories
+[33mca2fe10[m Remove empty directories
+[33m35ed4a5[m ajuste
+[33m88abdff[m chore: snapshot current workspace
+[33m56779b4[m chore: snapshot current workspace
+[33mc3ec509[m chore: snapshot current workspace
+[33md3a6ee9[m fix: garante schema=public no switch-db.sh para uso local e Docker
+[33m5fdfa1d[m fix: ajustes em seed, env e página de empresa
+[33m3b8f334[m chore: remove env exemplos e atualiza prismaClient
+[33m57577d4[m chore: atualiza prismaClient helper
+[33mbe38dfd[m chore: atualiza seed do prisma
+[33ma5f9f2e[m fix: ajustes em painel-releases-manuais-autenticado/page.tsx
+[33ma3ddea8[m chore: atualiza qaseSdk helper
+[33m74b2f6e[m chore: atualiza seeds e scripts auxiliares
+[33m07f8acf[m fix: corrige todos os imports/require de '@/lib/prisma' para '@/lib/prismaClient'
+[33m425dca1[m feat: atualizações em rotas, permissões, schema e arquivos de empresa
+[33m390065c[m feat: adiciona store de documentos de empresa (company-documents-store.json)
+[33m55d89ac[m fix: remove isPrismaConfigured, ajusta uso do Prisma Client e corrige imports
+[33m81ab420[m refactor: atualiza todos os imports para prismaClient
+[33mb5f6c54[m refactor: renomeia prisma.ts para prismaClient.ts para evitar confusão com supabase
+[33m5978d63[m Remove middleware.ts (proxy only)
+[33m482e1c7[m chore: sincroniza workspace e garante push de todos os arquivos atualizados
+[33m98ae62b[m refactor: simplifica e padroniza client Prisma
+[33mf7816a5[m fix: remove integrações quebradas com Qase e ajusta testes multi-tenant
+[33mb41e435[m refactor(prisma): remove aliases legados, padroniza DATABASE_URL como única fonte
+[33m1925406[m chore: atualiza .gitignore e remove artefatos ignorados
+[33mac4cb1f[m fix(prisma/ssl): força aceitação de certificado self-signed do Supabase Pooler em produção (NODE_TLS_REJECT_UNAUTHORIZED=0)
+[33m89da3c5[m chore(prisma7): remove prisma.config.ts (configuração agora só via env e PrismaClient)
+[33m347e100[m chore(prisma7): remove url/directUrl do schema e move config para prisma.config.ts (migrate)
+[33m2a9ed97[m chore(prisma): adiciona directUrl para separar pooler (runtime) e conexão direta (migração)
+[33mdbd44c8[m chore(debug): log DATABASE_URL host in metrics overview route for deployment troubleshooting
+[33md5ca6cf[m fix(build): run prisma generate before next build to prevent missing client errors
+[33mcfe396b[m fix(api/auth/login): move all runtime logic inside POST handler to prevent build-time execution
+[33m9a2e696[m fix(rbac): remove extra closing brace and finalize role logic encapsulation
+[33m4104b12[m fix(prisma): migrate config to JS for Prisma 7+ compatibility and remove url from schema
+[33md7ebb9c[m fix(rbac): encapsula lógica de role em resolveDefectRole para evitar returns inválidos no módulo
+[33mbf2a723[m fix(api): require dinâmico de fs/path em releases order para evitar erro de build em edge/serverless
+[33mdbafcbe[m fix(api): require dinâmico de fs/path em releases-manual root para evitar erro de build em edge/serverless
+[33m1fbbff9[m fix(api): require dinâmico de fs/path em user-settings para evitar erro de build em edge/serverless
+[33mcaba6d0[m fix(api): require dinâmico de fs/path em releases-manual para evitar erro de build em edge/serverless
+[33mfeb5a9a[m fix(api): require dinâmico de fs/path em releases-manual cases para evitar erro de build em edge/serverless
+[33m1e5992c[m fix(api): require dinâmico de fs/path em qualityGateHistory para evitar erro de build em edge/serverless
+[33m01c93d7[m fix(api): require dinâmico de fs/path em export de release para evitar erro de build em edge/serverless
+[33m6fab5bd[m fix(docs): require dinâmico de fs/path para evitar erro de build em edge/serverless
+[33m1b41154[m fix(api): import dinâmico do prisma em forgot-password para evitar erro de build em edge/serverless
+[33m571db4c[m fix(api): import dinâmico do prisma em resolveDefectRole para evitar erro de build em ambiente edge/serverless
+[33me7b975e[m fix(api): impede acesso ao fs em edge/build no readAlertsStore para evitar erro de build
+[33mc09f86a[m fix(api): adiciona 'use server' em /api/admin/alerts para evitar erro de build no Vercel
+[33m68b94de[m chore(env): atualiza DATABASE_URL para sslmode=require e sslaccept=accept_invalid_certs (Supabase Pooler/Prisma)
+[33mdad0877[m feat(debug): endpoint /api/debug/env para inspecionar variáveis de ambiente em produção
+[33m26ff813[m fix(docker): define DATABASE_URL do Session Pooler no compose.yaml para evitar erro de TLS Prisma
+[33m3464c9d[m fix(env): uso exclusivo do Session Pooler em DATABASE_URL e POSTGRES_PRISMA_URL, remoção de variantes duplicadas
+[33m1241d6c[m docs: instrução final para uso exclusivo do Session Pooler Supabase em DATABASE_URL (Vercel)
+[33mb4bd267[m docs(env): adiciona variáveis NEXT_PUBLIC_SUPABASE_URL e PUBLISHABLE_DEFAULT_KEY ao .env.example
+[33mc457613[m fix(react): tipagem useState<any[]> para resolver erro de build Next.js/TypeScript
+[33mfa4d02c[m docs(env): exemplos e instruções atualizadas para uso do Session Pooler Supabase (IPv4) em produção/Vercel
+[33mc3c1135[m fix(infra): workaround NODE_TLS_REJECT_UNAUTHORIZED=0 para Supabase pooler em produção (Vercel)
+[33m634c598[m docs(env): exemplos e instruções para DATABASE_URL/POSTGRES_PRISMA_URL pooler produção e SSL
+[33m290662d[m feat: ajustes finais de segurança, RLS, policies, função admin e script de teste para clients_view
+[33m3115dfb[m chore(prisma): ativa driverAdapters no schema.prisma para suporte ao adapter
+[33ma3087f1[m chore(build): roda prisma generate após next build para corrigir deploy no Vercel
+[33mfd5e9a8[m fix(api/me): usa coluna name em vez de company_name na tabela clients
+[33mdbf5c3f[m chore: adiciona logs de clientIds e resultado da query clients no endpoint /api/me para debug detalhado
+[33m65a0c6d[m chore: adiciona logs detalhados no endpoint /api/me para facilitar debug em produção
+[33m83374f6[m fix: remove SUPABASE_MOCK do endpoint de métricas para testar produção
+[33mc75b985[m chore: atualiza arquivos e remove testes antigos
+[33ma609fda[m Ajustes
+[33m0cf448d[m docs: checklist de produção e exemplos de env para Supabase/Vercel
+[33ma33a724[m test: ajustes de robustez nos testes E2E (timeouts, delays, sem alterar lógica principal)
+[33mcb427fc[m docs: adiciona roteiro SQL para criação de empresa, usuário e perfil
+[33m5c8c7cf[m chore: suprime erro Deno no TS local
+[33m7e12a4a[m feat: função Edge create-auth-users para Supabase
+[33mdae0f4f[m chore: atualização geral
+[33m49223f4[m chore: atualização geral
+[33m31fc667[m chore: atualização geral
+[33m1745a0d[m chore: atualização geral
+[33m50f476a[m chore: atualização geral
+[33m35ed5a8[m chore: script de teste de conexão S3
+[33m9173f1e[m fix: atualização em bootstrap route
+[33m1d287a8[m chore: ajustes finais integração S3
+[33mde82deb[m feat: integração S3 com @aws-sdk/client-s3
+[33m497c90e[m feat: atualizações recentes
+[33m930d7b9[m feat: atualizações recentes
+[33mc63c259[m fix: export default handler para compatibilidade Next.js 13+ API route
+[33m8f0ccd5[m fix: refatorar handler para garantir fluxo único e compatibilidade Vercel
+[33mb6a2656[m fix: refatorar bloco de autenticação para compatibilidade máxima Vercel
+[33m9e46989[m fix: reformatar return para parser Vercel
+[33mc9efae3[m fix: garantir returns apenas dentro de função e finalizar com exports
+[33mb2a7f77[m fix: remover returns fora de função para build Vercel
+[33m67ac396[m fix: dashboard sempre renderiza em modo mock
+[33m5829891[m fix: permitir acesso ao /api/me em mock sem sessão
+[33mb49f51a[m fix: forçar mock de login em produção para testes
+[33mce4121c[m feat: atualizações finais para produção
+[33mba3c732[m fix: corrigir import do PrismaClient para @prisma/client
+[33m1d4d735[m Atualizações: seed, dependências, ajustes Prisma/E2E
+[33meb36c81[m ajustes frontend
+[33me4ea785[m ajustes frontend
+[33m70fe8c4[m remove arquivo indevido
+[33m81eb520[m commit
+[33m585be40[m Ajusta conexao banco e login
+[33m4df7e01[m Atualizacoes restantes
+[33m3b427a1[m Ajusta home sem redirecionar login
+[33m131f673[m fix: ajusta conexão SSL do banco para aceitar certificados autoassinados (dev)
+[33m9043910[m fix(api/metrics): corrige campos de data e tipagem do groupBy
+[33m44499d4[m chore: aplica mudanças locais
+[33mb1e575a[m Ajuste
+[33m616edba[m AJUSTE
+[33m625a8e4[m AJUSTE
+[33mc640671[m mudanças
+[33m7ed2362[m Ajustes
+[33mbec891f[m Ajustes
+[33m27413e6[m Ajustes
+[33m71960ad[m Adiciona login atualizado e rota notes com helper Supabase
+[33m016c5fc[m Adiciona login atualizado e rota notes com helper Supabase
+[33m84c1718[m Ajuste
+[33mc20f8b0[m Ajuste
+[33m1238515[m Ajuste
+[33m9d266b2[m Ajuste
+[33m0d9b60d[m Ajuste
+[33m9e8cebc[m fix: ajustes Tailwind canonical, remoção de inline styles e tipagem de mocks
+[33mac10e07[m fix(redis): follow Upstash env docs
+[33m75a5968[m feat(redis): add public ping endpoint (secret)
+[33m660a90b[m feat(redis): support prefixed Upstash env vars
+[33md942be6[m chore(redis): prefer UPSTASH_REDIS_REST_* env vars
+[33me8cd817[m feat(auth): JWT-only login when Supabase disabled
+[33md8c5dbf[m Backend tests: make health spec env-independent
+[33mc6883bc[m Support prefixed Upstash env vars
+[33mb555e0f[m Add optional Upstash Redis ping
+[33m54b5c01[m Docs: add Vercel Postgres schema script
+[33mfb4200a[m Docs: clarify Neon token vs Postgres
+[33mfdf4b3a[m Docs: Postgres env vars + Neon token note
+[33m838a25f[m Admin context + theming fixes
+[33m0a570eb[m Harden auth and disable mock in prod
+[33md63411b[m Fix desktop sidebar overlap
+[33mc953377[m Fix navigation freeze by closing mobile overlay on route change
+[33me5cbdec[m Fix admin navigation env/envelope issues
+[33m96bc1a1[m fix: disable public clients mock in prod
+[33m72c10cf[m fix: tie defects to qase project code
+[33mf58b026[m fix: correct defects API parsing and open-status
+[33m6ef954f[m fix: clamp profile menu and improve login layout
+[33m19b5916[m fix: improve zoom responsiveness and surface access-request errors
+[33m67f2c0e[m fix: improve layout under browser zoom
+[33m6513d02[m fix: persist access requests reliably on Supabase
+[33mc00d725[m chore: reduce lint warnings in tests
+[33md68287a[m chore: remove unused imports/vars
+[33me3a87fd[m fix: lint warnings + ProfileButton state
+[33mc441e23[m ajustes
+[33m5376e8c[m Ajustes
+[33me19e21d[m Ajustes
+[33mf123109[m Return 200 for bootstrap in SUPABASE_MOCK
+[33m9741a42[m Avoid supabaseAdmin reassignment (Turbopack)
+[33m4ea333e[m Fix build + password reset flow
+[33me712295[m Padroniza EOL para LF
+[33m06408b5[m ajustes
+[33md0840bc[m style: fix lint warnings in mocks and auth/clients routes; remove unused helpers
+[33m286e661[m chore: remove .next build artifacts and add to .gitignore
+[33m68d14be[m ci(tests): make tests pass; add supabase/headers mocks; fix routes; eslint --fix applied
+[33md3a30bd[m fix: corrigir build e tipagens
+[33m1a129da[m chore: force vercel rebuild
+[33mb2253ec[m fix: corrigir build e tipagens
+[33m42cf42a[m fix: corrigir build e tipagens
+[33m771d663[m fix: corrigir build e tipagens
+[33mc4d78d9[m fix: corrigir build e tipagens
+[33md5b20f6[m fix: corrigir erro de build (i18n recursivo e admin home)
+[33m811639c[m Ajuste admin
+[33m1750871[m ajustes
+[33m3f1cc6e[m fix(auth): enforce global admin access on frontend and backend
+[33meabd792[m fluxo oficial de criação de usuarios via Supabase invite
+[33mbd567a8[m chore: ignore test-results directory
+[33m4c6f504[m test: ajusta util de auth para e2e
+[33m0e64fe9[m Merge branch 'feature/ajuste' # Please enter a commit message to explain why this merge is necessary, # especially if it merges an updated upstream into a topic branch. # # Lines starting with '#' will be ignored, and an empty message aborts # the commit.
+[33mdf6151a[m[33m ([m[1;31morigin/feature/ajuste[m[33m, [m[1;32mfeature/ajuste[m[33m)[m Ajustes
+[33m4667dad[m Merge pull request #1 from AnaLysyk/feature/ajuste
+[33mb7411a0[m ajusta sidebar
+[33m259a79a[m[33m ([m[1;31morigin/feature/ajuste-sidebar[m[33m, [m[1;32mfeature/ajuste-sidebar[m[33m)[m Fix Next build errors and server-only release data
+[33mf7e3805[m Melhorias

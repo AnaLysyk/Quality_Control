@@ -54,6 +54,8 @@ export default function AccessRequestClient() {
   const [role, setRole] = useState("");
   const [accessType, setAccessType] = useState<"user" | "company" | "admin">("user");
   const [notes, setNotes] = useState("");
+  const [titulo, setTitulo] = useState("");
+  const [descricao, setDescricao] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -144,6 +146,8 @@ export default function AccessRequestClient() {
           role: normalizedRole,
           access_type: accessType,
           notes: notes.trim() || undefined,
+          title: titulo.trim(),
+          description: descricao.trim(),
         }),
       });
 
@@ -159,6 +163,8 @@ export default function AccessRequestClient() {
       setClientId("");
       setRole("");
       setNotes("");
+      setTitulo("");
+      setDescricao("");
       setAccessType("user");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erro desconhecido";
@@ -449,6 +455,30 @@ export default function AccessRequestClient() {
                 />
               </label>
 
+              <label className={labelClass}>
+                Título do chamado
+                <input
+                  type="text"
+                  value={titulo}
+                  onChange={(event) => setTitulo(event.target.value)}
+                  required
+                  className={inputBase}
+                  placeholder="Ex: Erro ao acessar painel"
+                />
+              </label>
+
+              <label className={labelClass}>
+                Descrição detalhada
+                <textarea
+                  value={descricao}
+                  onChange={(event) => setDescricao(event.target.value)}
+                  required
+                  rows={4}
+                  className={textareaBase}
+                  placeholder="Descreva o problema ou solicitação"
+                />
+              </label>
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className={labelClass}>
                   Empresa (ou nome do cliente)
@@ -497,17 +527,6 @@ export default function AccessRequestClient() {
                   <p className="text-xs font-medium text-[#475569]">{currentOption.description}</p>
                 )}
               </div>
-
-              <label className={labelClass}>
-                Observações (opcional)
-                <textarea
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                  rows={4}
-                  className={textareaBase}
-                  placeholder="Preciso criar releases e revisar dashboards de aceitação."
-                />
-              </label>
 
               <button
                 type="submit"

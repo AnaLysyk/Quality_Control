@@ -209,6 +209,76 @@
       "authorId": "usr_admin_griaule_test",
       "body": "Solicitação rejeitada.",
       "createdAt": "2026-02-14T02:18:31.593Z"
+    },
+    {
+      "id": "4d49f554-3890-4c40-8a3f-2503a76aab7d",
+      "requestId": "e7c4cdb6-5c18-4520-a4d1-09dee21933e5",
+      "authorRole": "admin",
+      "authorName": "admin",
+      "authorEmail": "admin",
+      "authorId": "usr_admin",
+      "body": "scsdsdasdsd",
+      "createdAt": "2026-02-17T01:47:19.606Z"
+    },
+    {
+      "id": "b3eda3fb-dc08-4819-97c0-e5e0ef01debd",
+      "requestId": "e7c4cdb6-5c18-4520-a4d1-09dee21933e5",
+      "authorRole": "admin",
+      "authorName": "admin",
+      "authorEmail": "admin",
+      "authorId": "usr_admin",
+      "body": "sdsdasad",
+      "createdAt": "2026-02-17T01:47:24.077Z"
+    },
+    {
+      "id": "50caae97-ac09-4da8-91db-5f6380406f3d",
+      "requestId": "e7c4cdb6-5c18-4520-a4d1-09dee21933e5",
+      "authorRole": "admin",
+      "authorName": "admin",
+      "authorEmail": "admin",
+      "authorId": "usr_admin",
+      "body": "asdsdsadsa",
+      "createdAt": "2026-02-17T01:47:27.586Z"
+    },
+    {
+      "id": "0bdf87c8-3fa9-4ded-b737-9b75076f10b3",
+      "requestId": "e7c4cdb6-5c18-4520-a4d1-09dee21933e5",
+      "authorRole": "requester",
+      "authorName": "User Reject 947720",
+      "authorEmail": "e2e.reject.947720@griaule.test",
+      "authorId": null,
+      "body": "fdfsfdd",
+      "createdAt": "2026-02-17T01:48:07.446Z"
+    },
+    {
+      "id": "62cdd5d4-bd03-49b7-965d-57841c2fea2a",
+      "requestId": "e7c4cdb6-5c18-4520-a4d1-09dee21933e5",
+      "authorRole": "requester",
+      "authorName": "User Reject 947720",
+      "authorEmail": "e2e.reject.947720@griaule.test",
+      "authorId": null,
+      "body": "fsdfdsfdf",
+      "createdAt": "2026-02-17T01:48:09.847Z"
+    },
+    {
+      "id": "9851b156-d7ef-4f36-a5bf-a7255bc608ea",
+      "requestId": "fc0e3c4d-6f68-43bd-a6d3-b02979c769c2",
+      "authorRole": "admin",
+      "authorName": "admin",
+      "authorEmail": "admin",
+      "authorId": "usr_admin",
+      "body": "xfvxddfs",
+      "createdAt": "2026-02-17T01:49:13.313Z"
+    },
+    {
+      "id": "a9ba3548-9aa0-4358-9d7a-eeb95a333215",
+      "requestId": "fc0e3c4d-6f68-43bd-a6d3-b02979c769c2",
+      "authorRole": "admin",
+      "authorName": "admin",
+      "authorEmail": "admin",
+      "authorId": "usr_admin",
+      "body": "dfdfdf",
+      "createdAt": "2026-02-17T01:49:15.296Z"
     }
   ]
 }

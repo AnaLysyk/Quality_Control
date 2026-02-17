@@ -1,6 +1,19 @@
 {
   "items": [
     {
+      "id": "76ede658-71e6-4600-b884-ccb49c68507c",
+      "companySlug": "griaule",
+      "documentId": "f2a079da-1cd1-4715-a3e6-4bff67c9f108",
+      "action": "created",
+      "kind": "file",
+      "title": "baixados.jpg",
+      "description": null,
+      "url": null,
+      "fileName": "baixados.jpg",
+      "createdAt": "2026-02-17T01:34:02.887Z",
+      "actorId": "usr_admin"
+    },
+    {
       "id": "9c6115b3-0886-4f1f-abd9-2e6624f91ff6",
       "companySlug": "testing-company",
       "documentId": "d372b966-0759-42e6-bf3a-7fa97842ac17",

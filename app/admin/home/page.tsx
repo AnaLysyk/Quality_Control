@@ -10,6 +10,7 @@ import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequ
 import Badge from "@/components/Badge";
 import { CompanySelector } from "@/components/CompanySelector";
 import styles from "./page.module.css";
+import TicketsButton from "@/components/TicketsButton";
 
 type QualityOverviewResponse = {
   companies: CompanyRow[];
@@ -297,7 +298,7 @@ export default function AdminHomePage() {
   const releasesAtRisk = overview?.riskCount ?? ("--" as const);
 
   const runStats = selectedRun?.stats ?? { pass: 0, fail: 0, blocked: 0, notRun: 0 };
-  const runTotal = Object.values(runStats).reduce((sum, value) => sum + value, 0);
+  const runTotal = Object.values(runStats).reduce((sum, value) => Number(sum) + Number(value), 0);
   const runStatEntries = [
     { id: "pass", label: "Pass", value: runStats.pass, progressClass: styles.progressPass },
     { id: "fail", label: "Fail", value: runStats.fail, progressClass: styles.progressFail },
@@ -307,18 +308,10 @@ export default function AdminHomePage() {
 
   const companyRiskText = selectedCompany?.gate?.status ?? "no_data";
 
-  const companyCards = companies.map((company) => {
-    const totalFailures = sumStats(company.stats);
-    return {
-      id: company.id,
-      slug: company.slug ?? company.id,
-      name: company.name,
-      risk: company.gate?.status ?? "no_data",
-      passRate: company.passRate,
-      defectCount: totalFailures,
-      runsTotal: company.releases?.length ?? 0,
-      gateCopy: company.gate?.status === "failed" ? "Risco alto" : company.gate?.status === "warning" ? "Atenção" : "Estável",
-    };
+  // Remove duplicidade de empresas pelo id ou slug
+  const uniqueCompanies = companies.filter((company, idx, arr) => {
+    const key = company.id ?? company.slug;
+    return arr.findIndex(c => (c.id ?? c.slug) === key) === idx;
   });
 
   return (
@@ -364,63 +357,101 @@ export default function AdminHomePage() {
                 <span>Empresas</span>
                 <span>Arraste para ver</span>
               </div>
-              <div className="flex w-full gap-4 overflow-x-auto pb-2" data-testid="benchmark-table">
-                <button
-                  type="button"
-                  onClick={() => setSelectedCompanySlug(null)}
-                  className={`flex min-w-56 flex-col gap-2 rounded-2xl border p-4 shadow-sm transition border-slate-200 bg-slate-50 text-slate-600 ${
-                    selectedCompanySlug ? "opacity-80 hover:opacity-100" : "ring-2 ring-offset-2 ring-(--tc-border,#e5e7eb)"
-                  }`}
-                >
-                  <div className="text-sm font-bold text-(--page-text,#0b1a3c)">Contexto global</div>
-                  <div className="text-xs text-(--tc-text-muted,#6b7280)">Ver todos os clientes</div>
-                </button>
-                {companyCards.map((company) => {
-                  const tone = RISK_TONE[company.risk] ?? RISK_TONE.no_data;
-                  const selectedKey = resolveCompanyKey(company);
-                  const isSelected = selectedKey === selectedCompanySlug;
-                  const testSlug = slugifyTestId(selectedKey ?? company.name ?? company.id);
-                  return (
-                    <button
-                      key={company.id}
-                      type="button"
-                      onClick={() => setSelectedCompanySlug(selectedKey)}
-                      data-testid={testSlug ? `benchmark-row-${testSlug}` : "benchmark-row"}
-                      className={`flex min-w-56 flex-col gap-2 rounded-2xl border p-4 shadow-sm transition ${tone} ${
-                        isSelected ? "ring-2 ring-offset-2 ring-(--tc-border,#e5e7eb)" : "opacity-80 hover:opacity-100"
-                      }`}
-                    >
-                      <div className="text-sm font-bold text-(--page-text,#0b1a3c)">{company.name}</div>
-                      <div className="text-3xl font-extrabold" data-testid="benchmark-defects-total">
-                        {company.defectCount}
-                      </div>
-                      <div className="text-xs text-(--tc-text-muted,#6b7280)" data-testid="benchmark-runs-total">
-                        Runs: {company.runsTotal}
-                      </div>
-                      <div
-                        className="text-xs text-(--tc-text-muted,#6b7280)"
-                        data-testid="benchmark-quality-status"
-                        data-status={company.risk}
+              <div
+                className="overflow-x-auto scrollbar-hide"
+                style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch', overflowY: 'hidden' }}
+              >
+                <div className="flex flex-row gap-6 pb-2" style={{ scrollSnapType: 'x mandatory' }}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCompanySlug(null)}
+                    className="min-w-[220px] max-w-[220px] aspect-square flex flex-col gap-3 border p-6 shadow-md transition border-slate-200 bg-slate-50 text-slate-600 ring-2 ring-offset-2 ring-(--tc-border,#e5e7eb)"
+                    style={{ flex: '0 0 220px', height: '220px', scrollSnapAlign: 'start' }}
+                  >
+                    <div className="text-base font-bold text-(--page-text,#0b1a3c)">Contexto global</div>
+                    <div className="text-xs text-(--tc-text-muted,#6b7280)">Ver todos os clientes</div>
+                  </button>
+                  {uniqueCompanies.map((company, idx) => {
+                    const tone = RISK_TONE[company.gate?.status ?? "no_data"] ?? RISK_TONE.no_data;
+                    const selectedKey = resolveCompanyKey(company);
+                    const isSelected = selectedKey === selectedCompanySlug;
+                    const testSlug = slugifyTestId(selectedKey ?? company.name ?? company.id);
+                    let cardKey = company.id;
+                    if (!cardKey) {
+                      if (company.slug) {
+                        cardKey = `${company.slug}-${idx}`;
+                      } else {
+                        cardKey = `company-${idx}`;
+                      }
+                    }
+                    // Acesso seguro aos dados
+                    const stats = company.stats as Partial<any>;
+                    // Dia de criação e status
+                    const createdAt = company.createdAt ? formatDate(company.createdAt) : '--';
+                    const statusEmpresa = company.active === true ? 'Ativa' : 'Inativa';
+                    return (
+                      <button
+                        key={cardKey}
+                        type="button"
+                        onClick={() => setSelectedCompanySlug(selectedKey)}
+                        data-testid={testSlug ? `benchmark-row-${testSlug}` : "benchmark-row"}
+                        className={`min-w-[220px] max-w-[220px] aspect-square flex flex-col gap-3 border p-6 shadow-md transition ${tone} ${
+                          isSelected ? "ring-2 ring-offset-2 ring-(--tc-border,#e5e7eb)" : "opacity-80 hover:opacity-100"
+                        }`}
+                        style={{ flex: '0 0 220px', height: '220px', scrollSnapAlign: 'start' }}
                       >
-                        {company.gateCopy}
-                      </div>
-                      <div className="text-xs text-(--tc-text-muted,#6b7280)">
-                        Pass rate: {company.passRate !== null ? `${company.passRate}%` : "--"}
-                      </div>
-                    </button>
-                  );
-                })}
+                        <div className="text-base font-bold text-(--page-text,#0b1a3c)">{company.name}</div>
+                        <div className="text-xs text-(--tc-text-muted,#6b7280)">Criado em: {createdAt}</div>
+                        <div className="text-xs text-(--tc-text-muted,#6b7280)">Status: {statusEmpresa}</div>
+                        <div className="text-2xl font-extrabold" data-testid="benchmark-defects-total">
+                          {stats?.defectCount ?? "--"}
+                        </div>
+                        <div className="text-xs text-(--tc-text-muted,#6b7280)" data-testid="benchmark-runs-total">
+                          Runs: {stats?.runsTotal ?? "--"}
+                        </div>
+                        <div
+                          className="text-xs text-(--tc-text-muted,#6b7280)"
+                          data-testid="benchmark-quality-status"
+                          data-status={company.gate?.status ?? "no_data"}
+                        >
+                          {company.gate?.status ? STATUS_LABELS[company.gate.status] : "--"}
+                        </div>
+                        <div className="text-xs text-(--tc-text-muted,#6b7280)">
+                          Pass rate: {stats?.passRate !== null && stats?.passRate !== undefined ? `${stats?.passRate}%` : "--"}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </section>
 
           <section className="rounded-4xl bg-white p-6 shadow-sm">
-            <CompanySelector
-              title="Acessar empresa"
-              description="Abra o contexto da empresa selecionada para navegar no painel."
-              buildHref={(company) => `/empresas/${encodeURIComponent(company.clientSlug)}/home`}
-              ctaLabel="Abrir"
-            />
+            {/* Aba de acesso à empresa muda conforme empresa selecionada */}
+            <div className="space-y-4">
+              {selectedCompany ? (
+                <div className="rounded-2xl border border-(--tc-border)/40 bg-white p-5 shadow-sm">
+                  <h2 className="text-lg font-semibold text-(--page-text,#0b1a3c">{selectedCompany.name}</h2>
+                  <p className="text-xs text-(--tc-text-secondary,#4b5563)">Slug: {selectedCompany.slug}</p>
+                  <p className="text-xs text-(--tc-text-secondary,#4b5563)">Score: {selectedCompany.stats?.score ?? '--'}</p>
+                  <p className="text-xs text-(--tc-text-secondary,#4b5563)">Status: {selectedCompany.stats?.status ?? '--'}</p>
+                  <Link
+                    href={`/empresas/${encodeURIComponent(selectedCompany.slug ?? '')}/home`}
+                    className="mt-4 inline-flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
+                  >
+                    Acessar empresa
+                  </Link>
+                </div>
+              ) : (
+                <CompanySelector
+                  title="Acessar empresa"
+                  description="Abra o contexto da empresa selecionada para navegar no painel."
+                  buildHref={(company) => `/empresas/${encodeURIComponent(company.clientSlug)}/home`}
+                  ctaLabel="Abrir"
+                />
+              )}
+            </div>
           </section>
 
           <section className="rounded-4xl bg-linear-to-br from-white to-[#fef0ef] p-6 md:p-8 shadow-xl">
@@ -551,9 +582,9 @@ export default function AdminHomePage() {
                     </div>
                     <progress
                       className={`${styles.progress} ${entry.progressClass}`}
-                      value={entry.value}
+                      value={Number(entry.value)}
                       max={Math.max(runTotal, 1)}
-                      aria-label={`${entry.label} (${entry.value} de ${Math.max(runTotal, 1)})`}
+                      aria-label={`${entry.label} (${Number(entry.value)} de ${Math.max(runTotal, 1)})`}
                     />
                   </div>
                 ))}
@@ -640,3 +671,8 @@ export default function AdminHomePage() {
     </RequireGlobalAdmin>
   );
 }
+
+{/* Botão flutuante de abrir chamado para admin */}
+<div className="fixed bottom-8 right-8 z-50">
+  <TicketsButton />
+</div>

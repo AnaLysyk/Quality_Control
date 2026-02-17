@@ -119,7 +119,17 @@ export async function getCompanyDefects(slug: string, _period: string = "30d") {
   }));
 }
 import { ReleaseEntry } from "@/release/data";
-export type Stats = { pass: number; fail: number; blocked: number; notRun: number };
+export type Stats = {
+  pass: number;
+  fail: number;
+  blocked: number;
+  notRun: number;
+  defectCount?: number;
+  runsTotal?: number;
+  passRate?: number;
+  score?: number;
+  status?: string;
+};
 
 export type ReleaseWithStats = ReleaseEntry & {
   createdAtValue: number;
@@ -374,6 +384,7 @@ export type CompanyRow = {
     title?: string;
     createdAt?: string;
   };
+  createdAt?: string;
 };
 
 function resolveCompanyKey(

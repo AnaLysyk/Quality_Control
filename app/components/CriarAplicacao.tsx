@@ -1,1 +1,0 @@
-Componente CriarAplicacao criado. Permite adicionar novas aplicações com validação de nome obrigatório. Pronto para integrar em qualquer página/lista de aplicações.

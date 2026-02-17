@@ -1,4 +1,7 @@
-﻿"use client";
+﻿
+// ...existing code...
+
+"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FiPlus, FiRefreshCw } from "react-icons/fi";
@@ -67,7 +70,6 @@ function formatDate(iso?: string | null) {
   if (!Number.isFinite(time)) return "-";
   return new Date(time).toLocaleDateString("pt-BR");
 }
-
 export default function MeusChamadosPage() {
   const { user, loading } = useAuthUser();
   const [tickets, setTickets] = useState<TicketItem[]>([]);
@@ -81,8 +83,41 @@ export default function MeusChamadosPage() {
     type: "tarefa",
     priority: "medium",
   });
-
   // Cards horizontais, sem colunas, drag ou statusOptions
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [createSaving, setCreateSaving] = useState(false);
+
+  async function handleCreateTicket() {
+    if (!createDraft.title.trim()) return;
+    setCreateSaving(true);
+    setCreateError(null);
+    try {
+      const res = await fetch("/api/chamados", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          title: createDraft.title.trim(),
+          description: createDraft.description.trim(),
+          type: createDraft.type,
+          priority: createDraft.priority,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || "Erro ao criar chamado");
+      }
+      setCreateOpen(false);
+      setCreateDraft({ title: "", description: "", type: "tarefa", priority: "medium" });
+      setCreateSaving(false);
+      // Atualiza lista
+      window.location.reload();
+    } catch (e) {
+      setCreateError(e instanceof Error ? e.message : "Erro ao criar chamado");
+      setCreateSaving(false);
+    }
+  }
+
   async function updateStatus(ticketId: string, nextStatus: TicketStatus) {
     const previous = tickets;
     setTickets((current) =>
@@ -130,6 +165,7 @@ export default function MeusChamadosPage() {
         <div className="flex items-center gap-2">
           <button
             type="button"
+            aria-label="Criar chamado"
             onClick={() => setCreateOpen(true)}
             className="inline-flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
           >
@@ -269,10 +305,15 @@ export default function MeusChamadosPage() {
               </button>
               <button
                 type="button"
+                onClick={handleCreateTicket}
+                disabled={createSaving || !createDraft.title.trim()}
                 className="rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
               >
-                Criar
+                {createSaving ? "Salvando..." : "Criar"}
               </button>
+              {createError && (
+                <span className="ml-4 text-xs text-red-600">{createError}</span>
+              )}
             </div>
           </div>
         </div>

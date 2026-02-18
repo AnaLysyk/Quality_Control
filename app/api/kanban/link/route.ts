@@ -1,3 +1,4 @@
+import type { AuthUser } from "../../../lib/jwtAuth";
 import { NextRequest, NextResponse } from "next/server";
 
 import { getNextId, readKanbanStore, writeKanbanStore } from "../store";

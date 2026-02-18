@@ -6,13 +6,13 @@ import { canEditTicketContent, canViewTicket } from "@/lib/rbac/tickets";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 
 
-export async function GET(req: Request, context: { params: { id: string } }) {
+export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  const { id } = context.params;
+  const { id } = await context.params;
   const item = await getTicketById(id);
   if (!item) {
     return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
@@ -26,13 +26,13 @@ export async function GET(req: Request, context: { params: { id: string } }) {
 }
 
 
-export async function PUT(req: Request, context: { params: { id: string } }) {
+export async function PUT(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  const { id } = context.params;
+  const { id } = await context.params;
   const body = await req.json().catch(() => ({}));
   const item = await getTicketById(id);
   if (!item) {

@@ -1,19 +1,20 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
 import { getTicketById, updateTicketStatus } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { getTicketStatusLabel } from "@/lib/ticketsStatus";
 import { notifyTicketStatusChanged } from "@/lib/notificationService";
-import { canMoveTicket } from "@/lib/rbac/tickets";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
+import { authenticateRequest } from "@/lib/jwtAuth";
+import { isItDev } from "@/lib/rbac/tickets";
 
-export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
+export async function PATCH(req: Request, context: { params: { id: string } }) {
   const user = await authenticateRequest(req);
-  if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+  if (!user || !isItDev(user)) {
+    return NextResponse.json({ error: "Apenas dev pode mover chamado" }, { status: 403 });
   }
-
-  const { id } = await context.params;
+  // Next.js App Router: context.params pode ser Promise
+  const params = context.params && typeof context.params.then === 'function' ? await context.params : context.params;
+  const id = params.id;
   const body = await req.json().catch(() => ({}));
   const nextStatus = typeof body?.status === "string" ? body.status : "";
   const reason = typeof body?.reason === "string" ? body.reason.trim() : null;
@@ -21,9 +22,6 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   const current = await getTicketById(id);
   if (!current) {
     return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
-  }
-  if (!canMoveTicket(user, current)) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
 
   const updated = await updateTicketStatus(id, nextStatus, user.id);

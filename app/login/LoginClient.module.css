@@ -1,8 +1,15 @@
+
 .loginContainer {
-  /* Fallback for browsers that do not support clamp */
-  font-size: 1rem;
-  /* Responsive font scaling */
   font-size: clamp(1rem, 2.5vw, 1.5rem);
+  min-height: 100svh;
+  min-width: 100vw;
+  width: 100vw;
+  height: 100svh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(120deg, #011848 0%, #f4f6fb 60%, #ef0001 95%);
 }
 
 .loginFixedTheme {
@@ -43,15 +50,26 @@
   }
 }
 
+
 @media (max-width: 640px) {
   .loginContainer {
-    padding: 1rem;
+    padding: 0.5rem;
+    min-width: 100vw;
+    min-height: 100svh;
+    width: 100vw;
+    height: 100svh;
+    overflow: hidden;
   }
 }
 
 @media (min-width: 641px) {
   .loginContainer {
-    padding: 2.5rem;
+    padding: 1.5rem;
+    min-width: 100vw;
+    min-height: 100svh;
+    width: 100vw;
+    height: 100svh;
+    overflow: hidden;
   }
 }
 

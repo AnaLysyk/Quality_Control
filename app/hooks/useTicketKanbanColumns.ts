@@ -142,10 +142,16 @@ export function useTicketKanbanColumns(extraKeys: string[] = []) {
     });
   }, []);
 
+  const removeColumn = useCallback((key: string) => {
+    setColumns((prev) => prev.filter((col) => col.key !== key && !col.locked));
+  }, []);
+
   return {
     columns: mergedColumns,
     statusOptions,
     addColumn,
     renameColumn,
+    removeColumn,
+    setColumns, // para uso avançado
   };
 }

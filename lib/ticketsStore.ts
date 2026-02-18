@@ -621,7 +621,7 @@ export async function createTicket(input: {
     tags: normalizeTags(input.tags),
     createdAt: now,
     updatedAt: now,
-    createdBy: input.createdBy,
+    createdBy: input.createdBy || "anonymous",
     createdByName: input.createdByName ?? null,
     createdByEmail: input.createdByEmail ?? null,
     companySlug: input.companySlug ?? null,

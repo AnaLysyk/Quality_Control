@@ -84,58 +84,59 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
         aria-label="Menu do usuario"
         aria-haspopup="menu"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center justify-center h-11 w-11 rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface-dark,#0f1828) text-white shadow-[0_8px_20px_rgba(0,0,0,0.2)] hover:border-(--tc-primary,#4e8df5) hover:bg-(--tc-surface-hover,#111a2a) transition-all"
+        className="flex items-center justify-center h-12 w-12 rounded-full border-2 border-(--tc-accent,#ef0001) bg-(--tc-surface-dark,#0f1828) text-white shadow-[0_8px_20px_rgba(0,0,0,0.22)] hover:border-(--tc-accent-dark,#c20000) hover:bg-(--tc-surface-hover,#111a2a) transition-all"
       >
-        {/* Apenas ícone de perfil */}
         <span className="sr-only">{displayName}</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.8"
-          className="h-5 w-5"
+          strokeWidth="2.2"
+          className="h-6 w-6"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 12c2.485 0 4.5-2.015 4.5-4.5S14.485 3 12 3 7.5 5.015 7.5 7.5 9.515 12 12 12z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M4.75 19.5a7.25 7.25 0 0114.5 0"
-          />
+          <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2.2" />
+          <path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="currentColor" strokeWidth="2.2" />
         </svg>
       </button>
 
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-(--tc-border,#e5e7eb)/40 bg-(--tc-surface-dark,#0f1828) text-(--tc-text-inverse,#fff) shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
+          className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border-2 border-(--tc-accent,#ef0001) bg-white text-[#0b1a3c] shadow-[0_16px_40px_rgba(15,23,42,0.18)]"
         >
-          <div className="px-4 py-3 space-y-1">
-            <div className="font-semibold leading-tight text-[#0b1a3c]">{user?.name ?? t("profileMenu.userFallback")}</div>
-            {user?.email ? (
-              <div className="text-xs text-(--tc-text-muted,#cbd5e1) truncate">{user.email}</div>
-            ) : (
-              <div className="text-xs text-(--tc-text-muted,#cbd5e1)">{t("profileMenu.notAuthenticated")}</div>
-            )}
+          <div className="px-6 py-5 space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-(--tc-accent,#ef0001) text-white flex items-center justify-center h-12 w-12 font-bold text-xl uppercase">
+                {user?.name?.[0] ?? "U"}
+              </div>
+              <div>
+                <div className="font-bold text-lg leading-tight text-[#0b1a3c]">{user?.name ?? t("profileMenu.userFallback")}</div>
+                {user?.email ? (
+                  <div className="text-xs text-(--tc-text-muted,#6b7280) truncate">{user.email}</div>
+                ) : (
+                  <div className="text-xs text-(--tc-text-muted,#cbd5e1)">{t("profileMenu.notAuthenticated")}</div>
+                )}
+                {user?.role && (
+                  <div className="text-xs mt-1 px-2 py-0.5 rounded bg-(--tc-accent,#ef0001)/10 text-(--tc-accent,#ef0001) inline-block font-semibold uppercase tracking-wider">{user.role}</div>
+                )}
+              </div>
+            </div>
             {activeClientName && (
-              <div className="text-sm">
+              <div className="text-sm mt-2">
                 {isAdmin && onEditCompany ? (
-                  <button className="text-(--tc-accent,#4f46e5) underline" onClick={onEditCompany}>
+                  <button className="text-(--tc-accent,#ef0001) underline font-semibold" onClick={onEditCompany}>
                     {activeClientName}
                   </button>
                 ) : (
-                  <span className="text-[#0b1a3c]">{activeClientName}</span>
+                  <span className="text-[#0b1a3c] font-semibold">{activeClientName}</span>
                 )}
               </div>
             )}
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="mt-2 text-xs text-(--tc-primary,#4f46e5) hover:underline"
+              className="mt-2 text-xs text-(--tc-accent,#ef0001) hover:underline font-semibold"
               disabled={uploading || !user}
             >
               {uploading ? t("profileMenu.uploadingPhoto") : t("profileMenu.editPhoto")}

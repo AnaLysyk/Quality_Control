@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+// Autenticação removida para endpoint público
 import { getTicketById } from "@/lib/ticketsStore";
 import { listTicketEvents } from "@/lib/ticketEventsStore";
 import { getLocalUserById } from "@/lib/auth/localStore";
-import { canViewTicket } from "@/lib/rbac/tickets";
+// RBAC removido para endpoint público
 
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
-  const user = await authenticateRequest(req);
-  if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
-  }
-
   const { id } = await context.params;
   const ticket = await getTicketById(id);
   if (!ticket) {
@@ -18,9 +13,6 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
       { error: "Chamado nao encontrado. Atualize a pagina e tente novamente." },
       { status: 404 },
     );
-  }
-  if (!canViewTicket(user, ticket)) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
 
   const url = new URL(req.url);

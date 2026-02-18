@@ -82,8 +82,7 @@ export default function LoginClient() {
       className={
         styles.loginContainer +
         " " +
-        styles.loginFixedTheme +
-        " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-8 sm:px-6 sm:py-10 md:px-10"
+        styles.loginFixedTheme
       }
     >
       <div className="absolute inset-0 pointer-events-none">

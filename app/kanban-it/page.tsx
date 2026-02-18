@@ -49,8 +49,6 @@ const TYPE_OPTIONS = [
 function isDevRole(role: string | null | undefined) {
   const value = (role ?? "").toLowerCase();
   return (
-    value === "admin" ||
-    value === "global_admin" ||
     value === "it_dev" ||
     value === "itdev" ||
     value === "developer" ||
@@ -101,7 +99,7 @@ export default function KanbanItPage() {
     () => tickets.map((ticket) => normalizeKanbanStatus(ticket.status)),
     [tickets],
   );
-  const { columns, statusOptions, addColumn, renameColumn } = useTicketKanbanColumns(statusKeys);
+  const { columns, statusOptions, addColumn, renameColumn, removeColumn } = useTicketKanbanColumns(statusKeys);
 
   const grouped = useMemo(() => {
     const map: Record<ColumnKey, TicketItem[]> = {};
@@ -119,7 +117,10 @@ export default function KanbanItPage() {
     setLoadingTickets(true);
     setError(null);
     try {
-      const res = await fetch("/api/chamados?scope=all", {
+      // Só dev/admin vê todos; demais só os próprios
+      const isDev = isDevRole(user?.role);
+      const url = isDev ? "/api/chamados?scope=all" : "/api/chamados";
+      const res = await fetch(url, {
         credentials: "include",
         cache: "no-store",
       });
@@ -136,7 +137,7 @@ export default function KanbanItPage() {
     } finally {
       setLoadingTickets(false);
     }
-  }, [isAllowed]);
+  }, [user]);
 
   useEffect(() => {
     loadTickets();
@@ -148,6 +149,7 @@ export default function KanbanItPage() {
   }, [loadTickets]);
 
   function handleDragStart(ticket: TicketItem) {
+    if (!isDevRole(user?.role)) return;
     setDragging({ id: ticket.id, from: ticket.status });
   }
 
@@ -179,7 +181,7 @@ export default function KanbanItPage() {
   }
 
   async function handleDrop(toStatus: TicketStatus) {
-    if (!dragging) return;
+    if (!dragging || !isDevRole(user?.role)) return;
     if (dragging.from === toStatus) {
       setDragging(null);
       return;
@@ -228,6 +230,13 @@ export default function KanbanItPage() {
 
   function commitEditColumn() {
     if (!editingColumnKey) return;
+    // Se o label estiver vazio, remove a coluna (exceto as locked)
+    if (!editingColumnLabel.trim()) {
+      removeColumn(editingColumnKey);
+      setEditingColumnKey(null);
+      setEditingColumnLabel("");
+      return;
+    }
     renameColumn(editingColumnKey, editingColumnLabel);
     setEditingColumnKey(null);
     setEditingColumnLabel("");
@@ -327,17 +336,33 @@ export default function KanbanItPage() {
         </div>
       )}
 
-      <section className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(240px,1fr))]">
-        {columns.map((column) => (
-          <div
-            key={column.key}
-            className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-3 min-h-80"
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.dataTransfer.dropEffect = "move";
-            }}
-            onDrop={() => handleDrop(column.key)}
-          >
+      <section className="w-full overflow-x-auto py-4">
+        <div className="flex gap-6 min-w-max flex-nowrap snap-x snap-mandatory pb-4">
+          {columns.map((column, idx) => {
+            // Paleta de cores pastel para colunas
+            const pastel = [
+              'bg-pink-100 border-pink-300',
+              'bg-blue-100 border-blue-300',
+              'bg-green-100 border-green-300',
+              'bg-yellow-100 border-yellow-300',
+              'bg-purple-100 border-purple-300',
+              'bg-orange-100 border-orange-300',
+              'bg-cyan-100 border-cyan-300',
+              'bg-lime-100 border-lime-300',
+              'bg-fuchsia-100 border-fuchsia-300',
+              'bg-rose-100 border-rose-300',
+            ];
+            const color = pastel[idx % pastel.length];
+            return (
+              <div
+                key={column.key}
+                className={`w-72 shrink-0 rounded-2xl border shadow-lg p-3 min-h-80 snap-start flex flex-col ${color}`}
+                onDragOver={isDevRole(user?.role) ? (e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "move";
+                } : undefined}
+                onDrop={isDevRole(user?.role) ? () => handleDrop(column.key) : undefined}
+              >
             <div className="flex items-center justify-between">
               {editingColumnKey === column.key ? (
                 <input
@@ -380,13 +405,13 @@ export default function KanbanItPage() {
                   <div key={ticket.id} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 text-left shadow-sm">
                     <button
                       type="button"
-                      draggable
-                      onDragStart={(event) => {
+                      draggable={isDevRole(user?.role)}
+                      onDragStart={isDevRole(user?.role) ? (event) => {
                         event.dataTransfer.setData("text/plain", ticket.id);
                         event.dataTransfer.effectAllowed = "move";
                         handleDragStart(ticket);
-                      }}
-                      onDragEnd={() => setDragging(null)}
+                      } : undefined}
+                      onDragEnd={isDevRole(user?.role) ? () => setDragging(null) : undefined}
                       onClick={() => setSelectedTicket(ticket)}
                       className="w-full text-left"
                     >
@@ -408,27 +433,46 @@ export default function KanbanItPage() {
                       </div>
                       <div className="mt-2 text-[11px] text-(--tc-text-muted,#6b7280) space-y-1">
                         <p>Criador: {creatorLabel}</p>
-                        <p>Data: {formatDate(ticket.createdAt)}</p>
+                        <p>Criado: {formatDate(ticket.createdAt)}</p>
+                        <p>Atualizado: {formatDate(ticket.updatedAt)}</p>
                       </div>
                     </button>
                     <div className="mt-3">
                       <label className="sr-only" htmlFor={`status-${ticket.id}`}>
                         Status
                       </label>
-                      <select
-                        id={`status-${ticket.id}`}
-                        aria-label="Status do chamado"
-                        title="Status do chamado"
-                        className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[11px]"
-                        value={normalizeKanbanStatus(ticket.status)}
-                        onChange={(e) => updateStatus(ticket.id, e.target.value as TicketStatus)}
-                      >
-                        {statusOptions.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
+                      {isDevRole(user?.role) ? (
+                        <select
+                          id={`status-${ticket.id}`}
+                          aria-label="Status do chamado"
+                          title="Status do chamado"
+                          className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[11px]"
+                          value={normalizeKanbanStatus(ticket.status)}
+                          onChange={isDevRole(user?.role) ? (e) => updateStatus(ticket.id, e.target.value as TicketStatus) : undefined}
+                          disabled={!isDevRole(user?.role)}
+                        >
+                          {statusOptions.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <>
+                          <select
+                            id={`status-${ticket.id}`}
+                            aria-label="Status do chamado"
+                            title="Status do chamado"
+                            className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-gray-100 px-2 py-1 text-[11px] text-gray-400 cursor-not-allowed"
+                            value={normalizeKanbanStatus(ticket.status)}
+                            disabled
+                            tabIndex={-1}
+                          >
+                            <option value={normalizeKanbanStatus(ticket.status)}>{getTicketStatusLabel(normalizeKanbanStatus(ticket.status), statusOptions)}</option>
+                          </select>
+                          <p className="mt-1 text-xs text-red-500">Você não tem permissão para mover o chamado</p>
+                        </>
+                      )}
                     </div>
                   </div>
                 );
@@ -438,7 +482,9 @@ export default function KanbanItPage() {
               )}
             </div>
           </div>
-        ))}
+            );
+          })}
+        </div>
       </section>
 
       <TicketDetailsModal

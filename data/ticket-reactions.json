@@ -1,3 +1,36 @@
 {
-  "items": []
+  "items": [
+    {
+      "id": "afa4a0ca-223e-4dbb-b936-42df1992ce4f",
+      "ticketId": "c4f5ee7d-29b5-4526-94a3-743460e8c70f",
+      "commentId": "ecb5d079-5dbd-4b23-bbef-45daf4ebb714",
+      "userId": "usr_admin",
+      "type": "like",
+      "createdAt": "2026-02-17T19:02:16.428Z"
+    },
+    {
+      "id": "c59cdd58-528b-4067-a6ab-46b88d23fe52",
+      "ticketId": "16629048-7fe4-4339-a82b-4c87b45396cd",
+      "commentId": "b392eec7-28b8-4a51-8659-84f978e2bfd8",
+      "userId": "usr_admin",
+      "type": "like",
+      "createdAt": "2026-02-17T18:57:34.546Z"
+    },
+    {
+      "id": "120d4d92-eea8-45ba-9374-6417a2c85d7c",
+      "ticketId": "b06edd1e-6512-46d1-97b5-0f780b67e125",
+      "commentId": "3a728674-ee0d-42dd-9d0b-b5ebd15826c2",
+      "userId": "usr_admin",
+      "type": "like",
+      "createdAt": "2026-02-17T18:33:06.799Z"
+    },
+    {
+      "id": "4e271653-ef3e-493b-9d64-57a994d5132c",
+      "ticketId": "e71fa065-491e-4e36-ab80-a9418b81f40f",
+      "commentId": "84112ec7-71ea-42af-be8b-256f24f95691",
+      "userId": "usr_admin",
+      "type": "like",
+      "createdAt": "2026-02-17T18:31:31.479Z"
+    }
+  ]
 }

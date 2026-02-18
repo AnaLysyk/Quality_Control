@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { isDevRole } from "@/lib/rbac/devAccess";
 import { FiHeart, FiMessageSquare, FiRefreshCw, FiX } from "react-icons/fi";
+import styles from "./TicketDetailsModal.module.css";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { TICKET_STATUS_OPTIONS, getTicketStatusLabel, type TicketStatus } from "@/lib/ticketsStatus";
 
@@ -168,6 +169,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     }).catch(() => null);
   }, [open, ticketId]);
 
+  // Only reset tab to details if modal is closed, not when opening
   useEffect(() => {
     if (!open) {
       setEditingCommentId(null);
@@ -488,9 +490,10 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
   if (!open || !ticket) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-3xl rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_30px_80px_rgba(15,23,42,0.35)]">
-        <div className="flex items-start justify-between gap-4 border-b border-(--tc-border,#e5e7eb) px-6 py-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
+      <div className={styles.modalResponsive}>
+        <div className={styles.modalResponsiveContent + " space-y-4"}>
+          {/* TODO: todo o conteúdo do modal permanece igual aqui, sem divs extras abertas/fechadas */}
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Chamado</p>
             <h2 className="text-lg font-semibold text-(--tc-text,#0f172a)">{ticket.title}</h2>
@@ -526,7 +529,7 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
           })}
         </div>
 
-        <div className="px-6 py-4 space-y-4 max-h-[70vh] overflow-auto">
+        <div className={"px-2 sm:px-6 py-4 space-y-4 flex-1 overflow-auto " + styles.modalResponsiveContent}>
           {tab === "details" && (
             <>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -734,12 +737,14 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
           )}
 
           {tab === "comments" && (
-            <div className="space-y-4">
+            <div className="space-y-4" data-testid="comments-tab-content">
               <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-4 space-y-2">
                 <textarea
+                  data-testid="comment-textarea"
                   rows={4}
                   className="w-full rounded-xl border border-(--tc-border,#e5e7eb) px-3 py-2 text-sm"
                   placeholder="Escreva um comentario..."
+                  aria-label="Escreva um comentario"
                   value={commentBody}
                   onChange={(e) => setCommentBody(e.target.value)}
                 />

@@ -1,0 +1,34 @@
+const http = require('http');
+
+const data = JSON.stringify({
+  name: 'Usuário Teste',
+  email: 'teste@exemplo.com',
+  role: 'user'
+});
+
+const options = {
+  hostname: 'localhost',
+  port: 3000,
+  path: '/api/companies/test-company/users',
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Content-Length': data.length
+  }
+};
+
+const req = http.request(options, res => {
+  let body = '';
+  res.on('data', chunk => { body += chunk; });
+  res.on('end', () => {
+    console.log('Status:', res.statusCode);
+    console.log('Body:', body);
+  });
+});
+
+req.on('error', error => {
+  console.error('Request error:', error);
+});
+
+req.write(data);
+req.end();

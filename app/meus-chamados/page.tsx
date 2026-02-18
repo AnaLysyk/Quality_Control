@@ -87,6 +87,30 @@ export default function MeusChamadosPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [createSaving, setCreateSaving] = useState(false);
 
+  // Função para recarregar tickets
+  const reloadTickets = useCallback(async () => {
+    setLoadingTickets(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/chamados", {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const json = (await res.json().catch(() => ({}))) as { items?: TicketItem[]; error?: string };
+      if (!res.ok) {
+        setTickets([]);
+        setError(json?.error || "Erro ao carregar chamados");
+        return;
+      }
+      setTickets(Array.isArray(json.items) ? json.items : []);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao carregar chamados";
+      setError(msg);
+    } finally {
+      setLoadingTickets(false);
+    }
+  }, []);
+
   async function handleCreateTicket() {
     if (!createDraft.title.trim()) return;
     setCreateSaving(true);
@@ -110,8 +134,8 @@ export default function MeusChamadosPage() {
       setCreateOpen(false);
       setCreateDraft({ title: "", description: "", type: "tarefa", priority: "medium" });
       setCreateSaving(false);
-      // Atualiza lista
-      window.location.reload();
+      // Atualiza lista sem reload
+      await reloadTickets();
     } catch (e) {
       setCreateError(e instanceof Error ? e.message : "Erro ao criar chamado");
       setCreateSaving(false);
@@ -154,8 +178,8 @@ export default function MeusChamadosPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
+    <div className="p-4 sm:p-6 space-y-6 min-h-[80vh] bg-(--page-bg)">
+      <header className="flex flex-col sm:flex-row flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">Chamados</h1>
           <p className="text-sm text-(--tc-text-muted,#6b7280)">
@@ -177,34 +201,42 @@ export default function MeusChamadosPage() {
       {error && <p className="text-sm text-red-600">{error}</p>}
       {loadingTickets && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
 
-      {/* Cards/quadrados lado a lado, sem sobreposição, layout horizontal premium, visibilidade máxima */}
 
-      {/* Cards/quadrados lado a lado, sem sobreposição, layout horizontal seguro */}
-        {/* Cards/quadrados lado a lado, sem sobreposição, layout horizontal premium, visibilidade máxima */}
-        <div className="w-full overflow-x-auto py-4">
-          <div className="flex gap-8 min-w-max flex-nowrap snap-x snap-mandatory pb-4">
-            {tickets.map((ticket) => (
-              <div
-                key={ticket.id}
-                className="w-pct-100 h-pct-100 shrink-0 rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-lg snap-start flex flex-col justify-between"
-              >
+      {/* Responsivo: grid em telas médias/grandes, carrossel horizontal em mobile */}
+      <div className="w-full py-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {tickets.map((ticket) => (
+            <div
+              key={ticket.id}
+              className="w-80 shrink-0 rounded-3xl border-2 border-(--tc-border,#e5e7eb) shadow-[0_8px_32px_rgba(15,23,42,0.10)] p-5 min-h-80 flex flex-col bg-(--tc-surface,#f9fafb) transition hover:shadow-[0_16px_48px_rgba(15,23,42,0.13)]"
+            >
               <div className="flex items-center justify-between gap-2">
-                <p className="text-[14px] font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                <p className="text-[15px] font-bold uppercase tracking-[0.25em] text-(--tc-accent,#ef0001)">
                   {ticket.code || `CH-${ticket.id.slice(0, 6).toUpperCase()}`}
                 </p>
                 <span className="text-[13px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
                   {getTicketStatusLabel(normalizeKanbanStatus(ticket.status), [])}
                 </span>
+                <button
+                  type="button"
+                  className="ml-2 rounded-full border border-(--tc-accent,#ef0001) px-2 py-1 text-xs font-semibold uppercase tracking-[0.2em] bg-(--tc-accent,#ef0001) text-white hover:bg-(--tc-accent-dark,#c20000)"
+                  aria-label={`Abrir detalhes do chamado ${ticket.title}`}
+                  title="Abrir detalhes"
+                  onClick={() => setSelectedTicket(ticket)}
+                >
+                  Detalhes
+                </button>
               </div>
-              <p className="mt-2 text-lg font-semibold">{ticket.title || 'Sem titulo'}</p>
-              <p className="mt-1 text-[13px] text-(--tc-text-muted,#6b7280)">{shortText(ticket.description, 100)}</p>
-              <div className="mt-2 flex flex-wrap gap-2 text-[13px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                <span>Tipo: {ticket.type || 'tarefa'}</span>
-                <span>Prioridade: {ticket.priority || 'medium'}</span>
+              <p className="mt-2 text-lg font-semibold wrap-break-word">{ticket.title || 'Sem titulo'}</p>
+              <p className="mt-1 text-[14px] text-(--tc-text-muted,#6b7280) wrap-break-word">{shortText(ticket.description, 100)}</p>
+              <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                <span className="bg-(--tc-accent,#ef0001)/10 px-2 py-1 rounded">Tipo: {ticket.type || 'tarefa'}</span>
+                <span className="bg-(--tc-accent,#ef0001)/10 px-2 py-1 rounded">Prioridade: {ticket.priority || 'medium'}</span>
               </div>
-              <div className="mt-2 text-[13px] text-(--tc-text-muted,#6b7280) space-y-1">
-                <p>Criador: {ticket.createdByName || ticket.createdByEmail || ticket.createdBy || '-'}</p>
-                <p>Data: {formatDate(ticket.createdAt)}</p>
+              <div className="mt-2 text-[11px] text-(--tc-text-muted,#6b7280) space-y-1">
+                <p>Criador: <span className="font-semibold text-(--tc-accent,#ef0001)">{ticket.createdByName || ticket.createdByEmail || ticket.createdBy || '-'}</span></p>
+                <p>Criado: <span className="font-semibold">{formatDate(ticket.createdAt)}</span></p>
+                <p>Atualizado: <span className="font-semibold">{formatDate(ticket.updatedAt)}</span></p>
               </div>
               <div className="mt-3">
                 <label className="sr-only" htmlFor={`status-${ticket.id}`}>Status</label>
@@ -212,12 +244,14 @@ export default function MeusChamadosPage() {
                   id={`status-${ticket.id}`}
                   aria-label="Status do chamado"
                   title="Status do chamado"
-                  className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[13px]"
+                  className="w-full rounded-lg border-2 border-(--tc-accent,#ef0001) bg-(--tc-surface,#f9fafb) px-2 py-1 text-[11px] text-(--tc-accent,#ef0001) font-bold cursor-not-allowed"
                   value={normalizeKanbanStatus(ticket.status)}
-                  onChange={(e) => updateStatus(ticket.id, e.target.value as TicketStatus)}
+                  disabled
+                  tabIndex={-1}
                 >
                   <option value={normalizeKanbanStatus(ticket.status)}>{getTicketStatusLabel(normalizeKanbanStatus(ticket.status), [])}</option>
                 </select>
+                <p className="mt-2 text-xs font-semibold text-(--tc-accent,#ef0001) bg-(--tc-accent,#ef0001)/10 rounded px-2 py-1 border border-(--tc-accent,#ef0001)">Você não tem permissão para mover o chamado</p>
               </div>
             </div>
           ))}
@@ -225,6 +259,7 @@ export default function MeusChamadosPage() {
       </div>
 
       <TicketDetailsModal
+        key={selectedTicket?.id || 'empty'}
         open={Boolean(selectedTicket)}
         ticket={selectedTicket}
         onClose={() => setSelectedTicket(null)}

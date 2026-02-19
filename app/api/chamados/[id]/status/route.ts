@@ -55,7 +55,7 @@ export async function PATCH(
     // Busca comentários do ticket
     const commentsRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/chamados/${id}/comments`, { headers: { "Content-Type": "application/json" }, credentials: "include" });
     const commentsJson = await commentsRes.json().catch(() => ({}));
-    const hasDevComment = Array.isArray(commentsJson.items) && commentsJson.items.some((c) => c.authorUserId === user.id && !c.deletedAt);
+    const hasDevComment = Array.isArray(commentsJson.items) && commentsJson.items.some((c: any) => c.authorUserId === user.id && !c.deletedAt);
     if (!hasDevComment) {
       return NextResponse.json({ error: "Para concluir (DONE), é obrigatório pelo menos 1 comentário seu neste chamado." }, { status: 400 });
     }

@@ -1,4 +1,12 @@
-﻿
+﻿function getSuporteCode(code: string | null | undefined, id: string): string {
+  const raw = typeof code === "string" ? code.trim().toUpperCase() : "";
+  if (raw && raw.startsWith("SP-")) {
+    const match = raw.match(/^SP-(\d{4,})$/i);
+    if (match) return raw;
+  }
+  return `SP-${id.slice(0, 6).toUpperCase()}`;
+}
+
 // ...existing code...
 
 "use client";
@@ -7,7 +15,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { FiPlus, FiRefreshCw } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useSuporteKanbanColumns } from "@/hooks/useSuporteKanbanColumns";
-import { getSuporteStatusLabel, normalizeKanbanStatus, type SuporteStatus } from "@/lib/suportesStatus";
+import { getSuporteStatusLabel, SUPORTE_STATUS_OPTIONS, normalizeKanbanStatus, type SuporteStatus } from "@/lib/suportesStatus";
 import SuporteDetailsModal from "@/components/SuporteDetailsModal";
 
 type SuporteItem = {
@@ -212,7 +220,7 @@ export default function MeusSuportesPage() {
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="text-[15px] font-bold uppercase tracking-[0.25em] text-(--tc-accent,#ef0001)">
-                  {suporte.code || `SP-${suporte.id.slice(0, 6).toUpperCase()}`}
+                  {getSuporteCode(suporte.code, suporte.id)}
                 </p>
                 <span className="text-[13px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
                   {getSuporteStatusLabel(normalizeKanbanStatus(suporte.status), [])}

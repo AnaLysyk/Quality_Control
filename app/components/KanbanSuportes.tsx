@@ -33,7 +33,7 @@ export default function KanbanSuportes() {
   return (
     <div className="flex gap-8 overflow-x-auto py-4">
       {columns.map(col => (
-        <div key={col.id} className="min-w-[340px] bg-white border border-gray-200 rounded-lg shadow-md p-4 flex flex-col items-center">
+        <div key={col.id} className="min-w-85 bg-white border border-gray-200 rounded-lg shadow-md p-4 flex flex-col items-center">
           <label htmlFor={`col-name-${col.id}`} className="sr-only">Nome da coluna</label>
           <input
             id={`col-name-${col.id}`}
@@ -51,7 +51,7 @@ export default function KanbanSuportes() {
           >Remover coluna</button>
         </div>
       ))}
-      <div className="min-w-[340px] flex flex-col items-center justify-center">
+      <div className="min-w-85 flex flex-col items-center justify-center">
         <button className="btn-tc w-full" onClick={handleAdd}>Adicionar coluna</button>
       </div>
     </div>

@@ -1,29 +1,29 @@
-import "server-only";
-import { getTicketById } from "@/lib/ticketsStore";
-import { listTicketComments } from "@/lib/ticketCommentsStore";
-import { listTicketEvents } from "@/lib/ticketEventsStore";
 
-export type TicketInsights = {
+import "server-only";
+import { getSuporteById } from "@/lib/ticketsStore";
+import { listTicketComments } from "@/lib/ticketCommentsStore";
+
+export interface TicketInsights {
   daysSinceLastUpdate: number;
   hasAssignee: boolean;
   commentCount: number;
   lastCommentFromClient: boolean;
   statusAge: number;
   riskLevel: "low" | "medium" | "high";
-};
+}
 
 export async function getTicketInsights(ticketId: string): Promise<TicketInsights | null> {
-  const ticket = await getTicketById(ticketId);
-  if (!ticket) return null;
+  const suporte = await getSuporteById(ticketId);
+  if (!suporte) return null;
 
   const now = Date.now();
-  const updatedAt = new Date(ticket.updatedAt).getTime();
-  const createdAt = new Date(ticket.createdAt).getTime();
+  const updatedAt = new Date(suporte.updatedAt).getTime();
+  const createdAt = new Date(suporte.createdAt).getTime();
   const daysSinceLastUpdate = Math.floor((now - updatedAt) / 86400000);
   const statusAge = Math.floor((now - updatedAt) / 86400000);
-  const hasAssignee = !!ticket.assignedToUserId;
+  const hasAssignee = !!suporte.assignedToUserId;
 
-  const comments = await listTicketComments(ticketId);
+  const comments = await listTicketComments(suporte.id);
   const commentCount = comments.length;
   let lastCommentFromClient = false;
   if (comments.length > 0) {
@@ -33,7 +33,7 @@ export async function getTicketInsights(ticketId: string): Promise<TicketInsight
 
   // Simple risk logic
   let riskLevel: "low" | "medium" | "high" = "low";
-  if (!hasAssignee || daysSinceLastUpdate > 3 || ticket.priority === "high") {
+  if (!hasAssignee || daysSinceLastUpdate > 3 || suporte.priority === "high") {
     riskLevel = daysSinceLastUpdate > 7 ? "high" : "medium";
   }
 
@@ -46,3 +46,4 @@ export async function getTicketInsights(ticketId: string): Promise<TicketInsight
     riskLevel,
   };
 }
+

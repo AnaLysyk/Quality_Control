@@ -1,5 +1,5 @@
 // Tipo mínimo para AuthUser para evitar erro de compilação
-type AuthUser = { role?: string | null; isGlobalAdmin?: boolean; companySlug?: string; companySlugs?: string[] };
+type AuthUser = { role?: string | null; isGlobalAdmin?: boolean; companySlug?: string | null; companySlugs?: string[] };
 // import type { AuthUser } from "../../../lib/jwtAuth";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
 
   const store = await readKanbanStore();
   const existing = store.items.find(
-    (c) => c.project === project && c.run_id === runId && c.case_id === caseId && c.client_slug === effectiveSlug,
+    (c: any) => c.project === project && c.run_id === runId && c.case_id === caseId && c.client_slug === effectiveSlug,
   );
   if (existing) {
     if (title) existing.title = title;

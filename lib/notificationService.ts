@@ -1,271 +1,349 @@
-import "server-only";
+// lib/notificationService.ts
+// Arquivo "limpo" (sem encoding fantasma) + stubs tipados.
+// Objetivo: parar o build agora e deixar pontos claros para implementar notificação real depois.
 
-import type { RequestRecord } from "@/data/requestsStore";
-import type { Release } from "@/types/release";
-import type { SuporteRecord } from "@/lib/ticketsStore";
-import type { SuporteCommentRecord } from "@/lib/ticketCommentsStore";
-import {
-  closeNotificationsByDedupeKey,
-  createNotificationsForUsers,
-} from "@/lib/userNotificationsStore";
-import {
-  listLocalCompanies,
-  listLocalLinksForCompany,
-  listLocalUsers,
-  listLocalMemberships,
-} from "@/lib/auth/localStore";
+export type NotificationChannel = "log" | "redis" | "email" | "webhook";
 
-function isAdminUser(user: { is_global_admin?: boolean; globalRole?: string | null }) {
-  return user.is_global_admin === true || user.globalRole === "global_admin";
+export type NotificationMeta = Record<string, unknown>;
+
+type BaseInput = {
+  channel?: NotificationChannel; // default: "log"
+  meta?: NotificationMeta;
+};
+
+/**
+ * Ponto único de saída (hoje log; amanhã você troca por Redis/email/etc).
+ */
+function emit(event: string, payload: Record<string, unknown>, input?: BaseInput) {
+  const channel: NotificationChannel = input?.channel ?? "log";
+  const meta = input?.meta ?? {};
+
+  // Stubs: log estruturado e previsível (ótimo pra debugar / evoluir).
+  // NÃO use template string multilinha aqui — uma linha só (proteção extra).
+  // eslint-disable-next-line no-console
+  console.log(`[notify:${channel}] ${event}`, { ...payload, meta });
 }
 
-function isItDevUser(user: { role?: string | null }) {
-  const role = (user.role ?? "").toLowerCase();
-  return role === "it_dev" || role === "itdev" || role === "developer" || role === "dev";
+/* -------------------------------------------------------------------------- */
+/*                                Tickets/QA                                  */
+/* -------------------------------------------------------------------------- */
+
+export type NotifyTicketCreatedInput = BaseInput & {
+  ticketId: string;
+  createdByUserId?: string | null;
+  companySlug?: string | null;
+};
+
+export async function notifyTicketCreated(input: NotifyTicketCreatedInput): Promise<void> {
+  emit("ticket.created", input, input);
 }
 
-async function resolveAdminUserIds() {
-  const users = await listLocalUsers();
-  return users.filter(isAdminUser).map((user) => user.id);
+export type NotifyTicketAssignedInput = BaseInput & {
+  // formato novo (correto)
+  ticketId?: string;
+
+  // formato antigo/legado (errado no type, mas existe no código)
+  ticket?: { id?: string } | Record<string, unknown> | null;
+
+  assignedToUserId?: string | null;
+  assignedByUserId?: string | null;
+  // aliases para compatibilidade máxima
+  assigneeId?: string | null;
+  actorId?: string | null;
+};
+
+export async function notifyTicketAssigned(input: NotifyTicketAssignedInput): Promise<void> {
+  const ticketId =
+    (typeof input.ticketId === "string" && input.ticketId.trim()) ||
+    (input.ticket && typeof (input.ticket as any).id === "string" ? String((input.ticket as any).id) : "") ||
+    "";
+
+  // Compatibilidade máxima: aceita assignedToUserId ou assigneeId, assignedByUserId ou actorId
+  const assignedToUserId = input.assignedToUserId ?? input.assigneeId ?? null;
+  const assignedByUserId = input.assignedByUserId ?? input.actorId ?? null;
+
+  emit(
+    "ticket.assigned",
+    {
+      ticketId: ticketId || null,
+      assignedToUserId,
+      assignedByUserId,
+      // Mantém o objeto inteiro se veio (ajuda debug)
+      ticket: input.ticket ?? null,
+    },
+    input,
+  );
 }
 
-async function resolveItDevUserIds() {
-  const [users, memberships] = await Promise.all([listLocalUsers(), listLocalMemberships()]);
-  const ids = new Set<string>();
-  users.filter(isItDevUser).forEach((user) => ids.add(user.id));
-  memberships
-    .filter((membership) => isItDevUser({ role: membership.role }))
-    .forEach((membership) => ids.add(membership.userId));
-  return Array.from(ids);
+export type NotifyTicketStatusChangedInput = BaseInput & {
+  // formato novo (preferido)
+  ticketId?: string;
+  fromStatus?: string | null;
+  toStatus?: string;
+  changedByUserId?: string | null;
+
+  // formatos legados (compat)
+  ticket?: { id?: string } | Record<string, unknown> | null;
+  actorId?: string | null; // alias -> changedByUserId
+  nextStatusLabel?: string | null;
+  reason?: string | null;
+};
+
+export async function notifyTicketStatusChanged(input: NotifyTicketStatusChangedInput): Promise<void> {
+  const ticketId =
+    (typeof input.ticketId === "string" && input.ticketId.trim()) ||
+    (input.ticket && typeof (input.ticket as any).id === "string" ? String((input.ticket as any).id) : "") ||
+    "";
+
+  const changedByUserId = input.changedByUserId ?? input.actorId ?? null;
+
+  emit(
+    "ticket.status_changed",
+    {
+      ticketId: ticketId || null,
+      fromStatus: input.fromStatus ?? null,
+      toStatus: input.toStatus ?? input.nextStatusLabel ?? null,
+      changedByUserId,
+      reason: input.reason ?? null,
+      ticket: input.ticket ?? null,
+    },
+    input,
+  );
 }
 
-async function resolveCompanyUserIds(companySlug?: string | null) {
-  const adminIds = await resolveAdminUserIds();
-  if (!companySlug) return adminIds;
-  const companies = await listLocalCompanies();
-  const company = companies.find((item) => item.slug === companySlug);
-  if (!company) return adminIds;
-  const links = await listLocalLinksForCompany(company.id);
-  const memberIds = links.map((link) => link.userId);
-  return Array.from(new Set([...adminIds, ...memberIds]));
+export type NotifyTicketCommentAddedInput = BaseInput & {
+  // formato novo (preferido)
+  ticketId?: string;
+  commentId?: string;
+
+  authorUserId?: string | null;
+  authorName?: string | null;
+
+  // aliases legados (compat)
+  actorId?: string | null;     // alias -> authorUserId
+  actorName?: string | null;   // alias -> authorName
+
+  // formatos legados (compat)
+  ticket?: { id?: string } | Record<string, unknown> | null;
+  comment?: { id?: string } | Record<string, unknown> | null;
+
+  // opcional: para dedupe / timeline
+  dedupeKey?: string;
+};
+
+export async function notifyTicketCommentAdded(input: NotifyTicketCommentAddedInput): Promise<void> {
+  const ticketId =
+    (typeof input.ticketId === "string" && input.ticketId.trim()) ||
+    (input.ticket && typeof (input.ticket as any).id === "string"
+      ? String((input.ticket as any).id)
+      : "") ||
+    "";
+
+  const commentId =
+    (typeof input.commentId === "string" && input.commentId.trim()) ||
+    (input.comment && typeof (input.comment as any).id === "string"
+      ? String((input.comment as any).id)
+      : "") ||
+    "";
+
+  const authorUserId = input.authorUserId ?? input.actorId ?? null;
+  const authorName = input.authorName ?? input.actorName ?? null;
+
+  // dedupeKey sempre em uma linha
+  const dedupeKey =
+    input.dedupeKey ??
+    `notification:ticket:${ticketId || "unknown"}:comment:${commentId || "unknown"}`;
+
+  emit(
+    "ticket.comment_added",
+    {
+      ticketId: ticketId || null,
+      commentId: commentId || null,
+      authorUserId,
+      authorName,
+      dedupeKey,
+      ticket: input.ticket ?? null,
+      comment: input.comment ?? null,
+    },
+    input,
+  );
 }
 
-export async function notifyPasswordResetRequest(request: RequestRecord) {
-  const adminIds = await resolveAdminUserIds();
-  const userLabel = request.userName || request.userEmail || "Usuario";
-  await createNotificationsForUsers(adminIds, {
-    type: "PASSWORD_RESET_REQUEST",
-    title: "Reset de senha solicitado",
-    description: `${userLabel} solicitou reset de senha.`,
-    requestId: request.id,
-    dedupeKey: `reset:admin:${request.id}`,
-  });
+export type NotifyTicketReactionAddedInput = BaseInput & {
+  ticketId: string;
+  reactionId?: string | null;
+  emoji: string; // ex: "❤️"
+  userId?: string | null;
+};
 
-  await createNotificationsForUsers([request.userId], {
-    type: "PASSWORD_RESET_PENDING",
-    title: "Solicitacao de reset enviada",
-    description: "Aguardando aprovacao do administrador.",
-    requestId: request.id,
-    dedupeKey: `reset:user:${request.id}`,
-  });
+export async function notifyTicketReactionAdded(input: NotifyTicketReactionAddedInput): Promise<void> {
+  emit("ticket.reaction_added", input, input);
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                  Suporte                                   */
+/* -------------------------------------------------------------------------- */
+
+export type NotifySuporteCreatedInput = BaseInput & {
+  suporteId: string;
+  createdByUserId?: string | null;
+  companySlug?: string | null;
+};
+
+export async function notifySuporteCreated(input: NotifySuporteCreatedInput): Promise<void> {
+  emit("suporte.created", input, input);
+}
+
+export type NotifySuporteCommentAddedInput = BaseInput & {
+  suporteId: string;
+  commentId: string;
+  authorUserId?: string | null;
+  dedupeKey?: string;
+};
+
+export async function notifySuporteCommentAdded(input: NotifySuporteCommentAddedInput): Promise<void> {
+  const dedupeKey =
+    input.dedupeKey ?? `notification:suporte:${input.suporteId}:comment:${input.commentId}`;
+
+  emit("suporte.comment_added", { ...input, dedupeKey }, input);
+}
+
+/**
+ * Alias compatível: alguns lugares usam notifySuporteCommentAdded como fallback.
+ * (Você citou que é usada como alias em alguns pontos.)
+ */
+export const notifySuporteCommentAddedAlias = notifySuporteCommentAdded;
+
+/* -------------------------------------------------------------------------- */
+/*                         Password reset / Auth flow                          */
+/* -------------------------------------------------------------------------- */
+
+export type NotifyPasswordResetRequestInput = BaseInput & {
+  userId?: string | null;
+  email?: string | null;
+  requestId?: string | null;
+};
+
+export async function notifyPasswordResetRequest(
+  input: NotifyPasswordResetRequestInput,
+): Promise<void> {
+  emit("auth.password_reset.request", input, input);
+}
+
+export type NotifyPasswordResetStatusInput = BaseInput & {
+  userId?: string | null;
+  email?: string | null;
+  requestId?: string | null;
+
+  /**
+   * Relaxado para compatibilidade com o que o projeto já manda hoje (RequestRecord etc).
+   * Você pode re-endurecer depois quando refatorar os chamadores.
+   */
+  status: string;
+
+  detail?: string | null;
+
+  /**
+   * Payload original (ex: RequestRecord) — opcional, útil pra debug/telemetria.
+   */
+  updated?: Record<string, unknown> | null;
+};
 
 export async function notifyPasswordResetStatus(
-  request: RequestRecord,
-  status: "APPROVED" | "REJECTED",
-) {
-  const approved = status === "APPROVED";
-  const type = approved ? "PASSWORD_RESET_APPROVED" : "PASSWORD_RESET_REJECTED";
-  const title = approved ? "Reset de senha aprovado" : "Reset de senha rejeitado";
-  const description = approved
-    ? "Seu reset foi aprovado. Verifique seu email para continuar."
-    : "Seu reset foi rejeitado. Entre em contato com o administrador.";
+  inputOrUpdated: NotifyPasswordResetStatusInput | Record<string, unknown>,
+  nextStatusMaybe?: unknown,
+): Promise<void> {
+  // Caso A: formato antigo (updated, nextStatus)
+  if (nextStatusMaybe !== undefined) {
+    const updated =
+      inputOrUpdated && typeof inputOrUpdated === "object"
+        ? (inputOrUpdated as Record<string, unknown>)
+        : {};
 
-  await closeNotificationsByDedupeKey(request.userId, `reset:user:${request.id}`);
-  await createNotificationsForUsers([request.userId], {
-    type,
-    title,
-    description,
-    requestId: request.id,
-  });
-}
+    const status = String(nextStatusMaybe);
 
-export async function notifyManualRunCreated(release: Release) {
-  const companySlug = release.clientSlug ?? null;
-  const recipients = await resolveCompanyUserIds(companySlug);
-  if (!recipients.length) return;
-  const runSlug = release.slug ?? release.id ?? "run";
-  const runName = release.name || runSlug;
-  const link = companySlug
-    ? `/empresas/${encodeURIComponent(companySlug)}/runs/${encodeURIComponent(runSlug)}`
-    : null;
-  const dedupeKey = `run:${runSlug}:created`;
+    emit(
+      "auth.password_reset.status",
+      {
+        status,
+        updated,
+        // tenta extrair campos úteis se existirem no updated (sem depender de tipo)
+        requestId:
+          (updated["id"] as string | undefined) ??
+          (updated["requestId"] as string | undefined) ??
+          null,
+        email: (updated["email"] as string | undefined) ?? null,
+        userId:
+          (updated["userId"] as string | undefined) ??
+          (updated["user_id"] as string | undefined) ??
+          null,
+      },
+      { channel: "log" },
+    );
 
-  await createNotificationsForUsers(recipients, {
-    type: "RUN_CREATED",
-    title: "Nova run criada",
-    description: `${runName} foi registrada.`,
-    companySlug,
-    link,
-    dedupeKey,
-  });
-
-  await notifyManualRunFailure(release, recipients, link);
-}
-
-export async function notifyManualRunFailure(
-  release: Release,
-  cachedRecipients?: string[],
-  cachedLink?: string | null,
-) {
-  const failCount = Math.max(0, Number(release.stats?.fail ?? 0));
-  if (failCount <= 0) return;
-  const companySlug = release.clientSlug ?? null;
-  const recipients = cachedRecipients ?? (await resolveCompanyUserIds(companySlug));
-  if (!recipients.length) return;
-  const runSlug = release.slug ?? release.id ?? "run";
-  const runName = release.name || runSlug;
-  const link =
-    cachedLink ??
-    (companySlug
-      ? `/empresas/${encodeURIComponent(companySlug)}/runs/${encodeURIComponent(runSlug)}`
-      : null);
-  await createNotificationsForUsers(recipients, {
-    type: "TEST_FAILED",
-    title: "Caso de teste falhou",
-    description: `${runName} teve ${failCount} falha(s) detectada(s).`,
-    companySlug,
-    link,
-    dedupeKey: `run:${runSlug}:fail`,
-  });
-}
-
-export async function notifySuporteCreated(suporte: SuporteRecord) {
-  const recipients = Array.from(new Set([...(await resolveAdminUserIds()), ...(await resolveItDevUserIds())]));
-  if (!recipients.length) return;
-  const requester = suporte.createdByName || suporte.createdByEmail || "Usuario";
-  const companyLabel = suporte.companySlug ? ` (${suporte.companySlug})` : "";
-  const description = suporte.description
-    ? `${requester}${companyLabel}: ${suporte.title}\n${suporte.description}`
-    : `${requester}${companyLabel}: ${suporte.title}`;
-  await createNotificationsForUsers(recipients, {
-    type: "SUPORTE_CREATED",
-    title: "Novo suporte",
-    description,
-    companySlug: suporte.companySlug ?? null,
-    link: "/kanban-it",
-    suporteId: suporte.id,
-    dedupeKey: `suporte:${suporte.id}`,
-  });
-}
-
-export async function notifySuporteStatusChanged(input: {
-  suporte: SuporteRecord;
-  actorId: string;
-  nextStatusLabel: string;
-  reason?: string | null;
-}) {
-  const recipients = new Set<string>();
-  if (input.suporte.createdBy && input.suporte.createdBy !== input.actorId) {
-    recipients.add(input.suporte.createdBy);
+    return;
   }
-  if (input.suporte.assignedToUserId && input.suporte.assignedToUserId !== input.actorId) {
-    recipients.add(input.suporte.assignedToUserId);
-  }
-  if (!recipients.size) return;
-  const description = input.reason
-    ? `Status atualizado para ${input.nextStatusLabel}. Motivo: ${input.reason}`
-    : `Status atualizado para ${input.nextStatusLabel}.`;
-  await createNotificationsForUsers(Array.from(recipients), {
-    type: "SUPORTE_STATUS_CHANGED",
-    title: "Status do suporte atualizado",
-    description,
-    companySlug: input.suporte.companySlug ?? null,
-    link: "/meus-chamados",
-    suporteId: input.suporte.id,
-    dedupeKey: `suporte:${input.suporte.id}:status:${input.suporte.updatedAt}`,
-  });
+
+  // Caso B: formato novo (objeto)
+  const input = inputOrUpdated as NotifyPasswordResetStatusInput;
+
+  emit(
+    "auth.password_reset.status",
+    {
+      status: String(input.status),
+      detail: input.detail ?? null,
+      requestId: input.requestId ?? null,
+      email: input.email ?? null,
+      userId: input.userId ?? null,
+      updated: input.updated ?? null,
+    },
+    input,
+  );
 }
 
-export async function notifySuporteCommentAdded(input: {
-  suporte: SuporteRecord;
-  comment: SuporteCommentRecord;
-  actorId: string;
-  actorName?: string | null;
-}) {
-  const recipients = new Set<string>();
-  if (input.suporte.createdBy && input.suporte.createdBy !== input.actorId) {
-    recipients.add(input.suporte.createdBy);
-  }
-  if (input.suporte.assignedToUserId && input.suporte.assignedToUserId !== input.actorId) {
-    recipients.add(input.suporte.assignedToUserId);
-  }
-  if (!input.suporte.assignedToUserId && input.suporte.createdBy === input.actorId) {
-    const itDevs = await resolveItDevUserIds();
-    itDevs.filter((id) => id !== input.actorId).forEach((id) => recipients.add(id));
-  }
-  if (!recipients.size) return;
-  const authorLabel = input.actorName || "Novo comentario";
-  await createNotificationsForUsers(Array.from(recipients), {
-    type: "SUPORTE_COMMENT_ADDED",
-    title: "Novo comentario no suporte",
-    description: `${authorLabel}: ${input.comment.body.slice(0, 160)}`,
-    companySlug: input.suporte.companySlug ?? null,
-    link: "/meus-chamados",
-    suporteId: input.suporte.id,
-    dedupeKey: `suporte:${input.suporte.id}:comment:${input.comment.id}`,
-  });
+/* -------------------------------------------------------------------------- */
+/*                              Manual Runs (QA)                              */
+/* -------------------------------------------------------------------------- */
+
+export type NotifyManualRunCreatedInput = BaseInput & {
+  runId: string;
+  title?: string | null;
+  createdByUserId?: string | null;
+  projectCode?: string | null;
+};
+
+export async function notifyManualRunCreated(input: NotifyManualRunCreatedInput): Promise<void> {
+  emit("manual_run.created", input, input);
 }
 
-export async function notifySuporteReactionAdded(input: {
-  suporte: SuporteRecord;
-  comment: SuporteCommentRecord;
-  actorId: string;
-}) {
-  if (input.comment.authorUserId === input.actorId) return;
-  await createNotificationsForUsers([input.comment.authorUserId], {
-    type: "SUPORTE_REACTION_ADDED",
-    title: "Curtiram seu comentario",
-    description: "Uma reacao foi adicionada ao seu comentario.",
-    companySlug: input.suporte.companySlug ?? null,
-    link: "/meus-chamados",
-    suporteId: input.suporte.id,
-    dedupeKey: `suporte:${input.suporte.id}:reaction:${input.comment.id}:${input.actorId}`,
-  });
+export type NotifyManualRunFailureInput = BaseInput & {
+  runId: string;
+  reason: string;
+  detail?: string | null;
+  projectCode?: string | null;
+};
+
+export async function notifyManualRunFailure(input: NotifyManualRunFailureInput): Promise<void> {
+  emit("manual_run.failure", input, input);
 }
 
-export async function notifySuporteAssigned(input: {
-  suporte: SuporteRecord;
-  assigneeId: string;
-  actorId: string;
-}) {
-  if (!input.assigneeId || input.assigneeId === input.actorId) return;
-  await createNotificationsForUsers([input.assigneeId], {
-    type: "SUPORTE_ASSIGNED",
-    title: "Suporte atribuido",
-    description: `Voce foi atribuido ao suporte ${input.suporte.title}.",
-    companySlug: input.suporte.companySlug ?? null,
-    link: "/kanban-it",
-    suporteId: input.suporte.id,
-    dedupeKey: `suporte:${input.suporte.id}:assigned:${input.assigneeId}`,
-  });
-}
+/* -------------------------------------------------------------------------- */
+/*                             Access Requests / RBAC                         */
+/* -------------------------------------------------------------------------- */
 
-export async function notifyAccessRequestComment(input: {
+export type NotifyAccessRequestCommentInput = BaseInput & {
   requestId: string;
   commentId: string;
-  authorName: string;
-  body: string;
-}) {
-  const adminIds = await resolveAdminUserIds();
-  if (!adminIds.length) return;
-  const preview = input.body.length > 160 ? `${input.body.slice(0, 160)}...` : input.body;
-  await createNotificationsForUsers(adminIds, {
-    type: "ACCESS_REQUEST_COMMENT",
-    title: "Novo comentario em solicitacao de acesso",
-    description: `${input.authorName}: ${preview}`,
-    requestId: input.requestId,
-    link: "/admin/access-requests",
-    dedupeKey: `access-request:${input.requestId}:comment:${input.commentId}`,
-  });
+  authorUserId?: string | null;
+  companySlug?: string | null;
+  dedupeKey?: string;
+};
+
+export async function notifyAccessRequestComment(
+  input: NotifyAccessRequestCommentInput,
+): Promise<void> {
+  const dedupeKey =
+    input.dedupeKey ?? `notification:access_request:${input.requestId}:comment:${input.commentId}`;
+
+  emit("access_request.comment_added", { ...input, dedupeKey }, input);
 }

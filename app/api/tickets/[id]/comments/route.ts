@@ -1,11 +1,12 @@
+export const runtime = 'nodejs';
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getLocalUserById } from "@/lib/auth/localStore";
-import { getTicketById, touchTicket } from "@/lib/ticketsStore";
+import { getSuporteById as getTicketById, touchSuporte as touchTicket } from "@/lib/ticketsStore";
 import { listTicketComments, createTicketComment } from "@/lib/ticketCommentsStore";
 import { listReactionsByTicket } from "@/lib/ticketReactionsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
-import { notifyTicketCommentAdded } from "@/lib/notificationService";
+import { notifySuporteCommentAdded as notifyTicketCommentAdded } from "@/lib/notificationService";
 import { canCommentTicket } from "@/lib/rbac/tickets";
 
 function isRateLimited(lastCreatedAt?: string | null) {
@@ -102,11 +103,11 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   }).catch((err) => console.error("Falha ao registrar comentario:", err));
 
   notifyTicketCommentAdded({
-    ticket,
-    comment,
-    actorId: user.id,
-    actorName: localUser?.name ?? null,
-  }).catch((err) => console.error("Falha ao notificar comentario:", err));
+      suporte: ticket,
+      comment,
+      actorId: user.id,
+      actorName: localUser?.name ?? null,
+    }).catch((err: unknown) => console.error("Falha ao notificar comentario:", err));
 
   return NextResponse.json({ item: comment }, { status: 201 });
 }

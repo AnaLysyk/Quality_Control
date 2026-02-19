@@ -1,4 +1,14 @@
 ﻿// Aliases para compatibilidade com imports antigos de tickets
+export const updateTicket = updateSuporte;
+export const deleteTicketForUser = deleteSuporteForUser;
+export const updateTicketStatus = updateSuporteStatus;
+export const exportTickets = exportSuportes;
+export const importTickets = importSuportes;
+export const listTicketTimeline = listSuporteTimeline;
+// Aliases para compatibilidade com imports antigos de tickets
+export const getTicketById = getSuporteById;
+export const touchTicket = touchSuporte;
+// Aliases para compatibilidade com imports antigos de tickets
 export const createTicket = createSuporte;
 export const listAllTickets = listAllSuportes;
 export const listTicketsForUser = listSuportesForUser;

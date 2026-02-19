@@ -1,3 +1,4 @@
+export const runtime = 'nodejs';
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getTicketById } from "@/lib/ticketsStore";

@@ -1,0 +1,11 @@
+[
+  {
+    "id": "f64efe88-24fe-45cb-85f0-531188a9a44f",
+    "name": "Dev Teste",
+    "email": "dev@teste.com",
+    "role": "dev",
+    "companyId": "cmp_d13c7120",
+    "createdAt": "2026-02-18T18:32:50.082Z",
+    "deletedAt": "2026-02-18T18:32:50.167Z"
+  }
+]

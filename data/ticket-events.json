@@ -1,6 +1,256 @@
 {
   "items": [
     {
+      "id": "cfe8f944-72cd-4c17-92fb-5432a4b08e9b",
+      "ticketId": "55cc1598-5a93-41da-9a73-36a59b90edf3",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado comentário 1771460447965"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-02-19T00:20:57.493Z"
+    },
+    {
+      "id": "60974570-d5b7-4959-a959-d64e787b1d61",
+      "ticketId": "71a4989f-62bf-41c0-a03a-9679462a0c9c",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado comentário 1771460354311"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-02-19T00:19:23.742Z"
+    },
+    {
+      "id": "e2dd0802-1512-4714-b01d-2d3b7fb575cd",
+      "ticketId": "3959f535-6f8c-45ac-9796-cfa5659adda2",
+      "type": "CREATED",
+      "payload": {
+        "title": "Automated chamado admin-1771460253529"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-02-19T00:17:45.351Z"
+    },
+    {
+      "id": "2a1902e1-aa03-4fb4-b29a-69fde44c7a53",
+      "ticketId": "2accf721-5004-4197-89b7-0018903b14ad",
+      "type": "CREATED",
+      "payload": {
+        "title": "Automated chamado admin-1771460220496"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-02-19T00:17:07.166Z"
+    },
+    {
+      "id": "70323d08-6e4d-482d-8878-a57bd8f46630",
+      "ticketId": "34d5ccda-68c1-4f0a-adf4-fc15ba91fef5",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado comentário 1771459635896"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-02-19T00:07:43.897Z"
+    },
+    {
+      "id": "c464a4da-e498-45d8-9c61-c5fa48a85fa2",
+      "ticketId": "8b7f205e-72fc-4e17-b21e-ec92fa193ea2",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado comentário 1771459539449"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-02-19T00:06:04.568Z"
+    },
+    {
+      "id": "0b3ec383-cf7d-4c77-b96f-ba446eb89141",
+      "ticketId": "bebf7836-1e90-4cb6-b07f-d01ec3518132",
+      "type": "CREATED",
+      "payload": {
+        "title": "Automated chamado admin-1771459301134"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-02-19T00:02:12.805Z"
+    },
+    {
+      "id": "b0693967-59e1-4fd2-b0be-18f9b88c7f4d",
+      "ticketId": "feed9bdb-cdbe-4816-88b3-19462c04881c",
+      "type": "CREATED",
+      "payload": {
+        "title": "Automated chamado admin-1771459255078"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-02-19T00:01:08.733Z"
+    },
+    {
+      "id": "aaddd10b-7ac2-4274-a6f2-d3354761b174",
+      "ticketId": "498b0a99-a0ef-4863-a6b4-7a433cd5fe25",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-18T23:47:30.435Z"
+    },
+    {
+      "id": "1f77fb1f-061e-4b07-83c7-73a7448be75f",
+      "ticketId": "6201b4e9-0232-43a6-82f7-6b7bda83d4f2",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado comentário 1771455073790"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-02-18T22:51:27.471Z"
+    },
+    {
+      "id": "28df11d3-5345-49bc-b5e7-e908d01a0f45",
+      "ticketId": "02015597-cad4-4f61-8285-e6339bace4f1",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado comentário 1771454978942"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-02-18T22:49:50.588Z"
+    },
+    {
+      "id": "04e517ca-beba-4e26-ae12-9babd863a982",
+      "ticketId": "738a35f8-f7cf-4afa-8ec3-3f0e59264607",
+      "type": "CREATED",
+      "payload": {
+        "title": "Automated chamado admin-1771454858812"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-02-18T22:47:55.209Z"
+    },
+    {
+      "id": "a0c9ff94-88e5-4a0d-bae8-b3a35d52fffd",
+      "ticketId": "2ccc9695-8a01-4aac-81ca-fa4bfc577e67",
+      "type": "CREATED",
+      "payload": {
+        "title": "Automated chamado admin-1771454822676"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-02-18T22:47:11.672Z"
+    },
+    {
+      "id": "4efac3bf-720f-4f6a-8df1-319e03c7fcbb",
+      "ticketId": "0c5f033c-c340-4f2e-af68-ee477dc24f64",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-18T22:41:51.535Z"
+    },
+    {
+      "id": "48bcaffa-b629-49ff-8379-f12c67f7f6fd",
+      "ticketId": "66f2f658-9b11-4ff0-95e0-b2c2606501db",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-18T22:41:09.270Z"
+    },
+    {
+      "id": "cb948cf0-22eb-4068-bff0-b9f2cf8da244",
+      "ticketId": "927dd799-ae5c-46ef-ad5c-f62e5d81f6c3",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado comentário 1771453082426"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-02-18T22:18:10.519Z"
+    },
+    {
+      "id": "5849f11f-105a-421f-acb9-6b6075f6c880",
+      "ticketId": "e1297dbe-bdd9-45e8-b93f-04d2845ea7a1",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado comentário 1771452989336"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-02-18T22:16:36.861Z"
+    },
+    {
+      "id": "2b637757-bc27-4776-b2da-249fe30701dc",
+      "ticketId": "930d736e-966c-4bc6-a754-451dfffadbb8",
+      "type": "CREATED",
+      "payload": {
+        "title": "Automated chamado admin-1771452892705"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-02-18T22:15:02.247Z"
+    },
+    {
+      "id": "6fecb004-e329-4ea0-a3ba-e4c5f41e93cd",
+      "ticketId": "607c707c-08b9-41fd-99fb-cb4d203701c0",
+      "type": "CREATED",
+      "payload": {
+        "title": "Automated chamado admin-1771452848626"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-02-18T22:14:22.756Z"
+    },
+    {
+      "id": "ad2d2ff8-c3e3-4163-8aa3-c54381032391",
+      "ticketId": "391a6be7-9f32-437f-8b5f-f00f90d55b6e",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-18T21:38:57.874Z"
+    },
+    {
+      "id": "90b54821-e8ad-4bcc-827a-1ef0c4aeccfd",
+      "ticketId": "a219f547-4011-409c-8ed7-01d5954f1c38",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-18T21:03:55.406Z"
+    },
+    {
+      "id": "ef02216c-999e-4939-bce1-d78aae317a1b",
+      "ticketId": "15cac611-b5a5-47d8-91be-02de5641ceee",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-18T21:03:13.158Z"
+    },
+    {
+      "id": "a2385c4e-4eb9-4b9b-9ccd-12b4ce18796d",
+      "ticketId": "efd0385a-3734-4b91-9fd5-e85be83dc60a",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-18T21:02:34.166Z"
+    },
+    {
+      "id": "2cd016fe-0093-46a4-ad01-24b7fee5bd0f",
+      "ticketId": "3e11120e-3eea-4bf4-8211-7dd7de90cc37",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-18T21:01:51.351Z"
+    },
+    {
+      "id": "f40c18d0-ed2a-4a6f-aa49-b5ede1ee6986",
+      "ticketId": "d5b1a664-be75-4c44-8e8d-43ddf6c87cf7",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-18T21:00:29.910Z"
+    },
+    {
       "id": "8299e2a4-af02-4ec0-8d22-e6e2aeb7d2ad",
       "ticketId": "9d859d82-8bf4-4186-8b7a-9bc13f8c8506",
       "type": "CREATED",

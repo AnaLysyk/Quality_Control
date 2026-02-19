@@ -1,0 +1,10 @@
+[
+  {
+    "id": "a200bf64-f763-4872-aac7-4ab3c36e672e",
+    "name": "Admin Teste",
+    "email": "admin@teste.com",
+    "role": "admin",
+    "companyId": "cmp_1d01be90",
+    "createdAt": "2026-02-18T18:25:57.155Z"
+  }
+]

@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 import { readFileSync } from "node:fs";
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
 
 function loadDotenv(path: string): Record<string, string> {
   try {
@@ -41,25 +41,13 @@ export default defineConfig({
     trace: "on-first-retry",
     headless: true,
   },
-  webServer: useExistingServer
-    ? undefined
-    : {
-      command: "npm run dev:ci",
-        url: baseURL,
-        reuseExistingServer: true,
-        timeout: 300 * 1000,
-        env: {
-          ...dotenvEnv,
-          PLAYWRIGHT_MOCK: "true",
-          E2E_USE_JSON: envOverrides.E2E_USE_JSON,
-          NODE_ENV: "test",
-          JWT_SECRET: envOverrides.JWT_SECRET,
-          PORT: "3100",
-          HOSTNAME: "127.0.0.1",
-          NEXT_PUBLIC_SITE_URL: baseURL,
-          NEXT_PUBLIC_BASE_URL: baseURL,
-        },
-      },
+  webServer: undefined, // Always use existing server at localhost:3000
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+    },
+  ],
   projects: [
     {
       name: "chromium",

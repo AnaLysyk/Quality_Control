@@ -1,0 +1,11 @@
+[
+  {
+    "id": "b48fe8e2-ea13-41a3-96ed-f65716660b91",
+    "name": "Usuário Teste",
+    "email": "user@teste.com",
+    "role": "usuario",
+    "companyId": "cmp_398e3252",
+    "createdAt": "2026-02-18T18:32:47.483Z",
+    "deletedAt": "2026-02-18T18:32:47.595Z"
+  }
+]

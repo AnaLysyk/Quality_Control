@@ -1,6 +1,84 @@
 {
   "defeito_mttr": [
     {
+      "id": "1c78109d-c121-431e-acba-6f79ad9f6a4c",
+      "defectSlug": "defeito_mttr",
+      "action": "status_changed",
+      "createdAt": "2026-02-19T00:16:23.942Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": "open",
+      "toStatus": "done",
+      "fromRunSlug": null,
+      "toRunSlug": null,
+      "note": null
+    },
+    {
+      "id": "59d65c60-4004-4d0c-80e2-08109ebb184a",
+      "defectSlug": "defeito_mttr",
+      "action": "created",
+      "createdAt": "2026-02-19T00:16:23.437Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": null,
+      "toStatus": "open",
+      "fromRunSlug": null,
+      "toRunSlug": null,
+      "note": "Defeito MTTR"
+    },
+    {
+      "id": "0ba1ef34-fc83-4854-9b92-0a50c8eb9eb6",
+      "defectSlug": "defeito_mttr",
+      "action": "status_changed",
+      "createdAt": "2026-02-18T23:57:37.041Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": "open",
+      "toStatus": "done",
+      "fromRunSlug": null,
+      "toRunSlug": null,
+      "note": null
+    },
+    {
+      "id": "59971842-dae3-4d1c-8303-1d4f2827d5aa",
+      "defectSlug": "defeito_mttr",
+      "action": "created",
+      "createdAt": "2026-02-18T23:57:35.468Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": null,
+      "toStatus": "open",
+      "fromRunSlug": null,
+      "toRunSlug": null,
+      "note": "Defeito MTTR"
+    },
+    {
+      "id": "f039b1f2-d134-4e9a-90dd-c66eae843e11",
+      "defectSlug": "defeito_mttr",
+      "action": "status_changed",
+      "createdAt": "2026-02-18T23:46:53.516Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": "open",
+      "toStatus": "done",
+      "fromRunSlug": null,
+      "toRunSlug": null,
+      "note": null
+    },
+    {
+      "id": "e7e98939-caa1-426d-a6bf-e22449d5e229",
+      "defectSlug": "defeito_mttr",
+      "action": "created",
+      "createdAt": "2026-02-18T23:46:52.730Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": null,
+      "toStatus": "open",
+      "fromRunSlug": null,
+      "toRunSlug": null,
+      "note": "Defeito MTTR"
+    },
+    {
       "id": "e72f990f-51b4-49f0-8529-e949c9d243f5",
       "defectSlug": "defeito_mttr",
       "action": "created",
@@ -93,6 +171,32 @@
     }
   ],
   "defeito_encontrado_na_run": [
+    {
+      "id": "a7c17686-ef06-47ae-bc3d-3ffcce29dd54",
+      "defectSlug": "defeito_encontrado_na_run",
+      "action": "created",
+      "createdAt": "2026-02-19T00:16:56.066Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": null,
+      "toStatus": "open",
+      "fromRunSlug": null,
+      "toRunSlug": "run_e2e_negocio",
+      "note": "Defeito encontrado na run"
+    },
+    {
+      "id": "15354828-4eae-45c2-8cd7-9cb58188043e",
+      "defectSlug": "defeito_encontrado_na_run",
+      "action": "created",
+      "createdAt": "2026-02-19T00:00:26.769Z",
+      "actorId": "usr_company_griaule_test",
+      "actorName": "Company Griaule",
+      "fromStatus": null,
+      "toStatus": "open",
+      "fromRunSlug": null,
+      "toRunSlug": "run_e2e_negocio",
+      "note": "Defeito encontrado na run"
+    },
     {
       "id": "0a081b6f-6a9b-4761-a91d-0b6942cfaacd",
       "defectSlug": "defeito_encontrado_na_run",

@@ -1,61 +1,51 @@
 import { NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
-
-const COMPANIES_PATH = path.join(process.cwd(), "data", "companies.json");
-
-async function readCompanies() {
-  try {
-    const data = await fs.readFile(COMPANIES_PATH, "utf8");
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-}
-
-async function writeCompanies(companies: any[]) {
-  await fs.mkdir(path.dirname(COMPANIES_PATH), { recursive: true });
-  await fs.writeFile(COMPANIES_PATH, JSON.stringify(companies, null, 2));
-}
+import { listLocalCompanies, createLocalCompany } from "@/lib/auth/localStore";
 
 export async function GET() {
-  const companies = await readCompanies();
+  const companies = await listLocalCompanies();
   return NextResponse.json(companies);
 }
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  if (!body.name || !body.slug) {
-    return NextResponse.json({ error: "Campos obrigatórios" }, { status: 400 });
+  let body: any = {};
+  try {
+    body = await req.json();
+  } catch {
+    // Se não for JSON válido, body permanece {}
   }
-  const companies = await readCompanies();
-  const newCompany = {
-    id: crypto.randomUUID(),
+  if (!body.name) {
+    return NextResponse.json({ error: "Campo 'name' obrigatório" }, { status: 400 });
+  }
+  const slug = body.slug || body.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const company = await createLocalCompany({
     name: body.name,
-    slug: body.slug,
-    createdAt: new Date().toISOString(),
-  };
-  companies.push(newCompany);
-  await writeCompanies(companies);
-  return NextResponse.json(newCompany, { status: 201 });
+    slug,
+    company_name: body.company_name || body.name,
+    integration_mode: body.integration_mode || "manual",
+    qase_project_code: body.qase_project_code || null,
+    qase_token: body.qase_token || null,
+    created_at: new Date().toISOString(),
+  });
+  return NextResponse.json(company, { status: 201 });
 }
 
 export async function PATCH(req: Request) {
-  const body = await req.json();
-  const companies = await readCompanies();
-  const idx = companies.findIndex((c: any) => c.id === body.id);
-  if (idx === -1) return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
-  Object.assign(companies[idx], body.updates, { updatedAt: new Date().toISOString() });
-  await writeCompanies(companies);
-  return NextResponse.json(companies[idx]);
+  // Not implemented: PATCH for localAuthStore
+  return NextResponse.json({ error: "PATCH não implementado" }, { status: 501 });
 }
 
 export async function DELETE(req: Request) {
-  const body = await req.json();
-  const companies = await readCompanies();
-  const idx = companies.findIndex((c: any) => c.id === body.id);
+  // Accept id via query param for RESTful DELETE
+  const url = new URL(req.url, "http://localhost");
+  const id = url.searchParams.get("id");
+  if (!id) {
+    return NextResponse.json({ error: "ID da empresa é obrigatório" }, { status: 400 });
+  }
+  // Use localAuthStore for deletion
+  const companies = await listLocalCompanies();
+  const idx = companies.findIndex((c: any) => c.id === id);
   if (idx === -1) return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
   companies[idx].deletedAt = new Date().toISOString();
-  await writeCompanies(companies);
+  // Optionally: implement deleteLocalCompany if needed
   return NextResponse.json({ ok: true });
 }

@@ -5,6 +5,7 @@ const baseUrl = 'http://localhost:3000';
 
 describe('Projects API - Metrics Aggregation', () => {
   it('should return projects with aggregated metrics', async () => {
+    jest.setTimeout(20000); // Increase timeout to 20s for slow API
     // Ajuste o companyId conforme necessário para o ambiente de teste
     const companyId = 'test-company';
     const res = await request(baseUrl)

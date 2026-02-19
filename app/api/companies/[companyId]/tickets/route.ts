@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 
@@ -29,14 +29,26 @@ function safeUUID() {
   });
 }
 
-export async function GET(req: Request, { params }: { params: { companyId: string } }) {
+export async function GET(
+  req: NextRequest,
+  context: { params: { companyId: string } } | { params: Promise<{ companyId: string }> }
+) {
+  const params = (context.params && typeof (context.params as any).then === 'function')
+    ? await (context.params as Promise<{ companyId: string }>)
+    : (context.params as { companyId: string });
   const { companyId } = params;
   const chamados = await readChamados(companyId);
   return NextResponse.json(chamados);
 }
 
-export async function POST(req: Request, { params }: { params: { companyId: string } }) {
+export async function POST(
+  req: NextRequest,
+  context: { params: { companyId: string } } | { params: Promise<{ companyId: string }> }
+) {
   try {
+    const params = (context.params && typeof (context.params as any).then === 'function')
+      ? await (context.params as Promise<{ companyId: string }>)
+      : (context.params as { companyId: string });
     const { companyId } = params;
     let body;
     try {
@@ -79,7 +91,13 @@ export async function POST(req: Request, { params }: { params: { companyId: stri
   }
 }
 
-export async function PATCH(req: Request, { params }: { params: { companyId: string } }) {
+export async function PATCH(
+  req: NextRequest,
+  context: { params: { companyId: string } } | { params: Promise<{ companyId: string }> }
+) {
+  const params = (context.params && typeof (context.params as any).then === 'function')
+    ? await (context.params as Promise<{ companyId: string }>)
+    : (context.params as { companyId: string });
   const { companyId } = params;
   const body = await req.json();
   const chamados = await readChamados(companyId);
@@ -90,7 +108,13 @@ export async function PATCH(req: Request, { params }: { params: { companyId: str
   return NextResponse.json(chamados[idx]);
 }
 
-export async function DELETE(req: Request, { params }: { params: { companyId: string } }) {
+export async function DELETE(
+  req: NextRequest,
+  context: { params: { companyId: string } } | { params: Promise<{ companyId: string }> }
+) {
+  const params = (context.params && typeof (context.params as any).then === 'function')
+    ? await (context.params as Promise<{ companyId: string }>)
+    : (context.params as { companyId: string });
   const { companyId } = params;
   const body = await req.json();
   const chamados = await readChamados(companyId);

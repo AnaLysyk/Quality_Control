@@ -81,8 +81,12 @@ export async function POST(req: NextRequest) {
   if (!admin) return jsonError(status === 401 ? "Nao autenticado" : "Sem permissao", status);
 
   const body = await req.json().catch(() => null);
+  // Loga o payload recebido
+  console.error('[CLIENTS][POST] Payload recebido:', JSON.stringify(body));
   const parsed = ClientCreateRequestSchema.safeParse(body);
   if (!parsed.success) {
+    // Loga o erro de validação do Zod
+    console.error('[CLIENTS][POST] Erro de validação Zod:', JSON.stringify(parsed.error, null, 2));
     return jsonError("Payload invalido", 400);
   }
 

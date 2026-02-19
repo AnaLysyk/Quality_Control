@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 
@@ -44,7 +44,13 @@ async function aggregateProjectMetrics(companyId: string, projectId: string) {
   return { totalRuns, totalPassed, totalFailed, totalCases, passRate };
 }
 
-export async function GET(req: Request, { params }: { params: { companyId: string } }) {
+export async function GET(
+  req: NextRequest,
+  context: { params: { companyId: string } } | { params: Promise<{ companyId: string }> }
+) {
+  const params = (context.params && typeof (context.params as any).then === 'function')
+    ? await (context.params as Promise<{ companyId: string }>)
+    : (context.params as { companyId: string });
   const { companyId } = params;
   const projects = await readProjects(companyId);
   // Agrega métricas para cada projeto
@@ -54,7 +60,13 @@ export async function GET(req: Request, { params }: { params: { companyId: strin
   return NextResponse.json(projects);
 }
 
-export async function POST(req: Request, { params }: { params: { companyId: string } }) {
+export async function POST(
+  req: NextRequest,
+  context: { params: { companyId: string } } | { params: Promise<{ companyId: string }> }
+) {
+  const params = (context.params && typeof (context.params as any).then === 'function')
+    ? await (context.params as Promise<{ companyId: string }>)
+    : (context.params as { companyId: string });
   const { companyId } = params;
   const body = await req.json();
   if (!body.name) {
@@ -73,7 +85,13 @@ export async function POST(req: Request, { params }: { params: { companyId: stri
   return NextResponse.json(newProject, { status: 201 });
 }
 
-export async function PATCH(req: Request, { params }: { params: { companyId: string } }) {
+export async function PATCH(
+  req: NextRequest,
+  context: { params: { companyId: string } } | { params: Promise<{ companyId: string }> }
+) {
+  const params = (context.params && typeof (context.params as any).then === 'function')
+    ? await (context.params as Promise<{ companyId: string }>)
+    : (context.params as { companyId: string });
   const { companyId } = params;
   const body = await req.json();
   const projects = await readProjects(companyId);
@@ -84,7 +102,13 @@ export async function PATCH(req: Request, { params }: { params: { companyId: str
   return NextResponse.json(projects[idx]);
 }
 
-export async function DELETE(req: Request, { params }: { params: { companyId: string } }) {
+export async function DELETE(
+  req: NextRequest,
+  context: { params: { companyId: string } } | { params: Promise<{ companyId: string }> }
+) {
+  const params = (context.params && typeof (context.params as any).then === 'function')
+    ? await (context.params as Promise<{ companyId: string }>)
+    : (context.params as { companyId: string });
   const { companyId } = params;
   const body = await req.json();
   const projects = await readProjects(companyId);

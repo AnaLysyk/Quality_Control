@@ -58,5 +58,25 @@
       "slaOverdue": 7
     },
     "timestamp": "2026-02-17T02:36:27.754Z"
+  },
+  {
+    "companySlug": "griaule",
+    "type": "quality_score",
+    "severity": "critical",
+    "message": "Quality Score critico: 30",
+    "metadata": {
+      "score": 30
+    },
+    "timestamp": "2026-02-18T23:37:03.434Z"
+  },
+  {
+    "companySlug": "griaule",
+    "type": "sla",
+    "severity": "critical",
+    "message": "Defeitos fora do SLA: 7",
+    "metadata": {
+      "slaOverdue": 7
+    },
+    "timestamp": "2026-02-18T23:37:03.524Z"
   }
 ]

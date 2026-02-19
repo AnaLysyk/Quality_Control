@@ -1,6 +1,2553 @@
 {
   "items": [
     {
+      "id": "061682de-7264-4f41-9a04-e39d98bf486b",
+      "created_at": "2026-02-18T23:19:39.523Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_e650e119",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "c012986e-c85a-43e3-bdbc-5bd85ae069e8",
+      "created_at": "2026-02-18T23:19:37.954Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_ac1a3a2f",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "fa92ba13-e3e7-4cbd-b66e-4c15b1e69854",
+      "created_at": "2026-02-18T23:19:37.100Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_f6c2d251",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "d950079f-4f25-4f42-96ec-11d9e300ac66",
+      "created_at": "2026-02-18T23:19:36.737Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_555c5ca8",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "686a47fb-dbc3-4f59-9a3b-d50c2e66a610",
+      "created_at": "2026-02-18T23:19:35.819Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_033a68b2",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    }
+  ]
+      "created_at": "2026-02-18T21:59:15.416Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_28bf948e",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "8d2923ed-fd85-4a7f-933c-c063ce27d1b7",
+      "created_at": "2026-02-18T21:59:14.385Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_08aceb58",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "f2953ccf-9e5b-4a87-aa46-f6760b3b59c2",
+      "created_at": "2026-02-18T21:59:10.998Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_0701a629",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "c029c962-9a3b-4b30-bf7e-4250f8d36504",
+      "created_at": "2026-02-18T21:59:10.445Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_a3d2704f",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "9e7178a7-5423-4ec1-858b-b933e0098524",
+      "created_at": "2026-02-18T21:59:09.312Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_26b41e9d",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "69a682cc-749c-44b6-a795-1ec76d441507",
+      "created_at": "2026-02-18T18:32:49.977Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_d13c7120",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "01e6ab95-40e3-4f0e-86bf-8f9690cd0651",
+      "created_at": "2026-02-18T18:32:48.887Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_165eb8fe",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "4b332d57-3abf-4fb9-aa12-572114a82fae",
+      "created_at": "2026-02-18T18:32:45.476Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_398e3252",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "7f225aa1-e6ab-4954-90f7-5a92dd1dd7e3",
+      "created_at": "2026-02-18T18:32:44.833Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_82a1fab5",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "5f1655b5-527c-4cbf-b9ac-99ce9531b673",
+      "created_at": "2026-02-18T18:32:44.157Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_286e5eff",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "2fb20ef6-d3fa-4f40-a2c5-011b6cac74f9",
+      "created_at": "2026-02-18T18:31:58.273Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_1c53c531",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "9c0aee85-48e5-4a09-932f-6218279faecc",
+      "created_at": "2026-02-18T18:31:51.841Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_8553368e",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "428798d9-f030-4de4-bd00-a530fb8df8f4",
+      "created_at": "2026-02-18T18:31:42.624Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_04c14bf0",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "59b091cc-551a-4579-bcbd-b142ecb4e23c",
+      "created_at": "2026-02-18T18:31:35.647Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_9c1e17a1",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "8b43df73-60a5-4821-b052-fd02f77103ea",
+      "created_at": "2026-02-18T18:31:28.583Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_c6f31145",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "adb92679-5c1a-460b-954d-a097e9f09bc0",
+      "created_at": "2026-02-18T18:31:18.528Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_44077a0c",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "52667c5a-a0e7-4907-8f87-470f855362b7",
+      "created_at": "2026-02-18T18:31:17.880Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_04ee091a",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "265cb55c-77a2-4bd7-969c-49da1b8b63d5",
+      "created_at": "2026-02-18T18:31:16.376Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_7eb98016",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "7380c393-3ba8-47c5-8925-06e42f12b3ce",
+      "created_at": "2026-02-18T18:26:11.804Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_a61efd26",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "06c4dd70-0c50-4ea1-87c0-1594b8909d72",
+      "created_at": "2026-02-18T18:26:07.054Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_64c9c80d",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "6118738e-2281-44f0-b6ed-cb7db5b4733b",
+      "created_at": "2026-02-18T18:26:02.075Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_43b89ccc",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "c202b2d9-ef6f-4f59-a011-0550592daaa4",
+      "created_at": "2026-02-18T18:25:57.035Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_1d01be90",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "167032f0-6a30-425c-b0ff-229293d11282",
+      "created_at": "2026-02-18T18:25:51.801Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_19f69067",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "c04ab058-c893-468e-9609-65030db7a18a",
+      "created_at": "2026-02-18T18:25:45.417Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_55efca39",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "4f7d97c8-f9df-486a-9f60-df0a9246eeec",
+      "created_at": "2026-02-18T18:25:44.962Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_ef320288",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "72853113-7357-4763-8ef6-312892cb5198",
+      "created_at": "2026-02-18T18:25:44.334Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_6e4130e2",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "b213c9b8-a97e-474a-9ce9-ede15bba2557",
+      "created_at": "2026-02-18T18:24:32.352Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_9dc01534",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "e4347deb-0615-4608-98a2-3716105f6733",
+      "created_at": "2026-02-18T18:24:25.656Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_5c12224b",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "374aff1b-b2b6-4264-b188-be0ab36b1b9d",
+      "created_at": "2026-02-18T18:24:15.817Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_721c2fa0",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "ea6810ce-5306-4af2-aa69-47475e845068",
+      "created_at": "2026-02-18T18:23:53.172Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_696df8d1",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "853a19c1-3c60-4456-8901-8d57bbebc5e9",
+      "created_at": "2026-02-18T18:23:44.891Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_146d5eb1",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "60a6981f-3308-4152-8298-5b1618128979",
+      "created_at": "2026-02-18T18:23:44.325Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_3bfd76ae",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "dc8f2ab6-61e5-4aa9-9c33-e93676fa423c",
+      "created_at": "2026-02-18T18:23:43.516Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_41eb3b50",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "6f1ed054-5f93-4a31-ae5a-33240640858d",
+      "created_at": "2026-02-18T17:36:24.323Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_1b1f459e",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "2c3f2f3c-c50d-476e-a2b5-dbdec870b203",
+      "created_at": "2026-02-18T17:36:19.103Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_7594ee8b",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "28eae6d6-99ee-4855-b12c-a90db64c350b",
+      "created_at": "2026-02-18T17:36:13.785Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_0bfb70de",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "febae83a-3bcc-4440-913c-d9e7e2bb7f0b",
+      "created_at": "2026-02-18T17:36:09.105Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_21eb4baf",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "eefe1604-6871-43e3-9863-70f54f1492d6",
+      "created_at": "2026-02-18T17:36:03.519Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_a05f2392",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "9f71c088-2be0-46c6-85df-9000c3ad8981",
+      "created_at": "2026-02-18T17:35:56.687Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_6adb0015",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "08aa5baf-8915-4bd2-9e9a-9341495b8299",
+      "created_at": "2026-02-18T17:35:55.989Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_e7a441da",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "182dd207-f35a-4fd8-969f-71da5867b6af",
+      "created_at": "2026-02-18T17:35:55.213Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_42a946a2",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "22ad63dc-4687-4798-a052-9d1f5931dda1",
+      "created_at": "2026-02-18T17:35:12.574Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_9aa64da9",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "25599261-3316-48cc-8d06-f1b148374a88",
+      "created_at": "2026-02-18T17:35:08.316Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_fe4cf11d",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "6872a375-7925-47f8-ba31-3c27cd024e0d",
+      "created_at": "2026-02-18T17:35:03.020Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_8092cafb",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "4f0a67be-85ed-4778-9642-52f5b82ec00c",
+      "created_at": "2026-02-18T17:34:54.212Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_b8855a9e",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "901c97fd-644d-4b25-82f2-be2a6837de0e",
+      "created_at": "2026-02-18T17:34:47.174Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_d5f75451",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "8a024466-f6d3-480e-914e-3d98a4a0ed54",
+      "created_at": "2026-02-18T17:34:38.909Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_ac935369",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "e2cf9fec-bb47-4bcf-930d-42bc6cf03b4d",
+      "created_at": "2026-02-18T17:34:38.394Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_428c7770",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "4864d64e-5835-48e7-a94a-6adc65926a28",
+      "created_at": "2026-02-18T17:34:37.535Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_ae86ef71",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "27812735-a551-43dd-9631-4aae1ee80650",
+      "created_at": "2026-02-18T17:32:02.301Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_079fda72",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "3e2d924e-1e65-4653-b8ee-5baded22b109",
+      "created_at": "2026-02-18T17:31:56.680Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_61618a19",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "b0f2d1f1-8d9d-49e2-a43d-9678763ab941",
+      "created_at": "2026-02-18T17:31:49.547Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_82207e8c",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "f0290f9b-a3ec-4831-93d8-90b23d793988",
+      "created_at": "2026-02-18T17:31:43.421Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_960d7926",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "884cbd4a-67b5-4fac-8834-c622b97bb182",
+      "created_at": "2026-02-18T17:31:34.501Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_6f59fc1d",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "1eca8be5-8284-49fc-8166-73f2cb59ff0f",
+      "created_at": "2026-02-18T17:31:25.949Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_b2f840aa",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "7972d8ae-8e8e-4701-96aa-5b1a18e86d8e",
+      "created_at": "2026-02-18T17:31:25.422Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_6389b6f8",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "0d156f90-4cea-408c-9e29-3ab95bf87652",
+      "created_at": "2026-02-18T17:31:24.488Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_7c608fa5",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "edb78506-6e6a-44b9-9152-b49e193606c7",
+      "created_at": "2026-02-18T17:12:46.665Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_c9b9dd94",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "6a3276f4-9394-4a5d-886a-63d0d11a59a3",
+      "created_at": "2026-02-18T17:12:40.738Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_10e30d61",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "e7bf5b85-bfe2-4102-9799-43dccb24174f",
+      "created_at": "2026-02-18T17:12:34.251Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_6ed902c0",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "e5cca1d7-f8ba-4cf4-b36f-bac671a7c096",
+      "created_at": "2026-02-18T17:12:27.886Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_51dadecb",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "9525a1bd-46cf-4cc9-b4a9-695b481a19fc",
+      "created_at": "2026-02-18T17:12:22.732Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_3317ed43",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "df95b8be-b3d6-4378-8691-e5455f1862a2",
+      "created_at": "2026-02-18T17:12:15.460Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_eb3eacce",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "47a2449e-f259-4060-a890-0be86550b2b1",
+      "created_at": "2026-02-18T17:12:14.744Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_881f2207",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "d4c8c41d-f67f-4dba-8da2-b43952921c5a",
+      "created_at": "2026-02-18T17:12:13.251Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_84ed626b",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "38dbba39-7e05-4397-8702-163ae7aee5b0",
+      "created_at": "2026-02-18T17:05:25.950Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_962e8d22",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "e79dcefe-1897-4114-9640-ea2fc0d54e02",
+      "created_at": "2026-02-18T17:05:21.905Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_333f6b8b",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "1a43b83c-55c1-4ce2-9753-ff30467d4bc5",
+      "created_at": "2026-02-18T17:05:16.813Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_5c2e6fed",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "9fbe1b56-b497-4124-82df-a850e382d4e9",
+      "created_at": "2026-02-18T17:05:11.932Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_2e02ff5e",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "1c52e255-a71f-4352-a9f9-5d128b19ef53",
+      "created_at": "2026-02-18T17:05:07.338Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_0abf726a",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "24df53c4-fafd-4f36-9a9e-3430a7299137",
+      "created_at": "2026-02-18T17:05:01.725Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_1cdb5351",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "11e30107-c297-4e1d-8384-f2baa7a8409f",
+      "created_at": "2026-02-18T17:05:01.224Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_d77347a5",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "bba89594-8a17-4227-880d-a6799cce0515",
+      "created_at": "2026-02-18T17:05:00.718Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_077e6950",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "a4ca8356-137e-4370-9b73-97e1366c3f13",
+      "created_at": "2026-02-18T17:04:12.447Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_fd5af94a",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "4a05eb6d-ab54-4031-b038-2e5411f11a15",
+      "created_at": "2026-02-18T17:04:08.234Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_d95c5bee",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "3630ebb0-bf9d-4760-8088-0d91a7bb4633",
+      "created_at": "2026-02-18T17:04:03.983Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_781422db",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "11e49cd5-6f8c-4090-a42b-eef88f5e50f1",
+      "created_at": "2026-02-18T17:03:59.314Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_b7e7a1a4",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "dcf3312e-5a5b-466c-8fe3-4c08d8e8849a",
+      "created_at": "2026-02-18T17:03:54.257Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_a9063913",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "1940c05f-8330-4c01-8b6f-abc0e41c4990",
+      "created_at": "2026-02-18T17:03:49.226Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_d1f59bb2",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "c1d12399-06c6-49a9-899f-b6abaf5cb1e4",
+      "created_at": "2026-02-18T17:03:48.836Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_05430ea2",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "226a95e8-4a6b-4ac1-b0a9-2a22bb3a27bd",
+      "created_at": "2026-02-18T17:03:48.422Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_be6ef753",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "299ac17a-1010-43cd-b530-fe97d021b5aa",
+      "created_at": "2026-02-18T17:03:09.597Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_604e2e31",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "1b25298d-06a8-48bc-8fe1-e8df44c08f26",
+      "created_at": "2026-02-18T17:03:05.661Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_738234b0",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "001c23af-4f24-4143-9778-f67efaaa96f4",
+      "created_at": "2026-02-18T17:03:01.049Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_68af3a34",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "6ed0a86d-6434-400e-9660-27bb8f0b5e44",
+      "created_at": "2026-02-18T17:02:57.124Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_95a36820",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "0a2efd03-513b-4a83-bfaa-7a6a61910851",
+      "created_at": "2026-02-18T17:02:53.114Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_cb8175cc",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "bd207448-602b-4ee0-8c19-b855f556552e",
+      "created_at": "2026-02-18T17:02:48.036Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_efd62f53",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "cae5f9ff-ec2f-4379-92bb-0f99bdfc8867",
+      "created_at": "2026-02-18T17:02:47.620Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_db1999b0",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "08d53e17-7fee-4eae-bf16-05b03ada8f6d",
+      "created_at": "2026-02-18T17:02:47.175Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_6aa40f69",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "91ac9363-e9e1-4f4e-a885-577d2b6ed593",
+      "created_at": "2026-02-18T17:01:55.927Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_21342a89",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "8af6ad62-3c73-4bbb-8361-b073bc744bc9",
+      "created_at": "2026-02-18T17:01:51.979Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_3e3f303e",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "08fa916d-5aad-4eab-9896-64a4573e85a3",
+      "created_at": "2026-02-18T17:01:47.481Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_15be7742",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "9cd7f602-a438-416d-9c2d-d785c2ad0746",
+      "created_at": "2026-02-18T17:01:42.721Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_c6554dd2",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "eb70b3a1-0b2a-47ea-aa88-3a7786017af5",
+      "created_at": "2026-02-18T17:01:38.416Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_eab6252a",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "116ed8bb-3ee0-40b7-b972-b8ae43440e89",
+      "created_at": "2026-02-18T17:01:32.691Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_2232a121",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "958bd9ba-d2b5-430d-ba17-fd28489f3efc",
+      "created_at": "2026-02-18T17:01:32.210Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_3b0108a9",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "9d44b91c-d056-42cb-9316-f8407fbbed0f",
+      "created_at": "2026-02-18T17:01:31.805Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_9e3d26fb",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "1587763b-0ff2-40f9-b3e3-d5a077ef4801",
+      "created_at": "2026-02-18T17:00:39.733Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_ed572447",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "b67103ff-44a2-4ccb-9f8f-e374f5db7aca",
+      "created_at": "2026-02-18T17:00:34.171Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_00524429",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "b008bc85-fa88-4574-9bf1-c13e6e08c5c4",
+      "created_at": "2026-02-18T17:00:28.495Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_6609f1b7",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "7a079f1c-60eb-4dca-8125-63e57d7d723d",
+      "created_at": "2026-02-18T17:00:22.955Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_35854e24",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "23f10119-9599-4ee3-a89e-bbbbf32ecddc",
+      "created_at": "2026-02-18T17:00:18.147Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_87859b27",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "fc64eae3-f7e0-42f8-8651-04b518dde8ae",
+      "created_at": "2026-02-18T17:00:11.488Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_14622293",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "b759e7a8-f509-485b-845b-d618d0c6ddba",
+      "created_at": "2026-02-18T17:00:11.031Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_48b5e45b",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "320490ec-5fc4-429a-aba4-2f792a25fa9d",
+      "created_at": "2026-02-18T17:00:10.535Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_d705f233",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "f7eccbc8-8fcb-4807-8098-6a770a30f18f",
+      "created_at": "2026-02-18T16:58:52.906Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_c21fa1ce",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "b439ada5-3e60-4f60-bb96-66bf44d5aea9",
+      "created_at": "2026-02-18T16:58:47.202Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_a3be5839",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "1336c303-34a6-4323-bf3c-5e815ac0b584",
+      "created_at": "2026-02-18T16:58:39.246Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_48a657a9",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "2afa6b56-b8c9-485d-b8af-884d4eb1780d",
+      "created_at": "2026-02-18T16:58:32.931Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_ba4e4e7a",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "e290e9a1-0ed4-4b31-8297-e7133655ead2",
+      "created_at": "2026-02-18T16:58:17.746Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_b941b445",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "717a9907-d9bb-45b2-9e9c-cda27acbece1",
+      "created_at": "2026-02-18T16:58:09.791Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_4261492c",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "f99a5847-7470-40ff-845f-9cde8c666db6",
+      "created_at": "2026-02-18T16:58:09.122Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_3986dbd3",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "51a18784-f430-4d7d-80be-cd2a08016105",
+      "created_at": "2026-02-18T16:58:08.287Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_59addd4f",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "0d14ec65-c8d6-4f13-9fbc-2a5f3fb47ce0",
+      "created_at": "2026-02-18T16:49:26.933Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_f8a58178",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "7411a328-7da4-4043-a175-3432d5fe483a",
+      "created_at": "2026-02-18T16:49:22.118Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_88a11b41",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "9a65ba99-a860-438f-9294-deaa427c984b",
+      "created_at": "2026-02-18T16:49:16.816Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_8739e15f",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "c26bf3a6-fe95-4fb6-8316-5d6bffa03267",
+      "created_at": "2026-02-18T16:49:11.829Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_7df88f85",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "b1234a79-f63b-402c-af1d-b895d0b3e67d",
+      "created_at": "2026-02-18T16:49:05.501Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_5be2a0b4",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "8a1d6b23-940c-4690-a4e7-167748c7de9f",
+      "created_at": "2026-02-18T16:48:58.624Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_80ecccca",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "c72aa1de-2286-4898-9791-efc72a564776",
+      "created_at": "2026-02-18T16:48:58.126Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_e349a4e0",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "8baee450-7755-49c8-9234-0f19bbe1360f",
+      "created_at": "2026-02-18T16:48:57.045Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_6d0e2e68",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "7c2ed22c-9fac-4517-b85b-d362b8e56ebb",
+      "created_at": "2026-02-18T16:48:10.063Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_9e4247cc",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "6f74a36a-a70b-45ba-b85f-2e12b5a5579b",
+      "created_at": "2026-02-18T16:48:03.377Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_5b43e722",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "a52eec8e-a401-42c9-be24-c8aca47f3d6f",
+      "created_at": "2026-02-18T16:47:55.925Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_7fba5396",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "3a87907e-766a-4971-a3d4-38d14cf63c4a",
+      "created_at": "2026-02-18T16:47:49.328Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_59e4300b",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "ba30bf7d-8b63-4642-aa48-37d9f01d3517",
+      "created_at": "2026-02-18T16:47:44.356Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_d2cf649c",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "7a66c0ab-833f-4c1f-8d9e-5dbbfa28b9bf",
+      "created_at": "2026-02-18T16:47:38.147Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_7772b741",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "07d55a0b-bc90-4aa6-80a2-993b178a4da9",
+      "created_at": "2026-02-18T16:47:37.693Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_65b72c55",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "8293e262-8828-4840-af70-a74ed35a7f24",
+      "created_at": "2026-02-18T16:47:37.135Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_0603a422",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "8479cdd0-ee15-4d69-b1bb-dd052dc303e3",
+      "created_at": "2026-02-18T16:46:47.551Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_5eea6949",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "51dc04b9-b636-4f56-af51-c769e4088dab",
+      "created_at": "2026-02-18T16:46:43.139Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_af6d13b5",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "5cdf3066-d688-41cc-ac74-8ff870f4e393",
+      "created_at": "2026-02-18T16:46:37.779Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_7cd7616f",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "d5e345e2-8602-440e-b1ca-8aead8ebbb5b",
+      "created_at": "2026-02-18T16:46:32.583Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_e3b8cb03",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "717e40a7-649c-4b61-9fa8-cd2f6ab020f1",
+      "created_at": "2026-02-18T16:46:27.259Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_a95fcfc2",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "8e3e6779-f66c-4047-b8f7-89adb247dc08",
+      "created_at": "2026-02-18T16:46:19.142Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_af1aff03",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "1c58fed2-4988-47da-9f2d-fa8ed3ce0864",
+      "created_at": "2026-02-18T16:46:18.282Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_a6c59fb7",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "410461e4-48a9-4957-b197-bd968536e9ba",
+      "created_at": "2026-02-18T16:46:17.074Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_e2112a9b",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "ea7b5d21-2e35-4699-8676-9f0b6474ec93",
+      "created_at": "2026-02-18T16:44:36.310Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_c2354a0f",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "33ef9e19-42dd-43f7-923c-845c8f90c4ef",
+      "created_at": "2026-02-18T16:44:30.869Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_2c7108af",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "c260ff1b-801b-43b4-909c-a2554eb4658f",
+      "created_at": "2026-02-18T16:44:24.670Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_b4b12665",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "baca37a7-91b0-45fe-ac66-7df6df46e65d",
+      "created_at": "2026-02-18T16:44:19.125Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_7b662ae4",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "0e58e33f-f887-46be-afaa-bd565ca2b856",
+      "created_at": "2026-02-18T16:44:13.944Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_1cbb59df",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "6e211860-d83b-4819-aba6-7d1808e431af",
+      "created_at": "2026-02-18T16:44:08.130Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_367e5d8c",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "549022c9-bba1-49bd-abc8-40db1494bc97",
+      "created_at": "2026-02-18T16:44:03.090Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_2f781bcd",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "ae02cf66-406f-4113-80ba-b0577cf3e25f",
+      "created_at": "2026-02-18T16:43:58.685Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_97d10c56",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "102bef8f-122e-4934-a3d6-89bd444bff90",
+      "created_at": "2026-02-18T16:43:50.045Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_513021a1",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "2fabae40-ad5c-4ed2-b127-f952da7cf063",
+      "created_at": "2026-02-18T16:43:44.140Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_c7d3c67c",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "0071bc23-b45c-42c3-80ca-cd4addb8e2c4",
+      "created_at": "2026-02-18T16:19:14.341Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_0499d490",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "1dfadc4e-7346-49de-a667-1248c592fb65",
+      "created_at": "2026-02-18T16:19:08.778Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_0c102851",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "a3f5d70c-82df-4165-96f5-72e9db9601a3",
+      "created_at": "2026-02-18T16:19:04.102Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_f812d3e1",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "85804356-8912-4f5a-9795-c4b9ca02cfc3",
+      "created_at": "2026-02-18T16:18:57.030Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_9ba93491",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "0e6d1e36-ae0a-4f94-a9c0-dccdf1d682d9",
+      "created_at": "2026-02-18T16:18:52.539Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_be343071",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "1cf807c8-0b38-43ad-8e76-74ed7ba4b8b2",
+      "created_at": "2026-02-18T16:18:47.726Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_d2dc743f",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "84bc6dac-a99d-4c1c-8b6f-f2836ca0bdb1",
+      "created_at": "2026-02-18T16:18:43.449Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_b8513dd2",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "ba88fdf6-3725-435a-b972-a65c2beb1577",
+      "created_at": "2026-02-18T16:18:39.690Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_0ce86ed4",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "bec2dceb-19b8-4232-8913-b94bcda7c2e2",
+      "created_at": "2026-02-18T16:18:35.721Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_95354a87",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "415bcdf8-aad4-42ef-8361-83055bb3dcfe",
+      "created_at": "2026-02-18T16:18:30.941Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_885e6792",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "a794a0a7-e0c6-4558-983f-41649276b9b2",
+      "created_at": "2026-02-18T16:16:25.018Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_19f8a592",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "04ebe919-6f73-4ce4-9921-590ec5d32575",
+      "created_at": "2026-02-18T16:16:18.933Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_1d3d4085",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "d363ee12-ad48-43f6-ae9a-42888e6e1a0b",
+      "created_at": "2026-02-18T16:16:12.299Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_5c075891",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "756fd055-c5cf-4efd-902b-710af6b2def7",
+      "created_at": "2026-02-18T16:16:06.798Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_6eed65d4",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "2dd28be1-3e44-40c1-aba1-c588ce19c485",
+      "created_at": "2026-02-18T16:16:01.365Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_ffe27c70",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "4cb50633-be34-4b00-9020-a2d34c1d31ba",
+      "created_at": "2026-02-18T16:15:55.248Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_2ddc2233",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "ab4a091b-cc5f-4f19-99af-4112b2477d35",
+      "created_at": "2026-02-18T16:15:50.615Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_d3b99710",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "9db4fae4-83ca-44fd-bcba-83a57d6bcde0",
+      "created_at": "2026-02-18T16:15:45.534Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_7b23e000",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "0734b06c-ed54-45fc-9e76-85d270ce0209",
+      "created_at": "2026-02-18T16:15:38.470Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_e1f05d3b",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "8a4adbbd-967e-4568-bb26-31b1804a90d8",
+      "created_at": "2026-02-18T16:15:32.693Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_02b9dad8",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "4f43cf6b-5b57-47d6-b85f-e8c2a085ad5d",
+      "created_at": "2026-02-18T16:13:28.176Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_d945edfe",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "1b96f96e-664f-473f-ad57-b18c54214955",
+      "created_at": "2026-02-18T16:13:19.004Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_b7db35bc",
+      "entity_label": "Empresa Dev",
+      "metadata": {
+        "slug": "empresa-dev",
+        "active": true
+      }
+    },
+    {
+      "id": "969822a1-2140-4793-ab24-e6c73da64002",
+      "created_at": "2026-02-18T16:13:08.257Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_7585d391",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "717c3c7d-7b37-4872-bbc6-8bc529518cda",
+      "created_at": "2026-02-18T16:13:02.289Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_be6c833a",
+      "entity_label": "Empresa Admin",
+      "metadata": {
+        "slug": "empresa-admin",
+        "active": true
+      }
+    },
+    {
+      "id": "bf3e8408-7853-422a-90f3-49291f4653f9",
+      "created_at": "2026-02-18T16:12:57.315Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_927583fb",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "f7a53357-d974-4632-bbdb-20b3bb321383",
+      "created_at": "2026-02-18T16:12:51.299Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_821ebcf3",
+      "entity_label": "Empresa Usuário",
+      "metadata": {
+        "slug": "empresa-usuario",
+        "active": true
+      }
+    },
+    {
+      "id": "f068c392-baf9-413e-a0c5-646c70610b90",
+      "created_at": "2026-02-18T16:12:46.838Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_7582c85a",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "f523b94d-983b-480d-bfd0-8eb755d1b5ea",
+      "created_at": "2026-02-18T16:12:42.366Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_777f0544",
+      "entity_label": "Empresa Teste",
+      "metadata": {
+        "slug": "empresa-teste",
+        "active": true
+      }
+    },
+    {
+      "id": "d3ff8c20-cd82-4463-af45-ed54bbed1379",
+      "created_at": "2026-02-18T16:12:37.386Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_a010fa04",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
+      "id": "c96d5152-224d-4f3b-9bcf-dd229da3681e",
+      "created_at": "2026-02-18T16:12:31.714Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_876ae38c",
+      "entity_label": "Empresa Qase",
+      "metadata": {
+        "slug": "empresa-qase",
+        "active": true
+      }
+    },
+    {
       "id": "99097701-a707-4d92-be36-a68ec7badaea",
       "created_at": "2026-02-17T06:25:00.780Z",
       "actor_user_id": "usr_admin",

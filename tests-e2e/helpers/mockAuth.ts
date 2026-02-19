@@ -1,6 +1,6 @@
 import type { BrowserContext } from "@playwright/test";
 
-const rawBaseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
+const rawBaseURL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
 const baseURL = /^https?:\/\//i.test(rawBaseURL) ? rawBaseURL : `http://${rawBaseURL}`;
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || "admin@griaule.test";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "Griaule@123";

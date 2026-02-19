@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 
@@ -48,14 +48,26 @@ function safeUUID() {
   });
 }
 
-export async function GET(req: Request, { params }: { params: { companyId: string } }) {
+export async function GET(
+  req: NextRequest,
+  context: { params: { companyId: string } } | { params: Promise<{ companyId: string }> }
+) {
+  const params = (context.params && typeof (context.params as any).then === 'function')
+    ? await (context.params as Promise<{ companyId: string }>)
+    : (context.params as { companyId: string });
   const { companyId } = params;
   const runs = await listRuns(companyId);
   return NextResponse.json(runs);
 }
 
-export async function POST(req: Request, { params }: { params: { companyId: string } }) {
+export async function POST(
+  req: NextRequest,
+  context: { params: { companyId: string } } | { params: Promise<{ companyId: string }> }
+) {
   try {
+    const params = (context.params && typeof (context.params as any).then === 'function')
+      ? await (context.params as Promise<{ companyId: string }>)
+      : (context.params as { companyId: string });
     const { companyId } = params;
     let body;
     try {

@@ -1,1 +1,67 @@
-[]
+[
+  {
+    "id": "fdfe6c54-39af-4392-b079-8bafbf8115d4",
+    "name": "Usuário Teste",
+    "email": "teste@exemplo.com",
+    "role": "usuario",
+    "companyId": "test-company",
+    "createdAt": "2026-02-18T21:38:56.477Z"
+  },
+  {
+    "id": "b892f378-4be7-4c4d-9252-79bff7d5a270",
+    "name": "Usuário Teste",
+    "email": "teste@exemplo.com",
+    "role": "usuario",
+    "companyId": "test-company",
+    "createdAt": "2026-02-18T22:41:04.618Z"
+  },
+  {
+    "id": "a594b71b-dbb6-4e98-a280-9fd679cf0e43",
+    "name": "Usuário Teste",
+    "email": "teste@exemplo.com",
+    "role": "usuario",
+    "companyId": "test-company",
+    "createdAt": "2026-02-18T22:41:54.969Z"
+  },
+  {
+    "id": "cdc886ef-f58b-47f0-a3f6-7654640f1f46",
+    "name": "Usuário Teste",
+    "email": "teste@exemplo.com",
+    "role": "usuario",
+    "companyId": "test-company",
+    "createdAt": "2026-02-18T23:47:36.694Z"
+  },
+  {
+    "id": "admin-global",
+    "name": "Admin Global",
+    "email": "admin@empresa1.com",
+    "password": "123456",
+    "role": "global_admin",
+    "is_global_admin": true,
+    "companyId": "test-company"
+  },
+  {
+    "id": "admin-empresa",
+    "name": "Admin Empresa",
+    "email": "companyadmin@empresa1.com",
+    "password": "123456",
+    "role": "company_admin",
+    "companyId": "test-company"
+  },
+  {
+    "id": "dev-empresa",
+    "name": "Dev Empresa",
+    "email": "dev@empresa1.com",
+    "password": "123456",
+    "role": "dev",
+    "companyId": "test-company"
+  },
+  {
+    "id": "user-empresa",
+    "name": "User Empresa",
+    "email": "user@empresa1.com",
+    "password": "123456",
+    "role": "user",
+    "companyId": "test-company"
+  }
+]

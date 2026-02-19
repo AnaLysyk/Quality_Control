@@ -1,3 +1,5 @@
+// Tipo mínimo para AuthUser para evitar erro de compilação
+type AuthUser = { role: string; isGlobalAdmin?: boolean };
 // import type { AuthUser } from "../../../lib/jwtAuth";
 import { NextRequest, NextResponse } from "next/server";
 

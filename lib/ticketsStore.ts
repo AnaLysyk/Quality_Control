@@ -1,4 +1,11 @@
-﻿import "server-only";
+﻿// Aliases para compatibilidade com imports antigos de tickets
+export const createTicket = createSuporte;
+export const listAllTickets = listAllSuportes;
+export const listTicketsForUser = listSuportesForUser;
+// Aliases para compatibilidade com imports antigos
+// (não reexporta tudo de suportesStore para evitar duplicidade)
+// Se necessário, reexporte manualmente funções específicas.
+import "server-only";
 
 import { randomUUID } from "crypto";
 import path from "node:path";
@@ -166,32 +173,7 @@ function normalizeType(value?: unknown): SuporteType {
   const raw = typeof value === "string" ? value.trim().toLowerCase() : "";
   if (raw === "bug" || raw === "melhoria" || raw === "tarefa") return raw;
   return "tarefa";
-}
 
-  const raw = typeof value === "string" ? value.trim().toUpperCase() : "";
-  if (raw && raw.startsWith("SP-")) return raw;
-  return "";
-}
-
-  const match = code.match(/^SP-(\d{4,})$/i);
-  if (!match) return 0;
-  const num = Number.parseInt(match[1], 10);
-  return Number.isFinite(num) ? num : 0;
-}
-
-  return `SP-${String(counter).padStart(6, "0")}`;
-}
-
-  if (!Array.isArray(value)) return [];
-  const unique = new Set<string>();
-  for (const entry of value) {
-    if (typeof entry !== "string") continue;
-    const tag = entry.trim();
-    if (!tag) continue;
-    unique.add(tag.slice(0, 40));
-  }
-  return Array.from(unique);
-}
 
   const status = normalizeStatus(raw.status) ?? "backlog";
   const type = normalizeType(raw.type);
@@ -399,8 +381,7 @@ async function writeStore(next: SuportesStore) {
   }
 }
 
-  return `support-suportes.v${String(counter).padStart(6, "0")}.json`;
-}
+
 
 async function writeVersionSnapshot() {
   if (!cacheStore) return;
@@ -420,9 +401,7 @@ async function rotateVersions() {
   }
 }
 
-  const stamp = new Date().toISOString().replace(/[-:]/g, "").replace("T", "-").slice(0, 15);
-  return `support-suportes.bak-${stamp}.json`;
-}
+
 
 async function rotateBackups() {
   const files = (await fs.readdir(BACKUP_DIR)).filter((file) => file.endsWith(".json")).sort();

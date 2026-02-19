@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 import { createSuporte, listAllSuportes, listSuportesForUser } from "@/lib/ticketsStore";
-import { appendSuporteEvent } from "@/lib/ticketEventsStore";
+import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifySuporteCreated } from "@/lib/notificationService";
-import { attachAssigneeInfo, attachAssigneeToSuporte } from "@/lib/ticketsPresenter";
+import { attachAssigneeInfo, attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { isItDev } from "@/lib/rbac/suportes";
 

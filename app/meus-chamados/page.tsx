@@ -1,4 +1,6 @@
-﻿function getSuporteCode(code: string | null | undefined, id: string): string {
+﻿"use client";
+
+function getSuporteCode(code: string | null | undefined, id: string): string {
   const raw = typeof code === "string" ? code.trim().toUpperCase() : "";
   if (raw && raw.startsWith("SP-")) {
     const match = raw.match(/^SP-(\d{4,})$/i);
@@ -6,10 +8,6 @@
   }
   return `SP-${id.slice(0, 6).toUpperCase()}`;
 }
-
-// ...existing code...
-
-"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FiPlus, FiRefreshCw } from "react-icons/fi";
@@ -80,7 +78,7 @@ function formatDate(iso?: string | null) {
 }
 export default function MeusSuportesPage() {
   const { user, loading } = useAuthUser();
-  const [suportes, setSuportes] = useState<SuporteItem[]>([]);
+  const [suportes, setSuportes] = useState<SuporteItem[]>([]); // Initialize supports
   const [loadingSuportes, setLoadingSuportes] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedSuporte, setSelectedSuporte] = useState<SuporteItem | null>(null);
@@ -209,7 +207,6 @@ export default function MeusSuportesPage() {
       {error && <p className="text-sm text-red-600">{error}</p>}
       {loadingSuportes && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
 
-
       {/* Responsivo: grid em telas médias/grandes, carrossel horizontal em mobile */}
       <div className="w-full py-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -271,7 +268,7 @@ export default function MeusSuportesPage() {
         open={Boolean(selectedSuporte)}
         ticket={selectedSuporte}
         onClose={() => setSelectedSuporte(null)}
-        canEditStatus={isDevRole(user.role)}
+        canEditStatus={isDevRole(user?.role)}
         statusOptions={[]}
         onTicketUpdated={(updated: SuporteItem) => {
           setSelectedSuporte(updated);

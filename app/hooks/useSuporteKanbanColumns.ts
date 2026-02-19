@@ -1,2 +1,2 @@
 // Alias para manter compatibilidade após refatoração
-export { default, default as useSuporteKanbanColumns } from './useTicketKanbanColumns';
+export { useTicketKanbanColumns as useSuporteKanbanColumns } from './useTicketKanbanColumns';

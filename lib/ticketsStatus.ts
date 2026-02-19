@@ -1,4 +1,11 @@
-﻿export type SuporteStatus = string;
+﻿// Aliases para compatibilidade com imports antigos
+export type TicketStatusOption = SuporteStatusOption;
+export const formatTicketStatusLabel = formatSuporteStatusLabel;
+// Aliases para compatibilidade com imports antigos
+export type TicketStatus = SuporteStatus;
+export const TICKET_STATUS_OPTIONS = SUPORTE_STATUS_OPTIONS;
+export const getTicketStatusLabel = getSuporteStatusLabel;
+export type SuporteStatus = string;
 
 export type SuporteStatusOption = { value: SuporteStatus; label: string };
 

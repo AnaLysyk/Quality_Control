@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiMessageSquare, FiPlus, FiEdit2, FiTrash2, FiX, FiSave } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { getTicketStatusLabel, type TicketStatus } from "@/lib/ticketsStatus";
+import { getSuporteStatusLabel, type SuporteStatus } from "@/lib/suportesStatus";
 
-type TicketItem = {
+type SuporteItem = {
   id: string;
   title: string;
   description: string;
-  status: TicketStatus;
+  status: SuporteStatus;
   createdAt: string;
   updatedAt: string;
   createdBy?: string | null;
@@ -18,12 +18,12 @@ type TicketItem = {
   companySlug?: string | null;
 };
 
-type DraftTicket = {
+type DraftSuporte = {
   title: string;
   description: string;
 };
 
-function statusStyle(status: TicketStatus) {
+function statusStyle(status: SuporteStatus) {
   if (status === "done") return "bg-emerald-100 text-emerald-700";
   if (status === "review") return "bg-violet-100 text-violet-700";
   if (status === "doing") return "bg-amber-100 text-amber-700";
@@ -33,13 +33,13 @@ function statusStyle(status: TicketStatus) {
 export default function TicketsButton() {
   const { user } = useAuthUser();
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState<TicketItem[]>([]);
+  const [items, setItems] = useState<SuporteItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<DraftTicket | null>(null);
+  const [draft, setDraft] = useState<DraftSuporte | null>(null);
   const [saving, setSaving] = useState(false);
 
   const boxRef = useRef<HTMLDivElement>(null);
@@ -85,8 +85,8 @@ export default function TicketsButton() {
     setError(null);
     try {
       const scope = isDev ? "all" : "mine";
-      const res = await fetch(`/api/tickets?scope=${scope}`, { credentials: "include", cache: "no-store" });
-      const json = (await res.json().catch(() => ({}))) as { items?: TicketItem[]; error?: string };
+      const res = await fetch(`/api/suportes?scope=${scope}`, { credentials: "include", cache: "no-store" });
+      const json = (await res.json().catch(() => ({}))) as { items?: SuporteItem[]; error?: string };
       if (!res.ok) {
         setItems([]);
         setError(json?.error || "Erro ao carregar chamados");
@@ -94,7 +94,7 @@ export default function TicketsButton() {
       }
       setItems(Array.isArray(json.items) ? json.items : []);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao carregar chamados";
+      const msg = err instanceof Error ? err.message : "Erro ao carregar suportes";
       setItems([]);
       setError(msg);
     } finally {
@@ -109,9 +109,9 @@ export default function TicketsButton() {
   }, [open, loadTickets]);
 
   const countLabel = useMemo(() => {
-    if (!items.length) return "Sem chamados";
-    if (items.length === 1) return "1 chamado";
-    return `${items.length} chamados`;
+    if (!items.length) return "Sem suportes";
+    if (items.length === 1) return "1 suporte";
+    return `${items.length} suportes`;
   }, [items.length]);
 
   function startCreate() {

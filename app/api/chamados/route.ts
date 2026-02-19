@@ -1,10 +1,10 @@
 ﻿import { NextResponse } from "next/server";
-import { createTicket, listAllTickets, listTicketsForUser } from "@/lib/ticketsStore";
-import { appendTicketEvent } from "@/lib/ticketEventsStore";
-import { notifyTicketCreated } from "@/lib/notificationService";
-import { attachAssigneeInfo, attachAssigneeToTicket } from "@/lib/ticketsPresenter";
+import { createSuporte, listAllSuportes, listSuportesForUser } from "@/lib/ticketsStore";
+import { appendSuporteEvent } from "@/lib/ticketEventsStore";
+import { notifySuporteCreated } from "@/lib/notificationService";
+import { attachAssigneeInfo, attachAssigneeToSuporte } from "@/lib/ticketsPresenter";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { isItDev } from "@/lib/rbac/tickets";
+import { isItDev } from "@/lib/rbac/suportes";
 
 // GET /api/chamados: Only the creator or dev can see chamados (not public)
 export async function GET(req: Request) {
@@ -16,9 +16,9 @@ export async function GET(req: Request) {
   const limit = Math.max(1, Math.min(500, Number(url.searchParams.get("limit") ?? 200)));
   let items;
   if (isItDev(user)) {
-    items = await listAllTickets();
+    items = await listAllSuportes();
   } else {
-    items = await listTicketsForUser(user.id);
+    items = await listSuportesForUser(user.id);
   }
   items = items.slice(0, limit);
   const enriched = await attachAssigneeInfo(items);
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     const createdByName = user?.email || null;
     const createdByEmail = user?.email || null;
 
-    const ticket = await createTicket({
+    const suporte = await createSuporte({
       title: body?.title,
       description: body?.description,
       type: body?.type,
@@ -50,24 +50,24 @@ export async function POST(req: Request) {
       companyId: body?.companyId ?? null,
     });
 
-    if (!ticket) {
+    if (!suporte) {
       return NextResponse.json({ error: "Informe titulo ou descricao" }, { status: 400 });
     }
 
-    appendTicketEvent({
-      ticketId: ticket.id,
+    appendSuporteEvent({
+      suporteId: suporte.id,
       type: "CREATED",
-      actorUserId: ticket.createdBy ?? null,
-      payload: { title: ticket.title },
+      actorUserId: suporte.createdBy ?? null,
+      payload: { title: suporte.title },
     }).catch((err) => {
-      console.error("Falha ao registrar evento de chamado:", err);
+      console.error("Falha ao registrar evento de suporte:", err);
     });
 
-    notifyTicketCreated(ticket).catch((err) => {
-      console.error("Falha ao notificar novo chamado:", err);
+    notifySuporteCreated(suporte).catch((err) => {
+      console.error("Falha ao notificar novo suporte:", err);
     });
 
-    const enriched = await attachAssigneeToTicket(ticket);
+    const enriched = await attachAssigneeToSuporte(suporte);
     return NextResponse.json({ item: enriched }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erro ao criar chamado";

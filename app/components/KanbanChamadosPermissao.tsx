@@ -13,7 +13,7 @@ interface KanbanColumn {
   items: KanbanItem[];
 }
 
-interface KanbanChamadosProps {
+interface KanbanSuportesProps {
   userId: string;
   isAdmin: boolean;
   empresasVinculadas: string[];
@@ -25,7 +25,7 @@ const initialColumns: KanbanColumn[] = [
   { id: 'done', name: 'Concluído', items: [] },
 ];
 
-export default function KanbanChamados({ userId, isAdmin, empresasVinculadas }: KanbanChamadosProps) {
+export default function KanbanSuportes({ userId, isAdmin, empresasVinculadas }: KanbanSuportesProps) {
   const [columns, setColumns] = useState<KanbanColumn[]>(initialColumns);
   // Só dev pode movimentar chamados
   const isDev = userId?.startsWith('dev') || userId?.startsWith('it_dev');

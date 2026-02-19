@@ -1,22 +1,22 @@
-﻿export type TicketStatus = string;
+﻿export type SuporteStatus = string;
 
-export type TicketStatusOption = { value: TicketStatus; label: string };
+export type SuporteStatusOption = { value: SuporteStatus; label: string };
 
-export const KANBAN_STATUS_OPTIONS: TicketStatusOption[] = [
+export const KANBAN_STATUS_OPTIONS: SuporteStatusOption[] = [
   { value: "backlog", label: "Backlog" },
   { value: "doing", label: "Em andamento" },
   { value: "review", label: "Em revisao" },
   { value: "done", label: "Concluido" },
 ];
 
-export const TICKET_STATUS_OPTIONS: TicketStatusOption[] = [
+export const SUPORTE_STATUS_OPTIONS: SuporteStatusOption[] = [
   { value: "backlog", label: "Backlog" },
   { value: "doing", label: "Em andamento" },
   { value: "review", label: "Em revisao" },
   { value: "done", label: "Concluido" },
 ];
 
-export function formatTicketStatusLabel(value: string) {
+export function formatSuporteStatusLabel(value: string) {
   if (!value) return "Backlog";
   const cleaned = value
     .toString()
@@ -27,15 +27,15 @@ export function formatTicketStatusLabel(value: string) {
   return cleaned.replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export function getTicketStatusLabel(status: TicketStatus, options: TicketStatusOption[] = TICKET_STATUS_OPTIONS) {
-  return options.find((opt) => opt.value === status)?.label ?? formatTicketStatusLabel(status);
+export function getSuporteStatusLabel(status: SuporteStatus, options: SuporteStatusOption[] = SUPORTE_STATUS_OPTIONS) {
+  return options.find((opt) => opt.value === status)?.label ?? formatSuporteStatusLabel(status);
 }
 
-export function normalizeKanbanStatus(status: TicketStatus | string): TicketStatus {
+export function normalizeKanbanStatus(status: SuporteStatus | string): SuporteStatus {
   const normalized = (status ?? "").toString().trim().toLowerCase();
   if (!normalized) return "backlog";
   const ascii = normalized.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const mapped = ascii in LEGACY_TICKET_STATUS_MAP ? LEGACY_TICKET_STATUS_MAP[ascii] : normalized;
+  const mapped = ascii in LEGACY_SUPORTE_STATUS_MAP ? LEGACY_SUPORTE_STATUS_MAP[ascii] : normalized;
   if (mapped === "backlog" || mapped === "doing" || mapped === "review" || mapped === "done") {
     return mapped;
   }
@@ -47,11 +47,11 @@ export function normalizeKanbanStatus(status: TicketStatus | string): TicketStat
   return safe || "backlog";
 }
 
-export const LEGACY_TICKET_STATUS_MAP: Record<string, TicketStatus> = {
+export const LEGACY_SUPORTE_STATUS_MAP: Record<string, SuporteStatus> = {
   open: "backlog",
   analysis: "backlog",
   refining: "backlog",
-  ticket: "backlog",
+  suporte: "backlog",
   in_progress: "doing",
   doing: "doing",
   "em andamento": "doing",

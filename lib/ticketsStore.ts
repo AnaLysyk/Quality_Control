@@ -4,20 +4,20 @@ import { randomUUID } from "crypto";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
-import { LEGACY_TICKET_STATUS_MAP, normalizeKanbanStatus, type TicketStatus } from "@/lib/ticketsStatus";
+import { LEGACY_SUPORTE_STATUS_MAP, normalizeKanbanStatus, type SuporteStatus } from "@/lib/suportesStatus";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 
-export type TicketPriority = "low" | "medium" | "high";
-export type TicketType = "bug" | "melhoria" | "tarefa";
+export type SuportePriority = "low" | "medium" | "high";
+export type SuporteType = "bug" | "melhoria" | "tarefa";
 
-export type TicketRecord = {
+export type SuporteRecord = {
   id: string;
   code: string;
   title: string;
   description: string;
-  status: TicketStatus;
-  type: TicketType;
-  priority: TicketPriority;
+  status: SuporteStatus;
+  type: SuporteType;
+  priority: SuportePriority;
   tags: string[];
   createdAt: string;
   updatedAt: string;
@@ -28,27 +28,27 @@ export type TicketRecord = {
   companyId?: string | null;
   assignedToUserId?: string | null;
   updatedBy?: string | null;
-  timeline?: TicketStatusHistory[];
+  timeline?: SuporteStatusHistory[];
 };
 
-type TicketsStore = {
+type SuportesStore = {
   counter: number;
-  items: TicketRecord[];
+  items: SuporteRecord[];
 };
 
-type TicketStatusHistory = {
-  from: TicketStatus;
-  to: TicketStatus;
+type SuporteStatusHistory = {
+  from: SuporteStatus;
+  to: SuporteStatus;
   changedById: string;
   at: string;
 };
 
 type ExportPayload = {
-  format: "tickets-export";
+  format: "suportes-export";
   version: number;
   exportedAt: string;
   counter: number;
-  items: TicketRecord[];
+  items: SuporteRecord[];
 };
 
 type ImportMode = "merge" | "replace" | "upsert";
@@ -63,12 +63,12 @@ type ImportPayload = {
 
 const DEFAULT_DATA_DIR = getJsonStoreDir();
 const DATA_DIR = process.env.TICKETS_DATA_DIR || DEFAULT_DATA_DIR;
-const STORE_PATH = path.join(DATA_DIR, "support-tickets.json");
+const STORE_PATH = path.join(DATA_DIR, "support-suportes.json");
 const VERSION_DIR = path.join(DATA_DIR, "versions");
 const BACKUP_DIR = path.join(DATA_DIR, "backups");
 const LOCK_PATH = `${STORE_PATH}.lock`;
-const STORE_KEY = "qc:support_tickets:v1";
-const STORE_COUNTER_KEY = "qc:support_tickets:counter:v1";
+const STORE_KEY = "qc:support_suportes:v1";
+const STORE_COUNTER_KEY = "qc:support_suportes:counter:v1";
 const FORCE_FILE = process.env.TICKETS_STORE === "file";
 const FORCE_REDIS = process.env.TICKETS_STORE === "redis";
 const REDIS_AVAILABLE = isRedisConfigured();
@@ -90,9 +90,9 @@ const MAX_VERSIONS = Math.max(1, Number(process.env.TICKETS_MAX_VERSIONS ?? 20))
 const BACKUP_INTERVAL_MS = Math.max(5000, Number(process.env.TICKETS_BACKUP_INTERVAL_MS ?? 60000));
 const MAX_BACKUPS = Math.max(1, Number(process.env.TICKETS_MAX_BACKUPS ?? 30));
 
-let memoryStore: TicketsStore = { items: [], counter: 0 };
+let memoryStore: SuportesStore = { items: [], counter: 0 };
 let warnedFsFailure = false;
-let cacheStore: TicketsStore | null = null;
+let cacheStore: SuportesStore | null = null;
 let dirty = false;
 let initPromise: Promise<void> | null = null;
 let flushTimer: NodeJS.Timeout | null = null;
@@ -130,15 +130,15 @@ async function ensureStore(): Promise<boolean> {
   }
 }
 
-function normalizeStore(raw: unknown): TicketsStore {
+function normalizeStore(raw: unknown): SuportesStore {
   if (Array.isArray(raw)) {
-    return { items: raw.filter(Boolean) as TicketRecord[], counter: 0 };
+    return { items: raw.filter(Boolean) as SuporteRecord[], counter: 0 };
   }
   if (!raw || typeof raw !== "object") {
     return { items: [], counter: 0 };
   }
   const record = raw as { items?: unknown; counter?: unknown };
-  const items = Array.isArray(record.items) ? (record.items.filter(Boolean) as TicketRecord[]) : [];
+  const items = Array.isArray(record.items) ? (record.items.filter(Boolean) as SuporteRecord[]) : [];
   const counter = Number(record.counter ?? 0);
   return { items, counter: Number.isFinite(counter) ? counter : 0 };
 }
@@ -148,44 +148,40 @@ function sanitizeText(value: unknown, max: number) {
   return value.trim().slice(0, max);
 }
 
-function normalizeStatus(value?: string | null): TicketStatus | null {
+function normalizeStatus(value?: string | null): SuporteStatus | null {
   if (!value) return null;
   const normalized = value.trim().toLowerCase();
   const mapped = normalized in LEGACY_TICKET_STATUS_MAP ? LEGACY_TICKET_STATUS_MAP[normalized] : normalized;
   return normalizeKanbanStatus(mapped);
 }
 
-function normalizePriority(value?: unknown): TicketPriority {
+function normalizePriority(value?: unknown): SuportePriority {
   const raw = typeof value === "string" ? value.trim().toLowerCase() : "";
   if (raw === "urgent") return "high";
   if (raw === "low" || raw === "medium" || raw === "high") return raw;
   return "medium";
 }
 
-function normalizeType(value?: unknown): TicketType {
+function normalizeType(value?: unknown): SuporteType {
   const raw = typeof value === "string" ? value.trim().toLowerCase() : "";
   if (raw === "bug" || raw === "melhoria" || raw === "tarefa") return raw;
   return "tarefa";
 }
 
-function normalizeCode(value?: unknown): string {
   const raw = typeof value === "string" ? value.trim().toUpperCase() : "";
-  if (raw && raw.startsWith("CH-")) return raw;
+  if (raw && raw.startsWith("SP-")) return raw;
   return "";
 }
 
-function parseCodeNumber(code: string): number {
-  const match = code.match(/^CH-(\d{4,})$/i);
+  const match = code.match(/^SP-(\d{4,})$/i);
   if (!match) return 0;
   const num = Number.parseInt(match[1], 10);
   return Number.isFinite(num) ? num : 0;
 }
 
-function formatCode(counter: number) {
-  return `CH-${String(counter).padStart(6, "0")}`;
+  return `SP-${String(counter).padStart(6, "0")}`;
 }
 
-function normalizeTags(value?: unknown): string[] {
   if (!Array.isArray(value)) return [];
   const unique = new Set<string>();
   for (const entry of value) {
@@ -197,7 +193,6 @@ function normalizeTags(value?: unknown): string[] {
   return Array.from(unique);
 }
 
-function normalizeRecord(raw: TicketRecord): TicketRecord {
   const status = normalizeStatus(raw.status) ?? "backlog";
   const type = normalizeType(raw.type);
   const code = normalizeCode(raw.code);
@@ -214,7 +209,7 @@ function normalizeRecord(raw: TicketRecord): TicketRecord {
   };
 }
 
-async function syncLegacyCodes(store: TicketsStore): Promise<TicketsStore> {
+async function syncLegacyCodes(store: SuportesStore): Promise<SuportesStore> {
   let counter = Number.isFinite(store.counter) ? store.counter : 0;
   let maxCode = 0;
   store.items.forEach((item) => {
@@ -275,7 +270,7 @@ async function withFileLock<T>(fn: () => Promise<T>) {
   }
 }
 
-async function loadStoreFromDisk(): Promise<TicketsStore> {
+async function loadStoreFromDisk(): Promise<SuportesStore> {
   const ok = await ensureStore();
   if (!ok) return memoryStore;
   try {
@@ -341,7 +336,7 @@ async function initStore() {
   return initPromise;
 }
 
-async function readStore(): Promise<TicketsStore> {
+async function readStore(): Promise<SuportesStore> {
   if (USE_REDIS) {
     try {
       const redis = getRedis();
@@ -371,8 +366,8 @@ async function readStore(): Promise<TicketsStore> {
   return cacheStore;
 }
 
-async function writeStore(next: TicketsStore) {
-  const payload: TicketsStore = { counter: next.counter ?? 0, items: next.items ?? [] };
+async function writeStore(next: SuportesStore) {
+  const payload: SuportesStore = { counter: next.counter ?? 0, items: next.items ?? [] };
   if (USE_REDIS) {
     try {
       const redis = getRedis();
@@ -404,8 +399,7 @@ async function writeStore(next: TicketsStore) {
   }
 }
 
-function buildVersionName(counter: number) {
-  return `support-tickets.v${String(counter).padStart(6, "0")}.json`;
+  return `support-suportes.v${String(counter).padStart(6, "0")}.json`;
 }
 
 async function writeVersionSnapshot() {
@@ -426,9 +420,8 @@ async function rotateVersions() {
   }
 }
 
-function buildBackupName() {
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace("T", "-").slice(0, 15);
-  return `support-tickets.bak-${stamp}.json`;
+  return `support-suportes.bak-${stamp}.json`;
 }
 
 async function rotateBackups() {
@@ -490,11 +483,11 @@ export async function restoreVersion(name: string) {
   return cacheStore;
 }
 
-export async function exportTickets(filter?: (item: TicketRecord) => boolean): Promise<ExportPayload> {
+export async function exportSuportes(filter?: (item: SuporteRecord) => boolean): Promise<ExportPayload> {
   const store = await syncLegacyCodes(await readStore());
   const items = filter ? store.items.filter(filter) : store.items;
   return {
-    format: "tickets-export",
+    format: "suportes-export",
     version: 1,
     exportedAt: new Date().toISOString(),
     counter: store.counter,
@@ -502,26 +495,26 @@ export async function exportTickets(filter?: (item: TicketRecord) => boolean): P
   };
 }
 
-function validateImportItem(item: TicketRecord) {
+function validateImportItem(item: SuporteRecord) {
   if (!item.id || !item.title || !item.createdBy || !item.companyId) {
-    throw new Error("TICKETS_IMPORT_INVALID_ITEM");
+    throw new Error("SUPORTES_IMPORT_INVALID_ITEM");
   }
 }
 
-export async function importTickets(payload: ImportPayload, mode: ImportMode) {
+export async function importSuportes(payload: ImportPayload, mode: ImportMode) {
   if (USE_REDIS || usingMemory()) {
-    throw new Error("TICKETS_IMPORT_UNSUPPORTED");
+    throw new Error("SUPORTES_IMPORT_UNSUPPORTED");
   }
-  if (!payload || payload.format !== "tickets-export") {
-    throw new Error("TICKETS_IMPORT_INVALID_FORMAT");
+  if (!payload || payload.format !== "suportes-export") {
+    throw new Error("SUPORTES_IMPORT_INVALID_FORMAT");
   }
   if (!Array.isArray(payload.items)) {
-    throw new Error("TICKETS_IMPORT_INVALID_ITEMS");
+    throw new Error("SUPORTES_IMPORT_INVALID_ITEMS");
   }
   await initStore();
   await createBackup();
   await withFileLock(async () => {
-    const nextItems = payload.items as TicketRecord[];
+    const nextItems = payload.items as SuporteRecord[];
     nextItems.forEach(validateImportItem);
 
     if (!cacheStore) {
@@ -557,7 +550,8 @@ export async function importTickets(payload: ImportPayload, mode: ImportMode) {
   return cacheStore;
 }
 
-export async function listTicketsForUser(userId: string) {
+
+export async function listSuportesForUser(userId: string) {
   const store = await syncLegacyCodes(await readStore());
   return store.items
     .filter((item) => item.createdBy === userId)
@@ -565,18 +559,21 @@ export async function listTicketsForUser(userId: string) {
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 }
 
-export async function listAllTickets() {
+
+export async function listAllSuportes() {
   const store = await syncLegacyCodes(await readStore());
   return [...store.items].map((item) => normalizeRecord(item)).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 }
 
-export async function getTicketById(id: string) {
+
+export async function getSuporteById(id: string) {
   const store = await syncLegacyCodes(await readStore());
-  const item = store.items.find((ticket) => ticket.id === id);
+  const item = store.items.find((suporte) => suporte.id === id);
   return item ? normalizeRecord({ ...item }) : null;
 }
 
-export async function createTicket(input: {
+
+export async function createSuporte(input: {
   title?: unknown;
   description?: unknown;
   type?: unknown;
@@ -593,7 +590,7 @@ export async function createTicket(input: {
   const description = sanitizeText(input.description, 2000);
   const type = normalizeType(input.type);
   if (!title && !description) {
-    console.error('[createTicket] Título e descrição recebidos:', { title: input.title, description: input.description });
+    console.error('[createSuporte] Título e descrição recebidos:', { title: input.title, description: input.description });
     return null;
   }
 
@@ -613,10 +610,10 @@ export async function createTicket(input: {
   }
   store.counter = nextCounter;
   const code = formatCode(nextCounter);
-  const ticket: TicketRecord = {
+  const suporte: SuporteRecord = {
     id: randomUUID(),
     code,
-    title: title || "Novo chamado",
+    title: title || "Novo suporte",
     description,
     status: "backlog",
     type,
@@ -633,12 +630,13 @@ export async function createTicket(input: {
     timeline: [],
   };
 
-  store.items.unshift(ticket);
+  store.items.unshift(suporte);
   await writeStore(store);
-  return normalizeRecord(ticket);
+  return normalizeRecord(suporte);
 }
 
-export async function updateTicketForUser(
+
+export async function updateSuporteForUser(
   userId: string,
   id: string,
   patch: { title?: unknown; description?: unknown },
@@ -650,7 +648,7 @@ export async function updateTicketForUser(
   const title = sanitizeText(patch.title, 120) || current.title;
   const description =
     typeof patch.description === "string" ? sanitizeText(patch.description, 2000) : current.description;
-  const updated: TicketRecord = {
+  const updated: SuporteRecord = {
     ...current,
     title,
     description,
@@ -662,7 +660,8 @@ export async function updateTicketForUser(
   return normalizeRecord(updated);
 }
 
-export async function deleteTicketForUser(userId: string, id: string) {
+
+export async function deleteSuporteForUser(userId: string, id: string) {
   const store = await readStore();
   const before = store.items.length;
   store.items = store.items.filter((item) => !(item.id === id && item.createdBy === userId));
@@ -671,7 +670,8 @@ export async function deleteTicketForUser(userId: string, id: string) {
   return true;
 }
 
-export async function updateTicketStatus(id: string, status: string, actorId: string) {
+
+export async function updateSuporteStatus(id: string, status: string, actorId: string) {
   const nextStatus = normalizeStatus(status);
   if (!nextStatus) return null;
   const store = await readStore();
@@ -682,7 +682,7 @@ export async function updateTicketStatus(id: string, status: string, actorId: st
   if (current.status === nextStatus) {
     return normalizeRecord({ ...current, timeline });
   }
-  const updated: TicketRecord = {
+  const updated: SuporteRecord = {
     ...current,
     status: nextStatus,
     updatedAt: new Date().toISOString(),
@@ -697,15 +697,17 @@ export async function updateTicketStatus(id: string, status: string, actorId: st
   return normalizeRecord(updated);
 }
 
-export async function listTicketTimeline(id: string) {
+
+export async function listSuporteTimeline(id: string) {
   const store = await readStore();
-  const item = store.items.find((ticket) => ticket.id === id);
+  const item = store.items.find((suporte) => suporte.id === id);
   if (!item) return null;
   const timeline = Array.isArray(item.timeline) ? item.timeline : [];
   return timeline;
 }
 
-export async function updateTicket(
+
+export async function updateSuporte(
   id: string,
   patch: {
     title?: unknown;
@@ -737,7 +739,7 @@ export async function updateTicket(
       : typeof patch.assignedToUserId === "string"
         ? patch.assignedToUserId.trim() || null
         : null;
-  const updated: TicketRecord = {
+  const updated: SuporteRecord = {
     ...current,
     title,
     description,
@@ -753,12 +755,13 @@ export async function updateTicket(
   return normalizeRecord(updated);
 }
 
-export async function touchTicket(id: string, updatedBy?: string | null) {
+
+export async function touchSuporte(id: string, updatedBy?: string | null) {
   const store = await readStore();
   const idx = store.items.findIndex((item) => item.id === id);
   if (idx === -1) return null;
   const current = store.items[idx];
-  const updated: TicketRecord = {
+  const updated: SuporteRecord = {
     ...current,
     updatedAt: new Date().toISOString(),
     updatedBy: updatedBy ?? current.updatedBy ?? null,

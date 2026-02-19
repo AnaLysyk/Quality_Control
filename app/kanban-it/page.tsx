@@ -3,19 +3,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FiPlus, FiRefreshCw } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { useTicketKanbanColumns } from "@/hooks/useTicketKanbanColumns";
+import { useSuporteKanbanColumns } from "@/hooks/useSuporteKanbanColumns";
 import {
-  getTicketStatusLabel,
+  getSuporteStatusLabel,
   normalizeKanbanStatus,
-  type TicketStatus,
-} from "@/lib/ticketsStatus";
-import TicketDetailsModal from "@/components/TicketDetailsModal";
+  type SuporteStatus,
+} from "@/lib/suportesStatus";
+import SuporteDetailsModal from "@/components/SuporteDetailsModal";
 
-type TicketItem = {
+type SuporteItem = {
   id: string;
   title: string;
   description: string;
-  status: TicketStatus;
+  status: SuporteStatus;
   type?: string | null;
   code?: string | null;
   priority?: string | null;
@@ -81,11 +81,11 @@ export default function KanbanItPage() {
     // eslint-disable-next-line no-console
     console.log("[KANBAN] user?.role:", user?.role);
   }
-  const [tickets, setTickets] = useState<TicketItem[]>([]);
-  const [loadingTickets, setLoadingTickets] = useState(false);
+  const [suportes, setSuportes] = useState<SuporteItem[]>([]);
+  const [loadingSuportes, setLoadingSuportes] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dragging, setDragging] = useState<{ id: string; from: TicketStatus } | null>(null);
-  const [selectedTicket, setSelectedTicket] = useState<TicketItem | null>(null);
+  const [dragging, setDragging] = useState<{ id: string; from: SuporteStatus } | null>(null);
+  const [selectedSuporte, setSelectedSuporte] = useState<SuporteItem | null>(null);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [createDraft, setCreateDraft] = useState({
@@ -104,108 +104,108 @@ export default function KanbanItPage() {
 
   // Só DEV pode editar/remover/adicionar colunas
   const isPrivileged = isPrivilegedRole(user?.role);
-  const isAllowed = true; // Todos podem ver chamados, mas só dev pode mexer nas colunas
+  const isAllowed = true; // Todos podem ver suportes, mas só dev pode mexer nas colunas
   const statusKeys = useMemo(
-    () => tickets.map((ticket) => normalizeKanbanStatus(ticket.status)),
-    [tickets],
+    () => suportes.map((suporte) => normalizeKanbanStatus(suporte.status)),
+    [suportes],
   );
-  const { columns, statusOptions, addColumn, renameColumn, removeColumn } = useTicketKanbanColumns(statusKeys);
+  const { columns, statusOptions, addColumn, renameColumn, removeColumn } = useSuporteKanbanColumns(statusKeys);
 
   const grouped = useMemo(() => {
-    const map: Record<ColumnKey, TicketItem[]> = {};
+    const map: Record<ColumnKey, SuporteItem[]> = {};
     columns.forEach((col) => {
       map[col.key] = [];
     });
-    for (const ticket of tickets) {
-      const normalized = normalizeKanbanStatus(ticket.status) as ColumnKey;
-      if (map[normalized]) map[normalized].push(ticket);
+    for (const suporte of suportes) {
+      const normalized = normalizeKanbanStatus(suporte.status) as ColumnKey;
+      if (map[normalized]) map[normalized].push(suporte);
     }
     return map;
-  }, [tickets, columns]);
+  }, [suportes, columns]);
 
-  const loadTickets = useCallback(async () => {
-    setLoadingTickets(true);
+  const loadSuportes = useCallback(async () => {
+    setLoadingSuportes(true);
     setError(null);
     try {
       // Só dev/admin vê todos; demais só os próprios
       const isPrivileged = isPrivilegedRole(user?.role);
-      const url = isPrivileged ? "/api/chamados?scope=all" : "/api/chamados";
+      const url = isPrivileged ? "/api/suportes?scope=all" : "/api/suportes";
       const res = await fetch(url, {
         credentials: "include",
         cache: "no-store",
       });
-      const json = (await res.json().catch(() => ({}))) as { items?: TicketItem[]; error?: string };
+      const json = (await res.json().catch(() => ({}))) as { items?: SuporteItem[]; error?: string };
       if (!res.ok) {
-        setTickets([]);
-        setError(json?.error || "Erro ao carregar chamados");
+        setSuportes([]);
+        setError(json?.error || "Erro ao carregar suportes");
         return;
       }
-      setTickets(Array.isArray(json.items) ? json.items : []);
+      setSuportes(Array.isArray(json.items) ? json.items : []);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao carregar chamados";
+      const msg = err instanceof Error ? err.message : "Erro ao carregar suportes";
       setError(msg);
     } finally {
-      setLoadingTickets(false);
+      setLoadingSuportes(false);
     }
   }, [user]);
 
   useEffect(() => {
-    loadTickets();
-  }, [loadTickets]);
+    loadSuportes();
+  }, [loadSuportes]);
 
   useEffect(() => {
-    const timer = setInterval(loadTickets, 30000);
+    const timer = setInterval(loadSuportes, 30000);
     return () => clearInterval(timer);
-  }, [loadTickets]);
+  }, [loadSuportes]);
 
-  function handleDragStart(ticket: TicketItem) {
-    if (!(isPrivileged && (user?.id === ticket.createdBy || isPrivilegedRole(user?.role)))) return;
-    setDragging({ id: ticket.id, from: ticket.status });
+  function handleDragStart(suporte: SuporteItem) {
+    if (!(isPrivileged && (user?.id === suporte.createdBy || isPrivilegedRole(user?.role)))) return;
+    setDragging({ id: suporte.id, from: suporte.status });
   }
 
-  async function updateStatus(ticketId: string, nextStatus: TicketStatus) {
-    const previous = tickets;
-    setTickets((current) =>
-      current.map((ticket) => (ticket.id === ticketId ? { ...ticket, status: nextStatus } : ticket)),
+  async function updateStatus(suporteId: string, nextStatus: SuporteStatus) {
+    const previous = suportes;
+    setSuportes((current) =>
+      current.map((suporte) => (suporte.id === suporteId ? { ...suporte, status: nextStatus } : suporte)),
     );
     try {
-      const res = await fetch(`/api/chamados/${ticketId}/status`, {
+      const res = await fetch(`/api/suportes/${suporteId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ status: nextStatus }),
       });
-      const json = (await res.json().catch(() => ({}))) as { item?: TicketItem; error?: string };
+      const json = (await res.json().catch(() => ({}))) as { item?: SuporteItem; error?: string };
       if (!res.ok || !json.item) {
-        setTickets(previous);
+        setSuportes(previous);
         setError(json?.error || "Falha ao atualizar status");
         return;
       }
-      setTickets((current) =>
-        current.map((ticket) => (ticket.id === json.item?.id ? json.item : ticket)),
+      setSuportes((current) =>
+        current.map((suporte) => (suporte.id === json.item?.id ? json.item : suporte)),
       );
     } catch {
-      setTickets(previous);
+      setSuportes(previous);
       setError("Falha ao atualizar status");
     }
   }
 
-  async function handleDrop(toStatus: TicketStatus) {
+  async function handleDrop(toStatus: SuporteStatus) {
     if (!dragging || !isPrivileged) return;
     if (dragging.from === toStatus) {
       setDragging(null);
       return;
     }
-    const ticketId = dragging.id;
+    const suporteId = dragging.id;
     setDragging(null);
-    await updateStatus(ticketId, toStatus);
+    await updateStatus(suporteId, toStatus);
   }
 
   async function submitCreate() {
     setCreating(true);
     setCreateError(null);
     try {
-      const res = await fetch("/api/chamados", {
+      const res = await fetch("/api/suportes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -216,16 +216,16 @@ export default function KanbanItPage() {
           priority: createDraft.priority,
         }),
       });
-      const json = (await res.json().catch(() => ({}))) as { item?: TicketItem; error?: string };
+      const json = (await res.json().catch(() => ({}))) as { item?: SuporteItem; error?: string };
       if (!res.ok || !json.item) {
-        setCreateError(json?.error || "Erro ao criar chamado");
+        setCreateError(json?.error || "Erro ao criar suporte");
         return;
       }
       setCreateOpen(false);
       setCreateDraft({ title: "", description: "", type: "tarefa", priority: "medium" });
-      setTickets((current) => [json.item as TicketItem, ...current]);
+      setSuportes((current) => [json.item as SuporteItem, ...current]);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao criar chamado";
+      const msg = err instanceof Error ? err.message : "Erro ao criar suporte";
       setCreateError(msg);
     } finally {
       setCreating(false);
@@ -282,9 +282,9 @@ export default function KanbanItPage() {
     <div className="p-6 space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Chamados</h1>
+          <h1 className="text-2xl font-semibold">Suportes</h1>
           <p className="text-sm text-(--tc-text-muted,#6b7280)">
-            Visão completa do fluxo de chamados para desenvolvimento.
+            Visão completa do fluxo de suportes para desenvolvimento.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -299,16 +299,16 @@ export default function KanbanItPage() {
             type="button"
             onClick={() => setCreateOpen(true)}
             className="flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-5 py-3 text-base font-semibold shadow-lg text-white hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/60"
-            aria-label="Criar chamado"
+            aria-label="Criar suporte"
           >
             <FiPlus size={20} />
-            <span className="hidden sm:inline">Novo chamado</span>
+            <span className="hidden sm:inline">Novo suporte</span>
           </button>
         </div>
       </header>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
-      {loadingTickets && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
+      {loadingSuportes && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
 
 
       {user?.id && (
@@ -413,57 +413,57 @@ export default function KanbanItPage() {
               </span>
             </div>
             <div className="mt-3 space-y-3">
-              {(grouped[column.key] ?? []).map((ticket) => {
-                const creatorLabel = ticket.createdByName || ticket.createdByEmail || ticket.createdBy || "-";
+              {(grouped[column.key] ?? []).map((suporte) => {
+                const creatorLabel = suporte.createdByName || suporte.createdByEmail || suporte.createdBy || "-";
                 return (
-                  <div key={ticket.id} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 text-left shadow-sm">
+                  <div key={suporte.id} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 text-left shadow-sm">
                     <button
                       type="button"
-                      draggable={isPrivileged && (user?.id === ticket.createdBy || isPrivilegedRole(user?.role))}
-                      onDragStart={isPrivileged && (user?.id === ticket.createdBy || isPrivilegedRole(user?.role)) ? (event) => {
-                        event.dataTransfer.setData("text/plain", ticket.id);
+                      draggable={isPrivileged && (user?.id === suporte.createdBy || isPrivilegedRole(user?.role))}
+                      onDragStart={isPrivileged && (user?.id === suporte.createdBy || isPrivilegedRole(user?.role)) ? (event) => {
+                        event.dataTransfer.setData("text/plain", suporte.id);
                         event.dataTransfer.effectAllowed = "move";
-                        handleDragStart(ticket);
+                        handleDragStart(suporte);
                       } : undefined}
-                      onDragEnd={isPrivileged && (user?.id === ticket.createdBy || isPrivilegedRole(user?.role)) ? () => setDragging(null) : undefined}
-                      onClick={() => setSelectedTicket(ticket)}
+                      onDragEnd={isPrivileged && (user?.id === suporte.createdBy || isPrivilegedRole(user?.role)) ? () => setDragging(null) : undefined}
+                      onClick={() => setSelectedSuporte(suporte)}
                       className="w-full text-left"
-                      disabled={!(isPrivileged && (user?.id === ticket.createdBy || isPrivilegedRole(user?.role)))}
+                      disabled={!(isPrivileged && (user?.id === suporte.createdBy || isPrivilegedRole(user?.role)))}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                          {ticket.code || `CH-${ticket.id.slice(0, 6).toUpperCase()}`}
+                          {suporte.code || `SP-${suporte.id.slice(0, 6).toUpperCase()}`}
                         </p>
                         <span className="text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                          {getTicketStatusLabel(normalizeKanbanStatus(ticket.status), statusOptions)}
+                          {getSuporteStatusLabel(normalizeKanbanStatus(suporte.status), statusOptions)}
                         </span>
                       </div>
-                      <p className="mt-2 text-sm font-semibold">{ticket.title || "Sem titulo"}</p>
+                      <p className="mt-2 text-sm font-semibold">{suporte.title || "Sem titulo"}</p>
                       <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">
-                        {shortText(ticket.description, 100)}
+                        {shortText(suporte.description, 100)}
                       </p>
                       <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                        <span>Tipo: {ticket.type || "tarefa"}</span>
-                        <span>Prioridade: {ticket.priority || "medium"}</span>
+                        <span>Tipo: {suporte.type || "tarefa"}</span>
+                        <span>Prioridade: {suporte.priority || "medium"}</span>
                       </div>
                       <div className="mt-2 text-[11px] text-(--tc-text-muted,#6b7280) space-y-1">
                         <p>Criador: {creatorLabel}</p>
-                        <p>Criado: {formatDate(ticket.createdAt)}</p>
-                        <p>Atualizado: {formatDate(ticket.updatedAt)}</p>
+                        <p>Criado: {formatDate(suporte.createdAt)}</p>
+                        <p>Atualizado: {formatDate(suporte.updatedAt)}</p>
                       </div>
                     </button>
                     <div className="mt-3">
-                      <label className="sr-only" htmlFor={`status-${ticket.id}`}>
+                      <label className="sr-only" htmlFor={`status-${suporte.id}`}>
                         Status
                       </label>
-                      {(isPrivileged && (user?.id === ticket.createdBy || isPrivilegedRole(user?.role))) ? (
+                      {(isPrivileged && (user?.id === suporte.createdBy || isPrivilegedRole(user?.role))) ? (
                         <select
-                          id={`status-${ticket.id}`}
-                          aria-label="Status do chamado"
-                          title="Status do chamado"
+                          id={`status-${suporte.id}`}
+                          aria-label="Status do suporte"
+                          title="Status do suporte"
                           className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[11px]"
-                          value={normalizeKanbanStatus(ticket.status)}
-                          onChange={(e) => updateStatus(ticket.id, e.target.value as TicketStatus)}
+                          value={normalizeKanbanStatus(suporte.status)}
+                          onChange={(e) => updateStatus(suporte.id, e.target.value as SuporteStatus)}
                         >
                           {statusOptions.map((opt) => (
                             <option key={opt.value} value={opt.value}>
@@ -474,17 +474,17 @@ export default function KanbanItPage() {
                       ) : (
                         <>
                           <select
-                            id={`status-${ticket.id}`}
-                            aria-label="Status do chamado"
-                            title="Status do chamado"
+                            id={`status-${suporte.id}`}
+                            aria-label="Status do suporte"
+                            title="Status do suporte"
                             className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-gray-100 px-2 py-1 text-[11px] text-gray-400 cursor-not-allowed"
-                            value={normalizeKanbanStatus(ticket.status)}
+                            value={normalizeKanbanStatus(suporte.status)}
                             disabled
                             tabIndex={-1}
                           >
-                            <option value={normalizeKanbanStatus(ticket.status)}>{getTicketStatusLabel(normalizeKanbanStatus(ticket.status), statusOptions)}</option>
+                            <option value={normalizeKanbanStatus(suporte.status)}>{getSuporteStatusLabel(normalizeKanbanStatus(suporte.status), statusOptions)}</option>
                           </select>
-                          <p className="mt-1 text-xs text-red-500">Você não tem permissão para mover o chamado</p>
+                          <p className="mt-1 text-xs text-red-500">Você não tem permissão para mover o suporte</p>
                         </>
                       )}
                     </div>
@@ -492,7 +492,7 @@ export default function KanbanItPage() {
                 );
               })}
               {(grouped[column.key] ?? []).length === 0 && (
-                <p className="text-xs text-(--tc-text-muted,#6b7280)">Sem chamados</p>
+                <p className="text-xs text-(--tc-text-muted,#6b7280)">Sem suportes</p>
               )}
             </div>
           </div>
@@ -501,16 +501,16 @@ export default function KanbanItPage() {
         </div>
       </section>
 
-      <TicketDetailsModal
-        open={Boolean(selectedTicket)}
-        ticket={selectedTicket}
-        onClose={() => setSelectedTicket(null)}
+      <SuporteDetailsModal
+        open={Boolean(selectedSuporte)}
+        suporte={selectedSuporte}
+        onClose={() => setSelectedSuporte(null)}
         canEditStatus={true}
         statusOptions={statusOptions}
-        onTicketUpdated={(updated) => {
-          setSelectedTicket(updated);
-          setTickets((current) =>
-            current.map((ticket) => (ticket.id === updated.id ? updated : ticket)),
+        onSuporteUpdated={(updated) => {
+          setSelectedSuporte(updated);
+          setSuportes((current) =>
+            current.map((suporte) => (suporte.id === updated.id ? updated : suporte)),
           );
         }}
       />
@@ -519,7 +519,7 @@ export default function KanbanItPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-lg rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_30px_80px_rgba(15,23,42,0.35)]">
             <div className="flex items-center justify-between border-b border-(--tc-border,#e5e7eb) px-6 py-4">
-              <h2 className="text-lg font-semibold">Novo chamado</h2>
+              <h2 className="text-lg font-semibold">Novo suporte</h2>
               <button
                 type="button"
                 onClick={() => setCreateOpen(false)}
@@ -538,18 +538,18 @@ export default function KanbanItPage() {
               <textarea
                 rows={4}
                 className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                placeholder="Descreva o chamado..."
+                placeholder="Descreva o suporte..."
                 value={createDraft.description}
                 onChange={(e) => setCreateDraft((prev) => ({ ...prev, description: e.target.value }))}
               />
               <div className="grid gap-2 sm:grid-cols-2">
-                <label className="sr-only" htmlFor="create-ticket-type">
-                  Tipo do chamado
+                <label className="sr-only" htmlFor="create-suporte-type">
+                  Tipo do suporte
                 </label>
                 <select
-                  id="create-ticket-type"
-                  aria-label="Tipo do chamado"
-                  title="Tipo do chamado"
+                  id="create-suporte-type"
+                  aria-label="Tipo do suporte"
+                  title="Tipo do suporte"
                   className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
                   value={createDraft.type}
                   onChange={(e) => setCreateDraft((prev) => ({ ...prev, type: e.target.value }))}
@@ -560,13 +560,13 @@ export default function KanbanItPage() {
                     </option>
                   ))}
                 </select>
-                <label className="sr-only" htmlFor="create-ticket-priority">
-                  Prioridade do chamado
+                <label className="sr-only" htmlFor="create-suporte-priority">
+                  Prioridade do suporte
                 </label>
                 <select
-                  id="create-ticket-priority"
-                  aria-label="Prioridade do chamado"
-                  title="Prioridade do chamado"
+                  id="create-suporte-priority"
+                  aria-label="Prioridade do suporte"
+                  title="Prioridade do suporte"
                   className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
                   value={createDraft.priority}
                   onChange={(e) => setCreateDraft((prev) => ({ ...prev, priority: e.target.value }))}

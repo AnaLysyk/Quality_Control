@@ -2,8 +2,8 @@ import "server-only";
 
 import type { RequestRecord } from "@/data/requestsStore";
 import type { Release } from "@/types/release";
-import type { TicketRecord } from "@/lib/ticketsStore";
-import type { TicketCommentRecord } from "@/lib/ticketCommentsStore";
+import type { SuporteRecord } from "@/lib/ticketsStore";
+import type { SuporteCommentRecord } from "@/lib/ticketCommentsStore";
 import {
   closeNotificationsByDedupeKey,
   createNotificationsForUsers,
@@ -140,114 +140,114 @@ export async function notifyManualRunFailure(
   });
 }
 
-export async function notifyTicketCreated(ticket: TicketRecord) {
+export async function notifySuporteCreated(suporte: SuporteRecord) {
   const recipients = Array.from(new Set([...(await resolveAdminUserIds()), ...(await resolveItDevUserIds())]));
   if (!recipients.length) return;
-  const requester = ticket.createdByName || ticket.createdByEmail || "Usuario";
-  const companyLabel = ticket.companySlug ? ` (${ticket.companySlug})` : "";
-  const description = ticket.description
-    ? `${requester}${companyLabel}: ${ticket.title}\n${ticket.description}`
-    : `${requester}${companyLabel}: ${ticket.title}`;
+  const requester = suporte.createdByName || suporte.createdByEmail || "Usuario";
+  const companyLabel = suporte.companySlug ? ` (${suporte.companySlug})` : "";
+  const description = suporte.description
+    ? `${requester}${companyLabel}: ${suporte.title}\n${suporte.description}`
+    : `${requester}${companyLabel}: ${suporte.title}`;
   await createNotificationsForUsers(recipients, {
-    type: "TICKET_CREATED",
-    title: "Novo chamado",
+    type: "SUPORTE_CREATED",
+    title: "Novo suporte",
     description,
-    companySlug: ticket.companySlug ?? null,
+    companySlug: suporte.companySlug ?? null,
     link: "/kanban-it",
-    ticketId: ticket.id,
-    dedupeKey: `ticket:${ticket.id}`,
+    suporteId: suporte.id,
+    dedupeKey: `suporte:${suporte.id}`,
   });
 }
 
-export async function notifyTicketStatusChanged(input: {
-  ticket: TicketRecord;
+export async function notifySuporteStatusChanged(input: {
+  suporte: SuporteRecord;
   actorId: string;
   nextStatusLabel: string;
   reason?: string | null;
 }) {
   const recipients = new Set<string>();
-  if (input.ticket.createdBy && input.ticket.createdBy !== input.actorId) {
-    recipients.add(input.ticket.createdBy);
+  if (input.suporte.createdBy && input.suporte.createdBy !== input.actorId) {
+    recipients.add(input.suporte.createdBy);
   }
-  if (input.ticket.assignedToUserId && input.ticket.assignedToUserId !== input.actorId) {
-    recipients.add(input.ticket.assignedToUserId);
+  if (input.suporte.assignedToUserId && input.suporte.assignedToUserId !== input.actorId) {
+    recipients.add(input.suporte.assignedToUserId);
   }
   if (!recipients.size) return;
   const description = input.reason
     ? `Status atualizado para ${input.nextStatusLabel}. Motivo: ${input.reason}`
     : `Status atualizado para ${input.nextStatusLabel}.`;
   await createNotificationsForUsers(Array.from(recipients), {
-    type: "TICKET_STATUS_CHANGED",
-    title: "Status do chamado atualizado",
+    type: "SUPORTE_STATUS_CHANGED",
+    title: "Status do suporte atualizado",
     description,
-    companySlug: input.ticket.companySlug ?? null,
+    companySlug: input.suporte.companySlug ?? null,
     link: "/meus-chamados",
-    ticketId: input.ticket.id,
-    dedupeKey: `ticket:${input.ticket.id}:status:${input.ticket.updatedAt}`,
+    suporteId: input.suporte.id,
+    dedupeKey: `suporte:${input.suporte.id}:status:${input.suporte.updatedAt}`,
   });
 }
 
-export async function notifyTicketCommentAdded(input: {
-  ticket: TicketRecord;
-  comment: TicketCommentRecord;
+export async function notifySuporteCommentAdded(input: {
+  suporte: SuporteRecord;
+  comment: SuporteCommentRecord;
   actorId: string;
   actorName?: string | null;
 }) {
   const recipients = new Set<string>();
-  if (input.ticket.createdBy && input.ticket.createdBy !== input.actorId) {
-    recipients.add(input.ticket.createdBy);
+  if (input.suporte.createdBy && input.suporte.createdBy !== input.actorId) {
+    recipients.add(input.suporte.createdBy);
   }
-  if (input.ticket.assignedToUserId && input.ticket.assignedToUserId !== input.actorId) {
-    recipients.add(input.ticket.assignedToUserId);
+  if (input.suporte.assignedToUserId && input.suporte.assignedToUserId !== input.actorId) {
+    recipients.add(input.suporte.assignedToUserId);
   }
-  if (!input.ticket.assignedToUserId && input.ticket.createdBy === input.actorId) {
+  if (!input.suporte.assignedToUserId && input.suporte.createdBy === input.actorId) {
     const itDevs = await resolveItDevUserIds();
     itDevs.filter((id) => id !== input.actorId).forEach((id) => recipients.add(id));
   }
   if (!recipients.size) return;
   const authorLabel = input.actorName || "Novo comentario";
   await createNotificationsForUsers(Array.from(recipients), {
-    type: "TICKET_COMMENT_ADDED",
-    title: "Novo comentario no chamado",
+    type: "SUPORTE_COMMENT_ADDED",
+    title: "Novo comentario no suporte",
     description: `${authorLabel}: ${input.comment.body.slice(0, 160)}`,
-    companySlug: input.ticket.companySlug ?? null,
+    companySlug: input.suporte.companySlug ?? null,
     link: "/meus-chamados",
-    ticketId: input.ticket.id,
-    dedupeKey: `ticket:${input.ticket.id}:comment:${input.comment.id}`,
+    suporteId: input.suporte.id,
+    dedupeKey: `suporte:${input.suporte.id}:comment:${input.comment.id}`,
   });
 }
 
-export async function notifyTicketReactionAdded(input: {
-  ticket: TicketRecord;
-  comment: TicketCommentRecord;
+export async function notifySuporteReactionAdded(input: {
+  suporte: SuporteRecord;
+  comment: SuporteCommentRecord;
   actorId: string;
 }) {
   if (input.comment.authorUserId === input.actorId) return;
   await createNotificationsForUsers([input.comment.authorUserId], {
-    type: "TICKET_REACTION_ADDED",
+    type: "SUPORTE_REACTION_ADDED",
     title: "Curtiram seu comentario",
     description: "Uma reacao foi adicionada ao seu comentario.",
-    companySlug: input.ticket.companySlug ?? null,
+    companySlug: input.suporte.companySlug ?? null,
     link: "/meus-chamados",
-    ticketId: input.ticket.id,
-    dedupeKey: `ticket:${input.ticket.id}:reaction:${input.comment.id}:${input.actorId}`,
+    suporteId: input.suporte.id,
+    dedupeKey: `suporte:${input.suporte.id}:reaction:${input.comment.id}:${input.actorId}`,
   });
 }
 
-export async function notifyTicketAssigned(input: {
-  ticket: TicketRecord;
+export async function notifySuporteAssigned(input: {
+  suporte: SuporteRecord;
   assigneeId: string;
   actorId: string;
 }) {
   if (!input.assigneeId || input.assigneeId === input.actorId) return;
   await createNotificationsForUsers([input.assigneeId], {
-    type: "TICKET_ASSIGNED",
-    title: "Chamado atribuido",
-    description: `Voce foi atribuido ao chamado ${input.ticket.title}.`,
-    companySlug: input.ticket.companySlug ?? null,
+    type: "SUPORTE_ASSIGNED",
+    title: "Suporte atribuido",
+    description: `Voce foi atribuido ao suporte ${input.suporte.title}.",
+    companySlug: input.suporte.companySlug ?? null,
     link: "/kanban-it",
-    ticketId: input.ticket.id,
-    dedupeKey: `ticket:${input.ticket.id}:assigned:${input.assigneeId}`,
+    suporteId: input.suporte.id,
+    dedupeKey: `suporte:${input.suporte.id}:assigned:${input.assigneeId}`,
   });
 }
 

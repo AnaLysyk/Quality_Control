@@ -20,7 +20,25 @@ describe('API /api/companies/[companyId]/tickets', () => {
     expect(resList.status).toBe(200);
     expect(Array.isArray(resList.body)).toBe(true);
   });
-});
+  });
+  describe('API /api/companies/[companyId]/suportes', () => {
+    const companyId = 'test-company';
+    it('deve criar e listar suportes multiempresa', async () => {
+      jest.setTimeout(20000);
+      const resCreate = await request(baseUrl)
+        .post(`/api/companies/${companyId}/suportes`)
+        .send({ titulo: 'Suporte Teste', descricao: 'Descrição', criadoPor: 'user-1' });
+      if (resCreate.status !== 201) {
+        console.error('Erro ao criar suporte:', resCreate.status, resCreate.body);
+      }
+      expect(resCreate.status).toBe(201);
+      expect(resCreate.body.titulo).toBe('Suporte Teste');
+
+      const resList = await request(baseUrl).get(`/api/companies/${companyId}/suportes`);
+      expect(resList.status).toBe(200);
+      expect(Array.isArray(resList.body)).toBe(true);
+    });
+  });
 
 describe('API /api/chamados (public)', () => {
   it('deve criar chamado sem autenticação', async () => {

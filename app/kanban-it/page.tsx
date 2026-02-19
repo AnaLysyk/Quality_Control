@@ -205,7 +205,7 @@ export default function KanbanItPage() {
     setCreating(true);
     setCreateError(null);
     try {
-      const res = await fetch("/api/tickets", {
+      const res = await fetch("/api/chamados", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

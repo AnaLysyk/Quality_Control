@@ -1,9 +1,13 @@
 ﻿import React from "react";
 
+type TicketStatusOption = { value: string; label: string };
 type TicketDetailsModalProps = {
 	open: boolean;
 	ticket: any;
 	onClose: () => void;
+	canEditStatus?: boolean;
+	statusOptions?: TicketStatusOption[];
+	onTicketUpdated?: (updated: any) => void;
 };
 
 const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({ open, ticket, onClose }) => {

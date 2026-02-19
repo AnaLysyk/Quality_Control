@@ -4,7 +4,7 @@ import { listLocalUsers, updateLocalUser } from "@/lib/auth/localStore";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 // PATCH: Edita um usuário existente
-export async function PATCH(req: NextRequest, context: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, context: { params: any }) {
   // Permite autenticação fake para testes E2E
   let testAdmin = false;
   let testRole = 'admin';
@@ -34,7 +34,8 @@ export async function PATCH(req: NextRequest, context: { params: { id: string } 
       return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
     }
   }
-  const { id } = context.params;
+  const params = typeof context.params.then === "function" ? await context.params : context.params;
+  const { id } = params;
   const data = await req.json().catch(() => null);
   if (!id) {
     return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });

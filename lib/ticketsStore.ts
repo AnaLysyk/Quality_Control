@@ -592,7 +592,10 @@ export async function createTicket(input: {
   const title = sanitizeText(input.title, 120);
   const description = sanitizeText(input.description, 2000);
   const type = normalizeType(input.type);
-  if (!title && !description) return null;
+  if (!title && !description) {
+    console.error('[createTicket] Título e descrição recebidos:', { title: input.title, description: input.description });
+    return null;
+  }
 
   const now = new Date().toISOString();
   const store = await readStore();

@@ -1,2 +1,13 @@
-// Alias para manter compatibilidade após refatoração
-export { default } from './TicketDetailsModal';
+import TicketDetailsModal from './TicketDetailsModal';
+
+// Wrapper para aceitar prop 'suporte' e repassar como 'ticket'
+export default function SuporteDetailsModal(props: any) {
+	const { suporte, onSuporteUpdated, ...rest } = props;
+	return (
+		<TicketDetailsModal
+			{...rest}
+			ticket={suporte}
+			onTicketUpdated={onSuporteUpdated}
+		/>
+	);
+}

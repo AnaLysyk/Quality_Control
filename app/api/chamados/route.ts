@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 import { createSuporte, listAllSuportes, listSuportesForUser } from "@/lib/ticketsStore";
-import { appendTicketEvent } from "@/lib/ticketEventsStore";
+import { appendTicketEvent as appendSuporteEvent } from "@/lib/suporteEventsStore";
 import { notifySuporteCreated } from "@/lib/notificationService";
 import { attachAssigneeInfo, attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 import { authenticateRequest } from "@/lib/jwtAuth";
@@ -55,10 +55,12 @@ export async function POST(req: Request) {
     }
 
     appendSuporteEvent({
-      suporteId: suporte.id,
-      type: "CREATED",
-      actorUserId: suporte.createdBy ?? null,
-      payload: { title: suporte.title },
+      await appendSuporteEvent({
+        suporteId: suporte.id,
+        type: "CREATED",
+        actorUserId: suporte.createdBy ?? null,
+        payload: { title: suporte.title },
+      });
     }).catch((err) => {
       console.error("Falha ao registrar evento de suporte:", err);
     });

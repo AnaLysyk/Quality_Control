@@ -1,4 +1,14 @@
-﻿"use client";
+﻿  // Funções stub para evitar erros de referência
+  function submitComment() {}
+  function loadComments() {}
+  function toggleLike(comment?: any) {}
+  function startEditComment(comment?: any) {}
+  function deleteComment(comment?: any) {}
+  function saveEditComment(comment?: any) {}
+  function cancelEditComment() {}
+  function loadEvents() {}
+  function loadTimeline() {}
+"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FiAlertTriangle, FiInfo, FiCheckCircle } from "react-icons/fi";

@@ -4,9 +4,14 @@ import { describe, it, expect } from '@jest/globals';
 const baseUrl = 'http://localhost:3000';
 
 describe('API /api/companies/[companyId]/users', () => {
-  const companyId = 'test-company';
+  const companyId = 'cmp_f9323403';
   it('deve criar e listar usuários', async () => {
     jest.setTimeout(20000);
+    // Garante que a empresa existe antes de criar o usuário
+    await request(baseUrl)
+      .post('/api/companies')
+      .send({ name: 'Empresa Teste', slug: companyId });
+
     const resCreate = await request(baseUrl)
       .post(`/api/companies/${companyId}/users`)
       .set('x-test-admin', 'true')

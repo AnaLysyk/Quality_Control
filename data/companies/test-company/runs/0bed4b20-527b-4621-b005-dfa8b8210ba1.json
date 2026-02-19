@@ -1,0 +1,26 @@
+{
+  "id": "0bed4b20-527b-4621-b005-dfa8b8210ba1",
+  "name": "Run Teste",
+  "projectId": "proj-1",
+  "columns": [
+    {
+      "id": "backlog",
+      "title": "Backlog"
+    },
+    {
+      "id": "in_progress",
+      "title": "Em andamento"
+    },
+    {
+      "id": "passed",
+      "title": "Passou"
+    },
+    {
+      "id": "failed",
+      "title": "Falhou"
+    }
+  ],
+  "cases": [],
+  "createdAt": "2026-02-19T01:36:12.077Z",
+  "metrics": null
+}

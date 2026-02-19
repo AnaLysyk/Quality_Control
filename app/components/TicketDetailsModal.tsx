@@ -1,11 +1,21 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { FiAlertTriangle, FiInfo, FiCheckCircle } from "react-icons/fi";
+type TicketInsights = {
+  daysSinceLastUpdate: number;
+  hasAssignee: boolean;
+  commentCount: number;
+  lastCommentFromClient: boolean;
+  statusAge: number;
+  riskLevel: "low" | "medium" | "high";
+};
 import { isDevRole } from "@/lib/rbac/devAccess";
 import { FiHeart, FiMessageSquare, FiRefreshCw, FiX } from "react-icons/fi";
 import styles from "./TicketDetailsModal.module.css";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { TICKET_STATUS_OPTIONS, getTicketStatusLabel, type TicketStatus } from "@/lib/ticketsStatus";
+
 
 type TicketItem = {
   id: string;
@@ -25,47 +35,24 @@ type TicketItem = {
   assignedToName?: string | null;
   assignedToEmail?: string | null;
   companySlug?: string | null;
-  companyId?: string | null;
 };
+const PRIORITY_OPTIONS = [
+  { value: "medium", label: "Média" },
+  { value: "high", label: "Alta" },
+];
 
-type TicketComment = {
-  id: string;
-  ticketId: string;
-  authorUserId: string;
-  authorName?: string | null;
-  body: string;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  reactions?: { like: number };
-  viewerHasLiked?: boolean;
-};
-
-type TicketEvent = {
-  id: string;
-  ticketId: string;
-  type: string;
-  payload?: Record<string, unknown> | null;
-  actorUserId?: string | null;
-  actorName?: string | null;
-  actorEmail?: string | null;
-  createdAt: string;
-};
-
-type TimelineItem = {
-  from: TicketStatus;
-  to: TicketStatus;
-  changedById: string;
-  at: string;
-};
-
-type AssigneeItem = {
-  id: string;
-  name: string;
-  email: string;
-  role?: string | null;
-  active?: boolean;
-};
+// Simplificado: aceita qualquer tipo para event, retorna string básica
+function formatEventLabel(event: any, options?: Array<{ value: TicketStatus; label: string }>) {
+  const base = event?.type || "Evento";
+  if (event?.type === "STATUS_CHANGED") {
+    const from = event.payload?.from ? String(event.payload.from) : "";
+    const to = event.payload?.to ? String(event.payload.to) : "";
+    if (from && to) {
+      return `${base}: ${getTicketStatusLabel(from as TicketStatus, options)} -> ${getTicketStatusLabel(to as TicketStatus, options)}`;
+    }
+  }
+  return base;
+}
 
 type Props = {
   open: boolean;
@@ -76,46 +63,11 @@ type Props = {
   onTicketUpdated?: (ticket: TicketItem) => void;
 };
 
-const EVENT_LABELS: Record<string, string> = {
-  CREATED: "Chamado criado",
-  STATUS_CHANGED: "Status alterado",
-  COMMENT_ADDED: "Comentario adicionado",
-  COMMENT_UPDATED: "Comentario atualizado",
-  COMMENT_DELETED: "Comentario removido",
-  REACTION_ADDED: "Reacao adicionada",
-  ASSIGNED: "Chamado atribuido",
-  UPDATED: "Detalhes atualizados",
-};
-
-const TYPE_OPTIONS = [
-  { value: "bug", label: "Bug" },
-  { value: "melhoria", label: "Melhoria" },
-  { value: "tarefa", label: "Tarefa" },
-];
-
-const PRIORITY_OPTIONS = [
-  { value: "low", label: "Baixa" },
-  { value: "medium", label: "Média" },
-  { value: "high", label: "Alta" },
-];
-
-function formatEventLabel(event: TicketEvent, options?: Array<{ value: TicketStatus; label: string }>) {
-  const base = EVENT_LABELS[event.type] ?? event.type;
-  if (event.type === "STATUS_CHANGED") {
-    const from = event.payload?.from ? String(event.payload.from) : "";
-    const to = event.payload?.to ? String(event.payload.to) : "";
-    if (from && to) {
-      return `${base}: ${getTicketStatusLabel(from as TicketStatus, options)} -> ${getTicketStatusLabel(to as TicketStatus, options)}`;
-    }
-  }
-  return base;
-}
-
 export default function TicketDetailsModal({ open, ticket, onClose, canEditStatus, statusOptions, onTicketUpdated }: Props) {
   const { user } = useAuthUser();
   const [tab, setTab] = useState<"details" | "comments" | "history" | "timeline">("details");
-  const [comments, setComments] = useState<TicketComment[]>([]);
-  const [events, setEvents] = useState<TicketEvent[]>([]);
+  const [comments, setComments] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [commentBody, setCommentBody] = useState("");
@@ -126,9 +78,9 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
   const [editingSaving, setEditingSaving] = useState(false);
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
-  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
+  const [timelineItems, setTimelineItems] = useState<any[]>([]);
   const [timelineLoading, setTimelineLoading] = useState(false);
-  const [assignees, setAssignees] = useState<AssigneeItem[]>([]);
+  const [assignees, setAssignees] = useState<any[]>([]);
   const [assigneesLoading, setAssigneesLoading] = useState(false);
   const [assigneeError, setAssigneeError] = useState<string | null>(null);
   const [assigning, setAssigning] = useState(false);
@@ -143,7 +95,32 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
   const [detailsSaving, setDetailsSaving] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
 
+  // ticketId precisa ser declarado antes do useEffect
   const ticketId = ticket?.id ?? null;
+
+  // Ticket Insights
+  const [insights, setInsights] = useState<TicketInsights | null>(null);
+  const [loadingInsights, setLoadingInsights] = useState(false);
+  const [insightsError, setInsightsError] = useState<string | null>(null);
+  // Carrega insights ao abrir modal
+  useEffect(() => {
+    if (!open || !ticketId) {
+      setInsights(null);
+      setInsightsError(null);
+      return;
+    }
+    setLoadingInsights(true);
+    setInsightsError(null);
+    fetch(`/api/chamados/${ticketId}/insights`, { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.insights) setInsights(data.insights);
+        else setInsightsError(data?.error || "Erro ao carregar insights");
+      })
+      .catch(() => setInsightsError("Erro ao carregar insights"))
+      .finally(() => setLoadingInsights(false));
+  }, [open, ticketId]);
+
   const codeLabel = ticket?.code ?? null;
   const assignedLabel =
     ticket?.assignedToName ||
@@ -181,560 +158,75 @@ export default function TicketDetailsModal({ open, ticket, onClose, canEditStatu
     }
   }, [open]);
 
-  useEffect(() => {
-    if (!open || !ticket) return;
-    setDetailsDraft({
-      title: ticket.title ?? "",
-      description: ticket.description ?? "",
-      priority: ticket.priority ?? "medium",
-      type: ticket.type ?? "tarefa",
-    });
-    setEditingDetails(false);
-    setDetailsError(null);
-  }, [open, ticket]);
-
-  useEffect(() => {
-    if (!open) return;
-    setSelectedAssignee(ticket?.assignedToUserId ?? "");
-  }, [open, ticket?.assignedToUserId]);
-
-  useEffect(() => {
-    if (!open || !canAssign) return;
-    let active = true;
-    setAssigneesLoading(true);
-    setAssigneeError(null);
-    const endpoint = ticket?.companyId
-      ? `/api/admin/users?client_id=${encodeURIComponent(ticket.companyId)}`
-      : "/api/admin/users";
-    fetch(endpoint, { credentials: "include", cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => {
-        if (!active) return;
-        const items = Array.isArray(data?.items) ? (data.items as AssigneeItem[]) : [];
-        const filtered = items.filter((item) => {
-          const role = (item.role ?? "").toLowerCase();
-          return role === "it_dev" || role === "dev" || role === "developer";
-        });
-        setAssignees(filtered);
-      })
-      .catch((err) => {
-        if (!active) return;
-        const msg = err instanceof Error ? err.message : "Erro ao carregar desenvolvedores";
-        setAssignees([]);
-        setAssigneeError(msg);
-      })
-      .finally(() => {
-        if (!active) return;
-        setAssigneesLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [open, canAssign, ticket?.companyId]);
-
-  const loadComments = useCallback(async () => {
-    if (!ticketId) return;
-    setLoadingComments(true);
-    setCommentError(null);
-    try {
-      const res = await fetch(`/api/chamados/${ticketId}/comments`, { credentials: "include", cache: "no-store" });
-      const json = (await res.json().catch(() => ({}))) as { items?: TicketComment[]; error?: string };
-      if (!res.ok) {
-        setCommentError(json?.error || "Erro ao carregar comentarios");
-        setComments([]);
-        return;
-      }
-      setComments(Array.isArray(json.items) ? json.items : []);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao carregar comentarios";
-      setCommentError(msg);
-    } finally {
-      setLoadingComments(false);
-    }
-  }, [ticketId]);
-
-  const loadEvents = useCallback(async () => {
-    if (!ticketId) return;
-    setLoadingEvents(true);
-    try {
-      const res = await fetch(`/api/chamados/${ticketId}/events`, { credentials: "include", cache: "no-store" });
-      const json = (await res.json().catch(() => ({}))) as { items?: TicketEvent[] };
-      if (!res.ok) {
-        setEvents([]);
-        return;
-      }
-      setEvents(Array.isArray(json.items) ? json.items : []);
-    } finally {
-      setLoadingEvents(false);
-    }
-  }, [ticketId]);
-
-  const loadTimeline = useCallback(async () => {
-    if (!ticketId) return;
-    setTimelineLoading(true);
-    try {
-      const res = await fetch(`/api/chamados/${ticketId}/timeline`, { credentials: "include", cache: "no-store" });
-      const json = (await res.json().catch(() => ({}))) as { items?: TimelineItem[] };
-      if (!res.ok) {
-        setTimelineItems([]);
-        return;
-      }
-      const items = Array.isArray(json.items) ? json.items : [];
-      setTimelineItems(items);
-    } finally {
-      setTimelineLoading(false);
-    }
-  }, [ticketId]);
-
-  useEffect(() => {
-    if (!open) return;
-    loadComments();
-    loadEvents();
-    loadTimeline();
-  }, [open, loadComments, loadEvents, loadTimeline]);
-
-  async function submitComment() {
-    if (!ticketId) return;
-    setCommentSaving(true);
-    setCommentError(null);
-    try {
-      const res = await fetch(`/api/chamados/${ticketId}/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ body: commentBody }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setCommentError(json?.error || "Erro ao salvar comentario");
-        return;
-      }
-      setCommentBody("");
-      await loadComments();
-      await loadEvents();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao salvar comentario";
-      setCommentError(msg);
-    } finally {
-      setCommentSaving(false);
-    }
-  }
-
-  async function toggleLike(comment: TicketComment) {
-    if (!ticketId) return;
-    const hasLiked = comment.viewerHasLiked;
-    const endpoint = hasLiked
-      ? `/api/comments/${comment.id}/reactions/like`
-      : `/api/comments/${comment.id}/reactions`;
-    const method = hasLiked ? "DELETE" : "POST";
-    const body = hasLiked ? undefined : JSON.stringify({ type: "like" });
-    await fetch(endpoint, {
-      method,
-      headers: hasLiked ? undefined : { "Content-Type": "application/json" },
-      credentials: "include",
-      body,
-    });
-    await loadComments();
-  }
-
-  function startEditComment(comment: TicketComment) {
-    setEditingCommentId(comment.id);
-    setEditingCommentBody(comment.body);
-  }
-
-  function cancelEditComment() {
-    setEditingCommentId(null);
-    setEditingCommentBody("");
-  }
-
-  async function saveEditComment(comment: TicketComment) {
-    setEditingSaving(true);
-    try {
-      const res = await fetch(`/api/comments/${comment.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ body: editingCommentBody }),
-      });
-      if (!res.ok) return;
-      await loadComments();
-      await loadEvents();
-      cancelEditComment();
-    } finally {
-      setEditingSaving(false);
-    }
-  }
-
-  async function deleteComment(comment: TicketComment) {
-    const res = await fetch(`/api/comments/${comment.id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-    if (res.ok) {
-      await loadComments();
-      await loadEvents();
-    }
-  }
-
-  function startEditDetails() {
-    if (!ticket) return;
-    setDetailsDraft({
-      title: ticket.title ?? "",
-      description: ticket.description ?? "",
-      priority: ticket.priority ?? "medium",
-      type: ticket.type ?? "tarefa",
-    });
-    setDetailsError(null);
-    setEditingDetails(true);
-  }
-
-  function cancelEditDetails() {
-    if (!ticket) return;
-    setDetailsDraft({
-      title: ticket.title ?? "",
-      description: ticket.description ?? "",
-      priority: ticket.priority ?? "medium",
-      type: ticket.type ?? "tarefa",
-    });
-    setDetailsError(null);
-    setEditingDetails(false);
-  }
-
-  async function saveDetails() {
-    if (!ticketId) return;
-    setDetailsSaving(true);
-    setDetailsError(null);
-    try {
-      const res = await fetch(`/api/chamados/${ticketId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          title: detailsDraft.title,
-          description: detailsDraft.description,
-          priority: detailsDraft.priority,
-          type: detailsDraft.type,
-        }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok || !json?.item) {
-        setDetailsError(json?.error || "Erro ao atualizar chamado");
-        return;
-      }
-      onTicketUpdated?.(json.item as TicketItem);
-      setEditingDetails(false);
-      await loadEvents();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao atualizar chamado";
-      setDetailsError(msg);
-    } finally {
-      setDetailsSaving(false);
-    }
-  }
-
-  async function updateStatus(nextStatus: TicketStatus) {
-    if (!ticketId) return;
-    setStatusUpdating(true);
-    setStatusError(null);
-    try {
-      const res = await fetch(`/api/chamados/${ticketId}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ status: nextStatus }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setStatusError(json?.error || "Erro ao atualizar status");
-        return;
-      }
-      if (json?.item && onTicketUpdated) {
-        onTicketUpdated(json.item);
-      }
-      await loadEvents();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao atualizar status";
-      setStatusError(msg);
-    } finally {
-      setStatusUpdating(false);
-    }
-  }
-
-  async function updateAssignment(nextAssignee: string) {
-    if (!ticketId) return;
-    setAssigning(true);
-    setAssigneeError(null);
-    try {
-      const res = await fetch(`/api/chamados/${ticketId}/assign`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ assignedToUserId: nextAssignee || null }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok || !json?.item) {
-        setAssigneeError(json?.error || "Erro ao atribuir");
-        return;
-      }
-      setSelectedAssignee(json.item.assignedToUserId ?? "");
-      onTicketUpdated?.(json.item as TicketItem);
-      await loadEvents();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao atribuir";
-      setAssigneeError(msg);
-    } finally {
-      setAssigning(false);
-    }
-  }
-
   if (!open || !ticket) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
       <div className={styles.modalResponsive}>
-        <div className={styles.modalResponsiveContent + " space-y-4"}>
-          {/* TODO: todo o conteúdo do modal permanece igual aqui, sem divs extras abertas/fechadas */}
+        {/* Botão de fechar no topo direito, sempre visível */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Fechar modal"
+          title="Fechar"
+          className={[
+            "absolute right-4 top-4 z-10 flex items-center justify-center rounded-full border border-(--tc-border,#e5e7eb) bg-white/90 text-(--tc-text,#0f172a) shadow hover:bg-red-100 hover:text-red-600 transition-colors w-9 h-9 p-0",
+            styles.closeButton
+          ].join(" ")}
+        >
+          <FiX size={22} />
+        </button>
+        <div className={styles.modalResponsiveContent + " space-y-4 pt-8"}>
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Chamado</p>
             <h2 className="text-lg font-semibold text-(--tc-text,#0f172a)">{ticket.title}</h2>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Fechar modal"
-            title="Fechar"
-            className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
-          >
-            <FiX />
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2 border-b border-(--tc-border,#e5e7eb) px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em]">
-          {(["details", "comments", "history", "timeline"] as const).map((key) => {
-            const label = key === "details" ? "Detalhes" : key === "comments" ? "Comentarios" : key === "history" ? "Historico" : "Timeline";
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setTab(key)}
-                aria-label={`Ir para ${label}`}
-                title={`Ir para ${label}`}
-                className={`rounded-full px-3 py-1 ${
-                  tab === key ? "bg-(--tc-accent,#ef0001) text-white" : "text-(--tc-text-muted,#6b7280)"
-                }`}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className={"px-2 sm:px-6 py-4 space-y-4 flex-1 overflow-auto " + styles.modalResponsiveContent}>
-          {tab === "details" && (
-            <>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Codigo</p>
-                  <p className="text-sm font-semibold">{codeLabel ?? "CH-000000"}</p>
+          {/* Bloco de Ticket Insights */}
+          <div className="mb-2">
+            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-(--tc-text-muted,#6b7280)">Ticket Insights</h3>
+            {loadingInsights && <span className="text-xs text-(--tc-text-muted,#6b7280)">Carregando insights...</span>}
+            {insightsError && <span className="text-xs text-red-600">{insightsError}</span>}
+            {insights && (
+              <>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {/* Dias sem atualização */}
+                  <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${insights.daysSinceLastUpdate > 3 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                    <FiInfo /> {insights.daysSinceLastUpdate}d sem atualização
+                  </span>
+                  {/* Responsável */}
+                  <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${insights.hasAssignee ? 'bg-green-100 text-green-800' : 'bg-rose-100 text-rose-700'}`}>
+                    {insights.hasAssignee ? <FiCheckCircle /> : <FiAlertTriangle />} {insights.hasAssignee ? 'Com responsável' : 'Sem responsável'}
+                  </span>
+                  {/* Comentários */}
+                  <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-800">
+                    <FiMessageSquare size={14} /> {insights.commentCount} comentários
+                  </span>
+                  {/* Último comentário do cliente */}
+                  {insights.lastCommentFromClient && (
+                    <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold bg-orange-100 text-orange-800">
+                      <FiAlertTriangle /> Último comentário do cliente
+                    </span>
+                  )}
+                  {/* Risco */}
+                  <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${insights.riskLevel === 'high' ? 'bg-rose-200 text-rose-800' : insights.riskLevel === 'medium' ? 'bg-yellow-200 text-yellow-900' : 'bg-green-200 text-green-900'}`}>
+                    <FiAlertTriangle /> Risco: {insights.riskLevel === 'high' ? 'Alto' : insights.riskLevel === 'medium' ? 'Médio' : 'Baixo'}
+                  </span>
                 </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Status</p>
-                  <p className="text-sm font-semibold">{getTicketStatusLabel(ticket.status, selectableStatusOptions)}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Prioridade</p>
-                  <p className="text-sm font-semibold">{ticket.priority ?? "medium"}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Tipo</p>
-                  <p className="text-sm font-semibold">{ticket.type || "Nao informado"}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Atribuido</p>
-                  <p className="text-sm font-semibold">{assignedLabel}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Tags</p>
-                  <p className="text-sm font-semibold">{tagsLabel}</p>
-                </div>
-              </div>
-              {canAssign && (
-                <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4 space-y-2">
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
-                    Responsavel pelo ticket
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <label className="sr-only" htmlFor="ticket-assignee-select">
-                      Responsavel pelo ticket
-                    </label>
-                    <select
-                      id="ticket-assignee-select"
-                      aria-label="Responsavel pelo ticket"
-                      title="Responsavel pelo ticket"
-                      className="rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
-                      value={selectedAssignee}
-                      onChange={(e) => updateAssignment(e.target.value)}
-                      disabled={assigning || assigneesLoading}
-                    >
-                      <option value="">Sem responsavel</option>
-                      {assignees.map((assignee) => (
-                        <option key={assignee.id} value={assignee.id}>
-                          {assignee.name || assignee.email}
-                        </option>
-                      ))}
-                    </select>
-                    {user?.id && (
-                      <button
-                        type="button"
-                        onClick={() => updateAssignment(user.id)}
-                        disabled={assigning || selectedAssignee === user.id}
-                        className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.3em]"
-                      >
-                        Assumir
-                      </button>
-                    )}
-                    {assigneesLoading && <span className="text-xs text-(--tc-text-muted,#6b7280)">Carregando...</span>}
-                  </div>
-                  {assigneeError && <p className="text-xs text-red-600">{assigneeError}</p>}
-                  {!assigneesLoading && assignees.length === 0 && (
-                    <p className="text-xs text-(--tc-text-muted,#6b7280)">Nenhum desenvolvedor disponivel.</p>
+                {/* Sugestão contextual */}
+                <div className="mt-2">
+                  {insights.riskLevel === 'high' && (
+                    <div className="text-xs text-rose-700 font-semibold flex items-center gap-1"><FiAlertTriangle /> Este ticket está parado ou sem responsável. Priorize!</div>
+                  )}
+                  {insights.riskLevel === 'medium' && (
+                    <div className="text-xs text-yellow-800 font-semibold flex items-center gap-1"><FiInfo /> Atenção: verifique atualização ou atribuição.</div>
+                  )}
+                  {insights.lastCommentFromClient && (
+                    <div className="text-xs text-orange-800 font-semibold flex items-center gap-1"><FiMessageSquare /> Cliente aguarda resposta.</div>
                   )}
                 </div>
-              )}
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Descricao</p>
-                <p className="mt-2 text-sm whitespace-pre-wrap text-(--tc-text-secondary,#4b5563)">
-                  {ticket.description || "Sem descricao."}
-                </p>
-              </div>
-              <div className="grid gap-2 text-xs text-(--tc-text-muted,#6b7280)">
-                <p>
-                  Criado em {new Date(ticket.createdAt).toLocaleString("pt-BR")}
-                  {ticket.createdByName || ticket.createdByEmail
-                    ? ` por ${ticket.createdByName || ticket.createdByEmail}`
-                    : ""}
-                </p>
-                <p>Atualizado em {new Date(ticket.updatedAt).toLocaleString("pt-BR")}</p>
-                {ticket.companySlug && <p>Empresa: {ticket.companySlug}</p>}
-              </div>
-
-              {canEditDetails && !editingDetails && (
-                <button
-                  type="button"
-                  onClick={startEditDetails}
-                  className="inline-flex items-center gap-2 rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
-                >
-                  Editar chamado
-                </button>
-              )}
-
-              {canEditDetails && editingDetails && (
-                <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4 space-y-3">
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
-                    Editar detalhes
-                  </p>
-                  <div className="space-y-2">
-                    <input
-                      className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                      placeholder="Titulo"
-                      value={detailsDraft.title}
-                      onChange={(e) => setDetailsDraft((prev) => ({ ...prev, title: e.target.value }))}
-                    />
-                    <textarea
-                      rows={4}
-                      className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                      placeholder="Descreva o chamado..."
-                      value={detailsDraft.description}
-                      onChange={(e) => setDetailsDraft((prev) => ({ ...prev, description: e.target.value }))}
-                    />
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <label className="sr-only" htmlFor="ticket-type-select">
-                      Tipo do chamado
-                    </label>
-                    <select
-                      id="ticket-type-select"
-                      aria-label="Tipo do chamado"
-                      title="Tipo do chamado"
-                      className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                      value={detailsDraft.type}
-                      onChange={(e) => setDetailsDraft((prev) => ({ ...prev, type: e.target.value }))}
-                    >
-                      {TYPE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                    <label className="sr-only" htmlFor="ticket-priority-select">
-                      Prioridade do chamado
-                    </label>
-                    <select
-                      id="ticket-priority-select"
-                      aria-label="Prioridade do chamado"
-                      title="Prioridade do chamado"
-                      className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                      value={detailsDraft.priority}
-                      onChange={(e) => setDetailsDraft((prev) => ({ ...prev, priority: e.target.value }))}
-                    >
-                      {PRIORITY_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={saveDetails}
-                      disabled={detailsSaving}
-                      className="rounded-lg bg-(--tc-surface-dark,#0b1a3c) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
-                    >
-                      {detailsSaving ? "Salvando" : "Salvar"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={cancelEditDetails}
-                      className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                  {detailsError && <p className="text-xs text-red-600">{detailsError}</p>}
-                </div>
-              )}
-              {canEditStatus && (
-                <div className="mt-4 rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4 space-y-2">
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
-                    Atualizar status
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <label className="sr-only" htmlFor="ticket-status-select">
-                      Atualizar status
-                    </label>
-                    <select
-                      id="ticket-status-select"
-                      aria-label="Atualizar status do chamado"
-                      title="Atualizar status do chamado"
-                      className="rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
-                      value={ticket.status}
-                      onChange={(e) => updateStatus(e.target.value as TicketStatus)}
-                      disabled={statusUpdating}
-                    >
-                      {selectableStatusOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                    {statusUpdating && <span className="text-xs text-(--tc-text-muted,#6b7280)">Salvando...</span>}
-                  </div>
-                  {statusError && <p className="text-xs text-red-600">{statusError}</p>}
-                </div>
-              )}
-            </>
-          )}
+              </>
+            )}
+          </div>
 
           {tab === "comments" && (
             <div className="space-y-4" data-testid="comments-tab-content">

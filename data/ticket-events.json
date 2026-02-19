@@ -1,6 +1,351 @@
 {
   "items": [
     {
+      "id": "c788b6bd-e058-4fdd-a22e-7806961f5b05",
+      "ticketId": "47f7e76a-5d44-494c-8a77-632936ab5439",
+      "type": "STATUS_CHANGED",
+      "payload": {
+        "from": "review",
+        "to": "done",
+        "reason": null
+      },
+      "actorUserId": "usr_dev",
+      "createdAt": "2026-02-19T10:57:50.537Z"
+    },
+    {
+      "id": "2edf8bf5-3c85-4a81-b946-11bb14a59519",
+      "ticketId": "47f7e76a-5d44-494c-8a77-632936ab5439",
+      "type": "STATUS_CHANGED",
+      "payload": {
+        "from": "backlog",
+        "to": "doing",
+        "reason": null
+      },
+      "actorUserId": "usr_dev",
+      "createdAt": "2026-02-19T05:03:37.210Z"
+    },
+    {
+      "id": "898df9fd-90df-4a16-9f3a-433d2e8c6d3f",
+      "ticketId": "b941699d-ddef-4ba8-bf13-0edfcd77cc3b",
+      "type": "UPDATED",
+      "payload": {
+        "title": "ZZXC",
+        "type": "tarefa",
+        "priority": "medium",
+        "tags": []
+      },
+      "actorUserId": "usr_dev",
+      "createdAt": "2026-02-19T03:15:29.410Z"
+    },
+    {
+      "id": "13835d3a-8dac-4f9c-a5c7-227b81149bc5",
+      "ticketId": "47f7e76a-5d44-494c-8a77-632936ab5439",
+      "type": "CREATED",
+      "payload": {
+        "title": "ZXCZXCX"
+      },
+      "actorUserId": "usr_dev",
+      "createdAt": "2026-02-19T03:12:22.552Z"
+    },
+    {
+      "id": "d71124cb-37c5-43bb-9314-e3937d43bb32",
+      "ticketId": "ef982f16-3ec5-4faf-9144-585b43980e83",
+      "type": "CREATED",
+      "payload": {
+        "title": "CZXCXZCZXCXZ"
+      },
+      "actorUserId": "usr_dev",
+      "createdAt": "2026-02-19T03:11:11.512Z"
+    },
+    {
+      "id": "ce295c0e-c22d-4f2f-bd0a-8af8271241f2",
+      "ticketId": "b941699d-ddef-4ba8-bf13-0edfcd77cc3b",
+      "type": "CREATED",
+      "payload": {
+        "title": "ZZXC"
+      },
+      "actorUserId": "usr_dev",
+      "createdAt": "2026-02-19T03:10:42.176Z"
+    },
+    {
+      "id": "d064e55f-b7ea-4d1a-b87b-23af899ad3af",
+      "ticketId": "840602b0-6ae2-4edb-aa40-0c8077c29811",
+      "type": "CREATED",
+      "payload": {
+        "title": "SDFDFD"
+      },
+      "actorUserId": "usr_dev",
+      "createdAt": "2026-02-19T03:03:37.311Z"
+    },
+    {
+      "id": "6deeebb6-37f5-40ca-8add-cbe98eabf2b9",
+      "ticketId": "19bc4a44-2c53-4fab-968d-f00e3333a251",
+      "type": "UPDATED",
+      "payload": {
+        "title": "Automated chamado admin-1771348207834",
+        "type": "tarefa",
+        "priority": "medium",
+        "tags": []
+      },
+      "actorUserId": "usr_dev",
+      "createdAt": "2026-02-19T02:21:55.718Z"
+    },
+    {
+      "id": "5e19b026-90ea-470d-a609-feb7e9264fcb",
+      "ticketId": "19bc4a44-2c53-4fab-968d-f00e3333a251",
+      "type": "COMMENT_ADDED",
+      "payload": {
+        "commentId": "f8c80ff8-65c8-4969-ab54-e826c828d5d4"
+      },
+      "actorUserId": "usr_dev",
+      "createdAt": "2026-02-19T02:20:46.996Z"
+    },
+    {
+      "id": "e61b1184-93b1-4594-9e4d-a14741ac7af5",
+      "ticketId": "19bc4a44-2c53-4fab-968d-f00e3333a251",
+      "type": "COMMENT_ADDED",
+      "payload": {
+        "commentId": "570d7a89-c9e9-47a9-9f4d-7af9182de89b"
+      },
+      "actorUserId": "usr_dev",
+      "createdAt": "2026-02-19T02:20:42.005Z"
+    },
+    {
+      "id": "cfcf88ee-895b-45fe-9fb4-a54db19e154d",
+      "ticketId": "19bc4a44-2c53-4fab-968d-f00e3333a251",
+      "type": "STATUS_CHANGED",
+      "payload": {
+        "from": "review",
+        "to": "backlog",
+        "reason": null
+      },
+      "actorUserId": "usr_dev",
+      "createdAt": "2026-02-19T02:20:32.888Z"
+    },
+    {
+      "id": "a30b103e-f3fe-4051-8347-83eabb07a5e0",
+      "ticketId": "19bc4a44-2c53-4fab-968d-f00e3333a251",
+      "type": "STATUS_CHANGED",
+      "payload": {
+        "from": "doing",
+        "to": "review",
+        "reason": null
+      },
+      "actorUserId": "usr_dev",
+      "createdAt": "2026-02-19T02:20:27.747Z"
+    },
+    {
+      "id": "72bdd4f7-59b7-4455-b3bc-ec966d659586",
+      "ticketId": "19bc4a44-2c53-4fab-968d-f00e3333a251",
+      "type": "ASSIGNED",
+      "payload": {
+        "from": null,
+        "to": "usr_itdev"
+      },
+      "actorUserId": null,
+      "createdAt": "2026-02-19T02:20:22.220Z"
+    },
+    {
+      "id": "261726f4-e990-4dda-a454-8acfd6ff5f88",
+      "ticketId": "e4788d8f-5c54-4020-b268-1f1c1dbec50d",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T02:09:54.113Z"
+    },
+    {
+      "id": "a1672d04-c93b-4a45-815a-13892db3b498",
+      "ticketId": "f254ccdb-a776-4ff9-946a-4bb0f6de6b6d",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T02:09:16.560Z"
+    },
+    {
+      "id": "8fce48fe-6114-469a-9e1d-adda2c09eb39",
+      "ticketId": "184e52bb-e5f3-44d1-8895-57340ee1f613",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:53:41.136Z"
+    },
+    {
+      "id": "25e88fb1-c585-4f49-be8e-f18935ea81f8",
+      "ticketId": "66b1c16c-45bb-4f1e-8232-bedcca17404b",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:52:18.053Z"
+    },
+    {
+      "id": "7b355e70-8d28-4d85-8087-1c8b55b5c2f6",
+      "ticketId": "d901e76a-c033-47f4-adb5-8d95865475a3",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:51:53.437Z"
+    },
+    {
+      "id": "23fdf970-5297-4594-b57b-4c53cb3630bf",
+      "ticketId": "76a2bf4a-15c1-4307-900d-2ee7ea0fa202",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:51:08.670Z"
+    },
+    {
+      "id": "dcfb1187-cfae-498e-bc36-fe85fe465941",
+      "ticketId": "b1329342-ca33-4db6-a17b-a355c07ac5a9",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:39:14.079Z"
+    },
+    {
+      "id": "f7d6e09a-60a9-4d0b-a57e-d79e7ee10148",
+      "ticketId": "24b9e106-c1be-4e3f-ad3a-f69412c16837",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:36:14.479Z"
+    },
+    {
+      "id": "78906a5b-aa6d-4a06-a579-acd237ac7d5b",
+      "ticketId": "c9935982-d3d3-4a53-8058-f58b2bb858a6",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:33:32.452Z"
+    },
+    {
+      "id": "c4e26566-b1b1-48b3-a5db-0653b0b5e5db",
+      "ticketId": "f5b01ed5-cb7d-4bd2-a2e1-76c8a62ea556",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:32:38.860Z"
+    },
+    {
+      "id": "f84853a0-4355-40de-885a-8009a7ffa12f",
+      "ticketId": "92ee30c9-f800-464c-a449-af6da5ecf06f",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:32:00.082Z"
+    },
+    {
+      "id": "dc5bcdba-b74d-419a-b6a3-72279f0753f5",
+      "ticketId": "1d176f3e-6c83-422b-87fd-3efe6e48e683",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:29:16.156Z"
+    },
+    {
+      "id": "a76841d5-66fe-4854-b78d-0d587b9be128",
+      "ticketId": "389d7f2e-5d10-4dae-a2e8-20f30370fad9",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:28:43.168Z"
+    },
+    {
+      "id": "32bb8fa1-24b2-4161-b904-e901dc5f180b",
+      "ticketId": "f1fe9d13-2436-4f9e-a9a2-dba616a08ea9",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:28:06.697Z"
+    },
+    {
+      "id": "2aa56c76-dfb0-4c5c-8344-ca41201ca056",
+      "ticketId": "4d7b1028-f516-4b03-a488-751a4419b14a",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:27:25.249Z"
+    },
+    {
+      "id": "ae81a02d-3fc1-48ed-ab02-9661b45f6d85",
+      "ticketId": "66329b4a-2847-479a-a807-51a8ce5a9dda",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:26:34.634Z"
+    },
+    {
+      "id": "3c705ea2-bf97-4f53-9888-e5c2a2d78fd9",
+      "ticketId": "3641761d-4ca3-4256-b846-f8aeff968f79",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:25:23.273Z"
+    },
+    {
+      "id": "6b896986-3e6c-4f6e-9f98-8b595de9af77",
+      "ticketId": "a69030e5-0057-4a75-b480-12b0e4c05bc2",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:23:42.971Z"
+    },
+    {
+      "id": "9b48c834-a787-4fc9-aa30-fd1bde5a6a23",
+      "ticketId": "46f2b3ef-f8f5-468b-aea1-699deb492f50",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:19:53.824Z"
+    },
+    {
+      "id": "2b0f157c-50e5-48e8-aa8d-e382c29fca71",
+      "ticketId": "ea00aa7a-c2c9-40ce-bd25-311d95c70a22",
+      "type": "CREATED",
+      "payload": {
+        "title": "Chamado Público"
+      },
+      "actorUserId": "anonymous",
+      "createdAt": "2026-02-19T01:19:05.159Z"
+    },
+    {
       "id": "cfe8f944-72cd-4c17-92fb-5432a4b08e9b",
       "ticketId": "55cc1598-5a93-41da-9a73-36a59b90edf3",
       "type": "CREATED",
@@ -1229,4 +1574,4 @@
       "createdAt": "2026-02-17T17:18:51.021Z"
     }
   ]
-}
+}}

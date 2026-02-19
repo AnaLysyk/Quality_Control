@@ -30,8 +30,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
       if (!boxRef.current?.contains(e.target as Node)) setOpen(false);
     }
     function esc(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
+}
     document.addEventListener("mousedown", close);
     document.addEventListener("keydown", esc);
     return () => {
@@ -64,27 +63,22 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
 
   const displayName = loading ? t("profileMenu.loading") : user?.name || t("profileMenu.userFallback");
 
-  // Se nao ha usuario e nao esta carregando, mostre um botao de login simples
+  // Universal session fallback: redireciona para login se não há usuário e não está carregando
   if (!loading && !user) {
-    return (
-      <button
-        type="button"
-        className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface-dark,#0f1828) px-3 py-2 text-sm text-white hover:bg-(--tc-surface-hover,#111a2a)"
-        onClick={() => router.push("/login")}
-      >
-        {t("profileMenu.signIn")}
-      </button>
-    );
+    useEffect(() => {
+      router.replace("/login");
+    }, [router]);
+    return null;
   }
 
   return (
-    <div className="relative" ref={boxRef}>
+      <div className="relative" ref={boxRef}>
       <button
         type="button"
         aria-label="Menu do usuario"
         aria-haspopup="menu"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center justify-center h-12 w-12 rounded-full border-2 border-(--tc-accent,#ef0001) bg-(--tc-surface-dark,#0f1828) text-white shadow-[0_8px_20px_rgba(0,0,0,0.22)] hover:border-(--tc-accent-dark,#c20000) hover:bg-(--tc-surface-hover,#111a2a) transition-all"
+          className="flex items-center justify-center h-12 w-12 rounded-full border-2 border-(--tc-accent,#ef0001) bg-[#0f172a] text-white shadow-[0_8px_20px_rgba(0,0,0,0.22)] hover:border-(--tc-accent-dark,#c20000) hover:bg-[#111a2a] transition-all"
       >
         <span className="sr-only">{displayName}</span>
         <svg
@@ -100,22 +94,22 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
         </svg>
       </button>
 
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border-2 border-(--tc-accent,#ef0001) bg-white text-[#0b1a3c] shadow-[0_16px_40px_rgba(15,23,42,0.18)]"
-        >
+        {open && (
+          <div
+            role="menu"
+            className="absolute right-0 mt-2 w-full sm:w-[20rem] max-w-xs sm:max-w-sm md:max-w-md min-w-0 rounded-2xl border-2 border-(--tc-accent,#ef0001) bg-[#0f172a] text-white shadow-[0_16px_40px_rgba(15,23,42,0.18)]"
+          >
           <div className="px-6 py-5 space-y-2">
             <div className="flex items-center gap-3">
               <div className="rounded-full bg-(--tc-accent,#ef0001) text-white flex items-center justify-center h-12 w-12 font-bold text-xl uppercase">
                 {user?.name?.[0] ?? "U"}
               </div>
               <div>
-                <div className="font-bold text-lg leading-tight text-[#0b1a3c]">{user?.name ?? t("profileMenu.userFallback")}</div>
+                <div className="font-bold text-lg leading-tight text-white">{user?.name ?? t("profileMenu.userFallback")}</div>
                 {user?.email ? (
-                  <div className="text-xs text-(--tc-text-muted,#6b7280) truncate">{user.email}</div>
+                  <div className="text-xs text-blue-100 truncate">{user.email}</div>
                 ) : (
-                  <div className="text-xs text-(--tc-text-muted,#cbd5e1)">{t("profileMenu.notAuthenticated")}</div>
+                  <div className="text-xs text-blue-200">{t("profileMenu.notAuthenticated")}</div>
                 )}
                 {user?.role && (
                   <div className="text-xs mt-1 px-2 py-0.5 rounded bg-(--tc-accent,#ef0001)/10 text-(--tc-accent,#ef0001) inline-block font-semibold uppercase tracking-wider">{user.role}</div>
@@ -129,7 +123,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
                     {activeClientName}
                   </button>
                 ) : (
-                  <span className="text-[#0b1a3c] font-semibold">{activeClientName}</span>
+                  <span className="text-white font-semibold">{activeClientName}</span>
                 )}
               </div>
             )}
@@ -162,7 +156,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
                   setOpen(false);
                   onOpenTeam();
                 }}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-[#0b1a3c] hover:bg-(--tc-surface-hover,#111a2a)"
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white hover:bg-blue-900"
               >
                 {t("profileMenu.team")}
               </button>
@@ -181,7 +175,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
                   router.push("/settings");
                 }
               }}
-              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-[#0b1a3c] hover:bg-(--tc-surface-hover,#111a2a)"
+              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white hover:bg-blue-900"
             >
               {t("profileMenu.settings")}
             </button>

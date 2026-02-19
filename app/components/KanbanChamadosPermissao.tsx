@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface KanbanItem {
   id: string;
@@ -27,6 +27,16 @@ const initialColumns: KanbanColumn[] = [
 
 export default function KanbanChamados({ userId, isAdmin, empresasVinculadas }: KanbanChamadosProps) {
   const [columns, setColumns] = useState<KanbanColumn[]>(initialColumns);
+  // Só dev pode movimentar chamados
+  const isDev = userId?.startsWith('dev') || userId?.startsWith('it_dev');
+  const kanbanUnlocked = isDev;
+
+  // Só pode editar chamado se for o criador
+  const canEdit = (item: KanbanItem) => {
+    if (isAdmin && item.createdBy === userId) return true;
+    if (item.createdBy === userId) return true;
+    return false;
+  };
 
   // Permissão para deletar item
   const canDelete = (item: KanbanItem) => {
@@ -66,6 +76,9 @@ export default function KanbanChamados({ userId, isAdmin, empresasVinculadas }: 
 
   return (
     <div className="flex gap-6 overflow-x-auto py-4">
+      {kanbanUnlocked && (
+        <div className="w-full text-center text-green-700 text-xs mb-2">Movimentação liberada apenas para DEV</div>
+      )}
       {columns.map(col => (
         <div key={col.id} className="min-w-55 bg-white border border-gray-200 rounded-lg shadow-md p-4 flex flex-col items-center">
           <div className="font-semibold mb-2">{col.name}</div>
@@ -73,11 +86,12 @@ export default function KanbanChamados({ userId, isAdmin, empresasVinculadas }: 
             {col.items.map(item => (
               <div key={item.id} className="card-tc flex items-center justify-between px-3 py-2">
                 <span>{item.title}</span>
-                {canDelete(item) && (
+                {canEdit(item) && (
                   <button
                     className="btn-tc ml-2 px-2 py-1 text-xs"
                     onClick={() => handleDeleteItem(col.id, item.id)}
                     title="Remover chamado"
+                    disabled={!kanbanUnlocked && !isAdmin}
                   >Deletar</button>
                 )}
               </div>
@@ -86,6 +100,10 @@ export default function KanbanChamados({ userId, isAdmin, empresasVinculadas }: 
           <button className="btn-tc mt-4 w-full" onClick={() => handleAddItem(col.id)}>
             Adicionar chamado
           </button>
+          {/* Exemplo: bloqueio visual para não devs */}
+          {!kanbanUnlocked && (
+            <div className="mt-2 text-xs text-rose-600">Apenas DEV pode mudar status dos chamados</div>
+          )}
         </div>
       ))}
     </div>

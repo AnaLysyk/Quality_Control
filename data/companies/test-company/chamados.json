@@ -160,5 +160,365 @@
         "alteradoEm": "2026-02-18T23:47:29.658Z"
       }
     ]
+  },
+  {
+    "id": "053e81b3-2867-4971-b6c7-c7ad3f9efd69",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:19:04.805Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:19:04.805Z"
+      }
+    ]
+  },
+  {
+    "id": "947e8f6d-c088-4c1e-99ca-1dc57b6ca6e3",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:19:53.578Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:19:53.578Z"
+      }
+    ]
+  },
+  {
+    "id": "3435186e-2a17-48fd-a4d2-3dc51ce83890",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:23:42.706Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:23:42.706Z"
+      }
+    ]
+  },
+  {
+    "id": "cc1163da-1c96-44d3-994d-37bacad701e0",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:25:23.015Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:25:23.015Z"
+      }
+    ]
+  },
+  {
+    "id": "8d73844f-ec83-481b-89c5-28e2232a6582",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:26:34.351Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:26:34.351Z"
+      }
+    ]
+  },
+  {
+    "id": "08b35192-0825-403d-ad82-6f601c7c13ae",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:27:24.982Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:27:24.982Z"
+      }
+    ]
+  },
+  {
+    "id": "7375125f-8f95-41c2-a631-00b447fd971f",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:28:06.522Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:28:06.522Z"
+      }
+    ]
+  },
+  {
+    "id": "0d6b6989-a3ef-4b0d-aa47-6ddc59b4aa15",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:28:43.012Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:28:43.012Z"
+      }
+    ]
+  },
+  {
+    "id": "644bed02-4339-4a84-af78-24d091d41556",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:29:15.988Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:29:15.988Z"
+      }
+    ]
+  },
+  {
+    "id": "5a19a1a0-d98d-4a18-b91a-8c26c8a3216e",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:31:59.330Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:31:59.330Z"
+      }
+    ]
+  },
+  {
+    "id": "f6bf5380-2b4f-4195-b6a9-19d3769fb75a",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:32:38.578Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:32:38.578Z"
+      }
+    ]
+  },
+  {
+    "id": "7fc226fe-34ad-4c50-af21-9711d23a90de",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:33:31.816Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:33:31.816Z"
+      }
+    ]
+  },
+  {
+    "id": "1a00053a-4815-469c-837f-2d738158df77",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:36:14.077Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:36:14.077Z"
+      }
+    ]
+  },
+  {
+    "id": "9cc286f7-d7bf-45d0-bdd0-4377608844ff",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:39:13.836Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:39:13.836Z"
+      }
+    ]
+  },
+  {
+    "id": "3ee34292-b79c-4d8b-99db-8232d4db6951",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:51:07.768Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:51:07.768Z"
+      }
+    ]
+  },
+  {
+    "id": "47c2b7a2-910b-480d-9401-714c2615a3be",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:51:52.828Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:51:52.828Z"
+      }
+    ]
+  },
+  {
+    "id": "a47751a0-b53e-4a47-9782-fb89b498b547",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:52:17.816Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:52:17.816Z"
+      }
+    ]
+  },
+  {
+    "id": "491c772b-9c4c-4ce2-9337-76d63759625c",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T01:53:40.766Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T01:53:40.766Z"
+      }
+    ]
+  },
+  {
+    "id": "5c1e0b8c-1304-47cd-8411-ba0b04d03755",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T02:09:15.541Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T02:09:15.541Z"
+      }
+    ]
+  },
+  {
+    "id": "c78ae77d-00da-4d15-a58e-30681102fc5f",
+    "titulo": "Chamado Teste",
+    "descricao": "Descrição",
+    "status": "backlog",
+    "prioridade": "media",
+    "tipo": "bug",
+    "anexos": [],
+    "criadoPor": "user-1",
+    "companyId": "test-company",
+    "criadoEm": "2026-02-19T02:09:53.736Z",
+    "historico": [
+      {
+        "status": "backlog",
+        "alteradoEm": "2026-02-19T02:09:53.736Z"
+      }
+    ]
   }
 ]

@@ -1,0 +1,186 @@
+[
+  {
+    "id": "b7506560-79f1-440f-b2b5-9a08a70bdc60",
+    "name": "Usuário Teste",
+    "email": "teste@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:29:15.366Z"
+  },
+  {
+    "id": "26757a18-3cdd-45d7-bb2d-4f8ec9b21d9d",
+    "name": "Usuário Editar",
+    "email": "editar@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:31:54.456Z"
+  },
+  {
+    "id": "da802c8d-b1a0-4547-80c8-6d0c8f19746a",
+    "name": "Usuário Teste",
+    "email": "teste@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:31:55.963Z"
+  },
+  {
+    "id": "f7888ea8-c739-4bc9-b0c8-98b33a267aa6",
+    "name": "Usuário Editar",
+    "email": "editar@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:32:36.438Z"
+  },
+  {
+    "id": "5571563b-dc45-4e7f-9581-d3033c39cd59",
+    "name": "Usuário Teste",
+    "email": "teste@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:32:42.426Z"
+  },
+  {
+    "id": "c4753f94-1188-4048-b039-4138a7e4eb15",
+    "name": "Usuário Editar",
+    "email": "editar@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:33:28.630Z"
+  },
+  {
+    "id": "1b27476f-3268-4b18-91e0-49a69149778d",
+    "name": "Usuário Teste",
+    "email": "teste@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:33:29.787Z"
+  },
+  {
+    "id": "8489536c-a315-41a5-a031-885c642c6aa6",
+    "name": "Usuário Editar",
+    "email": "editar@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:36:10.318Z"
+  },
+  {
+    "id": "e8782deb-7b1c-4ba1-bf37-c6bfaf93918c",
+    "name": "Usuário Teste",
+    "email": "teste@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:36:17.159Z"
+  },
+  {
+    "id": "f71b7c0c-f29d-44b4-8bc1-dd65024a32d7",
+    "name": "Usuário Editar",
+    "email": "editar@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:39:05.755Z"
+  },
+  {
+    "id": "bb67fc09-adf6-4509-bff1-c4a9df9306e8",
+    "name": "Usuário Teste",
+    "email": "teste@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:39:08.571Z"
+  },
+  {
+    "id": "e5e496f4-1b18-4b6d-b618-b748b30a5f45",
+    "name": "Usuário Editar",
+    "email": "editar@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:51:07.440Z"
+  },
+  {
+    "id": "e07668ce-3d0a-4b2c-a5a2-26984b5ba773",
+    "name": "Usuário Teste",
+    "email": "teste@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:51:13.492Z"
+  },
+  {
+    "id": "2c884b27-6f52-457c-9553-fb2e544c237b",
+    "name": "Usuário Editar",
+    "email": "editar@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:51:52.727Z"
+  },
+  {
+    "id": "dfe5509b-47e4-4e59-afcd-479916ef5eee",
+    "name": "Usuário Teste",
+    "email": "teste@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:51:56.338Z"
+  },
+  {
+    "id": "9ada5b04-268b-4944-88f5-11e6a6dea773",
+    "name": "Usuário Editar",
+    "email": "editar@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:52:17.665Z"
+  },
+  {
+    "id": "c05f0ec8-3896-427e-a25e-c72d75aa614c",
+    "name": "Usuário Teste",
+    "email": "teste@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:52:22.066Z"
+  },
+  {
+    "id": "2762dcc2-91f6-449d-83a2-19740927c6a3",
+    "name": "Usuário Editar",
+    "email": "editar@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:53:41.713Z"
+  },
+  {
+    "id": "fdf8b571-cabf-4a12-9ac8-d2aa93c946c9",
+    "name": "Usuário Teste",
+    "email": "teste@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T01:53:44.582Z"
+  },
+  {
+    "id": "d27f155c-3ad9-44bf-acc8-fa8dacc8664a",
+    "name": "Usuário Editar",
+    "email": "editar@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T02:09:16.209Z"
+  },
+  {
+    "id": "58ba1531-d8bf-4ecd-a4e0-60a6067a9a9b",
+    "name": "Usuário Teste",
+    "email": "teste@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T02:09:20.489Z"
+  },
+  {
+    "id": "ae6b9186-77a3-4af0-813f-c76556f43969",
+    "name": "Usuário Editar",
+    "email": "editar@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T02:09:53.851Z"
+  },
+  {
+    "id": "df8ca798-31f0-4005-ad8f-3d7e43d1ccf7",
+    "name": "Usuário Teste",
+    "email": "teste@exemplo.com",
+    "role": "usuario",
+    "companyId": "cmp_f9323403",
+    "createdAt": "2026-02-19T02:09:57.411Z"
+  }
+]

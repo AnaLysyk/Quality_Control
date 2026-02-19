@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { getTicketById, updateTicketStatus } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { getTicketStatusLabel } from "@/lib/ticketsStatus";
+
+// Máquina de estados: define transições permitidas
+const TICKET_STATE_MACHINE: Record<string, string[]> = {
+  backlog: ["doing"],
+  doing: ["review", "backlog"],
+  review: ["done", "doing"],
+  done: [],
+};
+
+// Função para validar transição
+function isValidTransition(from: string, to: string) {
+  return Array.isArray(TICKET_STATE_MACHINE[from]) && TICKET_STATE_MACHINE[from].includes(to);
+}
 import { notifyTicketStatusChanged } from "@/lib/notificationService";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 import { authenticateRequest } from "@/lib/jwtAuth";
@@ -27,6 +40,25 @@ export async function PATCH(
   const current = await getTicketById(id);
   if (!current) {
     return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
+  }
+
+
+  // Valida transição de status
+  const fromStatus = String(current.status);
+  const toStatus = String(nextStatus);
+  if (!isValidTransition(fromStatus, toStatus)) {
+    return NextResponse.json({ error: `Transição não permitida: ${getTicketStatusLabel(fromStatus)} → ${getTicketStatusLabel(toStatus)}` }, { status: 400 });
+  }
+
+  // Regra: não pode ir para DONE sem comentário de dev
+  if (toStatus === "done") {
+    // Busca comentários do ticket
+    const commentsRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/chamados/${id}/comments`, { headers: { "Content-Type": "application/json" }, credentials: "include" });
+    const commentsJson = await commentsRes.json().catch(() => ({}));
+    const hasDevComment = Array.isArray(commentsJson.items) && commentsJson.items.some((c) => c.authorUserId === user.id && !c.deletedAt);
+    if (!hasDevComment) {
+      return NextResponse.json({ error: "Para concluir (DONE), é obrigatório pelo menos 1 comentário seu neste chamado." }, { status: 400 });
+    }
   }
 
   const updated = await updateTicketStatus(id, nextStatus, user.id);

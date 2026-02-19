@@ -99,7 +99,7 @@ export function CompanySelector({
 
       {!loading && !error && hasCompanies && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {companies.map((company) => {
+          {companies.map((company, idx) => {
             const isActive = company.clientSlug === activeClientSlug;
             const isDisabled = !company.linkActive;
             const createdAtLabel =
@@ -111,7 +111,7 @@ export function CompanySelector({
             <Link
               data-testid={`company-item-${company.clientSlug}`}
               data-disabled={isDisabled ? "true" : undefined}
-              key={`${company.clientId}-${company.clientSlug}`}
+              key={`${company.clientId}-${company.clientSlug}-${idx}`}
               href={buildHref(company)}
               aria-disabled={isDisabled}
               tabIndex={isDisabled ? -1 : undefined}

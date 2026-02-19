@@ -6,12 +6,12 @@
       "code": "CH-000120",
       "title": "ZXCZXCX",
       "description": "ZXCZXCZX",
-      "status": "done",
+      "status": "doing",
       "type": "tarefa",
       "priority": "medium",
       "tags": [],
       "createdAt": "2026-02-19T03:12:22.511Z",
-      "updatedAt": "2026-02-19T10:57:50.496Z",
+      "updatedAt": "2026-02-19T05:03:37.109Z",
       "createdBy": "usr_dev",
       "createdByName": "dev",
       "createdByEmail": "dev",
@@ -24,18 +24,6 @@
           "to": "doing",
           "changedById": "usr_dev",
           "at": "2026-02-19T05:03:37.109Z"
-        },
-        {
-          "from": "doing",
-          "to": "review",
-          "changedById": "usr_dev",
-          "at": "2026-02-19T10:57:50.494Z"
-        },
-        {
-          "from": "review",
-          "to": "done",
-          "changedById": "usr_dev",
-          "at": "2026-02-19T10:57:50.496Z"
         }
       ],
       "updatedBy": "usr_dev"

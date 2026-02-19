@@ -46,13 +46,17 @@ const TYPE_OPTIONS = [
   { value: "tarefa", label: "Tarefa" },
 ];
 
-function isDevRole(role: string | null | undefined) {
+
+function isPrivilegedRole(role: string | null | undefined) {
   const value = (role ?? "").toLowerCase();
   return (
     value === "it_dev" ||
     value === "itdev" ||
     value === "developer" ||
-    value === "dev"
+    value === "dev" ||
+    value === "admin" ||
+    value === "empresa" ||
+    value === "company"
   );
 }
 
@@ -72,6 +76,11 @@ function formatDate(iso?: string | null) {
 
 export default function KanbanItPage() {
   const { user, loading } = useAuthUser();
+  // DEBUG: log do perfil do usuário
+  if (typeof window !== "undefined") {
+    // eslint-disable-next-line no-console
+    console.log("[KANBAN] user?.role:", user?.role);
+  }
   const [tickets, setTickets] = useState<TicketItem[]>([]);
   const [loadingTickets, setLoadingTickets] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,8 +102,9 @@ export default function KanbanItPage() {
   const [addingColumn, setAddingColumn] = useState(false);
   const [newColumnLabel, setNewColumnLabel] = useState("");
 
-  // Todos os perfis podem criar chamados
-  const isAllowed = true;
+  // Só DEV pode editar/remover/adicionar colunas
+  const isPrivileged = isPrivilegedRole(user?.role);
+  const isAllowed = true; // Todos podem ver chamados, mas só dev pode mexer nas colunas
   const statusKeys = useMemo(
     () => tickets.map((ticket) => normalizeKanbanStatus(ticket.status)),
     [tickets],
@@ -118,8 +128,8 @@ export default function KanbanItPage() {
     setError(null);
     try {
       // Só dev/admin vê todos; demais só os próprios
-      const isDev = isDevRole(user?.role);
-      const url = isDev ? "/api/chamados?scope=all" : "/api/chamados";
+      const isPrivileged = isPrivilegedRole(user?.role);
+      const url = isPrivileged ? "/api/chamados?scope=all" : "/api/chamados";
       const res = await fetch(url, {
         credentials: "include",
         cache: "no-store",
@@ -149,7 +159,7 @@ export default function KanbanItPage() {
   }, [loadTickets]);
 
   function handleDragStart(ticket: TicketItem) {
-    if (!isDevRole(user?.role)) return;
+    if (!(isPrivileged && (user?.id === ticket.createdBy || isPrivilegedRole(user?.role)))) return;
     setDragging({ id: ticket.id, from: ticket.status });
   }
 
@@ -181,7 +191,7 @@ export default function KanbanItPage() {
   }
 
   async function handleDrop(toStatus: TicketStatus) {
-    if (!dragging || !isDevRole(user?.role)) return;
+    if (!dragging || !isPrivileged) return;
     if (dragging.from === toStatus) {
       setDragging(null);
       return;
@@ -223,7 +233,7 @@ export default function KanbanItPage() {
   }
 
   function startEditColumn(key: string, label: string) {
-    if (!isAllowed) return;
+    if (!isPrivileged) return;
     setEditingColumnKey(key);
     setEditingColumnLabel(label);
   }
@@ -248,7 +258,7 @@ export default function KanbanItPage() {
   }
 
   function startAddColumn() {
-    if (!isAllowed) return;
+    if (!isPrivileged) return;
     setAddingColumn(true);
     setNewColumnLabel("");
   }
@@ -301,7 +311,7 @@ export default function KanbanItPage() {
       {loadingTickets && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
 
 
-      {isAllowed && (
+      {user?.id && (
         <div className="flex flex-wrap items-center gap-2">
           {!addingColumn && (
             <button
@@ -336,8 +346,8 @@ export default function KanbanItPage() {
         </div>
       )}
 
-      <section className="w-full overflow-x-auto py-4">
-        <div className="flex gap-6 min-w-max flex-nowrap snap-x snap-mandatory pb-4">
+      <section className="w-full py-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 pb-4">
           {columns.map((column, idx) => {
             // Paleta de cores pastel para colunas
             const pastel = [
@@ -356,12 +366,12 @@ export default function KanbanItPage() {
             return (
               <div
                 key={column.key}
-                className={`w-72 shrink-0 rounded-2xl border shadow-lg p-3 min-h-80 snap-start flex flex-col ${color}`}
-                onDragOver={isDevRole(user?.role) ? (e) => {
+                className={`rounded-2xl border shadow-lg p-3 min-h-80 flex flex-col ${color}`}
+                onDragOver={isPrivilegedRole(user?.role) ? (e) => {
                   e.preventDefault();
                   e.dataTransfer.dropEffect = "move";
                 } : undefined}
-                onDrop={isDevRole(user?.role) ? () => handleDrop(column.key) : undefined}
+                onDrop={isPrivilegedRole(user?.role) ? () => handleDrop(column.key) : undefined}
               >
             <div className="flex items-center justify-between">
               {editingColumnKey === column.key ? (
@@ -385,15 +395,19 @@ export default function KanbanItPage() {
                   aria-label="Editar nome da coluna"
                   className="w-full rounded-md border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
                 />
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => startEditColumn(column.key, column.label)}
-                  className="text-left text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
-                >
-                  {column.label}
-                </button>
-              )}
+              ) :
+                isPrivileged ? (
+                  <button
+                    type="button"
+                    onClick={() => startEditColumn(column.key, column.label)}
+                    className="text-left text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
+                  >
+                    {column.label}
+                  </button>
+                ) : (
+                  <span className="text-left text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">{column.label}</span>
+                )
+              }
               <span className="text-xs text-(--tc-text-muted,#6b7280)">
                 {grouped[column.key]?.length ?? 0}
               </span>
@@ -405,15 +419,16 @@ export default function KanbanItPage() {
                   <div key={ticket.id} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 text-left shadow-sm">
                     <button
                       type="button"
-                      draggable={isDevRole(user?.role)}
-                      onDragStart={isDevRole(user?.role) ? (event) => {
+                      draggable={isPrivileged && (user?.id === ticket.createdBy || isPrivilegedRole(user?.role))}
+                      onDragStart={isPrivileged && (user?.id === ticket.createdBy || isPrivilegedRole(user?.role)) ? (event) => {
                         event.dataTransfer.setData("text/plain", ticket.id);
                         event.dataTransfer.effectAllowed = "move";
                         handleDragStart(ticket);
                       } : undefined}
-                      onDragEnd={isDevRole(user?.role) ? () => setDragging(null) : undefined}
+                      onDragEnd={isPrivileged && (user?.id === ticket.createdBy || isPrivilegedRole(user?.role)) ? () => setDragging(null) : undefined}
                       onClick={() => setSelectedTicket(ticket)}
                       className="w-full text-left"
+                      disabled={!(isPrivileged && (user?.id === ticket.createdBy || isPrivilegedRole(user?.role)))}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
@@ -441,15 +456,14 @@ export default function KanbanItPage() {
                       <label className="sr-only" htmlFor={`status-${ticket.id}`}>
                         Status
                       </label>
-                      {isDevRole(user?.role) ? (
+                      {(isPrivileged && (user?.id === ticket.createdBy || isPrivilegedRole(user?.role))) ? (
                         <select
                           id={`status-${ticket.id}`}
                           aria-label="Status do chamado"
                           title="Status do chamado"
                           className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[11px]"
                           value={normalizeKanbanStatus(ticket.status)}
-                          onChange={isDevRole(user?.role) ? (e) => updateStatus(ticket.id, e.target.value as TicketStatus) : undefined}
-                          disabled={!isDevRole(user?.role)}
+                          onChange={(e) => updateStatus(ticket.id, e.target.value as TicketStatus)}
                         >
                           {statusOptions.map((opt) => (
                             <option key={opt.value} value={opt.value}>

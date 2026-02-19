@@ -1,0 +1,22 @@
+[
+  {
+    "key": "backlog",
+    "label": "Backlog",
+    "locked": true
+  },
+  {
+    "key": "doing",
+    "label": "Em andamento",
+    "locked": true
+  },
+  {
+    "key": "review",
+    "label": "Em revisao",
+    "locked": true
+  },
+  {
+    "key": "done",
+    "label": "Concluido",
+    "locked": true
+  }
+]

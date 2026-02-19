@@ -13,6 +13,18 @@ export default function ToasterProvider() {
           color: "var(--tc-text-inverse, #fff)",
           border: "1px solid var(--surface-border, rgba(255,255,255,0.10))",
         },
+        success: {
+          style: {
+            background: "#22c55e", // Tailwind green-500
+            color: "#fff",
+          },
+        },
+        error: {
+          style: {
+            background: "#ef4444", // Tailwind red-500
+            color: "#fff",
+          },
+        },
       }}
     />
   );

@@ -261,11 +261,11 @@ export default function MeusSuportesPage() {
       <SuporteDetailsModal
         key={selectedSuporte?.id || 'empty'}
         open={Boolean(selectedSuporte)}
-        ticket={selectedSuporte}
+        suporte={selectedSuporte}
         onClose={() => setSelectedSuporte(null)}
         canEditStatus={isDevRole(user.role)}
         statusOptions={[]}
-        onTicketUpdated={(updated: SuporteItem) => {
+        onSuporteUpdated={(updated: SuporteItem) => {
           setSelectedSuporte(updated);
           setSuportes((current) =>
             current.map((suporte) => (suporte.id === updated.id ? updated : suporte)),

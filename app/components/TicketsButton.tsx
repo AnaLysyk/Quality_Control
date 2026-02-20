@@ -4,26 +4,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiMessageSquare, FiPlus, FiEdit2, FiTrash2, FiX, FiSave } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { getSuporteStatusLabel, type SuporteStatus } from "@/lib/suportesStatus";
+import type { TicketRecord as TicketItem } from "@/lib/ticketsStore";
 
-type SuporteItem = {
-  id: string;
-  title: string;
-  description: string;
-  status: SuporteStatus;
-  createdAt: string;
-  updatedAt: string;
-  createdBy?: string | null;
-  createdByName?: string | null;
-  createdByEmail?: string | null;
-  companySlug?: string | null;
-};
 
 type DraftSuporte = {
   title: string;
   description: string;
 };
 
-function statusStyle(status: SuporteStatus) {
+function statusStyle(status: SuporteStatus | string) {
   if (status === "done") return "bg-emerald-100 text-emerald-700";
   if (status === "review") return "bg-violet-100 text-violet-700";
   if (status === "doing") return "bg-amber-100 text-amber-700";
@@ -33,7 +22,7 @@ function statusStyle(status: SuporteStatus) {
 export default function TicketsButton() {
   const { user } = useAuthUser();
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState<SuporteItem[]>([]);
+  const [items, setItems] = useState<TicketItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -86,7 +75,7 @@ export default function TicketsButton() {
     try {
       const scope = isDev ? "all" : "mine";
       const res = await fetch(`/api/suportes?scope=${scope}`, { credentials: "include", cache: "no-store" });
-      const json = (await res.json().catch(() => ({}))) as { items?: SuporteItem[]; error?: string };
+      const json = (await res.json().catch(() => ({}))) as { items?: TicketItem[]; error?: string };
       if (!res.ok) {
         setItems([]);
         setError(json?.error || "Erro ao carregar chamados");
@@ -312,7 +301,7 @@ export default function TicketsButton() {
                       )}
                     </div>
                     <span className={`text-[10px] uppercase tracking-[0.25em] px-2 py-1 rounded ${statusStyle(ticket.status)}`}>
-                      {getTicketStatusLabel(ticket.status)}
+                      {getSuporteStatusLabel(ticket.status)}
                     </span>
                   </button>
 

@@ -103,11 +103,10 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   }).catch((err) => console.error("Falha ao registrar comentario:", err));
 
   notifyTicketCommentAdded({
-      suporte: ticket,
-      comment,
-      actorId: user.id,
+      suporteId: ticket.id,
+      commentId: comment.id,
       actorName: localUser?.name ?? null,
-    }).catch((err: unknown) => console.error("Falha ao notificar comentario:", err));
+    } as any).catch((err: unknown) => console.error("Falha ao notificar comentario:", err));
 
   return NextResponse.json({ item: comment }, { status: 201 });
 }

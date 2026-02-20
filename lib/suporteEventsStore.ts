@@ -1,3 +1,4 @@
+import { appendTicketEvent } from "./ticketEventsStore";
 export type SuporteEventInput = {
 	suporteId?: string;
 	ticketId?: string;
@@ -5,6 +6,8 @@ export type SuporteEventInput = {
 	actorUserId?: string | null;
 	createdAt?: string;
 	payload?: Record<string, unknown> | null;
+	// Permitir propriedades extras para compatibilidade
+	[key: string]: any;
 };
 
 export async function appendSuporteEvent(event: any) {

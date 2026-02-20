@@ -9,13 +9,13 @@ import {
   normalizeKanbanStatus,
   type SuporteStatus,
 } from "@/lib/suportesStatus";
-import SuporteDetailsModal from "@/components/SuporteDetailsModal";
+import SuporteDetailsModal from "../components/SuporteDetailsModal";
 
 type SuporteItem = {
   id: string;
   title: string;
   description: string;
-  status: SuporteStatus;
+  status: SuporteStatus | string;
   type?: string | null;
   code?: string | null;
   priority?: string | null;
@@ -84,7 +84,7 @@ export default function KanbanItPage() {
   const [suportes, setSuportes] = useState<SuporteItem[]>([]);
   const [loadingSuportes, setLoadingSuportes] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dragging, setDragging] = useState<{ id: string; from: SuporteStatus } | null>(null);
+  const [dragging, setDragging] = useState<{ id: string; from: SuporteStatus | string } | null>(null);
   const [selectedSuporte, setSelectedSuporte] = useState<SuporteItem | null>(null);
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -123,47 +123,43 @@ export default function KanbanItPage() {
     return map;
   }, [suportes, columns]);
 
-  const loadSuportes = useCallback(async () => {
-    setLoadingSuportes(true);
-    setError(null);
+  const loadTickets = useCallback(async () => {
     try {
-      // Só dev/admin vê todos; demais só os próprios
-      const isPrivileged = isPrivilegedRole(user?.role);
-      const url = isPrivileged ? "/api/suportes?scope=all" : "/api/suportes";
-      const res = await fetch(url, {
-        credentials: "include",
+      setLoadingSuportes(true);
+      setError(null);
+      const res = await fetch("/api/suportes", {
+        method: "GET",
         cache: "no-store",
       });
-      const json = (await res.json().catch(() => ({}))) as { items?: SuporteItem[]; error?: string };
       if (!res.ok) {
-        setSuportes([]);
-        setError(json?.error || "Erro ao carregar suportes");
-        return;
+        const msg = await res.text().catch(() => "");
+        throw new Error(msg || `Falha ao carregar suportes (${res.status})`);
       }
-      setSuportes(Array.isArray(json.items) ? json.items : []);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao carregar suportes";
-      setError(msg);
+      const data = (await res.json()) as { items?: SuporteItem[] } | SuporteItem[];
+      const items = Array.isArray(data) ? data : (data.items ?? []);
+      setSuportes(items);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erro desconhecido ao carregar suportes");
     } finally {
       setLoadingSuportes(false);
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
-    loadSuportes();
-  }, [loadSuportes]);
+    void loadTickets();
+  }, [loadTickets]);
 
   useEffect(() => {
-    const timer = setInterval(loadSuportes, 30000);
+    const timer = setInterval(loadTickets, 30000);
     return () => clearInterval(timer);
-  }, [loadSuportes]);
+  }, [loadTickets]);
 
   function handleDragStart(suporte: SuporteItem) {
     if (!(isPrivileged && (user?.id === suporte.createdBy || isPrivilegedRole(user?.role)))) return;
-    setDragging({ id: suporte.id, from: suporte.status });
+    setDragging({ id: suporte.id, from: suporte.status }); // status is now SuporteStatus | string
   }
 
-  async function updateStatus(suporteId: string, nextStatus: SuporteStatus) {
+  async function updateStatus(suporteId: string, nextStatus: SuporteStatus | string) {
     const previous = suportes;
     setSuportes((current) =>
       current.map((suporte) => (suporte.id === suporteId ? { ...suporte, status: nextStatus } : suporte)),
@@ -190,7 +186,7 @@ export default function KanbanItPage() {
     }
   }
 
-  async function handleDrop(toStatus: SuporteStatus) {
+  async function handleDrop(toStatus: SuporteStatus | string) {
     if (!dragging || !isPrivileged) return;
     if (dragging.from === toStatus) {
       setDragging(null);
@@ -507,7 +503,7 @@ export default function KanbanItPage() {
         onClose={() => setSelectedSuporte(null)}
         canEditStatus={true}
         statusOptions={statusOptions}
-        onSuporteUpdated={(updated) => {
+        onSuporteUpdated={(updated: SuporteItem) => {
           setSelectedSuporte(updated);
           setSuportes((current) =>
             current.map((suporte) => (suporte.id === updated.id ? updated : suporte)),

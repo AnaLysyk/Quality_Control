@@ -1,4 +1,26 @@
-﻿// Aliases para compatibilidade com imports antigos de tickets
+﻿function buildBackupName(): string {
+  return `backup-${Date.now()}.json`;
+}
+function buildVersionName(counter: number): string {
+  return `version-${counter}.json`;
+}
+function formatCode(counter: number): string {
+  return `SUP-${counter}`;
+}
+function parseCodeNumber(code: string): number {
+  const match = code.match(/\d+/);
+  return match ? parseInt(match[0], 10) : 0;
+}
+function normalizeTags(value?: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((v) => typeof v === "string");
+  if (typeof value === "string") return value.split(",").map((v) => v.trim()).filter(Boolean);
+  return [];
+}
+function normalizeCode(value?: unknown): string | null {
+  if (typeof value === "string") return value.trim();
+  return null;
+}
+// Aliases para compatibilidade com imports antigos de tickets
 export const updateTicket = updateSuporte;
 export const deleteTicketForUser = deleteSuporteForUser;
 export const updateTicketStatus = updateSuporteStatus;
@@ -32,7 +54,7 @@ export type SuporteRecord = {
   code: string;
   title: string;
   description: string;
-  status: SuporteStatus;
+  status: SuporteStatus | string;
   type: SuporteType;
   priority: SuportePriority;
   tags: string[];
@@ -48,14 +70,17 @@ export type SuporteRecord = {
   timeline?: SuporteStatusHistory[];
 };
 
+// Compatibilidade: exporta SuporteRecord também como TicketRecord
+export type TicketRecord = SuporteRecord;
+
 type SuportesStore = {
   counter: number;
   items: SuporteRecord[];
 };
 
 type SuporteStatusHistory = {
-  from: SuporteStatus;
-  to: SuporteStatus;
+  from: SuporteStatus | string;
+  to: SuporteStatus | string;
   changedById: string;
   at: string;
 };
@@ -165,10 +190,10 @@ function sanitizeText(value: unknown, max: number) {
   return value.trim().slice(0, max);
 }
 
-function normalizeStatus(value?: string | null): SuporteStatus | null {
+function normalizeStatus(value?: string | null): SuporteStatus | string | null {
   if (!value) return null;
   const normalized = value.trim().toLowerCase();
-  const mapped = normalized in LEGACY_TICKET_STATUS_MAP ? LEGACY_TICKET_STATUS_MAP[normalized] : normalized;
+  const mapped = normalized in LEGACY_SUPORTE_STATUS_MAP ? LEGACY_SUPORTE_STATUS_MAP[normalized] : normalized;
   return normalizeKanbanStatus(mapped);
 }
 
@@ -179,12 +204,14 @@ function normalizePriority(value?: unknown): SuportePriority {
   return "medium";
 }
 
+
 function normalizeType(value?: unknown): SuporteType {
   const raw = typeof value === "string" ? value.trim().toLowerCase() : "";
   if (raw === "bug" || raw === "melhoria" || raw === "tarefa") return raw;
   return "tarefa";
+}
 
-
+function normalizeRecord(raw: any): any {
   const status = normalizeStatus(raw.status) ?? "backlog";
   const type = normalizeType(raw.type);
   const code = normalizeCode(raw.code);

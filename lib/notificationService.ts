@@ -306,25 +306,98 @@ export async function notifyPasswordResetStatus(
 /* -------------------------------------------------------------------------- */
 
 export type NotifyManualRunCreatedInput = BaseInput & {
-  runId: string;
+  runId?: string;
   title?: string | null;
+
+  // compat: chamadores antigos podem mandar "release" inteiro
+  release?: { id?: string | number; title?: string; name?: string } | Record<string, unknown> | null;
+
+  // compat: se existirem, aceitamos (não exigimos)
   createdByUserId?: string | null;
   projectCode?: string | null;
 };
 
-export async function notifyManualRunCreated(input: NotifyManualRunCreatedInput): Promise<void> {
-  emit("manual_run.created", input, input);
+export async function notifyManualRunCreated(
+  inputOrRelease: NotifyManualRunCreatedInput | Record<string, unknown>,
+): Promise<void> {
+  const obj = (inputOrRelease && typeof inputOrRelease === "object")
+    ? (inputOrRelease as any)
+    : {};
+
+  const release = obj.release ?? obj;
+
+  const rawId =
+    obj.runId ??
+    release?.id ??
+    obj.id ??
+    null;
+
+  const runId = rawId === null || rawId === undefined ? "" : String(rawId);
+
+  const title =
+    obj.title ??
+    release?.title ??
+    release?.name ??
+    null;
+
+  emit("manual_run.created", {
+    runId: runId || null,
+    title,
+    createdByUserId: obj.createdByUserId ?? obj.createdBy ?? null,
+    projectCode: obj.projectCode ?? obj.project ?? null,
+    release: obj.release ?? null,
+  }, obj);
 }
 
 export type NotifyManualRunFailureInput = BaseInput & {
-  runId: string;
-  reason: string;
-  detail?: string | null;
-  projectCode?: string | null;
+  runId?: string;
+  reason?: string;
+
+  // compat
+  updated?: Record<string, unknown> | null;
+  release?: { id?: string | number } | Record<string, unknown> | null;
+  detail?: unknown;
+  projectCode?: unknown;
 };
 
-export async function notifyManualRunFailure(input: NotifyManualRunFailureInput): Promise<void> {
-  emit("manual_run.failure", input, input);
+export async function notifyManualRunFailure(
+  inputOrUpdated: NotifyManualRunFailureInput | Record<string, unknown>,
+  reasonMaybe?: unknown,
+): Promise<void> {
+  // formato antigo: (updated, reason)
+  if (reasonMaybe !== undefined) {
+    const updated =
+      inputOrUpdated && typeof inputOrUpdated === "object"
+        ? (inputOrUpdated as Record<string, unknown>)
+        : {};
+
+    const rawId = (updated as any)?.runId ?? (updated as any)?.id ?? (updated as any)?.release?.id ?? null;
+    const runId = rawId === null || rawId === undefined ? "" : String(rawId);
+
+    emit("manual_run.failure", {
+      runId: runId || null,
+      reason: String(reasonMaybe),
+      updated,
+    });
+
+    return;
+  }
+
+  // formato novo: ({ runId, reason, ... })
+  const input = inputOrUpdated as any;
+
+  const rawId = input.runId ?? input?.release?.id ?? input?.updated?.id ?? input?.id ?? null;
+  const runId = rawId === null || rawId === undefined ? "" : String(rawId);
+
+  emit("manual_run.failure", {
+    runId: runId || null,
+    reason: input.reason ? String(input.reason) : "unknown",
+    updated: input.updated ?? null,
+    release: input.release ?? null,
+    // aceita, mas não exige
+    detail: input.detail ?? null,
+    projectCode: input.projectCode ?? null,
+  }, input);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -332,18 +405,44 @@ export async function notifyManualRunFailure(input: NotifyManualRunFailureInput)
 /* -------------------------------------------------------------------------- */
 
 export type NotifyAccessRequestCommentInput = BaseInput & {
-  requestId: string;
-  commentId: string;
-  authorUserId?: string | null;
-  companySlug?: string | null;
+  requestId?: string;
+  commentId?: string;
+
+  // compat
+  request?: { id?: string } | Record<string, unknown> | null;
+  comment?: { id?: string } | Record<string, unknown> | null;
+
+  actorId?: string | null;
+  actorName?: string | null;
+
+  // esses estavam “quebrando” o type — agora aceitamos:
+  authorName?: string | null;
+  body?: string | null;
+
   dedupeKey?: string;
 };
 
-export async function notifyAccessRequestComment(
-  input: NotifyAccessRequestCommentInput,
-): Promise<void> {
-  const dedupeKey =
-    input.dedupeKey ?? `notification:access_request:${input.requestId}:comment:${input.commentId}`;
+export async function notifyAccessRequestComment(input: NotifyAccessRequestCommentInput): Promise<void> {
+  const requestId =
+    (typeof input.requestId === "string" && input.requestId.trim()) ||
+    (input.request && typeof (input.request as any).id === "string" ? String((input.request as any).id) : "") ||
+    "";
 
-  emit("access_request.comment_added", { ...input, dedupeKey }, input);
+  const commentId =
+    (typeof input.commentId === "string" && input.commentId.trim()) ||
+    (input.comment && typeof (input.comment as any).id === "string" ? String((input.comment as any).id) : "") ||
+    "";
+
+  const dedupeKey =
+    input.dedupeKey ??
+    `notification:access_request:${requestId || "unknown"}:comment:${commentId || "unknown"}`;
+
+  emit("access_request.comment_added", {
+    requestId: requestId || null,
+    commentId: commentId || null,
+    actorId: input.actorId ?? null,
+    actorName: input.actorName ?? input.authorName ?? null,
+    body: input.body ?? null, // loga se vier
+    dedupeKey,
+  }, input);
 }

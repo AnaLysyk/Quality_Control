@@ -67,7 +67,7 @@ export async function GET(req: Request) {
   if (tags) {
     const tagList = tags.split(",").map((value) => value.trim()).filter(Boolean);
     if (tagList.length) {
-      items = items.filter((ticket) => ticket.tags.some((tag) => tagList.includes(tag)));
+      items = items.filter((ticket) => ticket.tags.some((tag: string) => tagList.includes(tag)));
     }
   }
   if (search) {

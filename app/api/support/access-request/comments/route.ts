@@ -164,8 +164,6 @@ export async function POST(req: Request) {
   await notifyAccessRequestComment({
     requestId: request.id,
     commentId: record.id,
-    authorName: name,
-    body: comment,
   });
 
   return NextResponse.json({ item: record }, { status: 200 });

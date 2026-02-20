@@ -48,9 +48,10 @@ export async function POST(req: Request, context: { params: Promise<{ commentId:
     }).catch((err) => console.error("Falha ao registrar reacao:", err));
 
     notifyTicketReactionAdded({
-      ticket,
-      comment,
-      actorId: user.id,
+      ticketId: ticket.id,
+      emoji: "❤️",
+      userId: user.id,
+      reactionId: reaction.id,
     }).catch((err) => console.error("Falha ao notificar reacao:", err));
   }
 

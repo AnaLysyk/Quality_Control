@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 import { createSuporte, listAllSuportes, listSuportesForUser } from "@/lib/ticketsStore";
-import { appendTicketEvent as appendSuporteEvent } from "@/lib/suporteEventsStore";
+import { appendSuporteEvent } from "@/lib/suporteEventsStore";
 import { notifySuporteCreated } from "@/lib/notificationService";
 import { attachAssigneeInfo, attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 import { authenticateRequest } from "@/lib/jwtAuth";
@@ -54,22 +54,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Informe titulo ou descricao" }, { status: 400 });
     }
 
-    appendSuporteEvent({
+    try {
       await appendSuporteEvent({
         suporteId: suporte.id,
         type: "CREATED",
         actorUserId: suporte.createdBy ?? null,
         payload: { title: suporte.title },
       });
-    }).catch((err) => {
+    } catch (err) {
       console.error("Falha ao registrar evento de suporte:", err);
-    });
+    }
 
     notifySuporteCreated(suporte).catch((err) => {
       console.error("Falha ao notificar novo suporte:", err);
     });
 
-    const enriched = await attachAssigneeToSuporte(suporte);
+    const enriched = await attachAssigneeToTicket(suporte);
     return NextResponse.json({ item: enriched }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erro ao criar chamado";

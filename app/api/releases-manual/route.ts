@@ -152,7 +152,10 @@ export async function POST(req: Request) {
         }
       }
       try {
-        await notifyManualRunCreated(release);
+        await notifyManualRunCreated({
+          runId: release.id?.toString() ?? "",
+          title: release.name ?? null,
+        });
       } catch (err) {
         console.error("Falha ao enviar notificacoes de run", err);
       }

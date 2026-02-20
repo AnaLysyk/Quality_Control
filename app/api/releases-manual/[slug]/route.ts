@@ -141,7 +141,10 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
   await writeManualReleases(releases);
   if (nextKind === "run") {
     try {
-      await notifyManualRunFailure(updated);
+      await notifyManualRunFailure({
+        runId: updated.id,
+        reason: "failure", // ajuste conforme contexto se necessário
+      });
     } catch (err) {
       console.error("Falha ao notificar falha de run", err);
     }

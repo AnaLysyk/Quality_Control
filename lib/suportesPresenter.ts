@@ -1,5 +1,5 @@
 import { listLocalUsers } from "@/lib/auth/localStore";
-import type { SuporteRecord } from "@/lib/suportesStore";
+import type { SuporteRecord } from "@/lib/ticketsStore";
 
 export type SuporteWithAssignee = SuporteRecord & {
   assignedToName?: string | null;

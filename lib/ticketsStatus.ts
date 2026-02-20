@@ -1,13 +1,14 @@
-﻿// Aliases para compatibilidade com imports antigos
+﻿export type SuporteStatus = "backlog" | "doing" | "review" | "done";
+// Aliases para compatibilidade com imports antigos
 export type TicketStatusOption = SuporteStatusOption;
 export const formatTicketStatusLabel = formatSuporteStatusLabel;
-// Aliases para compatibilidade com imports antigos
-export type TicketStatus = SuporteStatus;
-export const TICKET_STATUS_OPTIONS = SUPORTE_STATUS_OPTIONS;
+// TICKET_STATUS_OPTIONS alias moved below SUPORTE_STATUS_OPTIONS definition
 export const getTicketStatusLabel = getSuporteStatusLabel;
-export type SuporteStatus = string;
+export type TicketStatus = SuporteStatus;
+// Aliases para compatibilidade com imports antigos
 
-export type SuporteStatusOption = { value: SuporteStatus; label: string };
+
+export type SuporteStatusOption = { value: SuporteStatus | string; label: string };
 
 export const KANBAN_STATUS_OPTIONS: SuporteStatusOption[] = [
   { value: "backlog", label: "Backlog" },
@@ -23,6 +24,9 @@ export const SUPORTE_STATUS_OPTIONS: SuporteStatusOption[] = [
   { value: "done", label: "Concluido" },
 ];
 
+// Aliases for legacy compatibility (must be after SUPORTE_STATUS_OPTIONS definition)
+export const TICKET_STATUS_OPTIONS = SUPORTE_STATUS_OPTIONS;
+
 export function formatSuporteStatusLabel(value: string) {
   if (!value) return "Backlog";
   const cleaned = value
@@ -34,11 +38,11 @@ export function formatSuporteStatusLabel(value: string) {
   return cleaned.replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export function getSuporteStatusLabel(status: SuporteStatus, options: SuporteStatusOption[] = SUPORTE_STATUS_OPTIONS) {
+export function getSuporteStatusLabel(status: SuporteStatus | string, options: SuporteStatusOption[] = SUPORTE_STATUS_OPTIONS) {
   return options.find((opt) => opt.value === status)?.label ?? formatSuporteStatusLabel(status);
 }
 
-export function normalizeKanbanStatus(status: SuporteStatus | string): SuporteStatus {
+export function normalizeKanbanStatus(status: SuporteStatus | string): SuporteStatus | string {
   const normalized = (status ?? "").toString().trim().toLowerCase();
   if (!normalized) return "backlog";
   const ascii = normalized.normalize("NFD").replace(/[\u0300-\u036f]/g, "");

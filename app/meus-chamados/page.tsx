@@ -1,13 +1,4 @@
-﻿// Patch: only add missing logic, avoid duplicate imports and state
-// If useCallback, useEffect, useState already imported, do not re-import
-// If state already exists, do not redeclare
-// Add loadTickets function if not present
-// Add reload button if not present
-      {/* Minimal reload button for build compatibility */}
-      <button onClick={() => void reloadSuportes()} disabled={loadingSuportes} className="rounded border px-3 py-2 text-xs">
-        {loadingSuportes ? "Carregando..." : "Recarregar"}
-      </button>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+﻿// ...existing code...
 "use client";
 
 function getSuporteCode(code: string | null | undefined, id: string): string {

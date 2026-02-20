@@ -130,8 +130,13 @@ export default function KanbanItPage() {
       const res = await fetch("/api/chamados", {
         method: "GET",
         cache: "no-store",
+        credentials: "include",
       });
       const contentType = res.headers.get("content-type") ?? "";
+      if (res.status === 401) {
+        setSuportes([]);
+        throw new Error("Faça login para visualizar os suportes.");
+      }
       if (!res.ok) {
         throw new Error(`Falha ao carregar suportes (${res.status}).`);
       }

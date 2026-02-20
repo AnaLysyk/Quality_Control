@@ -113,42 +113,196 @@ export default function Page() {
   // Fila de moves por card
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<SuporteItem | null>(null);
-    // ...existing code...
+  // ...existing code...
 
-    // Atalhos de teclado para mover card selecionado e abrir modal
-    useEffect(() => {
-      const onKeyDown = async (ev: KeyboardEvent) => {
-        if (isTypingTarget(document.activeElement)) return;
-        if (!selectedId) return;
-        if (ev.key === "ArrowLeft") {
-          ev.preventDefault();
-          void moveOptimistic(selectedId, -1);
-        }
-        if (ev.key === "ArrowRight") {
-          ev.preventDefault();
-          void moveOptimistic(selectedId, 1);
-        }
-        if (ev.key === "Enter") {
-          if (savingById[selectedId]) return;
-          ev.preventDefault();
-          // Busca dados frescos e abre modal
+  const moveQueueRef = useMemo(() => new Map<string, Promise<void>>(), []);
+
+  // Toast global
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    window.setTimeout(() => setToast(null), 2200);
+  }, []);
+
+  // Contador de pendências por card
+  const [pendingById, setPendingById] = useState<Record<string, number>>({});
+
+  const enqueueMove = useCallback(
+    (id: string, task: () => Promise<void>) => {
+      setPendingById((m) => ({ ...m, [id]: (m[id] ?? 0) + 1 }));
+      const prev = moveQueueRef.get(id) ?? Promise.resolve();
+      const next = prev
+        .catch(() => {})
+        .then(task)
+        .finally(() => {
+          setPendingById((m) => {
+            const n = (m[id] ?? 1) - 1;
+            if (n <= 0) {
+              const { [id]: _, ...rest } = m;
+              return rest;
+            }
+            return { ...m, [id]: n };
+          });
+          if (moveQueueRef.get(id) === next) moveQueueRef.delete(id);
+        });
+      moveQueueRef.set(id, next);
+      return next;
+    },
+    [moveQueueRef],
+  );
+
+  const [items, setItems] = useState<SuporteItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [savingById, setSavingById] = useState<Record<string, boolean>>({});
+  const [basePath, setBasePath] = useState<"/api/chamados" | "/api/suportes" | null>(null);
+  const [errorById, setErrorById] = useState<Record<string, string>>({});
+
+  // Detecta basePath uma única vez e cacheia
+  const detectBasePath = useCallback(async () => {
+    if (basePath) return basePath;
+    try {
+      await safeFetchJson("/api/chamados", { noStore: true });
+      setBasePath("/api/chamados");
+      return "/api/chamados" as const;
+    } catch (e) {
+      if (e instanceof SafeFetchJsonError && e.status === 404) {
+        setBasePath("/api/suportes");
+        return "/api/suportes" as const;
+      }
+      setBasePath("/api/chamados");
+      return "/api/chamados" as const;
+    }
+  }, [basePath]);
+
+  // Carrega suportes usando basePath detectado
+  const loadSuportes = useCallback(async () => {
+    try {
+      setLoading(true);
+      setErrorMsg(null);
+      const bp = await detectBasePath();
+      const data = await safeFetchJson<ApiList<SuporteItem>>(`${bp}`, {
+        noStore: true,
+        friendlyMessage: "Não foi possível carregar suportes",
+      });
+      setItems(data.items ?? []);
+    } catch (e: unknown) {
+      setErrorMsg(e instanceof Error ? e.message : "Erro ao carregar suportes");
+    } finally {
+      setLoading(false);
+    }
+  }, [detectBasePath]);
+
+  useEffect(() => {
+    void loadSuportes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const grouped = useMemo(() => {
+    const acc = COLUMNS.reduce<Record<ColumnKey, SuporteItem[]>>((a, c) => {
+      a[c.key] = [];
+      return a;
+    }, {} as any);
+    for (const it of items) {
+      acc[normalizeStatus(it.status)].push(it);
+    }
+    return acc;
+  }, [items]);
+
+  // PATCH status usando basePath fixo
+  const patchStatus = useCallback(async (id: string, next: ColumnKey) => {
+    const bp = await detectBasePath();
+    await safeFetchJson(`${bp}/${id}/status`, {
+      method: "PATCH",
+      noStore: true,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: denormalizeStatus(next) }),
+      friendlyMessage: "Não foi possível atualizar o status",
+    });
+  }, [detectBasePath]);
+
+  // Move otimista com fila por card
+  const moveOptimistic = useCallback(
+    async (id: string, dir: -1 | 1) => {
+      await enqueueMove(id, async () => {
+        const currentItem = items.find((x) => x.id === id);
+        if (!currentItem) return;
+
+        const from = normalizeStatus(currentItem.status);
+        const to = moveTarget(from, dir);
+        if (from === to) return;
+
+        // limpa erro do card
+        setErrorById((m) => {
+          const { [id]: _, ...rest } = m;
+          return rest;
+        });
+
+        // otimista
+        const prev = items;
+        setItems((cur) => cur.map((x) => (x.id === id ? { ...x, status: to } : x)));
+        setSavingById((m) => ({ ...m, [id]: true }));
+
+        try {
+          await patchStatus(id, to);
+          // revalidação individual
           const bp = await detectBasePath();
           try {
-            const fresh = await fetchById(bp, selectedId);
-            setSelectedItem(fresh);
+            const fresh = await fetchById(bp, id);
+            setItems((cur) => cur.map((x) => (x.id === id ? fresh : x)));
+            showToast("Status atualizado ✅");
           } catch {
-            // fallback: pega do state se fetch falhar
-            const it = items.find((x) => x.id === selectedId) ?? null;
-            setSelectedItem(it);
+            // fallback: recarrega tudo se GET por id falhar
+            await loadSuportes();
+            showToast("Status atualizado ✅");
           }
+        } catch (e: unknown) {
+          // rollback
+          setItems(prev);
+          const msg = e instanceof Error ? e.message : "Falha ao atualizar status";
+          setErrorById((m) => ({ ...m, [id]: msg }));
+        } finally {
+          setSavingById((m) => ({ ...m, [id]: false }));
         }
-        if (ev.key === "Escape") {
-          setSelectedItem(null);
+      });
+    },
+    [enqueueMove, items, patchStatus, loadSuportes, detectBasePath, showToast],
+  );
+
+  // Atalhos de teclado para mover card selecionado e abrir modal
+  useEffect(() => {
+    const onKeyDown = async (ev: KeyboardEvent) => {
+      if (isTypingTarget(document.activeElement)) return;
+      if (!selectedId) return;
+      if (ev.key === "ArrowLeft") {
+        ev.preventDefault();
+        void moveOptimistic(selectedId, -1);
+      }
+      if (ev.key === "ArrowRight") {
+        ev.preventDefault();
+        void moveOptimistic(selectedId, 1);
+      }
+      if (ev.key === "Enter") {
+        if (savingById[selectedId]) return;
+        ev.preventDefault();
+        // Busca dados frescos e abre modal
+        const bp = await detectBasePath();
+        try {
+          const fresh = await fetchById(bp, selectedId);
+          setSelectedItem(fresh);
+        } catch {
+          // fallback: pega do state se fetch falhar
+          const it = items.find((x) => x.id === selectedId) ?? null;
+          setSelectedItem(it);
         }
-      };
-      window.addEventListener("keydown", onKeyDown);
-      return () => window.removeEventListener("keydown", onKeyDown);
-    }, [selectedId, moveOptimistic, detectBasePath, items, savingById]);
+      }
+      if (ev.key === "Escape") {
+        setSelectedItem(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedId, moveOptimistic, detectBasePath, items, savingById]);
   const moveQueueRef = useMemo(() => new Map<string, Promise<void>>(), []);
 
   // Toast global

@@ -127,13 +127,16 @@ export default function KanbanItPage() {
     try {
       setLoadingSuportes(true);
       setError(null);
-      const res = await fetch("/api/suportes", {
+      const res = await fetch("/api/chamados", {
         method: "GET",
         cache: "no-store",
       });
+      const contentType = res.headers.get("content-type") ?? "";
       if (!res.ok) {
-        const msg = await res.text().catch(() => "");
-        throw new Error(msg || `Falha ao carregar suportes (${res.status})`);
+        throw new Error(`Falha ao carregar suportes (${res.status}).`);
+      }
+      if (!contentType.includes("application/json")) {
+        throw new Error("Resposta inesperada (não é JSON). Verifique o endpoint /api/chamados.");
       }
       const data = (await res.json()) as { items?: SuporteItem[] } | SuporteItem[];
       const items = Array.isArray(data) ? data : (data.items ?? []);

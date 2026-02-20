@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "id": "emp_001",
+      "name": "Testing Company",
+      "slug": "testing-company",
+      "isActive": true,
+      "createdAt": "2026-02-19T00:00:00.000Z",
+      "updatedAt": "2026-02-19T00:00:00.000Z"
+    }
+  ]
+}

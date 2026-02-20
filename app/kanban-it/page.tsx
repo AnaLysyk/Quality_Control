@@ -1,609 +1,477 @@
-﻿"use client";
+﻿// Helper para checar se foco está em input/editável
+function isTypingTarget(el: Element | null) {
+  if (!el) return false;
+  const tag = (el as HTMLElement).tagName?.toLowerCase();
+  const editable = (el as HTMLElement).isContentEditable;
+  return editable || tag === "input" || tag === "textarea" || tag === "select";
+}
+// ...existing code...
+// Fila de moves por card
+import { useRef } from "react";
+type BasePath = "/api/chamados" | "/api/suportes";
+
+async function fetchById(bp: BasePath, id: string) {
+  return safeFetchJson<SuporteItem>(`${bp}/${id}`,
+    {
+      noStore: true,
+      friendlyMessage: "Não foi possível revalidar o item",
+    }
+  );
+}
+
+"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FiPlus, FiRefreshCw } from "react-icons/fi";
-import { useAuthUser } from "@/hooks/useAuthUser";
-import { useSuporteKanbanColumns } from "@/hooks/useSuporteKanbanColumns";
-import {
-  getSuporteStatusLabel,
-  normalizeKanbanStatus,
-  type SuporteStatus,
-} from "@/lib/suportesStatus";
-import SuporteDetailsModal from "../components/SuporteDetailsModal";
+import { safeFetchJson, SafeFetchJsonError } from "@/lib/safeFetchJson";
+
 
 type SuporteItem = {
   id: string;
-  title: string;
-  description: string;
-  status: SuporteStatus | string;
-  type?: string | null;
-  code?: string | null;
+  title?: string | null;
+  description?: string | null;
+  status?: string | null;
   priority?: string | null;
-  tags?: string[];
-  createdAt: string;
-  updatedAt: string;
-  createdBy?: string | null;
-  createdByName?: string | null;
-  createdByEmail?: string | null;
-  companySlug?: string | null;
-  companyId?: string | null;
-  assignedToUserId?: string | null;
-  assignedToName?: string | null;
-  assignedToEmail?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 };
 
-type ColumnKey = string;
+type ApiList<T> = { items: T[] };
 
-const PRIORITY_OPTIONS = [
-  { value: "low", label: "Baixa" },
-  { value: "medium", label: "Média" },
-  { value: "high", label: "Alta" },
-];
+const COLUMNS = [
+  { key: "BACKLOG", title: "Backlog" },
+  { key: "IN_PROGRESS", title: "Em andamento" },
+  { key: "DONE", title: "Concluído" },
+] as const;
 
-const TYPE_OPTIONS = [
-  { value: "bug", label: "Bug" },
-  { value: "melhoria", label: "Melhoria" },
-  { value: "tarefa", label: "Tarefa" },
-];
+type ColumnKey = (typeof COLUMNS)[number]["key"];
 
+function normalizeStatus(s?: string | null): ColumnKey {
+  const v = (s ?? "").toUpperCase().trim();
 
-function isPrivilegedRole(role: string | null | undefined) {
-  const value = (role ?? "").toLowerCase();
-  return (
-    value === "it_dev" ||
-    value === "itdev" ||
-    value === "developer" ||
-    value === "dev" ||
-    value === "admin" ||
-    value === "empresa" ||
-    value === "company"
-  );
+  if (
+    v === "IN_PROGRESS" ||
+    v.includes("PROGRESS") ||
+    v.includes("ANDAMENTO") ||
+    v.includes("FAZENDO")
+  )
+    return "IN_PROGRESS";
+
+  if (v === "DONE" || v.includes("DONE") || v.includes("CONCL") || v.includes("FECH"))
+    return "DONE";
+
+  return "BACKLOG";
 }
 
-function shortText(value?: string | null, max = 120) {
-  if (!value) return "Sem descricao.";
-  const trimmed = value.trim();
-  if (trimmed.length <= max) return trimmed;
-  return `${trimmed.slice(0, Math.max(0, max - 3))}...`;
+function denormalizeStatus(col: ColumnKey) {
+  // o que vai para o backend
+  return col;
 }
 
-function formatDate(iso?: string | null) {
-  if (!iso) return "-";
-  const time = Date.parse(iso);
-  if (!Number.isFinite(time)) return "-";
-  return new Date(time).toLocaleDateString("pt-BR");
-}
 
-export default function KanbanItPage() {
-  const { user, loading } = useAuthUser();
-  // DEBUG: log do perfil do usuário
-  if (typeof window !== "undefined") {
-    // eslint-disable-next-line no-console
-    console.log("[KANBAN] user?.role:", user?.role);
+// Detecta e cacheia o endpoint base ("/api/chamados" ou "/api/suportes")
+async function detectBasePath(): Promise<"/api/chamados" | "/api/suportes"> {
+  try {
+    await safeFetchJson("/api/chamados", { method: "HEAD", noStore: true });
+    return "/api/chamados";
+  } catch (e) {
+    if (e instanceof SafeFetchJsonError && e.status === 404) {
+      return "/api/suportes";
+    }
+    throw e;
   }
-  const [suportes, setSuportes] = useState<SuporteItem[]>([]);
-  const [loadingSuportes, setLoadingSuportes] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [dragging, setDragging] = useState<{ id: string; from: SuporteStatus | string } | null>(null);
-  const [selectedSuporte, setSelectedSuporte] = useState<SuporteItem | null>(null);
+}
 
-  const [createOpen, setCreateOpen] = useState(false);
-  const [createDraft, setCreateDraft] = useState({
-    title: "",
-    description: "",
-    type: "tarefa",
-    priority: "medium",
+async function fetchSuportes(basePath: string): Promise<SuporteItem[]> {
+  const data = await safeFetchJson<ApiList<SuporteItem>>(basePath, {
+    noStore: true,
+    friendlyMessage: "Não foi possível carregar suportes",
   });
-  const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
+  return data.items ?? [];
+}
 
-  const [editingColumnKey, setEditingColumnKey] = useState<string | null>(null);
-  const [editingColumnLabel, setEditingColumnLabel] = useState("");
-  const [addingColumn, setAddingColumn] = useState(false);
-  const [newColumnLabel, setNewColumnLabel] = useState("");
 
-  // Só DEV pode editar/remover/adicionar colunas
-  const isPrivileged = isPrivilegedRole(user?.role);
-  const isAllowed = true; // Todos podem ver suportes, mas só dev pode mexer nas colunas
-  const statusKeys = useMemo(
-    () => suportes.map((suporte) => normalizeKanbanStatus(suporte.status)),
-    [suportes],
-  );
-  const { columns, statusOptions, addColumn, renameColumn, removeColumn } = useSuporteKanbanColumns(statusKeys);
+async function patchStatus(basePath: string, id: string, next: ColumnKey): Promise<void> {
+  const body = { status: denormalizeStatus(next) };
+  await safeFetchJson(`${basePath}/${id}/status`, {
+    method: "PATCH",
+    noStore: true,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    friendlyMessage: "Não foi possível atualizar o status",
+  });
+}
 
-  const grouped = useMemo(() => {
-    const map: Record<ColumnKey, SuporteItem[]> = {};
-    columns.forEach((col) => {
-      map[col.key] = [];
-    });
-    for (const suporte of suportes) {
-      const normalized = normalizeKanbanStatus(suporte.status) as ColumnKey;
-      if (map[normalized]) map[normalized].push(suporte);
-    }
-    return map;
-  }, [suportes, columns]);
+function moveTarget(current: ColumnKey, dir: -1 | 1): ColumnKey {
+  const idx = COLUMNS.findIndex((c) => c.key === current);
+  const nextIdx = Math.max(0, Math.min(COLUMNS.length - 1, idx + dir));
+  return COLUMNS[nextIdx].key;
+}
 
-  const loadTickets = useCallback(async () => {
-    try {
-      setLoadingSuportes(true);
-      setError(null);
-      const res = await fetch("/api/chamados", {
-        method: "GET",
-        cache: "no-store",
-        credentials: "include",
-      });
-      const contentType = res.headers.get("content-type") ?? "";
-      if (res.status === 401) {
-        setSuportes([]);
-        throw new Error("Faça login para visualizar os suportes.");
-      }
-      if (!res.ok) {
-        throw new Error(`Falha ao carregar suportes (${res.status}).`);
-      }
-      if (!contentType.includes("application/json")) {
-        throw new Error("Resposta inesperada (não é JSON). Verifique o endpoint /api/chamados.");
-      }
-      const data = (await res.json()) as { items?: SuporteItem[] } | SuporteItem[];
-      const items = Array.isArray(data) ? data : (data.items ?? []);
-      setSuportes(items);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Erro desconhecido ao carregar suportes");
-    } finally {
-      setLoadingSuportes(false);
-    }
+
+
+export default function Page() {
+  // Fila de moves por card
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<SuporteItem | null>(null);
+    // ...existing code...
+
+    // Atalhos de teclado para mover card selecionado e abrir modal
+    useEffect(() => {
+      const onKeyDown = async (ev: KeyboardEvent) => {
+        if (isTypingTarget(document.activeElement)) return;
+        if (!selectedId) return;
+        if (ev.key === "ArrowLeft") {
+          ev.preventDefault();
+          void moveOptimistic(selectedId, -1);
+        }
+        if (ev.key === "ArrowRight") {
+          ev.preventDefault();
+          void moveOptimistic(selectedId, 1);
+        }
+        if (ev.key === "Enter") {
+          if (savingById[selectedId]) return;
+          ev.preventDefault();
+          // Busca dados frescos e abre modal
+          const bp = await detectBasePath();
+          try {
+            const fresh = await fetchById(bp, selectedId);
+            setSelectedItem(fresh);
+          } catch {
+            // fallback: pega do state se fetch falhar
+            const it = items.find((x) => x.id === selectedId) ?? null;
+            setSelectedItem(it);
+          }
+        }
+        if (ev.key === "Escape") {
+          setSelectedItem(null);
+        }
+      };
+      window.addEventListener("keydown", onKeyDown);
+      return () => window.removeEventListener("keydown", onKeyDown);
+    }, [selectedId, moveOptimistic, detectBasePath, items, savingById]);
+  const moveQueueRef = useMemo(() => new Map<string, Promise<void>>(), []);
+
+  // Toast global
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    window.setTimeout(() => setToast(null), 2200);
   }, []);
 
-  useEffect(() => {
-    void loadTickets();
-  }, [loadTickets]);
+  // Contador de pendências por card
+  const [pendingById, setPendingById] = useState<Record<string, number>>({});
 
-  useEffect(() => {
-    const timer = setInterval(loadTickets, 30000);
-    return () => clearInterval(timer);
-  }, [loadTickets]);
+  const enqueueMove = useCallback(
+    (id: string, task: () => Promise<void>) => {
+      setPendingById((m) => ({ ...m, [id]: (m[id] ?? 0) + 1 }));
+      const prev = moveQueueRef.get(id) ?? Promise.resolve();
+      const next = prev
+        .catch(() => {})
+        .then(task)
+        .finally(() => {
+          setPendingById((m) => {
+            const n = (m[id] ?? 1) - 1;
+            if (n <= 0) {
+              const { [id]: _, ...rest } = m;
+              return rest;
+            }
+            return { ...m, [id]: n };
+          });
+          if (moveQueueRef.get(id) === next) moveQueueRef.delete(id);
+        });
+      moveQueueRef.set(id, next);
+      return next;
+    },
+    [moveQueueRef],
+  );
 
-  function handleDragStart(suporte: SuporteItem) {
-    if (!(isPrivileged && (user?.id === suporte.createdBy || isPrivilegedRole(user?.role)))) return;
-    setDragging({ id: suporte.id, from: suporte.status }); // status is now SuporteStatus | string
-  }
+  const [items, setItems] = useState<SuporteItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [savingById, setSavingById] = useState<Record<string, boolean>>({});
+  const [basePath, setBasePath] = useState<"/api/chamados" | "/api/suportes" | null>(null);
+  const [errorById, setErrorById] = useState<Record<string, string>>({});
 
-  async function updateStatus(suporteId: string, nextStatus: SuporteStatus | string) {
-    const previous = suportes;
-    setSuportes((current) =>
-      current.map((suporte) => (suporte.id === suporteId ? { ...suporte, status: nextStatus } : suporte)),
-    );
+  // Detecta basePath uma única vez e cacheia
+  const detectBasePath = useCallback(async () => {
+    if (basePath) return basePath;
     try {
-      const res = await fetch(`/api/suportes/${suporteId}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ status: nextStatus }),
-      });
-      const json = (await res.json().catch(() => ({}))) as { item?: SuporteItem; error?: string };
-      if (!res.ok || !json.item) {
-        setSuportes(previous);
-        setError(json?.error || "Falha ao atualizar status");
-        return;
+      await safeFetchJson("/api/chamados", { noStore: true });
+      setBasePath("/api/chamados");
+      return "/api/chamados" as const;
+    } catch (e) {
+      if (e instanceof SafeFetchJsonError && e.status === 404) {
+        setBasePath("/api/suportes");
+        return "/api/suportes" as const;
       }
-      setSuportes((current) =>
-        current.map((suporte) => (suporte.id === json.item?.id ? json.item : suporte)),
-      );
-    } catch {
-      setSuportes(previous);
-      setError("Falha ao atualizar status");
+      setBasePath("/api/chamados");
+      return "/api/chamados" as const;
     }
-  }
+  }, [basePath]);
 
-  async function handleDrop(toStatus: SuporteStatus | string) {
-    if (!dragging || !isPrivileged) return;
-    if (dragging.from === toStatus) {
-      setDragging(null);
-      return;
-    }
-    const suporteId = dragging.id;
-    setDragging(null);
-    await updateStatus(suporteId, toStatus);
-  }
-
-  async function submitCreate() {
-    setCreating(true);
-    setCreateError(null);
+  // Carrega suportes usando basePath detectado
+  const loadSuportes = useCallback(async () => {
     try {
-      const res = await fetch("/api/suportes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          title: createDraft.title,
-          description: createDraft.description,
-          type: createDraft.type,
-          priority: createDraft.priority,
-        }),
+      setLoading(true);
+      setErrorMsg(null);
+      const bp = await detectBasePath();
+      const data = await safeFetchJson<ApiList<SuporteItem>>(`${bp}`, {
+        noStore: true,
+        friendlyMessage: "Não foi possível carregar suportes",
       });
-      const json = (await res.json().catch(() => ({}))) as { item?: SuporteItem; error?: string };
-      if (!res.ok || !json.item) {
-        setCreateError(json?.error || "Erro ao criar suporte");
-        return;
-      }
-      setCreateOpen(false);
-      setCreateDraft({ title: "", description: "", type: "tarefa", priority: "medium" });
-      setSuportes((current) => [json.item as SuporteItem, ...current]);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao criar suporte";
-      setCreateError(msg);
+      setItems(data.items ?? []);
+    } catch (e: unknown) {
+      setErrorMsg(e instanceof Error ? e.message : "Erro ao carregar suportes");
     } finally {
-      setCreating(false);
+      setLoading(false);
     }
-  }
+  }, [detectBasePath]);
 
-  function startEditColumn(key: string, label: string) {
-    if (!isPrivileged) return;
-    setEditingColumnKey(key);
-    setEditingColumnLabel(label);
-  }
+  useEffect(() => {
+    void loadSuportes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  function commitEditColumn() {
-    if (!editingColumnKey) return;
-    // Se o label estiver vazio, remove a coluna (exceto as locked)
-    if (!editingColumnLabel.trim()) {
-      removeColumn(editingColumnKey);
-      setEditingColumnKey(null);
-      setEditingColumnLabel("");
-      return;
+  const grouped = useMemo(() => {
+    const acc = COLUMNS.reduce<Record<ColumnKey, SuporteItem[]>>((a, c) => {
+      a[c.key] = [];
+      return a;
+    }, {} as any);
+    for (const it of items) {
+      acc[normalizeStatus(it.status)].push(it);
     }
-    renameColumn(editingColumnKey, editingColumnLabel);
-    setEditingColumnKey(null);
-    setEditingColumnLabel("");
-  }
+    return acc;
+  }, [items]);
 
-  function cancelEditColumn() {
-    setEditingColumnKey(null);
-    setEditingColumnLabel("");
-  }
+  // PATCH status usando basePath fixo
+  const patchStatus = useCallback(async (id: string, next: ColumnKey) => {
+    const bp = await detectBasePath();
+    await safeFetchJson(`${bp}/${id}/status`, {
+      method: "PATCH",
+      noStore: true,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: denormalizeStatus(next) }),
+      friendlyMessage: "Não foi possível atualizar o status",
+    });
+  }, [detectBasePath]);
 
-  function startAddColumn() {
-    if (!isPrivileged) return;
-    setAddingColumn(true);
-    setNewColumnLabel("");
-  }
+  // Move otimista com fila por card
+  const moveOptimistic = useCallback(
+    async (id: string, dir: -1 | 1) => {
+      await enqueueMove(id, async () => {
+        const currentItem = items.find((x) => x.id === id);
+        if (!currentItem) return;
 
-  function commitAddColumn() {
-    const created = addColumn(newColumnLabel);
-    setAddingColumn(false);
-    setNewColumnLabel("");
-    return created;
-  }
+        const from = normalizeStatus(currentItem.status);
+        const to = moveTarget(from, dir);
+        if (from === to) return;
 
-  if (loading) {
-    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Carregando...</div>;
-  }
+        // limpa erro do card
+        setErrorById((m) => {
+          const { [id]: _, ...rest } = m;
+          return rest;
+        });
 
-  if (!isAllowed) {
-    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Acesso restrito.</div>;
-  }
+        // otimista
+        const prev = items;
+        setItems((cur) => cur.map((x) => (x.id === id ? { ...x, status: to } : x)));
+        setSavingById((m) => ({ ...m, [id]: true }));
+
+        try {
+          await patchStatus(id, to);
+          // revalidação individual
+          const bp = await detectBasePath();
+          try {
+            const fresh = await fetchById(bp, id);
+            setItems((cur) => cur.map((x) => (x.id === id ? fresh : x)));
+            showToast("Status atualizado ✅");
+          } catch {
+            // fallback: recarrega tudo se GET por id falhar
+            await loadSuportes();
+            showToast("Status atualizado ✅");
+          }
+        } catch (e: unknown) {
+          // rollback
+          setItems(prev);
+          const msg = e instanceof Error ? e.message : "Falha ao atualizar status";
+          setErrorById((m) => ({ ...m, [id]: msg }));
+        } finally {
+          setSavingById((m) => ({ ...m, [id]: false }));
+        }
+      });
+    },
+    [enqueueMove, items, patchStatus, loadSuportes, detectBasePath, showToast],
+  );
 
   return (
-    <div className="p-6 space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Suportes</h1>
-          <p className="text-sm text-(--tc-text-muted,#6b7280)">
+    <div className="w-full">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">Suportes</h1>
+          <p className="text-sm text-slate-500">
             Visão completa do fluxo de suportes para desenvolvimento.
           </p>
+          <p className="text-xs text-slate-500 mt-1">
+            Dica: clique em um card e use ← → para mover
+          </p>
         </div>
+
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={loadTickets}
-            className="inline-flex items-center gap-2 rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+            onClick={() => void loadSuportes()}
+            disabled={loading || !basePath}
+            className="rounded-xl border px-3 py-2 text-sm font-semibold hover:bg-slate-50 disabled:opacity-60"
           >
-            <FiRefreshCw size={14} /> Atualizar
+            {loading ? "Atualizando..." : "Atualizar"}
           </button>
+
           <button
             type="button"
-            onClick={() => setCreateOpen(true)}
-            className="flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-5 py-3 text-base font-semibold shadow-lg text-white hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/60"
-            aria-label="Criar suporte"
+            className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:opacity-95"
           >
-            <FiPlus size={20} />
-            <span className="hidden sm:inline">Novo suporte</span>
+            Novo suporte
           </button>
         </div>
-      </header>
+      </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {loadingSuportes && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
-
-
-      {user?.id && (
-        <div className="flex flex-wrap items-center gap-2">
-          {!addingColumn && (
-            <button
-              type="button"
-              onClick={startAddColumn}
-              className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
-            >
-              + Coluna
-            </button>
-          )}
-          {addingColumn && (
-            <input
-              value={newColumnLabel}
-              autoFocus
-              onChange={(e) => setNewColumnLabel(e.target.value)}
-              onBlur={commitAddColumn}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  commitAddColumn();
-                }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setAddingColumn(false);
-                  setNewColumnLabel("");
-                }
-              }}
-              className="w-56 rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
-              placeholder="Nome da coluna"
-            />
-          )}
+      {errorMsg ? (
+        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {errorMsg}
         </div>
-      )}
+      ) : null}
 
-      <section className="w-full py-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 pb-4">
-          {columns.map((column, idx) => {
-            // Paleta de cores pastel para colunas
-            const pastel = [
-              'bg-pink-100 border-pink-300',
-              'bg-blue-100 border-blue-300',
-              'bg-green-100 border-green-300',
-              'bg-yellow-100 border-yellow-300',
-              'bg-purple-100 border-purple-300',
-              'bg-orange-100 border-orange-300',
-              'bg-cyan-100 border-cyan-300',
-              'bg-lime-100 border-lime-300',
-              'bg-fuchsia-100 border-fuchsia-300',
-              'bg-rose-100 border-rose-300',
-            ];
-            const color = pastel[idx % pastel.length];
-            return (
-              <div
-                key={column.key}
-                className={`rounded-2xl border shadow-lg p-3 min-h-80 flex flex-col ${color}`}
-                onDragOver={isPrivilegedRole(user?.role) ? (e) => {
-                  e.preventDefault();
-                  e.dataTransfer.dropEffect = "move";
-                } : undefined}
-                onDrop={isPrivilegedRole(user?.role) ? () => handleDrop(column.key) : undefined}
-              >
-            <div className="flex items-center justify-between">
-              {editingColumnKey === column.key ? (
-                <input
-                  value={editingColumnLabel}
-                  autoFocus
-                  onChange={(e) => setEditingColumnLabel(e.target.value)}
-                  onBlur={commitEditColumn}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      commitEditColumn();
-                    }
-                    if (e.key === "Escape") {
-                      e.preventDefault();
-                      cancelEditColumn();
-                    }
-                  }}
-                  placeholder="Nome da coluna"
-                  title="Editar nome da coluna"
-                  aria-label="Editar nome da coluna"
-                  className="w-full rounded-md border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
-                />
-              ) :
-                isPrivileged ? (
-                  <button
-                    type="button"
-                    onClick={() => startEditColumn(column.key, column.label)}
-                    className="text-left text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
-                  >
-                    {column.label}
-                  </button>
-                ) : (
-                  <span className="text-left text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">{column.label}</span>
-                )
-              }
-              <span className="text-xs text-(--tc-text-muted,#6b7280)">
-                {grouped[column.key]?.length ?? 0}
+      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+        {COLUMNS.map((col) => (
+          <section
+            key={col.key}
+            className="rounded-2xl border bg-white p-3 shadow-sm"
+          >
+            <header className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-extrabold tracking-wide">{col.title}</h2>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+                {grouped[col.key].length}
               </span>
-            </div>
-            <div className="mt-3 space-y-3">
-              {(grouped[column.key] ?? []).map((suporte) => {
-                const creatorLabel = suporte.createdByName || suporte.createdByEmail || suporte.createdBy || "-";
+            </header>
+
+            <div className="space-y-2">
+              {grouped[col.key].map((it) => {
+                const st = normalizeStatus(it.status);
+                const busy = !!savingById[it.id];
+                const err = errorById[it.id];
+                const pend = pendingById[it.id];
+
                 return (
-                  <div key={suporte.id} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 text-left shadow-sm">
-                    <button
-                      type="button"
-                      draggable={isPrivileged && (user?.id === suporte.createdBy || isPrivilegedRole(user?.role))}
-                      onDragStart={isPrivileged && (user?.id === suporte.createdBy || isPrivilegedRole(user?.role)) ? (event) => {
-                        event.dataTransfer.setData("text/plain", suporte.id);
-                        event.dataTransfer.effectAllowed = "move";
-                        handleDragStart(suporte);
-                      } : undefined}
-                      onDragEnd={isPrivileged && (user?.id === suporte.createdBy || isPrivilegedRole(user?.role)) ? () => setDragging(null) : undefined}
-                      onClick={() => setSelectedSuporte(suporte)}
-                      className="w-full text-left"
-                      disabled={!(isPrivileged && (user?.id === suporte.createdBy || isPrivilegedRole(user?.role)))}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                          {suporte.code || `SP-${suporte.id.slice(0, 6).toUpperCase()}`}
+                  <article
+                    key={it.id}
+                    onClick={() => setSelectedId(it.id)}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") setSelectedId(it.id);
+                    }}
+                    className={[
+                      "rounded-2xl border bg-white p-3 shadow-[0_8px_16px_rgba(15,23,42,0.06)]",
+                      selectedId === it.id
+                        ? "ring-2 ring-slate-900/40 border-slate-900/30"
+                        : "hover:border-slate-300",
+                    ].join(" ")}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-900">
+                          {it.title ?? "Sem título"}
                         </p>
-                        <span className="text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                          {getSuporteStatusLabel(normalizeKanbanStatus(suporte.status), statusOptions)}
+                        {it.description ? (
+                          <p className="mt-1 line-clamp-2 text-xs text-slate-600">
+                            {it.description}
+                          </p>
+                        ) : null}
+                        <p className="mt-2 text-[11px] text-slate-500">
+                          ID: {it.id}
+                        </p>
+                        {err ? (
+                          <div className="mt-2 rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-[11px] font-semibold text-red-700">
+                            {err}
+                          </div>
+                        ) : null}
+                        {pend ? (
+                          <span className="ml-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                            {pend} pendente
+                          </span>
+                        ) : null}
+                        {selectedId === it.id ? (
+                          <span className="ml-2 text-[10px] text-slate-400">Enter: abrir</span>
+                        ) : null}
+                      </div>
+
+                      <div className="flex flex-col items-end gap-2">
+                        <span className="rounded-full border bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-700">
+                          {st}
                         </span>
-                      </div>
-                      <p className="mt-2 text-sm font-semibold">{suporte.title || "Sem titulo"}</p>
-                      <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">
-                        {shortText(suporte.description, 100)}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                        <span>Tipo: {suporte.type || "tarefa"}</span>
-                        <span>Prioridade: {suporte.priority || "medium"}</span>
-                      </div>
-                      <div className="mt-2 text-[11px] text-(--tc-text-muted,#6b7280) space-y-1">
-                        <p>Criador: {creatorLabel}</p>
-                        <p>Criado: {formatDate(suporte.createdAt)}</p>
-                        <p>Atualizado: {formatDate(suporte.updatedAt)}</p>
-                      </div>
-                    </button>
-                    <div className="mt-3">
-                      <label className="sr-only" htmlFor={`status-${suporte.id}`}>
-                        Status
-                      </label>
-                      {(isPrivileged && (user?.id === suporte.createdBy || isPrivilegedRole(user?.role))) ? (
-                        <select
-                          id={`status-${suporte.id}`}
-                          aria-label="Status do suporte"
-                          title="Status do suporte"
-                          className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[11px]"
-                          value={normalizeKanbanStatus(suporte.status)}
-                          onChange={(e) => updateStatus(suporte.id, e.target.value as SuporteStatus)}
-                        >
-                          {statusOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <>
-                          <select
-                            id={`status-${suporte.id}`}
-                            aria-label="Status do suporte"
-                            title="Status do suporte"
-                            className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-gray-100 px-2 py-1 text-[11px] text-gray-400 cursor-not-allowed"
-                            value={normalizeKanbanStatus(suporte.status)}
-                            disabled
-                            tabIndex={-1}
+
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => void moveOptimistic(it.id, -1)}
+                            disabled={busy || st === "BACKLOG"}
+                            className="rounded-lg border px-2 py-1 text-xs font-semibold hover:bg-slate-50 disabled:opacity-40"
+                            title="Mover para a coluna anterior"
                           >
-                            <option value={normalizeKanbanStatus(suporte.status)}>{getSuporteStatusLabel(normalizeKanbanStatus(suporte.status), statusOptions)}</option>
-                          </select>
-                          <p className="mt-1 text-xs text-red-500">Você não tem permissão para mover o suporte</p>
-                        </>
-                      )}
+                            ←
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void moveOptimistic(it.id, 1)}
+                            disabled={busy || st === "DONE"}
+                            className="rounded-lg border px-2 py-1 text-xs font-semibold hover:bg-slate-50 disabled:opacity-40"
+                            title="Mover para a próxima coluna"
+                          >
+                            →
+                          </button>
+                        </div>
+
+                        {busy ? (
+                          <span className="text-[10px] font-semibold text-slate-500">
+                            Salvando…
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
+                  </article>
                 );
               })}
-              {(grouped[column.key] ?? []).length === 0 && (
-                <p className="text-xs text-(--tc-text-muted,#6b7280)">Sem suportes</p>
-              )}
+
+              {grouped[col.key].length === 0 ? (
+                <div className="rounded-xl border border-dashed p-4 text-center text-xs text-slate-500">
+                  Sem itens
+                </div>
+              ) : null}
             </div>
-          </div>
-            );
-          })}
+          </section>
+        ))}
+      </div>
+      {/* Toast global */}
+      {toast ? (
+        <div className="fixed bottom-4 right-4 z-50 rounded-xl border bg-white px-4 py-2 text-sm font-semibold shadow-lg">
+          {toast}
         </div>
-      </section>
+      ) : null}
 
-      <SuporteDetailsModal
-        open={Boolean(selectedSuporte)}
-        suporte={selectedSuporte}
-        onClose={() => setSelectedSuporte(null)}
-        canEditStatus={true}
-        statusOptions={statusOptions}
-        onSuporteUpdated={(updated: SuporteItem) => {
-          setSelectedSuporte(updated);
-          setSuportes((current) =>
-            current.map((suporte) => (suporte.id === updated.id ? updated : suporte)),
-          );
-        }}
-      />
-
-      {createOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_30px_80px_rgba(15,23,42,0.35)]">
-            <div className="flex items-center justify-between border-b border-(--tc-border,#e5e7eb) px-6 py-4">
-              <h2 className="text-lg font-semibold">Novo suporte</h2>
-              <button
-                type="button"
-                onClick={() => setCreateOpen(false)}
-                className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
-              >
-                Fechar
-              </button>
-            </div>
-            <div className="px-6 py-4 space-y-3">
-              <input
-                className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                placeholder="Titulo"
-                value={createDraft.title}
-                onChange={(e) => setCreateDraft((prev) => ({ ...prev, title: e.target.value }))}
-              />
-              <textarea
-                rows={4}
-                className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                placeholder="Descreva o suporte..."
-                value={createDraft.description}
-                onChange={(e) => setCreateDraft((prev) => ({ ...prev, description: e.target.value }))}
-              />
-              <div className="grid gap-2 sm:grid-cols-2">
-                <label className="sr-only" htmlFor="create-suporte-type">
-                  Tipo do suporte
-                </label>
-                <select
-                  id="create-suporte-type"
-                  aria-label="Tipo do suporte"
-                  title="Tipo do suporte"
-                  className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                  value={createDraft.type}
-                  onChange={(e) => setCreateDraft((prev) => ({ ...prev, type: e.target.value }))}
-                >
-                  {TYPE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <label className="sr-only" htmlFor="create-suporte-priority">
-                  Prioridade do suporte
-                </label>
-                <select
-                  id="create-suporte-priority"
-                  aria-label="Prioridade do suporte"
-                  title="Prioridade do suporte"
-                  className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                  value={createDraft.priority}
-                  onChange={(e) => setCreateDraft((prev) => ({ ...prev, priority: e.target.value }))}
-                >
-                  {PRIORITY_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {createError && <p className="text-sm text-red-600">{createError}</p>}
-            </div>
-            <div className="flex items-center justify-end gap-2 border-t border-(--tc-border,#e5e7eb) px-6 py-4">
-              <button
-                type="button"
-                onClick={() => setCreateOpen(false)}
-                className="rounded-lg border border-(--tc-border,#e5e7eb) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={submitCreate}
-                disabled={creating}
-                className="rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
-              >
-                {creating ? "Criando..." : "Criar"}
-              </button>
-            </div>
+      {/* Modal de detalhes (placeholder) */}
+      {selectedItem ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="rounded-xl bg-white p-6 shadow-xl min-w-[320px] max-w-[90vw]">
+            <h2 className="text-lg font-bold mb-2">Detalhes do Suporte</h2>
+            <pre className="text-xs bg-slate-50 rounded p-2 mb-4 overflow-x-auto">{JSON.stringify(selectedItem, null, 2)}</pre>
+            <button
+              className="mt-2 rounded bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+              onClick={() => setSelectedItem(null)}
+            >
+              Fechar
+            </button>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

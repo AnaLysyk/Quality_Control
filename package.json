@@ -29,7 +29,8 @@
     "seed:quality-alert": "tsx tests-e2e/utils/seed.ts",
     "seed:griaule": "npx tsx scripts/seed-griaule.ts",
     "seed:all": "npm run seed:ana-admin && npm run seed:quality-alert && npm run seed:griaule",
-    "postinstall": "node scripts/fix-server-only.js"
+    "postinstall": "node scripts/fix-server-only.js",
+    "migrate:redis": "node scripts/migrate-json-to-redis.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.975.0",

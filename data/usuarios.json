@@ -1,0 +1,15 @@
+{
+  "items": [
+    {
+      "id": "usr_001",
+      "name": "Usuário",
+      "email": "user@testingcompany.com",
+      "cpf": "00000000000",
+      "role": "admin",
+      "companyId": "emp_001",
+      "isActive": true,
+      "createdAt": "2026-02-19T00:00:00.000Z",
+      "updatedAt": "2026-02-19T00:00:00.000Z"
+    }
+  ]
+}

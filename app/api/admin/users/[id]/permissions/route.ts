@@ -1,41 +1,32 @@
-import { NextResponse } from 'next/server';
-import { NextRequest } from 'next/server';
-import jsonStore from '../../../../../../src/lib/store/jsonStore';
-import { requireGlobalAdminWithStatus } from '@/lib/rbac/requireGlobalAdmin';
+import { NextResponse, NextRequest } from 'next/server';
+import { getUserOverride, setUserOverride } from '../../../../../../src/lib/store/permissionsStore';
+import { ROLE_DEFAULTS } from '../../../../../../src/lib/permissions/roleDefaults';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) return NextResponse.json({ error: status === 401 ? 'Nao autenticado' : 'Sem permissao' }, { status });
-  const id = params?.id;
-  const overrides = jsonStore.listItems('permissionOverrides') || [];
-  const entry = overrides.find((o: any) => o.userId === id) || null;
-  return NextResponse.json({ item: entry });
-}
-
-export async function PATCH(req: NextRequest, { params }: { params?: { id?: string } } = { params: {} }) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) return NextResponse.json({ error: status === 401 ? 'Nao autenticado' : 'Sem permissao' }, { status });
-
-  // robust id extraction: prefer params, fallback to parsing URL
-  const url = new URL(req.url);
-  const parts = url.pathname.split('/').filter(Boolean);
-  const id = params?.id || (parts.length >= 2 ? parts[parts.length - 2] : undefined);
-  const body = await req.json().catch(() => ({}));
-  const now = new Date().toISOString();
-  const overrides = jsonStore.listItems('permissionOverrides') || [];
-  const idx = overrides.findIndex((o: any) => o.userId === id);
-  const entry: any = {
-    allow: body.allow || {},
-    deny: body.deny || {},
-    updatedAt: now,
-    createdAt: idx === -1 ? now : overrides[idx].createdAt,
-  };
-  if (id) entry.userId = id;
-  if (idx === -1) {
-    overrides.push(entry);
-  } else {
-    overrides[idx] = entry;
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const p = await params;
+    const userId = p.id;
+    // In a real app you'd fetch the user and role; for prototype assume role in query or default to 'user'
+    const role = 'user';
+    const override = await getUserOverride(userId);
+    const roleDefaults = (ROLE_DEFAULTS as any)[role] || {};
+    return NextResponse.json({ userId, role, roleDefaults, override });
+  } catch (e: any) {
+    return NextResponse.json({ error: String(e) }, { status: 500 });
   }
-  jsonStore.saveList('permissionOverrides', overrides);
-  return NextResponse.json({ item: entry });
 }
+
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const p = await params;
+    const userId = p.id;
+    const body = await req.json();
+    const allowed = body.allow ?? undefined;
+    const deny = body.deny ?? undefined;
+    const saved = await setUserOverride(userId, { allow: allowed, deny });
+    return NextResponse.json({ ok: true, saved });
+  } catch (e: any) {
+    return NextResponse.json({ error: String(e) }, { status: 500 });
+  }
+}
+

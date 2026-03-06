@@ -1,4 +1,3 @@
-
 import "server-only";
 
 import { getAccessContext } from "@/lib/auth/session";
@@ -19,11 +18,6 @@ export type AuthUser = {
   companySlugs?: string[];
 };
 
-/**
- * Auth helper used by API routes.
- * - Prefer access_token (JWT) / session_id / auth_token (legacy) cookies.
- * - Fallback: Authorization Bearer <email|id> or ?user= for local tooling.
- */
 export async function authenticateRequest(req: Request): Promise<AuthUser | null> {
   const access = await getAccessContext(req);
   if (access) {

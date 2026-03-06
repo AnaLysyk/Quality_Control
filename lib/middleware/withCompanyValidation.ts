@@ -34,8 +34,7 @@ export function withCompanyValidation(handler: HandlerFn) {
             method: req.method,
             headers: req.headers as any,
             body: raw,
-            duplex: (req as any).duplex,
-          });
+          } as any);
         }
         // fallback: if body doesn't contain companyId, use user's primary companyId
         if (!companyId && typeof user.companyId === "string" && user.companyId.length > 0) {

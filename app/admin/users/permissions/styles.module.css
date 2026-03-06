@@ -1,0 +1,53 @@
+.container {
+  display: flex;
+  height: 100%;
+  min-height: 600px;
+}
+.leftCol {
+  width: 360px;
+}
+.rightCol {
+  flex: 1;
+  padding: 16px;
+}
+.usersList {
+  padding: 12px;
+  border-right: 1px solid #eee;
+  height: 100%;
+  overflow: auto;
+}
+.searchInput {
+  width: 100%;
+  padding: 8px;
+}
+.searchWrap {
+  margin-bottom: 8px;
+}
+.userNameSmall { font-weight: 600; }
+.actionText { font-size: 13px; }
+.overrideAllow { color: #0a84ff; margin-left: 6px; }
+.overrideDeny { color: #ff6b6b; margin-left: 6px; }
+.contentSpacing { margin-top: 12px; }
+.userItem {
+  padding: 8px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+}
+.panelPlaceholder {
+  padding: 12px;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.userName { font-weight: 700; }
+.userMeta { font-size: 13px; color: #666; }
+.buttons { display:flex; gap:8px; }
+.panel { padding: 12px; margin-top: 12px; }
+.grid { padding: 12px; }
+.moduleRow { margin-bottom: 12px; }
+.moduleTitle { font-weight: 700; }
+.actionsRow { display:flex; gap:12px; margin-top:8px; }
+.actionLabel { display:flex; align-items:center; gap:6px; }
+.adminPlaceholder { padding: 20px; }

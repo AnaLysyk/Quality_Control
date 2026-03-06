@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
-import MODULES from '../../../../src/lib/modules';
+import { getModulesCatalog } from '../../../../src/lib/store/modulesStore';
 
 export async function GET() {
-  return NextResponse.json({ items: MODULES });
+  try {
+    const modules = await getModulesCatalog();
+    return NextResponse.json({ modules });
+  } catch (e: any) {
+    return NextResponse.json({ error: String(e) }, { status: 500 });
+  }
 }
+ 

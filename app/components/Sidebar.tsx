@@ -24,6 +24,8 @@ import {
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useI18n } from "@/hooks/useI18n";
 import { useClientContext } from "@/context/ClientContext";
+import { ROLE_DEFAULTS } from '../../src/lib/permissions/roleDefaults';
+import { useEffect, useState } from 'react';
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
 
@@ -161,9 +163,56 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     return publicNav;
   }, [user, appRole, adminNav, itDevNav, companyNav, publicNav, pathname]);
 
+  // Map certain hrefs to module ids used by permissions
+  const hrefToModule: Record<string, string> = {
+    '/admin/users/permissions': 'users',
+    '/admin/chamados': 'tickets',
+    '/empresas': 'applications',
+    '/admin/clients': 'users',
+    '/admin/home': 'dashboard',
+    '/admin/access-requests': 'access_requests',
+  };
+
+  const [moduleVisibility, setModuleVisibility] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    async function loadOverrides() {
+      try {
+        if (!user?.id) return;
+        const res = await fetch(`/api/admin/users/${user.id}/permissions`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const role = data.role || (user.role ?? 'user');
+        const roleDefaults = (ROLE_DEFAULTS as any)[role] || {};
+        const override = data.override || { allow: {}, deny: {} };
+        const allow = override.allow || {};
+        const deny = override.deny || {};
+        const modules = new Set<string>([...Object.keys(roleDefaults), ...Object.keys(allow), ...Object.keys(deny)]);
+        const vis: Record<string, boolean> = {};
+        for (const m of modules) {
+          const base = new Set<string>(roleDefaults[m] || []);
+          (allow[m] || []).forEach((a: string) => base.add(a));
+          (deny[m] || []).forEach((a: string) => base.delete(a));
+          vis[m] = base.has('view');
+        }
+        setModuleVisibility(vis);
+      } catch (e) {
+        // ignore
+      }
+    }
+    loadOverrides();
+  }, [user]);
+
   const renderNavLinks = (isMobile = false) =>
     navigation
       .filter((item) => !item.roles || (appRole ? item.roles.includes(appRole) : false))
+      .filter(item => {
+        const moduleId = hrefToModule[item.href] || null;
+        if (!moduleId) return true; // unknown mapping -> keep
+        // if we have visibility info, respect it
+        if (moduleVisibility[moduleId] === false) return false;
+        return true;
+      })
       .map((item) => {
         const isActive =
           item.href === "/"

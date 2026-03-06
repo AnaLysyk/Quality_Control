@@ -16,6 +16,7 @@ import {
   FiHome,
   FiList,
   FiMessageSquare,
+  FiShield,
   
   FiUserPlus,
   FiUsers,
@@ -118,6 +119,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
     items.push(
       { label: "Chamados", icon: FiMessageSquare, href: "/admin/chamados" },
+      { label: "Gestão", icon: FiShield, href: "/admin/users/permissions" },
       { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
       { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
     );

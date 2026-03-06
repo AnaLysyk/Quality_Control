@@ -560,8 +560,8 @@ export default function AdminHomePage() {
                   onChange={(event) => setSelectedRunSlug(event.target.value || null)}
                   aria-label="Selecionar run em foco"
                 >
-                  {runOptions.map((run) => (
-                    <option key={run.slug} value={run.slug}>
+                  {runOptions.map((run, idx) => (
+                    <option key={`${run.slug ?? 'run'}-${idx}`} value={run.slug}>
                       {run.title ?? run.slug}
                     </option>
                   ))}
@@ -650,8 +650,8 @@ export default function AdminHomePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {ranking.companies.map((c) => (
-                    <tr key={c.slug} className="bg-white hover:bg-(--tc-surface,#f9fafb) transition">
+                  {ranking.companies.map((c, idx) => (
+                    <tr key={`${c.slug ?? 'company'}-${idx}`} className="bg-white hover:bg-(--tc-surface,#f9fafb) transition">
                       <td className="px-2 py-1 font-semibold text-(--page-text,#0b1a3c)">{c.name}</td>
                       <td className="px-2 py-1 font-mono font-bold text-lg">{c.score}</td>
                       <td className="px-2 py-1"><Badge status={c.status} /></td>

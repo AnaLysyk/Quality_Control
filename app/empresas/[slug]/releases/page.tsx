@@ -24,8 +24,8 @@ export default async function CompanyReleasesPage({ params }: PageProps) {
         </header>
 
         <div className="grid gap-4 md:grid-cols-2">
-          {sorted.map((release) => (
-            <div key={release.slug} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-5 shadow-sm">
+          {sorted.map((release, idx) => (
+            <div key={`${release.slug ?? 'release'}-${release.createdAt ?? idx}`} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-5 shadow-sm">
               <Link
                 href={`/empresas/${encodeURIComponent(slug)}/releases/${encodeURIComponent(release.slug)}`}
                 className="text-base font-semibold text-(--tc-accent,#ef0001)"

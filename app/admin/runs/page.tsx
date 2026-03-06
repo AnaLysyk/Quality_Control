@@ -356,7 +356,7 @@ export default function AdminRunsPage() {
           <p className="text-(--tc-text-muted,#6b7280)">Nenhuma run salva ainda.</p>
         ) : (
           <div className="grid gap-4">
-            {pagedItems.map((item) => {
+            {pagedItems.map((item, idx) => {
                 const chipKey = (item.app ?? item.project ?? "smart").toLowerCase();
                 const meta = getAppMeta(chipKey, chipKey.toUpperCase());
                 const chipText = meta.label ?? (item.app ?? item.project ?? "APP").toUpperCase();
@@ -364,7 +364,7 @@ export default function AdminRunsPage() {
                 const titleClean = (item.title ?? "").replace(/^run\s*/i, "");
                 return (
                 <div
-                  key={item.slug}
+                  key={`${item.slug ?? 'run'}-${idx}`}
                   className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-5 space-y-4 shadow-sm transition hover:border-(--tc-accent,#ef0001)/60 hover:shadow-lg"
                 >
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

@@ -30,7 +30,8 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
       if (!boxRef.current?.contains(e.target as Node)) setOpen(false);
     }
     function esc(e: KeyboardEvent) {
-}
+      if (e.key === "Escape") setOpen(false);
+    }
     document.addEventListener("mousedown", close);
     document.addEventListener("keydown", esc);
     return () => {
@@ -64,12 +65,13 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
   const displayName = loading ? t("profileMenu.loading") : user?.name || t("profileMenu.userFallback");
 
   // Universal session fallback: redireciona para login se não há usuário e não está carregando
-  if (!loading && !user) {
-    useEffect(() => {
+  useEffect(() => {
+    if (!loading && !user) {
       router.replace("/login");
-    }, [router]);
-    return null;
-  }
+    }
+  }, [loading, user, router]);
+
+  if (!loading && !user) return null;
 
   return (
       <div className="relative" ref={boxRef}>

@@ -128,8 +128,8 @@ export default function CompanyKanbanPage() {
               aria-label="Selecionar run"
             >
               <option value="">Selecione uma run</option>
-              {runs.map((run) => (
-                <option key={run.slug} value={run.slug}>
+              {runs.map((run, idx) => (
+                <option key={`${run.slug ?? 'run'}-${idx}`} value={run.slug}>
                   {run.name}
                 </option>
               ))}

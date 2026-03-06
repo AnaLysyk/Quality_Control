@@ -87,9 +87,11 @@ export async function GET(req: Request) {
 export const POST = withCompanyValidation(async (user, companyId, req) => {
   try {
     const body = await req.json().catch(() => ({}));
+    // Log received payload for debugging when creation fails
+    console.debug("[tickets POST] received body:", body);
     const localUser = await getLocalUserById(user.id);
     const assignedToUserId =
-      canAssignTicket(user) && typeof body?.assignedToUserId === "string" ? body.assignedToUserId : null;
+      canAssignTicket(user) && typeof body?.assignedToUserId === "string" ? body?.assignedToUserId : null;
     const tags =
       Array.isArray(body?.tags) ? body.tags : typeof body?.tags === "string" ? body.tags.split(",") : undefined;
 
@@ -108,6 +110,7 @@ export const POST = withCompanyValidation(async (user, companyId, req) => {
     });
 
     if (!ticket) {
+      console.warn("[tickets POST] createTicket returned null — body:", body);
       return NextResponse.json({ error: "Informe titulo ou descricao" }, { status: 400 });
     }
 
@@ -127,6 +130,7 @@ export const POST = withCompanyValidation(async (user, companyId, req) => {
     const enriched = await attachAssigneeToTicket(ticket);
     return NextResponse.json({ item: enriched }, { status: 201 });
   } catch (err) {
+
     const message = err instanceof Error ? err.message : "Erro ao criar chamado";
     console.error("[tickets] Falha ao criar chamado:", err);
     return NextResponse.json({ error: message }, { status: 500 });

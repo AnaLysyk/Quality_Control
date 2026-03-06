@@ -142,6 +142,13 @@ export default function TicketsButton() {
     setMessage(null);
     try {
       if (isCreating) {
+        // Basic client-side validation to avoid empty posts
+        const title = String(draft.title ?? "").trim();
+        const description = String(draft.description ?? "").trim();
+        if (!title && !description) {
+          setError("Informe titulo ou descricao");
+          return;
+        }
         const res = await fetch("/api/tickets", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -206,7 +213,6 @@ export default function TicketsButton() {
   }
 
   if (!user) return null;
-  if (isDev) return null;
 
   return (
     <div className="relative" ref={boxRef}>

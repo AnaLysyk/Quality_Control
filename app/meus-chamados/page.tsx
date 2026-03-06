@@ -1,4 +1,6 @@
-﻿function getSuporteCode(code: string | null | undefined, id: string): string {
+﻿"use client";
+
+function getSuporteCode(code: string | null | undefined, id: string): string {
   const raw = typeof code === "string" ? code.trim().toUpperCase() : "";
   if (raw && raw.startsWith("SP-")) {
     const match = raw.match(/^SP-(\d{4,})$/i);
@@ -6,10 +8,6 @@
   }
   return `SP-${id.slice(0, 6).toUpperCase()}`;
 }
-
-// ...existing code...
-
-"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FiPlus, FiRefreshCw } from "react-icons/fi";

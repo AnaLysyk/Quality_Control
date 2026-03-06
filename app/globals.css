@@ -64,6 +64,19 @@ input[type="password"]::-ms-clear {
   --stat-blocked: #ffa73a;
   --stat-notrun: #94a3b8;
 
+  /* Semantic badge token fallbacks (safe defaults) */
+  --tc-success-bg: var(--tc-surface-2);
+  --tc-success-text: var(--tc-text);
+  --tc-success-border: var(--tc-border);
+
+  --tc-warn-bg: var(--tc-surface-2);
+  --tc-warn-text: var(--tc-text);
+  --tc-warn-border: var(--tc-border);
+
+  --tc-danger-bg: var(--tc-surface-2);
+  --tc-danger-text: var(--tc-text);
+  --tc-danger-border: var(--tc-border);
+
   /* legacy palette (mantido p/ compatibilidade) */
   --primary: #011848;
   --secondary: #000f2e;

@@ -3,7 +3,7 @@ import "server-only";
 import type { RequestRecord } from "@/data/requestsStore";
 import type { Release } from "@/types/release";
 import type { SuporteRecord } from "@/lib/ticketsStore";
-import type { SuporteCommentRecord } from "@/lib/ticketCommentsStore";
+import type { TicketCommentRecord } from "@/lib/ticketCommentsStore";
 import {
   closeNotificationsByDedupeKey,
   createNotificationsForUsers,
@@ -149,12 +149,12 @@ export async function notifySuporteCreated(suporte: SuporteRecord) {
     ? `${requester}${companyLabel}: ${suporte.title}\n${suporte.description}`
     : `${requester}${companyLabel}: ${suporte.title}`;
   await createNotificationsForUsers(recipients, {
-    type: "SUPORTE_CREATED",
+    type: "TICKET_CREATED",
     title: "Novo suporte",
     description,
     companySlug: suporte.companySlug ?? null,
     link: "/kanban-it",
-    suporteId: suporte.id,
+    ticketId: suporte.id,
     dedupeKey: `suporte:${suporte.id}`,
   });
 }
@@ -177,19 +177,19 @@ export async function notifySuporteStatusChanged(input: {
     ? `Status atualizado para ${input.nextStatusLabel}. Motivo: ${input.reason}`
     : `Status atualizado para ${input.nextStatusLabel}.`;
   await createNotificationsForUsers(Array.from(recipients), {
-    type: "SUPORTE_STATUS_CHANGED",
+    type: "TICKET_STATUS_CHANGED",
     title: "Status do suporte atualizado",
     description,
     companySlug: input.suporte.companySlug ?? null,
     link: "/meus-chamados",
-    suporteId: input.suporte.id,
+    ticketId: input.suporte.id,
     dedupeKey: `suporte:${input.suporte.id}:status:${input.suporte.updatedAt}`,
   });
 }
 
 export async function notifySuporteCommentAdded(input: {
   suporte: SuporteRecord;
-  comment: SuporteCommentRecord;
+  comment: TicketCommentRecord;
   actorId: string;
   actorName?: string | null;
 }) {
@@ -207,29 +207,29 @@ export async function notifySuporteCommentAdded(input: {
   if (!recipients.size) return;
   const authorLabel = input.actorName || "Novo comentario";
   await createNotificationsForUsers(Array.from(recipients), {
-    type: "SUPORTE_COMMENT_ADDED",
+    type: "TICKET_COMMENT_ADDED",
     title: "Novo comentario no suporte",
     description: `${authorLabel}: ${input.comment.body.slice(0, 160)}`,
     companySlug: input.suporte.companySlug ?? null,
     link: "/meus-chamados",
-    suporteId: input.suporte.id,
+    ticketId: input.suporte.id,
     dedupeKey: `suporte:${input.suporte.id}:comment:${input.comment.id}`,
   });
 }
 
 export async function notifySuporteReactionAdded(input: {
   suporte: SuporteRecord;
-  comment: SuporteCommentRecord;
+  comment: TicketCommentRecord;
   actorId: string;
 }) {
   if (input.comment.authorUserId === input.actorId) return;
   await createNotificationsForUsers([input.comment.authorUserId], {
-    type: "SUPORTE_REACTION_ADDED",
+    type: "TICKET_REACTION_ADDED",
     title: "Curtiram seu comentario",
     description: "Uma reacao foi adicionada ao seu comentario.",
     companySlug: input.suporte.companySlug ?? null,
     link: "/meus-chamados",
-    suporteId: input.suporte.id,
+    ticketId: input.suporte.id,
     dedupeKey: `suporte:${input.suporte.id}:reaction:${input.comment.id}:${input.actorId}`,
   });
 }
@@ -241,12 +241,12 @@ export async function notifySuporteAssigned(input: {
 }) {
   if (!input.assigneeId || input.assigneeId === input.actorId) return;
   await createNotificationsForUsers([input.assigneeId], {
-    type: "SUPORTE_ASSIGNED",
+    type: "TICKET_ASSIGNED",
     title: "Suporte atribuido",
-    description: `Voce foi atribuido ao suporte ${input.suporte.title}.",
+    description: `Voce foi atribuido ao suporte ${input.suporte.title}.`,
     companySlug: input.suporte.companySlug ?? null,
     link: "/kanban-it",
-    suporteId: input.suporte.id,
+    ticketId: input.suporte.id,
     dedupeKey: `suporte:${input.suporte.id}:assigned:${input.assigneeId}`,
   });
 }
@@ -268,4 +268,43 @@ export async function notifyAccessRequestComment(input: {
     link: "/admin/access-requests",
     dedupeKey: `access-request:${input.requestId}:comment:${input.commentId}`,
   });
+}
+
+// Backwards-compatible wrappers for ticket-named notifications (map { ticket } -> { suporte })
+import type { TicketRecord } from "@/lib/ticketsStore";
+
+export async function notifyTicketCreated(input: { ticket: TicketRecord } | TicketRecord) {
+  const ticket = (input && typeof (input as any) === "object" && "ticket" in (input as any)) ? (input as any).ticket : (input as any);
+  if (!ticket) return;
+  return notifySuporteCreated(ticket as SuporteRecord);
+}
+
+export async function notifyTicketStatusChanged(input: {
+  ticket: TicketRecord;
+  actorId: string;
+  nextStatusLabel: string;
+  reason?: string | null;
+}) {
+  if (!input || !input.ticket) return;
+  return notifySuporteStatusChanged({ suporte: input.ticket as SuporteRecord, actorId: input.actorId, nextStatusLabel: input.nextStatusLabel, reason: input.reason });
+}
+
+export async function notifyTicketCommentAdded(input: {
+  ticket: TicketRecord;
+  comment: TicketCommentRecord;
+  actorId: string;
+  actorName?: string | null;
+}) {
+  if (!input || !input.ticket) return;
+  return notifySuporteCommentAdded({ suporte: input.ticket as SuporteRecord, comment: input.comment, actorId: input.actorId, actorName: input.actorName });
+}
+
+export async function notifyTicketReactionAdded(input: { ticket: TicketRecord; comment: TicketCommentRecord; actorId: string }) {
+  if (!input || !input.ticket) return;
+  return notifySuporteReactionAdded({ suporte: input.ticket as SuporteRecord, comment: input.comment as any, actorId: input.actorId });
+}
+
+export async function notifyTicketAssigned(input: { ticket: TicketRecord; assigneeId: string; actorId: string }) {
+  if (!input || !input.ticket) return;
+  return notifySuporteAssigned({ suporte: input.ticket as SuporteRecord, assigneeId: input.assigneeId, actorId: input.actorId });
 }

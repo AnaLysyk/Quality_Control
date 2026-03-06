@@ -1,4 +1,30 @@
 [
+  {
+    "id": "u1",
+    "name": "Ana",
+    "role": "admin",
+    "companies": ["c1"]
+  },
+  {
+    "id": "u2",
+    "name": "João",
+    "role": "company",
+    "companies": ["c1"]
+  },
+  {
+    "id": "u3",
+    "name": "Maria",
+    "role": "user",
+    "companies": ["c1"]
+  },
+  {
+    "id": "u4",
+    "name": "Support",
+    "role": "support",
+    "companies": []
+  }
+]
+[
 	{
 		"id": "usr_admin",
 		"email": "admin",

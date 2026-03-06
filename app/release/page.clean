@@ -99,9 +99,9 @@ export default function ReleasesPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              {releases.map((rel) => (
+              {releases.map((rel, idx) => (
                 <Link
-                  key={rel.slug}
+                  key={`${rel.slug ?? 'rel'}-${rel.createdAt ?? idx}`}
                   href={`/release/${rel.slug}`}
                   aria-label={`Abrir release ${rel.title}`}
                   className="cursor-pointer group card-tc bg-white text-[#0b1a3c] border border-(--tc-border)/40 p-4 min-h-40 rounded-xl transition hover:bg-(--tc-surface-hover) hover:border-[--tc-accent]/60 hover:shadow-[0_10px_30px_var(--tc-accent-soft)]"

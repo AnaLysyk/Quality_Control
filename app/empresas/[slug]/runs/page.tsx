@@ -99,11 +99,11 @@ export default function CompanyRunsPage() {
             {filteredRuns.length === 0 && (
               <p className="text-sm text-(--tc-text-muted)">Nenhuma run encontrada.</p>
             )}
-            {filteredRuns.map((run) => {
+            {filteredRuns.map((run, idx) => {
               const total = run.stats.pass + run.stats.fail + run.stats.blocked + run.stats.notRun;
               const passRate = total > 0 ? Math.round((run.stats.pass / total) * 100) : 0;
               return (
-                <div key={run.slug} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-4">
+                <div key={`${run.slug ?? 'run'}-${run.createdAt ?? idx}`} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-4">
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <Link
                       href={`/empresas/${encodeURIComponent(companySlug ?? "")}/runs/${encodeURIComponent(run.slug)}`}

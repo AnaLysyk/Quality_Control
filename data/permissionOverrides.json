@@ -1,0 +1,27 @@
+{
+  "items": [
+    {
+      "allow": {
+        "tickets": [
+          "view",
+          "create"
+        ]
+      },
+      "deny": {},
+      "updatedAt": "2026-03-06T04:02:19.254Z",
+      "createdAt": "2026-03-06T04:02:19.254Z"
+    },
+    {
+      "allow": {
+        "tickets": [
+          "view",
+          "create"
+        ]
+      },
+      "deny": {},
+      "updatedAt": "2026-03-06T04:08:58.974Z",
+      "createdAt": "2026-03-06T04:03:19.031Z",
+      "userId": "usr_company_griaule"
+    }
+  ]
+}

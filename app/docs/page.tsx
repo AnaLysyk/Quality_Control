@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Breadcrumb from "@/components/Breadcrumb";
+import makeKey from "@/utils/makeKey";
 
 const DOCS = [
   {
@@ -48,9 +49,9 @@ export default function DocsIndexPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {DOCS.map((doc) => (
+          {DOCS.map((doc, idx) => (
             <Link
-              key={doc.slug}
+              key={makeKey(doc, "slug", "id", idx)}
               href={`/docs/${doc.slug}`}
               className="rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 transition hover:border-(--tc-accent,#ef0001)/50 focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30"
             >

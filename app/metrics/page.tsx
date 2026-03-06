@@ -59,9 +59,9 @@ export default function MetricasPage() {
             </p>
           ) : (
             <div className="grid gap-3">
-              {clients.map((client) => (
+              {clients.map((client, idx) => (
                 <button
-                  key={client.slug}
+                  key={`${client.slug ?? 'client'}-${client.id ?? idx}`}
                   type="button"
                   className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-left hover:bg-slate-50"
                   onClick={() => {

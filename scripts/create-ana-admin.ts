@@ -3,9 +3,12 @@ console.log('DATABASE_URL:', process.env.DATABASE_URL);
 import "./loadEnv";
 import { hashPasswordSha256 } from "../lib/passwordHash";
 // PrismaClient deve ser importado após o carregamento das variáveis de ambiente
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+// Load PrismaClient dynamically to avoid build-time type errors when @prisma/client
+// is not installed in the environment used for building the frontend assets.
+const _pkg = require("@prisma/client");
+const PrismaClient = (_pkg && _pkg.PrismaClient) || (_pkg && _pkg.default && _pkg.default.PrismaClient);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const prisma = PrismaClient ? new PrismaClient() : ({} as any);
 
 async function createAnaAdmin() {
   const email = "ana.testing.company@gmail.com";

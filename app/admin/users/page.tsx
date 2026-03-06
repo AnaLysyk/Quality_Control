@@ -1,5 +1,101 @@
 "use client";
 
+import React, { useEffect, useState } from 'react';
+import UserDrawer from './UserDrawer';
+
+function CreateUserForm({ onCreated }: { onCreated: ()=>void }){
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('user');
+
+  async function submit(){
+    await fetch('/api/admin/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, role, client_id: 'c_testing' }) });
+    setOpen(false); setName(''); setEmail(''); setRole('user');
+    onCreated();
+  }
+
+  return (
+    <div>
+      <button className="bg-green-600 text-white px-3 py-1 rounded" onClick={()=>setOpen(true)}>Criar usuário</button>
+      {open && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+          <div className="bg-white p-4 rounded w-96">
+            <h3 className="font-semibold mb-2">Criar usuário</h3>
+            <input className="w-full border p-2 mb-2" placeholder="Nome" value={name} onChange={(e)=>setName(e.target.value)} />
+            <input className="w-full border p-2 mb-2" placeholder="Email" value={email} onChange={(e)=>setEmail(e.target.value)} />
+            <select aria-label="Role" title="Role" className="w-full border p-2 mb-2" value={role} onChange={(e)=>setRole(e.target.value)}>
+              <option value="user">User</option>
+              <option value="company">Company</option>
+              <option value="admin">Admin</option>
+            </select>
+            <div className="flex gap-2 justify-end">
+              <button className="px-3 py-1" onClick={()=>setOpen(false)}>Cancelar</button>
+              <button className="bg-blue-600 text-white px-3 py-1 rounded" onClick={submit}>Criar</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type User = {
+  id: string;
+  name: string;
+  email?: string;
+  role?: string;
+  companyIds?: string[];
+  active?: boolean;
+};
+
+export default function UsersPage() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [q, setQ] = useState('');
+  const [selected, setSelected] = useState<User | null>(null);
+
+  async function load() {
+    const res = await fetch(`/api/admin/users?q=${encodeURIComponent(q)}`);
+    const json = await res.json();
+    setUsers(json.items || []);
+  }
+
+  useEffect(() => { load(); }, []);
+
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-semibold">Gestão de Usuários</h1>
+        <div className="flex gap-2 items-center">
+          <input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Buscar por nome ou email" className="border rounded px-2 py-1" />
+          <button className="bg-blue-600 text-white px-3 py-1 rounded" onClick={load}>Buscar</button>
+          <CreateUserForm onCreated={load} />
+        </div>
+      </div>
+
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="text-left border-b"><th className="p-2">Nome</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          {users.map(u => (
+            <tr key={u.id} className="border-b">
+              <td className="p-2">{u.name}</td>
+              <td>{u.email}</td>
+              <td>{u.role}</td>
+              <td>{u.active ? 'Ativo' : 'Inativo'}</td>
+              <td className="p-2"><button className="text-blue-600" onClick={()=>setSelected(u)}>Ver</button></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {selected && <UserDrawer user={selected} onClose={()=>{ setSelected(null); load(); }} />}
+    </div>
+  );
+}
+"use client";
+
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";

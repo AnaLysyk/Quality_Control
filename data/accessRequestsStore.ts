@@ -141,7 +141,7 @@ export async function createAccessRequest(input: {
 
 export async function updateAccessRequest(
   id: string,
-  patch: Partial<Pick<AccessRequestRecord, "email" | "message" | "status">>,
+  patch: Partial<Pick<AccessRequestRecord, "email" | "message" | "status" | "user_id">>,
 ) {
   const store = await readStore();
   const index = store.items.findIndex((item) => item.id === id);
@@ -152,6 +152,7 @@ export async function updateAccessRequest(
     email: typeof patch.email === "string" ? patch.email : current.email,
     message: typeof patch.message === "string" ? patch.message : current.message,
     status: (patch.status as AccessRequestStatus) ?? current.status,
+    user_id: patch.user_id !== undefined ? (patch.user_id as string | null) : current.user_id,
     updated_at: new Date().toISOString(),
   };
   store.items[index] = updated;

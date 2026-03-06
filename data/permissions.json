@@ -1,0 +1,14 @@
+{
+  "admin": {
+    "ticket": ["create", "edit", "delete", "view"]
+  },
+  "support": {
+    "ticket": ["create", "edit", "view"]
+  },
+  "company": {
+    "ticket": ["create", "view"]
+  },
+  "user": {
+    "ticket": ["create"]
+  }
+}

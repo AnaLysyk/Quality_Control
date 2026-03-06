@@ -1,6 +1,7 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+const _pkg = require("@prisma/client");
+const PrismaClient = (_pkg && _pkg.PrismaClient) || (_pkg && _pkg.default && _pkg.default.PrismaClient);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const prisma = PrismaClient ? new PrismaClient() : ({} as any);
 
 async function main() {
   // Buscar uma empresa existente para associar releases manuais

@@ -1,5 +1,11 @@
 [
   {
+    "id": "c1",
+    "name": "Testing Company"
+  }
+]
+[
+  {
     "id": "test-company",
     "name": "Empresa Teste",
     "slug": "test-company",

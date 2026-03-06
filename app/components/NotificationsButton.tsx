@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiBell } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { getTicketStatusLabel, TICKET_STATUS_OPTIONS, type TicketStatus } from "@/lib/ticketsStatus";
+import { getSuporteStatusLabel, SUPORTE_STATUS_OPTIONS, type SuporteStatus } from "@/lib/suportesStatus";
 
 type NotificationItem = {
   id: string;
@@ -24,7 +24,7 @@ type TicketItem = {
   id: string;
   title: string;
   description: string;
-  status: TicketStatus;
+  status: SuporteStatus;
   createdAt: string;
   updatedAt: string;
   createdBy?: string | null;
@@ -129,6 +129,13 @@ export default function NotificationsButton() {
   useEffect(() => {
     let mounted = true;
     if (!user) return;
+    // Global admin or legacy roleGlobal ADMIN should manage tickets
+    if (user?.isGlobalAdmin === true || user?.roleGlobal === "ADMIN") {
+      setCanManageTickets(true);
+      return () => {
+        mounted = false;
+      };
+    }
     import("@/lib/rbac/devAccess")
       .then((mod) => {
         if (!mounted) return;
@@ -222,7 +229,7 @@ export default function NotificationsButton() {
     }
   }
 
-  async function updateTicketStatus(nextStatus: TicketStatus) {
+  async function updateTicketStatus(nextStatus: SuporteStatus) {
     if (!selected?.ticketId) return;
     setTicketUpdating(true);
     setTicketError(null);
@@ -428,17 +435,17 @@ export default function NotificationsButton() {
                           id={`notification-ticket-status-${selected.ticketId ?? "current"}`}
                           className="rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
                           value={ticketInfo.status}
-                          onChange={(e) => updateTicketStatus(e.target.value as TicketStatus)}
+                          onChange={(e) => updateTicketStatus(e.target.value as SuporteStatus)}
                           disabled={ticketUpdating || !canManageTickets}
                         >
-                          {TICKET_STATUS_OPTIONS.map((opt) => (
+                          {SUPORTE_STATUS_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>
                               {opt.label}
                             </option>
                           ))}
                         </select>
                         <span className="text-xs text-(--tc-text-muted,#6b7280)">
-                          Atual: {getTicketStatusLabel(ticketInfo.status)}
+                          Atual: {getSuporteStatusLabel(ticketInfo.status)}
                         </span>
                       </div>
                     </>

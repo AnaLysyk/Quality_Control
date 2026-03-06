@@ -1,0 +1,14 @@
+[
+  {
+    "id": "T-1001",
+    "title": "Erro ao gerar boleto",
+    "description": "Pagamento não aparece na tela",
+    "status": "open",
+    "priority": "high",
+    "createdBy": "u3",
+    "companyId": "c1",
+    "assignedTo": "u4",
+    "createdAt": "2026-03-05T10:00:00Z",
+    "updatedAt": "2026-03-05T10:00:00Z"
+  }
+]

@@ -95,12 +95,12 @@ export function ApplicationsList({ className }: ApplicationsListProps) {
 
       {filteredApps.length > 0 && (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredApps.map((app) => {
+          {filteredApps.map((app, idx) => {
             const meta = getAppMeta(app.slug, app.tag);
             const appColorClass = APP_COLOR_CLASS[app.slug] ?? "app-color-default";
             return (
               <Link
-                key={app.slug}
+                key={`${app.slug ?? 'app'}-${idx}`}
                 href={`/applications-hub/${app.slug}`}
                 className="rounded-2xl border border-(--surface-border,#e5e7eb) bg-white p-6 shadow-lg shadow-black/10 transition hover:border-(--tc-accent)/60 text-(--page-text,#0b1a3c)"
               >

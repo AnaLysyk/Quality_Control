@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useClientContext } from "@/context/ClientContext";
 
 export default function CreateUserForm({
   onCreated,
@@ -12,7 +13,16 @@ export default function CreateUserForm({
   const [login, setLogin] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
-  const [companyId, setCompanyId] = useState(companies[0]?.id || "");
+  const { activeClientId, activeClientSlug } = useClientContext();
+
+  const [companyId, setCompanyId] = useState(activeClientId ?? companies[0]?.id ?? "");
+  useEffect(() => {
+    if (activeClientId && activeClientId !== companyId) {
+      const exists = companies.some((c) => c.id === activeClientId);
+      if (exists) setCompanyId(activeClientId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeClientId]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -23,10 +33,13 @@ export default function CreateUserForm({
     setError(null);
     setSuccess(false);
     try {
+      const payload: any = { user: login, email, name, password, companyId };
+      if (activeClientSlug) payload.companySlug = activeClientSlug;
+
       const res = await fetch("/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user: login, email, name, password, companyId }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         let msg = "Erro ao criar usuario";

@@ -3,12 +3,9 @@
 // que lança um erro claro quando utilizado. Isso permite que builds (ex.: Vercel)
 // resolvam os imports mesmo quando o schema/client não foram gerados.
 
-import type { PrismaClient as PrismaClientType } from "@prisma/client";
-
-// Allow a typed PrismaClient when available; fall back to `any` for cases
-// where the runtime/client is not present to avoid cascading TS errors.
+// Avoid requiring Prisma types at build time when @prisma/client is not installed.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-let prisma: PrismaClientType | any;
+let prisma: any;
 try {
   // Usamos require dinâmico para evitar falha em tempo de compilação se
   // @prisma/client não estiver presente no ambiente de build.

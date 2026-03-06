@@ -255,7 +255,7 @@ export default function AdminDefeitosPage() {
                 <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma empresa com defeitos.</p>
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
-                  {companyCards.map((c) => {
+                  {companyCards.map((c, idx) => {
                     const total = c.total;
                     const fail = c.statuses.fail ?? 0;
                     const blocked = c.statuses.blocked ?? 0;
@@ -263,7 +263,7 @@ export default function AdminDefeitosPage() {
                     const done = c.statuses.done ?? 0;
                     return (
                       <div
-                        key={c.slug ?? c.name}
+                        key={`${c.slug ?? c.name}-${idx}`}
                         className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm space-y-3 hover:shadow-md transition"
                       >
                         <div className="flex items-center justify-between">

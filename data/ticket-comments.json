@@ -1,3 +1,19 @@
+[
+  {
+    "id": "c1",
+    "ticketId": "T-1001",
+    "userId": "u3",
+    "message": "O erro aparece quando clico em gerar boleto.",
+    "createdAt": "2026-03-05T10:05:00Z"
+  },
+  {
+    "id": "c2",
+    "ticketId": "T-1001",
+    "userId": "u4",
+    "message": "Estamos analisando.",
+    "createdAt": "2026-03-05T10:15:00Z"
+  }
+]
 {
   "items": [
     {

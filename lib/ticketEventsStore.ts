@@ -134,3 +134,23 @@ export async function appendTicketEvent(input: {
   await writeStore(store);
   return event;
 }
+
+// Backwards-compatible aliases
+export async function appendSuporteEvent(input: {
+  suporteId: string;
+  type: TicketEventType;
+  payload?: Record<string, unknown> | null;
+  actorUserId?: string | null;
+  createdAt?: string;
+}) {
+  if (!input || !input.suporteId) return null;
+  return appendTicketEvent({
+    ticketId: input.suporteId,
+    type: input.type,
+    payload: input.payload ?? null,
+    actorUserId: input.actorUserId ?? null,
+    createdAt: input.createdAt,
+  });
+}
+
+export const listSuporteEvents = listTicketEvents;

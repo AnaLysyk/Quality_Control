@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getAppMeta } from "@/lib/appMeta";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useClientContext } from "@/context/ClientContext";
 
 type NewManualRelease = {
   name: string;
@@ -128,6 +129,27 @@ export function CreateManualReleaseButton({
     "CIDADAO SMART",
     "GMT",
   ];
+
+  const { activeClientSlug } = useClientContext();
+  const [applications, setApplications] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const slug = companySlug ?? activeClientSlug ?? undefined;
+    (async () => {
+      try {
+        const q = slug ? `?companySlug=${encodeURIComponent(slug)}` : "";
+        const res = await fetch(`/api/applications${q}`, { cache: "no-store" });
+        const data = await res.json().catch(() => null);
+        const items = (data && data.items) || [];
+        setApplications(items.map((it: any) => ({ id: it.id, name: it.name, slug: it.slug })));
+        if (items.length > 0) setSelectedApplicationId(items[0].id);
+      } catch (e) {
+        setApplications([]);
+      }
+    })();
+  }, [open, companySlug, activeClientSlug]);
 
   const total = form.pass + form.fail + form.blocked + form.notRun;
   const appMeta = getAppMeta(form.app.toLowerCase(), form.app);
@@ -319,18 +341,33 @@ export function CreateManualReleaseButton({
 
                     <div className="space-y-1">
                       <label className="text-sm font-semibold text-(--tc-text-muted)">Aplicação</label>
-                      <select
-                        aria-label="Selecionar aplicação"
-                        className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
-                        value={form.app}
-                        onChange={(e) => setForm((prev) => ({ ...prev, app: e.target.value }))}
-                      >
-                        {apps.map((app) => (
-                          <option key={app} value={app}>
-                            {app}
-                          </option>
-                        ))}
-                      </select>
+                      {applications.length > 0 ? (
+                        <select
+                          aria-label="Selecionar aplicação"
+                          className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
+                          value={selectedApplicationId ?? ""}
+                          onChange={(e) => setSelectedApplicationId(e.target.value)}
+                        >
+                          {applications.map((app) => (
+                            <option key={app.id} value={app.id}>
+                              {app.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <select
+                          aria-label="Selecionar aplicação"
+                          className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
+                          value={form.app}
+                          onChange={(e) => setForm((prev) => ({ ...prev, app: e.target.value }))}
+                        >
+                          {apps.map((app) => (
+                            <option key={app} value={app}>
+                              {app}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                       <div className="text-xs text-(--tc-text-muted)">
                         {appMeta.label} • cor aplicada automaticamente
                       </div>
@@ -348,7 +385,6 @@ export function CreateManualReleaseButton({
                       <div className="text-xs text-(--tc-text-muted)">Slug da release a ser impactada (ex: v1_8_0_reg)</div>
                     </div>
                   </div>
-
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     {(["pass", "fail", "blocked", "notRun"] as const).map((key) => (
                       <div key={key} className="space-y-1">

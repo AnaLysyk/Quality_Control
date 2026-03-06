@@ -1,8 +1,8 @@
 import "../../scripts/loadEnv";
-import { PrismaClient } from '@prisma/client';
-
-// Prisma 7+ uses config from prisma.config.ts, so no options needed
-const prisma = new PrismaClient();
+const _pkg = require('@prisma/client');
+const PrismaClient = (_pkg && _pkg.PrismaClient) || (_pkg && _pkg.default && _pkg.default.PrismaClient);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const prisma = PrismaClient ? new PrismaClient() : ({} as any);
 
 async function main() {
   // Companies

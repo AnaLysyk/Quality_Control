@@ -149,6 +149,9 @@ export default function KanbanItPage() {
     }
   }, [user]);
 
+  // Backwards-compatible alias used in some UI handlers
+  const loadTickets = loadSuportes;
+
   useEffect(() => {
     loadSuportes();
   }, [loadSuportes]);
@@ -507,7 +510,7 @@ export default function KanbanItPage() {
         onClose={() => setSelectedSuporte(null)}
         canEditStatus={true}
         statusOptions={statusOptions}
-        onSuporteUpdated={(updated) => {
+        onSuporteUpdated={(updated: SuporteItem) => {
           setSelectedSuporte(updated);
           setSuportes((current) =>
             current.map((suporte) => (suporte.id === updated.id ? updated : suporte)),

@@ -31,6 +31,11 @@ export type SuporteRecord = {
   timeline?: SuporteStatusHistory[];
 };
 
+// Backwards-compatible type aliases
+export type TicketRecord = SuporteRecord;
+export type TicketPriority = SuportePriority;
+export type TicketType = SuporteType;
+
 type SuportesStore = {
   counter: number;
   items: SuporteRecord[];
@@ -99,6 +104,7 @@ let flushTimer: NodeJS.Timeout | null = null;
 let backupTimer: NodeJS.Timeout | null = null;
 let versionCounter = 0;
 let flushingPromise: Promise<void> | null = null;
+let writeQueue: Promise<void> = Promise.resolve();
 let warnedRedisFailure = false;
 let forceMemory = false;
 
@@ -151,7 +157,7 @@ function sanitizeText(value: unknown, max: number) {
 function normalizeStatus(value?: string | null): SuporteStatus | null {
   if (!value) return null;
   const normalized = value.trim().toLowerCase();
-  const mapped = normalized in LEGACY_TICKET_STATUS_MAP ? LEGACY_TICKET_STATUS_MAP[normalized] : normalized;
+  const mapped = normalized in LEGACY_SUPORTE_STATUS_MAP ? LEGACY_SUPORTE_STATUS_MAP[normalized] : normalized;
   return normalizeKanbanStatus(mapped);
 }
 
@@ -167,21 +173,25 @@ function normalizeType(value?: unknown): SuporteType {
   if (raw === "bug" || raw === "melhoria" || raw === "tarefa") return raw;
   return "tarefa";
 }
-
+function normalizeCode(value?: unknown): string {
   const raw = typeof value === "string" ? value.trim().toUpperCase() : "";
   if (raw && raw.startsWith("SP-")) return raw;
   return "";
 }
 
+function parseCodeNumber(code?: string): number {
+  if (!code || typeof code !== "string") return 0;
   const match = code.match(/^SP-(\d{4,})$/i);
   if (!match) return 0;
   const num = Number.parseInt(match[1], 10);
   return Number.isFinite(num) ? num : 0;
 }
 
+function formatCode(counter: number): string {
   return `SP-${String(counter).padStart(6, "0")}`;
 }
 
+function normalizeTags(value?: unknown): string[] {
   if (!Array.isArray(value)) return [];
   const unique = new Set<string>();
   for (const entry of value) {
@@ -193,6 +203,7 @@ function normalizeType(value?: unknown): SuporteType {
   return Array.from(unique);
 }
 
+function normalizeRecord(raw: any): SuporteRecord {
   const status = normalizeStatus(raw.status) ?? "backlog";
   const type = normalizeType(raw.type);
   const code = normalizeCode(raw.code);
@@ -392,13 +403,27 @@ async function writeStore(next: SuportesStore) {
   cacheStore = payload;
   dirty = true;
   if (SHOULD_FLUSH_ON_WRITE) {
-    await flushNow().catch((err) => {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.warn("[TICKETS] Falha ao persistir imediatamente:", msg);
+    // Ensure flushes are serialized to avoid concurrent file-lock attempts
+    await enqueueWrite(async () => {
+      try {
+        await flushNow();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn("[TICKETS] Falha ao persistir imediatamente:", msg);
+      }
     });
   }
 }
 
+// Simple in-process queue to serialize write/flush operations
+function enqueueWrite<T>(fn: () => Promise<T>): Promise<T> {
+  const next = writeQueue.then(() => fn());
+  // propagate completion and ensure queue continues
+  writeQueue = next.then(() => undefined, () => undefined);
+  return next;
+}
+
+function buildVersionName(counter: number) {
   return `support-suportes.v${String(counter).padStart(6, "0")}.json`;
 }
 
@@ -420,6 +445,7 @@ async function rotateVersions() {
   }
 }
 
+function buildBackupName() {
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace("T", "-").slice(0, 15);
   return `support-suportes.bak-${stamp}.json`;
 }
@@ -494,6 +520,9 @@ export async function exportSuportes(filter?: (item: SuporteRecord) => boolean):
     items,
   };
 }
+
+// Backwards-compatible export alias
+export const exportTickets = exportSuportes;
 
 function validateImportItem(item: SuporteRecord) {
   if (!item.id || !item.title || !item.createdBy || !item.companyId) {
@@ -770,3 +799,16 @@ export async function touchSuporte(id: string, updatedBy?: string | null) {
   await writeStore(store);
   return normalizeRecord(updated);
 }
+
+// Backwards-compatible aliases (legacy "Ticket" API)
+export const getTicketById = getSuporteById;
+export const touchTicket = touchSuporte;
+export const updateTicket = updateSuporte;
+export const updateTicketStatus = updateSuporteStatus;
+export const listTicketTimeline = listSuporteTimeline;
+export const listAllTickets = listAllSuportes;
+export const listTicketsForUser = listSuportesForUser;
+export const createTicket = createSuporte;
+export const importTickets = importSuportes;
+export const deleteTicketForUser = deleteSuporteForUser;
+export const updateTicketForUser = updateSuporteForUser;

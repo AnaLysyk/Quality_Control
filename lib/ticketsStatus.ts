@@ -31,6 +31,17 @@ export function getSuporteStatusLabel(status: SuporteStatus, options: SuporteSta
   return options.find((opt) => opt.value === status)?.label ?? formatSuporteStatusLabel(status);
 }
 
+// Backwards-compatible Ticket exports
+export type TicketStatus = SuporteStatus;
+export type TicketStatusOption = SuporteStatusOption;
+export const TICKET_STATUS_OPTIONS: TicketStatusOption[] = SUPORTE_STATUS_OPTIONS;
+export function formatTicketStatusLabel(value: string) {
+  return formatSuporteStatusLabel(value);
+}
+export function getTicketStatusLabel(status: TicketStatus, options: TicketStatusOption[] = TICKET_STATUS_OPTIONS) {
+  return getSuporteStatusLabel(status, options as any);
+}
+
 export function normalizeKanbanStatus(status: SuporteStatus | string): SuporteStatus {
   const normalized = (status ?? "").toString().trim().toLowerCase();
   if (!normalized) return "backlog";

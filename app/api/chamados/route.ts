@@ -4,6 +4,7 @@ import { appendSuporteEvent } from "@/lib/ticketEventsStore";
 import { notifySuporteCreated } from "@/lib/notificationService";
 import { attachAssigneeInfo, attachAssigneeToSuporte } from "@/lib/ticketsPresenter";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { getLocalUserById } from "@/lib/auth/localStore";
 import { isItDev } from "@/lib/rbac/suportes";
 
 // GET /api/chamados: Only the creator or dev can see chamados (not public)
@@ -34,8 +35,13 @@ export async function POST(req: Request) {
 
     // Sempre usar usuário autenticado, se houver
     const createdBy = user?.id || "anonymous";
-    const createdByName = user?.email || null;
-    const createdByEmail = user?.email || null;
+    const localUser = user ? await getLocalUserById(user.id) : null;
+    const createdByName = localUser?.name ?? user?.email ?? null;
+    const createdByEmail = localUser?.email ?? user?.email ?? null;
+
+    // allow assigning to a dev user when requester is dev/admin
+    const assignedToUserId =
+      isItDev(user) && typeof body?.assignedToUserId === "string" ? body?.assignedToUserId : null;
 
     const suporte = await createSuporte({
       title: body?.title,
@@ -48,6 +54,7 @@ export async function POST(req: Request) {
       createdByEmail,
       companySlug: body?.companySlug ?? null,
       companyId: body?.companyId ?? null,
+      assignedToUserId,
     });
 
     if (!suporte) {

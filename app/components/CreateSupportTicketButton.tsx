@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useClientContext } from "@/context/ClientContext";
+import { useEffect } from "react";
 
 export default function CreateSupportTicketButton() {
   const { user } = useAuthUser();
+  const { activeClientSlug, activeClientId } = useClientContext();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -14,6 +17,8 @@ export default function CreateSupportTicketButton() {
     title: "",
     description: "",
   });
+  const [devs, setDevs] = useState<Array<{ id: string; name: string }>>([]);
+  const [assignedTo, setAssignedTo] = useState<string | null>(null);
 
   // Permite para todos os perfis
 
@@ -22,14 +27,19 @@ export default function CreateSupportTicketButton() {
     setSaving(true);
     setError(null);
     try {
+      const bodyPayload: any = {
+        title: form.title.trim(),
+        description: form.description.trim(),
+        companySlug: activeClientSlug ?? (user as any)?.company?.slug ?? "test-company",
+        companyId: activeClientId ?? (user as any)?.company?.id ?? (user as any)?.companyId ?? null,
+      };
+      if (assignedTo) bodyPayload.assignedToUserId = assignedTo;
+
       const res = await fetch("/api/chamados", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          title: form.title.trim(),
-          description: form.description.trim(),
-        }),
+        body: JSON.stringify(bodyPayload),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -44,6 +54,30 @@ export default function CreateSupportTicketButton() {
       setSaving(false);
     }
   };
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadDevs() {
+      if (!open) return;
+      try {
+        const companyId = activeClientId ?? (user as any)?.company?.id ?? (user as any)?.companyId ?? null;
+        if (!companyId) return;
+        const res = await fetch(`/api/users?companyId=${encodeURIComponent(companyId)}`, { cache: "no-store", credentials: "include" });
+        if (!res.ok) return;
+        const users = await res.json().catch(() => []);
+        if (!mounted) return;
+        const devs = Array.isArray(users) ? users.filter((u: any) => {
+          const role = (u.role ?? "").toString().toLowerCase();
+          return role === "dev" || role === "it_dev" || role === "itdev" || role === "developer";
+        }).map((u: any) => ({ id: u.id, name: u.name || u.email || u.id })) : [];
+        setDevs(devs);
+      } catch {
+        // ignore
+      }
+    }
+    loadDevs();
+    return () => { mounted = false; };
+  }, [open]);
 
   return (
     <div className="relative">
@@ -78,6 +112,23 @@ export default function CreateSupportTicketButton() {
                   placeholder="Descreva o problema ou solicitação"
                 />
               </div>
+              {devs.length > 0 && (
+                <div>
+                  <label className="text-sm font-semibold text-(--tc-text-muted)">Atribuir a (dev)</label>
+                  <select
+                    id="create-support-assignee"
+                    aria-label="Atribuir a (dev)"
+                    className="w-full rounded-xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent)"
+                    value={assignedTo ?? ""}
+                    onChange={(e) => setAssignedTo(e.target.value || null)}
+                  >
+                    <option value="">-- nenhum --</option>
+                    {devs.map((d) => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               {error && <p className="text-sm text-rose-600">{error}</p>}
             </div>
             <div className="flex items-center justify-end gap-3 mt-6">

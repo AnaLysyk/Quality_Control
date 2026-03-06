@@ -232,8 +232,8 @@ export default function DashboardClient({
                   </tr>
                 </thead>
                 <tbody>
-                  {localRuns.slice(0, 8).map((run) => (
-                    <tr key={run.slug} className="border-t border-(--tc-border,#e5e7eb)">
+                  {localRuns.slice(0, 8).map((run, idx) => (
+                    <tr key={`${run.slug ?? 'run'}-${run.createdAt ?? idx}`} className="border-t border-(--tc-border,#e5e7eb)">
                       <td className="py-2">
                         <Link
                           data-testid="run-drilldown-link"
@@ -298,12 +298,12 @@ export default function DashboardClient({
           <div className="rounded-3xl bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold">Releases em destaque</h2>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {localRuns.slice(0, 4).map((run) => {
+              {localRuns.slice(0, 4).map((run, idx) => {
                 const isRisk = run.gateStatus === "failed";
                 const isRiskHighlight = isRisk && run.slug === riskHighlightSlug;
                 return (
                   <div
-                    key={run.slug}
+                    key={`${run.slug ?? 'run'}-${run.createdAt ?? idx}`}
                     data-testid="release-card"
                     className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-4"
                   >

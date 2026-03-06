@@ -506,7 +506,7 @@ export default function CompanyDefectsPage() {
               const isLinking = linkingDefectId === defect.slug;
               return (
                 <div
-                  key={defect.slug}
+                  key={`${defect.slug ?? 'defect'}-${index}`}
                   data-testid={testId}
                   className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-4"
                 >

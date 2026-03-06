@@ -221,6 +221,18 @@ export default function ProfileButton() {
 
   async function handleLogout() {
     setOpen(false);
+    try {
+      const prefix = `chat_history_v1:`;
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(prefix)) {
+          localStorage.removeItem(k);
+          i = -1;
+        }
+      }
+    } catch {
+      /* ignore */
+    }
     await logout();
     router.replace("/login");
   }

@@ -27,3 +27,6 @@ export async function attachAssigneeToTicket(item: TicketRecord | null) {
   const [withAssignee] = await attachAssigneeInfo([item]);
   return withAssignee ?? null;
 }
+
+// Backwards-compatible alias
+export const attachAssigneeToSuporte = attachAssigneeToTicket;

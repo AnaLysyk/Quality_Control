@@ -7,7 +7,7 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
-  webpack: (config: { watchOptions?: { ignored?: string[] } }, { dev }: { dev: boolean }) => {
+  webpack: (config: any, { dev }: { dev: boolean }) => {
     // ensure webpack knows the tsconfig path aliases for runtime resolution
     config.resolve = config.resolve ?? {};
     config.resolve.alias = {

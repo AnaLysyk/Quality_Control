@@ -235,6 +235,23 @@ body::after {
   animation: bubble-drift 18s ease-in-out infinite alternate;
 }
 
+html[data-login-route="true"],
+html[data-login-route="true"] body {
+  background: #f4f6fb !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+html[data-login-route="true"] body::before,
+html[data-login-route="true"] body::after {
+  content: none !important;
+  display: none !important;
+}
+
+html[data-login-route="true"] [data-rht-toaster] {
+  display: none !important;
+}
+
 img,
 video {
   max-width: 100%;

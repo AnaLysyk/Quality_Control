@@ -28,7 +28,9 @@ interface AppShellProps {
 
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname() || "";
-  const isLogin = pathname.startsWith("/login");
+  const isPathResolved = pathname.length > 0;
+  const isLoginRoute = pathname.startsWith("/login");
+  const useMinimalShell = !isPathResolved || isLoginRoute;
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -40,9 +42,9 @@ export default function AppShell({ children }: AppShellProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  if (isLogin) {
+  if (useMinimalShell) {
     return (
-      <div className="min-h-screen w-full overflow-y-auto bg-(--page-bg) text-(--page-text)">
+      <div className="relative min-h-screen w-full overflow-y-auto bg-(--page-bg) text-(--page-text)">
         {children}
       </div>
     );

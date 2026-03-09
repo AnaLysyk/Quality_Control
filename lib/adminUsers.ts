@@ -1,0 +1,222 @@
+import "server-only";
+
+import {
+  listLocalCompanies,
+  listLocalMemberships,
+  listLocalUsers,
+  normalizeLocalRole,
+  type LocalAuthCompany,
+  type LocalAuthMembership,
+  type LocalAuthUser,
+} from "@/lib/auth/localStore";
+import { syncLegacyCompanyUsersToLocalStore } from "@/lib/legacyCompanyUsersSync";
+
+export type AdminUserCompanyItem = {
+  id: string;
+  name: string;
+  slug: string | null;
+  role: string;
+};
+
+export type AdminUserItem = {
+  id: string;
+  name: string;
+  email: string;
+  user?: string;
+  avatar_key?: string | null;
+  role?: string;
+  permission_role?: string;
+  client_id?: string | null;
+  company_name?: string | null;
+  company_names?: string[];
+  company_ids?: string[];
+  company_count?: number;
+  companyNames?: string[];
+  companyIds?: string[];
+  companyCount?: number;
+  companies?: AdminUserCompanyItem[];
+  active?: boolean;
+  status?: string;
+  job_title?: string | null;
+  linkedin_url?: string | null;
+  avatar_url?: string | null;
+};
+
+const ROLE_WEIGHT: Record<string, number> = {
+  viewer: 0,
+  user: 1,
+  company_admin: 2,
+  it_dev: 3,
+};
+
+function normalizeCompanyName(company: LocalAuthCompany | null | undefined, companyId: string) {
+  const candidate =
+    (typeof company?.name === "string" && company.name.trim()) ||
+    (typeof company?.company_name === "string" && company.company_name.trim()) ||
+    "";
+  return candidate || `Empresa ${companyId}`;
+}
+
+function compareCompanyLinks(a: AdminUserCompanyItem, b: AdminUserCompanyItem) {
+  return a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" });
+}
+
+function summarizeCompanyNames(companyNames: string[]) {
+  if (!companyNames.length) return null;
+  if (companyNames.length === 1) return companyNames[0];
+  return `${companyNames[0]} +${companyNames.length - 1}`;
+}
+
+export function resolveStrongestCompanyRole(links: Array<Pick<LocalAuthMembership, "role">>) {
+  let strongest = "user";
+  let strongestWeight = ROLE_WEIGHT[strongest] ?? 0;
+
+  for (const link of links) {
+    const role = normalizeLocalRole(link.role ?? null);
+    const weight = ROLE_WEIGHT[role] ?? ROLE_WEIGHT.user;
+    if (weight > strongestWeight) {
+      strongest = role;
+      strongestWeight = weight;
+    }
+  }
+
+  return strongest;
+}
+
+export function resolvePermissionRoleForUser(
+  user: Pick<LocalAuthUser, "globalRole" | "is_global_admin" | "role"> | null | undefined,
+  links: Array<Pick<LocalAuthMembership, "role">>,
+) {
+  const strongestFromLinks = resolveStrongestCompanyRole(links);
+  const userRole = normalizeLocalRole(user?.role ?? null);
+  const strongest =
+    (ROLE_WEIGHT[userRole] ?? ROLE_WEIGHT.user) > (ROLE_WEIGHT[strongestFromLinks] ?? ROLE_WEIGHT.user)
+      ? userRole
+      : strongestFromLinks;
+  if (strongest === "it_dev") return "dev" as const;
+  if (user?.globalRole === "global_admin" || user?.is_global_admin === true) return "admin" as const;
+  if (strongest === "company_admin") return "company" as const;
+  return "user" as const;
+}
+
+export function buildAdminUserItem(
+  user: LocalAuthUser,
+  links: LocalAuthMembership[],
+  companyById: Map<string, LocalAuthCompany>,
+): AdminUserItem {
+  const uniqueLinks = new Map<string, LocalAuthMembership>();
+  for (const link of links) {
+    const role = normalizeLocalRole(link.role ?? null);
+    const current = uniqueLinks.get(link.companyId);
+    if (!current) {
+      uniqueLinks.set(link.companyId, { ...link, role });
+      continue;
+    }
+    const currentWeight = ROLE_WEIGHT[normalizeLocalRole(current.role ?? null)] ?? ROLE_WEIGHT.user;
+    const nextWeight = ROLE_WEIGHT[role] ?? ROLE_WEIGHT.user;
+    if (nextWeight >= currentWeight) {
+      uniqueLinks.set(link.companyId, { ...link, role });
+    }
+  }
+
+  const companies: AdminUserCompanyItem[] = Array.from(uniqueLinks.values())
+    .map((link) => {
+      const company = companyById.get(link.companyId);
+      return {
+        id: link.companyId,
+        name: normalizeCompanyName(company, link.companyId),
+        slug: typeof company?.slug === "string" ? company.slug : null,
+        role: normalizeLocalRole(link.role ?? null),
+      };
+    })
+    .sort(compareCompanyLinks);
+
+  const companyNames = companies.map((company) => company.name);
+  const companyIds = companies.map((company) => company.id);
+
+  const defaultCompanySlug =
+    typeof user.default_company_slug === "string" && user.default_company_slug.trim()
+      ? user.default_company_slug.trim().toLowerCase()
+      : null;
+
+  const primaryCompany =
+    (defaultCompanySlug ? companies.find((company) => (company.slug ?? "").toLowerCase() === defaultCompanySlug) : null) ??
+    companies[0] ??
+    null;
+
+  const strongestFromLinks = resolveStrongestCompanyRole(Array.from(uniqueLinks.values()));
+  const userRole = normalizeLocalRole(user.role ?? null);
+  const strongestRole =
+    (ROLE_WEIGHT[userRole] ?? ROLE_WEIGHT.user) > (ROLE_WEIGHT[strongestFromLinks] ?? ROLE_WEIGHT.user)
+      ? userRole
+      : strongestFromLinks;
+  const permissionRole = resolvePermissionRoleForUser(user, Array.from(uniqueLinks.values()));
+  const mappedRole =
+    permissionRole === "admin"
+      ? "global_admin"
+      : strongestRole === "it_dev"
+        ? "it_dev"
+        : strongestRole === "company_admin"
+          ? "client_admin"
+          : "client_user";
+
+  return {
+    id: user.id,
+    name: user.full_name?.trim() || (user.name ?? ""),
+    email: user.email,
+    user: user.user ?? user.email ?? "",
+    avatar_key: user.avatar_key ?? null,
+    role: mappedRole,
+    permission_role: permissionRole,
+    client_id: primaryCompany?.id ?? null,
+    company_name: summarizeCompanyNames(companyNames),
+    company_names: companyNames,
+    company_ids: companyIds,
+    company_count: companies.length,
+    companyNames,
+    companyIds,
+    companyCount: companies.length,
+    companies,
+    active: user.active !== false,
+    status: user.active === false ? "inactive" : user.status ?? "active",
+    job_title: user.job_title ?? null,
+    linkedin_url: user.linkedin_url ?? null,
+    avatar_url: user.avatar_url ?? null,
+  };
+}
+
+export async function listAdminUserItems(options?: { companyId?: string | null }) {
+  await syncLegacyCompanyUsersToLocalStore();
+
+  const [users, companies, memberships] = await Promise.all([
+    listLocalUsers(),
+    listLocalCompanies(),
+    listLocalMemberships(),
+  ]);
+
+  const companyById = new Map(companies.map((company) => [company.id, company]));
+  const membershipsByUser = new Map<string, LocalAuthMembership[]>();
+
+  for (const membership of memberships) {
+    const list = membershipsByUser.get(membership.userId) ?? [];
+    list.push(membership);
+    membershipsByUser.set(membership.userId, list);
+  }
+
+  const companyId = options?.companyId ?? null;
+  const items = users
+    .filter((user) => {
+      if (!companyId) return true;
+      const links = membershipsByUser.get(user.id) ?? [];
+      return links.some((link) => link.companyId === companyId);
+    })
+    .map((user) => buildAdminUserItem(user, membershipsByUser.get(user.id) ?? [], companyById))
+    .sort((a, b) => (a.name || "").localeCompare(b.name || "", "pt-BR", { sensitivity: "base" }));
+
+  return items;
+}
+
+export async function getAdminUserItem(userId: string) {
+  const items = await listAdminUserItems();
+  return items.find((item) => item.id === userId) ?? null;
+}

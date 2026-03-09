@@ -9,6 +9,7 @@ export type NotificationStatus = "unread" | "closed";
 export type NotificationType =
   | "RUN_CREATED"
   | "TEST_FAILED"
+  | "ACCESS_REQUEST_CREATED"
   | "ACCESS_REQUEST_COMMENT"
   | "PASSWORD_RESET_REQUEST"
   | "PASSWORD_RESET_PENDING"
@@ -18,7 +19,9 @@ export type NotificationType =
   | "TICKET_STATUS_CHANGED"
   | "TICKET_COMMENT_ADDED"
   | "TICKET_REACTION_ADDED"
-  | "TICKET_ASSIGNED";
+  | "TICKET_ASSIGNED"
+  | "USER_ACCESS_UPDATED"
+  | "USER_ACCESS_RESTORED";
 
 export type UserNotification = {
   id: string;

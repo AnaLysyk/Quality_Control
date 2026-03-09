@@ -1,4 +1,5 @@
 import type { AuthUser } from "@/lib/jwtAuth";
+import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import type { SuporteRecord } from "@/lib/ticketsStore";
 
 export function isSuporteAdmin(user: AuthUser | null) {
@@ -9,31 +10,28 @@ export function isSuporteAdmin(user: AuthUser | null) {
 
 export function isItDev(user: AuthUser | null) {
   if (!user) return false;
-  if (isSuporteAdmin(user)) return true;
   const role = (user.role ?? "").toLowerCase();
-  return role === "it_dev" || role === "itdev" || role === "developer" || role === "dev";
-}
-
-function hasCompanyAccess(user: AuthUser, suporte: SuporteRecord) {
-  if (user.companyId && suporte.companyId) {
-    return user.companyId === suporte.companyId;
-  }
-  if (suporte.companySlug && Array.isArray(user.companySlugs) && user.companySlugs.length) {
-    return user.companySlugs.includes(suporte.companySlug);
-  }
-  if (!suporte.companyId && !suporte.companySlug) return true;
-  return false;
+  const permissionRole = (user.permissionRole ?? "").toLowerCase();
+  const companyRole = (user.companyRole ?? "").toLowerCase();
+  return (
+    role === "it_dev" ||
+    role === "itdev" ||
+    role === "developer" ||
+    role === "dev" ||
+    permissionRole === "dev" ||
+    companyRole === "it_dev"
+  );
 }
 
 export function canViewSuporte(user: AuthUser | null, suporte: SuporteRecord) {
   if (!user) return false;
+  const canView = hasPermissionAccess(user.permissions, "support", "view") || hasPermissionAccess(user.permissions, "tickets", "view");
+  if (!canView) return false;
   if (isItDev(user)) return true;
-  if (suporte.createdBy === user.id) return true;
-  const role = (user.role ?? "").toLowerCase();
-  if (role === "company" && hasCompanyAccess(user, suporte)) return true;
-  return false;
+  return suporte.createdBy === user.id;
 }
 
 export function canCommentSuporte(user: AuthUser | null, suporte: SuporteRecord) {
-  return canViewSuporte(user, suporte);
+  const canComment = hasPermissionAccess(user?.permissions, "support", "comment") || hasPermissionAccess(user?.permissions, "tickets", "comment");
+  return canViewSuporte(user, suporte) && canComment;
 }

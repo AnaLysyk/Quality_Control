@@ -43,6 +43,38 @@
       },
       "status": "PENDING",
       "createdAt": "2026-02-12T16:09:53.205Z"
+    },
+    {
+      "id": "02b8642f-350c-4eb6-a82f-91359598ad82",
+      "userId": "usr_admin_ana1",
+      "userName": "Ana 1",
+      "userEmail": "ana1",
+      "companyId": "griaule",
+      "companyName": "Griaule",
+      "type": "PASSWORD_RESET",
+      "payload": {
+        "reason": "forgot_password",
+        "profileType": "testing_company_lead",
+        "reviewQueue": "admin_and_global"
+      },
+      "status": "PENDING",
+      "createdAt": "2026-03-08T01:01:00.883Z"
+    },
+    {
+      "id": "de3c4ee5-4c0b-4f11-ae01-67820210da00",
+      "userId": "usr_user_griaule_test",
+      "userName": "Usuario Griaule",
+      "userEmail": "user@griaule.test",
+      "companyId": "griaule",
+      "companyName": "Griaule",
+      "type": "PASSWORD_RESET",
+      "payload": {
+        "reason": "forgot_password",
+        "profileType": "technical_support",
+        "reviewQueue": "global_only"
+      },
+      "status": "PENDING",
+      "createdAt": "2026-03-08T01:01:30.133Z"
     }
   ]
 }

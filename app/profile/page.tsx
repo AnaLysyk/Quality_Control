@@ -227,13 +227,7 @@ export default function ProfilePage() {
                 href="/settings/profile"
                 className="inline-flex items-center gap-2 rounded-full border border-white/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-white transition hover:bg-white/10"
               >
-                Editar perfil
-              </Link>
-              <Link
-                href="/settings?tab=preferences"
-                className="inline-flex items-center gap-2 rounded-full border border-white/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-white transition hover:bg-white/10"
-              >
-                Preferências
+                Meu perfil
               </Link>
             </div>
           </div>
@@ -241,7 +235,7 @@ export default function ProfilePage() {
             {[
               { title: "Visão geral", description: "Indicadores-chave para sua operação", href: "/applications-panel" },
               { title: "Runs do cliente", description: "Apps e runs ativos para o contexto atual", href: `/empresas/${encodeURIComponent(slug)}/runs` },
-              { title: "Configurações", description: "Tema, notificações e dados pessoais", href: "/settings" },
+              { title: "Meu perfil", description: "Dados, preferencias e seguranca da conta", href: "/settings/profile" },
             ].map((item) => (
               <Link
                 key={item.title}
@@ -376,13 +370,13 @@ export default function ProfilePage() {
           <section className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">Configurações pessoais</p>
+                <p className="text-xs uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">Meu perfil</p>
                 <h3 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Minha conta</h3>
               </div>
               <FiSettings size={20} className="text-(--tc-text-muted,#6b7280)" />
             </div>
             <div className="space-y-3 text-sm text-(--tc-text-muted,#4b5563)">
-              <p>Avatar, nome e preferências visuais são o foco desta tela.</p>
+              <p>Dados, preferencias e seguranca ficam centralizados no Meu perfil.</p>
               <p>Sem tokens, sem permissões administrativas, apenas identidade.</p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -390,13 +384,7 @@ export default function ProfilePage() {
                 href="/settings/profile"
                 className="rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f7f8fb) px-4 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-hover,#edf2ff)"
               >
-                Editar perfil
-              </Link>
-              <Link
-                href="/settings?tab=preferences"
-                className="rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text-muted,#6b7280) hover:bg-(--tc-surface-hover,#f7f8fb)"
-              >
-                Preferências visuais
+                Abrir Meu perfil
               </Link>
             </div>
           </section>
@@ -405,3 +393,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

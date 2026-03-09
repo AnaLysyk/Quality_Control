@@ -9,6 +9,7 @@ import {
   formatMessageWithRequestId,
   unwrapEnvelopeData,
 } from "@/lib/apiEnvelope";
+import { normalizeRequestProfileType, requestProfileTypeNeedsCompany, toInternalAccessType } from "@/lib/requestRouting";
 
 import type { AccessRequestItem, AccessTypeLabel, ClientOption, RawSupportRequest } from "./shared";
 import { parseFromMessage } from "./shared";
@@ -27,10 +28,8 @@ function computeDirty(a: AccessRequestItem, b: Partial<AccessRequestItem>) {
   return fields.some((f) => b[f] !== a[f]);
 }
 
-function toAcceptAccessType(label: AccessTypeLabel): "admin" | "company" | "user" {
-  if (label === "Admin do sistema") return "admin";
-  if (label === "Admin da empresa") return "company";
-  return "user";
+function toAcceptAccessType(label: AccessTypeLabel): "admin" | "company" | "user" | "global" {
+  return toInternalAccessType(normalizeRequestProfileType(label) ?? "company_user");
 }
 
 function getItemsFromEnvelope<T>(value: unknown): T[] {
@@ -117,9 +116,10 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
         createdAt: String(r.created_at),
         status: String(r.status ?? "open"),
         email: String(parsedMsg.email ?? r.email ?? ""),
-        name: String(parsedMsg.name ?? ""),
+        name: String(parsedMsg.fullName ?? parsedMsg.name ?? ""),
+        fullName: String(parsedMsg.fullName ?? parsedMsg.name ?? ""),
         jobRole: String(parsedMsg.jobRole ?? ""),
-        accessType: (parsedMsg.accessType as AccessTypeLabel) ?? "Usuario da empresa",
+        accessType: (parsedMsg.accessType as AccessTypeLabel) ?? "Usuario Testing Company",
         clientId: parsedMsg.clientId ?? null,
         company: String(parsedMsg.company ?? ""),
         notes: String(parsedMsg.notes ?? ""),
@@ -327,7 +327,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
           client_id: draft.clientId,
           comment: draft.adminNotes ?? "",
           admin_notes: draft.adminNotes ?? "",
-          access_type: toAcceptAccessType((draft.accessType ?? "Usuario da empresa") as AccessTypeLabel),
+          access_type: toAcceptAccessType((draft.accessType ?? "Usuario Testing Company") as AccessTypeLabel),
         }),
       });
 
@@ -432,7 +432,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="text-base font-semibold text-[#1e293b] truncate">
-                          {it.name || "(sem nome)"}
+                          {it.fullName || it.name || "(sem nome)"}
                         </div>
                         <div className="mt-1 text-xs text-[#94a3b8] truncate">{it.email}</div>
                       </div>
@@ -472,7 +472,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                   <div>
                     <p className={labelBase}>Solicitante</p>
                     <h2 className="mt-2 text-xl font-semibold text-[#1e293b]">
-                      {selected.name || "(sem nome)"}
+                      {selected.fullName || selected.name || "(sem nome)"}
                     </h2>
                     <p className="mt-1 text-sm text-[#64748b]">{selected.email}</p>
                   </div>
@@ -493,22 +493,25 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <label className="block text-sm font-medium text-[#1e293b]">
-                    Tipo de acesso
+                    Tipo de perfil
                     <select
                       className={inputBase}
-                      value={(draft.accessType ?? "Usuario da empresa") as AccessTypeLabel}
+                      value={(draft.accessType ?? "Usuario Testing Company") as AccessTypeLabel}
                       onChange={(e) => {
                         draftTouchedRef.current = true;
                         const v = e.target.value as AccessTypeLabel;
                         setDraft((d: Partial<AccessRequestItem> | null) => (d ? { ...d, accessType: v } : d));
-                        if (v === "Admin do sistema") setDraft((d: Partial<AccessRequestItem> | null) => (d ? { ...d, clientId: null, company: "" } : d));
+                        if (!requestProfileTypeNeedsCompany(normalizeRequestProfileType(v) ?? "company_user")) {
+                          setDraft((d: Partial<AccessRequestItem> | null) => (d ? { ...d, clientId: null, company: "" } : d));
+                        }
                       }}
-                      aria-label="Tipo de acesso"
-                      title="Tipo de acesso"
+                      aria-label="Tipo de perfil"
+                      title="Tipo de perfil"
                     >
-                      <option value="Usuario da empresa">Usuario da empresa</option>
-                      <option value="Admin da empresa">Admin da empresa</option>
-                      <option value="Admin do sistema">Admin do sistema</option>
+                      <option value="Usuario Testing Company">Usuario Testing Company</option>
+                      <option value="Usuario Empresa">Usuario Empresa</option>
+                      <option value="Usuario Lider TC">Usuario Lider TC</option>
+                      <option value="Suporte tecnico">Suporte tecnico</option>
                     </select>
                   </label>
 
@@ -526,7 +529,11 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                           console.debug("[E2E][access-requests] select empresa -> id=", id, "match=", match?.name);
                         } catch {}
                       }}
-                      disabled={draft.accessType === "Admin do sistema"}
+                      disabled={
+                        !requestProfileTypeNeedsCompany(
+                          normalizeRequestProfileType((draft.accessType ?? "Usuario Testing Company") as string) ?? "company_user",
+                        )
+                      }
                       aria-label="Empresa"
                       title="Empresa"
                     >
@@ -675,7 +682,11 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                     </button>
                     {(() => {
                       const acceptDisabled =
-                        accepting || ((draft.accessType ?? "Usuario da empresa") !== "Admin do sistema" && !draft.clientId);
+                        accepting ||
+                        (requestProfileTypeNeedsCompany(
+                          normalizeRequestProfileType((draft.accessType ?? "Usuario Testing Company") as string) ?? "company_user",
+                        ) &&
+                          !draft.clientId);
                       try {
                         console.debug(
                           "[E2E][access-requests] acceptDisabled=",

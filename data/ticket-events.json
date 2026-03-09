@@ -1,6 +1,152 @@
 {
   "items": [
     {
+      "id": "80c7a40d-057a-4401-8a84-643cad69ec65",
+      "ticketId": "906c6c27-50ac-4a52-a994-13bc7c607c0b",
+      "type": "CREATED",
+      "payload": {
+        "title": "Admin real support 1772926130351"
+      },
+      "actorUserId": "usr_admin_ana1",
+      "createdAt": "2026-03-07T23:28:50.496Z"
+    },
+    {
+      "id": "f82ff930-842f-41b2-bdc6-92aba3ed51af",
+      "ticketId": "60d1f098-d951-40ca-ba2c-eaa95ebb4984",
+      "type": "CREATED",
+      "payload": {
+        "title": "Global support 1772926048768"
+      },
+      "actorUserId": "usr_itdev",
+      "createdAt": "2026-03-07T23:27:31.544Z"
+    },
+    {
+      "id": "3d662e33-d46b-473b-a4dc-a2ad55491675",
+      "ticketId": "ccbe714b-3d56-4a49-ab86-6578d5eadc18",
+      "type": "CREATED",
+      "payload": {
+        "title": "Admin support 1772926048768"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-03-07T23:27:31.323Z"
+    },
+    {
+      "id": "f45c1aa8-41a4-4301-8d3a-6cbc70ce5c52",
+      "ticketId": "8d0121d5-1eba-465f-9a3a-990c10246128",
+      "type": "CREATED",
+      "payload": {
+        "title": "Codex owner only 1772924466",
+        "role": "it_dev"
+      },
+      "actorUserId": "usr_itdev",
+      "createdAt": "2026-03-07T23:01:07.877Z"
+    },
+    {
+      "id": "14f37006-cd4e-4b42-81a3-f5e82608bfad",
+      "ticketId": "8a861111-609e-44a4-8040-509a2c0cf493",
+      "type": "CREATED",
+      "payload": {
+        "title": "debug direct tickets",
+        "role": "it_dev"
+      },
+      "actorUserId": "usr_itdev",
+      "createdAt": "2026-03-07T22:59:37.912Z"
+    },
+    {
+      "id": "af589a83-3c62-4cd5-9dcf-3366ece908d9",
+      "ticketId": "7f3a6b3c-d927-4d3d-94da-1a95438572c8",
+      "type": "STATUS_CHANGED",
+      "payload": {
+        "from": "done",
+        "to": "kljoklc-kol",
+        "reason": null
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-03-07T14:14:43.583Z"
+    },
+    {
+      "id": "89fd07e1-9e19-4075-b260-8f0a0bca0e78",
+      "ticketId": "66854031-0ebc-49c1-9683-fb89b6b460bd",
+      "type": "STATUS_CHANGED",
+      "payload": {
+        "from": "review",
+        "to": "doing",
+        "reason": null
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-03-07T14:14:41.800Z"
+    },
+    {
+      "id": "c4bfd967-65f8-4248-a90a-a31203afe74b",
+      "ticketId": "e9f611e6-3783-4165-b6cf-b3e3e02e3eed",
+      "type": "STATUS_CHANGED",
+      "payload": {
+        "from": "backlog",
+        "to": "doing",
+        "reason": null
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-03-07T14:14:41.403Z"
+    },
+    {
+      "id": "f0d9d163-887c-405b-912e-a8e8278bb19d",
+      "ticketId": "7f3a6b3c-d927-4d3d-94da-1a95438572c8",
+      "type": "STATUS_CHANGED",
+      "payload": {
+        "from": "backlog",
+        "to": "done",
+        "reason": null
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-03-07T13:49:32.137Z"
+    },
+    {
+      "id": "f4b6dfa3-b799-4cac-a677-4a6202c3a55c",
+      "ticketId": "66854031-0ebc-49c1-9683-fb89b6b460bd",
+      "type": "STATUS_CHANGED",
+      "payload": {
+        "from": "backlog",
+        "to": "review",
+        "reason": null
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-03-07T13:49:27.518Z"
+    },
+    {
+      "id": "b0079a46-f16d-4f8a-a712-e42e2f559548",
+      "ticketId": "3969d218-7ce7-4bfe-ad28-9cad929f4fc4",
+      "type": "STATUS_CHANGED",
+      "payload": {
+        "from": "review",
+        "to": "backlog",
+        "reason": null
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-03-07T13:48:30.840Z"
+    },
+    {
+      "id": "e5459c6e-c0fa-4026-ac43-c39034418489",
+      "ticketId": "3969d218-7ce7-4bfe-ad28-9cad929f4fc4",
+      "type": "ASSIGNED",
+      "payload": {
+        "from": "usr_admin",
+        "to": "dev-empresa"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-03-07T13:48:18.211Z"
+    },
+    {
+      "id": "4be5966e-bb44-4043-b589-832ae7c20319",
+      "ticketId": "66854031-0ebc-49c1-9683-fb89b6b460bd",
+      "type": "CREATED",
+      "payload": {
+        "title": "dxcv",
+        "role": "admin"
+      },
+      "actorUserId": "usr_admin",
+      "createdAt": "2026-03-07T13:48:05.832Z"
+    },
+    {
       "id": "0989491d-2726-4111-8380-d08a09afbafc",
       "ticketId": "7f3a6b3c-d927-4d3d-94da-1a95438572c8",
       "type": "CREATED",

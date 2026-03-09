@@ -22,7 +22,7 @@ export default function ChamadosPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/chamados?scope=all");
+      const res = await fetch("/api/chamados");
       const data = await res.json();
       setChamados(data.items || []);
     } catch (err) {

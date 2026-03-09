@@ -29,11 +29,18 @@
     "seed:quality-alert": "tsx tests-e2e/utils/seed.ts",
     "seed:griaule": "npx tsx scripts/seed-griaule.ts",
     "seed:all": "npm run seed:ana-admin && npm run seed:quality-alert && npm run seed:griaule",
-    "postinstall": "node scripts/fix-server-only.js"
-    ,"migrate:upstash": "node tmp/migrate_to_upstash.js"
+    "postinstall": "node scripts/fix-server-only.js",
+    "migrate:upstash": "node tmp/migrate_to_upstash.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.975.0",
+    "@radix-ui/react-accordion": "^1.2.12",
+    "@radix-ui/react-scroll-area": "^1.2.10",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-separator": "^1.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-tabs": "^1.1.13",
+    "@radix-ui/react-tooltip": "^1.2.8",
     "@upstash/redis": "^1.36.1",
     "ai": "^6.0.79",
     "clsx": "^2.1.1",

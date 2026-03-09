@@ -5,7 +5,7 @@ import path from "node:path";
 import jwt from "jsonwebtoken";
 
 import { getRedis } from "@/lib/redis";
-import { listLocalCompanies, listLocalLinksForUser } from "@/lib/auth/localStore";
+import { listLocalCompanies, listLocalLinksForUser, listLocalUsers } from "@/lib/auth/localStore";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 
@@ -25,6 +25,7 @@ export type CompanyDocumentItem = {
   storagePath?: string | null;
   createdAt: string;
   createdBy?: string | null;
+  createdByName?: string | null;
 };
 
 type DocumentHistoryEvent = {
@@ -44,6 +45,10 @@ type DocumentHistoryEvent = {
 type AuthContext = {
   userId: string;
   companySlugs: string[];
+  isGlobalAdmin: boolean;
+  role: string | null;
+  companyRole: string | null;
+  permissionRole: string | null;
 };
 
 const STORE_PATH = path.join(getJsonStoreDir(), "company-documents-store.json");
@@ -164,6 +169,15 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
         const userId = (parsed as { userId?: string; id?: string }).userId ?? (parsed as { id?: string }).id;
         if (!userId) return null;
         const isGlobalAdmin = (parsed as { isGlobalAdmin?: boolean }).isGlobalAdmin === true;
+        const role = typeof (parsed as { role?: unknown }).role === "string" ? String((parsed as { role?: string }).role) : null;
+        const companyRole =
+          typeof (parsed as { companyRole?: unknown }).companyRole === "string"
+            ? String((parsed as { companyRole?: string }).companyRole)
+            : null;
+        const permissionRole =
+          typeof (parsed as { permissionRole?: unknown }).permissionRole === "string"
+            ? String((parsed as { permissionRole?: string }).permissionRole)
+            : null;
         const [links, companies] = await Promise.all([
           listLocalLinksForUser(userId),
           listLocalCompanies(),
@@ -171,7 +185,7 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
         const allowed = isGlobalAdmin
           ? companies
           : companies.filter((company) => links.some((link) => link.companyId === company.id));
-        return { userId, companySlugs: allowed.map((c) => c.slug) };
+        return { userId, companySlugs: allowed.map((c) => c.slug), isGlobalAdmin, role, companyRole, permissionRole };
       } catch {
         return null;
       }
@@ -181,6 +195,9 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
       const userId = typeof payload.sub === "string" ? payload.sub : null;
       if (!userId) return null;
       const isGlobalAdmin = payload.isGlobalAdmin === true;
+      const role = typeof payload.role === "string" ? payload.role : null;
+      const companyRole = typeof payload.companyRole === "string" ? payload.companyRole : null;
+      const permissionRole = typeof payload.permissionRole === "string" ? payload.permissionRole : null;
       const [links, companies] = await Promise.all([
         listLocalLinksForUser(userId),
         listLocalCompanies(),
@@ -188,7 +205,7 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
       const allowed = isGlobalAdmin
         ? companies
         : companies.filter((company) => links.some((link) => link.companyId === company.id));
-      return { userId, companySlugs: allowed.map((c) => c.slug) };
+      return { userId, companySlugs: allowed.map((c) => c.slug), isGlobalAdmin, role, companyRole, permissionRole };
     } catch {
       // Token exists but is invalid/expired: do not fall back to session_id.
       return null;
@@ -207,6 +224,15 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
     const userId = (parsed as { userId?: string; id?: string }).userId ?? (parsed as { id?: string }).id;
     if (!userId) return null;
     const isGlobalAdmin = (parsed as { isGlobalAdmin?: boolean }).isGlobalAdmin === true;
+    const role = typeof (parsed as { role?: unknown }).role === "string" ? String((parsed as { role?: string }).role) : null;
+    const companyRole =
+      typeof (parsed as { companyRole?: unknown }).companyRole === "string"
+        ? String((parsed as { companyRole?: string }).companyRole)
+        : null;
+    const permissionRole =
+      typeof (parsed as { permissionRole?: unknown }).permissionRole === "string"
+        ? String((parsed as { permissionRole?: string }).permissionRole)
+        : null;
     const [links, companies] = await Promise.all([
       listLocalLinksForUser(userId),
       listLocalCompanies(),
@@ -214,7 +240,7 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
     const allowed = isGlobalAdmin
       ? companies
       : companies.filter((company) => links.some((link) => link.companyId === company.id));
-    return { userId, companySlugs: allowed.map((c) => c.slug) };
+    return { userId, companySlugs: allowed.map((c) => c.slug), isGlobalAdmin, role, companyRole, permissionRole };
   } catch {
     return null;
   }
@@ -224,9 +250,33 @@ function canAccessCompany(auth: AuthContext, companySlug: string) {
   return auth.companySlugs.includes(companySlug);
 }
 
+function canManageCompanyDocuments(auth: AuthContext) {
+  const role = (auth.role ?? "").toLowerCase();
+  const permissionRole = (auth.permissionRole ?? "").toLowerCase();
+  return auth.isGlobalAdmin || role === "admin" || permissionRole === "admin";
+}
+
+async function enrichItems(items: CompanyDocumentItem[]) {
+  const users = await listLocalUsers();
+  const namesByUserId = new Map(
+    users.map((user) => [
+      user.id,
+      (typeof user.full_name === "string" && user.full_name.trim()) ||
+        (typeof user.name === "string" && user.name.trim()) ||
+        user.email,
+    ]),
+  );
+
+  return items.map((item) => ({
+    ...item,
+    createdByName: item.createdBy ? namesByUserId.get(item.createdBy) ?? item.createdBy : null,
+  }));
+}
+
 export async function GET(req: NextRequest) {
   const auth = await getAuthContext(req);
   if (!auth) return NextResponse.json({ error: "Nao autorizado", items: [] }, { status: 401 });
+  const canManage = canManageCompanyDocuments(auth);
 
   const url = new URL(req.url);
   const slugRaw = url.searchParams.get("slug") ?? "";
@@ -242,7 +292,7 @@ export async function GET(req: NextRequest) {
     const items = history.items
       .filter((event) => event.companySlug === companySlug)
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-    return NextResponse.json({ history: items }, { status: 200 });
+    return NextResponse.json({ history: items, canManage }, { status: 200 });
   }
   if (download) {
     if (!downloadId) return NextResponse.json({ error: "id obrigatorio" }, { status: 400 });
@@ -267,7 +317,8 @@ export async function GET(req: NextRequest) {
   }
 
   const store = await readStore();
-  const items = store.items
+  const items = await enrichItems(
+    store.items
     .filter((i) => i.companySlug === companySlug)
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
     .map((item) => {
@@ -278,14 +329,16 @@ export async function GET(req: NextRequest) {
         return { ...item, url: downloadUrl };
       }
       return item;
-    });
+    }),
+  );
 
-  return NextResponse.json({ items }, { status: 200 });
+  return NextResponse.json({ items, canManage }, { status: 200 });
 }
 
 export async function POST(req: NextRequest) {
   const auth = await getAuthContext(req);
   if (!auth) return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+  if (!canManageCompanyDocuments(auth)) return NextResponse.json({ error: "Sem permissao para gerenciar documentos" }, { status: 403 });
 
   const contentType = req.headers.get("content-type") || "";
   if (contentType.includes("multipart/form-data")) {
@@ -374,6 +427,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const auth = await getAuthContext(req);
   if (!auth) return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+  if (!canManageCompanyDocuments(auth)) return NextResponse.json({ error: "Sem permissao para gerenciar documentos" }, { status: 403 });
 
   const url = new URL(req.url);
   const id = (url.searchParams.get("id") ?? "").trim();

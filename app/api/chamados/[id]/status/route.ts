@@ -18,15 +18,15 @@ function isValidTransition(from: string, to: string) {
 import { notifyTicketStatusChanged } from "@/lib/notificationService";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { isItDev } from "@/lib/rbac/tickets";
+import { canMoveTicket } from "@/lib/rbac/tickets";
 
 export async function PATCH(
   req: NextRequest,
   context: { params: { id: string } } | { params: Promise<{ id: string }> }
 ) {
   const user = await authenticateRequest(req);
-  if (!user || !isItDev(user)) {
-    return NextResponse.json({ error: "Apenas dev pode mover chamado" }, { status: 403 });
+  if (!user) {
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
   // Next.js App Router: context.params pode ser Promise
   const params = (context.params && typeof (context.params as any).then === 'function')
@@ -40,6 +40,9 @@ export async function PATCH(
   const current = await getTicketById(id);
   if (!current) {
     return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
+  }
+  if (!canMoveTicket(user, current)) {
+    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
 
 

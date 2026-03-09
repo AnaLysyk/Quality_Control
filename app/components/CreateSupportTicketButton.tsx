@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthUser } from "@/hooks/useAuthUser";
+import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { useClientContext } from "@/context/ClientContext";
 import { useEffect } from "react";
 
 export default function CreateSupportTicketButton() {
-  const { user } = useAuthUser();
+  const { user, can } = usePermissionAccess();
   const { activeClientSlug, activeClientId } = useClientContext();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -19,8 +19,6 @@ export default function CreateSupportTicketButton() {
   });
   const [devs, setDevs] = useState<Array<{ id: string; name: string }>>([]);
   const [assignedTo, setAssignedTo] = useState<string | null>(null);
-
-  // Permite para todos os perfis
 
   const handleSubmit = async () => {
     if (!form.title.trim()) return;
@@ -78,6 +76,9 @@ export default function CreateSupportTicketButton() {
     loadDevs();
     return () => { mounted = false; };
   }, [open]);
+
+  if (!user) return null;
+  if (!can("support", "create") || !can("support", "modal")) return null;
 
   return (
     <div className="relative">

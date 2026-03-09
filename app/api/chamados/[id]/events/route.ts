@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
-// Autenticação removida para endpoint público
+// Autenticacao removida para endpoint publico
 import { getTicketById } from "@/lib/ticketsStore";
 import { listTicketEvents } from "@/lib/ticketEventsStore";
 import { getLocalUserById } from "@/lib/auth/localStore";
-// RBAC removido para endpoint público
+// RBAC removido para endpoint publico
+
+function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
+  return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
+}
 
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
@@ -32,7 +36,7 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
     const actor = event.actorUserId ? actorMap.get(event.actorUserId) ?? null : null;
     return {
       ...event,
-      actorName: actor?.name ?? null,
+      actorName: resolveDisplayName(actor),
       actorEmail: actor?.email ?? null,
     };
   });

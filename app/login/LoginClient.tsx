@@ -190,7 +190,7 @@ export default function LoginClient() {
         <div className="absolute top-1/2 right-2 w-14 h-14 bg-[#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
       </div>
 
-      <div className="max-w-lg w-full space-y-6 sm:space-y-8 relative z-10 sm:max-w-xl md:max-w-2xl">
+      <div className="relative z-10 max-h-[calc(100svh-1rem)] w-full max-w-lg space-y-4 overflow-y-auto pr-1 [scrollbar-width:none] sm:max-h-[calc(100svh-2rem)] sm:max-w-xl sm:space-y-6 md:max-w-2xl [&::-webkit-scrollbar]:hidden">
         <div className="text-center">
           <div
             className={`relative mx-auto w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 mb-4 sm:mb-6 ${styles.logoWrapper}`}
@@ -215,7 +215,7 @@ export default function LoginClient() {
         </div>
 
         <form
-          className="bg-white p-5 sm:p-8 rounded-2xl shadow-2xl border border-[#011848]/10 w-full max-w-sm sm:max-w-md mx-auto min-w-0"
+          className="mx-auto w-full max-w-sm min-w-0 rounded-2xl border border-[#011848]/10 bg-white p-5 shadow-2xl sm:max-w-md sm:p-7"
           onSubmit={handleSubmit}
         >
           <div className="space-y-4">

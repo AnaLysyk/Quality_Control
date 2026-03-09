@@ -6,11 +6,10 @@ import { useRouter } from "next/navigation";
 import { CreateClientModal, type ClientFormValues } from "@/clients/components/CreateClientModal";
 import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { getAccessToken } from "@/lib/api";
+import { fetchApi } from "@/lib/api";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, readApiError, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
-import Image from "next/image";
-import { FiExternalLink, FiUsers, FiX, FiCheckCircle, FiXCircle } from "react-icons/fi";
+import { FiCheckCircle, FiExternalLink, FiHome, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiUsers, FiX, FiXCircle } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import Breadcrumb from "@/components/Breadcrumb";
 
@@ -25,6 +24,7 @@ type Client = {
   phone?: string | null;
   logoUrl?: string | null;
   docsLink?: string | null;
+  linkedinUrl?: string | null;
   notes?: string | null;
   integrationMode?: "qase" | "manual" | null;
   qaseProjectCode?: string | null;
@@ -142,6 +142,7 @@ function mapClient(row: Record<string, unknown>): Client {
     phone: readNullableString(row.phone),
     logoUrl: readNullableString(row.logo_url),
     docsLink: readNullableString(row.docs_link),
+    linkedinUrl: readNullableString(row.linkedin_url) ?? readNullableString(row.docs_link),
     notes: readNullableString(row.notes),
     integrationMode: readNullableString(row.integration_mode) as "qase" | "manual" | null,
     qaseProjectCode: readNullableString(row.qase_project_code),
@@ -164,21 +165,139 @@ function AdminClientsPage() {
   const [items, setItems] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<Client>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"visao" | "pessoas">("visao");
   const [openCreate, setOpenCreate] = useState(false);
-  const [openUserModal, setOpenUserModal] = useState(false);
-  const [userClientId, setUserClientId] = useState<string | null>(null);
+  const [companyAction, setCompanyAction] = useState<null | "activate" | "deactivate" | "delete">(null);
 
   const selected = useMemo(() => items.find((c) => c.id === selectedId) ?? null, [items, selectedId]);
   const currentActive = form.active ?? selected?.active ?? false;
   const isInactive = !currentActive;
+  const currentName = (form.name && form.name.trim()) || selected?.name || "Empresa";
+  const currentSlug = (form.slug ?? selected?.slug) || null;
+  const currentTaxId = form.taxId ?? selected?.taxId ?? null;
+  const currentAddress = form.address ?? selected?.address ?? null;
+  const currentPhone = form.phone ?? selected?.phone ?? null;
+  const currentWebsite = form.website ?? selected?.website ?? null;
+  const currentDocsLink = form.docsLink ?? selected?.docsLink ?? null;
+  const currentLinkedin = form.linkedinUrl ?? selected?.linkedinUrl ?? currentDocsLink ?? null;
+  const currentDescription = form.description ?? selected?.description ?? null;
+  const currentNotes = form.notes ?? selected?.notes ?? null;
+  const currentQaseProject = form.qaseProjectCode ?? selected?.qaseProjectCode ?? null;
+  const currentQaseProjects =
+    ((form.qaseProjectCodes !== undefined ? form.qaseProjectCodes : selected?.qaseProjectCodes) ?? null)?.join(", ") ?? null;
+  const hasQaseIntegration = (form.integrationMode ?? selected?.integrationMode) === "qase" || !!currentQaseProject || !!currentQaseProjects;
+  const currentIntegrationMode = hasQaseIntegration ? "Qase" : "Manual";
+  const filteredItems = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return items;
+    return items.filter((client) =>
+      [client.name, client.slug, client.taxId, client.website, client.phone, client.address]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(term)),
+    );
+  }, [items, search]);
+  const activeCompaniesCount = useMemo(() => items.filter((item) => item.active).length, [items]);
+  const qaseCompaniesCount = useMemo(
+    () => items.filter((item) => item.integrationMode === "qase" || item.qaseProjectCode || (item.qaseProjectCodes?.length ?? 0) > 0).length,
+    [items],
+  );
   const resetForm = () => {
     if (selected) setForm(selected);
   };
+
+  function requestToggleCompanyStatus() {
+    if (!selectedId || saving) return;
+    setCompanyAction(currentActive ? "deactivate" : "activate");
+  }
+
+  async function toggleCompanyStatus() {
+    if (!selectedId || saving) return;
+    const nextActive = !currentActive;
+
+    setSaving(true);
+    setMessage(null);
+    try {
+      const res = await fetchApi(`/api/clients/${selectedId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          active: nextActive,
+          status: nextActive ? "active" : "inactive",
+        }),
+      });
+
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        const msg = extractMessageFromJson(err) || "Nao foi possivel atualizar o status da empresa";
+        setMessage(msg);
+        toast.error(msg);
+        return;
+      }
+
+      const raw = await res.json().catch(() => null);
+      const updated = unwrapEnvelopeData<Record<string, unknown>>(raw) ?? (raw as Record<string, unknown> | null);
+      if (updated) {
+        const next = mapClient(updated);
+        setItems((prev) => prev.map((c) => (c.id === selectedId ? next : c)));
+        setForm(next);
+      }
+
+      toast.success(nextActive ? "Empresa ativada" : "Empresa inativada");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao atualizar status";
+      setMessage(msg);
+      toast.error(msg);
+    } finally {
+      setSaving(false);
+      setCompanyAction(null);
+    }
+  }
+
+  async function deleteCompany() {
+    if (!selectedId || saving) return;
+
+    setSaving(true);
+    setMessage(null);
+    try {
+      const res = await fetchApi(`/api/clients/${selectedId}`, {
+        method: "DELETE",
+      });
+
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        const msg = extractMessageFromJson(err) || "Nao foi possivel excluir a empresa";
+        setMessage(msg);
+        toast.error(msg);
+        return;
+      }
+
+      setItems((prev) => prev.filter((company) => company.id !== selectedId));
+      toast.success("Empresa excluida");
+      closeModal();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao excluir empresa";
+      setMessage(msg);
+      toast.error(msg);
+    } finally {
+      setSaving(false);
+      setCompanyAction(null);
+    }
+  }
 
   const handleUnauthorized = useCallback(() => {
     const msg = "SessÃ£o expirada. FaÃ§a login novamente.";
@@ -191,9 +310,7 @@ function AdminClientsPage() {
     setLoading(true);
     setMessage(null);
     try {
-      const token = await getAccessToken();
-      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
-      const res = await fetch("/api/clients", { cache: "no-store", headers, credentials: "include" });
+      const res = await fetchApi("/api/clients");
       if (res.status === 401) {
         handleUnauthorized();
         setItems([]);
@@ -231,13 +348,10 @@ function AdminClientsPage() {
 
   async function openModal(id: string) {
     setSelectedId(id);
-    setUserClientId(id);
     setIsEditing(false);
     setMessage(null);
     try {
-      const token = await getAccessToken();
-      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
-      const res = await fetch(`/api/clients/${id}`, { cache: "no-store", headers, credentials: "include" });
+      const res = await fetchApi(`/api/clients/${id}`);
       if (res.status === 401) {
         handleUnauthorized();
         return;
@@ -270,6 +384,7 @@ function AdminClientsPage() {
     setForm({});
     setIsEditing(false);
     setActiveTab("visao");
+    setCompanyAction(null);
   }
 
   async function save() {
@@ -277,31 +392,31 @@ function AdminClientsPage() {
     setSaving(true);
     setMessage(null);
     try {
-      const token = await getAccessToken();
-      const headers = { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+      const normalizedQaseProjectCodes =
+        Array.isArray(form.qaseProjectCodes) && form.qaseProjectCodes.length > 0 ? form.qaseProjectCodes : undefined;
       const payload = {
-        name: form.name,
-        tax_id: form.taxId,
-        address: form.address,
-        description: form.description,
-        phone: form.phone,
-        website: form.website,
-        logo_url: form.logoUrl,
-        docs_link: form.docsLink,
-        notes: form.notes,
-        active: form.active,
-        integration_mode: form.integrationMode,
-        qase_project_code: form.qaseProjectCode,
-        qase_project_codes: form.qaseProjectCodes,
+        name: form.name || undefined,
+        tax_id: form.taxId || undefined,
+        address: form.address || undefined,
+        description: form.description || undefined,
+        phone: form.phone || undefined,
+        website: form.website || undefined,
+        logo_url: form.logoUrl || undefined,
+        docs_link: form.docsLink || undefined,
+        linkedin_url: form.linkedinUrl || undefined,
+        notes: form.notes || undefined,
+        active: typeof form.active === "boolean" ? form.active : undefined,
+        integration_mode: form.integrationMode || undefined,
+        qase_project_code: form.qaseProjectCode || undefined,
+        qase_project_codes: normalizedQaseProjectCodes,
         qase_token: form.qaseToken && form.qaseToken.trim() ? form.qaseToken : undefined,
-        jira_base_url: form.jiraBaseUrl,
-        jira_email: form.jiraEmail,
+        jira_base_url: form.jiraBaseUrl || undefined,
+        jira_email: form.jiraEmail || undefined,
         jira_api_token: form.jiraApiToken && form.jiraApiToken.trim() ? form.jiraApiToken : undefined,
       };
-      const res = await fetch(`/api/clients/${selectedId}`, {
+      const res = await fetchApi(`/api/clients/${selectedId}`, {
         method: "PATCH",
-        headers,
-        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       if (res.status === 401) {
@@ -320,9 +435,11 @@ function AdminClientsPage() {
       const raw = await res.json().catch(() => null);
       const updated = unwrapEnvelopeData<Record<string, unknown>>(raw) ?? (raw as Record<string, unknown> | null);
       if (updated) {
-        setItems((prev) => prev.map((c) => (c.id === selectedId ? mapClient(updated) : c)));
+        const next = mapClient(updated);
+        setItems((prev) => prev.map((c) => (c.id === selectedId ? next : c)));
+        setForm(next);
       }
-      closeModal();
+      setIsEditing(false);
       toast.success("Empresa atualizada");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao salvar cliente";
@@ -335,7 +452,6 @@ function AdminClientsPage() {
 
   async function handleCreateClient(data: ClientFormValues) {
     try {
-      const token = await getAccessToken();
       const normalizedCodes = Array.isArray(data.qaseProjectCodes) && data.qaseProjectCodes.length ? data.qaseProjectCodes : undefined;
       const legacyProjectCode =
         data.integrationMode === "qase"
@@ -350,7 +466,7 @@ function AdminClientsPage() {
         phone: data.phone,
         website: data.website,
         logo_url: data.logoUrl,
-        docs_link: data.linkedin,
+        linkedin_url: data.linkedin,
         notes: data.notes,
         active: data.active,
         description: data.description,
@@ -362,11 +478,9 @@ function AdminClientsPage() {
         jira_email: data.jiraEmail,
         jira_api_token: data.jiraApiToken,
       };
-      const headers = { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
-      const res = await fetch("/api/clients", {
+      const res = await fetchApi("/api/clients", {
         method: "POST",
-        headers,
-        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       if (res.status === 401) {
@@ -382,7 +496,6 @@ function AdminClientsPage() {
       const created = await res.json().catch(() => null);
       if (created) {
         setItems((prev) => [mapClient(created), ...prev]);
-        setUserClientId(created.id);
         if (data.integrationMode === "manual") {
           setMessage(
             "Empresa criada sem integraÃ§Ã£o. VocÃª pode configurar Qase depois (token + project code) ou seguir em modo manual.",
@@ -406,132 +519,217 @@ function AdminClientsPage() {
 
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
-      <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-10 space-y-4">
+      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-10 space-y-6">
         <Breadcrumb items={[{ label: "Admin", href: "/admin/home" }, { label: "Empresas" }]} />
 
-        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-          <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Empresas</h1>
-            <p className="text-sm sm:text-base text-(--tc-text-muted,#6b7280)">Gerencie clientes e usuÃ¡rios</p>
+        <section className="overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,#031843_0%,#082457_38%,#3a174f_72%,#9f1025_100%)] px-6 py-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:px-8">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Base de empresas</p>
+                <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Empresas da plataforma</h1>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/82">
+                  Consulte clientes cadastrados, abra o detalhamento da empresa e acompanhe integrações e usuários vinculados.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3 text-sm">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
+                  <FiHome className="h-4 w-4" /> {items.length} empresas cadastradas
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
+                  <FiCheckCircle className="h-4 w-4" /> {activeCompaniesCount} empresas ativas
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
+                  <FiUsers className="h-4 w-4" /> {qaseCompaniesCount} com Qase
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3 lg:justify-end">
+              {isGlobalAdmin && (
+                <button
+                  type="button"
+                  onClick={() => setOpenCreate(true)}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+                >
+                  <FiPlus className="h-4 w-4" /> Cadastrar empresa
+                </button>
+              )}
+              {isGlobalAdmin && (
+                <a
+                  href="/admin/users"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+                >
+                  <FiUsers className="h-4 w-4" /> Gerenciar usuários
+                </a>
+              )}
+              <button
+                type="button"
+                onClick={load}
+                className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15 disabled:opacity-60"
+                disabled={loading}
+              >
+                <FiRefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Atualizar
+              </button>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-          {isGlobalAdmin && (
-            <button
-              type="button"
-              onClick={() => setOpenCreate(true)}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            >
-              + Cadastrar empresa
-            </button>
-          )}
-          {isGlobalAdmin && (
-            <a
-              href="/admin/users"
-              className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-            >
-              Gerenciar Usuários
-            </a>
-          )}
-            <button
-              type="button"
-              onClick={load}
-              className="rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) px-3 py-2 text-sm text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-2,#f3f4f6) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/30 disabled:opacity-60"
-              disabled={loading}
-            >
-              Atualizar
-            </button>
-          </div>
-        </div>
+        </section>
 
         {message && (
-          <p role="status" aria-live="polite" className="text-sm text-red-600">
+          <p role="status" aria-live="polite" className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             {message}
           </p>
         )}
-        {loading && (
-          <p role="status" aria-live="polite" className="text-sm text-(--tc-text-muted,#6b7280)">
-            Carregando...
-          </p>
-        )}
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {items.map((client) => (
+        <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">Carteira de empresas</p>
+              <h2 className="mt-2 text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">Lista de empresas</h2>
+              <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
+                Abra uma empresa para ver dados, integrações, documentos e usuários vinculados.
+              </p>
+            </div>
+            <label className="flex w-full max-w-md items-center gap-3 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3 text-sm text-(--tc-text-secondary,#4b5563)">
+              <FiSearch className="h-4 w-4 text-(--tc-text-muted,#6b7280)" />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Buscar por nome, slug, CNPJ, site ou telefone"
+                className="w-full bg-transparent outline-none placeholder:text-(--tc-text-muted,#94a3b8)"
+              />
+            </label>
+          </div>
+
+          {loading ? (
+            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5">
+                  <div className="h-4 w-28 animate-pulse rounded-full bg-slate-200" />
+                  <div className="mt-4 flex items-start gap-3">
+                    <div className="h-12 w-12 animate-pulse rounded-xl bg-slate-200" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-5 w-2/3 animate-pulse rounded-full bg-slate-200" />
+                      <div className="h-4 w-1/2 animate-pulse rounded-full bg-slate-200" />
+                      <div className="h-4 w-full animate-pulse rounded-full bg-slate-200" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {filteredItems.map((client) => (
             <button
               type="button"
               key={client.id}
               onClick={() => openModal(client.id)}
-              className="w-full text-left rounded-lg border border-(--tc-border,#e5e7eb) p-4 bg-(--tc-surface,#ffffff) hover:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full rounded-[24px] border border-(--tc-border,#d7deea) bg-white p-5 text-left transition hover:border-(--tc-accent,#ef0001)/35 hover:shadow-[0_14px_32px_rgba(15,23,42,0.06)] focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
             >
-                <div className="flex flex-row flex-wrap items-center gap-3">
-                  <div className="h-12 w-12 rounded logo-background overflow-hidden flex items-center justify-center">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc)">
                   <CompanyLogo
                     logoUrl={client.logoUrl}
                     slug={client.slug}
                     website={client.website}
                     name={client.name}
-                    className="logo-image"
+                    className="h-full w-full object-cover"
                   />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold truncate" title={client.name}>
-                    {client.name}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="truncate text-base font-bold text-(--tc-text-primary,#0b1a3c)" title={client.name}>
+                      {client.name}
+                    </div>
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                        client.active ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {client.active ? "Ativa" : "Inativa"}
+                    </span>
                   </div>
-                  <div className="text-xs text-(--tc-text-secondary,#4b5563)">{client.active ? "Ativo" : "Inativo"}</div>
-                  <div className="text-xs text-(--tc-text-muted,#6b7280) flex flex-wrap gap-2">
-                    {client.taxId && <span>{client.taxId}</span>}
-                    {client.website && (
-                      <span className="text-indigo-600 truncate" title={client.website}>
-                        {client.website}
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-(--tc-text-secondary,#4b5563)">
+                    <span>{client.slug ? `@${client.slug}` : "Sem slug"}</span>
+                    {client.taxId ? (
+                      <>
+                        <span className="text-(--tc-text-muted,#94a3b8)">•</span>
+                        <span>{client.taxId}</span>
+                      </>
+                    ) : null}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <span className="inline-flex rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-2.5 py-1 text-[11px] font-semibold text-(--tc-text-secondary,#4b5563)">
+                      {client.integrationMode === "qase" || client.qaseProjectCode || (client.qaseProjectCodes?.length ?? 0) > 0 ? "Qase" : "Manual"}
+                    </span>
+                    {client.website ? (
+                      <span className="inline-flex max-w-full rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-2.5 py-1 text-[11px] font-semibold text-(--tc-text-secondary,#4b5563)">
+                        <span className="truncate" title={client.website}>{client.website}</span>
                       </span>
-                    )}
-                    {client.createdAt && <span>Criado em {new Date(client.createdAt).toLocaleDateString()}</span>}
+                    ) : null}
+                    {client.createdAt ? (
+                      <span className="inline-flex rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-2.5 py-1 text-[11px] font-semibold text-(--tc-text-secondary,#4b5563)">
+                        Criada em {new Date(client.createdAt).toLocaleDateString()}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
               </div>
             </button>
           ))}
-          {items.length === 0 && !loading && (
-            <div className="text-sm text-(--tc-text-muted,#6b7280)">
+          {filteredItems.length === 0 && (
+            <div className="col-span-full text-sm text-(--tc-text-muted,#6b7280)">
               {isGlobalAdmin ? (
-                <div className="mt-2 rounded-xl border border-dashed border-(--tc-border,#e5e7eb) p-4 text-center">
-                  <p className="text-sm text-(--tc-text-secondary,#4b5563)">VocÃª ainda nÃ£o criou nenhum cliente.</p>
+                <div className="mt-2 rounded-[24px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-8 text-center">
+                  <p className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">
+                    {items.length === 0 ? "Nenhuma empresa cadastrada" : "Nenhuma empresa encontrada"}
+                  </p>
+                  <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
+                    {items.length === 0
+                      ? "Cadastre a primeira empresa para iniciar a base da plataforma."
+                      : "Ajuste a busca para encontrar outra empresa."}
+                  </p>
                   <button
                     type="button"
                     onClick={() => setOpenCreate(true)}
-                    className="mt-3 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-[linear-gradient(90deg,#071e53_0%,#ef0001_100%)] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(239,0,1,0.18)] transition hover:opacity-95"
                   >
-                    + Cadastrar instituiÃ§Ã£o ou empresa
+                    <FiPlus className="h-4 w-4" /> Cadastrar empresa
                   </button>
                 </div>
               ) : (
-                <p>Nenhum cliente encontrado.</p>
+                <p>Nenhuma empresa encontrada.</p>
               )}
             </div>
           )}
         </div>
+          )}
+        </section>
 
       </div>
 
       {selected && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-3 py-6 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-hidden bg-black/40 px-3 py-6">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="client-modal-title"
-            className="w-full max-w-4xl bg-(--tc-surface,#ffffff) rounded-3xl shadow-2xl p-6 md:p-7 space-y-6 max-h-[calc(100vh-96px)] overflow-y-auto border border-(--tc-border,#e5e7eb)"
+            className="flex w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-2xl max-h-[calc(100vh-72px)]"
           >
             {/* Header */}
-            <div className="rounded-2xl bg-linear-to-r from-[#0b1e3c] via-[#0f274d] to-[#0b1e3c] text-white p-5 relative overflow-hidden">
+            <div className="relative shrink-0 overflow-hidden border-b border-white/10 bg-linear-to-r from-[#011848] via-[#0b1e3c] to-[#7a1026] p-6 text-white">
+              <div className="pointer-events-none absolute -left-10 top-0 h-28 w-28 rounded-full bg-white/10 blur-3xl" />
+              <div className="pointer-events-none absolute right-0 top-6 h-32 w-32 rounded-full bg-[#ef0001]/35 blur-3xl" />
+              <div className="pointer-events-none absolute bottom-0 left-1/3 h-24 w-24 rounded-full bg-[#3b82f6]/20 blur-3xl" />
               <div className="flex items-start justify-between gap-3">
-                <div className="space-y-2">
-                  <p className="text-[11px] uppercase tracking-[0.35em] text-white/80">Painel da empresa</p>
+                <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="h-12 w-12 rounded-xl logo-background border border-white/20 flex items-center justify-center overflow-hidden shadow-inner">
                       <CompanyLogo
                         logoUrl={(form.logoUrl ?? selected.logoUrl) ?? null}
                         slug={(form.slug ?? selected.slug) ?? null}
                         website={(form.website ?? selected.website) ?? null}
-                        name={(form.name ?? selected.name) ?? ""}
+                        name={currentName}
                         className="logo-image"
                       />
                     </div>
@@ -540,303 +738,305 @@ function AdminClientsPage() {
                         id="client-modal-title"
                         className="text-2xl font-extrabold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] leading-tight"
                       >
-                        {(form.name && form.name.trim()) || selected.name}
+                        {currentName}
                       </h2>
-                      {form.slug || selected.slug ? (
-                        <p className="text-xs text-white/90 drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
-                          slug: {form.slug || selected.slug}
-                        </p>
-                      ) : null}
                     </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      aria-pressed={form.active ?? selected.active}
+                      aria-pressed={currentActive}
                       className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs border transition ${
-                        form.active ?? selected.active
+                        currentActive
                           ? "bg-emerald-500 text-white border-emerald-400"
                           : "bg-amber-200 text-amber-800 border-amber-300"
                       }`}
                       onClick={() => {
-                        const next = !(form.active ?? selected.active);
-                        setIsEditing(true);
-                        setForm((f) => ({ ...f, active: next }));
+                        if (isEditing) {
+                          setForm((f) => ({ ...f, active: !currentActive }));
+                          return;
+                        }
+                        requestToggleCompanyStatus();
                       }}
-                      title="Alterar status (confirme ao salvar)"
+                      title={isEditing ? "Alterar status" : "Ativar ou inativar empresa"}
                     >
-                      {form.active ?? selected.active ? <FiCheckCircle size={12} /> : <FiXCircle size={12} />}
-                      {form.active ?? selected.active ? "Ativa" : "Inativa"}
+                      {currentActive ? <FiCheckCircle size={12} /> : <FiXCircle size={12} />}
+                      {currentActive ? "Ativa" : "Inativa"}
                     </button>
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    <ActionChip
-                      href={`/empresas/${form.slug || selected.slug || selected.id}/dashboard`}
-                      icon={<FiExternalLink size={14} />}
-                      label="Entrar na empresa"
-                      disabled={isInactive}
-                    />
-                    {form.website && (
-                      <ActionChip
-                        href={form.website}
-                        icon={<FiExternalLink size={14} />}
-                        label="Site oficial"
-                        external
-                        disabled={isInactive}
-                      />
-                    )}
-                    {form.docsLink && (
-                      <ActionChip
-                        href={form.docsLink}
-                        icon={<FiExternalLink size={14} />}
-                        label="Documentos/LinkedIn"
-                        external
-                        disabled={isInactive}
-                      />
-                    )}
+                    {currentTaxId ? <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/90">CNPJ: {currentTaxId}</span> : null}
+                    <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/90">Integracao: {currentIntegrationMode}</span>
+                    {currentWebsite ? (
+                      <HeaderLinkTag href={currentWebsite} label="Website" external />
+                    ) : null}
+                    {currentLinkedin ? (
+                      <HeaderLinkTag href={currentLinkedin} label="LinkedIn" external />
+                    ) : null}
+                    {currentSlug ? (
+                      <HeaderLinkTag href={`/empresas/${currentSlug}/documentos`} label="Documentos" />
+                    ) : null}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <IconButton
-                    title="Acessar perfil"
+                    title="Abrir perfil da empresa"
                     onClick={() => {
-                      const slug = form.slug || selected.slug || selected.id;
-                      window.open(`/empresas/${slug}/dashboard`, "_blank");
+                      const slug = form.slug || selected.slug || null;
+                      if (!slug) {
+                        toast.error("Empresa sem slug para abrir o perfil.");
+                        return;
+                      }
+                      router.push(`/empresas/${slug}/home`);
                     }}
-                    disabled={isInactive}
+                    disabled={!currentSlug}
                   >
                     <FiExternalLink size={16} />
                   </IconButton>
                   <IconButton
-                    title="Gerenciar equipe"
-                    onClick={() => {
-                      setUserClientId(selected.id);
-                      setOpenUserModal(true);
-                    }}
-                    disabled={isInactive}
-                  >
-                    <FiUsers size={16} />
-                  </IconButton>
-                  <IconButton title="Fechar" onClick={closeModal}>
+                    title="Fechar" onClick={closeModal}>
                     <FiX size={16} />
                   </IconButton>
                 </div>
               </div>
             </div>
 
+            <div className="shrink-0 border-b border-(--tc-border) bg-(--tc-surface,#ffffff) px-6 py-3 md:px-7">
             {/* Tabs */}
-            <div role="tablist" aria-label="Detalhes da empresa" className="flex items-center gap-3 border-b border-(--tc-border) pb-2">
+            <div role="tablist" aria-label="Detalhes da empresa" className="flex items-center gap-3">
               <TabButton active={activeTab === "visao"} onClick={() => setActiveTab("visao")}>
-                Visao Geral
+                Visao geral
               </TabButton>
               <TabButton active={activeTab === "pessoas"} onClick={() => setActiveTab("pessoas")}>
-                Pessoas
+                Usuários
               </TabButton>
             </div>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-6 py-5 md:px-7 [scrollbar-gutter:stable]">
 
             {/* Tab content */}
             {activeTab === "visao" && (
               <div className="space-y-4">
-                <div className="grid gap-3 md:grid-cols-2">
-                  <InfoCard label="CNPJ" value={form.taxId ?? selected.taxId} />
-                  <InfoCard label="CEP / Endereco" value={form.address ?? selected.address} />
-                  <InfoCard label="Telefone" value={form.phone ?? selected.phone} />
-                  <InfoCard label="Website" value={form.website ?? selected.website} isLink />
-                  <InfoCard label="LinkedIn / Docs" value={form.docsLink ?? selected.docsLink} isLink />
-                  <InfoCard
-                    label="Integracao"
-                    value={(form.integrationMode ?? selected.integrationMode) === "qase" ? "Qase" : "Manual"}
-                  />
-                  <InfoCard label="Qase Project" value={form.qaseProjectCode ?? selected.qaseProjectCode} />
-                  <InfoCard
-                    label="Qase Projects"
-                    value={((form.qaseProjectCodes !== undefined ? form.qaseProjectCodes : selected.qaseProjectCodes) ?? null)?.join(", ") ?? null}
-                  />
-                  <InfoCard label="Jira URL" value={form.jiraBaseUrl ?? selected.jiraBaseUrl} isLink />
-                  <InfoCard label="Jira Email" value={form.jiraEmail ?? selected.jiraEmail} />
-                  <InfoCard label="Notas" value={form.notes ?? selected.notes} full />
-                  <InfoCard label="Descricao" value={form.description ?? selected.description} full />
-                </div>
-
-                {isEditing && (
-                  <div className="rounded-xl border border-(--tc-border) bg-(--tc-surface-2) p-4 space-y-3">
-                    <EditField label="Nome" value={form.name ?? ""} onChange={(v) => setForm((f) => ({ ...f, name: v }))} />
-                    <EditField label="CNPJ" value={form.taxId ?? ""} onChange={(v) => setForm((f) => ({ ...f, taxId: v }))} />
-                    <EditField label="CEP / Endereco" value={form.address ?? ""} onChange={(v) => setForm((f) => ({ ...f, address: v }))} />
-                    <EditField label="Telefone" value={form.phone ?? ""} onChange={(v) => setForm((f) => ({ ...f, phone: v }))} />
-                    <EditField label="Website" value={form.website ?? ""} onChange={(v) => setForm((f) => ({ ...f, website: v }))} />
-                    <EditField label="LinkedIn / Docs" value={form.docsLink ?? ""} onChange={(v) => setForm((f) => ({ ...f, docsLink: v }))} />
-                    <EditTextArea label="Descricao" value={form.description ?? ""} onChange={(v) => setForm((f) => ({ ...f, description: v }))} />
-                    <EditTextArea label="Notas" value={form.notes ?? ""} onChange={(v) => setForm((f) => ({ ...f, notes: v }))} />
-
-                    <div className="rounded-lg border border-(--tc-border) bg-(--tc-surface) p-3">
-                      <p className="text-sm font-semibold text-(--tc-text-primary)">Integracoes (Qase / Jira)</p>
-                      <p className="mt-1 text-xs text-(--tc-text-muted)">
-                        Tokens nao aparecem por seguranca. Para trocar, informe um novo token e salve.
-                      </p>
-
-                      <label className="block text-sm mt-3">
-                        Modo de integracao
-                        <select
-                          className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm"
-                          value={(form.integrationMode ?? "manual") as string}
-                          onChange={(e) => setForm((f) => ({ ...f, integrationMode: e.target.value as "qase" | "manual" }))}
-                        >
-                          <option value="manual">Manual</option>
-                          <option value="qase">Qase</option>
-                        </select>
-                      </label>
-
-                      <div className="mt-3 grid gap-3 md:grid-cols-2">
-                        <EditField
-                          label="Qase Project Code"
-                          value={form.qaseProjectCode ?? ""}
-                          onChange={(v) => setForm((f) => ({ ...f, qaseProjectCode: v }))}
-                        />
-                        <EditTextArea
-                          label="Qase Project Codes (um por linha, opcional)"
-                          value={((form.qaseProjectCodes !== undefined ? form.qaseProjectCodes : selected.qaseProjectCodes) ?? null)?.join("\n") ?? ""}
-                          onChange={(v) => {
-                            const codes = v
-                              .split(/[\s,;|]+/g)
-                              .map((code) => code.trim().toUpperCase())
-                              .filter(Boolean);
-                            const uniq = codes.length ? Array.from(new Set(codes)) : null;
-                            setForm((f) => ({ ...f, qaseProjectCodes: uniq }));
-                          }}
-                        />
-                        <label className="block text-sm">
-                          Novo token da Qase
-                          <input
-                            className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm"
-                            type="password"
-                            value={form.qaseToken ?? ""}
-                            onChange={(e) => setForm((f) => ({ ...f, qaseToken: e.target.value }))}
-                            placeholder="(deixe em branco para manter)"
-                            autoComplete="off"
-                            spellCheck={false}
-                          />
-                        </label>
-
-                        <EditField
-                          label="Jira URL base"
-                          value={form.jiraBaseUrl ?? ""}
-                          onChange={(v) => setForm((f) => ({ ...f, jiraBaseUrl: v }))}
-                        />
-                        <EditField
-                          label="Jira e-mail"
-                          value={form.jiraEmail ?? ""}
-                          onChange={(v) => setForm((f) => ({ ...f, jiraEmail: v }))}
-                        />
-                        <label className="block text-sm md:col-span-2">
-                          Novo API token do Jira
-                          <input
-                            className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm"
-                            type="password"
-                            value={form.jiraApiToken ?? ""}
-                            onChange={(e) => setForm((f) => ({ ...f, jiraApiToken: e.target.value }))}
-                            placeholder="(deixe em branco para manter)"
-                            autoComplete="off"
-                            spellCheck={false}
-                          />
-                        </label>
-                      </div>
-                    </div>
+                <SectionCard
+                  eyebrow="Visao geral"
+                  title="Dados principais"
+                  description="Dados essenciais da empresa em uma estrutura unica de formulario."
+                >
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <DetailField
+                      label="Nome da empresa"
+                      value={isEditing ? form.name ?? "" : currentName}
+                      editable={isEditing}
+                      onChange={(v) => setForm((f) => ({ ...f, name: v }))}
+                    />
+                    <DetailField
+                      label="CNPJ"
+                      value={isEditing ? form.taxId ?? "" : currentTaxId ?? ""}
+                      editable={isEditing}
+                      onChange={(v) => setForm((f) => ({ ...f, taxId: v }))}
+                    />
+                    <DetailField
+                      label="Endereco"
+                      value={isEditing ? form.address ?? "" : currentAddress ?? ""}
+                      editable={isEditing}
+                      onChange={(v) => setForm((f) => ({ ...f, address: v }))}
+                    />
+                    <DetailField
+                      label="Telefone"
+                      value={isEditing ? form.phone ?? "" : currentPhone ?? ""}
+                      editable={isEditing}
+                      onChange={(v) => setForm((f) => ({ ...f, phone: v }))}
+                    />
+                    <DetailField
+                      label="Website"
+                      value={isEditing ? form.website ?? "" : currentWebsite ?? ""}
+                      editable={isEditing}
+                      onChange={(v) => setForm((f) => ({ ...f, website: v }))}
+                    />
+                    <DetailField
+                      label="LinkedIn"
+                      value={isEditing ? form.linkedinUrl ?? currentLinkedin ?? "" : currentLinkedin ?? ""}
+                      editable={isEditing}
+                      onChange={(v) => setForm((f) => ({ ...f, linkedinUrl: v }))}
+                    />
+                    <DetailField
+                      label="Logo da empresa (URL)"
+                      value={isEditing ? form.logoUrl ?? "" : (form.logoUrl ?? selected.logoUrl ?? "")}
+                      editable={isEditing}
+                      onChange={(v) => setForm((f) => ({ ...f, logoUrl: v }))}
+                      placeholder="https://example.com/logo.png"
+                    />
                   </div>
-                )}
+                </SectionCard>
+
+                <SectionCard
+                  eyebrow="Conexao"
+                  title="Integracao com Qase"
+                  description="A empresa guarda o contexto base da integracao para projetos e aplicacoes."
+                >
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <DetailSelectField
+                      label="Modo de integracao"
+                      value={(isEditing ? (form.integrationMode ?? "manual") : currentIntegrationMode) as string}
+                      editable={isEditing}
+                      options={[
+                        { value: "manual", label: "Manual" },
+                        { value: "qase", label: "Qase" },
+                      ]}
+                      onChange={(v) => setForm((f) => ({ ...f, integrationMode: v as "qase" | "manual" }))}
+                    />
+                    <DetailField
+                      label="Qase Project Code"
+                      value={isEditing ? form.qaseProjectCode ?? "" : currentQaseProject ?? ""}
+                      editable={isEditing}
+                      onChange={(v) => setForm((f) => ({ ...f, qaseProjectCode: v }))}
+                    />
+                    <DetailTextArea
+                      label="Qase Project Codes"
+                      value={isEditing ? (((form.qaseProjectCodes !== undefined ? form.qaseProjectCodes : selected.qaseProjectCodes) ?? null)?.join("\n") ?? "") : currentQaseProjects ?? ""}
+                      editable={isEditing}
+                      onChange={(v) => {
+                        const codes = v
+                          .split(/[\s,;|]+/g)
+                          .map((code) => code.trim().toUpperCase())
+                          .filter(Boolean);
+                        const uniq = codes.length ? Array.from(new Set(codes)) : null;
+                        setForm((f) => ({ ...f, qaseProjectCodes: uniq }));
+                      }}
+                    />
+                    <DetailField
+                      label="Token da Qase"
+                      value={isEditing ? form.qaseToken ?? "" : "Configurado"}
+                      editable={isEditing}
+                      onChange={(v) => setForm((f) => ({ ...f, qaseToken: v }))}
+                      type={isEditing ? "password" : "text"}
+                      placeholder={isEditing ? "Deixe em branco para manter" : undefined}
+                    />
+                  </div>
+                </SectionCard>
+
+                <SectionCard
+                  eyebrow="Observacoes"
+                  title="Descricao e notas"
+                  description="Campos de contexto para leitura da lideranca e acompanhamento do cadastro."
+                >
+                  <div className="grid gap-3">
+                    <DetailTextArea
+                      label="Descricao"
+                      value={isEditing ? form.description ?? "" : currentDescription ?? ""}
+                      editable={isEditing}
+                      onChange={(v) => setForm((f) => ({ ...f, description: v }))}
+                    />
+                    <DetailTextArea
+                      label="Notas"
+                      value={isEditing ? form.notes ?? "" : currentNotes ?? ""}
+                      editable={isEditing}
+                      onChange={(v) => setForm((f) => ({ ...f, notes: v }))}
+                    />
+                  </div>
+                </SectionCard>
               </div>
             )}
 
             {activeTab === "pessoas" && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-(--tc-text-primary)">Pessoas desta empresa</h3>
-                  <button
-                    type="button"
-                    className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:border-indigo-300 dark:border-indigo-400/40 dark:bg-indigo-500/15 dark:text-indigo-200"
-                    onClick={() => {
-                      setUserClientId(selected.id);
-                      setOpenUserModal(true);
-                    }}
-                    disabled={isInactive}
-                  >
-                    + Adicionar
-                  </button>
-                </div>
-                <CompanyUsers
-                  clientId={selected.id}
-                  disabled={isInactive}
-                  onAddUser={() => {
-                    setUserClientId(selected.id);
-                    setOpenUserModal(true);
-                  }}
-                />
-              </div>
+              <SectionCard
+                eyebrow="Usuarios"
+                title="Usuários vinculados"
+                description="Vincule usuários já cadastrados a esta empresa."
+              >
+                <CompanyUsers clientId={selected.id} companyName={currentName} />
+              </SectionCard>
             )}
+            </div>
 
-            {message && <p className="text-sm text-red-600">{message}</p>}
+            <div className="shrink-0 border-t border-(--tc-border) bg-(--tc-surface,#ffffff) px-6 py-4 md:px-7">
+              {message && <p className="pb-3 text-sm text-red-600">{message}</p>}
 
-            <div className="flex justify-end gap-2 pt-2">
-              {isEditing ? (
-                <>
+              <div className="flex items-center justify-between gap-3">
+                {!isEditing ? (
                   <button
                     type="button"
-                    className="px-3 py-2 rounded-lg border border-[#e5e7eb] disabled:opacity-60"
-                    onClick={() => {
-                      resetForm();
-                      setIsEditing(false);
-                    }}
+                    className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition hover:border-red-300 hover:bg-red-100 disabled:opacity-60"
+                    onClick={() => setCompanyAction("delete")}
                     disabled={saving}
                   >
-                    Cancelar
+                    <FiTrash2 size={15} />
+                    Excluir empresa
                   </button>
-                  <button
-                    type="button"
-                    className="px-3 py-2 rounded-lg border border-[#e5e7eb] disabled:opacity-60"
-                    onClick={resetForm}
-                    disabled={saving}
-                  >
-                    Limpar
-                  </button>
-                  <button
-                    type="button"
-                    className="px-4 py-2 rounded-lg bg-[#e53935] text-white font-semibold shadow disabled:opacity-60"
-                    onClick={save}
-                    disabled={saving}
-                  >
-                    Salvar dados
-                  </button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  className="px-4 py-2 rounded-lg bg-[#0b1e3c] text-white font-semibold shadow disabled:opacity-60"
-                  onClick={() => setIsEditing(true)}
-                  disabled={isInactive}
-                >
-                  Editar dados
-                </button>
-              )}
+                ) : (
+                  <div />
+                )}
+
+                <div className="flex justify-end gap-2">
+                  {isEditing ? (
+                    <>
+                      <button
+                        type="button"
+                        className="px-3 py-2 rounded-lg border border-[#e5e7eb] disabled:opacity-60"
+                        onClick={() => {
+                          resetForm();
+                          setIsEditing(false);
+                        }}
+                        disabled={saving}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        className="px-3 py-2 rounded-lg border border-[#e5e7eb] disabled:opacity-60"
+                        onClick={resetForm}
+                        disabled={saving}
+                      >
+                        Limpar
+                      </button>
+                      <button
+                        type="button"
+                        className="px-4 py-2 rounded-lg bg-[#e53935] text-white font-semibold shadow disabled:opacity-60"
+                        onClick={save}
+                        disabled={saving}
+                      >
+                        Salvar dados
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      className="px-4 py-2 rounded-lg bg-[#0b1e3c] text-white font-semibold shadow disabled:opacity-60"
+                      onClick={() => {
+                        setActiveTab("visao");
+                        setIsEditing(true);
+                      }}
+                    >
+                      Editar dados
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
+      )}
+
+      {selected && companyAction && (
+        <CompanyActionModal
+          action={companyAction}
+          companyName={currentName}
+          saving={saving}
+          onClose={() => setCompanyAction(null)}
+          onConfirm={() => {
+            if (companyAction === "delete") {
+              void deleteCompany();
+              return;
+            }
+            void toggleCompanyStatus();
+          }}
+        />
       )}
 
       <CreateClientModal
         open={openCreate}
         onClose={() => setOpenCreate(false)}
         onCreate={handleCreateClient}
-        onOpenUser={(id) => {
-          setUserClientId(id);
-          setOpenUserModal(true);
-        }}
-      />
-      <CreateUserModal
-        open={openUserModal}
-        clientId={userClientId}
-        clients={items.map((c) => ({ id: c.id, name: c.name }))}
-        onClose={() => setOpenUserModal(false)}
-        onCreated={async () => {
-          load();
-        }}
+        onOpenUser={() => {}}
       />
     </div>
   );
@@ -932,33 +1132,169 @@ function IconButton({
     </button>
   );
 }
-function ActionChip({
+
+function CompanyActionModal({
+  action,
+  companyName,
+  saving,
+  onClose,
+  onConfirm,
+}: {
+  action: "activate" | "deactivate" | "delete";
+  companyName: string;
+  saving: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  const isDelete = action === "delete";
+  const isDeactivate = action === "deactivate";
+  const ActionIcon = isDelete ? FiTrash2 : isDeactivate ? FiXCircle : FiCheckCircle;
+  const title = isDelete ? "Excluir empresa" : isDeactivate ? "Inativar empresa" : "Ativar empresa";
+  const description = isDelete
+    ? "Esta ação remove o cadastro da empresa e encerra os vínculos existentes com ela."
+    : isDeactivate
+      ? "Ao inativar a empresa, o acesso a ela deixa de estar disponível na plataforma."
+      : "Ao ativar a empresa, os acessos vinculados voltam a operar normalmente.";
+  const confirmLabel = isDelete ? "Excluir empresa" : isDeactivate ? "Inativar empresa" : "Ativar empresa";
+  const headerClasses = isDelete || isDeactivate
+    ? "from-[#04153d] via-[#30122e] to-[#ef0001]"
+    : "from-[#04153d] via-[#0b1e3c] to-[#7a1026]";
+  const eyebrowChip = isDelete || isDeactivate
+    ? "border-white/15 bg-white/10 text-white/90"
+    : "border-cyan-300/30 bg-cyan-400/10 text-cyan-100";
+  const impactCardClasses = isDelete || isDeactivate
+    ? "border-[#ef0001]/20 bg-[#fff4f5]"
+    : "border-[#0b5cab]/20 bg-[#f3f8ff]";
+  const impactTitleClasses = isDelete || isDeactivate ? "text-[#b10f22]" : "text-[#0b3b78]";
+  const impactTextClasses = isDelete || isDeactivate ? "text-[#7f1d1d]" : "text-[#163d6b]";
+  const guidanceCardClasses = "border-[#011848]/12 bg-[linear-gradient(180deg,rgba(1,24,72,0.03),rgba(122,16,38,0.04))]";
+  const confirmButtonClasses = isDelete || isDeactivate
+    ? "bg-linear-to-r from-[#7a1026] to-[#ef0001]"
+    : "bg-linear-to-r from-[#011848] to-[#0b5cab]";
+  const actionTag = isDelete ? "Exclusão definitiva" : isDeactivate ? "Bloqueio de acesso" : "Reativação";
+  const impactItems = isDelete
+    ? [
+        "Todos os usuários vinculados perdem o acesso à empresa e aos dados dela.",
+        "Os vínculos com esta empresa serão removidos do sistema.",
+        "O cadastro deixa de existir na base após a confirmação.",
+      ]
+    : isDeactivate
+      ? [
+          "Todos os usuários vinculados deixam de acessar esta empresa e os dados dela.",
+          "A empresa sai do fluxo operacional enquanto estiver inativa.",
+          "A reativação volta a liberar o acesso sem recriar o cadastro.",
+        ]
+      : [
+          "Os acessos vinculados voltam a operar normalmente.",
+          "A empresa retorna ao fluxo operacional da plataforma.",
+          "Os usuários voltam a visualizar a empresa e os dados dela.",
+        ];
+  const guidanceItems = isDelete
+    ? [
+        "Use esta ação apenas quando a empresa não precisar mais existir na base.",
+        "Para pausar o acesso sem apagar o cadastro, prefira a inativação.",
+      ]
+    : isDeactivate
+      ? [
+          "Use inativação para bloquear o acesso sem apagar o cadastro.",
+          "A empresa continua cadastrada e pode ser reativada depois.",
+        ]
+      : [
+          "Use a ativação quando a empresa estiver pronta para voltar a operar.",
+          "Os vínculos atuais continuam válidos após a reativação.",
+        ];
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[rgba(2,10,28,0.62)] px-4 py-6 backdrop-blur-[3px]">
+      <div className="w-full max-w-2xl overflow-hidden rounded-[30px] border border-white/12 bg-(--tc-surface,#ffffff) shadow-[0_32px_90px_rgba(15,23,42,0.5)]">
+        <div className={`relative overflow-hidden bg-linear-to-r ${headerClasses} px-6 py-6 text-white`}>
+          <div className="pointer-events-none absolute -left-8 top-0 h-28 w-28 rounded-full bg-white/8 blur-3xl" />
+          <div className="pointer-events-none absolute right-0 top-4 h-28 w-28 rounded-full bg-[#ef0001]/20 blur-3xl" />
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/8 shadow-inner">
+              <ActionIcon size={22} />
+            </div>
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] !text-white ${eyebrowChip}`}>
+                  Ação sensível
+                </span>
+                <span className="inline-flex rounded-full border border-white/12 bg-white/8 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] !text-white">
+                  {actionTag}
+                </span>
+              </div>
+              <h3 className="text-[28px] font-extrabold leading-tight tracking-[-0.02em] !text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)]">{title}</h3>
+              <p className="max-w-2xl text-sm leading-6 !text-white/95">{description}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-5 px-6 py-6">
+          <div className="rounded-2xl border border-(--tc-border) bg-[linear-gradient(180deg,rgba(1,24,72,0.02),rgba(239,0,1,0.03))] p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-accent)">Empresa afetada</p>
+            <p className="mt-2 text-xl font-bold tracking-[-0.02em] text-(--tc-text-primary)">{companyName}</p>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className={`rounded-2xl border p-4 ${impactCardClasses}`}>
+              <p className={`text-[11px] font-semibold uppercase tracking-[0.24em] ${impactTitleClasses}`}>Impacto nos acessos</p>
+              <ul className={`mt-2 space-y-2 text-sm leading-6 ${impactTextClasses}`}>
+                {impactItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className={`rounded-2xl border p-4 ${guidanceCardClasses}`}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-accent)">Orientação</p>
+              <ul className="mt-2 space-y-2 text-sm leading-6 text-(--tc-text-secondary)">
+                {guidanceItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 border-t border-(--tc-border) pt-4">
+            <button
+              type="button"
+              className="rounded-lg border border-(--tc-border) bg-(--tc-surface-2) px-4 py-2 text-sm font-semibold text-(--tc-text-primary) transition hover:border-(--tc-accent)/30 hover:bg-(--tc-surface) disabled:opacity-60"
+              onClick={onClose}
+              disabled={saving}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className={`rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(15,23,42,0.22)] transition hover:brightness-105 disabled:opacity-60 ${confirmButtonClasses}`}
+              onClick={onConfirm}
+              disabled={saving}
+            >
+              {saving ? "Processando..." : confirmLabel}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HeaderLinkTag({
   href,
   label,
-  icon,
   external,
-  disabled,
 }: {
   href: string;
   label: string;
-  icon?: React.ReactNode;
   external?: boolean;
-  disabled?: boolean;
 }) {
-  const finalHref = disabled ? undefined : href;
-
   return (
     <a
-      href={finalHref}
-      aria-disabled={disabled || undefined}
-      tabIndex={disabled ? -1 : undefined}
-      target={!disabled && external ? "_blank" : undefined}
-      rel={!disabled && external ? "noreferrer" : undefined}
-      className={`inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/30 px-3 py-1 text-xs text-white transition ${
-        disabled ? "opacity-50 pointer-events-none" : "hover:bg-white/15"
-      }`}
+      href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noreferrer" : undefined}
+      className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/90 transition hover:bg-white/16"
     >
-      {icon}
       {label}
     </a>
   );
@@ -982,169 +1318,467 @@ function TabButton({ active, children, onClick }: { active: boolean; children: R
   );
 }
 
-function InfoCard({ label, value, isLink, full }: { label: string; value?: string | null; isLink?: boolean; full?: boolean }) {
-  if (!value) return null;
-  const content = isLink ? (
-    <a
-      href={value}
-      target="_blank"
-      rel="noreferrer"
-      className="text-(--tc-accent) font-semibold hover:underline break-all"
-    >
-      {value}
-    </a>
-  ) : (
-    <p className="text-(--tc-text-primary)">{value}</p>
-  );
+function SectionCard({
+  eyebrow,
+  title,
+  description,
+  action,
+  children,
+  className,
+}: {
+  eyebrow: string;
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className={`rounded-xl border border-(--tc-border) bg-(--tc-surface) p-3 ${full ? "md:col-span-2" : ""}`}>
-      <p className="text-[11px] uppercase tracking-[0.2em] text-(--tc-text-muted)">{label}</p>
-      {content}
-    </div>
+    <section className={["rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) p-3.5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]", className].filter(Boolean).join(" ")}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-accent)">{eyebrow}</p>
+          <h3 className="text-lg font-semibold text-(--tc-text-primary)">{title}</h3>
+          {description ? <p className="max-w-2xl text-sm text-(--tc-text-muted)">{description}</p> : null}
+        </div>
+        {action ? <div className="shrink-0">{action}</div> : null}
+      </div>
+      <div className="mt-3">{children}</div>
+    </section>
   );
 }
 
-function EditField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function DetailField({
+  label,
+  value,
+  editable,
+  onChange,
+  type = "text",
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  editable?: boolean;
+  onChange?: (v: string) => void;
+  type?: string;
+  placeholder?: string;
+}) {
   return (
     <label className="block text-sm text-(--tc-text-primary)">
       {label}
       <input
-        className="mt-1 w-full px-3 py-2 border rounded-lg border-(--tc-border) bg-(--tc-surface) text-(--tc-text-primary) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30 focus:border-(--tc-accent)"
+        className={`mt-1 w-full rounded-lg border border-(--tc-border) px-3 py-2 text-sm text-(--tc-text-primary) ${
+          editable
+            ? "bg-(--tc-surface) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30 focus:border-(--tc-accent)"
+            : "bg-(--tc-surface-2) text-(--tc-text-secondary)"
+        }`}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        type={type}
+        readOnly={!editable}
+        onChange={(e) => onChange?.(e.target.value)}
+        placeholder={placeholder}
+        autoComplete="off"
+        spellCheck={false}
       />
     </label>
   );
 }
 
-function EditTextArea({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function DetailTextArea({
+  label,
+  value,
+  editable,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  editable?: boolean;
+  onChange?: (v: string) => void;
+}) {
   return (
     <label className="block text-sm text-(--tc-text-primary)">
       {label}
       <textarea
-        className="mt-1 w-full px-3 py-2 border rounded-lg border-(--tc-border) bg-(--tc-surface) text-(--tc-text-primary) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30 focus:border-(--tc-accent)"
-        rows={3}
+        className={`mt-1 w-full rounded-lg border border-(--tc-border) px-3 py-2 text-sm text-(--tc-text-primary) ${
+          editable
+            ? "bg-(--tc-surface) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30 focus:border-(--tc-accent)"
+            : "bg-(--tc-surface-2) text-(--tc-text-secondary)"
+        }`}
+        rows={2}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        readOnly={!editable}
+        onChange={(e) => onChange?.(e.target.value)}
       />
+    </label>
+  );
+}
+
+function DetailSelectField({
+  label,
+  value,
+  editable,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  editable?: boolean;
+  onChange?: (v: string) => void;
+  options: Array<{ value: string; label: string }>;
+}) {
+  if (!editable) {
+    const selectedOption = options.find((option) => option.value === value)?.label ?? value;
+    return <DetailField label={label} value={selectedOption} />;
+  }
+
+  return (
+    <label className="block text-sm text-(--tc-text-primary)">
+      {label}
+      <select
+        className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm text-(--tc-text-primary) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30 focus:border-(--tc-accent)"
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
     </label>
   );
 }
 
 type CompanyUsersProps = {
   clientId: string;
-  onAddUser: () => void;
+  companyName: string;
   disabled?: boolean;
 };
 
-function CompanyUsers({ clientId, onAddUser, disabled = false }: CompanyUsersProps) {
+function CompanyUsers({ clientId, companyName, disabled = false }: CompanyUsersProps) {
   const router = useRouter();
-  const [users, setUsers] = useState<Array<{ id: string; name: string; job_title?: string | null; role?: string | null; avatar_url?: string | null }>>([]);
+  const [users, setUsers] = useState<Array<{
+    id: string;
+    name: string;
+    user?: string | null;
+    email?: string | null;
+    permission_role?: string | null;
+    avatar_url?: string | null;
+    active?: boolean;
+    status?: string | null;
+  }>>([]);
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<"view" | "edit">("view");
+  const [openLinkModal, setOpenLinkModal] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState<Array<{
+    id: string;
+    name: string;
+    user?: string | null;
+    email?: string | null;
+    permission_role?: string | null;
+    active?: boolean;
+    status?: string | null;
+  }>>([]);
+  const [loadingAvailable, setLoadingAvailable] = useState(false);
+  const [linking, setLinking] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [search, setSearch] = useState("");
+  const [openCreateUserModal, setOpenCreateUserModal] = useState(false);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/admin/users?client_id=${clientId}`, { credentials: "include", cache: "no-store" });
-        if (res.status === 401) {
-          toast.error("SessÃ£o expirada. FaÃ§a login novamente.");
-          router.replace("/login");
-          setUsers([]);
-          return;
-        }
-        const json = await res.json().catch(() => ({ items: [] }));
-        setUsers(Array.isArray(json.items) ? json.items : []);
-      } catch {
+  const loadLinkedUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetchApi(`/api/admin/users?client_id=${clientId}`);
+      if (res.status === 401) {
+        toast.error("Sessao expirada. Faca login novamente.");
+        router.replace("/login");
         setUsers([]);
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
-    fetchUsers();
+      const json = await res.json().catch(() => ({ items: [] }));
+      setUsers(Array.isArray(json.items) ? json.items : []);
+    } catch {
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
   }, [clientId, router]);
 
   useEffect(() => {
-    if (disabled && mode === "edit") {
-      setMode("view");
+    void loadLinkedUsers();
+  }, [loadLinkedUsers]);
+
+  const loadAvailableUsers = useCallback(async () => {
+    setLoadingAvailable(true);
+    try {
+      const res = await fetchApi("/api/admin/users");
+      if (res.status === 401) {
+        toast.error("Sessao expirada. Faca login novamente.");
+        router.replace("/login");
+        setAvailableUsers([]);
+        return;
+      }
+      const json = await res.json().catch(() => ({ items: [] }));
+      const items = Array.isArray(json.items) ? json.items : [];
+      const linkedIds = new Set(users.map((user) => user.id));
+      setAvailableUsers(
+        items.filter(
+          (item: { id: string; permission_role?: string | null }) =>
+            item?.permission_role !== "dev" && !linkedIds.has(item.id),
+        ),
+      );
+    } catch {
+      setAvailableUsers([]);
+    } finally {
+      setLoadingAvailable(false);
     }
-  }, [disabled, mode]);
+  }, [router, users]);
+
+  const filteredAvailableUsers = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return availableUsers;
+    return availableUsers.filter((user) =>
+      [user.name, user.user, user.email].some((value) => (value ?? "").toLowerCase().includes(term)),
+    );
+  }, [availableUsers, search]);
+
+  async function handleLinkUser() {
+    if (!selectedUserId || linking) return;
+    setLinking(true);
+    try {
+      const res = await fetchApi(`/api/admin/clients/${clientId}/people`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: selectedUserId }),
+      });
+      if (res.status === 401) {
+        toast.error("Sessao expirada. Faca login novamente.");
+        router.replace("/login");
+        return;
+      }
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        toast.error(extractMessageFromJson(json) || "Nao foi possivel vincular o usuario");
+        return;
+      }
+      toast.success("Usuario vinculado");
+      setOpenLinkModal(false);
+      setSelectedUserId("");
+      setSearch("");
+      await loadLinkedUsers();
+    } finally {
+      setLinking(false);
+    }
+  }
+
+  async function handleRemoveLink(userId: string) {
+    if (disabled || removingId) return;
+    setRemovingId(userId);
+    try {
+      const res = await fetchApi(`/api/admin/clients/${clientId}/people/${userId}`, {
+        method: "DELETE",
+      });
+      if (res.status === 401) {
+        toast.error("Sessao expirada. Faca login novamente.");
+        router.replace("/login");
+        return;
+      }
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        toast.error(extractMessageFromJson(json) || "Nao foi possivel remover o vinculo");
+        return;
+      }
+      toast.success("Vinculo removido");
+      await loadLinkedUsers();
+    } finally {
+      setRemovingId(null);
+    }
+  }
 
   return (
-    <div className="space-y-2">
-      {loading && <p className="text-sm text-gray-500">Carregando pessoas...</p>}
-      {!loading && users.length === 0 && <p className="text-sm text-gray-500">Nenhum responsavel vinculado.</p>}
-      <div className="flex items-center gap-2 text-xs">
-        <span className="text-(--tc-text-muted)">Modo</span>
-        <button
-          type="button"
-          className={`rounded px-2 py-1 border text-xs ${mode === "view" ? "border-indigo-300 text-indigo-700" : "border-(--tc-border) text-(--tc-text-muted)"} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
-          disabled={disabled}
-          onClick={() => !disabled && setMode("view")}
-        >
-          Visualizar
-        </button>
-        <button
-          type="button"
-          className={`rounded px-2 py-1 border text-xs ${mode === "edit" ? "border-indigo-300 text-indigo-700" : "border-(--tc-border) text-(--tc-text-muted)"} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
-          disabled={disabled}
-          onClick={() => {
-            if (disabled) return;
-            setMode("edit");
-            onAddUser();
-          }}
-        >
-          Editar / Adicionar
-        </button>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-(--tc-text-secondary)">Gerencie os usuários vinculados a esta empresa.</p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className={`rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 transition hover:border-indigo-300 ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
+            disabled={disabled}
+            onClick={() => {
+              if (disabled) return;
+              setSelectedUserId("");
+              setSearch("");
+              setOpenLinkModal(true);
+              void loadAvailableUsers();
+            }}
+          >
+            Vincular usuário
+          </button>
+          <button
+            type="button"
+            className={`rounded-lg border border-(--tc-accent)/20 bg-white px-3 py-2 text-sm font-semibold text-(--tc-accent) transition hover:border-(--tc-accent)/40 hover:bg-(--tc-surface) ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
+            disabled={disabled}
+            onClick={() => {
+              if (disabled) return;
+              setOpenCreateUserModal(true);
+            }}
+          >
+            Criar usuário
+          </button>
+        </div>
       </div>
+
+      {loading && <p className="text-sm text-gray-500">Carregando usuários...</p>}
+      {!loading && users.length === 0 && <p className="text-sm text-gray-500">Nenhum usuário vinculado a esta empresa.</p>}
       <div className="space-y-2">
         {users.map((u) => (
-          <div key={u.id} className="flex items-center justify-between rounded-lg border border-(--tc-border) px-3 py-2">
+          <div key={u.id} className="flex items-center justify-between gap-3 rounded-xl border border-(--tc-border) bg-(--tc-surface) px-3 py-3">
             <div className="flex items-center gap-2">
               {u.avatar_url ? (
-                <Image src={u.avatar_url} alt={u.name} width={32} height={32} className="rounded-full object-cover" />
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={u.avatar_url} alt={u.name} className="h-8 w-8 rounded-full object-cover" />
               ) : (
                 <div className="h-8 w-8 rounded-full bg-(--tc-surface-2) flex items-center justify-center text-xs text-(--tc-text-muted)">
                   {u.name?.slice(0, 1)?.toUpperCase() ?? "U"}
                 </div>
               )}
-              <div>
+              <div className="min-w-0">
                 <div className="text-sm font-medium">{u.name}</div>
-                <div className="text-xs text-(--tc-text-muted)">{u.job_title ?? u.role ?? "Membro"}</div>
+                <div className="truncate text-xs text-(--tc-text-muted)">
+                  {u.user ? `@${u.user}` : u.email ?? "Sem identificação"}
+                </div>
               </div>
             </div>
-            {mode === "edit" && (
+            <div className="flex items-center gap-2">
+              <span className="inline-flex rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-2.5 py-1 text-[11px] font-semibold text-(--tc-text-secondary)">
+                {companyName}
+              </span>
+              <span
+                className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                  u.active === false || u.status === "inactive"
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-emerald-100 text-emerald-700"
+                }`}
+              >
+                {u.active === false || u.status === "inactive" ? "Inativo" : "Ativo"}
+              </span>
               <button
-                className={`text-xs font-semibold ${disabled ? "text-gray-400 cursor-not-allowed" : "text-indigo-700 hover:underline"}`}
-                disabled={disabled}
+                type="button"
+                className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition ${
+                  disabled
+                    ? "cursor-not-allowed border-(--tc-border) text-gray-400"
+                    : "border-red-200 text-red-700 hover:border-red-300 hover:bg-red-50"
+                }`}
+                disabled={disabled || removingId === u.id}
+                title={removingId === u.id ? "Removendo vínculo" : "Remover vínculo"}
+                aria-label={removingId === u.id ? "Removendo vínculo" : "Remover vínculo"}
                 onClick={() => {
                   if (disabled) return;
-                  onAddUser();
+                  void handleRemoveLink(u.id);
                 }}
               >
-                Editar usuario
+                {removingId === u.id ? <span className="text-[10px]">...</span> : <FiX size={14} />}
               </button>
-            )}
+            </div>
           </div>
         ))}
       </div>
-      {mode === "edit" && (
-        <button
-          className={`mt-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:border-indigo-300 dark:border-indigo-400/40 dark:bg-indigo-500/15 dark:text-indigo-200 ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
-          disabled={disabled}
-          onClick={() => {
-            if (disabled) return;
-            onAddUser();
-          }}
-        >
-          Adicionar responsavel
-        </button>
+
+      {openLinkModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[rgba(2,10,28,0.48)] px-4 py-6 backdrop-blur-[2px]">
+          <div className="w-full max-w-xl overflow-hidden rounded-[28px] border border-white/10 bg-(--tc-surface,#ffffff) shadow-[0_28px_80px_rgba(15,23,42,0.32)]">
+            <div className="bg-linear-to-r from-[#04153d] via-[#0b1e3c] to-[#7a1026] px-5 py-5 text-white">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">Usuários</p>
+              <div className="mt-2 flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-2xl font-extrabold">Vincular usuário</h3>
+                  <p className="mt-2 text-sm text-white/85">Selecione um usuário já cadastrado para associar a esta empresa.</p>
+                </div>
+                <button
+                  type="button"
+                  className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
+                  onClick={() => {
+                    setOpenLinkModal(false);
+                    setSelectedUserId("");
+                    setSearch("");
+                  }}
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4 px-5 py-5">
+              <label className="block text-sm text-(--tc-text-primary)">
+                Buscar usuário
+                <input
+                  className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Buscar por nome, usuário ou e-mail"
+                />
+              </label>
+
+              <label className="block text-sm text-(--tc-text-primary)">
+                Usuário disponível
+                <select
+                  className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm"
+                  value={selectedUserId}
+                  onChange={(event) => setSelectedUserId(event.target.value)}
+                >
+                  <option value="">Selecione um usuário</option>
+                  {filteredAvailableUsers.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} {user.user ? `(@${user.user})` : user.email ? `(${user.email})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="rounded-xl border border-(--tc-border) bg-(--tc-surface-2) px-3 py-3 text-sm text-(--tc-text-secondary)">
+                {loadingAvailable
+                  ? "Carregando usuários disponíveis..."
+                  : filteredAvailableUsers.length > 0
+                    ? `${filteredAvailableUsers.length} usuários disponíveis para vínculo.`
+                    : "Nenhum usuário disponível para vincular."}
+              </div>
+
+              <div className="flex justify-end gap-2 border-t border-(--tc-border) pt-4">
+                <button
+                  type="button"
+                  className="rounded-lg border border-(--tc-border) px-4 py-2 text-sm font-semibold text-(--tc-text-primary)"
+                  onClick={() => {
+                    setOpenLinkModal(false);
+                    setSelectedUserId("");
+                    setSearch("");
+                  }}
+                  disabled={linking}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="rounded-lg bg-[#0b1e3c] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                  onClick={() => void handleLinkUser()}
+                  disabled={!selectedUserId || linking}
+                >
+                  {linking ? "Vinculando..." : "Vincular usuário"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
+
+      <CreateUserModal
+        open={openCreateUserModal}
+        clientId={clientId}
+        clients={[{ id: clientId, name: companyName }]}
+        onClose={() => setOpenCreateUserModal(false)}
+        onCreated={async () => {
+          await loadLinkedUsers();
+        }}
+      />
     </div>
   );
 }
-
-
-
-

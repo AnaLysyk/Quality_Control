@@ -7,9 +7,11 @@ import { getRedis, isRedisConfigured } from "@/lib/redis";
 
 export type LocalAuthUser = {
   id: string;
+  full_name?: string | null;
   name: string;
   email: string;
   user?: string;
+  avatar_key?: string | null;
   password_hash: string;
   globalRole?: "global_admin" | null;
   role?: string | null;
@@ -80,6 +82,13 @@ type GlobalAuthStore = {
 
 function normalizeLogin(value: string) {
   return value.trim().toLowerCase();
+}
+
+function normalizeComparableFullName(value?: string | null) {
+  return (value ?? "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
 }
 
 function normalizeSlug(value: string) {
@@ -367,9 +376,11 @@ export async function listLocalLinksForCompany(companyId: string): Promise<Local
 }
 
 export async function createLocalUser(input: {
+  full_name?: string | null;
   name: string;
   email: string;
   user?: string;
+  avatar_key?: string | null;
   password_hash: string;
   role?: string | null;
   globalRole?: "global_admin" | null;
@@ -384,23 +395,26 @@ export async function createLocalUser(input: {
   const store = await loadStoreForWrite();
   const email = normalizeLogin(input.email);
   const login = normalizeLogin(input.user ?? input.email);
+  const fullName = (input.full_name ?? input.name ?? input.email ?? "").trim();
   const existingByEmail = store.users.find((user) => normalizeLogin(user.email) === email);
   if (existingByEmail) {
-    const err = new Error("E-mail ja existe") as Error & { code?: string };
+    const err = new Error("E-mail ja cadastrado") as Error & { code?: string };
     err.code = "DUPLICATE_EMAIL";
     throw err;
   }
   const existingByLogin = store.users.find((user) => normalizeLogin(user.user ?? user.email) === login);
   if (existingByLogin) {
-    const err = new Error("Usuario ja existe") as Error & { code?: string };
+    const err = new Error("Usuario ja cadastrado") as Error & { code?: string };
     err.code = "DUPLICATE_USER";
     throw err;
   }
   const user: LocalAuthUser = {
     id: `usr_${randomUUID().slice(0, 8)}`,
+    full_name: fullName || null,
     name: input.name.trim() || email,
     email,
     user: login || email,
+    avatar_key: input.avatar_key ?? null,
     password_hash: input.password_hash,
     role: input.role ?? "user",
     globalRole: input.globalRole ?? null,
@@ -426,11 +440,35 @@ export async function updateLocalUser(
   const idx = store.users.findIndex((user) => user.id === id);
   if (idx === -1) return null;
   const current = store.users[idx];
+  const nextEmail = patch.email ? normalizeLogin(patch.email) : current.email;
+  const nextLogin = typeof patch.user === "string" ? normalizeLogin(patch.user) : current.user ?? current.email;
+  const nextName = patch.name ? patch.name : current.name;
+  const nextFullName =
+    patch.full_name !== undefined
+      ? (patch.full_name ?? "").trim() || nextName || nextEmail
+      : (current.full_name ?? nextName ?? nextEmail);
+
+  const duplicateEmail = store.users.find((user) => user.id !== id && normalizeLogin(user.email) === nextEmail);
+  if (duplicateEmail) {
+    const err = new Error("E-mail ja cadastrado") as Error & { code?: string };
+    err.code = "DUPLICATE_EMAIL";
+    throw err;
+  }
+
+  const duplicateLogin = store.users.find((user) => user.id !== id && normalizeLogin(user.user ?? user.email) === nextLogin);
+  if (duplicateLogin) {
+    const err = new Error("Usuario ja cadastrado") as Error & { code?: string };
+    err.code = "DUPLICATE_USER";
+    throw err;
+  }
+
   const next: LocalAuthUser = {
     ...current,
-    ...(patch.name ? { name: patch.name } : {}),
-    ...(patch.email ? { email: normalizeLogin(patch.email) } : {}),
-    ...(typeof patch.user === "string" ? { user: normalizeLogin(patch.user) } : {}),
+    ...(patch.full_name !== undefined ? { full_name: nextFullName || null } : {}),
+    ...(patch.name ? { name: nextName } : {}),
+    ...(patch.email ? { email: nextEmail } : {}),
+    ...(typeof patch.user === "string" ? { user: nextLogin } : {}),
+    ...(patch.avatar_key !== undefined ? { avatar_key: patch.avatar_key ?? null } : {}),
     ...(typeof patch.role === "string" ? { role: patch.role } : {}),
     ...(patch.globalRole !== undefined ? { globalRole: patch.globalRole } : {}),
     ...(typeof patch.status === "string" ? { status: patch.status } : {}),
@@ -440,6 +478,7 @@ export async function updateLocalUser(
     ...(patch.job_title !== undefined ? { job_title: patch.job_title ?? null } : {}),
     ...(patch.linkedin_url !== undefined ? { linkedin_url: patch.linkedin_url ?? null } : {}),
     ...(patch.phone !== undefined ? { phone: patch.phone ?? null } : {}),
+    ...(patch.default_company_slug !== undefined ? { default_company_slug: patch.default_company_slug ?? null } : {}),
     ...(patch.password_hash ? { password_hash: patch.password_hash } : {}),
   };
   store.users[idx] = next;
@@ -449,6 +488,29 @@ export async function updateLocalUser(
 
 export async function createLocalCompany(input: Partial<LocalAuthCompany> & { name: string; slug?: string | null }) {
   const store = await loadStoreForWrite();
+  const normalizedName = normalizeComparableFullName(input.name ?? "");
+  const normalizedTaxId =
+    typeof input.tax_id === "string" ? input.tax_id.replace(/\D+/g, "") : "";
+  const duplicateByName = store.companies.find(
+    (company) => normalizeComparableFullName(company.name ?? company.company_name ?? "") === normalizedName,
+  );
+  if (normalizedName && duplicateByName) {
+    const err = new Error("Empresa ja cadastrada com esse nome") as Error & { code?: string };
+    err.code = "DUPLICATE_COMPANY_NAME";
+    throw err;
+  }
+  const duplicateByTaxId =
+    normalizedTaxId.length > 0
+      ? store.companies.find((company) => {
+          const companyTaxId = typeof company.tax_id === "string" ? company.tax_id.replace(/\D+/g, "") : "";
+          return companyTaxId.length > 0 && companyTaxId === normalizedTaxId;
+        })
+      : null;
+  if (duplicateByTaxId) {
+    const err = new Error("CNPJ ja cadastrado para outra empresa") as Error & { code?: string };
+    err.code = "DUPLICATE_COMPANY_TAX_ID";
+    throw err;
+  }
   const slug = normalizeSlug(input.slug ?? input.name);
   let finalSlug = slug || `empresa-${randomUUID().slice(0, 8)}`;
   if (store.companies.some((company) => normalizeSlug(company.slug ?? "") === finalSlug)) {
@@ -569,9 +631,9 @@ export function normalizeGlobalRole(role?: string | null) {
 }
 
 export function toLegacyRole(companyRole?: string | null, isGlobalAdmin?: boolean) {
-  if (isGlobalAdmin) return "admin";
   const normalized = normalizeMembershipRole(companyRole ?? null);
   if (normalized === "it_dev") return "it_dev";
+  if (isGlobalAdmin) return "admin";
   if (normalized === "company_admin") return "company";
   return "user";
 }

@@ -37,10 +37,6 @@ export default function KanbanSuportes() {
       setError(null);
       try {
         const qs = new URLSearchParams({ companySlug: activeClientSlug });
-        // If the user is an admin or dev, request the full company scope
-        const normalizedRole = typeof user?.role === "string" ? user.role.toLowerCase() : null;
-        const isAdminLike = user?.isGlobalAdmin === true || normalizedRole === "admin" || normalizedRole === "global_admin" || normalizedRole === "it_dev" || normalizedRole === "itdev" || normalizedRole === "dev";
-        if (isAdminLike) qs.set("scope", "all");
         const res = await fetch(`/api/suportes?${qs.toString()}`, { cache: "no-store" });
         if (!res.ok) {
           if (res.status === 204) {

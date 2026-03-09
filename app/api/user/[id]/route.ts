@@ -46,13 +46,29 @@ export async function PATCH(req: NextRequest, context: { params: any }) {
     return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
   const update: any = {};
-  if (typeof data?.name === "string") update.name = data.name;
+  if (typeof data?.name === "string") {
+    update.name = data.name;
+    update.full_name = data.name;
+  }
   if (typeof data?.email === "string") update.email = data.email;
   if (typeof data?.user === "string") update.user = data.user;
   // Adicione outros campos conforme necessário
-  const updated = await updateLocalUser(id, update);
+  let updated = null;
+  try {
+    updated = await updateLocalUser(id, update);
+  } catch (err) {
+    const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
+    if (code === "DUPLICATE_EMAIL") {
+      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+    }
+    if (code === "DUPLICATE_USER") {
+      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+    }
+    throw err;
+  }
   if (!updated) {
     return NextResponse.json({ error: "Falha ao atualizar usuário" }, { status: 500 });
   }
   return NextResponse.json(updated, { status: 200 });
 }
+

@@ -1,6 +1,219 @@
 {
   "items": [
     {
+      "id": "12045e5e-f9e9-4e15-862d-cc422e0137a7",
+      "created_at": "2026-03-09T01:21:15.803Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "dev",
+      "action": "user.created",
+      "entity_type": "user",
+      "entity_id": "usr_f601a299",
+      "entity_label": "ffddd@cvbcvb.com",
+      "metadata": {
+        "companyId": null,
+        "role": "company_admin"
+      }
+    },
+    {
+      "id": "fb8f79d5-15fd-4fbb-bfba-ea17cf6ec5d9",
+      "created_at": "2026-03-09T00:19:01.500Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "dev",
+      "action": "user.created",
+      "entity_type": "user",
+      "entity_id": "usr_c6666914",
+      "entity_label": "nbhlk2li@uyhokl.co",
+      "metadata": {
+        "companyId": "cmp_04c14bf0",
+        "role": "company_admin"
+      }
+    },
+    {
+      "id": "876b9ded-99c3-40a7-af01-1141bce26c57",
+      "created_at": "2026-03-09T00:17:36.359Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "dev",
+      "action": "user.updated",
+      "entity_type": "user",
+      "entity_id": "usr_admin",
+      "entity_label": "admin",
+      "metadata": {
+        "companyId": "cmp_04c14bf0",
+        "role": "company_admin",
+        "active": false
+      }
+    },
+    {
+      "id": "e5c4e9ad-65d0-410d-89be-150ba76a841c",
+      "created_at": "2026-03-08T20:56:00.751Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "dev",
+      "action": "user.created",
+      "entity_type": "user",
+      "entity_id": "usr_0b1b5f96",
+      "entity_label": "sdfsd@cvcvb.com",
+      "metadata": {
+        "companyId": "cmp_04c14bf0",
+        "role": "user"
+      }
+    },
+    {
+      "id": "9baffaaf-6a97-449e-98d3-eaab73b3fa3e",
+      "created_at": "2026-03-08T20:34:49.370Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "dev",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "cmp_04c14bf0",
+      "entity_label": "Empresa cmp_04c14bf0",
+      "metadata": {
+        "active": false,
+        "integrationMode": "manual"
+      }
+    },
+    {
+      "id": "0fb6bf0f-6f36-40ad-a119-d68fc63582d6",
+      "created_at": "2026-03-08T20:26:47.412Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "dev",
+      "action": "user.created",
+      "entity_type": "user",
+      "entity_id": "usr_00151b30",
+      "entity_label": "sfds@xfggggfd.com",
+      "metadata": {
+        "companyId": "cmp_04c14bf0",
+        "role": "user"
+      }
+    },
+    {
+      "id": "9d314d6b-f55d-4b5d-8937-b7edb423dfa1",
+      "created_at": "2026-03-08T20:21:03.886Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "dev",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "cmp_04c14bf0",
+      "entity_label": "Empresa cmp_04c14bf0",
+      "metadata": {
+        "operation": "user_linked",
+        "userId": "usr_anapaula",
+        "userEmail": "anapaula"
+      }
+    },
+    {
+      "id": "21501b17-d1e0-4352-a736-e2dc294022f5",
+      "created_at": "2026-03-08T16:04:49.606Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "dev",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "cmp_04c14bf0",
+      "entity_label": "Empresa cmp_04c14bf0",
+      "metadata": {
+        "active": false,
+        "integrationMode": "manual"
+      }
+    },
+    {
+      "id": "5bb1bae6-c14a-4bf0-bb20-636c78829cb8",
+      "created_at": "2026-03-08T15:38:43.104Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "dev",
+      "action": "client.deleted",
+      "entity_type": "client",
+      "entity_id": "cmp_fb86a467",
+      "entity_label": "dasdsda",
+      "metadata": {
+        "slug": "dasdsda"
+      }
+    },
+    {
+      "id": "bea52165-d51c-40d8-9c6e-5f64a2b5a7b2",
+      "created_at": "2026-03-08T15:10:24.254Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "dev",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "cmp_fb86a467",
+      "entity_label": "dasdsda",
+      "metadata": {
+        "active": false,
+        "integrationMode": "manual"
+      }
+    },
+    {
+      "id": "9877f422-c4b6-4ce7-a895-ae8b88bfa2d2",
+      "created_at": "2026-03-08T13:04:05.103Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "dev",
+      "action": "user.created",
+      "entity_type": "user",
+      "entity_id": "usr_6ce4232d",
+      "entity_label": "asdsa@ftf.com",
+      "metadata": {
+        "companyId": null,
+        "role": "it_dev"
+      }
+    },
+    {
+      "id": "7bb0c736-70cd-4f23-81bf-16ad982ee115",
+      "created_at": "2026-03-07T22:18:26.468Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "dev",
+      "action": "user.created",
+      "entity_type": "user",
+      "entity_id": "usr_b461366c",
+      "entity_label": "global.codex.191825@testingcompany.test",
+      "metadata": {
+        "companyId": null,
+        "role": "it_dev"
+      }
+    },
+    {
+      "id": "b348f3ff-4f3b-47db-a150-8bdf6af2b70c",
+      "created_at": "2026-03-07T20:57:56.768Z",
+      "actor_user_id": "usr_admin",
+      "actor_email": "admin",
+      "action": "user.updated",
+      "entity_type": "user",
+      "entity_id": "usr_admin",
+      "entity_label": "admin",
+      "metadata": {
+        "companyId": "cmp_04c14bf0",
+        "role": "user",
+        "permissionRole": "user",
+        "active": null
+      }
+    },
+    {
+      "id": "1ad86a5e-004e-4808-9bb2-52eb4669cf65",
+      "created_at": "2026-03-07T19:06:07.820Z",
+      "actor_user_id": "usr_admin",
+      "actor_email": "admin",
+      "action": "user.created",
+      "entity_type": "user",
+      "entity_id": "usr_ab721ecc",
+      "entity_label": "vbxcx@fdgdf.com",
+      "metadata": {
+        "companyId": "cmp_022eb57b",
+        "role": "user"
+      }
+    },
+    {
+      "id": "52aaa7dd-4246-4a72-9d06-61ee5196a24c",
+      "created_at": "2026-03-07T19:05:45.664Z",
+      "actor_user_id": "usr_admin",
+      "actor_email": "admin",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_022eb57b",
+      "entity_label": "Ana Lima",
+      "metadata": {
+        "slug": "ana-lima",
+        "active": true
+      }
+    },
+    {
       "id": "1689be29-a5e5-4bd7-bba2-e1966a591112",
       "created_at": "2026-03-06T04:01:34.701Z",
       "actor_user_id": "usr_admin_griaule_test",

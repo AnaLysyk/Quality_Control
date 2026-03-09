@@ -10,6 +10,9 @@ type AdminSession = {
   id: string;
   email: string;
   token: string;
+  role?: string | null;
+  isGlobalAdmin?: boolean;
+  globalRole?: string | null;
 };
 
 type SessionUser = {
@@ -122,6 +125,11 @@ function isAdminRole(role?: string | null) {
   return normalized === "admin" || normalized === "super-admin" || normalized === "global_admin";
 }
 
+function isGlobalDeveloperRole(role?: string | null) {
+  const normalized = (role ?? "").toLowerCase().trim();
+  return normalized === "it_dev" || normalized === "itdev" || normalized === "developer" || normalized === "dev";
+}
+
 export async function requireGlobalAdmin(
   req: Request,
   opts?: { token?: string | null },
@@ -138,6 +146,9 @@ export async function requireGlobalAdmin(
     id: session.userId ?? session.id ?? "",
     email: session.email ?? "",
     token: opts?.token ?? "",
+    role,
+    isGlobalAdmin,
+    globalRole: session.globalRole ?? null,
   };
 }
 
@@ -147,6 +158,37 @@ export async function requireGlobalAdminWithStatus(
 ): Promise<{ admin: AdminSession | null; status: 200 | 401 | 403 }>
 {
   const admin = await requireGlobalAdmin(req, opts);
+  if (admin) return { admin, status: 200 };
+
+  const session = await readSessionUser(req);
+  if (!session) return { admin: null, status: 401 };
+  return { admin: null, status: 403 };
+}
+
+export async function requireGlobalDeveloper(
+  req: Request,
+  opts?: { token?: string | null },
+): Promise<AdminSession | null> {
+  const session = await readSessionUser(req);
+  if (!session) return null;
+
+  if (!isGlobalDeveloperRole(session.role)) return null;
+
+  return {
+    id: session.userId ?? session.id ?? "",
+    email: session.email ?? "",
+    token: opts?.token ?? "",
+    role: session.role ?? null,
+    isGlobalAdmin: session.isGlobalAdmin === true,
+    globalRole: session.globalRole ?? null,
+  };
+}
+
+export async function requireGlobalDeveloperWithStatus(
+  req: Request,
+  opts?: { token?: string | null },
+): Promise<{ admin: AdminSession | null; status: 200 | 401 | 403 }> {
+  const admin = await requireGlobalDeveloper(req, opts);
   if (admin) return { admin, status: 200 };
 
   const session = await readSessionUser(req);

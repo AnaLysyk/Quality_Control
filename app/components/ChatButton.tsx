@@ -2,13 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { FiZap, FiX, FiSend } from "react-icons/fi";
-import { useAuthUser } from "@/hooks/useAuthUser";
+import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import ConfirmDialog from "./ConfirmDialog";
 
 type Msg = { id: string; from: "user" | "assistant"; text: string; ts: number };
 
 export default function ChatButton() {
-  const { user } = useAuthUser();
+  const { user, can } = usePermissionAccess();
   const assistantEnabled = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -77,6 +77,7 @@ export default function ChatButton() {
 
   if (!assistantEnabled) return null;
   if (!user) return null;
+  if (!can("ai", "view") || !can("ai", "use")) return null;
 
   async function sendMessage() {
     if (sending) return; // prevent duplicate sends

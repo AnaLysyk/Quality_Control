@@ -91,6 +91,7 @@
       "user": "dev",
       "password_hash": "87274af01876341455b32d805946f272871bb42effa6604dccf28bb027afa82b",
       "globalRole": "global_admin",
+      "role": "it_dev",
       "status": "active",
       "active": true,
       "is_global_admin": true,

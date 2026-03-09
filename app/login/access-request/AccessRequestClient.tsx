@@ -1,40 +1,74 @@
 ﻿"use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import loginStyles from "../LoginClient.module.css";
 import styles from "./AccessRequestClient.module.css";
+import { normalizeRequestProfileType, requestProfileTypeNeedsCompany } from "@/lib/requestRouting";
+import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ACCESS_OPTIONS = [
   {
-    value: "user",
-    label: "Usuário da empresa",
-    description:
-      "Acesso regular vinculado a uma empresa/cliente (leitura de dashboards e permissões operacionais).",
+    value: "testing_company_user",
+    label: "Usuario Testing Company",
+    hint: "Usuario da plataforma com empresa vinculada.",
   },
   {
-    value: "company",
-    label: "Admin da empresa",
-    description: "Permite gerenciar usuários, releases e permissões da própria empresa.",
+    value: "company_user",
+    label: "Usuario Empresa",
+    hint: "Conta institucional da propria empresa.",
   },
   {
-    value: "admin",
-    label: "Admin do sistema",
-    description: "Acesso completo ao painel (apenas para equipes internas).",
+    value: "testing_company_lead",
+    label: "Usuario Lider TC",
+    hint: "Perfil administrativo do sistema.",
+  },
+  {
+    value: "technical_support",
+    label: "Suporte tecnico",
+    hint: "Perfil tecnico global com acesso total.",
   },
 ];
+const EMPTY_JOB_TITLE = "__empty_job_title__";
+
+type CompanyOption = {
+  id: string;
+  name: string;
+  active?: boolean;
+};
+
+type CompanyRequestDraft = {
+  companyName: string;
+  companyTaxId: string;
+  companyZip: string;
+  companyAddress: string;
+  companyPhone: string;
+  companyWebsite: string;
+  companyLinkedin: string;
+  companyDescription: string;
+  companyNotes: string;
+};
 
 type LookupItem = {
   id: string;
   status: string;
   createdAt: string;
+  updatedAt?: string | null;
   email: string;
   name: string;
+  fullName?: string | null;
+  username?: string | null;
+  phone?: string | null;
   jobRole?: string | null;
   company?: string | null;
   clientId?: string | null;
   accessType?: string | null;
+  profileType?: string | null;
+  title?: string | null;
+  description?: string | null;
   notes?: string | null;
+  companyProfile?: CompanyRequestDraft | null;
   adminNotes?: string | null;
 };
 
@@ -46,28 +80,76 @@ type AccessRequestComment = {
   createdAt: string;
 };
 
+type RequestTimelineEntry = {
+  id: string;
+  authorRole: "admin" | "requester";
+  authorName: string;
+  body: string;
+  createdAt: string;
+};
+
+type LookupDraft = {
+  fullName: string;
+  name: string;
+  user: string;
+  email: string;
+  phone: string;
+  company: string;
+  clientId: string;
+  role: string;
+  accessType: "testing_company_user" | "company_user" | "testing_company_lead" | "technical_support";
+  title: string;
+  description: string;
+  notes: string;
+  password: string;
+  companyProfile: CompanyRequestDraft;
+};
+
+function emptyCompanyRequestDraft(): CompanyRequestDraft {
+  return {
+    companyName: "",
+    companyTaxId: "",
+    companyZip: "",
+    companyAddress: "",
+    companyPhone: "",
+    companyWebsite: "",
+    companyLinkedin: "",
+    companyDescription: "",
+    companyNotes: "",
+  };
+}
+
 export default function AccessRequestClient() {
-  const [name, setName] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [requestedUser, setRequestedUser] = useState("");
   const [email, setEmail] = useState("");
-  const [company, setCompany] = useState("");
+  const [phone, setPhone] = useState("");
   const [clientId, setClientId] = useState("");
+  const [companyDraft, setCompanyDraft] = useState<CompanyRequestDraft>(emptyCompanyRequestDraft);
   const [role, setRole] = useState("");
-  const [accessType, setAccessType] = useState<"user" | "company" | "admin">("user");
-  const [notes, setNotes] = useState("");
+  const [accessType, setAccessType] = useState<
+    "testing_company_user" | "company_user" | "testing_company_lead" | "technical_support"
+  >("testing_company_user");
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [companyOptions, setCompanyOptions] = useState<CompanyOption[]>([]);
+  const [companiesLoading, setCompaniesLoading] = useState(false);
+  const [companiesError, setCompaniesError] = useState<string | null>(null);
 
   const [lookupName, setLookupName] = useState("");
   const [lookupEmail, setLookupEmail] = useState("");
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [lookupItem, setLookupItem] = useState<LookupItem | null>(null);
+  const [lookupDraft, setLookupDraft] = useState<LookupDraft | null>(null);
   const [lookupComments, setLookupComments] = useState<AccessRequestComment[]>([]);
   const [commentDraft, setCommentDraft] = useState("");
   const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [lookupSaving, setLookupSaving] = useState(false);
   const [isLookupOpen, setIsLookupOpen] = useState(false);
   const [isRequestOpen, setIsRequestOpen] = useState(false);
   const lookupNameRef = useRef<HTMLInputElement>(null);
@@ -99,9 +181,41 @@ export default function AccessRequestClient() {
   }, [isLookupOpen]);
 
   useEffect(() => {
-    if (!isRequestOpen) return;
+    if (!isRequestOpen && !isLookupOpen) return;
     const timer = window.setTimeout(() => requestNameRef.current?.focus(), 80);
     return () => window.clearTimeout(timer);
+  }, [isLookupOpen, isRequestOpen]);
+
+  useEffect(() => {
+    if (!isRequestOpen) return;
+
+    let mounted = true;
+    setCompaniesLoading(true);
+    setCompaniesError(null);
+
+    fetch("/api/public/clients", { cache: "no-store" })
+      .then(async (response) => {
+        const json = (await response.json().catch(() => null)) as { items?: CompanyOption[] } | null;
+        if (!response.ok) {
+          throw new Error("Nao foi possivel carregar as empresas cadastradas.");
+        }
+        if (!mounted) return;
+        const items = Array.isArray(json?.items) ? json.items : [];
+        setCompanyOptions(items.filter((item) => item.active !== false));
+      })
+      .catch((err) => {
+        if (!mounted) return;
+        setCompanyOptions([]);
+        setCompaniesError(err instanceof Error ? err.message : "Nao foi possivel carregar as empresas cadastradas.");
+      })
+      .finally(() => {
+        if (!mounted) return;
+        setCompaniesLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, [isRequestOpen]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -110,11 +224,35 @@ export default function AccessRequestClient() {
     setSuccess(null);
 
     const normalizedEmail = email.trim().toLowerCase();
-    const normalizedName = name.trim();
+    const normalizedFullName = fullName.trim();
+    const normalizedRequestedUser = requestedUser.trim().toLowerCase();
+    const normalizedPhone = phone.trim();
     const normalizedRole = role.trim();
+    const normalizedPassword = password.trim();
+    const normalizedTitle = titulo.trim();
+    const normalizedDescription = descricao.trim();
+    const normalizedCompanyDraft = {
+      companyName: companyDraft.companyName.trim(),
+      companyTaxId: companyDraft.companyTaxId.trim(),
+      companyZip: companyDraft.companyZip.trim(),
+      companyAddress: companyDraft.companyAddress.trim(),
+      companyPhone: companyDraft.companyPhone.trim(),
+      companyWebsite: companyDraft.companyWebsite.trim(),
+      companyLinkedin: companyDraft.companyLinkedin.trim(),
+      companyDescription: companyDraft.companyDescription.trim(),
+      companyNotes: companyDraft.companyNotes.trim(),
+    };
 
-    if (!normalizedName || !normalizedEmail || !normalizedRole) {
-      setError("Informe nome, e-mail e cargo.");
+    if (
+      !normalizedFullName ||
+      !normalizedEmail ||
+      !normalizedPhone ||
+      !normalizedRole ||
+      !normalizedTitle ||
+      !normalizedDescription ||
+      !normalizedPassword
+    ) {
+      setError("Preencha nome completo, e-mail, telefone, cargo, título, descrição e senha.");
       return;
     }
 
@@ -123,12 +261,32 @@ export default function AccessRequestClient() {
       setError("E-mail inválido.");
       return;
     }
+    if (normalizedPassword.length < 8) {
+      setError("A senha precisa ter pelo menos 8 caracteres.");
+      return;
+    }
+    if (accessType === "technical_support" && !normalizedRequestedUser) {
+      setError("Informe o usuario/login para o perfil Suporte tecnico.");
+      return;
+    }
 
-    const normalizedCompany = company.trim();
     const normalizedClientId = clientId.trim();
+    const requiresCompany = requestProfileTypeNeedsCompany(accessType);
+    const selectedCompany = companyOptions.find((item) => item.id === normalizedClientId) ?? null;
+    const normalizedCompany = selectedCompany?.name?.trim() ?? "";
+    const isCompanyProfile = accessType === "company_user";
 
-    if (accessType !== "admin" && !normalizedCompany && !normalizedClientId) {
-      setError("Informe o nome da empresa ou o ID do cliente para esse tipo de acesso.");
+    if (requiresCompany && !normalizedClientId) {
+      setError("Selecione uma empresa para realizar a solicitacao.");
+      return;
+    }
+
+    if (requiresCompany && !selectedCompany) {
+      setError("Selecione uma empresa cadastrada valida para continuar.");
+      return;
+    }
+    if (isCompanyProfile && !normalizedCompanyDraft.companyName) {
+      setError("Preencha o nome ou razao social da empresa.");
       return;
     }
 
@@ -137,17 +295,30 @@ export default function AccessRequestClient() {
     try {
       const response = await fetch("/api/support/access-request", {
         method: "POST",
+        cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: normalizedName,
+          full_name: normalizedFullName,
+          name: normalizedFullName,
+          user: accessType === "technical_support" ? normalizedRequestedUser || undefined : undefined,
           email: normalizedEmail,
+          phone: normalizedPhone,
           company: normalizedCompany,
           client_id: normalizedClientId,
           role: normalizedRole,
-          access_type: accessType,
-          notes: notes.trim() || undefined,
-          title: titulo.trim(),
-          description: descricao.trim(),
+          profile_type: accessType,
+          title: normalizedTitle,
+          description: normalizedDescription,
+          password: normalizedPassword,
+          company_name: isCompanyProfile ? normalizedCompanyDraft.companyName : undefined,
+          company_tax_id: isCompanyProfile ? normalizedCompanyDraft.companyTaxId : undefined,
+          company_zip: isCompanyProfile ? normalizedCompanyDraft.companyZip : undefined,
+          company_address: isCompanyProfile ? normalizedCompanyDraft.companyAddress : undefined,
+          company_phone: isCompanyProfile ? normalizedCompanyDraft.companyPhone : undefined,
+          company_website: isCompanyProfile ? normalizedCompanyDraft.companyWebsite : undefined,
+          company_linkedin: isCompanyProfile ? normalizedCompanyDraft.companyLinkedin : undefined,
+          company_description: isCompanyProfile ? normalizedCompanyDraft.companyDescription : undefined,
+          company_notes: isCompanyProfile ? normalizedCompanyDraft.companyNotes : undefined,
         }),
       });
 
@@ -156,16 +327,18 @@ export default function AccessRequestClient() {
         throw new Error(data?.message || "Erro ao registrar solicitação.");
       }
 
-      setSuccess("Solicitação enviada. Em breve você receberá um retorno por e-mail.");
-      setName("");
+      setSuccess("Solicitação enviada. Use a opção Consultar solicitação para acompanhar o andamento e as respostas.");
+      setFullName("");
+      setRequestedUser("");
       setEmail("");
-      setCompany("");
+      setPhone("");
       setClientId("");
+      setCompanyDraft(emptyCompanyRequestDraft());
       setRole("");
-      setNotes("");
       setTitulo("");
       setDescricao("");
-      setAccessType("user");
+      setPassword("");
+      setAccessType("testing_company_user");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erro desconhecido";
       setError(message);
@@ -192,6 +365,7 @@ export default function AccessRequestClient() {
     event.preventDefault();
     setLookupError(null);
     setLookupItem(null);
+    setLookupDraft(null);
     setLookupComments([]);
     setCommentDraft("");
 
@@ -221,6 +395,27 @@ export default function AccessRequestClient() {
         return;
       }
       setLookupItem(json.item ?? null);
+      setLookupDraft(
+        json.item
+          ? {
+              fullName: json.item.fullName?.trim() || json.item.name?.trim() || "",
+              name: json.item.fullName?.trim() || json.item.name?.trim() || "",
+              user: json.item.username?.trim() || "",
+              email: json.item.email?.trim() || "",
+              phone: json.item.phone?.trim() || "",
+              company: json.item.company?.trim() || "",
+              clientId: json.item.clientId?.trim() || "",
+              role: json.item.jobRole?.trim() || "",
+              accessType:
+                normalizeRequestProfileType(json.item.profileType ?? json.item.accessType ?? "") ?? "testing_company_user",
+              title: json.item.title?.trim() || "",
+              description: json.item.description?.trim() || "",
+              notes: json.item.notes?.trim() || "",
+              password: "",
+              companyProfile: json.item.companyProfile ?? emptyCompanyRequestDraft(),
+            }
+          : null,
+      );
       setLookupComments(Array.isArray(json.comments) ? json.comments : []);
     } catch (err) {
       setLookupError(err instanceof Error ? err.message : "Erro ao consultar solicitação.");
@@ -239,6 +434,7 @@ export default function AccessRequestClient() {
     try {
       const res = await fetch("/api/support/access-request/comments", {
         method: "POST",
+        cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           requestId: lookupItem.id,
@@ -263,13 +459,41 @@ export default function AccessRequestClient() {
     }
   };
 
-  const currentOption = ACCESS_OPTIONS.find((option) => option.value === accessType);
   const adminNote = lookupItem?.adminNotes?.trim() || "";
-  const showAdminNote =
-    Boolean(adminNote) &&
-    !lookupComments.some(
-      (comment) => comment.authorRole === "admin" && comment.body.trim() === adminNote,
-    );
+  const canEditLookup = Boolean(lookupItem && lookupDraft && lookupItem.status !== "closed" && lookupItem.status !== "rejected");
+  const timelineEntries = useMemo<RequestTimelineEntry[]>(() => {
+    if (!lookupItem) return [];
+
+    const entries: RequestTimelineEntry[] = [];
+
+    const hasAdminNoteInComments =
+      Boolean(adminNote) &&
+      lookupComments.some(
+        (comment) => comment.authorRole === "admin" && comment.body.trim() === adminNote,
+      );
+
+    if (adminNote && !hasAdminNoteInComments) {
+      entries.push({
+        id: `${lookupItem.id}-admin-note`,
+        authorRole: "admin",
+        authorName: "Admin",
+        body: adminNote,
+        createdAt: lookupItem.updatedAt || lookupItem.createdAt,
+      });
+    }
+
+    for (const comment of lookupComments) {
+      entries.push({
+        id: comment.id,
+        authorRole: comment.authorRole,
+        authorName: comment.authorName?.trim() || (comment.authorRole === "admin" ? "Admin" : "Solicitante"),
+        body: comment.body,
+        createdAt: comment.createdAt,
+      });
+    }
+
+    return entries.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  }, [adminNote, lookupComments, lookupItem]);
 
   const inputBase =
     "form-control-user w-full rounded-xl border border-[#011848]/15 bg-white px-4 py-3 text-sm text-[#011848] placeholder:text-[#94a3b8] focus:ring-2 focus:ring-[#ef0001]/40 focus:border-[#ef0001]/60 transition-all duration-200";
@@ -278,13 +502,135 @@ export default function AccessRequestClient() {
     "form-control-user w-full rounded-xl border border-[#011848]/15 bg-white px-4 py-3 text-sm text-[#011848] placeholder:text-[#94a3b8] focus:ring-2 focus:ring-[#ef0001]/40 focus:border-[#ef0001]/60 transition-all duration-200";
 
   const labelClass = "space-y-2 text-sm font-semibold text-[#011848]";
+  const selectedAccessOption = ACCESS_OPTIONS.find((option) => option.value === accessType) ?? ACCESS_OPTIONS[0];
+  const selectedLookupAccessOption =
+    ACCESS_OPTIONS.find((option) => option.value === (lookupDraft?.accessType ?? "testing_company_user")) ?? ACCESS_OPTIONS[0];
+  const isCompanyAccessRequest = accessType === "company_user";
+  const isTechnicalSupportRequest = accessType === "technical_support";
+  const isLookupCompanyAccessRequest = lookupDraft?.accessType === "company_user";
+  const isLookupTechnicalSupportRequest = lookupDraft?.accessType === "technical_support";
+
+  async function handleUpdateLookup() {
+    if (!lookupItem || !lookupDraft) return;
+
+    const normalizedEmail = lookupDraft.email.trim().toLowerCase();
+    const normalizedFullName = lookupDraft.fullName.trim();
+    const normalizedPhone = lookupDraft.phone.trim();
+    const normalizedRole = lookupDraft.role.trim();
+    const normalizedTitle = lookupDraft.title.trim();
+    const normalizedDescription = lookupDraft.description.trim();
+    const normalizedClientId = lookupDraft.clientId.trim();
+    const normalizedPassword = lookupDraft.password.trim();
+    const normalizedCompanyDraft = {
+      companyName: lookupDraft.companyProfile.companyName.trim(),
+      companyTaxId: lookupDraft.companyProfile.companyTaxId.trim(),
+      companyZip: lookupDraft.companyProfile.companyZip.trim(),
+      companyAddress: lookupDraft.companyProfile.companyAddress.trim(),
+      companyPhone: lookupDraft.companyProfile.companyPhone.trim(),
+      companyWebsite: lookupDraft.companyProfile.companyWebsite.trim(),
+      companyLinkedin: lookupDraft.companyProfile.companyLinkedin.trim(),
+      companyDescription: lookupDraft.companyProfile.companyDescription.trim(),
+      companyNotes: lookupDraft.companyProfile.companyNotes.trim(),
+    };
+
+    if (
+      !normalizedFullName ||
+      !normalizedEmail ||
+      !normalizedPhone ||
+      !normalizedRole ||
+      !normalizedTitle ||
+      !normalizedDescription
+    ) {
+      setLookupError("Preencha os campos obrigatorios para reenviar a solicitacao.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      setLookupError("E-mail invalido.");
+      return;
+    }
+
+    const requiresCompany = requestProfileTypeNeedsCompany(lookupDraft.accessType);
+    const selectedCompany = companyOptions.find((item) => item.id === normalizedClientId) ?? null;
+    const isCompanyProfile = lookupDraft.accessType === "company_user";
+    if (requiresCompany && !normalizedClientId) {
+      setLookupError("Selecione uma empresa para reenviar a solicitacao.");
+      return;
+    }
+    if (requiresCompany && !selectedCompany) {
+      setLookupError("Selecione uma empresa cadastrada valida para continuar.");
+      return;
+    }
+    if (isCompanyProfile && !normalizedCompanyDraft.companyName) {
+      setLookupError("Preencha o nome ou razao social da empresa.");
+      return;
+    }
+    if (lookupDraft.accessType === "technical_support" && !lookupDraft.user.trim()) {
+      setLookupError("Informe o usuario/login para o perfil Suporte tecnico.");
+      return;
+    }
+    if (normalizedPassword && normalizedPassword.length < 8) {
+      setLookupError("A nova senha precisa ter pelo menos 8 caracteres.");
+      return;
+    }
+
+    setLookupSaving(true);
+    setLookupError(null);
+    try {
+      const response = await fetch("/api/support/access-request/update", {
+        method: "PATCH",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId: lookupItem.id,
+          lookup_name: lookupName.trim(),
+          lookup_email: lookupEmail.trim().toLowerCase(),
+          full_name: normalizedFullName,
+          name: normalizedFullName,
+          user: lookupDraft.accessType === "technical_support" ? lookupDraft.user.trim().toLowerCase() : undefined,
+          email: normalizedEmail,
+          phone: normalizedPhone,
+          company: selectedCompany?.name?.trim() || lookupDraft.company.trim(),
+          client_id: requiresCompany ? normalizedClientId : "",
+          role: normalizedRole,
+          profile_type: lookupDraft.accessType,
+          title: normalizedTitle,
+          description: normalizedDescription,
+          notes: lookupDraft.notes.trim(),
+          password: normalizedPassword || undefined,
+          company_name: isCompanyProfile ? normalizedCompanyDraft.companyName : undefined,
+          company_tax_id: isCompanyProfile ? normalizedCompanyDraft.companyTaxId : undefined,
+          company_zip: isCompanyProfile ? normalizedCompanyDraft.companyZip : undefined,
+          company_address: isCompanyProfile ? normalizedCompanyDraft.companyAddress : undefined,
+          company_phone: isCompanyProfile ? normalizedCompanyDraft.companyPhone : undefined,
+          company_website: isCompanyProfile ? normalizedCompanyDraft.companyWebsite : undefined,
+          company_linkedin: isCompanyProfile ? normalizedCompanyDraft.companyLinkedin : undefined,
+          company_description: isCompanyProfile ? normalizedCompanyDraft.companyDescription : undefined,
+          company_notes: isCompanyProfile ? normalizedCompanyDraft.companyNotes : undefined,
+        }),
+      });
+
+      const json = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response.ok) {
+        setLookupError(json?.error || "Nao foi possivel atualizar a solicitacao.");
+        return;
+      }
+
+      setLookupDraft((current) => (current ? { ...current, password: "" } : current));
+      await handleLookup(new Event("submit") as unknown as FormEvent<HTMLFormElement>);
+    } catch (err) {
+      setLookupError(err instanceof Error ? err.message : "Erro ao atualizar solicitacao.");
+    } finally {
+      setLookupSaving(false);
+    }
+  }
 
   return (
     <div
       className={
-        `${loginStyles.loginContainer} ${loginStyles.loginFixedTheme} min-h-svh flex items-start sm:items-center ` +
-        "justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] " +
-        "relative overflow-x-hidden overflow-y-auto px-4 py-10 sm:px-6 md:px-10"
+        `${loginStyles.loginContainer} ${loginStyles.loginFixedTheme} relative flex min-h-svh items-center ` +
+        "justify-center overflow-hidden bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] px-4 py-4 sm:px-6 sm:py-6 md:px-8"
       }
     >
       <div className="absolute inset-0 pointer-events-none">
@@ -298,9 +644,9 @@ export default function AccessRequestClient() {
         <div className="absolute top-1/2 right-2 w-14 h-14 bg-[#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
       </div>
 
-      <div className="max-w-3xl w-full space-y-8 relative z-10">
+      <div className="relative z-10 max-h-[calc(100svh-1rem)] w-full max-w-3xl space-y-5 overflow-y-auto pr-1 [scrollbar-width:none] sm:max-h-[calc(100svh-2rem)] sm:space-y-6 [&::-webkit-scrollbar]:hidden">
         <div className={`text-center ${styles.introBase} ${styles.introDelay1}`}>
-          <h2 className="mt-5 text-3xl sm:text-4xl font-bold text-[#011848] mb-2 leading-tight drop-shadow-sm">
+          <h2 className="text-3xl font-bold leading-tight text-[#011848] drop-shadow-sm sm:text-4xl">
             Solicitações de acesso
           </h2>
           <p className="text-[#0b1a3c] font-medium">
@@ -370,14 +716,14 @@ export default function AccessRequestClient() {
 
       {isRequestOpen && (
         <div
-          className={`fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-slate-950/50 backdrop-blur-sm ${
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-3 py-3 backdrop-blur-sm sm:px-4 sm:py-4 ${
             styles.modalOverlay
           }`}
           onClick={() => setIsRequestOpen(false)}
           role="presentation"
         >
           <div
-            className={`w-full max-w-3xl rounded-2xl bg-white/95 backdrop-blur-xl border border-white/60 shadow-2xl p-6 sm:p-8 ${
+            className={`flex max-h-[calc(100svh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/95 p-4 shadow-2xl backdrop-blur-xl sm:max-h-[calc(100svh-2rem)] sm:p-6 ${
               styles.modalPanel
             }`}
             role="dialog"
@@ -404,138 +750,320 @@ export default function AccessRequestClient() {
               </button>
             </div>
 
-            <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-              {error && (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                  {error}
-                </div>
-              )}
-
-              {success && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                  {success}
-                </div>
-              )}
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className={labelClass}>
-                  Nome completo
-                  <input
-                    ref={requestNameRef}
-                    type="text"
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    required
-                    className={inputBase}
-                    placeholder="Ana Souza"
-                  />
-                </label>
-                <label className={labelClass}>
-                  E-mail profissional
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    required
-                    className={inputBase}
-                    placeholder="voce@empresa.com"
-                  />
-                </label>
-              </div>
-
-              <label className={labelClass}>
-                Cargo ou função
-                <input
-                  type="text"
-                  value={role}
-                  onChange={(event) => setRole(event.target.value)}
-                  required
-                  className={inputBase}
-                  placeholder="Analista de QA"
-                />
-              </label>
-
-              <label className={labelClass}>
-                Título do chamado
-                <input
-                  type="text"
-                  value={titulo}
-                  onChange={(event) => setTitulo(event.target.value)}
-                  required
-                  className={inputBase}
-                  placeholder="Ex: Erro ao acessar painel"
-                />
-              </label>
-
-              <label className={labelClass}>
-                Descrição detalhada
-                <textarea
-                  value={descricao}
-                  onChange={(event) => setDescricao(event.target.value)}
-                  required
-                  rows={4}
-                  className={textareaBase}
-                  placeholder="Descreva o problema ou solicitação"
-                />
-              </label>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className={labelClass}>
-                  Empresa (ou nome do cliente)
-                  <input
-                    type="text"
-                    value={company}
-                    onChange={(event) => setCompany(event.target.value)}
-                    className={inputBase}
-                    placeholder="Testing Company"
-                  />
-                </label>
-                <label className={labelClass}>
-                  ID do cliente (opcional)
-                  <input
-                    type="text"
-                    value={clientId}
-                    onChange={(event) => setClientId(event.target.value)}
-                    className={inputBase}
-                    placeholder="client-123"
-                  />
-                </label>
-              </div>
-
-              <div className="space-y-2 text-sm font-semibold text-[#011848]">
-                <div className="flex items-center justify-between">
-                  <span>Tipo de acesso</span>
-                  <span className="text-xs font-medium text-[#6b7280]">Escolha conforme seu papel</span>
-                </div>
-                <label className="sr-only" htmlFor="access-type-select">
-                  Tipo de acesso
-                </label>
-                <select
-                  id="access-type-select"
-                  aria-label="Tipo de acesso"
-                  value={accessType}
-                  onChange={(event) => setAccessType(event.target.value as "user" | "company" | "admin")}
-                  className={inputBase}
-                >
-                  {ACCESS_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                {currentOption && (
-                  <p className="text-xs font-medium text-[#475569]">{currentOption.description}</p>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                title="Enviar solicitação"
-                disabled={loading}
-                className="w-full flex items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:opacity-60 disabled:cursor-not-allowed"
+            {success && (
+              <div
+                role="status"
+                aria-live="polite"
+                className="mt-4 shrink-0 rounded-2xl border border-emerald-300 bg-gradient-to-r from-emerald-50 to-emerald-100 px-4 py-4 shadow-[0_12px_30px_rgba(16,185,129,0.14)]"
               >
-                {loading ? "Enviando..." : "Enviar solicitação"}
-              </button>
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-emerald-300 bg-white text-lg text-emerald-600">
+                    ✓
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-emerald-900">Solicitação enviada com sucesso</p>
+                    <p className="mt-1 text-sm leading-6 text-emerald-800">{success}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <form className="mt-5 flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
+              <div className="min-h-0 space-y-4 overflow-y-auto pr-1">
+                {error && (
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {error}
+                  </div>
+                )}
+
+                <div className="space-y-2 text-sm font-semibold text-[#011848]">
+                  <div className="flex items-center justify-between gap-3">
+                    <span>Tipo de perfil</span>
+                    <span className="text-right text-xs font-medium text-[#6b7280]">Escolha conforme seu papel</span>
+                  </div>
+                  <label className="sr-only" htmlFor="access-type-select">
+                    Tipo de perfil
+                  </label>
+                  <select
+                    id="access-type-select"
+                    aria-label="Tipo de perfil"
+                    value={accessType}
+                    onChange={(event) => {
+                      const next = event.target.value as
+                        | "testing_company_user"
+                        | "company_user"
+                        | "testing_company_lead"
+                        | "technical_support";
+                      setAccessType(next);
+                      if (!requestProfileTypeNeedsCompany(next)) {
+                        setClientId("");
+                      }
+                    }}
+                    className={inputBase}
+                  >
+                    {ACCESS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs font-medium text-[#64748b]">{selectedAccessOption.hint}</p>
+                </div>
+
+                {requestProfileTypeNeedsCompany(accessType) ? (
+                  <label className={labelClass}>
+                    Empresa vinculada
+                    <select
+                      value={clientId}
+                      onChange={(event) => setClientId(event.target.value)}
+                      required
+                      className={inputBase}
+                      disabled={companiesLoading || companyOptions.length === 0}
+                    >
+                      <option value="">
+                        {companiesLoading ? "Carregando empresas..." : "Selecione uma empresa cadastrada"}
+                      </option>
+                      {companyOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.name}
+                        </option>
+                      ))}
+                    </select>
+                    {companiesError ? (
+                      <p className="text-xs font-medium text-rose-600">{companiesError}</p>
+                    ) : companyOptions.length === 0 && !companiesLoading ? (
+                      <p className="text-xs font-medium text-rose-600">
+                        Nenhuma empresa cadastrada disponivel para selecionar.
+                      </p>
+                    ) : null}
+                  </label>
+                ) : null}
+
+                {isCompanyAccessRequest ? (
+                  <div className="space-y-4 rounded-xl border border-[#011848]/10 bg-[#f8fafc] px-4 py-4">
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-[#011848]">Dados da empresa</p>
+                      <p className="text-xs text-[#64748b]">
+                        Esse perfil segue o cadastro institucional da empresa, entao os campos abaixo precisam refletir o formulario real de criacao.
+                      </p>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className={labelClass}>
+                        Nome / razao social
+                        <input
+                          type="text"
+                          value={companyDraft.companyName}
+                          onChange={(event) => setCompanyDraft((current) => ({ ...current, companyName: event.target.value }))}
+                          required
+                          className={inputBase}
+                          placeholder="Ex.: Testing Company LTDA"
+                        />
+                      </label>
+                      <label className={labelClass}>
+                        CNPJ
+                        <input
+                          type="text"
+                          value={companyDraft.companyTaxId}
+                          onChange={(event) => setCompanyDraft((current) => ({ ...current, companyTaxId: event.target.value }))}
+                          className={inputBase}
+                          placeholder="00.000.000/0000-00"
+                        />
+                      </label>
+                      <label className={labelClass}>
+                        CEP
+                        <input
+                          type="text"
+                          value={companyDraft.companyZip}
+                          onChange={(event) => setCompanyDraft((current) => ({ ...current, companyZip: event.target.value }))}
+                          className={inputBase}
+                          placeholder="00000-000"
+                        />
+                      </label>
+                      <label className={labelClass}>
+                        Telefone da empresa
+                        <input
+                          type="tel"
+                          value={companyDraft.companyPhone}
+                          onChange={(event) => setCompanyDraft((current) => ({ ...current, companyPhone: event.target.value }))}
+                          className={inputBase}
+                          placeholder="+55 11 4000-0000"
+                        />
+                      </label>
+                      <label className={labelClass + " sm:col-span-2"}>
+                        Endereco
+                        <input
+                          type="text"
+                          value={companyDraft.companyAddress}
+                          onChange={(event) => setCompanyDraft((current) => ({ ...current, companyAddress: event.target.value }))}
+                          className={inputBase}
+                          placeholder="Rua, numero, bairro, cidade"
+                        />
+                      </label>
+                      <label className={labelClass}>
+                        Website
+                        <input
+                          type="text"
+                          value={companyDraft.companyWebsite}
+                          onChange={(event) => setCompanyDraft((current) => ({ ...current, companyWebsite: event.target.value }))}
+                          className={inputBase}
+                          placeholder="https://empresa.com"
+                        />
+                      </label>
+                      <label className={labelClass}>
+                        LinkedIn da empresa
+                        <input
+                          type="text"
+                          value={companyDraft.companyLinkedin}
+                          onChange={(event) => setCompanyDraft((current) => ({ ...current, companyLinkedin: event.target.value }))}
+                          className={inputBase}
+                          placeholder="https://www.linkedin.com/company/..."
+                        />
+                      </label>
+                      <label className={labelClass + " sm:col-span-2"}>
+                        Descricao da empresa
+                        <textarea
+                          rows={3}
+                          value={companyDraft.companyDescription}
+                          onChange={(event) => setCompanyDraft((current) => ({ ...current, companyDescription: event.target.value }))}
+                          className={textareaBase}
+                          placeholder="Descreva rapidamente a empresa e o contexto da solicitacao."
+                        />
+                      </label>
+                      <label className={labelClass + " sm:col-span-2"}>
+                        Observacoes da empresa
+                        <textarea
+                          rows={3}
+                          value={companyDraft.companyNotes}
+                          onChange={(event) => setCompanyDraft((current) => ({ ...current, companyNotes: event.target.value }))}
+                          className={textareaBase}
+                          placeholder="Observacoes adicionais sobre a empresa."
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className={labelClass}>
+                    Nome completo
+                    <input
+                      ref={requestNameRef}
+                      type="text"
+                      value={fullName}
+                      onChange={(event) => setFullName(event.target.value)}
+                      required
+                      className={inputBase}
+                      placeholder="Ana Souza"
+                    />
+                  </label>
+                  {isTechnicalSupportRequest ? (
+                    <label className={labelClass}>
+                      Usuario/login
+                      <input
+                        type="text"
+                        value={requestedUser}
+                        onChange={(event) => setRequestedUser(event.target.value)}
+                        required
+                        className={inputBase}
+                        placeholder="login.global"
+                      />
+                      <p className="text-xs font-medium text-[#64748b]">
+                        Obrigatorio para o perfil Suporte tecnico.
+                      </p>
+                    </label>
+                  ) : null}
+                  <label className={labelClass}>
+                    E-mail profissional
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      required
+                      className={inputBase}
+                      placeholder="voce@empresa.com"
+                    />
+                  </label>
+                  <label className={labelClass}>
+                    Telefone
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(event) => setPhone(event.target.value)}
+                      required
+                      className={inputBase}
+                      placeholder="+55 11 99999-9999"
+                    />
+                  </label>
+                </div>
+
+                <label className={labelClass}>
+                  {isCompanyAccessRequest ? "Cargo do responsavel" : "Cargo ou funcao"}
+                  <div>
+                    <Select value={role || EMPTY_JOB_TITLE} onValueChange={(value) => setRole(value === EMPTY_JOB_TITLE ? "" : value)}>
+                      <SelectTrigger className="h-[50px] rounded-xl border-[#011848]/15 bg-white px-4 py-3 text-sm text-[#011848] focus-visible:ring-[#ef0001]/40">
+                        <SelectValue placeholder="Selecione uma profissao" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-80">
+                        <SelectItem value={EMPTY_JOB_TITLE}>Selecione uma profissao</SelectItem>
+                        {JOB_TITLE_OPTIONS.map((jobTitleOption) => (
+                          <SelectItem key={jobTitleOption} value={jobTitleOption}>
+                            {jobTitleOption}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </label>
+
+                <label className={labelClass}>
+                  Titulo da solicitacao
+                  <input
+                    type="text"
+                    value={titulo}
+                    onChange={(event) => setTitulo(event.target.value)}
+                    required
+                    className={inputBase}
+                    placeholder="Ex: Solicito acesso ao painel de qualidade"
+                  />
+                </label>
+
+                <label className={labelClass}>
+                  Descricao detalhada
+                  <textarea
+                    value={descricao}
+                    onChange={(event) => setDescricao(event.target.value)}
+                    required
+                    rows={4}
+                    className={textareaBase}
+                    placeholder="Explique o contexto, a necessidade de acesso e o que precisa operar."
+                  />
+                </label>
+
+                <label className={labelClass}>
+                  Senha escolhida para o novo acesso
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    required
+                    minLength={8}
+                    className={inputBase}
+                    placeholder="Minimo de 8 caracteres"
+                  />
+                </label>
+              </div>
+
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  title="Enviar solicitação"
+                  disabled={loading}
+                  className="flex w-full items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {loading ? "Enviando..." : "Enviar solicitação"}
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -543,14 +1071,14 @@ export default function AccessRequestClient() {
 
       {isLookupOpen && (
         <div
-          className={`fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-slate-950/50 backdrop-blur-sm ${
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-3 py-3 backdrop-blur-sm sm:px-4 sm:py-4 ${
             styles.modalOverlay
           }`}
           onClick={() => setIsLookupOpen(false)}
           role="presentation"
         >
           <div
-            className={`w-full max-w-2xl rounded-2xl bg-white/95 backdrop-blur-xl border border-white/60 shadow-2xl p-6 sm:p-8 ${
+            className={`flex max-h-[calc(100svh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/95 p-4 shadow-2xl backdrop-blur-xl sm:max-h-[calc(100svh-2rem)] sm:p-6 ${
               styles.modalPanel
             }`}
             role="dialog"
@@ -577,51 +1105,52 @@ export default function AccessRequestClient() {
               </button>
             </div>
 
-            <form className="mt-6 space-y-4" onSubmit={handleLookup}>
-              {lookupError && (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                  {lookupError}
+            <div className="mt-5 min-h-0 flex-1 overflow-y-auto pr-1">
+              <form className="space-y-4" onSubmit={handleLookup}>
+                {lookupError && (
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {lookupError}
+                  </div>
+                )}
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className={labelClass}>
+                    Nome completo
+                    <input
+                      ref={lookupNameRef}
+                      type="text"
+                      value={lookupName}
+                      onChange={(event) => setLookupName(event.target.value)}
+                      required
+                      className={inputBase}
+                      placeholder="Ana Souza"
+                    />
+                  </label>
+                  <label className={labelClass}>
+                    E-mail
+                    <input
+                      type="email"
+                      value={lookupEmail}
+                      onChange={(event) => setLookupEmail(event.target.value)}
+                      required
+                      className={inputBase}
+                      placeholder="voce@empresa.com"
+                    />
+                  </label>
                 </div>
-              )}
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className={labelClass}>
-                  Nome completo
-                  <input
-                    ref={lookupNameRef}
-                    type="text"
-                    value={lookupName}
-                    onChange={(event) => setLookupName(event.target.value)}
-                    required
-                    className={inputBase}
-                    placeholder="Ana Souza"
-                  />
-                </label>
-                <label className={labelClass}>
-                  E-mail
-                  <input
-                    type="email"
-                    value={lookupEmail}
-                    onChange={(event) => setLookupEmail(event.target.value)}
-                    required
-                    className={inputBase}
-                    placeholder="voce@empresa.com"
-                  />
-                </label>
-              </div>
+                <button
+                  type="submit"
+                  title="Consultar solicitação"
+                  disabled={lookupLoading}
+                  className="flex w-full items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {lookupLoading ? "Consultando..." : "Consultar solicitação"}
+                </button>
+              </form>
 
-              <button
-                type="submit"
-                title="Consultar solicitação"
-                disabled={lookupLoading}
-                className="w-full flex items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {lookupLoading ? "Consultando..." : "Consultar solicitação"}
-              </button>
-            </form>
-
-            {lookupItem && (
-              <div className="mt-6 rounded-2xl border border-[#e5e7eb] bg-[#f8fafc] p-5 space-y-4">
+              {lookupItem && (
+                <div className="mt-6 space-y-4 rounded-2xl border border-[#e5e7eb] bg-[#f8fafc] p-4 sm:p-5">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-[#011848]">Solicitação encontrada</p>
@@ -636,63 +1165,485 @@ export default function AccessRequestClient() {
                   </span>
                 </div>
 
-                {showAdminNote && (
-                  <div className="rounded-lg border bg-white px-3 py-2 text-sm text-[#0b1a3c]">
-                    <strong>Comentário do admin:</strong> {adminNote}
-                  </div>
-                )}
+                  {lookupItem.status === "in_progress" ? (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                      <div className="font-semibold">Aguardando ajuste do solicitante</div>
+                      <div className="mt-1 text-xs leading-5 text-amber-700">
+                        Revise a mensagem enviada pela equipe, atualize os dados abaixo e reenvi e a solicitacao para nova analise.
+                      </div>
+                    </div>
+                  ) : null}
 
-                <div className="space-y-2">
-                  <p className="text-sm font-semibold text-[#011848]">Comentários</p>
-                  <div className="comments-chat">
-                    <div className="comments-chat-list" aria-live="polite">
-                      {lookupComments.length === 0 ? (
-                        <p className="comments-chat-empty">Nenhum comentário ainda.</p>
-                      ) : (
-                        lookupComments.map((comment) => {
-                          const mine = comment.authorRole === "requester";
-                          return (
-                            <div
-                              key={comment.id}
-                              className={`comments-chat-message ${mine ? "mine" : "other"}`}
-                            >
-                              <div className="comments-chat-author">
-                                {comment.authorRole === "admin" ? "Admin" : "Solicitante"}: {comment.authorName}
-                              </div>
-                              <div className="comments-chat-bubble whitespace-pre-wrap">{comment.body}</div>
-                              <div className="comments-chat-meta">
-                                {new Date(comment.createdAt).toLocaleString("pt-BR")}
-                              </div>
-                            </div>
-                          );
-                        })
-                      )}
+                  <div className="space-y-2">
+                    <div className="space-y-3 rounded-xl border border-[#011848]/10 bg-white px-4 py-4">
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#64748b]">
+                          Título
+                        </p>
+                        <p className="text-sm font-semibold text-[#011848]">
+                          {lookupItem.title?.trim() || "Solicitação sem título informado"}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#64748b]">
+                          Descrição
+                        </p>
+                        <p className="whitespace-pre-wrap text-sm text-[#0b1a3c]">
+                          {lookupItem.description?.trim() ||
+                            lookupItem.notes?.trim() ||
+                            "Sem descrição detalhada informada."}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="comments-chat-input">
-                      <textarea
-                        className={textareaBase}
-                        rows={3}
-                        placeholder="Adicionar comentário"
-                        value={commentDraft}
-                        onChange={(event) => setCommentDraft(event.target.value)}
-                      />
-                      <div className="comments-chat-actions">
+                    {canEditLookup && lookupDraft ? (
+                      <div className="space-y-4 rounded-xl border border-[#011848]/10 bg-white px-4 py-4">
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-[#011848]">Ajustar dados da solicitacao</p>
+                          <p className="text-xs text-[#64748b]">
+                            Se a equipe pediu ajuste, corrija os dados abaixo e reenvi e a solicitacao para revisao.
+                          </p>
+                        </div>
+
+                        <div className="space-y-2 text-sm font-semibold text-[#011848]">
+                          <div className="flex items-center justify-between gap-3">
+                            <span>Tipo de perfil</span>
+                            <span className="text-right text-xs font-medium text-[#6b7280]">Ajuste conforme o acesso solicitado</span>
+                          </div>
+                          <select
+                            value={lookupDraft.accessType}
+                            onChange={(event) => {
+                              const next = event.target.value as LookupDraft["accessType"];
+                              setLookupDraft((current) =>
+                                current
+                                  ? {
+                                      ...current,
+                                      accessType: next,
+                                      clientId: requestProfileTypeNeedsCompany(next) ? current.clientId : "",
+                                      company: requestProfileTypeNeedsCompany(next) ? current.company : "",
+                                    }
+                                  : current,
+                              );
+                            }}
+                            className={inputBase}
+                          >
+                            {ACCESS_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          <p className="text-xs font-medium text-[#64748b]">{selectedLookupAccessOption.hint}</p>
+                        </div>
+
+                        {requestProfileTypeNeedsCompany(lookupDraft.accessType) ? (
+                          <label className={labelClass}>
+                            Empresa vinculada
+                            <select
+                              value={lookupDraft.clientId}
+                              onChange={(event) => {
+                                const nextId = event.target.value;
+                                const match = companyOptions.find((item) => item.id === nextId) ?? null;
+                                setLookupDraft((current) =>
+                                  current
+                                    ? {
+                                        ...current,
+                                        clientId: nextId,
+                                        company: match?.name?.trim() || "",
+                                      }
+                                    : current,
+                                );
+                              }}
+                              className={inputBase}
+                              disabled={companiesLoading || companyOptions.length === 0}
+                            >
+                              <option value="">
+                                {companiesLoading ? "Carregando empresas..." : "Selecione uma empresa cadastrada"}
+                              </option>
+                              {companyOptions.map((option) => (
+                                <option key={option.id} value={option.id}>
+                                  {option.name}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        ) : null}
+
+                        {isLookupCompanyAccessRequest ? (
+                          <div className="space-y-4 rounded-xl border border-[#011848]/10 bg-[#f8fafc] px-4 py-4">
+                            <div className="space-y-1">
+                              <p className="text-sm font-semibold text-[#011848]">Dados da empresa</p>
+                              <p className="text-xs text-[#64748b]">
+                                Ajuste aqui os mesmos dados institucionais usados no cadastro da empresa.
+                              </p>
+                            </div>
+
+                            <div className="grid gap-4 sm:grid-cols-2">
+                              <label className={labelClass}>
+                                Nome / razao social
+                                <input
+                                  type="text"
+                                  value={lookupDraft.companyProfile.companyName}
+                                  onChange={(event) =>
+                                    setLookupDraft((current) =>
+                                      current
+                                        ? {
+                                            ...current,
+                                            companyProfile: { ...current.companyProfile, companyName: event.target.value },
+                                          }
+                                        : current,
+                                    )
+                                  }
+                                  className={inputBase}
+                                />
+                              </label>
+                              <label className={labelClass}>
+                                CNPJ
+                                <input
+                                  type="text"
+                                  value={lookupDraft.companyProfile.companyTaxId}
+                                  onChange={(event) =>
+                                    setLookupDraft((current) =>
+                                      current
+                                        ? {
+                                            ...current,
+                                            companyProfile: { ...current.companyProfile, companyTaxId: event.target.value },
+                                          }
+                                        : current,
+                                    )
+                                  }
+                                  className={inputBase}
+                                />
+                              </label>
+                              <label className={labelClass}>
+                                CEP
+                                <input
+                                  type="text"
+                                  value={lookupDraft.companyProfile.companyZip}
+                                  onChange={(event) =>
+                                    setLookupDraft((current) =>
+                                      current
+                                        ? {
+                                            ...current,
+                                            companyProfile: { ...current.companyProfile, companyZip: event.target.value },
+                                          }
+                                        : current,
+                                    )
+                                  }
+                                  className={inputBase}
+                                />
+                              </label>
+                              <label className={labelClass}>
+                                Telefone da empresa
+                                <input
+                                  type="tel"
+                                  value={lookupDraft.companyProfile.companyPhone}
+                                  onChange={(event) =>
+                                    setLookupDraft((current) =>
+                                      current
+                                        ? {
+                                            ...current,
+                                            companyProfile: { ...current.companyProfile, companyPhone: event.target.value },
+                                          }
+                                        : current,
+                                    )
+                                  }
+                                  className={inputBase}
+                                />
+                              </label>
+                              <label className={labelClass + " sm:col-span-2"}>
+                                Endereco
+                                <input
+                                  type="text"
+                                  value={lookupDraft.companyProfile.companyAddress}
+                                  onChange={(event) =>
+                                    setLookupDraft((current) =>
+                                      current
+                                        ? {
+                                            ...current,
+                                            companyProfile: { ...current.companyProfile, companyAddress: event.target.value },
+                                          }
+                                        : current,
+                                    )
+                                  }
+                                  className={inputBase}
+                                />
+                              </label>
+                              <label className={labelClass}>
+                                Website
+                                <input
+                                  type="text"
+                                  value={lookupDraft.companyProfile.companyWebsite}
+                                  onChange={(event) =>
+                                    setLookupDraft((current) =>
+                                      current
+                                        ? {
+                                            ...current,
+                                            companyProfile: { ...current.companyProfile, companyWebsite: event.target.value },
+                                          }
+                                        : current,
+                                    )
+                                  }
+                                  className={inputBase}
+                                />
+                              </label>
+                              <label className={labelClass}>
+                                LinkedIn da empresa
+                                <input
+                                  type="text"
+                                  value={lookupDraft.companyProfile.companyLinkedin}
+                                  onChange={(event) =>
+                                    setLookupDraft((current) =>
+                                      current
+                                        ? {
+                                            ...current,
+                                            companyProfile: { ...current.companyProfile, companyLinkedin: event.target.value },
+                                          }
+                                        : current,
+                                    )
+                                  }
+                                  className={inputBase}
+                                />
+                              </label>
+                              <label className={labelClass + " sm:col-span-2"}>
+                                Descricao da empresa
+                                <textarea
+                                  rows={3}
+                                  value={lookupDraft.companyProfile.companyDescription}
+                                  onChange={(event) =>
+                                    setLookupDraft((current) =>
+                                      current
+                                        ? {
+                                            ...current,
+                                            companyProfile: { ...current.companyProfile, companyDescription: event.target.value },
+                                          }
+                                        : current,
+                                    )
+                                  }
+                                  className={textareaBase}
+                                />
+                              </label>
+                              <label className={labelClass + " sm:col-span-2"}>
+                                Observacoes da empresa
+                                <textarea
+                                  rows={3}
+                                  value={lookupDraft.companyProfile.companyNotes}
+                                  onChange={(event) =>
+                                    setLookupDraft((current) =>
+                                      current
+                                        ? {
+                                            ...current,
+                                            companyProfile: { ...current.companyProfile, companyNotes: event.target.value },
+                                          }
+                                        : current,
+                                    )
+                                  }
+                                  className={textareaBase}
+                                />
+                              </label>
+                            </div>
+                          </div>
+                        ) : null}
+
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <label className={labelClass}>
+                            Nome completo
+                            <input
+                              type="text"
+                              value={lookupDraft.fullName}
+                              onChange={(event) =>
+                                setLookupDraft((current) => (current ? { ...current, fullName: event.target.value } : current))
+                              }
+                              className={inputBase}
+                            />
+                          </label>
+                          {isLookupTechnicalSupportRequest ? (
+                            <label className={labelClass}>
+                              Usuario/login
+                              <input
+                                type="text"
+                                value={lookupDraft.user}
+                                onChange={(event) =>
+                                  setLookupDraft((current) => (current ? { ...current, user: event.target.value } : current))
+                                }
+                                className={inputBase}
+                                placeholder="login.global"
+                              />
+                            </label>
+                          ) : null}
+                          <label className={labelClass}>
+                            E-mail profissional
+                            <input
+                              type="email"
+                              value={lookupDraft.email}
+                              onChange={(event) =>
+                                setLookupDraft((current) => (current ? { ...current, email: event.target.value } : current))
+                              }
+                              className={inputBase}
+                            />
+                          </label>
+                          <label className={labelClass}>
+                            Telefone
+                            <input
+                              type="tel"
+                              value={lookupDraft.phone}
+                              onChange={(event) =>
+                                setLookupDraft((current) => (current ? { ...current, phone: event.target.value } : current))
+                              }
+                              className={inputBase}
+                            />
+                          </label>
+                          <label className={labelClass}>
+                            {isLookupCompanyAccessRequest ? "Cargo do responsavel" : "Cargo ou funcao"}
+                            <div>
+                              <Select
+                                value={lookupDraft.role || EMPTY_JOB_TITLE}
+                                onValueChange={(value) =>
+                                  setLookupDraft((current) =>
+                                    current ? { ...current, role: value === EMPTY_JOB_TITLE ? "" : value } : current,
+                                  )
+                                }
+                              >
+                                <SelectTrigger className="h-[50px] rounded-xl border-[#011848]/15 bg-white px-4 py-3 text-sm text-[#011848] focus-visible:ring-[#ef0001]/40">
+                                  <SelectValue placeholder="Selecione uma profissao" />
+                                </SelectTrigger>
+                                <SelectContent className="max-h-80">
+                                  <SelectItem value={EMPTY_JOB_TITLE}>Selecione uma profissao</SelectItem>
+                                  {JOB_TITLE_OPTIONS.map((jobTitleOption) => (
+                                    <SelectItem key={jobTitleOption} value={jobTitleOption}>
+                                      {jobTitleOption}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </label>
+                        </div>
+
+                        <label className={labelClass}>
+                          Titulo da solicitacao
+                          <input
+                            type="text"
+                            value={lookupDraft.title}
+                            onChange={(event) =>
+                              setLookupDraft((current) => (current ? { ...current, title: event.target.value } : current))
+                            }
+                            className={inputBase}
+                          />
+                        </label>
+
+                        <label className={labelClass}>
+                          Descricao detalhada
+                          <textarea
+                            rows={4}
+                            value={lookupDraft.description}
+                            onChange={(event) =>
+                              setLookupDraft((current) => (current ? { ...current, description: event.target.value } : current))
+                            }
+                            className={textareaBase}
+                          />
+                        </label>
+
+                        <label className={labelClass}>
+                          Observacoes
+                          <textarea
+                            rows={3}
+                            value={lookupDraft.notes}
+                            onChange={(event) =>
+                              setLookupDraft((current) => (current ? { ...current, notes: event.target.value } : current))
+                            }
+                            className={textareaBase}
+                          />
+                        </label>
+
+                        <label className={labelClass}>
+                          Nova senha
+                          <input
+                            type="password"
+                            value={lookupDraft.password}
+                            onChange={(event) =>
+                              setLookupDraft((current) => (current ? { ...current, password: event.target.value } : current))
+                            }
+                            className={inputBase}
+                            placeholder="Deixe em branco para manter a senha atual"
+                          />
+                          <p className="text-xs font-medium text-[#64748b]">
+                            Se quiser trocar a senha informada na solicitacao, preencha aqui.
+                          </p>
+                        </label>
+
                         <button
                           type="button"
-                          onClick={handleSubmitComment}
-                          disabled={commentSubmitting || !commentDraft.trim()}
-                          title="Enviar comentário"
-                          className="rounded-xl border border-[#011848]/15 bg-white px-4 py-2 text-xs font-semibold text-[#011848] transition hover:bg-[#011848]/5 disabled:opacity-60"
+                          onClick={() => void handleUpdateLookup()}
+                          disabled={lookupSaving}
+                          className="flex w-full items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                          {commentSubmitting ? "Enviando..." : "Enviar comentário"}
+                          {lookupSaving ? "Reenviando..." : "Reenviar com ajustes"}
                         </button>
+                      </div>
+                    ) : null}
+
+                    <p className="text-sm font-semibold text-[#011848]">Comentários</p>
+                    <div className="comments-chat">
+                      <div className="comments-chat-list" aria-live="polite">
+                        {timelineEntries.length === 0 ? (
+                          <p className="comments-chat-empty">Nenhum comentário ainda.</p>
+                        ) : (
+                          timelineEntries.map((entry) => {
+                            const mine = entry.authorRole === "requester";
+                            return (
+                              <div
+                                key={entry.id}
+                                className={`comments-chat-message ${mine ? "mine" : "other"}`}
+                              >
+                                <div className="comments-chat-author">
+                                  {entry.authorRole === "admin" ? "Admin" : "Solicitante"}: {entry.authorName}
+                                </div>
+                                <div className="comments-chat-bubble whitespace-pre-wrap">{entry.body}</div>
+                                <div className="comments-chat-meta">
+                                  {new Date(entry.createdAt).toLocaleString("pt-BR")}
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+
+                      <div className="comments-chat-input">
+                        <textarea
+                          className={textareaBase}
+                          rows={3}
+                          placeholder={
+                            lookupItem.status === "closed" || lookupItem.status === "rejected"
+                              ? "Solicitacao finalizada"
+                              : "Adicionar comentario"
+                          }
+                          value={commentDraft}
+                          onChange={(event) => setCommentDraft(event.target.value)}
+                          disabled={lookupItem.status === "closed" || lookupItem.status === "rejected"}
+                        />
+                        <div className="comments-chat-actions">
+                          <button
+                            type="button"
+                            onClick={handleSubmitComment}
+                            disabled={
+                              commentSubmitting ||
+                              !commentDraft.trim() ||
+                              lookupItem.status === "closed" ||
+                              lookupItem.status === "rejected"
+                            }
+                            title="Enviar comentário"
+                            className="rounded-xl border border-[#011848]/15 bg-white px-4 py-2 text-xs font-semibold text-[#011848] transition hover:bg-[#011848]/5 disabled:opacity-60"
+                          >
+                            {commentSubmitting ? "Enviando..." : "Enviar comentário"}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}

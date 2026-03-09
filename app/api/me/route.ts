@@ -10,6 +10,8 @@ import {
   normalizeLocalRole,
   updateLocalUser,
 } from "@/lib/auth/localStore";
+import { isAvatarKey } from "@/lib/avatarCatalog";
+import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
 
 function errorResponse(status: number, code: string, message: string) {
   return NextResponse.json(
@@ -33,6 +35,7 @@ export async function GET(req: Request) {
     listLocalLinksForUser(user.id),
     listLocalCompanies(),
   ]);
+  const permissionAccess = await resolvePermissionAccessForUser(user.id);
   const isGlobalAdmin = access.isGlobalAdmin === true;
   const normalizedRole = (access.role ?? "").toLowerCase();
   const normalizedCompanyRole = (access.companyRole ?? "").toLowerCase();
@@ -74,16 +77,33 @@ export async function GET(req: Request) {
     };
   });
 
+  const displayName =
+    (typeof (user as { full_name?: string | null }).full_name === "string"
+      ? (user as { full_name?: string | null }).full_name?.trim()
+      : "") ||
+    (typeof user.name === "string" ? user.name.trim() : "") ||
+    user.email;
+
   return NextResponse.json({
     user: {
       id: user.id,
       email: user.email,
-      name: user.name,
+      name: displayName,
+      user: user.user ?? user.email,
+      username: user.user ?? user.email,
       phone: user.phone ?? null,
+      avatarKey: isAvatarKey(user.avatar_key) ? user.avatar_key : null,
+      avatarUrl: user.avatar_url ?? null,
+      fullName:
+        (typeof (user as { full_name?: string | null }).full_name === "string"
+          ? (user as { full_name?: string | null }).full_name
+          : null) ?? null,
       role: access.role ?? null,
       globalRole: access.globalRole ?? null,
       companyRole: access.companyRole ?? null,
       capabilities: access.capabilities ?? [],
+      permissions: permissionAccess.permissions,
+      permissionRole: permissionAccess.roleKey,
       clientId: access.companyId ?? null,
       clientSlug: access.companySlug ?? null,
       defaultClientSlug: user.default_company_slug ?? access.companySlug ?? null,
@@ -117,9 +137,13 @@ export async function PATCH(req: Request) {
   const hasName = typeof body?.name === "string";
   const hasEmail = typeof body?.email === "string";
   const hasPhone = typeof body?.phone === "string";
+  const hasFullName = typeof body?.full_name === "string" || typeof body?.fullName === "string";
+  const hasAvatarKey = typeof body?.avatar_key === "string" || typeof body?.avatarKey === "string";
 
   const name = hasName ? sanitizeText(body?.name, 120) : null;
   const email = hasEmail ? normalizeEmail(body?.email) : null;
+  const fullName = hasFullName ? sanitizeText(body?.full_name ?? body?.fullName, 160) : null;
+  const avatarKey = hasAvatarKey ? String(body?.avatar_key ?? body?.avatarKey ?? "").trim() : null;
   const phone = (() => {
     if (!hasPhone) return null;
     const trimmed = String(body?.phone ?? "").trim();
@@ -129,7 +153,13 @@ export async function PATCH(req: Request) {
   if (hasName && !name) {
     return NextResponse.json({ error: "Nome invalido" }, { status: 400 });
   }
-  if (!name && !email && !hasPhone) {
+  if (hasFullName && !fullName) {
+    return NextResponse.json({ error: "Nome completo invalido" }, { status: 400 });
+  }
+  if (hasAvatarKey && avatarKey && !isAvatarKey(avatarKey)) {
+    return NextResponse.json({ error: "Avatar invalido" }, { status: 400 });
+  }
+  if (!name && !email && !hasPhone && !hasFullName && !hasAvatarKey) {
     return NextResponse.json({ error: "Nenhuma alteracao informada" }, { status: 400 });
   }
 
@@ -141,19 +171,37 @@ export async function PATCH(req: Request) {
   if (email && email !== user.email) {
     const existing = await findLocalUserByEmailOrId(email);
     if (existing && existing.id !== user.id) {
-      return NextResponse.json({ error: "E-mail ja em uso" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
     }
   }
 
-  const updated = await updateLocalUser(user.id, {
-    ...(name ? { name } : {}),
-    ...(email ? { email } : {}),
-    ...(hasPhone ? { phone } : {}),
-  });
+  let updated = null;
+  try {
+    updated = await updateLocalUser(user.id, {
+      ...(hasFullName ? { full_name: fullName } : {}),
+      ...(name ? { name } : {}),
+      ...(email ? { email } : {}),
+      ...(hasAvatarKey ? { avatar_key: avatarKey || null } : {}),
+      ...(hasPhone ? { phone } : {}),
+    });
+  } catch (error) {
+    const code = error && typeof error === "object" ? (error as { code?: string }).code : null;
+    if (code === "DUPLICATE_EMAIL") {
+      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+    }
+    throw error;
+  }
 
   if (!updated) {
     return NextResponse.json({ error: "Nao foi possivel atualizar" }, { status: 500 });
   }
+
+  const updatedDisplayName =
+    (typeof (updated as { full_name?: string | null }).full_name === "string"
+      ? (updated as { full_name?: string | null }).full_name?.trim()
+      : "") ||
+    (typeof updated.name === "string" ? updated.name.trim() : "") ||
+    updated.email;
 
   return NextResponse.json(
     {
@@ -161,8 +209,16 @@ export async function PATCH(req: Request) {
       user: {
         id: updated.id,
         email: updated.email,
-        name: updated.name,
+        name: updatedDisplayName,
+        user: updated.user ?? updated.email,
+        username: updated.user ?? updated.email,
         phone: updated.phone ?? null,
+        avatarKey: isAvatarKey(updated.avatar_key) ? updated.avatar_key : null,
+        avatarUrl: updated.avatar_url ?? null,
+        fullName:
+          (typeof (updated as { full_name?: string | null }).full_name === "string"
+            ? (updated as { full_name?: string | null }).full_name
+            : null) ?? null,
       },
     },
     { status: 200 },

@@ -56,21 +56,24 @@ export async function buildLocalSessionForUser(
     normalizeLocalRole(user.role ?? null) === "it_dev" ||
     links.some((link) => normalizeLocalRole(link.role ?? null) === "it_dev");
   const hasFullCompanyAccess = isGlobalAdmin || hasDevRole;
+  const shouldBindCompanyContext = !hasFullCompanyAccess;
   const allowedCompanies = hasFullCompanyAccess
     ? companies
     : companies.filter((company) => links.some((link) => link.companyId === company.id));
 
   const requestedSlug = typeof opts?.requestedSlug === "string" ? opts.requestedSlug.trim() : "";
   const requestedCompany =
-    requestedSlug && allowedCompanies.length
+    shouldBindCompanyContext && requestedSlug && allowedCompanies.length
       ? allowedCompanies.find((company) => company.slug === requestedSlug) ?? null
       : null;
 
   const activeCompany =
-    requestedCompany ??
-    allowedCompanies.find((company) => company.slug === user.default_company_slug) ??
-    allowedCompanies[0] ??
-    null;
+    shouldBindCompanyContext
+      ? requestedCompany ??
+        allowedCompanies.find((company) => company.slug === user.default_company_slug) ??
+        allowedCompanies[0] ??
+        null
+      : null;
 
   const activeLink = activeCompany ? links.find((link) => link.companyId === activeCompany.id) ?? null : null;
   const normalizedRole = normalizeLocalRole(activeLink?.role ?? user.role ?? null);
@@ -89,20 +92,26 @@ export async function buildLocalSessionForUser(
     membershipCapabilities: activeLink?.capabilities ?? null,
   });
 
-  const effectiveRole = isGlobalAdmin
-    ? "admin"
-    : companyRole === "it_dev"
+  const effectiveRole =
+    companyRole === "it_dev"
       ? "it_dev"
-      : companyRole === "company_admin"
-        ? "company"
-        : "user";
+      : isGlobalAdmin
+        ? "admin"
+        : companyRole === "company_admin"
+          ? "company"
+          : "user";
+
+  const displayName =
+    (typeof user.full_name === "string" ? user.full_name.trim() : "") ||
+    (typeof user.name === "string" ? user.name.trim() : "") ||
+    user.email;
 
   const session: BuiltSessionPayload = {
     userId: user.id,
     email: user.email,
-    name: user.name,
-    companyId: activeCompany?.id ?? null,
-    companySlug: activeCompany?.slug ?? null,
+    name: displayName,
+    companyId: shouldBindCompanyContext ? activeCompany?.id ?? null : null,
+    companySlug: shouldBindCompanyContext ? activeCompany?.slug ?? null : null,
     role: effectiveRole,
     globalRole: isGlobalAdmin ? "global_admin" : null,
     companyRole,
@@ -117,8 +126,8 @@ export async function buildLocalSessionForUser(
     globalRole: isGlobalAdmin ? "global_admin" : null,
     companyRole,
     capabilities,
-    companyId: activeCompany?.id ?? null,
-    companySlug: activeCompany?.slug ?? null,
+    companyId: shouldBindCompanyContext ? activeCompany?.id ?? null : null,
+    companySlug: shouldBindCompanyContext ? activeCompany?.slug ?? null : null,
     isGlobalAdmin,
   };
 

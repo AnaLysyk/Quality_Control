@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FiPlus, FiRefreshCw } from "react-icons/fi";
-import { useAuthUser } from "@/hooks/useAuthUser";
+import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { useSuporteKanbanColumns } from "@/hooks/useSuporteKanbanColumns";
 import {
   getSuporteStatusLabel,
@@ -53,10 +53,7 @@ function isPrivilegedRole(role: string | null | undefined) {
     value === "it_dev" ||
     value === "itdev" ||
     value === "developer" ||
-    value === "dev" ||
-    value === "admin" ||
-    value === "empresa" ||
-    value === "company"
+    value === "dev"
   );
 }
 
@@ -75,7 +72,7 @@ function formatDate(iso?: string | null) {
 }
 
 export default function KanbanItPage() {
-  const { user, loading } = useAuthUser();
+  const { user, loading, can } = usePermissionAccess();
   // DEBUG: log do perfil do usuário
   if (typeof window !== "undefined") {
     // eslint-disable-next-line no-console
@@ -103,8 +100,13 @@ export default function KanbanItPage() {
   const [newColumnLabel, setNewColumnLabel] = useState("");
 
   // Só DEV pode editar/remover/adicionar colunas
-  const isPrivileged = isPrivilegedRole(user?.role);
-  const isAllowed = true; // Todos podem ver suportes, mas só dev pode mexer nas colunas
+  const isPrivileged =
+    isPrivilegedRole(user?.role) ||
+    can("tickets", "assign") ||
+    can("tickets", "status") ||
+    can("support", "assign") ||
+    can("support", "status");
+  const isAllowed = can("tickets", "view") || can("support", "view");
   const statusKeys = useMemo(
     () => suportes.map((suporte) => normalizeKanbanStatus(suporte.status)),
     [suportes],
@@ -127,10 +129,7 @@ export default function KanbanItPage() {
     setLoadingSuportes(true);
     setError(null);
     try {
-      // Só dev/admin vê todos; demais só os próprios
-      const isPrivileged = isPrivilegedRole(user?.role);
-      const url = isPrivileged ? "/api/suportes?scope=all" : "/api/suportes";
-      const res = await fetch(url, {
+      const res = await fetch("/api/suportes", {
         credentials: "include",
         cache: "no-store",
       });
@@ -147,7 +146,7 @@ export default function KanbanItPage() {
     } finally {
       setLoadingSuportes(false);
     }
-  }, [user]);
+  }, []);
 
   // Backwards-compatible alias used in some UI handlers
   const loadTickets = loadSuportes;
@@ -287,7 +286,7 @@ export default function KanbanItPage() {
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">Suportes</h1>
           <p className="text-sm text-(--tc-text-muted,#6b7280)">
-            Visão completa do fluxo de suportes para desenvolvimento.
+            Acompanhe apenas os suportes abertos pelo usuario autenticado.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -298,15 +297,17 @@ export default function KanbanItPage() {
           >
             <FiRefreshCw size={14} /> Atualizar
           </button>
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-5 py-3 text-base font-semibold shadow-lg text-white hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/60"
-            aria-label="Criar suporte"
-          >
-            <FiPlus size={20} />
-            <span className="hidden sm:inline">Novo suporte</span>
-          </button>
+          {(can("support", "create") || can("tickets", "create")) && (
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-5 py-3 text-base font-semibold shadow-lg text-white hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/60"
+              aria-label="Criar suporte"
+            >
+              <FiPlus size={20} />
+              <span className="hidden sm:inline">Novo suporte</span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -314,7 +315,7 @@ export default function KanbanItPage() {
       {loadingSuportes && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
 
 
-      {user?.id && (
+      {isPrivileged && user?.id && (
         <div className="flex flex-wrap items-center gap-2">
           {!addingColumn && (
             <button
@@ -606,6 +607,3 @@ export default function KanbanItPage() {
     </div>
   );
 }
-
-
-

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { hasPermissionAccess } from "@/lib/permissionMatrix";
 
 const ASSISTANT_ENABLED = process.env.AI_ASSISTANT_ENABLED !== "false";
 
@@ -11,6 +12,12 @@ export async function POST(req: Request) {
   const authUser = await authenticateRequest(req);
   if (!authUser) {
     return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+  }
+  if (
+    !hasPermissionAccess(authUser.permissions, "ai", "view") ||
+    !hasPermissionAccess(authUser.permissions, "ai", "use")
+  ) {
+    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
 
   try {

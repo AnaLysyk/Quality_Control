@@ -8,6 +8,10 @@ import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketCommentAdded } from "@/lib/notificationService";
 import { canCommentTicket } from "@/lib/rbac/tickets";
 
+function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
+  return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
+}
+
 function isRateLimited(lastCreatedAt?: string | null) {
   if (!lastCreatedAt) return false;
   const last = new Date(lastCreatedAt).getTime();
@@ -84,7 +88,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   const comment = await createTicketComment({
     ticketId: id,
     authorUserId: user.id,
-    authorName: localUser?.name ?? null,
+    authorName: resolveDisplayName(localUser),
     body: body?.body,
   });
 
@@ -105,7 +109,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     ticket,
     comment,
     actorId: user.id,
-    actorName: localUser?.name ?? null,
+    actorName: resolveDisplayName(localUser),
   }).catch((err) => console.error("Falha ao notificar comentario:", err));
 
   return NextResponse.json({ item: comment }, { status: 201 });

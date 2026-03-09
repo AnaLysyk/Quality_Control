@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { useAuthUser } from "@/hooks/useAuthUser";
+import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ClientOption = { id: string; name: string };
 
@@ -29,11 +32,12 @@ type Props = {
 };
 
 const ROLE_OPTIONS = [
-  { value: "client_admin", label: "Admin do cliente" },
-  { value: "client_user", label: "Usuario do cliente" },
-  { value: "it_dev", label: "Dev / IT" },
-  { value: "global_admin", label: "Admin global" },
+  { value: "client_admin", label: "Empresa" },
+  { value: "client_user", label: "Usuario" },
+  { value: "it_dev", label: "Global" },
+  { value: "global_admin", label: "Admin" },
 ] as const;
+const EMPTY_JOB_TITLE = "__empty_job_title__";
 
 type RoleValue = (typeof ROLE_OPTIONS)[number]["value"];
 
@@ -43,6 +47,15 @@ const normalizeRole = (value?: string | null): RoleValue => {
   if (value === "client_admin" || value === "client_owner" || value === "client_manager") return "client_admin";
   return "client_user";
 };
+
+function isGlobalDeveloperUser(
+  user?: { role?: string | null; permissionRole?: string | null; companyRole?: string | null } | null,
+) {
+  const role = (user?.role ?? "").toLowerCase();
+  const permissionRole = (user?.permissionRole ?? "").toLowerCase();
+  const companyRole = (user?.companyRole ?? "").toLowerCase();
+  return role === "it_dev" || permissionRole === "dev" || companyRole === "it_dev";
+}
 
 function isDirty(a: {
   name: string;
@@ -80,6 +93,7 @@ function isDirty(a: {
 
 export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirtyChange }: Props) {
   const router = useRouter();
+  const { user: authUser } = useAuthUser();
   const [name, setName] = useState("");
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
@@ -127,9 +141,21 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
   );
 
   const dirty = useMemo(() => isDirty(initial, draft), [initial, draft]);
+  const canManagePrivilegedProfiles = useMemo(() => isGlobalDeveloperUser(authUser), [authUser]);
+  const availableRoleOptions = useMemo(() => {
+    if (canManagePrivilegedProfiles) return ROLE_OPTIONS;
+    return ROLE_OPTIONS.filter((option) => option.value !== "it_dev" && option.value !== "global_admin");
+  }, [canManagePrivilegedProfiles]);
+  const canEditRole = canManagePrivilegedProfiles || (role !== "it_dev" && role !== "global_admin");
 
-  const requiresClient = true;
-  const canSave = !!user?.id && dirty && !!clientId && !!name.trim() && !!login.trim() && !!email.trim();
+  const requiresClient = false;
+  const canSave =
+    !!user?.id &&
+    dirty &&
+    (!requiresClient || !!clientId) &&
+    !!name.trim() &&
+    !!login.trim() &&
+    !!email.trim();
 
   useEffect(() => {
     if (!open) return;
@@ -241,7 +267,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
               onChange={(e) => setClientId(e.target.value || null)}
               aria-label="Empresa vinculada ao usuário"
             >
-              <option value="">Selecione</option>
+              <option value="">{requiresClient ? "Selecione" : "Opcional"}</option>
               {clients?.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -283,31 +309,53 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
 
           <label className="block text-sm">
             Cargo
-            <input
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-              value={jobTitle}
-              onChange={(e) => setJobTitle(e.target.value)}
-            />
+            <div className="mt-1">
+              <Select
+                value={jobTitle || EMPTY_JOB_TITLE}
+                onValueChange={(value) => setJobTitle(value === EMPTY_JOB_TITLE ? "" : value)}
+              >
+                <SelectTrigger className="h-[42px] rounded-lg border-gray-200 bg-white px-3 py-2 text-sm focus-visible:ring-indigo-500/30">
+                  <SelectValue placeholder="Selecione uma profissao" />
+                </SelectTrigger>
+                <SelectContent className="max-h-80">
+                  <SelectItem value={EMPTY_JOB_TITLE}>Nao informado</SelectItem>
+                  {JOB_TITLE_OPTIONS.map((jobTitleOption) => (
+                    <SelectItem key={jobTitleOption} value={jobTitleOption}>
+                      {jobTitleOption}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </label>
 
           <label className="block text-sm">
             Perfil
-            <select
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-              value={role}
-              onChange={(e) => {
-                const next = e.target.value as RoleValue;
-                setRole(next);
-              }}
-              aria-label="Perfil do usuário"
-              title="Perfil"
-            >
-              {ROLE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            {canEditRole ? (
+              <select
+                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                value={role}
+                onChange={(e) => {
+                  const next = e.target.value as RoleValue;
+                  setRole(next);
+                }}
+                aria-label="Perfil do usuário"
+                title="Perfil"
+              >
+                {availableRoleOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div
+                className="mt-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                title="Somente Global pode alterar perfis privilegiados."
+              >
+                {ROLE_OPTIONS.find((option) => option.value === role)?.label ?? role}
+              </div>
+            )}
           </label>
 
           <label className="block text-sm">
@@ -329,6 +377,23 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
               placeholder="https://example.com/avatar.jpg"
             />
           </label>
+
+          <div className="block text-sm sm:col-span-2">
+            Foto atual
+            <div className="mt-1 flex h-[42px] items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3">
+              {avatarUrl.trim() ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl.trim()} alt="Preview da foto" className="h-8 w-8 rounded-full object-cover" />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-600">
+                  {name.trim().slice(0, 1).toUpperCase() || "U"}
+                </div>
+              )}
+              <span className="text-xs text-gray-500">
+                {avatarUrl.trim() ? "Preview da foto informada" : "Nenhuma foto informada"}
+              </span>
+            </div>
+          </div>
 
           <label className="flex items-center gap-2 text-sm sm:col-span-2">
             <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
@@ -359,3 +424,4 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
     </div>
   );
 }
+

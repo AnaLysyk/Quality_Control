@@ -11,7 +11,7 @@ function getSuporteCode(code: string | null | undefined, id: string): string {
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FiPlus, FiRefreshCw } from "react-icons/fi";
-import { useAuthUser } from "@/hooks/useAuthUser";
+import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { useSuporteKanbanColumns } from "@/hooks/useSuporteKanbanColumns";
 import { getSuporteStatusLabel, SUPORTE_STATUS_OPTIONS, normalizeKanbanStatus, type SuporteStatus } from "@/lib/suportesStatus";
 import SuporteDetailsModal from "@/components/SuporteDetailsModal";
@@ -54,8 +54,6 @@ const TYPE_OPTIONS = [
 function isDevRole(role: string | null | undefined) {
   const value = (role ?? "").toLowerCase();
   return (
-    value === "admin" ||
-    value === "global_admin" ||
     value === "it_dev" ||
     value === "itdev" ||
     value === "developer" ||
@@ -77,7 +75,10 @@ function formatDate(iso?: string | null) {
   return new Date(time).toLocaleDateString("pt-BR");
 }
 export default function MeusSuportesPage() {
-  const { user, loading } = useAuthUser();
+  const { user, loading, can } = usePermissionAccess();
+  const canViewSupport = can("support", "view") || can("tickets", "view");
+  const canCreateSupport = can("support", "create") || can("tickets", "create");
+  const canMoveSupport = isDevRole(user?.role) || can("support", "status") || can("tickets", "status");
   const [suportes, setSuportes] = useState<SuporteItem[]>([]);
   const [loadingSuportes, setLoadingSuportes] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -179,7 +180,7 @@ export default function MeusSuportesPage() {
     return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Carregando...</div>;
   }
 
-  if (!user) {
+  if (!user || !canViewSupport) {
     return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Acesso restrito.</div>;
   }
 
@@ -193,14 +194,16 @@ export default function MeusSuportesPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            aria-label="Criar suporte"
-            onClick={() => setCreateOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
-          >
-            <FiPlus size={14} /> Suporte
-          </button>
+          {canCreateSupport && (
+            <button
+              type="button"
+              aria-label="Criar suporte"
+              onClick={() => setCreateOpen(true)}
+              className="inline-flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
+            >
+              <FiPlus size={14} /> Suporte
+            </button>
+          )}
         </div>
       </header>
 
@@ -269,7 +272,7 @@ export default function MeusSuportesPage() {
         open={Boolean(selectedSuporte)}
         ticket={selectedSuporte}
         onClose={() => setSelectedSuporte(null)}
-        canEditStatus={isDevRole(user.role)}
+        canEditStatus={canMoveSupport}
         statusOptions={[]}
         onTicketUpdated={(updated: SuporteItem) => {
           setSelectedSuporte(updated);
@@ -361,6 +364,3 @@ export default function MeusSuportesPage() {
     </div>
   );
 }
-
-
-

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getAccessContext } from "@/lib/auth/session";
 import { getLocalUserById } from "@/lib/auth/localStore";
+import { isAvatarKey } from "@/lib/avatarCatalog";
 
 function errorResponse(status: number, code: string, message: string) {
   return NextResponse.json({ user: null, error: { code, message } }, { status });
@@ -18,11 +19,19 @@ export async function GET(req: Request) {
     return errorResponse(401, "USER_NOT_FOUND", "Usuario nao encontrado");
   }
 
+  const displayName =
+    (typeof user.full_name === "string" ? user.full_name.trim() : "") ||
+    (typeof user.name === "string" ? user.name.trim() : "") ||
+    user.email;
+
   return NextResponse.json({
     user: {
       id: user.id,
       email: user.email,
-      name: user.name,
+      name: displayName,
+      fullName: typeof user.full_name === "string" ? user.full_name : null,
+      avatarKey: isAvatarKey(user.avatar_key) ? user.avatar_key : null,
+      avatarUrl: user.avatar_url ?? null,
       role: access.role ?? null,
       globalRole: access.globalRole ?? null,
       companyRole: access.companyRole ?? null,

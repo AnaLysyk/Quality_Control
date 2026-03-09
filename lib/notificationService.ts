@@ -14,6 +14,7 @@ import {
   listLocalUsers,
   listLocalMemberships,
 } from "@/lib/auth/localStore";
+import { canAdminReviewQueue, resolveReviewQueue, toRequestProfileTypeLabel, type ReviewQueue } from "@/lib/requestRouting";
 
 function isAdminUser(user: { is_global_admin?: boolean; globalRole?: string | null }) {
   return user.is_global_admin === true || user.globalRole === "global_admin";
@@ -22,6 +23,14 @@ function isAdminUser(user: { is_global_admin?: boolean; globalRole?: string | nu
 function isItDevUser(user: { role?: string | null }) {
   const role = (user.role ?? "").toLowerCase();
   return role === "it_dev" || role === "itdev" || role === "developer" || role === "dev";
+}
+
+function describePermissionRole(role?: string | null) {
+  const normalized = (role ?? "").toLowerCase();
+  if (normalized === "admin" || normalized === "global_admin") return "Admin";
+  if (normalized === "dev" || normalized === "it_dev" || normalized === "itdev" || normalized === "developer") return "Dev";
+  if (normalized === "company" || normalized === "company_admin" || normalized === "client_admin") return "Empresa";
+  return "Usuario";
 }
 
 async function resolveAdminUserIds() {
@@ -39,6 +48,13 @@ async function resolveItDevUserIds() {
   return Array.from(ids);
 }
 
+async function resolveRequestReviewerIds(queue: ReviewQueue) {
+  const globalIds = await resolveItDevUserIds();
+  if (!canAdminReviewQueue(queue)) return globalIds;
+  const adminIds = await resolveAdminUserIds();
+  return Array.from(new Set([...adminIds, ...globalIds]));
+}
+
 async function resolveCompanyUserIds(companySlug?: string | null) {
   const adminIds = await resolveAdminUserIds();
   if (!companySlug) return adminIds;
@@ -51,20 +67,37 @@ async function resolveCompanyUserIds(companySlug?: string | null) {
 }
 
 export async function notifyPasswordResetRequest(request: RequestRecord) {
-  const adminIds = await resolveAdminUserIds();
+  const requestedProfileType =
+    typeof request.payload?.profileType === "string" ? request.payload.profileType : null;
+  const reviewQueue =
+    typeof request.payload?.reviewQueue === "string" &&
+    (request.payload.reviewQueue === "admin_and_global" || request.payload.reviewQueue === "global_only")
+      ? request.payload.reviewQueue
+      : resolveReviewQueue(
+          requestedProfileType === "testing_company_user" ||
+            requestedProfileType === "company_user" ||
+            requestedProfileType === "testing_company_lead" ||
+            requestedProfileType === "technical_support"
+            ? requestedProfileType
+            : "testing_company_user",
+        );
+  const reviewerIds = await resolveRequestReviewerIds(reviewQueue);
   const userLabel = request.userName || request.userEmail || "Usuario";
-  await createNotificationsForUsers(adminIds, {
+  const reviewerLabel = canAdminReviewQueue(reviewQueue) ? "Admin e Global" : "Global";
+  await createNotificationsForUsers(reviewerIds, {
     type: "PASSWORD_RESET_REQUEST",
     title: "Reset de senha solicitado",
-    description: `${userLabel} solicitou reset de senha.`,
+    description: `${userLabel} solicitou reset de senha para ${reviewerLabel}.`,
     requestId: request.id,
-    dedupeKey: `reset:admin:${request.id}`,
+    dedupeKey: `reset:reviewers:${request.id}`,
   });
 
   await createNotificationsForUsers([request.userId], {
     type: "PASSWORD_RESET_PENDING",
     title: "Solicitacao de reset enviada",
-    description: "Aguardando aprovacao do administrador.",
+    description: canAdminReviewQueue(reviewQueue)
+      ? "Aguardando analise de Admin ou Global."
+      : "Aguardando analise exclusiva do Global.",
     requestId: request.id,
     dedupeKey: `reset:user:${request.id}`,
   });
@@ -256,17 +289,63 @@ export async function notifyAccessRequestComment(input: {
   commentId: string;
   authorName: string;
   body: string;
+  reviewQueue?: ReviewQueue | null;
 }) {
-  const adminIds = await resolveAdminUserIds();
-  if (!adminIds.length) return;
+  const reviewerIds = await resolveRequestReviewerIds(input.reviewQueue ?? "admin_and_global");
+  if (!reviewerIds.length) return;
   const preview = input.body.length > 160 ? `${input.body.slice(0, 160)}...` : input.body;
-  await createNotificationsForUsers(adminIds, {
+  await createNotificationsForUsers(reviewerIds, {
     type: "ACCESS_REQUEST_COMMENT",
     title: "Novo comentario em solicitacao de acesso",
     description: `${input.authorName}: ${preview}`,
     requestId: input.requestId,
     link: "/admin/access-requests",
     dedupeKey: `access-request:${input.requestId}:comment:${input.commentId}`,
+  });
+}
+
+export async function notifyAccessRequestCreated(input: {
+  requestId: string;
+  requesterName: string;
+  profileType: "testing_company_user" | "company_user" | "testing_company_lead" | "technical_support";
+  reviewQueue: ReviewQueue;
+}) {
+  const reviewerIds = await resolveRequestReviewerIds(input.reviewQueue);
+  if (!reviewerIds.length) return;
+  await createNotificationsForUsers(reviewerIds, {
+    type: "ACCESS_REQUEST_CREATED",
+    title: "Nova solicitacao de acesso",
+    description: `${input.requesterName} solicitou ${toRequestProfileTypeLabel(input.profileType)}.`,
+    requestId: input.requestId,
+    link: "/admin/access-requests",
+    dedupeKey: `access-request:${input.requestId}:created`,
+  });
+}
+
+export async function notifyUserAccessUpdated(input: {
+  targetUserId: string;
+  actorEmail?: string | null;
+  nextRole?: string | null;
+  companyLabel?: string | null;
+  permissionsCount?: number;
+  restored?: boolean;
+}) {
+  if (!input.targetUserId) return;
+  const roleLabel = describePermissionRole(input.nextRole);
+  const actorLabel = input.actorEmail?.trim() || "administrador";
+  const title = input.restored ? "Seu acesso foi restaurado" : "Seu acesso foi atualizado";
+  const scopeLabel = input.companyLabel?.trim() ? ` Contexto principal: ${input.companyLabel}.` : "";
+  const permissionsLabel =
+    typeof input.permissionsCount === "number" ? ` Permissoes ativas: ${input.permissionsCount}.` : "";
+  const description = input.restored
+    ? `${actorLabel} restaurou seu acesso para a base ${roleLabel}.${scopeLabel}${permissionsLabel}`.trim()
+    : `${actorLabel} atualizou seu perfil de acesso para ${roleLabel}.${scopeLabel}${permissionsLabel}`.trim();
+
+  await createNotificationsForUsers([input.targetUserId], {
+    type: input.restored ? "USER_ACCESS_RESTORED" : "USER_ACCESS_UPDATED",
+    title,
+    description,
+    link: "/settings/profile",
   });
 }
 
@@ -308,3 +387,4 @@ export async function notifyTicketAssigned(input: { ticket: TicketRecord; assign
   if (!input || !input.ticket) return;
   return notifySuporteAssigned({ suporte: input.ticket as SuporteRecord, assigneeId: input.assigneeId, actorId: input.actorId });
 }
+

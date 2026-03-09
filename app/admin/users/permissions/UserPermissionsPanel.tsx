@@ -9,6 +9,7 @@ export default function UserPermissionsPanel({ user }: { user: any }) {
   const [modules, setModules] = useState<any[]>([]);
   const [override, setOverride] = useState<any>({ allow: {}, deny: {} });
   const [pending, setPending] = useState(false);
+  const displayName = user?.fullName || user?.full_name || user?.name || user?.email || "Sem nome";
 
   useEffect(() => {
     async function load() {
@@ -45,7 +46,7 @@ export default function UserPermissionsPanel({ user }: { user: any }) {
     <div className={styles.panel}>
       <div className={styles.header}>
         <div>
-          <div className={styles.userName}>{user.name}</div>
+          <div className={styles.userName}>{displayName}</div>
           <div className={styles.userMeta}>{user.email} • {user.role}</div>
         </div>
         <div className={styles.buttons}>

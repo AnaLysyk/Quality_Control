@@ -11,6 +11,9 @@ export function isAuditLogStorageConfigured() {
 export type AuditAction =
   | "user.created"
   | "user.updated"
+  | "user.deleted"
+  | "user.permissions.updated"
+  | "user.permissions.reset"
   | "client.created"
   | "client.updated"
   | "client.deleted"

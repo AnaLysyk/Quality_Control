@@ -3,8 +3,9 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { getTicketById, deleteTicketForUser, updateTicket } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketAssigned } from "@/lib/notificationService";
-import { canAssignTicket, canEditTicketContent, canViewTicket, isItDev } from "@/lib/rbac/tickets";
+import { canAssignTicket, canEditTicketContent, canViewTicket } from "@/lib/rbac/tickets";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
+import { hasPermissionAccess } from "@/lib/permissionMatrix";
 
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
@@ -123,7 +124,7 @@ export async function DELETE(req: Request, context: { params: Promise<{ id: stri
   if (!item) {
     return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
   }
-  const canDelete = item.createdBy === user.id || isItDev(user);
+  const canDelete = hasPermissionAccess(user.permissions, "tickets", "delete") && item.createdBy === user.id;
   if (!canDelete) {
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }

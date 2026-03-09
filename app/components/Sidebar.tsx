@@ -15,17 +15,14 @@ import {
   FiGrid,
   FiHome,
   FiList,
-  FiMessageSquare,
   FiShield,
   
   FiUserPlus,
   FiUsers,
 } from "react-icons/fi";
-import { useAuthUser } from "@/hooks/useAuthUser";
 import { useI18n } from "@/hooks/useI18n";
 import { useClientContext } from "@/context/ClientContext";
-import { ROLE_DEFAULTS } from '../../src/lib/permissions/roleDefaults';
-import { useEffect, useState } from 'react';
+import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
 
@@ -46,7 +43,7 @@ type SidebarProps = {
 export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const logoSrc = useMemo(() => (menuLogoEnv ? menuLogoEnv : "/images/tc.png"), []);
   const pathname = usePathname() || "";
-  const { user } = useAuthUser();
+  const { user, visibility } = usePermissionAccess();
   const { activeClientSlug } = useClientContext();
   const { t } = useI18n();
 
@@ -63,9 +60,9 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
   const appRole = useMemo<AppRole | null>(() => {
     if (!user) return null;
-    if (isGlobalAdmin) return "admin";
     const role = (user.role ?? "").toLowerCase();
     if (["it_dev", "itdev", "developer", "dev"].includes(role)) return "it_dev";
+    if (isGlobalAdmin) return "admin";
     if (["client_owner", "client_manager", "client_admin"].includes(role)) return "client";
     if (["client_member", "client_user", "user"].includes(role)) return "user";
     return "user";
@@ -106,8 +103,10 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const adminNav: NavItem[] = useMemo(() => {
     const companyTarget = activeClientSlug ? adminCompanyHref : "/empresas";
     const items: NavItem[] = [
-      { label: t("nav.adminPanel"), icon: FiCompass, href: "/admin/home" },
+      { label: t("nav.dashboard"), icon: FiCompass, href: "/admin/home" },
       { label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric" },
+      { label: "Runs", icon: FiList, href: "/admin/runs" },
+      { label: "Defeitos", icon: FiAlertTriangle, href: "/admin/defeitos" },
       { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
     ];
 
@@ -116,11 +115,12 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
         { label: t("nav.apps"), icon: FiBriefcase, href: `${companyTarget}/aplicacoes` },
         { label: t("nav.runs"), icon: FiList, href: `${companyTarget}/runs` },
         { label: t("nav.defects"), icon: FiAlertTriangle, href: `${companyTarget}/defeitos` },
+        { label: "Releases", icon: FiGrid, href: `${companyTarget}/releases` },
       );
     }
 
     items.push(
-      { label: "Chamados", icon: FiMessageSquare, href: "/admin/chamados" },
+      { label: "Chamados", icon: FiColumns, href: "/admin/support" },
       { label: "Gestão", icon: FiShield, href: "/admin/users/permissions" },
       { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
       { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
@@ -129,12 +129,9 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     return items;
   }, [t, activeClientSlug, adminCompanyHref]);
 
-  const itDevNav: NavItem[] = useMemo(
-    () => [
-      { label: "Chamados", icon: FiColumns, href: "/kanban-it" },
-    ],
-    []
-  );
+  const itDevNav: NavItem[] = useMemo(() => {
+    return adminNav.filter((item) => item.href !== "/admin/home" || item.label === t("nav.dashboard"));
+  }, [adminNav, t]);
 
   const companyNav: NavItem[] = useMemo(
     () =>
@@ -146,8 +143,9 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             { label: t("nav.apps"), icon: FiBriefcase, href: `/empresas/${companySlug}/aplicacoes` },
             { label: t("nav.testPlans"), icon: FiClipboard, href: `/empresas/${companySlug}/planos-de-teste` },
             { label: t("nav.runs"), icon: FiList, href: `/empresas/${companySlug}/runs` },
+            { label: "Releases", icon: FiGrid, href: `/empresas/${companySlug}/releases` },
             { label: t("nav.defects"), icon: FiAlertTriangle, href: `/empresas/${companySlug}/defeitos` },
-            { label: "Chamados", icon: FiMessageSquare, href: "/meus-chamados", roles: ["client", "user", "admin"] },
+            { label: "Chamados", icon: FiColumns, href: "/meus-chamados", roles: ["client", "user", "admin", "it_dev"] },
           ]
         : [],
     [companySlug, t]
@@ -163,55 +161,32 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     return publicNav;
   }, [user, appRole, adminNav, itDevNav, companyNav, publicNav, pathname]);
 
-  // Map certain hrefs to module ids used by permissions
-  const hrefToModule: Record<string, string> = {
-    '/admin/users/permissions': 'users',
-    '/admin/chamados': 'tickets',
-    '/empresas': 'applications',
-    '/admin/clients': 'users',
-    '/admin/home': 'dashboard',
-    '/admin/access-requests': 'access_requests',
-  };
-
-  const [moduleVisibility, setModuleVisibility] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    async function loadOverrides() {
-      try {
-        if (!user?.id) return;
-        const res = await fetch(`/api/admin/users/${user.id}/permissions`);
-        if (!res.ok) return;
-        const data = await res.json();
-        const role = data.role || (user.role ?? 'user');
-        const roleDefaults = (ROLE_DEFAULTS as any)[role] || {};
-        const override = data.override || { allow: {}, deny: {} };
-        const allow = override.allow || {};
-        const deny = override.deny || {};
-        const modules = new Set<string>([...Object.keys(roleDefaults), ...Object.keys(allow), ...Object.keys(deny)]);
-        const vis: Record<string, boolean> = {};
-        for (const m of modules) {
-          const base = new Set<string>(roleDefaults[m] || []);
-          (allow[m] || []).forEach((a: string) => base.add(a));
-          (deny[m] || []).forEach((a: string) => base.delete(a));
-          vis[m] = base.has('view');
-        }
-        setModuleVisibility(vis);
-      } catch (e) {
-        // ignore
-      }
-    }
-    loadOverrides();
-  }, [user]);
+  function resolveModuleFromHref(href: string) {
+    if (href === "/admin/users/permissions") return "permissions";
+    if (href === "/admin/chamados") return "tickets";
+    if (href === "/meus-chamados") return "support";
+    if (href === "/admin/support" || href === "/kanban-it") return "support";
+    if (href === "/empresas" || href === "/admin/clients") return "applications";
+    if (href === "/admin/home") return "dashboard";
+    if (href === "/admin/runs") return "runs";
+    if (href === "/admin/defeitos") return "defects";
+    if (href === "/admin/access-requests") return "access_requests";
+    if (href === "/admin/audit-logs") return "audit";
+    if (/^\/empresas\/[^/]+\/(home|dashboard)$/.test(href)) return "dashboard";
+    if (/^\/empresas\/[^/]+\/aplicacoes$/.test(href)) return "applications";
+    if (/^\/empresas\/[^/]+\/runs$/.test(href)) return "runs";
+    if (/^\/empresas\/[^/]+\/defeitos$/.test(href)) return "defects";
+    if (/^\/empresas\/[^/]+\/releases$/.test(href)) return "releases";
+    return null;
+  }
 
   const renderNavLinks = (isMobile = false) =>
     navigation
       .filter((item) => !item.roles || (appRole ? item.roles.includes(appRole) : false))
       .filter(item => {
-        const moduleId = hrefToModule[item.href] || null;
+        const moduleId = resolveModuleFromHref(item.href);
         if (!moduleId) return true; // unknown mapping -> keep
-        // if we have visibility info, respect it
-        if (moduleVisibility[moduleId] === false) return false;
-        return true;
+        return Boolean(visibility[moduleId]);
       })
       .map((item) => {
         const isActive =
@@ -387,3 +362,4 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     </>
   );
 }
+

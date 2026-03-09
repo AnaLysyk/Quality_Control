@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { requireGlobalDeveloperWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
 import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
@@ -13,7 +14,7 @@ function applyAdminNotes(message: string, notes: string | null) {
 }
 
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  const { admin, status } = await requireGlobalDeveloperWithStatus(req);
   if (!admin) {
     return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
   }
@@ -28,19 +29,22 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     if (!existing) {
       return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
     }
+    if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
+      return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+    }
     console.debug(`[ACCESS-REQUESTS][REJECT] admin=${admin?.email ?? "-"} id=${id} comment=${Boolean(comment)} reason=${Boolean(reason)}`);
     const updatedMessage = applyAdminNotes(existing.message, reason || null);
     const updated = await updateAccessRequest(id, { status: "rejected", message: updatedMessage });
-    if (comment || reason) {
-      await createAccessRequestComment({
-        requestId: id,
-        authorRole: "admin",
-        authorName: admin.email || "Admin",
-        authorEmail: admin.email || null,
-        authorId: admin.id || null,
-        body: comment || reason,
-      });
-    }
+    await createAccessRequestComment({
+      requestId: id,
+      authorRole: "admin",
+      authorName: admin.email || "Admin",
+      authorEmail: admin.email || null,
+      authorId: admin.id || null,
+      body: [reason || comment || "Solicitacao recusada.", "Fale com um responsavel para revisar o acesso solicitado."]
+        .filter(Boolean)
+        .join("\n"),
+    });
     return NextResponse.json({
       ok: true,
       item: {
@@ -50,36 +54,68 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     });
   }
 
-  const existing = await prisma.supportRequest.findUnique({ where: { id } });
-  if (!existing) {
-    return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
-  }
-  console.debug(`[ACCESS-REQUESTS][REJECT] admin=${admin?.email ?? "-"} id=${id} comment=${Boolean(comment)} reason=${Boolean(reason)}`);
+  try {
+    const existing = await prisma.supportRequest.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+    }
+    if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
+      return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+    }
+    console.debug(`[ACCESS-REQUESTS][REJECT] admin=${admin?.email ?? "-"} id=${id} comment=${Boolean(comment)} reason=${Boolean(reason)}`);
 
-  const updated = await prisma.supportRequest.update({
-    where: { id },
-    data: {
-      status: "rejected",
-      message: applyAdminNotes(existing.message, reason || null),
-    },
-  });
+    const updated = await prisma.supportRequest.update({
+      where: { id },
+      data: {
+        status: "rejected",
+        message: applyAdminNotes(existing.message, reason || null),
+      },
+    });
 
-  if (comment || reason) {
     await createAccessRequestComment({
       requestId: id,
       authorRole: "admin",
       authorName: admin.email || "Admin",
       authorEmail: admin.email || null,
       authorId: admin.id || null,
-      body: comment || reason,
+      body: [reason || comment || "Solicitacao recusada.", "Fale com um responsavel para revisar o acesso solicitado."]
+        .filter(Boolean)
+        .join("\n"),
+    });
+
+    return NextResponse.json({
+      ok: true,
+      item: {
+        id: updated.id,
+        status: updated.status,
+      },
+    });
+  } catch (error) {
+    console.error("[ACCESS-REQUESTS][REJECT][PRISMA_FALLBACK]", error);
+    const existing = await getAccessRequestById(id);
+    if (!existing) {
+      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+    }
+    if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
+      return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+    }
+    const updated = await updateAccessRequest(id, { status: "rejected", message: applyAdminNotes(existing.message, reason || null) });
+    await createAccessRequestComment({
+      requestId: id,
+      authorRole: "admin",
+      authorName: admin.email || "Admin",
+      authorEmail: admin.email || null,
+      authorId: admin.id || null,
+      body: [reason || comment || "Solicitacao recusada.", "Fale com um responsavel para revisar o acesso solicitado."]
+        .filter(Boolean)
+        .join("\n"),
+    });
+    return NextResponse.json({
+      ok: true,
+      item: {
+        id: updated?.id ?? id,
+        status: updated?.status ?? "rejected",
+      },
     });
   }
-
-  return NextResponse.json({
-    ok: true,
-    item: {
-      id: updated.id,
-      status: updated.status,
-    },
-  });
 }

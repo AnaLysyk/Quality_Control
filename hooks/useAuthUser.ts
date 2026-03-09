@@ -5,13 +5,20 @@ import { useEffect, useState } from "react";
 export interface AuthUser {
   id?: string;
   userId?: string;
+  user?: string | null;
+  username?: string | null;
   email?: string;
+  phone?: string | null;
+  fullName?: string | null;
   name?: string;
+  avatarKey?: string | null;
+  avatarUrl?: string | null;
   companyId?: string;
   companySlug?: string;
   role?: string;
   globalRole?: string | null;
   companyRole?: string | null;
+  permissionRole?: string | null;
   capabilities?: string[];
   isGlobalAdmin?: boolean;
 }

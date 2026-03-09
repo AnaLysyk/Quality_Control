@@ -5,22 +5,29 @@ import { notifySuporteCreated } from "@/lib/notificationService";
 import { attachAssigneeInfo, attachAssigneeToSuporte } from "@/lib/ticketsPresenter";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getLocalUserById } from "@/lib/auth/localStore";
-import { isItDev } from "@/lib/rbac/suportes";
+import { hasPermissionAccess } from "@/lib/permissionMatrix";
+import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
+import { isItDev } from "@/lib/rbac/tickets";
 
-// GET /api/chamados: Only the creator or dev can see chamados (not public)
+function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
+  return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
+}
+
+// GET /api/chamados: each authenticated user can only see their own chamados
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
+  if (
+    !hasPermissionAccess(user.permissions, "tickets", "view") &&
+    !hasPermissionAccess(user.permissions, "support", "view")
+  ) {
+    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+  }
   const url = new URL(req.url);
   const limit = Math.max(1, Math.min(500, Number(url.searchParams.get("limit") ?? 200)));
-  let items;
-  if (isItDev(user)) {
-    items = await listAllSuportes();
-  } else {
-    items = await listSuportesForUser(user.id);
-  }
+  let items = isItDev(user) ? await listAllSuportes() : await listSuportesForUser(user.id);
   items = items.slice(0, limit);
   const enriched = await attachAssigneeInfo(items);
   return NextResponse.json({ items: enriched }, { status: 200 });
@@ -29,19 +36,34 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const user = await authenticateRequest(req);
+    if (!user) {
+      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    }
+    if (
+      !hasPermissionAccess(user.permissions, "support", "create") &&
+      !hasPermissionAccess(user.permissions, "tickets", "create")
+    ) {
+      return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    }
     const body = await req.json().catch(() => ({}));
+    const requestedCompanyId = typeof body?.companyId === "string" ? body.companyId : null;
+    const targetCompanyId = requestedCompanyId ?? user.companyId ?? null;
+    if (requestedCompanyId) {
+      assertCompanyAccess(user, requestedCompanyId);
+    }
     const tags =
       Array.isArray(body?.tags) ? body.tags : typeof body?.tags === "string" ? body.tags.split(",") : undefined;
 
-    // Sempre usar usuário autenticado, se houver
-    const createdBy = user?.id || "anonymous";
-    const localUser = user ? await getLocalUserById(user.id) : null;
-    const createdByName = localUser?.name ?? user?.email ?? null;
-    const createdByEmail = localUser?.email ?? user?.email ?? null;
+    const createdBy = user.id;
+    const localUser = await getLocalUserById(user.id);
+    const createdByName = resolveDisplayName(localUser) ?? user.email ?? null;
+    const createdByEmail = localUser?.email ?? user.email ?? null;
 
-    // allow assigning to a dev user when requester is dev/admin
     const assignedToUserId =
-      isItDev(user) && typeof body?.assignedToUserId === "string" ? body?.assignedToUserId : null;
+      (isItDev(user) || hasPermissionAccess(user.permissions, "support", "assign")) &&
+      typeof body?.assignedToUserId === "string"
+        ? body?.assignedToUserId
+        : null;
 
     const suporte = await createSuporte({
       title: body?.title,
@@ -52,8 +74,8 @@ export async function POST(req: Request) {
       createdBy,
       createdByName,
       createdByEmail,
-      companySlug: body?.companySlug ?? null,
-      companyId: body?.companyId ?? null,
+      companySlug: requestedCompanyId ? body?.companySlug ?? null : user.companySlug ?? null,
+      companyId: targetCompanyId,
       assignedToUserId,
     });
 
@@ -82,6 +104,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
-
-

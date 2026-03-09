@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -11,10 +11,9 @@ type Props = {
   activeClientName?: string | null;
   onEditCompany?: () => void;
   onOpenTeam?: () => void;
-  onOpenSettings?: () => void;
 };
 
-export default function UserProfileMenu({ activeClientName, onEditCompany, onOpenTeam, onOpenSettings }: Props) {
+export default function UserProfileMenu({ activeClientName, onEditCompany, onOpenTeam }: Props) {
   const { user, loading, refreshUser, logout } = useAuthUser();
   const { t } = useI18n();
   const legacyUser = (user ?? null) as unknown as { is_global_admin?: boolean } | null;
@@ -64,7 +63,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
 
   const displayName = loading ? t("profileMenu.loading") : user?.name || t("profileMenu.userFallback");
 
-  // Universal session fallback: redireciona para login se nÃ£o hÃ¡ usuÃ¡rio e nÃ£o estÃ¡ carregando
+  // Universal session fallback: redireciona para login se não há usuário e não está carregando
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/login");
@@ -171,15 +170,11 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
               type="button"
               onClick={() => {
                 setOpen(false);
-                if (onOpenSettings) {
-                  onOpenSettings();
-                } else {
-                  router.push("/settings");
-                }
+                router.push("/settings/profile");
               }}
               className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white hover:bg-blue-900"
             >
-              {t("profileMenu.settings")}
+              Meu perfil
             </button>
           </div>
 
@@ -197,3 +192,6 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
     </div>
   );
 }
+
+
+

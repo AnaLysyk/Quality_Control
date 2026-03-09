@@ -115,7 +115,7 @@ export default function RequestsPage() {
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
       <div className="mx-auto w-full max-w-5xl px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-10 space-y-6">
-        <Breadcrumb items={[{ label: "Conta", href: "/settings" }, { label: "Solicitacoes" }]} />
+        <Breadcrumb items={[{ label: "Conta", href: "/settings/profile" }, { label: "Solicitacoes" }]} />
 
         <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Minhas solicitacoes</h1>
 
@@ -212,3 +212,4 @@ export default function RequestsPage() {
     </div>
   );
 }
+

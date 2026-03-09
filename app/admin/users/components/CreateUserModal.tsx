@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { readApiError } from "@/lib/apiEnvelope";
+import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ClientOption = { id: string; name: string };
 
@@ -13,21 +15,42 @@ type Props = {
   clients?: ClientOption[];
   onClose: () => void;
   onCreated?: () => void | Promise<void>;
+  initialRole?: string;
+  lockRole?: boolean;
+  companyOptional?: boolean;
+  showCompanyField?: boolean;
+  requireCompanySelection?: boolean;
+  title?: string;
+  subtitle?: string;
+  submitLabel?: string;
 };
 
 const ROLE_OPTIONS = [
-  { value: "client_admin", label: "Admin do cliente" },
-  { value: "client_user", label: "Usuario do cliente" },
-  { value: "it_dev", label: "Dev / IT" },
-  { value: "global_admin", label: "Admin global" },
+  { value: "client_admin", label: "Empresa" },
+  { value: "client_user", label: "Usuario" },
 ];
+const EMPTY_JOB_TITLE = "__empty_job_title__";
 
-export function CreateUserModal({ open, clientId, clients, onClose, onCreated }: Props) {
+export function CreateUserModal({
+  open,
+  clientId,
+  clients,
+  onClose,
+  onCreated,
+  initialRole = "client_user",
+  lockRole = false,
+  showCompanyField = true,
+  requireCompanySelection = false,
+  title = "Criar usuario",
+  subtitle = "Um convite sera enviado por email.",
+  submitLabel = "Criar usuario",
+}: Props) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [login, setLogin] = useState("");
+  const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("client_user");
+  const [role, setRole] = useState(initialRole);
   const [jobTitle, setJobTitle] = useState("");
   const [linkedin, setLinkedin] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -40,10 +63,19 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
     return null;
   });
 
-  const requiresClient = true;
+  const requiresClient = showCompanyField && requireCompanySelection;
+  const requiresPassword = useMemo(
+    () => ["admin", "global_admin", "it_dev", "itdev", "developer", "dev"].includes(role.trim().toLowerCase()),
+    [role],
+  );
   const canSubmit = useMemo(
-    () => !!open && (!requiresClient || !!localClientId) && !!name.trim() && !!email.trim(),
-    [open, requiresClient, localClientId, name, email],
+    () =>
+      !!open &&
+      (!requiresClient || !!localClientId) &&
+      !!name.trim() &&
+      !!email.trim() &&
+      (!requiresPassword || password.trim().length >= 8),
+    [open, requiresClient, localClientId, name, email, requiresPassword, password],
   );
 
   useEffect(() => {
@@ -94,6 +126,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
       const payload = {
         name: name.trim(),
         ...(login.trim() ? { user: login.trim() } : {}),
+        ...(password.trim() ? { password: password.trim() } : {}),
         email: email.trim(),
         avatar_url: avatarUrl.trim() || undefined,
         role,
@@ -147,11 +180,12 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
   function resetForm() {
     setName("");
     setLogin("");
+    setPassword("");
     setEmail("");
     setJobTitle("");
     setLinkedin("");
     setAvatarUrl("");
-    setRole("client_user");
+    setRole(initialRole);
     if (clientId) setLocalClientId(clientId);
     else if (clients && clients.length === 1) setLocalClientId(clients[0].id);
     setMessage(null);
@@ -164,8 +198,8 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
         <div className="flex items-start justify-between mb-4">
           <div>
             <p className="text-xs uppercase text-indigo-600">Usuario</p>
-            <h3 className="text-lg font-semibold text-gray-900">Criar usuario</h3>
-            <p className="text-sm text-gray-600">Um convite sera enviado por email.</p>
+            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <p className="text-sm text-gray-600">{subtitle}</p>
           </div>
           <button type="button" className="text-sm text-gray-500" onClick={() => { resetForm(); onClose(); }}>
             Fechar
@@ -178,6 +212,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
 
         <form onSubmit={handleSubmit} className="space-y-3">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {showCompanyField ? (
               <label className="block text-sm sm:col-span-2">
                 Empresa vinculada
                 <select
@@ -186,7 +221,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
                   onChange={(e) => setLocalClientId(e.target.value || null)}
                   aria-label="Empresa vinculada ao usuário"
                 >
-                  <option value="">Selecione</option>
+                  <option value="">{requiresClient ? "Selecione" : "Opcional"}</option>
                   {clients?.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -194,6 +229,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
                   ))}
                 </select>
               </label>
+              ) : null}
               <label className="block text-sm">
                 Nome completo
                 <input
@@ -205,14 +241,29 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
                 />
               </label>
               <label className="block text-sm">
-                Usuario (login) (opcional)
+                Usuario (login)
                 <input
                   className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                   value={login}
                   onChange={(e) => setLogin(e.target.value)}
-                  placeholder="usuario"
+                  placeholder="Se deixar em branco, o sistema gera"
                 />
               </label>
+              {requiresPassword ? (
+                <label className="block text-sm">
+                  Senha
+                  <input
+                    type="password"
+                    minLength={8}
+                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Minimo de 8 caracteres"
+                    required
+                  />
+                  <span className="mt-1 block text-xs text-gray-500">Obrigatoria para criar perfil admin/global.</span>
+                </label>
+              ) : null}
               <label className="block text-sm">
                 Email
                 <input
@@ -226,27 +277,41 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
               </label>
               <label className="block text-sm">
                 Cargo
-                <input
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                  value={jobTitle}
-                  onChange={(e) => setJobTitle(e.target.value)}
-                  placeholder="Cargo ou funcao"
-                />
+                <div className="mt-1">
+                  <Select
+                    value={jobTitle || EMPTY_JOB_TITLE}
+                    onValueChange={(value) => setJobTitle(value === EMPTY_JOB_TITLE ? "" : value)}
+                  >
+                    <SelectTrigger className="h-[42px] rounded-lg border-gray-200 bg-white px-3 py-2 text-sm focus-visible:ring-indigo-500/30">
+                      <SelectValue placeholder="Selecione uma profissao" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-80">
+                      <SelectItem value={EMPTY_JOB_TITLE}>Nao informado</SelectItem>
+                      {JOB_TITLE_OPTIONS.map((jobTitleOption) => (
+                        <SelectItem key={jobTitleOption} value={jobTitleOption}>
+                          {jobTitleOption}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </label>
-              <label className="block text-sm">
-                Perfil
-                <select
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                >
-                  {ROLE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              {!lockRole ? (
+                <label className="block text-sm">
+                  Perfil
+                  <select
+                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                  >
+                    {ROLE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
               <label className="block text-sm">
                 LinkedIn
                 <input
@@ -265,6 +330,22 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
                   placeholder="https://example.com/avatar.jpg"
                 />
               </label>
+              <div className="block text-sm">
+                Foto atual
+                <div className="mt-1 flex h-[42px] items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3">
+                  {avatarUrl.trim() ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatarUrl.trim()} alt="Preview da foto" className="h-8 w-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-600">
+                      {name.trim().slice(0, 1).toUpperCase() || "U"}
+                    </div>
+                  )}
+                  <span className="text-xs text-gray-500">
+                    {avatarUrl.trim() ? "Preview da foto informada" : "Nenhuma foto informada"}
+                  </span>
+                </div>
+              </div>
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked readOnly />
                 Ativo (ao criar)
@@ -287,7 +368,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
                 className="rounded bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                 disabled={!canSubmit || loading}
               >
-                {loading ? "Criando..." : "Criar usuario"}
+                {loading ? "Criando..." : submitLabel}
               </button>
             </div>
         </form>

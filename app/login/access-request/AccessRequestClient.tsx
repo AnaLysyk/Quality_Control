@@ -4,6 +4,12 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import loginStyles from "../LoginClient.module.css";
 import styles from "./AccessRequestClient.module.css";
+import type {
+  AccessRequestAdjustmentEntry,
+  AccessRequestAdjustmentField,
+  AccessRequestAdjustmentRound,
+  AccessRequestSnapshot,
+} from "@/lib/accessRequestMessage";
 import { normalizeRequestProfileType, requestProfileTypeNeedsCompany } from "@/lib/requestRouting";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -69,6 +75,12 @@ type LookupItem = {
   description?: string | null;
   notes?: string | null;
   companyProfile?: CompanyRequestDraft | null;
+  originalRequest?: AccessRequestSnapshot | null;
+  adjustmentRound?: number;
+  adjustmentRequestedFields?: AccessRequestAdjustmentField[];
+  adjustmentHistory?: AccessRequestAdjustmentRound[];
+  lastAdjustmentAt?: string | null;
+  lastAdjustmentDiff?: AccessRequestAdjustmentEntry[];
   adminNotes?: string | null;
 };
 
@@ -87,6 +99,37 @@ type RequestTimelineEntry = {
   body: string;
   createdAt: string;
 };
+
+type AdjustmentFieldOption = {
+  field: AccessRequestAdjustmentField;
+  label: string;
+};
+
+const BASE_ADJUSTMENT_FIELD_OPTIONS: AdjustmentFieldOption[] = [
+  { field: "profileType", label: "Perfil" },
+  { field: "company", label: "Empresa" },
+  { field: "fullName", label: "Nome completo" },
+  { field: "username", label: "Usuario sugerido" },
+  { field: "email", label: "E-mail" },
+  { field: "phone", label: "Telefone" },
+  { field: "jobRole", label: "Cargo" },
+  { field: "title", label: "Titulo" },
+  { field: "description", label: "Descricao" },
+  { field: "notes", label: "Observacoes" },
+  { field: "password", label: "Senha" },
+];
+
+const COMPANY_ADJUSTMENT_FIELD_OPTIONS: AdjustmentFieldOption[] = [
+  { field: "companyName", label: "Razao social" },
+  { field: "companyTaxId", label: "CNPJ" },
+  { field: "companyZip", label: "CEP" },
+  { field: "companyAddress", label: "Endereco" },
+  { field: "companyPhone", label: "Telefone da empresa" },
+  { field: "companyWebsite", label: "Website" },
+  { field: "companyLinkedin", label: "LinkedIn" },
+  { field: "companyDescription", label: "Descricao da empresa" },
+  { field: "companyNotes", label: "Observacoes da empresa" },
+];
 
 type LookupDraft = {
   fullName: string;
@@ -117,6 +160,16 @@ function emptyCompanyRequestDraft(): CompanyRequestDraft {
     companyDescription: "",
     companyNotes: "",
   };
+}
+
+function textOrFallback(value: string | null | undefined, fallback = "Nao informado") {
+  return value && value.trim() ? value : fallback;
+}
+
+function adjustmentFieldLabel(field: AccessRequestAdjustmentField, fallback = "Campo") {
+  return (
+    [...BASE_ADJUSTMENT_FIELD_OPTIONS, ...COMPANY_ADJUSTMENT_FIELD_OPTIONS].find((option) => option.field === field)?.label ?? fallback
+  );
 }
 
 export default function AccessRequestClient() {
@@ -461,6 +514,18 @@ export default function AccessRequestClient() {
 
   const adminNote = lookupItem?.adminNotes?.trim() || "";
   const canEditLookup = Boolean(lookupItem && lookupDraft && lookupItem.status !== "closed" && lookupItem.status !== "rejected");
+  const requestedLookupFields = useMemo(
+    () => new Set<AccessRequestAdjustmentField>(lookupItem?.adjustmentRequestedFields ?? []),
+    [lookupItem?.adjustmentRequestedFields],
+  );
+  const latestLookupAdjustmentRound = lookupItem?.adjustmentHistory?.[lookupItem.adjustmentHistory.length - 1] ?? null;
+  const hasLookupCompanyDraft = Boolean(lookupItem?.originalRequest?.companyProfile || lookupItem?.companyProfile);
+  const lookupAdjustmentFieldOptions = useMemo(
+    () => (hasLookupCompanyDraft ? [...BASE_ADJUSTMENT_FIELD_OPTIONS, ...COMPANY_ADJUSTMENT_FIELD_OPTIONS] : BASE_ADJUSTMENT_FIELD_OPTIONS),
+    [hasLookupCompanyDraft],
+  );
+  const restrictLookupEditing =
+    lookupItem?.status === "in_progress" && requestedLookupFields.size > 0;
   const timelineEntries = useMemo<RequestTimelineEntry[]>(() => {
     if (!lookupItem) return [];
 
@@ -509,6 +574,26 @@ export default function AccessRequestClient() {
   const isTechnicalSupportRequest = accessType === "technical_support";
   const isLookupCompanyAccessRequest = lookupDraft?.accessType === "company_user";
   const isLookupTechnicalSupportRequest = lookupDraft?.accessType === "technical_support";
+
+  const isLookupFieldEditable = (field: AccessRequestAdjustmentField) => {
+    if (!canEditLookup) return false;
+    if (!restrictLookupEditing) return true;
+    return requestedLookupFields.has(field);
+  };
+
+  const lookupFieldClass = (field: AccessRequestAdjustmentField) =>
+    `${inputBase} ${
+      requestedLookupFields.has(field)
+        ? "border-rose-300 bg-rose-50 text-rose-700 placeholder:text-rose-300 focus:border-rose-400 focus:ring-rose-200/60"
+        : ""
+    }`;
+
+  const lookupTextareaClass = (field: AccessRequestAdjustmentField) =>
+    `${textareaBase} ${
+      requestedLookupFields.has(field)
+        ? "border-rose-300 bg-rose-50 text-rose-700 placeholder:text-rose-300 focus:border-rose-400 focus:ring-rose-200/60"
+        : ""
+    }`;
 
   async function handleUpdateLookup() {
     if (!lookupItem || !lookupDraft) return;
@@ -1150,54 +1235,211 @@ export default function AccessRequestClient() {
               </form>
 
               {lookupItem && (
-                <div className="mt-6 space-y-4 rounded-2xl border border-[#e5e7eb] bg-[#f8fafc] p-4 sm:p-5">
-                <div className="flex items-center justify-between gap-3">
+                <div className="mt-6 space-y-5 rounded-2xl border border-[#e5e7eb] bg-[#f8fafc] p-4 sm:p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-[#011848]">Solicitação encontrada</p>
                     <p className="text-xs text-[#64748b]">
                       Criada em {new Date(lookupItem.createdAt).toLocaleString("pt-BR")}
                     </p>
                   </div>
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold border ${statusTone(lookupItem.status)}`}
-                  >
-                    {statusLabel(lookupItem.status)}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {typeof lookupItem.adjustmentRound === "number" && lookupItem.adjustmentRound > 0 ? (
+                      <span className="rounded-full border border-[#011848]/15 bg-white px-3 py-1 text-xs font-semibold text-[#011848]">
+                        {lookupItem.adjustmentRound}º ajuste
+                      </span>
+                    ) : null}
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold border ${statusTone(lookupItem.status)}`}
+                    >
+                      {statusLabel(lookupItem.status)}
+                    </span>
+                  </div>
                 </div>
 
                   {lookupItem.status === "in_progress" ? (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                      <div className="font-semibold">Aguardando ajuste do solicitante</div>
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800">
+                      <div className="font-semibold">Ajuste solicitado pela equipe</div>
                       <div className="mt-1 text-xs leading-5 text-amber-700">
-                        Revise a mensagem enviada pela equipe, atualize os dados abaixo e reenvi e a solicitacao para nova analise.
+                        Revise a orientacao recebida, compare a base original com a devolvida e corrija somente os campos destacados.
+                      </div>
+                      {latestLookupAdjustmentRound?.requestMessage?.trim() ? (
+                        <div className="mt-3 rounded-lg border border-amber-200 bg-white px-3 py-3 text-sm text-amber-900">
+                          {latestLookupAdjustmentRound.requestMessage}
+                        </div>
+                      ) : null}
+                      {requestedLookupFields.size > 0 ? (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {lookupAdjustmentFieldOptions
+                            .filter((option) => requestedLookupFields.has(option.field))
+                            .map((option) => (
+                              <span
+                                key={`lookup-requested-${option.field}`}
+                                className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-rose-700"
+                              >
+                                {option.label}
+                              </span>
+                            ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  {lookupItem.adjustmentHistory && lookupItem.adjustmentHistory.length > 0 ? (
+                    <div className="rounded-xl border border-[#011848]/10 bg-white px-4 py-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-semibold text-[#011848]">Histórico de ajustes</p>
+                        <span className="rounded-full border border-[#011848]/10 bg-[#f8fafc] px-3 py-1 text-xs font-semibold text-[#64748b]">
+                          {lookupItem.adjustmentHistory.length} rodada(s)
+                        </span>
+                      </div>
+                      <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                        {[...lookupItem.adjustmentHistory].reverse().map((round) => (
+                          <div key={`lookup-round-${round.round}`} className="rounded-xl border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-sm font-semibold text-[#011848]">{round.round}º ajuste</span>
+                              <span className="text-xs font-medium text-[#64748b]">
+                                {new Date(round.requestedAt).toLocaleString("pt-BR")}
+                              </span>
+                            </div>
+                            <p className="mt-2 text-sm text-[#475569]">
+                              {round.requestMessage?.trim() || "Sem mensagem registrada."}
+                            </p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {round.requestedFields.map((field) => (
+                                <span
+                                  key={`lookup-round-field-${round.round}-${field}`}
+                                  className="inline-flex items-center rounded-full border border-[#011848]/12 bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#011848]"
+                                >
+                                  {adjustmentFieldLabel(field, field)}
+                                </span>
+                              ))}
+                            </div>
+                            <p className="mt-3 text-xs font-medium text-[#64748b]">
+                              {round.requesterReturnedAt
+                                ? `Respondido em ${new Date(round.requesterReturnedAt).toLocaleString("pt-BR")}`
+                                : "Aguardando resposta do solicitante."}
+                            </p>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ) : null}
 
-                  <div className="space-y-2">
-                    <div className="space-y-3 rounded-xl border border-[#011848]/10 bg-white px-4 py-4">
+                  <div className="space-y-4">
+                    <div className="grid items-stretch gap-4 xl:grid-cols-2">
+                    <div className="flex h-full flex-col space-y-4 rounded-xl border border-[#011848]/10 bg-white px-4 py-4">
                       <div className="space-y-1">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#64748b]">
-                          Título
-                        </p>
-                        <p className="text-sm font-semibold text-[#011848]">
-                          {lookupItem.title?.trim() || "Solicitação sem título informado"}
+                        <p className="text-sm font-semibold text-[#011848]">Base original enviada</p>
+                        <p className="text-xs text-[#64748b]">
+                          Referencia bloqueada para comparar o envio inicial com a versao devolvida para ajuste.
                         </p>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#64748b]">
-                          Descrição
-                        </p>
-                        <p className="whitespace-pre-wrap text-sm text-[#0b1a3c]">
-                          {lookupItem.description?.trim() ||
-                            lookupItem.notes?.trim() ||
-                            "Sem descrição detalhada informada."}
-                        </p>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <label className={labelClass}>
+                          Tipo de perfil
+                          <input
+                            type="text"
+                            readOnly
+                            className={inputBase}
+                            value={textOrFallback(
+                              ACCESS_OPTIONS.find((option) => option.value === (lookupItem.originalRequest?.profileType ?? "testing_company_user"))?.label,
+                              "Nao informado",
+                            )}
+                          />
+                        </label>
+                        <label className={labelClass}>
+                          Empresa vinculada
+                          <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest?.company, "Sem empresa definida")} />
+                        </label>
+                        <label className={labelClass}>
+                          Nome completo
+                          <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest?.fullName || lookupItem.originalRequest?.name)} />
+                        </label>
+                        <label className={labelClass}>
+                          Usuario/login
+                          <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest?.username)} />
+                        </label>
+                        <label className={labelClass}>
+                          E-mail
+                          <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest?.email)} />
+                        </label>
+                        <label className={labelClass}>
+                          Telefone
+                          <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest?.phone)} />
+                        </label>
+                        <label className={labelClass}>
+                          Cargo
+                          <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest?.jobRole)} />
+                        </label>
+                        <label className={labelClass}>
+                          Senha informada
+                          <input type="text" readOnly className={inputBase} value={lookupItem.originalRequest?.passwordHash ? "Preenchida" : "Nao informada"} />
+                        </label>
+                        <label className={labelClass + " sm:col-span-2"}>
+                          Titulo da solicitacao
+                          <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest?.title, "Sem titulo")} />
+                        </label>
+                        <label className={labelClass + " sm:col-span-2"}>
+                          Descricao detalhada
+                          <textarea readOnly rows={4} className={textareaBase} value={textOrFallback(lookupItem.originalRequest?.description)} />
+                        </label>
+                        <label className={labelClass + " sm:col-span-2"}>
+                          Observacoes
+                          <textarea readOnly rows={3} className={textareaBase} value={textOrFallback(lookupItem.originalRequest?.notes)} />
+                        </label>
                       </div>
+
+                      {lookupItem.originalRequest?.companyProfile ? (
+                        <div className="rounded-xl border border-[#011848]/10 bg-[#f8fafc] px-4 py-4">
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold text-[#011848]">Base original da empresa</p>
+                            <p className="text-xs text-[#64748b]">Dados institucionais enviados na solicitacao inicial.</p>
+                          </div>
+                          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                            <label className={labelClass}>
+                              Razao social
+                              <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest.companyProfile.companyName)} />
+                            </label>
+                            <label className={labelClass}>
+                              CNPJ
+                              <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest.companyProfile.companyTaxId)} />
+                            </label>
+                            <label className={labelClass}>
+                              CEP
+                              <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest.companyProfile.companyZip)} />
+                            </label>
+                            <label className={labelClass}>
+                              Telefone da empresa
+                              <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest.companyProfile.companyPhone)} />
+                            </label>
+                            <label className={labelClass + " sm:col-span-2"}>
+                              Endereco
+                              <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest.companyProfile.companyAddress)} />
+                            </label>
+                            <label className={labelClass}>
+                              Website
+                              <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest.companyProfile.companyWebsite)} />
+                            </label>
+                            <label className={labelClass}>
+                              LinkedIn
+                              <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest.companyProfile.companyLinkedin)} />
+                            </label>
+                            <label className={labelClass + " sm:col-span-2"}>
+                              Descricao da empresa
+                              <textarea readOnly rows={3} className={textareaBase} value={textOrFallback(lookupItem.originalRequest.companyProfile.companyDescription)} />
+                            </label>
+                            <label className={labelClass + " sm:col-span-2"}>
+                              Observacoes da empresa
+                              <textarea readOnly rows={3} className={textareaBase} value={textOrFallback(lookupItem.originalRequest.companyProfile.companyNotes)} />
+                            </label>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
 
-                    {canEditLookup && lookupDraft ? (
-                      <div className="space-y-4 rounded-xl border border-[#011848]/10 bg-white px-4 py-4">
+                    {lookupDraft ? (
+                      <div className="flex h-full flex-col space-y-4 rounded-xl border border-[#011848]/10 bg-white px-4 py-4">
                         <div className="space-y-1">
                           <p className="text-sm font-semibold text-[#011848]">Ajustar dados da solicitacao</p>
                           <p className="text-xs text-[#64748b]">
@@ -1208,7 +1450,9 @@ export default function AccessRequestClient() {
                         <div className="space-y-2 text-sm font-semibold text-[#011848]">
                           <div className="flex items-center justify-between gap-3">
                             <span>Tipo de perfil</span>
-                            <span className="text-right text-xs font-medium text-[#6b7280]">Ajuste conforme o acesso solicitado</span>
+                            <span className="text-right text-xs font-medium text-[#6b7280]">
+                              {restrictLookupEditing ? "Editavel apenas se marcado" : "Ajuste conforme o acesso solicitado"}
+                            </span>
                           </div>
                           <select
                             value={lookupDraft.accessType}
@@ -1223,9 +1467,10 @@ export default function AccessRequestClient() {
                                       company: requestProfileTypeNeedsCompany(next) ? current.company : "",
                                     }
                                   : current,
-                              );
-                            }}
-                            className={inputBase}
+                                );
+                              }}
+                            className={lookupFieldClass("profileType")}
+                            disabled={!isLookupFieldEditable("profileType")}
                           >
                             {ACCESS_OPTIONS.map((option) => (
                               <option key={option.value} value={option.value}>
@@ -1234,6 +1479,7 @@ export default function AccessRequestClient() {
                             ))}
                           </select>
                           <p className="text-xs font-medium text-[#64748b]">{selectedLookupAccessOption.hint}</p>
+                          {requestedLookupFields.has("profileType") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                         </div>
 
                         {requestProfileTypeNeedsCompany(lookupDraft.accessType) ? (
@@ -1254,8 +1500,8 @@ export default function AccessRequestClient() {
                                     : current,
                                 );
                               }}
-                              className={inputBase}
-                              disabled={companiesLoading || companyOptions.length === 0}
+                              className={lookupFieldClass("company")}
+                              disabled={companiesLoading || companyOptions.length === 0 || !isLookupFieldEditable("company")}
                             >
                               <option value="">
                                 {companiesLoading ? "Carregando empresas..." : "Selecione uma empresa cadastrada"}
@@ -1266,15 +1512,16 @@ export default function AccessRequestClient() {
                                 </option>
                               ))}
                             </select>
+                            {requestedLookupFields.has("company") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                           </label>
                         ) : null}
 
                         {isLookupCompanyAccessRequest ? (
                           <div className="space-y-4 rounded-xl border border-[#011848]/10 bg-[#f8fafc] px-4 py-4">
                             <div className="space-y-1">
-                              <p className="text-sm font-semibold text-[#011848]">Dados da empresa</p>
+                              <p className="text-sm font-semibold text-[#011848]">Dados da empresa devolvida</p>
                               <p className="text-xs text-[#64748b]">
-                                Ajuste aqui os mesmos dados institucionais usados no cadastro da empresa.
+                                Campos em vermelho sao os que a equipe devolveu para correcao nesta rodada.
                               </p>
                             </div>
 
@@ -1294,8 +1541,11 @@ export default function AccessRequestClient() {
                                         : current,
                                     )
                                   }
-                                  className={inputBase}
+                                  className={lookupFieldClass("companyName")}
+                                  readOnly={!isLookupFieldEditable("companyName")}
+                                  disabled={!isLookupFieldEditable("companyName")}
                                 />
+                                {requestedLookupFields.has("companyName") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                               </label>
                               <label className={labelClass}>
                                 CNPJ
@@ -1312,8 +1562,11 @@ export default function AccessRequestClient() {
                                         : current,
                                     )
                                   }
-                                  className={inputBase}
+                                  className={lookupFieldClass("companyTaxId")}
+                                  readOnly={!isLookupFieldEditable("companyTaxId")}
+                                  disabled={!isLookupFieldEditable("companyTaxId")}
                                 />
+                                {requestedLookupFields.has("companyTaxId") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                               </label>
                               <label className={labelClass}>
                                 CEP
@@ -1330,8 +1583,11 @@ export default function AccessRequestClient() {
                                         : current,
                                     )
                                   }
-                                  className={inputBase}
+                                  className={lookupFieldClass("companyZip")}
+                                  readOnly={!isLookupFieldEditable("companyZip")}
+                                  disabled={!isLookupFieldEditable("companyZip")}
                                 />
+                                {requestedLookupFields.has("companyZip") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                               </label>
                               <label className={labelClass}>
                                 Telefone da empresa
@@ -1348,8 +1604,11 @@ export default function AccessRequestClient() {
                                         : current,
                                     )
                                   }
-                                  className={inputBase}
+                                  className={lookupFieldClass("companyPhone")}
+                                  readOnly={!isLookupFieldEditable("companyPhone")}
+                                  disabled={!isLookupFieldEditable("companyPhone")}
                                 />
+                                {requestedLookupFields.has("companyPhone") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                               </label>
                               <label className={labelClass + " sm:col-span-2"}>
                                 Endereco
@@ -1366,8 +1625,11 @@ export default function AccessRequestClient() {
                                         : current,
                                     )
                                   }
-                                  className={inputBase}
+                                  className={lookupFieldClass("companyAddress")}
+                                  readOnly={!isLookupFieldEditable("companyAddress")}
+                                  disabled={!isLookupFieldEditable("companyAddress")}
                                 />
+                                {requestedLookupFields.has("companyAddress") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                               </label>
                               <label className={labelClass}>
                                 Website
@@ -1384,8 +1646,11 @@ export default function AccessRequestClient() {
                                         : current,
                                     )
                                   }
-                                  className={inputBase}
+                                  className={lookupFieldClass("companyWebsite")}
+                                  readOnly={!isLookupFieldEditable("companyWebsite")}
+                                  disabled={!isLookupFieldEditable("companyWebsite")}
                                 />
+                                {requestedLookupFields.has("companyWebsite") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                               </label>
                               <label className={labelClass}>
                                 LinkedIn da empresa
@@ -1402,8 +1667,11 @@ export default function AccessRequestClient() {
                                         : current,
                                     )
                                   }
-                                  className={inputBase}
+                                  className={lookupFieldClass("companyLinkedin")}
+                                  readOnly={!isLookupFieldEditable("companyLinkedin")}
+                                  disabled={!isLookupFieldEditable("companyLinkedin")}
                                 />
+                                {requestedLookupFields.has("companyLinkedin") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                               </label>
                               <label className={labelClass + " sm:col-span-2"}>
                                 Descricao da empresa
@@ -1420,8 +1688,11 @@ export default function AccessRequestClient() {
                                         : current,
                                     )
                                   }
-                                  className={textareaBase}
+                                  className={lookupTextareaClass("companyDescription")}
+                                  readOnly={!isLookupFieldEditable("companyDescription")}
+                                  disabled={!isLookupFieldEditable("companyDescription")}
                                 />
+                                {requestedLookupFields.has("companyDescription") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                               </label>
                               <label className={labelClass + " sm:col-span-2"}>
                                 Observacoes da empresa
@@ -1438,8 +1709,11 @@ export default function AccessRequestClient() {
                                         : current,
                                     )
                                   }
-                                  className={textareaBase}
+                                  className={lookupTextareaClass("companyNotes")}
+                                  readOnly={!isLookupFieldEditable("companyNotes")}
+                                  disabled={!isLookupFieldEditable("companyNotes")}
                                 />
+                                {requestedLookupFields.has("companyNotes") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                               </label>
                             </div>
                           </div>
@@ -1454,8 +1728,11 @@ export default function AccessRequestClient() {
                               onChange={(event) =>
                                 setLookupDraft((current) => (current ? { ...current, fullName: event.target.value } : current))
                               }
-                              className={inputBase}
+                              className={lookupFieldClass("fullName")}
+                              readOnly={!isLookupFieldEditable("fullName")}
+                              disabled={!isLookupFieldEditable("fullName")}
                             />
+                            {requestedLookupFields.has("fullName") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                           </label>
                           {isLookupTechnicalSupportRequest ? (
                             <label className={labelClass}>
@@ -1466,9 +1743,12 @@ export default function AccessRequestClient() {
                                 onChange={(event) =>
                                   setLookupDraft((current) => (current ? { ...current, user: event.target.value } : current))
                                 }
-                                className={inputBase}
+                                className={lookupFieldClass("username")}
                                 placeholder="login.global"
+                                readOnly={!isLookupFieldEditable("username")}
+                                disabled={!isLookupFieldEditable("username")}
                               />
+                              {requestedLookupFields.has("username") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                             </label>
                           ) : null}
                           <label className={labelClass}>
@@ -1479,8 +1759,11 @@ export default function AccessRequestClient() {
                               onChange={(event) =>
                                 setLookupDraft((current) => (current ? { ...current, email: event.target.value } : current))
                               }
-                              className={inputBase}
+                              className={lookupFieldClass("email")}
+                              readOnly={!isLookupFieldEditable("email")}
+                              disabled={!isLookupFieldEditable("email")}
                             />
+                            {requestedLookupFields.has("email") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                           </label>
                           <label className={labelClass}>
                             Telefone
@@ -1490,8 +1773,11 @@ export default function AccessRequestClient() {
                               onChange={(event) =>
                                 setLookupDraft((current) => (current ? { ...current, phone: event.target.value } : current))
                               }
-                              className={inputBase}
+                              className={lookupFieldClass("phone")}
+                              readOnly={!isLookupFieldEditable("phone")}
+                              disabled={!isLookupFieldEditable("phone")}
                             />
+                            {requestedLookupFields.has("phone") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                           </label>
                           <label className={labelClass}>
                             {isLookupCompanyAccessRequest ? "Cargo do responsavel" : "Cargo ou funcao"}
@@ -1503,8 +1789,9 @@ export default function AccessRequestClient() {
                                     current ? { ...current, role: value === EMPTY_JOB_TITLE ? "" : value } : current,
                                   )
                                 }
+                                disabled={!isLookupFieldEditable("jobRole")}
                               >
-                                <SelectTrigger className="h-[50px] rounded-xl border-[#011848]/15 bg-white px-4 py-3 text-sm text-[#011848] focus-visible:ring-[#ef0001]/40">
+                                <SelectTrigger className={`h-[50px] rounded-xl px-4 py-3 text-sm text-[#011848] focus-visible:ring-[#ef0001]/40 ${requestedLookupFields.has("jobRole") ? "border-rose-300 bg-rose-50 text-rose-700" : "border-[#011848]/15 bg-white"}`}>
                                   <SelectValue placeholder="Selecione uma profissao" />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-80">
@@ -1517,6 +1804,7 @@ export default function AccessRequestClient() {
                                 </SelectContent>
                               </Select>
                             </div>
+                            {requestedLookupFields.has("jobRole") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                           </label>
                         </div>
 
@@ -1528,8 +1816,11 @@ export default function AccessRequestClient() {
                             onChange={(event) =>
                               setLookupDraft((current) => (current ? { ...current, title: event.target.value } : current))
                             }
-                            className={inputBase}
+                            className={lookupFieldClass("title")}
+                            readOnly={!isLookupFieldEditable("title")}
+                            disabled={!isLookupFieldEditable("title")}
                           />
+                          {requestedLookupFields.has("title") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                         </label>
 
                         <label className={labelClass}>
@@ -1540,8 +1831,11 @@ export default function AccessRequestClient() {
                             onChange={(event) =>
                               setLookupDraft((current) => (current ? { ...current, description: event.target.value } : current))
                             }
-                            className={textareaBase}
+                            className={lookupTextareaClass("description")}
+                            readOnly={!isLookupFieldEditable("description")}
+                            disabled={!isLookupFieldEditable("description")}
                           />
+                          {requestedLookupFields.has("description") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                         </label>
 
                         <label className={labelClass}>
@@ -1552,8 +1846,11 @@ export default function AccessRequestClient() {
                             onChange={(event) =>
                               setLookupDraft((current) => (current ? { ...current, notes: event.target.value } : current))
                             }
-                            className={textareaBase}
+                            className={lookupTextareaClass("notes")}
+                            readOnly={!isLookupFieldEditable("notes")}
+                            disabled={!isLookupFieldEditable("notes")}
                           />
+                          {requestedLookupFields.has("notes") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                         </label>
 
                         <label className={labelClass}>
@@ -1564,26 +1861,38 @@ export default function AccessRequestClient() {
                             onChange={(event) =>
                               setLookupDraft((current) => (current ? { ...current, password: event.target.value } : current))
                             }
-                            className={inputBase}
+                            className={lookupFieldClass("password")}
                             placeholder="Deixe em branco para manter a senha atual"
+                            readOnly={!isLookupFieldEditable("password")}
+                            disabled={!isLookupFieldEditable("password")}
                           />
                           <p className="text-xs font-medium text-[#64748b]">
-                            Se quiser trocar a senha informada na solicitacao, preencha aqui.
+                            {requestedLookupFields.has("password")
+                              ? "Corrija este campo."
+                              : "Se quiser trocar a senha informada na solicitacao, preencha aqui."}
                           </p>
                         </label>
 
-                        <button
-                          type="button"
-                          onClick={() => void handleUpdateLookup()}
-                          disabled={lookupSaving}
-                          className="flex w-full items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {lookupSaving ? "Reenviando..." : "Reenviar com ajustes"}
-                        </button>
+                        {canEditLookup ? (
+                          <button
+                            type="button"
+                            onClick={() => void handleUpdateLookup()}
+                            disabled={lookupSaving}
+                            className="flex w-full items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {lookupSaving ? "Enviando..." : lookupItem.status === "in_progress" ? "Enviar ajuste" : "Atualizar solicitacao"}
+                          </button>
+                        ) : null}
                       </div>
                     ) : null}
+                    </div>
 
-                    <p className="text-sm font-semibold text-[#011848]">Comentários</p>
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-[#011848]">Conversa e justificativas</p>
+                      <p className="text-xs text-[#64748b]">
+                        A mensagem do admin explica o ajuste. Sua resposta fica registrada como conversa e nao altera os campos automaticamente.
+                      </p>
+                    </div>
                     <div className="comments-chat">
                       <div className="comments-chat-list" aria-live="polite">
                         {timelineEntries.length === 0 ? (

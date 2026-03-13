@@ -7,7 +7,7 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
-import { isItDev } from "@/lib/rbac/tickets";
+import { canAccessGlobalTicketWorkspace } from "@/lib/rbac/tickets";
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
@@ -27,7 +27,7 @@ export async function GET(req: Request) {
   }
   const url = new URL(req.url);
   const limit = Math.max(1, Math.min(500, Number(url.searchParams.get("limit") ?? 200)));
-  let items = isItDev(user) ? await listAllSuportes() : await listSuportesForUser(user.id);
+  let items = canAccessGlobalTicketWorkspace(user) ? await listAllSuportes() : await listSuportesForUser(user.id);
   items = items.slice(0, limit);
   const enriched = await attachAssigneeInfo(items);
   return NextResponse.json({ items: enriched }, { status: 200 });
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     const createdByEmail = localUser?.email ?? user.email ?? null;
 
     const assignedToUserId =
-      (isItDev(user) || hasPermissionAccess(user.permissions, "support", "assign")) &&
+      canAccessGlobalTicketWorkspace(user) &&
       typeof body?.assignedToUserId === "string"
         ? body?.assignedToUserId
         : null;

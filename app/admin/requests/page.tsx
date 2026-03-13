@@ -12,7 +12,7 @@ type RequestRecord = {
   userName: string;
   userEmail: string;
   companyName: string;
-  type: "EMAIL_CHANGE" | "COMPANY_CHANGE" | "PASSWORD_RESET";
+  type: "EMAIL_CHANGE" | "COMPANY_CHANGE" | "PASSWORD_RESET" | "PROFILE_DELETION";
   status: "PENDING" | "APPROVED" | "REJECTED";
   payload: Record<string, unknown>;
   createdAt: string;
@@ -165,6 +165,7 @@ function AdminRequestsPage() {
             <option value="EMAIL_CHANGE">Email</option>
             <option value="COMPANY_CHANGE">Empresa</option>
             <option value="PASSWORD_RESET">Reset de senha</option>
+            <option value="PROFILE_DELETION">Exclusao de perfil</option>
           </select>
         </div>
 
@@ -198,6 +199,8 @@ function AdminRequestsPage() {
                 {req.type === "EMAIL_CHANGE" && <div>Solicitou email: {payloadString(req.payload, "newEmail")}</div>}
                 {req.type === "COMPANY_CHANGE" && <div>Solicitou empresa: {payloadString(req.payload, "newCompanyName")}</div>}
                 {req.type === "PASSWORD_RESET" && <div>Solicitou reset de senha</div>}
+                {req.type === "PROFILE_DELETION" && <div>Solicitou exclusao de perfil</div>}
+                {req.type === "PROFILE_DELETION" && payloadString(req.payload, "reason") && <div>Motivo: {payloadString(req.payload, "reason")}</div>}
                 {typeof req.payload?.profileType === "string" && (
                   <div>
                     Tipo de perfil:{" "}

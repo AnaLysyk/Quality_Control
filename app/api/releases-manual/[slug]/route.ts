@@ -128,6 +128,12 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
   const updated: Release = {
     ...current,
     name: nextName,
+    qaseProject:
+      typeof body.qaseProject === "string"
+        ? body.qaseProject.trim().toUpperCase()
+        : typeof body.qase_project_code === "string"
+          ? body.qase_project_code.trim().toUpperCase()
+          : current.qaseProject,
     status: nextStatus ?? current.status,
     runSlug: nextRunSlug,
     runName: typeof body.runName === "string" ? body.runName : current.runName,

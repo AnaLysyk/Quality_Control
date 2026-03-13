@@ -1,5 +1,3 @@
-import "server-only";
-
 import {
   normalizeRequestProfileType,
   resolveReviewQueue,
@@ -45,6 +43,33 @@ export type AccessRequestAdjustmentEntry = {
   next: string;
 };
 
+export type AccessRequestSnapshot = {
+  email: string;
+  name: string;
+  fullName: string;
+  username: string | null;
+  phone: string;
+  passwordHash: string | null;
+  jobRole: string;
+  company: string;
+  clientId: string | null;
+  accessType: AccessType;
+  profileType: RequestProfileType;
+  title: string;
+  description: string;
+  notes: string;
+  companyProfile: AccessRequestCompanyProfile | null;
+};
+
+export type AccessRequestAdjustmentRound = {
+  round: number;
+  requestedAt: string;
+  requestedFields: AccessRequestAdjustmentField[];
+  requestMessage: string | null;
+  requesterReturnedAt?: string | null;
+  requesterDiff?: AccessRequestAdjustmentEntry[];
+};
+
 export type AccessRequestCompanyProfile = {
   companyName: string;
   companyTaxId: string;
@@ -74,6 +99,10 @@ export type ParsedAccessRequest = {
   description: string;
   notes: string;
   companyProfile: AccessRequestCompanyProfile | null;
+  originalRequest: AccessRequestSnapshot;
+  adjustmentRound: number;
+  adjustmentRequestedFields: AccessRequestAdjustmentField[];
+  adjustmentHistory: AccessRequestAdjustmentRound[];
   lastAdjustmentAt: string | null;
   lastAdjustmentDiff: AccessRequestAdjustmentEntry[];
 };
@@ -95,6 +124,10 @@ type ComposeAccessRequestInput = {
   notes: string;
   companyProfile?: Partial<AccessRequestCompanyProfile> | null;
   adminNotes?: string | null;
+  originalRequest?: AccessRequestSnapshot | null;
+  adjustmentRound?: number;
+  adjustmentRequestedFields?: AccessRequestAdjustmentField[];
+  adjustmentHistory?: AccessRequestAdjustmentRound[];
   lastAdjustmentAt?: string | null;
   lastAdjustmentDiff?: AccessRequestAdjustmentEntry[];
 };
@@ -117,6 +150,85 @@ function normalizeCompanyProfile(input?: Partial<AccessRequestCompanyProfile> | 
 
 function normalizeText(value: string) {
   return value.trim().toLowerCase();
+}
+
+function normalizeSnapshot(input: AccessRequestSnapshot): AccessRequestSnapshot {
+  return {
+    email: input.email,
+    name: input.name,
+    fullName: input.fullName,
+    username: input.username ?? null,
+    phone: input.phone,
+    passwordHash: input.passwordHash ?? null,
+    jobRole: input.jobRole,
+    company: input.company,
+    clientId: input.clientId ?? null,
+    accessType: input.accessType,
+    profileType: input.profileType,
+    title: input.title,
+    description: input.description,
+    notes: input.notes,
+    companyProfile: normalizeCompanyProfile(input.companyProfile),
+  };
+}
+
+function buildSnapshot(input: ComposeAccessRequestInput): AccessRequestSnapshot {
+  return {
+    email: input.email,
+    name: input.name,
+    fullName: input.fullName ?? input.name,
+    username: input.username ?? null,
+    phone: input.phone ?? "",
+    passwordHash: input.passwordHash ?? null,
+    jobRole: input.role,
+    company: input.company,
+    clientId: input.clientId ?? null,
+    accessType: input.accessType,
+    profileType: input.profileType,
+    title: input.title || "",
+    description: input.description || "",
+    notes: input.notes || "",
+    companyProfile: normalizeCompanyProfile(input.companyProfile),
+  };
+}
+
+function normalizeAdjustmentFields(input: unknown): AccessRequestAdjustmentField[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((value) => (typeof value === "string" ? value : ""))
+    .filter(Boolean) as AccessRequestAdjustmentField[];
+}
+
+function normalizeAdjustmentHistory(input: unknown): AccessRequestAdjustmentRound[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((entry) => {
+      const record = entry as Record<string, unknown>;
+      const round = typeof record.round === "number" ? record.round : Number(record.round ?? 0);
+      const requestedAt = typeof record.requestedAt === "string" ? record.requestedAt : "";
+      if (!round || !requestedAt) return null;
+      return {
+        round,
+        requestedAt,
+        requestedFields: normalizeAdjustmentFields(record.requestedFields),
+        requestMessage: typeof record.requestMessage === "string" ? record.requestMessage : null,
+        requesterReturnedAt: typeof record.requesterReturnedAt === "string" ? record.requesterReturnedAt : null,
+        requesterDiff: Array.isArray(record.requesterDiff)
+          ? record.requesterDiff
+              .map((diffEntry) => {
+                const diffRecord = diffEntry as Record<string, unknown>;
+                return {
+                  field: typeof diffRecord.field === "string" ? (diffRecord.field as AccessRequestAdjustmentField) : "notes",
+                  label: typeof diffRecord.label === "string" ? diffRecord.label : "Campo",
+                  previous: typeof diffRecord.previous === "string" ? diffRecord.previous : "",
+                  next: typeof diffRecord.next === "string" ? diffRecord.next : "",
+                } satisfies AccessRequestAdjustmentEntry;
+              })
+              .filter((diffEntry) => diffEntry.label)
+          : [],
+      } satisfies AccessRequestAdjustmentRound;
+    })
+    .filter((entry): entry is AccessRequestAdjustmentRound => Boolean(entry));
 }
 
 export function toAccessTypeLabel(accessType: AccessType): AccessTypeLabel {
@@ -159,6 +271,8 @@ export function extractAdminNotes(message: string): string | null {
 export function composeAccessRequestMessage(input: ComposeAccessRequestInput): string {
   const reviewQueue = resolveReviewQueue(input.profileType);
   const companyProfile = normalizeCompanyProfile(input.companyProfile);
+  const snapshot = buildSnapshot(input);
+  const originalRequest = normalizeSnapshot(input.originalRequest ?? snapshot);
   const payload = {
     v: 1,
     kind: "access_request",
@@ -179,6 +293,10 @@ export function composeAccessRequestMessage(input: ComposeAccessRequestInput): s
     description: input.description || null,
     notes: input.notes || null,
     companyProfile,
+    originalRequest,
+    adjustmentRound: typeof input.adjustmentRound === "number" ? input.adjustmentRound : 0,
+    adjustmentRequestedFields: normalizeAdjustmentFields(input.adjustmentRequestedFields),
+    adjustmentHistory: normalizeAdjustmentHistory(input.adjustmentHistory),
     lastAdjustmentAt: input.lastAdjustmentAt ?? null,
     lastAdjustmentDiff: Array.isArray(input.lastAdjustmentDiff) ? input.lastAdjustmentDiff : [],
   };
@@ -254,6 +372,71 @@ export function parseAccessRequestMessage(message: string, fallbackEmail: string
             ? (json.companyProfile as Partial<AccessRequestCompanyProfile>)
             : null,
         ),
+        originalRequest: normalizeSnapshot(
+          typeof json.originalRequest === "object" && json.originalRequest !== null
+            ? ({
+                email: typeof (json.originalRequest as Record<string, unknown>).email === "string" ? ((json.originalRequest as Record<string, unknown>).email as string) : fallbackEmail,
+                name: typeof (json.originalRequest as Record<string, unknown>).name === "string" ? ((json.originalRequest as Record<string, unknown>).name as string) : "",
+                fullName:
+                  typeof (json.originalRequest as Record<string, unknown>).fullName === "string"
+                    ? ((json.originalRequest as Record<string, unknown>).fullName as string)
+                    : typeof (json.originalRequest as Record<string, unknown>).name === "string"
+                      ? ((json.originalRequest as Record<string, unknown>).name as string)
+                      : "",
+                username: typeof (json.originalRequest as Record<string, unknown>).username === "string" ? ((json.originalRequest as Record<string, unknown>).username as string) : null,
+                phone: typeof (json.originalRequest as Record<string, unknown>).phone === "string" ? ((json.originalRequest as Record<string, unknown>).phone as string) : "",
+                passwordHash:
+                  typeof (json.originalRequest as Record<string, unknown>).passwordHash === "string"
+                    ? ((json.originalRequest as Record<string, unknown>).passwordHash as string)
+                    : null,
+                jobRole: typeof (json.originalRequest as Record<string, unknown>).jobRole === "string" ? ((json.originalRequest as Record<string, unknown>).jobRole as string) : "",
+                company: typeof (json.originalRequest as Record<string, unknown>).company === "string" ? ((json.originalRequest as Record<string, unknown>).company as string) : "",
+                clientId: typeof (json.originalRequest as Record<string, unknown>).clientId === "string" ? ((json.originalRequest as Record<string, unknown>).clientId as string) : null,
+                accessType: normalizeAccessType(typeof (json.originalRequest as Record<string, unknown>).accessType === "string" ? ((json.originalRequest as Record<string, unknown>).accessType as string) : "") ?? "user",
+                profileType:
+                  normalizeRequestProfileType(
+                    typeof (json.originalRequest as Record<string, unknown>).profileType === "string"
+                      ? ((json.originalRequest as Record<string, unknown>).profileType as string)
+                      : "",
+                  ) ?? "testing_company_user",
+                title: typeof (json.originalRequest as Record<string, unknown>).title === "string" ? ((json.originalRequest as Record<string, unknown>).title as string) : "",
+                description: typeof (json.originalRequest as Record<string, unknown>).description === "string" ? ((json.originalRequest as Record<string, unknown>).description as string) : "",
+                notes: typeof (json.originalRequest as Record<string, unknown>).notes === "string" ? ((json.originalRequest as Record<string, unknown>).notes as string) : "",
+                companyProfile: normalizeCompanyProfile(
+                  typeof (json.originalRequest as Record<string, unknown>).companyProfile === "object" &&
+                    (json.originalRequest as Record<string, unknown>).companyProfile !== null
+                    ? ((json.originalRequest as Record<string, unknown>).companyProfile as Partial<AccessRequestCompanyProfile>)
+                    : null,
+                ),
+              } satisfies AccessRequestSnapshot)
+            : {
+                email: typeof json.email === "string" ? json.email : fallbackEmail,
+                name: typeof json.name === "string" ? json.name : "",
+                fullName:
+                  typeof json.fullName === "string" ? json.fullName : typeof json.name === "string" ? json.name : "",
+                username: typeof json.username === "string" ? json.username : null,
+                phone: typeof json.phone === "string" ? json.phone : "",
+                passwordHash: typeof json.passwordHash === "string" ? json.passwordHash : null,
+                jobRole: typeof json.jobRole === "string" ? json.jobRole : "",
+                company: typeof json.company === "string" ? json.company : "",
+                clientId: typeof json.clientId === "string" ? json.clientId : null,
+                accessType: normalizeAccessType(typeof json.accessType === "string" ? json.accessType : "") ?? "user",
+                profileType:
+                  normalizeRequestProfileType(typeof json.profileType === "string" ? json.profileType : "") ??
+                  "testing_company_user",
+                title: typeof json.title === "string" ? json.title : "",
+                description: typeof json.description === "string" ? json.description : "",
+                notes: typeof json.notes === "string" ? json.notes : "",
+                companyProfile: normalizeCompanyProfile(
+                  typeof json.companyProfile === "object" && json.companyProfile !== null
+                    ? (json.companyProfile as Partial<AccessRequestCompanyProfile>)
+                    : null,
+                ),
+              },
+        ),
+        adjustmentRound: typeof json.adjustmentRound === "number" ? json.adjustmentRound : Number(json.adjustmentRound ?? 0) || 0,
+        adjustmentRequestedFields: normalizeAdjustmentFields(json.adjustmentRequestedFields),
+        adjustmentHistory: normalizeAdjustmentHistory(json.adjustmentHistory),
         lastAdjustmentAt: typeof json.lastAdjustmentAt === "string" ? json.lastAdjustmentAt : null,
         lastAdjustmentDiff: Array.isArray(json.lastAdjustmentDiff)
           ? json.lastAdjustmentDiff
@@ -314,6 +497,39 @@ export function parseAccessRequestMessage(message: string, fallbackEmail: string
       companyDescription: find("Descricao da empresa"),
       companyNotes: find("Observacoes da empresa"),
     }),
+    originalRequest: {
+      email: fallbackEmail,
+      name: find("Nome"),
+      fullName: find("Nome completo") || find("Nome"),
+      username: find("Usuario") || null,
+      phone: find("Telefone"),
+      passwordHash: null,
+      jobRole: find("Cargo"),
+      company: find("Empresa"),
+      clientId: null,
+      accessType: normalizeAccessType(find("Tipo de acesso")) ?? "user",
+      profileType:
+        normalizeRequestProfileType(find("Tipo de perfil")) ??
+        normalizeRequestProfileType(find("Tipo de acesso")) ??
+        "testing_company_user",
+      title: find("Titulo da solicitacao") || find("Titulo"),
+      description: find("Descricao detalhada") || find("Descricao") || find("Mensagem"),
+      notes: find("Observacoes") || find("Mensagem"),
+      companyProfile: normalizeCompanyProfile({
+        companyName: find("Empresa solicitada"),
+        companyTaxId: find("CNPJ"),
+        companyZip: find("CEP"),
+        companyAddress: find("Endereco"),
+        companyPhone: find("Telefone da empresa"),
+        companyWebsite: find("Website"),
+        companyLinkedin: find("LinkedIn"),
+        companyDescription: find("Descricao da empresa"),
+        companyNotes: find("Observacoes da empresa"),
+      }),
+    },
+    adjustmentRound: 0,
+    adjustmentRequestedFields: [],
+    adjustmentHistory: [],
     lastAdjustmentAt: null,
     lastAdjustmentDiff: [],
   };

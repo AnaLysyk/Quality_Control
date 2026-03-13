@@ -1,6 +1,88 @@
 {
   "items": [
     {
+      "id": "d9b4d377-5caa-4329-ab78-24bec055c735",
+      "created_at": "2026-03-10T21:46:47.921Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "josearlindod@gmail.com",
+      "action": "user.permissions.updated",
+      "entity_type": "user",
+      "entity_id": "usr_dev",
+      "entity_label": "josearlindod@gmail.com",
+      "metadata": {
+        "role": "dev",
+        "allowCount": 0,
+        "denyCount": 1,
+        "effectiveCount": 61,
+        "companyId": "cmp_1b1f459e",
+        "companyLabel": "Empresa cmp_1b1f459e +13"
+      }
+    },
+    {
+      "id": "d8b82fb7-2f09-487a-bc10-2768008f6d58",
+      "created_at": "2026-03-09T23:17:35.348Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "dev",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "cmp_04c14bf0",
+      "entity_label": "Empresa cmp_04c14bf0",
+      "metadata": {
+        "active": false,
+        "integrationMode": "manual"
+      }
+    },
+    {
+      "id": "22840542-415f-4403-a348-ab2e40d1c8b3",
+      "created_at": "2026-03-09T20:44:36.128Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "dev",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "cmp_0bfb70de",
+      "entity_label": "Empresa cmp_0bfb70de",
+      "metadata": {
+        "active": true,
+        "integrationMode": "manual"
+      }
+    },
+    {
+      "id": "d66212c0-d056-4223-b7f3-54601226b33c",
+      "created_at": "2026-03-09T18:53:06.947Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "dev",
+      "action": "user.permissions.updated",
+      "entity_type": "user",
+      "entity_id": "usr_dev",
+      "entity_label": "dev",
+      "metadata": {
+        "role": "dev",
+        "allowCount": 0,
+        "denyCount": 2,
+        "effectiveCount": 60,
+        "companyId": "cmp_1b1f459e",
+        "companyLabel": "Empresa cmp_1b1f459e +13"
+      }
+    },
+    {
+      "id": "b84d6c7d-903a-41b0-ab06-8c551f738b3a",
+      "created_at": "2026-03-09T18:51:52.183Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "dev",
+      "action": "user.permissions.updated",
+      "entity_type": "user",
+      "entity_id": "usr_f601a299",
+      "entity_label": "ffddd@cvbcvb.com",
+      "metadata": {
+        "role": "admin",
+        "allowCount": 0,
+        "denyCount": 2,
+        "effectiveCount": 53,
+        "companyId": null,
+        "companyLabel": null
+      }
+    },
+    {
       "id": "12045e5e-f9e9-4e15-862d-cc422e0137a7",
       "created_at": "2026-03-09T01:21:15.803Z",
       "actor_user_id": "usr_dev",

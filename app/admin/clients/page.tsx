@@ -30,6 +30,7 @@ type Client = {
   qaseProjectCode?: string | null;
   qaseProjectCodes?: string[] | null;
   qaseToken?: string | null;
+  hasQaseToken?: boolean;
   jiraBaseUrl?: string | null;
   jiraEmail?: string | null;
   jiraApiToken?: string | null;
@@ -105,6 +106,12 @@ function getInitials(value: string | null | undefined) {
   return (parts[0].slice(0, 1) + parts[parts.length - 1].slice(0, 1)).toUpperCase();
 }
 
+function hasQaseTokenConfigured(client?: Partial<Client> | null) {
+  if (!client) return false;
+  if (typeof client.qaseToken === "string") return client.qaseToken.trim().length > 0;
+  return client.hasQaseToken === true;
+}
+
 function mapClient(row: Record<string, unknown>): Client {
   const name =
     typeof row.name === "string"
@@ -148,6 +155,7 @@ function mapClient(row: Record<string, unknown>): Client {
     qaseProjectCode: readNullableString(row.qase_project_code),
     qaseProjectCodes: readProjectCodes(row.qase_project_codes),
     qaseToken: null,
+    hasQaseToken: !!readNullableString(row.qase_token),
     jiraBaseUrl: readNullableString(row.jira_base_url),
     jiraEmail: readNullableString(row.jira_email),
     jiraApiToken: null,
@@ -176,7 +184,6 @@ function AdminClientsPage() {
 
   const selected = useMemo(() => items.find((c) => c.id === selectedId) ?? null, [items, selectedId]);
   const currentActive = form.active ?? selected?.active ?? false;
-  const isInactive = !currentActive;
   const currentName = (form.name && form.name.trim()) || selected?.name || "Empresa";
   const currentSlug = (form.slug ?? selected?.slug) || null;
   const currentTaxId = form.taxId ?? selected?.taxId ?? null;
@@ -190,7 +197,8 @@ function AdminClientsPage() {
   const currentQaseProject = form.qaseProjectCode ?? selected?.qaseProjectCode ?? null;
   const currentQaseProjects =
     ((form.qaseProjectCodes !== undefined ? form.qaseProjectCodes : selected?.qaseProjectCodes) ?? null)?.join(", ") ?? null;
-  const hasQaseIntegration = (form.integrationMode ?? selected?.integrationMode) === "qase" || !!currentQaseProject || !!currentQaseProjects;
+  const currentHasQaseToken = hasQaseTokenConfigured(form) || hasQaseTokenConfigured(selected);
+  const hasQaseIntegration = currentHasQaseToken;
   const currentIntegrationMode = hasQaseIntegration ? "Qase" : "Manual";
   const filteredItems = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -202,8 +210,9 @@ function AdminClientsPage() {
     );
   }, [items, search]);
   const activeCompaniesCount = useMemo(() => items.filter((item) => item.active).length, [items]);
+  const inactiveCompaniesCount = useMemo(() => Math.max(0, items.length - activeCompaniesCount), [items.length, activeCompaniesCount]);
   const qaseCompaniesCount = useMemo(
-    () => items.filter((item) => item.integrationMode === "qase" || item.qaseProjectCode || (item.qaseProjectCodes?.length ?? 0) > 0).length,
+    () => items.filter((item) => item.hasQaseToken).length,
     [items],
   );
   const resetForm = () => {
@@ -518,59 +527,91 @@ function AdminClientsPage() {
   }, [load]);
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
-      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-10 space-y-6">
+    <div className="min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
+      <div className="mx-auto w-full max-w-none px-2 py-4 sm:px-4 lg:px-6 xl:px-8 2xl:px-10 space-y-4">
         <Breadcrumb items={[{ label: "Admin", href: "/admin/home" }, { label: "Empresas" }]} />
 
-        <section className="overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,#031843_0%,#082457_38%,#3a174f_72%,#9f1025_100%)] px-6 py-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:px-8">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-4">
-              <div>
+        <section className="overflow-hidden rounded-[30px] border border-white/12 bg-[linear-gradient(135deg,#031843_0%,#082457_38%,#3a174f_72%,#9f1025_100%)] px-5 py-5 text-white shadow-[0_22px_60px_rgba(15,23,42,0.15)] sm:px-6 lg:px-7">
+          <div className="space-y-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-3xl space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Base de empresas</p>
-                <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Empresas da plataforma</h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/82">
-                  Consulte clientes cadastrados, abra o detalhamento da empresa e acompanhe integrações e usuários vinculados.
+                <h1 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">Empresas da plataforma</h1>
+                <p className="max-w-2xl text-sm leading-6 text-white/82">
+                  Consulte clientes, abra o detalhe da empresa e acompanhe integrações e usuários vinculados.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-3 text-sm">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                  <FiHome className="h-4 w-4" /> {items.length} empresas cadastradas
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                  <FiCheckCircle className="h-4 w-4" /> {activeCompaniesCount} empresas ativas
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                  <FiUsers className="h-4 w-4" /> {qaseCompaniesCount} com Qase
-                </span>
+
+              <div className="flex flex-wrap items-center gap-2 lg:max-w-[520px] lg:justify-end">
+                {isGlobalAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setOpenCreate(true)}
+                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/18 bg-white/8 px-3.5 text-sm font-semibold text-white transition hover:bg-white/12"
+                  >
+                    <FiPlus className="h-4 w-4" /> Cadastrar empresa
+                  </button>
+                )}
+                {isGlobalAdmin && (
+                  <a
+                    href="/admin/users"
+                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/18 bg-white/8 px-3.5 text-sm font-semibold text-white transition hover:bg-white/12"
+                  >
+                    <FiUsers className="h-4 w-4" /> Gerenciar usuários
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={load}
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/18 bg-white/8 px-3.5 text-sm font-semibold text-white transition hover:bg-white/12 disabled:opacity-60"
+                  disabled={loading}
+                >
+                  <FiRefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Atualizar
+                </button>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3 lg:justify-end">
-              {isGlobalAdmin && (
-                <button
-                  type="button"
-                  onClick={() => setOpenCreate(true)}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
-                >
-                  <FiPlus className="h-4 w-4" /> Cadastrar empresa
-                </button>
-              )}
-              {isGlobalAdmin && (
-                <a
-                  href="/admin/users"
-                  className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
-                >
-                  <FiUsers className="h-4 w-4" /> Gerenciar usuários
-                </a>
-              )}
-              <button
-                type="button"
-                onClick={load}
-                className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15 disabled:opacity-60"
-                disabled={loading}
-              >
-                <FiRefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Atualizar
-              </button>
+            <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+              <div className="rounded-[18px] border border-white/14 bg-white/10 px-4 py-3.5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">Empresas</div>
+                    <div className="mt-2 text-[28px] font-extrabold leading-none text-white">{items.length}</div>
+                    <div className="mt-1 text-sm text-white/76">cadastradas</div>
+                  </div>
+                  <FiHome className="mt-1 h-4 w-4 text-white/72" />
+                </div>
+              </div>
+              <div className="rounded-[18px] border border-white/14 bg-white/10 px-4 py-3.5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">Ativas</div>
+                    <div className="mt-2 text-[28px] font-extrabold leading-none text-white">{activeCompaniesCount}</div>
+                    <div className="mt-1 text-sm text-white/76">em operação</div>
+                  </div>
+                  <FiCheckCircle className="mt-1 h-4 w-4 text-white/72" />
+                </div>
+              </div>
+              <div className="rounded-[18px] border border-white/14 bg-white/10 px-4 py-3.5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">Inativas</div>
+                    <div className="mt-2 text-[28px] font-extrabold leading-none text-white">{inactiveCompaniesCount}</div>
+                    <div className="mt-1 text-sm text-white/76">fora da operação</div>
+                  </div>
+                  <FiXCircle className="mt-1 h-4 w-4 text-white/72" />
+                </div>
+              </div>
+              <div className="rounded-[18px] border border-white/14 bg-white/10 px-4 py-3.5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">Qase</div>
+                    <div className="mt-2 text-[28px] font-extrabold leading-none text-white">{qaseCompaniesCount}</div>
+                    <div className="mt-1 text-sm text-white/76">com token</div>
+                  </div>
+                  <FiUsers className="mt-1 h-4 w-4 text-white/72" />
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -581,16 +622,14 @@ function AdminClientsPage() {
           </p>
         )}
 
-        <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-white p-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-5 xl:p-6 min-h-[calc(100vh-210px)]">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,420px)] lg:items-end">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">Carteira de empresas</p>
               <h2 className="mt-2 text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">Lista de empresas</h2>
-              <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
-                Abra uma empresa para ver dados, integrações, documentos e usuários vinculados.
-              </p>
+              <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Abra uma empresa para ver dados, integrações e usuários.</p>
             </div>
-            <label className="flex w-full max-w-md items-center gap-3 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3 text-sm text-(--tc-text-secondary,#4b5563)">
+            <label className="flex w-full items-center gap-3 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3 text-sm text-(--tc-text-secondary,#4b5563)">
               <FiSearch className="h-4 w-4 text-(--tc-text-muted,#6b7280)" />
               <input
                 value={search}
@@ -602,7 +641,7 @@ function AdminClientsPage() {
           </div>
 
           {loading ? (
-            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {Array.from({ length: 6 }).map((_, index) => (
                 <div key={index} className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5">
                   <div className="h-4 w-28 animate-pulse rounded-full bg-slate-200" />
@@ -618,16 +657,17 @@ function AdminClientsPage() {
               ))}
             </div>
           ) : (
-            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {filteredItems.map((client) => (
             <button
               type="button"
               key={client.id}
               onClick={() => openModal(client.id)}
-              className="w-full rounded-[24px] border border-(--tc-border,#d7deea) bg-white p-5 text-left transition hover:border-(--tc-accent,#ef0001)/35 hover:shadow-[0_14px_32px_rgba(15,23,42,0.06)] focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+              className="flex h-full w-full flex-col overflow-hidden rounded-[24px] border border-(--tc-border,#d7deea) bg-white p-4 text-left transition hover:border-(--tc-accent,#ef0001)/35 hover:shadow-[0_14px_32px_rgba(15,23,42,0.06)] focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
             >
-                <div className="flex items-start gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc)">
+                <div className="flex h-full flex-col gap-4">
+                  <div className="flex items-start gap-3">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc)">
                   <CompanyLogo
                     logoUrl={client.logoUrl}
                     slug={client.slug}
@@ -637,44 +677,52 @@ function AdminClientsPage() {
                   />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="truncate text-base font-bold text-(--tc-text-primary,#0b1a3c)" title={client.name}>
-                      {client.name}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="line-clamp-2 text-[15px] font-bold leading-5 text-slate-900" title={client.name}>
+                        {client.name}
+                      </div>
+                      <div className="mt-1 truncate text-sm text-slate-500">
+                        {client.slug ? `@${client.slug}` : "Sem slug"}
+                      </div>
                     </div>
                     <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                      className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                         client.active ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
                       }`}
                     >
                       {client.active ? "Ativa" : "Inativa"}
                     </span>
                   </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-(--tc-text-secondary,#4b5563)">
-                    <span>{client.slug ? `@${client.slug}` : "Sem slug"}</span>
-                    {client.taxId ? (
-                      <>
-                        <span className="text-(--tc-text-muted,#94a3b8)">•</span>
-                        <span>{client.taxId}</span>
-                      </>
-                    ) : null}
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <span className="inline-flex rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-2.5 py-1 text-[11px] font-semibold text-(--tc-text-secondary,#4b5563)">
-                      {client.integrationMode === "qase" || client.qaseProjectCode || (client.qaseProjectCodes?.length ?? 0) > 0 ? "Qase" : "Manual"}
-                    </span>
+                  <div className="mt-3 grid gap-2">
+                    <div className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-2.5 py-2">
+                      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Integração</span>
+                      <span className="truncate text-sm font-semibold text-slate-900">{client.hasQaseToken ? "Qase" : "Manual"}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-2.5 py-2">
+                      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500">CNPJ</span>
+                      <span className="truncate text-sm font-medium text-slate-700" title={client.taxId || "Nao informado"}>
+                        {client.taxId || "Nao informado"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-2.5 py-2">
+                      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Criado</span>
+                      <span className="text-sm font-medium text-slate-700">
+                        {client.createdAt ? new Date(client.createdAt).toLocaleDateString() : "Sem data"}
+                      </span>
+                    </div>
                     {client.website ? (
-                      <span className="inline-flex max-w-full rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-2.5 py-1 text-[11px] font-semibold text-(--tc-text-secondary,#4b5563)">
-                        <span className="truncate" title={client.website}>{client.website}</span>
-                      </span>
-                    ) : null}
-                    {client.createdAt ? (
-                      <span className="inline-flex rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-2.5 py-1 text-[11px] font-semibold text-(--tc-text-secondary,#4b5563)">
-                        Criada em {new Date(client.createdAt).toLocaleDateString()}
-                      </span>
+                      <div className="truncate text-xs text-slate-500" title={client.website}>
+                        {client.website}
+                      </div>
                     ) : null}
                   </div>
                 </div>
               </div>
+                  <div className="mt-auto flex items-center justify-end border-t border-(--tc-border,#eef2f7) pt-3 text-xs">
+                    <span className="font-semibold text-(--tc-accent,#ef0001)">Abrir detalhes</span>
+                  </div>
+                </div>
             </button>
           ))}
           {filteredItems.length === 0 && (
@@ -709,12 +757,12 @@ function AdminClientsPage() {
       </div>
 
       {selected && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-hidden bg-black/40 px-3 py-6">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-2 py-4 sm:px-4 sm:py-6">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="client-modal-title"
-            className="flex w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-2xl max-h-[calc(100vh-72px)]"
+            className="flex w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-2xl my-auto max-h-[calc(100vh-48px)] sm:max-h-[calc(100vh-72px)]"
           >
             {/* Header */}
             <div className="relative shrink-0 overflow-hidden border-b border-white/10 bg-linear-to-r from-[#011848] via-[#0b1e3c] to-[#7a1026] p-6 text-white">
@@ -905,7 +953,7 @@ function AdminClientsPage() {
                     />
                     <DetailField
                       label="Token da Qase"
-                      value={isEditing ? form.qaseToken ?? "" : "Configurado"}
+                      value={isEditing ? form.qaseToken ?? "" : currentHasQaseToken ? "Configurado" : "Nao configurado"}
                       editable={isEditing}
                       onChange={(v) => setForm((f) => ({ ...f, qaseToken: v }))}
                       type={isEditing ? "password" : "text"}
@@ -1063,19 +1111,26 @@ function CompanyLogo({ logoUrl, slug, website, name, className }: CompanyLogoPro
     () => resolveLogoCandidates({ logoUrl: logoUrl ?? null, slug: slug ?? null, website: website ?? null, name: name ?? null }),
     [logoUrl, slug, website, name],
   );
-  const [index, setIndex] = useState(0);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    setIndex(0);
-    setFailed(false);
-  }, [candidates]);
+  const candidatesKey = candidates.join("|");
+  const [imageState, setImageState] = useState<{ key: string; index: number; failed: boolean }>({
+    key: candidatesKey,
+    index: 0,
+    failed: false,
+  });
+  const resolvedState =
+    imageState.key === candidatesKey
+      ? imageState
+      : {
+          key: candidatesKey,
+          index: 0,
+          failed: false,
+        };
 
   const normalizedClass = className ? className.trim() : "";
   const alt = (name && name.trim()) || "Logo da empresa";
-  const currentSrc = candidates[index] ?? null;
+  const currentSrc = candidates[resolvedState.index] ?? null;
 
-  if (!currentSrc || failed) {
+  if (!currentSrc || resolvedState.failed) {
     const initials = getInitials(name);
     return (
       <span
@@ -1089,11 +1144,20 @@ function CompanyLogo({ logoUrl, slug, website, name, className }: CompanyLogoPro
   }
 
   const handleError = () => {
-    if (index < candidates.length - 1) {
-      setIndex((prev) => prev + 1);
-    } else {
-      setFailed(true);
+    if (resolvedState.index < candidates.length - 1) {
+      setImageState({
+        key: candidatesKey,
+        index: resolvedState.index + 1,
+        failed: false,
+      });
+      return;
     }
+
+    setImageState({
+      key: candidatesKey,
+      index: resolvedState.index,
+      failed: true,
+    });
   };
 
   return (
@@ -1102,7 +1166,7 @@ function CompanyLogo({ logoUrl, slug, website, name, className }: CompanyLogoPro
       src={currentSrc}
       alt={alt}
       loading="lazy"
-      className={`h-full w-full object-contain ${normalizedClass}`.trim()}
+      className={`h-full w-full object-cover ${normalizedClass}`.trim()}
       onError={handleError}
     />
   );

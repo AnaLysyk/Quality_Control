@@ -23,6 +23,9 @@ export async function POST(req: Request) {
     title: body?.title,
     content: body?.content,
     color: body?.color,
+    status: body?.status,
+    priority: body?.priority,
+    tags: body?.tags,
   });
 
   if (!note) {

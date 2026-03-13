@@ -5,7 +5,6 @@ import {
   composeAccessRequestMessage,
   normalizeAccessType,
   parseAccessRequestMessage,
-  type AccessType,
 } from "@/lib/accessRequestMessage";
 import { prisma } from "@/lib/prismaClient";
 import { requireGlobalDeveloperWithStatus } from "@/lib/rbac/requireGlobalAdmin";
@@ -14,7 +13,6 @@ import {
   normalizeRequestProfileType,
   resolveReviewQueue,
   toInternalAccessType,
-  type RequestProfileType,
 } from "@/lib/requestRouting";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 
@@ -94,6 +92,13 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       description: description || parsed.description,
       notes: notes || parsed.notes,
       adminNotes,
+      companyProfile: parsed.companyProfile,
+      originalRequest: parsed.originalRequest,
+      adjustmentRound: parsed.adjustmentRound,
+      adjustmentRequestedFields: parsed.adjustmentRequestedFields,
+      adjustmentHistory: parsed.adjustmentHistory,
+      lastAdjustmentAt: parsed.lastAdjustmentAt,
+      lastAdjustmentDiff: parsed.lastAdjustmentDiff,
     });
 
     const updated = await updateAccessRequest(id, {
@@ -146,6 +151,13 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       description: description || parsed.description,
       notes: notes || parsed.notes,
       adminNotes,
+      companyProfile: parsed.companyProfile,
+      originalRequest: parsed.originalRequest,
+      adjustmentRound: parsed.adjustmentRound,
+      adjustmentRequestedFields: parsed.adjustmentRequestedFields,
+      adjustmentHistory: parsed.adjustmentHistory,
+      lastAdjustmentAt: parsed.lastAdjustmentAt,
+      lastAdjustmentDiff: parsed.lastAdjustmentDiff,
     });
 
     const updated = await prisma.supportRequest.update({
@@ -195,6 +207,13 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       description: description || parsed.description,
       notes: notes || parsed.notes,
       adminNotes,
+      companyProfile: parsed.companyProfile,
+      originalRequest: parsed.originalRequest,
+      adjustmentRound: parsed.adjustmentRound,
+      adjustmentRequestedFields: parsed.adjustmentRequestedFields,
+      adjustmentHistory: parsed.adjustmentHistory,
+      lastAdjustmentAt: parsed.lastAdjustmentAt,
+      lastAdjustmentDiff: parsed.lastAdjustmentDiff,
     });
 
     const updated = await updateAccessRequest(id, {

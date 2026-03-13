@@ -5,6 +5,8 @@ import { getAccessRequestById, listAccessRequests, updateAccessRequest } from "@
 import { findLocalCompanyById } from "@/lib/auth/localStore";
 import {
   type AccessRequestAdjustmentEntry,
+  type AccessRequestAdjustmentField,
+  type AccessRequestAdjustmentRound,
   composeAccessRequestMessage,
   normalizeAccessType,
   parseAccessRequestMessage,
@@ -147,6 +149,12 @@ function buildAdjustmentComment(diff: AccessRequestAdjustmentEntry[]) {
     ...diff.map((entry) => `- ${entry.label}: ${entry.previous} -> ${entry.next}`),
   ];
   return lines.join("\n");
+}
+
+function isFieldEditableDuringAdjustment(field: AccessRequestAdjustmentField, requestedFields: AccessRequestAdjustmentField[]) {
+  if (requestedFields.includes(field)) return true;
+  if (field === "company" && requestedFields.includes("companyName")) return true;
+  return false;
 }
 
 async function findRequestById(id: string): Promise<SupportRequestRow | null> {
@@ -392,6 +400,22 @@ export async function PATCH(req: Request) {
 
   const adjustmentDiff = buildAdjustmentDiff(previousSnapshot, nextSnapshot);
   const adjustmentTimestamp = new Date().toISOString();
+  if (request.status === "in_progress" && parsed.adjustmentRequestedFields.length > 0) {
+    const invalidDiff = adjustmentDiff.find((entry) => !isFieldEditableDuringAdjustment(entry.field, parsed.adjustmentRequestedFields));
+    if (invalidDiff) {
+      return NextResponse.json({ error: `Somente os campos marcados para ajuste podem ser alterados agora: ${invalidDiff.label}.` }, { status: 400 });
+    }
+  }
+
+  const updatedHistory: AccessRequestAdjustmentRound[] = parsed.adjustmentHistory.map((entry) =>
+    entry.round === parsed.adjustmentRound
+      ? {
+          ...entry,
+          requesterReturnedAt: adjustmentTimestamp,
+          requesterDiff: adjustmentDiff,
+        }
+      : entry,
+  );
 
   const message = composeAccessRequestMessage({
     email,
@@ -409,6 +433,10 @@ export async function PATCH(req: Request) {
     description,
     notes: notes || parsed.notes || "",
     companyProfile,
+    originalRequest: parsed.originalRequest,
+    adjustmentRound: parsed.adjustmentRound,
+    adjustmentRequestedFields: [],
+    adjustmentHistory: updatedHistory,
     lastAdjustmentAt: adjustmentTimestamp,
     lastAdjustmentDiff: adjustmentDiff,
   });

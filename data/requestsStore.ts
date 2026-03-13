@@ -14,7 +14,7 @@ export type RequestUser = {
   companyName?: string;
 };
 
-export type RequestType = "EMAIL_CHANGE" | "COMPANY_CHANGE" | "PASSWORD_RESET";
+export type RequestType = "EMAIL_CHANGE" | "COMPANY_CHANGE" | "PASSWORD_RESET" | "PROFILE_DELETION";
 export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export type RequestRecord = {

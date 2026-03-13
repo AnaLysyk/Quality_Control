@@ -4,7 +4,7 @@ import { getTicketById, updateTicketStatus } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { getTicketStatusLabel } from "@/lib/ticketsStatus";
 import { notifyTicketStatusChanged } from "@/lib/notificationService";
-import { canMoveTicket } from "@/lib/rbac/tickets";
+import { canManageAllTickets, canMoveTicket } from "@/lib/rbac/tickets";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
@@ -24,6 +24,12 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   }
   if (!canMoveTicket(user, current)) {
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+  }
+  if (canManageAllTickets(user) && !current.assignedToUserId) {
+    return NextResponse.json(
+      { error: "Selecione e salve um responsavel antes de mover o chamado" },
+      { status: 400 },
+    );
   }
 
   const updated = await updateTicketStatus(id, nextStatus, user.id);

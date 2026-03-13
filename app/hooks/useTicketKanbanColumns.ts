@@ -11,8 +11,6 @@ export type TicketKanbanColumn = {
   locked?: boolean;
 };
 
-const STORAGE_KEY = "ticket-kanban-columns:v1";
-
 const DEFAULT_COLUMNS: TicketKanbanColumn[] = [
   { key: "backlog", label: "Backlog", locked: true },
   { key: "doing", label: "Em andamento", locked: true },
@@ -81,9 +79,10 @@ async function saveColumnsToApi(columns: TicketKanbanColumn[]): Promise<boolean>
 }
 
 
-export function useTicketKanbanColumns(extraKeys: string[] = []) {
+export function useTicketKanbanColumns(extraKeys: string[] = [], canManageColumns?: boolean) {
   const { user } = useAuthUser();
   const isDev = isDevRole(user?.role);
+  const canManage = canManageColumns ?? isDev;
   const [columns, setColumns] = useState<TicketKanbanColumn[]>(DEFAULT_COLUMNS);
   const hydratedRef = useRef(false);
 
@@ -102,9 +101,9 @@ export function useTicketKanbanColumns(extraKeys: string[] = []) {
   // Salva no backend sempre que columns mudar (após hidratação inicial)
   useEffect(() => {
     if (!hydratedRef.current) return;
-    if (!isDev) return; // Só dev pode persistir
+    if (!canManage) return;
     saveColumnsToApi(columns);
-  }, [columns, isDev]);
+  }, [canManage, columns]);
 
   const statusOptions = useMemo<TicketStatusOption[]>(
     () => mergedColumns.map((col) => ({ value: col.key, label: col.label })),
@@ -113,7 +112,7 @@ export function useTicketKanbanColumns(extraKeys: string[] = []) {
 
   const addColumn = useCallback(
     (label: string) => {
-      if (!isDev) return null;
+      if (!canManage) return null;
       const trimmed = (label ?? "").toString().trim();
       if (!trimmed) return null;
       const baseKey = slugifyKey(trimmed) || `col-${Date.now()}`;
@@ -130,28 +129,46 @@ export function useTicketKanbanColumns(extraKeys: string[] = []) {
       });
       return key;
     },
-    [mergedColumns, isDev],
+    [canManage, mergedColumns],
   );
 
   const renameColumn = useCallback((key: string, label: string) => {
-    if (!isDev) return;
+    if (!canManage) return;
     const trimmed = (label ?? "").toString().trim();
     if (!trimmed || !key) return;
     setColumns((prev) => {
-      const idx = prev.findIndex((col) => col.key === key);
+      const base = prev.some((col) => col.key === key) ? [...prev] : mergeColumns(prev, extraKeys);
+      const idx = base.findIndex((col) => col.key === key);
       if (idx === -1) {
-        return [...prev, { key, label: trimmed }];
+        return [...base, { key, label: trimmed }];
       }
-      const next = [...prev];
+      const next = [...base];
       next[idx] = { ...next[idx], label: trimmed };
       return next;
     });
-  }, [isDev]);
+  }, [canManage, extraKeys]);
 
   const removeColumn = useCallback((key: string) => {
-    if (!isDev) return;
-    setColumns((prev) => prev.filter((col) => col.key !== key && !col.locked));
-  }, [isDev]);
+    if (!canManage) return;
+    setColumns((prev) => mergeColumns(prev, extraKeys).filter((col) => col.key !== key));
+  }, [canManage, extraKeys]);
+
+  const moveColumn = useCallback((fromKey: string, toKey: string) => {
+    if (!canManage) return;
+    if (!fromKey || !toKey || fromKey === toKey) return;
+
+    setColumns((prev) => {
+      const base = mergeColumns(prev, extraKeys);
+      const fromIndex = base.findIndex((col) => col.key === fromKey);
+      const toIndex = base.findIndex((col) => col.key === toKey);
+      if (fromIndex === -1 || toIndex === -1) return base;
+
+      const next = [...base];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
+  }, [canManage, extraKeys]);
 
   return {
     columns: mergedColumns,
@@ -159,6 +176,7 @@ export function useTicketKanbanColumns(extraKeys: string[] = []) {
     addColumn,
     renameColumn,
     removeColumn,
+    moveColumn,
     setColumns, // para uso avançado
   };
 }

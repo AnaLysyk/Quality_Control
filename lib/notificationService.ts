@@ -123,6 +123,50 @@ export async function notifyPasswordResetStatus(
   });
 }
 
+export async function notifyProfileDeletionRequest(request: RequestRecord) {
+  const reviewQueue =
+    typeof request.payload?.reviewQueue === "string" &&
+    (request.payload.reviewQueue === "admin_and_global" || request.payload.reviewQueue === "global_only")
+      ? request.payload.reviewQueue
+      : "admin_and_global";
+  const reviewerIds = await resolveRequestReviewerIds(reviewQueue);
+  const userLabel = request.userName || request.userEmail || "Usuario";
+  await createNotificationsForUsers(reviewerIds, {
+    type: "PROFILE_DELETION_REQUEST",
+    title: "Exclusao de perfil solicitada",
+    description: `${userLabel} solicitou exclusao do proprio perfil.`,
+    requestId: request.id,
+    link: "/admin/requests",
+    dedupeKey: `profile-deletion:reviewers:${request.id}`,
+  });
+
+  await createNotificationsForUsers([request.userId], {
+    type: "PROFILE_DELETION_PENDING",
+    title: "Solicitacao de exclusao enviada",
+    description: "Seu pedido de exclusao de perfil foi enviado para analise.",
+    requestId: request.id,
+    link: "/requests",
+    dedupeKey: `profile-deletion:user:${request.id}`,
+  });
+}
+
+export async function notifyProfileDeletionStatus(
+  request: RequestRecord,
+  status: "APPROVED" | "REJECTED",
+) {
+  const approved = status === "APPROVED";
+  await closeNotificationsByDedupeKey(request.userId, `profile-deletion:user:${request.id}`);
+  await createNotificationsForUsers([request.userId], {
+    type: approved ? "PROFILE_DELETION_APPROVED" : "PROFILE_DELETION_REJECTED",
+    title: approved ? "Exclusao de perfil aprovada" : "Exclusao de perfil rejeitada",
+    description: approved
+      ? "Seu perfil foi desativado pela equipe administrativa."
+      : "Seu pedido de exclusao de perfil foi rejeitado.",
+    requestId: request.id,
+    link: "/requests",
+  });
+}
+
 export async function notifyManualRunCreated(release: Release) {
   const companySlug = release.clientSlug ?? null;
   const recipients = await resolveCompanyUserIds(companySlug);
@@ -352,8 +396,13 @@ export async function notifyUserAccessUpdated(input: {
 // Backwards-compatible wrappers for ticket-named notifications (map { ticket } -> { suporte })
 import type { TicketRecord } from "@/lib/ticketsStore";
 
+function unwrapTicketInput(input: { ticket: TicketRecord } | TicketRecord): TicketRecord | null {
+  if (!input || typeof input !== "object") return null;
+  return "ticket" in input ? input.ticket : input;
+}
+
 export async function notifyTicketCreated(input: { ticket: TicketRecord } | TicketRecord) {
-  const ticket = (input && typeof (input as any) === "object" && "ticket" in (input as any)) ? (input as any).ticket : (input as any);
+  const ticket = unwrapTicketInput(input);
   if (!ticket) return;
   return notifySuporteCreated(ticket as SuporteRecord);
 }
@@ -380,7 +429,7 @@ export async function notifyTicketCommentAdded(input: {
 
 export async function notifyTicketReactionAdded(input: { ticket: TicketRecord; comment: TicketCommentRecord; actorId: string }) {
   if (!input || !input.ticket) return;
-  return notifySuporteReactionAdded({ suporte: input.ticket as SuporteRecord, comment: input.comment as any, actorId: input.actorId });
+  return notifySuporteReactionAdded({ suporte: input.ticket as SuporteRecord, comment: input.comment, actorId: input.actorId });
 }
 
 export async function notifyTicketAssigned(input: { ticket: TicketRecord; assigneeId: string; actorId: string }) {

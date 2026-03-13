@@ -115,7 +115,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
         { label: t("nav.apps"), icon: FiBriefcase, href: `${companyTarget}/aplicacoes` },
         { label: t("nav.runs"), icon: FiList, href: `${companyTarget}/runs` },
         { label: t("nav.defects"), icon: FiAlertTriangle, href: `${companyTarget}/defeitos` },
-        { label: "Releases", icon: FiGrid, href: `${companyTarget}/releases` },
+        { label: "Runs", icon: FiGrid, href: `${companyTarget}/releases` },
       );
     }
 
@@ -143,7 +143,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             { label: t("nav.apps"), icon: FiBriefcase, href: `/empresas/${companySlug}/aplicacoes` },
             { label: t("nav.testPlans"), icon: FiClipboard, href: `/empresas/${companySlug}/planos-de-teste` },
             { label: t("nav.runs"), icon: FiList, href: `/empresas/${companySlug}/runs` },
-            { label: "Releases", icon: FiGrid, href: `/empresas/${companySlug}/releases` },
+            { label: "Runs", icon: FiGrid, href: `/empresas/${companySlug}/releases` },
             { label: t("nav.defects"), icon: FiAlertTriangle, href: `/empresas/${companySlug}/defeitos` },
             { label: "Chamados", icon: FiColumns, href: "/meus-chamados", roles: ["client", "user", "admin", "it_dev"] },
           ]

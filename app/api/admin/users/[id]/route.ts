@@ -16,6 +16,10 @@ import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 type PermissionRole = "admin" | "dev" | "company" | "user";
 
+function hasOwn(obj: Record<string, unknown> | null, key: string) {
+  return !!obj && Object.prototype.hasOwnProperty.call(obj, key);
+}
+
 function normalizeRole(input?: string | null) {
   const value = (input ?? "").toLowerCase();
   if (value === "client_admin" || value === "admin" || value === "global_admin" || value === "company_admin") return "company_admin";
@@ -73,8 +77,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const body = await req.json().catch(() => null);
 
   const name = typeof body?.name === "string" ? body.name.trim() : null;
+  const fullName =
+    typeof body?.full_name === "string"
+      ? body.full_name.trim() || null
+      : typeof body?.fullName === "string"
+        ? body.fullName.trim() || null
+        : name;
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : null;
-  const login = typeof body?.user === "string" ? normalizeLogin(body.user) : null;
+  const hasLogin = typeof body?.user === "string";
+  const login = hasLogin ? normalizeLogin(body?.user) : null;
   const active = typeof body?.active === "boolean" ? body.active : null;
   const clientId = typeof body?.client_id === "string" ? body.client_id : null;
   const permissionRole =
@@ -82,7 +93,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     normalizePermissionRole(typeof body?.profile_role === "string" ? body.profile_role : null);
   const jobTitle = typeof body?.job_title === "string" ? body.job_title.trim() || null : null;
   const linkedinUrl = typeof body?.linkedin_url === "string" ? body.linkedin_url.trim() || null : null;
-  const avatarUrl = typeof body?.avatar_url === "string" ? body.avatar_url.trim() || null : null;
+  const hasAvatarUrl = hasOwn(body as Record<string, unknown> | null, "avatar_url");
+  const avatarUrl = hasAvatarUrl
+    ? typeof body?.avatar_url === "string"
+      ? body.avatar_url.trim() || null
+      : null
+    : undefined;
   const rawRole = typeof body?.role === "string" ? body.role : "";
   const wantsGlobalAdmin = permissionRole
     ? permissionRole === "admin" || permissionRole === "dev"
@@ -133,12 +149,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     updated = await updateLocalUser(id, {
       ...(name ? { name } : {}),
+      ...(fullName !== null ? { full_name: fullName } : {}),
       ...(email ? { email } : {}),
-      ...(login ? { user: login } : {}),
+      ...(hasLogin ? { user: login ?? "" } : {}),
       ...(active !== null ? { active } : {}),
       ...(jobTitle !== null ? { job_title: jobTitle } : {}),
       ...(linkedinUrl !== null ? { linkedin_url: linkedinUrl } : {}),
-      ...(avatarUrl !== null ? { avatar_url: avatarUrl } : {}),
+      ...(hasAvatarUrl ? { avatar_url: avatarUrl ?? null } : {}),
       ...(rawRole || permissionRole
         ? { globalRole: wantsGlobalAdmin ? "global_admin" : null, is_global_admin: wantsGlobalAdmin }
         : {}),

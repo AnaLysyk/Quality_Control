@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
+import { runAssistantRequest } from "@/lib/assistant/service";
+import type { AssistantClientRequest } from "@/lib/assistant/types";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 
 const ASSISTANT_ENABLED = process.env.AI_ASSISTANT_ENABLED !== "false";
+
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   if (!ASSISTANT_ENABLED) {
@@ -21,12 +25,12 @@ export async function POST(req: Request) {
   }
 
   try {
-    const body = await req.json().catch(() => ({}));
-    const message = body?.message ?? "";
-    // Simple echo stub — replace with real AI integration later
-    const reply = `Echo: ${String(message)}`;
-    return NextResponse.json({ reply });
-  } catch {
-    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+    const body = (await req.json().catch(() => ({}))) as AssistantClientRequest;
+    const response = await runAssistantRequest(authUser, body ?? {});
+    return NextResponse.json(response);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erro interno";
+    console.error("[assistant] falha ao processar requisicao:", error);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

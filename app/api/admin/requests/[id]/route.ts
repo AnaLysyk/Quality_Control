@@ -2,9 +2,9 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 
 import { getRequestById, updateRequestStatus, type RequestStatus } from "@/data/requestsStore";
-import { getLocalUserById } from "@/lib/auth/localStore";
+import { getLocalUserById, updateLocalUser } from "@/lib/auth/localStore";
 import { emailService } from "@/lib/email";
-import { notifyPasswordResetStatus } from "@/lib/notificationService";
+import { notifyPasswordResetStatus, notifyProfileDeletionStatus } from "@/lib/notificationService";
 import { getRedis } from "@/lib/redis";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { canReviewerAccessQueue, resolveGenericRequestQueue } from "@/lib/requestReviewAccess";
@@ -56,12 +56,33 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     }
   }
 
+  if (nextStatus === "APPROVED" && requestRecord.type === "PROFILE_DELETION") {
+    const user = await getLocalUserById(requestRecord.userId);
+    if (!user) {
+      return NextResponse.json({ message: "Usuario nao encontrado" }, { status: 404 });
+    }
+    const updatedUser = await updateLocalUser(user.id, {
+      active: false,
+      status: "blocked",
+    });
+    if (!updatedUser) {
+      return NextResponse.json({ message: "Nao foi possivel desativar o perfil" }, { status: 500 });
+    }
+  }
+
   const updated = await updateRequestStatus(id, nextStatus, { id: admin.id }, body?.reviewNote);
   if (updated && updated.type === "PASSWORD_RESET") {
     try {
       await notifyPasswordResetStatus(updated, nextStatus);
     } catch (err) {
       console.error("Falha ao notificar status de reset", err);
+    }
+  }
+  if (updated && updated.type === "PROFILE_DELETION") {
+    try {
+      await notifyProfileDeletionStatus(updated, nextStatus);
+    } catch (err) {
+      console.error("Falha ao notificar status de exclusao de perfil", err);
     }
   }
 

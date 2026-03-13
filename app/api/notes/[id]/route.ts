@@ -14,6 +14,9 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     title: body?.title,
     content: body?.content,
     color: body?.color,
+    status: body?.status,
+    priority: body?.priority,
+    tags: body?.tags,
   });
 
   if (!updated) {

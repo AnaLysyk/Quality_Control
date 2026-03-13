@@ -7,8 +7,8 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     releases: ['view', 'create', 'edit', 'delete'],
     runs: ['view', 'create', 'edit', 'delete', 'export'],
     defects: ['view', 'create', 'edit', 'delete'],
-    tickets: ['view', 'create', 'edit', 'delete', 'assign', 'status', 'comment', 'view_own'],
-    support: ['view', 'create', 'comment', 'modal', 'floating'],
+    tickets: ['view', 'create', 'edit', 'delete', 'assign', 'status', 'comment', 'view_own', 'view_company', 'view_all'],
+    support: ['view', 'create', 'assign', 'status', 'comment', 'modal', 'floating'],
     users: ['view', 'create', 'edit', 'delete', 'view_company', 'view_all'],
     permissions: ['view', 'edit', 'reset', 'clone'],
     access_requests: ['view'],
@@ -50,7 +50,7 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     notifications: ['view'],
     audit: [],
     settings: ['view', 'edit'],
-    ai: [],
+    ai: ['view', 'use'],
   },
   user: {
     dashboard: ['view'],
@@ -67,7 +67,7 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     notifications: ['view'],
     audit: [],
     settings: ['view', 'edit'],
-    ai: [],
+    ai: ['view', 'use'],
   },
   support: {
     dashboard: ['view'],
@@ -77,6 +77,6 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     permissions: [],
     access_requests: [],
     notifications: ['view'],
-    ai: [],
+    ai: ['view', 'use'],
   },
 };

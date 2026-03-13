@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { getAppMeta } from "@/lib/appMeta";
+import { formatRunText, formatRunTitle, stripRunPrefix } from "@/lib/runPresentation";
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
 
 type AdminRun = {
@@ -15,6 +16,14 @@ type AdminRun = {
   project?: string;
   radis?: string;
   source?: "API" | "MANUAL";
+};
+
+type ApplicationOption = {
+  id: string;
+  name: string;
+  slug: string;
+  companySlug?: string | null;
+  qaseProjectCode?: string | null;
 };
 
 const APP_COLOR_CLASS: Record<string, string> = {
@@ -43,6 +52,7 @@ export default function AdminRunsPage() {
   const [radis, setRadis] = useState("");
   const [summary, setSummary] = useState("");
   const [items, setItems] = useState<AdminRun[]>([]);
+  const [applications, setApplications] = useState<ApplicationOption[]>([]);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackType, setFeedbackType] = useState<"ok" | "error" | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,7 +61,11 @@ export default function AdminRunsPage() {
   const [pageSize, setPageSize] = useState(5);
   const [toast, setToast] = useState<{ message: string; type: "ok" | "error" } | null>(null);
 
-  const slugPreview = useMemo(() => slugifyRelease(title || "nova_run"), [title]);
+  const slugPreview = useMemo(() => slugifyRelease(stripRunPrefix(title) || "nova_run"), [title]);
+  const selectedApplication = useMemo(
+    () => applications.find((item) => item.slug === app) ?? null,
+    [applications, app],
+  );
 
   const load = async () => {
     setLoading(true);
@@ -99,6 +113,27 @@ export default function AdminRunsPage() {
   }, []);
 
   useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/applications", { cache: "no-store" });
+        const data = await res.json().catch(() => null);
+        const items = Array.isArray(data?.items) ? data.items : [];
+        setApplications(
+          items.map((item: Record<string, unknown>) => ({
+            id: typeof item.id === "string" ? item.id : "",
+            name: typeof item.name === "string" ? item.name : "",
+            slug: typeof item.slug === "string" ? item.slug : "",
+            companySlug: typeof item.companySlug === "string" ? item.companySlug : null,
+            qaseProjectCode: typeof item.qaseProjectCode === "string" ? item.qaseProjectCode : null,
+          })),
+        );
+      } catch {
+        setApplications([]);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
     if (!toast) return;
     const id = setTimeout(() => setToast(null), 3000);
     return () => clearTimeout(id);
@@ -114,10 +149,10 @@ export default function AdminRunsPage() {
     const trimmedApp = app.trim();
     const trimmedRadis = radis.trim();
     const runNumber = Number(trimmedRun);
-    const cleanedTitle = trimmedTitle.replace(/^run\s*/i, "");
+    const cleanedTitle = stripRunPrefix(trimmedTitle);
 
     if (!cleanedTitle || !trimmedRun || Number.isNaN(runNumber) || runNumber <= 0 || !trimmedApp) {
-      const msg = "Preencha nome, runId (numero) e selecione o projeto.";
+      const msg = "Preencha nome, runId (numero) e selecione a aplicacao.";
       setFeedback(msg);
       setFeedbackType("error");
       setToast({ message: msg, type: "error" });
@@ -131,7 +166,8 @@ export default function AdminRunsPage() {
         body: JSON.stringify({
           name: cleanedTitle,
           runId: runNumber,
-          app: trimmedApp,
+          app: selectedApplication?.slug || trimmedApp,
+          qaseProject: selectedApplication?.qaseProjectCode || trimmedApp.toUpperCase(),
           summary: summary.trim() || "Run cadastrada pelo painel.",
           radis: trimmedRadis,
         }),
@@ -205,7 +241,7 @@ export default function AdminRunsPage() {
               <p className="text-xs uppercase tracking-[0.45em] text-(--tc-accent,#ef0001)">Gestão de Runs</p>
               <h1 className="text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Gerenciar Runs</h1>
               <p className="text-(--tc-text-secondary,#4b5563) max-w-3xl">
-                Cadastre runs salvando em arquivo JSON do painel. Informe o nome, o ID da run no Qase e o projeto (ex.: sfq)
+                Cadastre runs salvando em arquivo JSON do painel. Informe o nome, o ID da run no Qase e a aplicacao
                 para gerar a URL e permitir buscar estatísticas automaticamente.
               </p>
             </div>
@@ -248,19 +284,31 @@ export default function AdminRunsPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-(--tc-text-secondary,#4b5563)">Projeto (Qase)</label>
+            <label className="text-sm text-(--tc-text-secondary,#4b5563)">Aplicacao</label>
             <select
-              aria-label="Selecionar projeto do Qase"
+              aria-label="Selecionar aplicacao"
               value={app}
               onChange={(e) => setApp(e.target.value)}
               className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-(--tc-text-primary,#011848) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
             >
-              <option value="">Selecione o projeto</option>
-              <option value="sfq">SFQ</option>
-              <option value="print">PRINT</option>
-              <option value="booking">Booking</option>
-              <option value="cds">CDS</option>
-              <option value="gmt">GMT</option>
+              <option value="">Selecione a aplicacao</option>
+              {applications.length > 0
+                ? applications.map((application) => (
+                    <option key={application.id} value={application.slug}>
+                      {application.name}
+                      {application.qaseProjectCode ? ` (${application.qaseProjectCode})` : ""}
+                      {application.companySlug ? ` - ${application.companySlug}` : ""}
+                    </option>
+                  ))
+                : (
+                  <>
+                    <option value="sfq">SFQ</option>
+                    <option value="print">PRINT</option>
+                    <option value="booking">Booking</option>
+                    <option value="cds">CDS</option>
+                    <option value="gmt">GMT</option>
+                  </>
+                )}
             </select>
           </div>
 
@@ -361,7 +409,8 @@ export default function AdminRunsPage() {
                 const meta = getAppMeta(chipKey, chipKey.toUpperCase());
                 const chipText = meta.label ?? (item.app ?? item.project ?? "APP").toUpperCase();
                 const appTagClass = APP_COLOR_CLASS[chipKey] ?? "app-color-default";
-                const titleClean = (item.title ?? "").replace(/^run\s*/i, "");
+                const titleClean = formatRunTitle(item.title, item.slug);
+                const summaryText = formatRunText(item.summary, "Sem resumo informado.");
                 return (
                 <div
                   key={`${item.slug ?? 'run'}-${idx}`}
@@ -385,13 +434,13 @@ export default function AdminRunsPage() {
                         </span>
                       )}
                       <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-3 py-1 truncate max-w-52 text-(--page-text,#0b1a3c)">
-                        Slug: /release/{item.slug}
+                        URL atual: /release/{item.slug}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <a
                         href={`/release/${item.slug}`}
-                        aria-label={`Abrir release ${titleClean || item.slug}`}
+                        aria-label={`Abrir run ${titleClean || item.slug}`}
                         className="rounded-lg border border-(--tc-accent,#ef0001)/70 px-4 py-2 text-sm font-semibold text-(--tc-accent,#ef0001) transition hover:bg-(--tc-accent-soft,rgba(239,0,1,0.12)) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
                       >
                         Abrir
@@ -401,7 +450,7 @@ export default function AdminRunsPage() {
                           data-testid="run-delete"
                           type="button"
                           onClick={() => handleDelete(item.slug, item.source)}
-                          aria-label={`Deletar release ${titleClean || item.slug}`}
+                          aria-label={`Deletar run ${titleClean || item.slug}`}
                           className="rounded-lg border border-red-400/60 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-300"
                         >
                           Deletar
@@ -413,7 +462,7 @@ export default function AdminRunsPage() {
                   <div className="space-y-2">
                     <h3 className="text-lg font-semibold text-(--page-text,#0b1a3c)">{titleClean}</h3>
                     <p className="text-sm text-(--tc-text-secondary,#4b5563) leading-snug">
-                      {item.summary || "Sem resumo informado."}
+                      {summaryText}
                     </p>
                     <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
                       <span>Slug: {item.slug}</span>

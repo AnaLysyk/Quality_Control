@@ -23,6 +23,35 @@ export function isItDev(user: AuthUser | null) {
   );
 }
 
+export function canManageAllTickets(user: AuthUser | null) {
+  if (!user) return false;
+  return (
+    isItDev(user) ||
+    isTicketAdmin(user) ||
+    hasPermissionAccess(user.permissions, "tickets", "view_all")
+  );
+}
+
+export function canAccessGlobalTicketWorkspace(user: AuthUser | null) {
+  if (!user) return false;
+  return (
+    canManageAllTickets(user) &&
+    (
+      hasPermissionAccess(user.permissions, "tickets", "view_all") ||
+      hasPermissionAccess(user.permissions, "tickets", "assign") ||
+      hasPermissionAccess(user.permissions, "tickets", "status") ||
+      hasPermissionAccess(user.permissions, "support", "assign") ||
+      hasPermissionAccess(user.permissions, "support", "status") ||
+      isItDev(user)
+    )
+  );
+}
+
+export function hasTicketEnteredSupportFlow(ticket: TicketRecord | null | undefined) {
+  if (!ticket) return false;
+  return ticket.status !== "backlog" || Boolean(ticket.assignedToUserId);
+}
+
 export function canViewTicket(user: AuthUser | null, ticket: TicketRecord) {
   if (!user) return false;
   if (
@@ -31,7 +60,7 @@ export function canViewTicket(user: AuthUser | null, ticket: TicketRecord) {
   ) {
     return false;
   }
-  if (isItDev(user)) return true;
+  if (canAccessGlobalTicketWorkspace(user)) return true;
   return ticket.createdBy === user.id;
 }
 
@@ -45,9 +74,9 @@ export function canCommentTicket(user: AuthUser | null, ticket: TicketRecord) {
 
 export function canEditTicketContent(user: AuthUser | null, ticket: TicketRecord) {
   if (!user) return false;
+  if (canAccessGlobalTicketWorkspace(user)) return true;
   if (!hasPermissionAccess(user.permissions, "tickets", "edit")) return false;
-  if (isItDev(user)) return true;
-  return ticket.createdBy === user.id;
+  return ticket.createdBy === user.id && !hasTicketEnteredSupportFlow(ticket);
 }
 
 export function canAssignTicket(user: AuthUser | null, ticket?: TicketRecord) {
@@ -59,8 +88,7 @@ export function canAssignTicket(user: AuthUser | null, ticket?: TicketRecord) {
     return false;
   }
   if (!ticket) return false;
-  if (isItDev(user)) return true;
-  return ticket.createdBy === user.id;
+  return canAccessGlobalTicketWorkspace(user);
 }
 
 export function canMoveTicket(user: AuthUser | null, ticket?: TicketRecord) {
@@ -72,6 +100,5 @@ export function canMoveTicket(user: AuthUser | null, ticket?: TicketRecord) {
     return false;
   }
   if (!ticket) return false;
-  if (isItDev(user)) return true;
-  return ticket.createdBy === user.id;
+  return canAccessGlobalTicketWorkspace(user);
 }

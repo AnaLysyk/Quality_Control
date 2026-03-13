@@ -1,6 +1,7 @@
 {
   "items": [
     {
+      "userId": "usr_company_griaule",
       "allow": {
         "tickets": [
           "view",
@@ -8,20 +9,28 @@
         ]
       },
       "deny": {},
-      "updatedAt": "2026-03-06T04:02:19.254Z",
-      "createdAt": "2026-03-06T04:02:19.254Z"
+      "updatedAt": "2026-03-06T04:08:58.974Z"
     },
     {
-      "allow": {
-        "tickets": [
+      "userId": "usr_f601a299",
+      "allow": {},
+      "deny": {
+        "users": [
           "view",
           "create"
         ]
       },
-      "deny": {},
-      "updatedAt": "2026-03-06T04:08:58.974Z",
-      "createdAt": "2026-03-06T04:03:19.031Z",
-      "userId": "usr_company_griaule"
+      "updatedAt": "2026-03-09T18:51:50.015Z"
+    },
+    {
+      "userId": "usr_dev",
+      "allow": {},
+      "deny": {
+        "support": [
+          "status"
+        ]
+      },
+      "updatedAt": "2026-03-10T21:46:47.378Z"
     }
   ]
 }

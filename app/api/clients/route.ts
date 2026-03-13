@@ -5,6 +5,7 @@ import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { ClientCreateRequestSchema, ClientListResponseSchema, ClientSchema } from "@/contracts/client";
 import { ErrorResponseSchema } from "@/contracts/errors";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
+import { syncCompanyApplications } from "@/lib/applicationsStore";
 import { createLocalCompany, listLocalCompanies, type LocalAuthCompany } from "@/lib/auth/localStore";
 
 export const runtime = "nodejs";
@@ -29,6 +30,24 @@ function asString(value: unknown): string | null {
 function asStringArray(value: unknown): string[] | null {
   if (!Array.isArray(value)) return null;
   return value.filter((item): item is string => typeof item === "string" && item.length > 0);
+}
+
+function normalizeProjectCodes(value: unknown): string[] | null {
+  if (Array.isArray(value)) {
+    const items = value
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim().toUpperCase())
+      .filter(Boolean);
+    return items.length ? Array.from(new Set(items)) : null;
+  }
+  if (typeof value === "string") {
+    const items = value
+      .split(/[\s,;|]+/g)
+      .map((item) => item.trim().toUpperCase())
+      .filter(Boolean);
+    return items.length ? Array.from(new Set(items)) : null;
+  }
+  return null;
 }
 
 function mapCompany(company: LocalAuthCompany) {
@@ -102,6 +121,8 @@ export async function POST(req: NextRequest) {
   console.debug(`[CLIENTS][POST] admin=${admin?.email ?? "-"} name=${name} desiredSlug=${desiredSlug} slugBase=${slugBase}`);
 
   const integrationType = (input as { integration_type?: string | null }).integration_type ?? null;
+  const normalizedProjectCodes = normalizeProjectCodes(input.qase_project_codes) ?? normalizeProjectCodes(input.qase_project_code);
+  const legacyProjectCode = input.qase_project_code ?? normalizedProjectCodes?.[0] ?? null;
   const resolvedNotes =
     input.notes ??
     input.internal_notes ??
@@ -126,8 +147,8 @@ export async function POST(req: NextRequest) {
     short_description: input.short_description ?? input.description ?? null,
     internal_notes: input.internal_notes ?? input.notes ?? null,
     extra_notes: input.extra_notes ?? null,
-    qase_project_code: input.qase_project_code ?? null,
-    qase_project_codes: input.qase_project_codes ?? null,
+    qase_project_code: legacyProjectCode,
+    qase_project_codes: normalizedProjectCodes,
     qase_token: input.qase_token ?? null,
     jira_base_url: input.jira_base_url ?? null,
     jira_email: input.jira_email ?? null,
@@ -139,6 +160,14 @@ export async function POST(req: NextRequest) {
     created_at: new Date().toISOString(),
     created_by: admin.email || admin.id,
   });
+
+  if (normalizedProjectCodes?.length) {
+    syncCompanyApplications({
+      companyId: company.id,
+      companySlug: company.slug,
+      projects: normalizedProjectCodes.map((code) => ({ code })),
+    });
+  }
 
   const payload = ClientSchema.parse(mapCompany(company));
 

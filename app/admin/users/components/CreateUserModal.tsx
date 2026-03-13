@@ -248,6 +248,7 @@ export function CreateUserModal({
                   onChange={(e) => setLogin(e.target.value)}
                   placeholder="Se deixar em branco, o sistema gera"
                 />
+                <span className="mt-1 block text-xs text-gray-500">Unico no sistema. Voce pode informar manualmente ou deixar o sistema gerar.</span>
               </label>
               {requiresPassword ? (
                 <label className="block text-sm">

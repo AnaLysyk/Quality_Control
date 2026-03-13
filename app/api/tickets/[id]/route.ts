@@ -3,9 +3,25 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { getTicketById, deleteTicketForUser, updateTicket } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketAssigned } from "@/lib/notificationService";
-import { canAssignTicket, canEditTicketContent, canViewTicket } from "@/lib/rbac/tickets";
+import { canAssignTicket, canEditTicketContent, canManageAllTickets, canMoveTicket, canViewTicket } from "@/lib/rbac/tickets";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
+import { listAdminUserItems } from "@/lib/adminUsers";
+
+function buildSupportAssigneeOptions(items: Awaited<ReturnType<typeof listAdminUserItems>>) {
+  return items
+    .filter(
+      (item) =>
+        item.active !== false &&
+        (item.permission_role === "admin" || item.permission_role === "dev"),
+    )
+    .map((item) => ({
+      id: item.id,
+      label: item.name || item.email || item.id,
+      email: item.email,
+      role: item.permission_role,
+    }));
+}
 
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
@@ -23,7 +39,21 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
   }
 
   const enriched = await attachAssigneeToTicket(item);
-  return NextResponse.json({ item: enriched }, { status: 200 });
+  const assigneeOptions = canAssignTicket(user, item)
+    ? buildSupportAssigneeOptions(await listAdminUserItems())
+    : [];
+  return NextResponse.json(
+    {
+      item: enriched,
+      assigneeOptions,
+      capabilities: {
+        canEditContent: canEditTicketContent(user, item),
+        canAssign: canAssignTicket(user, item),
+        canMoveStatus: canMoveTicket(user, item),
+      },
+    },
+    { status: 200 },
+  );
 }
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
@@ -124,10 +154,31 @@ export async function DELETE(req: Request, context: { params: Promise<{ id: stri
   if (!item) {
     return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
   }
-  const canDelete = hasPermissionAccess(user.permissions, "tickets", "delete") && item.createdBy === user.id;
+
+  const isOwner = item.createdBy === user.id;
+  const isPrivileged = canManageAllTickets(user);
+
+  // Privileged users (admin/it_dev) can delete any ticket at any time.
+  // Owners can only delete their own ticket while it is still in backlog.
+  const canDelete =
+    isPrivileged ||
+    (isOwner &&
+      item.status === "backlog" &&
+      (hasPermissionAccess(user.permissions, "tickets", "delete") ||
+        hasPermissionAccess(user.permissions, "support", "delete") ||
+        hasPermissionAccess(user.permissions, "tickets", "create") ||
+        hasPermissionAccess(user.permissions, "support", "create")));
+
   if (!canDelete) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    const reason =
+      !isOwner && !isPrivileged
+        ? "Sem permissao"
+        : item.status !== "backlog"
+          ? "Chamado so pode ser excluido enquanto estiver em Backlog"
+          : "Sem permissao";
+    return NextResponse.json({ error: reason }, { status: 403 });
   }
+
   const removed = await deleteTicketForUser(item.createdBy, id);
   return NextResponse.json({ ok: removed }, { status: 200 });
 }

@@ -1,4 +1,31 @@
 {
-  "items": [],
-  "counter": 0
+  "items": [
+    {
+      "id": "app_mmjsx5v2_bonnmf",
+      "companyId": "cmp_04c14bf0",
+      "companySlug": "empresa-04c14bf0",
+      "name": "PAULALYSYK1234@GMAIL.COM",
+      "slug": "paulalysyk1234-gmail-com",
+      "description": null,
+      "qaseProjectCode": "PAULALYSYK1234@GMAIL.COM",
+      "source": "qase",
+      "active": true,
+      "createdAt": "2026-03-09T23:17:35.342Z",
+      "updatedAt": "2026-03-09T23:17:35.342Z"
+    },
+    {
+      "id": "app_mmjngf29_0bubx1",
+      "companyId": "cmp_0bfb70de",
+      "companySlug": "empresa-0bfb70de",
+      "name": "DEV",
+      "slug": "dev",
+      "description": null,
+      "qaseProjectCode": "DEV",
+      "source": "qase",
+      "active": true,
+      "createdAt": "2026-03-09T20:44:36.033Z",
+      "updatedAt": "2026-03-09T20:44:36.033Z"
+    }
+  ],
+  "counter": 2
 }

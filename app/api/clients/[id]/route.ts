@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ClientCreateRequestSchema, ClientSchema } from "@/contracts/client";
 import { ErrorResponseSchema } from "@/contracts/errors";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
+import { syncCompanyApplications } from "@/lib/applicationsStore";
 import { deleteLocalCompany, listLocalCompanies, updateLocalCompany, type LocalAuthCompany } from "@/lib/auth/localStore";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
@@ -18,6 +19,24 @@ function asString(value: unknown): string | null {
 function asStringArray(value: unknown): string[] | null {
   if (!Array.isArray(value)) return null;
   return value.filter((item): item is string => typeof item === "string" && item.length > 0);
+}
+
+function normalizeProjectCodes(value: unknown): string[] | null {
+  if (Array.isArray(value)) {
+    const items = value
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim().toUpperCase())
+      .filter(Boolean);
+    return items.length ? Array.from(new Set(items)) : null;
+  }
+  if (typeof value === "string") {
+    const items = value
+      .split(/[\s,;|]+/g)
+      .map((item) => item.trim().toUpperCase())
+      .filter(Boolean);
+    return items.length ? Array.from(new Set(items)) : null;
+  }
+  return null;
 }
 
 function normalizeComparableName(value: string | null | undefined) {
@@ -96,6 +115,12 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
   const input = parsed.data;
   const nextName = (input.company_name ?? input.name ?? current.name ?? current.company_name ?? "").trim();
   if (!nextName) return jsonError("Nome da empresa obrigatorio", 400);
+  const nextProjectCodes =
+    normalizeProjectCodes(input.qase_project_codes) ??
+    normalizeProjectCodes(input.qase_project_code) ??
+    normalizeProjectCodes(current.qase_project_codes) ??
+    normalizeProjectCodes(current.qase_project_code);
+  const nextLegacyProjectCode = input.qase_project_code ?? nextProjectCodes?.[0] ?? current.qase_project_code ?? null;
 
   const duplicateByName = companies.find(
     (company) =>
@@ -130,8 +155,8 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
       current.description ??
       null,
     linkedin_url: input.linkedin_url ?? current.linkedin_url ?? null,
-    qase_project_code: input.qase_project_code ?? current.qase_project_code ?? null,
-    qase_project_codes: input.qase_project_codes ?? current.qase_project_codes ?? null,
+    qase_project_code: nextLegacyProjectCode,
+    qase_project_codes: nextProjectCodes,
     qase_token: input.qase_token ?? current.qase_token ?? null,
     jira_base_url: input.jira_base_url ?? current.jira_base_url ?? null,
     jira_email: input.jira_email ?? current.jira_email ?? null,
@@ -144,6 +169,14 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
   });
 
   if (!updated) return jsonError("Empresa nao encontrada", 404);
+
+  if (nextProjectCodes?.length) {
+    syncCompanyApplications({
+      companyId: updated.id,
+      companySlug: updated.slug,
+      projects: nextProjectCodes.map((code) => ({ code })),
+    });
+  }
 
   await addAuditLogSafe({
     actorUserId: admin.id,

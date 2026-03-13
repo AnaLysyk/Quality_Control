@@ -10,7 +10,7 @@ export function Card({ children, className, ...rest }: CardProps) {
   return (
     <div
       className={clsx(
-        "card-tc bg-(--tc-surface-dark) text-(--tc-text-inverse) border-(--tc-border)/20",
+        "card-tc border border-(--tc-border) bg-(--tc-surface) text-(--tc-text-primary)",
         className
       )}
       {...rest}
@@ -24,7 +24,7 @@ export function SectionCard({ children, className, ...rest }: CardProps) {
   return (
     <Card
       className={clsx(
-        "rounded-2xl p-5 md:p-6 shadow-[0_18px_38px_rgba(0,0,0,0.25)]",
+        "rounded-[24px] p-5 sm:p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]",
         className
       )}
       {...rest}

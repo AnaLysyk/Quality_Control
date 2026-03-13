@@ -7,7 +7,7 @@ function isRequestStatus(value: string | null): value is RequestStatus {
 }
 
 function isRequestType(value: string | null): value is RequestType {
-  return value === "EMAIL_CHANGE" || value === "COMPANY_CHANGE" || value === "PASSWORD_RESET";
+  return value === "EMAIL_CHANGE" || value === "COMPANY_CHANGE" || value === "PASSWORD_RESET" || value === "PROFILE_DELETION";
 }
 
 export async function GET(request: Request) {

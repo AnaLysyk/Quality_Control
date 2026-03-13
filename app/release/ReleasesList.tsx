@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { getAppMeta } from "@/lib/appMeta";
+import { formatRunText, formatRunTitle } from "@/lib/runPresentation";
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
 
 type ReleaseCard = {
@@ -155,7 +156,7 @@ export function ReleasesList({ className }: ReleasesListProps) {
                   <Link
                     key={`${rel.slug ?? 'rel'}-${rel.createdAt ?? idx}`}
                     href={`/release/${rel.slug}`}
-                    aria-label={`Abrir run ${rel.title}`}
+                    aria-label={`Abrir run ${formatRunTitle(rel.title, rel.slug)}`}
                     className={`cursor-pointer group card-tc bg-white text-[#0b1a3c] border border-(--tc-border)/40 p-4 min-h-40 rounded-xl transition hover:bg-(--tc-surface-hover) hover:border-(--tc-accent)/60 hover:shadow-[0_10px_30px_var(--tc-accent-soft)] ${appColorClass}`}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -166,9 +167,11 @@ export function ReleasesList({ className }: ReleasesListProps) {
 
                     <div className="mt-2 space-y-1">
                       <h3 className="text-base font-semibold text-(--tc-text-inverse)">
-                        {(rel.title ?? "").replace(/^run\s*/i, "")}
+                        {formatRunTitle(rel.title, rel.slug)}
                       </h3>
-                      <p className="text-sm text-(--tc-text-secondary) leading-relaxed line-clamp-2">{rel.summary}</p>
+                      <p className="text-sm text-(--tc-text-secondary) leading-relaxed line-clamp-2">
+                        {formatRunText(rel.summary, "Sem resumo informado.")}
+                      </p>
                     </div>
 
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-(--tc-text-muted)">

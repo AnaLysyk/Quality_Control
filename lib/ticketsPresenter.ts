@@ -6,6 +6,8 @@ import type { TicketRecord } from "@/lib/ticketsStore";
 export type TicketWithAssignee = TicketRecord & {
   assignedToName?: string | null;
   assignedToEmail?: string | null;
+  createdByLogin?: string | null;
+  createdByAvatarUrl?: string | null;
 };
 
 export async function attachAssigneeInfo(items: TicketRecord[]): Promise<TicketWithAssignee[]> {
@@ -14,10 +16,15 @@ export async function attachAssigneeInfo(items: TicketRecord[]): Promise<TicketW
   const byId = new Map(users.map((user) => [user.id, user]));
   return items.map((item) => {
     const assignee = item.assignedToUserId ? byId.get(item.assignedToUserId) : null;
+    const creator = item.createdBy ? byId.get(item.createdBy) : null;
     return {
       ...item,
+      createdByName: item.createdByName ?? creator?.name ?? null,
+      createdByEmail: item.createdByEmail ?? creator?.email ?? null,
       assignedToName: assignee?.name ?? null,
       assignedToEmail: assignee?.email ?? null,
+      createdByLogin: creator?.user ?? null,
+      createdByAvatarUrl: creator?.avatar_url ?? null,
     };
   });
 }

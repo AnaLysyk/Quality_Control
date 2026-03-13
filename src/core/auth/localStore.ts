@@ -84,6 +84,85 @@ function normalizeLogin(value: string) {
   return value.trim().toLowerCase();
 }
 
+function slugifyLoginSeed(value?: string | null) {
+  const normalized = (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ".")
+    .replace(/^\.+|\.+$/g, "")
+    .replace(/\.{2,}/g, ".");
+
+  return normalized || "usuario";
+}
+
+function duplicateEmailError() {
+  const err = new Error("E-mail ja cadastrado") as Error & { code?: string };
+  err.code = "DUPLICATE_EMAIL";
+  return err;
+}
+
+function duplicateUserError() {
+  const err = new Error("Usuario ja cadastrado") as Error & { code?: string };
+  err.code = "DUPLICATE_USER";
+  return err;
+}
+
+function buildUniqueLogin(
+  users: Array<Pick<LocalAuthUser, "id" | "email" | "user">>,
+  preferredLogin: string | null | undefined,
+  fallbackSeed: string,
+  excludeUserId?: string,
+) {
+  const taken = new Set(
+    users
+      .filter((user) => user.id !== excludeUserId)
+      .map((user) => normalizeLogin(user.user ?? user.email ?? "")),
+  );
+
+  const normalizedPreferred = normalizeLogin(preferredLogin ?? "");
+  if (normalizedPreferred) {
+    if (taken.has(normalizedPreferred)) throw duplicateUserError();
+    return normalizedPreferred;
+  }
+
+  const base = slugifyLoginSeed(fallbackSeed);
+  if (!taken.has(base)) return base;
+
+  let counter = 2;
+  while (taken.has(`${base}.${counter}`)) {
+    counter += 1;
+  }
+  return `${base}.${counter}`;
+}
+
+export async function suggestNextUniqueLogin(input: {
+  seed: string;
+  excludeUserId?: string;
+  avoid?: string[] | null;
+}) {
+  const store = await readLocalAuthStore();
+  const base = slugifyLoginSeed(input.seed);
+  const taken = new Set(
+    store.users
+      .filter((user) => user.id !== input.excludeUserId)
+      .map((user) => normalizeLogin(user.user ?? user.email ?? "")),
+  );
+  const avoid = new Set(
+    (input.avoid ?? [])
+      .map((value) => normalizeLogin(value ?? ""))
+      .filter(Boolean),
+  );
+
+  if (!taken.has(base) && !avoid.has(base)) return base;
+
+  let counter = 2;
+  while (taken.has(`${base}.${counter}`) || avoid.has(`${base}.${counter}`)) {
+    counter += 1;
+  }
+  return `${base}.${counter}`;
+}
+
 function normalizeComparableFullName(value?: string | null) {
   return (value ?? "")
     .trim()
@@ -394,19 +473,15 @@ export async function createLocalUser(input: {
 }): Promise<LocalAuthUser> {
   const store = await loadStoreForWrite();
   const email = normalizeLogin(input.email);
-  const login = normalizeLogin(input.user ?? input.email);
   const fullName = (input.full_name ?? input.name ?? input.email ?? "").trim();
+  const login = buildUniqueLogin(
+    store.users,
+    input.user,
+    fullName || input.name || email.split("@")[0] || email,
+  );
   const existingByEmail = store.users.find((user) => normalizeLogin(user.email) === email);
   if (existingByEmail) {
-    const err = new Error("E-mail ja cadastrado") as Error & { code?: string };
-    err.code = "DUPLICATE_EMAIL";
-    throw err;
-  }
-  const existingByLogin = store.users.find((user) => normalizeLogin(user.user ?? user.email) === login);
-  if (existingByLogin) {
-    const err = new Error("Usuario ja cadastrado") as Error & { code?: string };
-    err.code = "DUPLICATE_USER";
-    throw err;
+    throw duplicateEmailError();
   }
   const user: LocalAuthUser = {
     id: `usr_${randomUUID().slice(0, 8)}`,
@@ -441,25 +516,19 @@ export async function updateLocalUser(
   if (idx === -1) return null;
   const current = store.users[idx];
   const nextEmail = patch.email ? normalizeLogin(patch.email) : current.email;
-  const nextLogin = typeof patch.user === "string" ? normalizeLogin(patch.user) : current.user ?? current.email;
   const nextName = patch.name ? patch.name : current.name;
   const nextFullName =
     patch.full_name !== undefined
       ? (patch.full_name ?? "").trim() || nextName || nextEmail
       : (current.full_name ?? nextName ?? nextEmail);
+  const nextLogin =
+    typeof patch.user === "string"
+      ? buildUniqueLogin(store.users, patch.user, nextFullName || nextName || nextEmail, id)
+      : normalizeLogin(current.user ?? current.email);
 
   const duplicateEmail = store.users.find((user) => user.id !== id && normalizeLogin(user.email) === nextEmail);
   if (duplicateEmail) {
-    const err = new Error("E-mail ja cadastrado") as Error & { code?: string };
-    err.code = "DUPLICATE_EMAIL";
-    throw err;
-  }
-
-  const duplicateLogin = store.users.find((user) => user.id !== id && normalizeLogin(user.user ?? user.email) === nextLogin);
-  if (duplicateLogin) {
-    const err = new Error("Usuario ja cadastrado") as Error & { code?: string };
-    err.code = "DUPLICATE_USER";
-    throw err;
+    throw duplicateEmailError();
   }
 
   const next: LocalAuthUser = {

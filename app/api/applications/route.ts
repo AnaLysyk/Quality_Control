@@ -18,12 +18,14 @@ export async function POST(request: Request) {
       name: String(body.name),
       slug: body.slug ? String(body.slug) : undefined,
       description: body.description ?? null,
+      qaseProjectCode: typeof body.qaseProjectCode === "string" ? body.qaseProjectCode : null,
+      source: typeof body.source === "string" ? body.source : null,
       companySlug: body.companySlug ?? body.companyId ?? undefined,
       companyId: body.companyId ?? body.companySlug ?? undefined,
       active: body.active ?? true,
     });
     return NextResponse.json({ item: created }, { status: 201 });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "invalid body" }, { status: 400 });
   }
 }

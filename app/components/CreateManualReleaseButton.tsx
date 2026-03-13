@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { getAppMeta } from "@/lib/appMeta";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
+import { stripRunPrefix } from "@/lib/runPresentation";
 
 type NewManualRelease = {
   name: string;
@@ -109,7 +110,7 @@ export function CreateManualReleaseButton({
   redirectToRun?: boolean;
   onCreated?: (release: { slug?: string; name?: string; title?: string }) => void;
 }) {
-  const { user, loading } = useAuthUser();
+  useAuthUser();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -131,7 +132,9 @@ export function CreateManualReleaseButton({
   ];
 
   const { activeClientSlug } = useClientContext();
-  const [applications, setApplications] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+  const [applications, setApplications] = useState<
+    Array<{ id: string; name: string; slug: string; companySlug?: string | null; qaseProjectCode?: string | null }>
+  >([]);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -142,17 +145,28 @@ export function CreateManualReleaseButton({
         const q = slug ? `?companySlug=${encodeURIComponent(slug)}` : "";
         const res = await fetch(`/api/applications${q}`, { cache: "no-store" });
         const data = await res.json().catch(() => null);
-        const items = (data && data.items) || [];
-        setApplications(items.map((it: any) => ({ id: it.id, name: it.name, slug: it.slug })));
-        if (items.length > 0) setSelectedApplicationId(items[0].id);
-      } catch (e) {
+        const items = Array.isArray(data?.items) ? (data.items as Array<Record<string, unknown>>) : [];
+        const mapped = items.map((it) => ({
+          id: typeof it.id === "string" ? it.id : "",
+          name: typeof it.name === "string" ? it.name : "",
+          slug: typeof it.slug === "string" ? it.slug : "",
+          companySlug: typeof it.companySlug === "string" ? it.companySlug : null,
+          qaseProjectCode: typeof it.qaseProjectCode === "string" ? it.qaseProjectCode : null,
+        }));
+        setApplications(mapped);
+        if (mapped.length > 0) {
+          setSelectedApplicationId(mapped[0].id);
+          setForm((prev) => ({ ...prev, app: mapped[0].slug || mapped[0].name }));
+        }
+      } catch {
         setApplications([]);
       }
     })();
   }, [open, companySlug, activeClientSlug]);
 
   const total = form.pass + form.fail + form.blocked + form.notRun;
-  const appMeta = getAppMeta(form.app.toLowerCase(), form.app);
+  const selectedApplication = applications.find((application) => application.id === selectedApplicationId) ?? null;
+  const appMeta = getAppMeta((selectedApplication?.slug || form.app).toLowerCase(), selectedApplication?.name || form.app);
 
   const handleFailClick = () => {
     if (form.fail === 0) {
@@ -201,7 +215,8 @@ export function CreateManualReleaseButton({
   });
 
   const handleSubmit = async () => {
-    if (!form.name.trim()) return;
+    const cleanedName = stripRunPrefix(form.name);
+    if (!cleanedName) return;
     setSaving(true);
     setSubmitError(null);
     try {
@@ -211,8 +226,9 @@ export function CreateManualReleaseButton({
         credentials: "include",
           body: JSON.stringify({
             kind: "run",
-            name: form.name.trim(),
-            app: form.app,
+            name: cleanedName,
+            app: selectedApplication?.slug || form.app,
+            qaseProject: selectedApplication?.qaseProjectCode || form.app.toUpperCase(),
             slug: form.slug,
             ...(companySlug ? { clientSlug: companySlug } : {}),
             stats: {
@@ -346,11 +362,20 @@ export function CreateManualReleaseButton({
                           aria-label="Selecionar aplicação"
                           className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
                           value={selectedApplicationId ?? ""}
-                          onChange={(e) => setSelectedApplicationId(e.target.value)}
+                          onChange={(e) => {
+                            const nextId = e.target.value;
+                            setSelectedApplicationId(nextId);
+                            const nextApplication = applications.find((app) => app.id === nextId) ?? null;
+                            if (nextApplication) {
+                              setForm((prev) => ({ ...prev, app: nextApplication.slug || nextApplication.name }));
+                            }
+                          }}
                         >
                           {applications.map((app) => (
                             <option key={app.id} value={app.id}>
                               {app.name}
+                              {app.qaseProjectCode ? ` (${app.qaseProjectCode})` : ""}
+                              {app.companySlug ? ` - ${app.companySlug}` : ""}
                             </option>
                           ))}
                         </select>
@@ -369,12 +394,14 @@ export function CreateManualReleaseButton({
                         </select>
                       )}
                       <div className="text-xs text-(--tc-text-muted)">
-                        {appMeta.label} • cor aplicada automaticamente
+                        {selectedApplication?.qaseProjectCode
+                          ? `Projeto Qase: ${selectedApplication.qaseProjectCode}`
+                          : `${appMeta.label} • cor aplicada automaticamente`}
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-sm font-semibold text-(--tc-text-muted)">Release (slug)</label>
+                      <label className="text-sm font-semibold text-(--tc-text-muted)">Run (slug)</label>
                       <input
                         className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
                         data-testid="run-slug"
@@ -382,7 +409,7 @@ export function CreateManualReleaseButton({
                         onChange={(e) => setForm((prev) => ({ ...prev, slug: e.target.value }))}
                         placeholder="Ex: v1_8_0_reg"
                       />
-                      <div className="text-xs text-(--tc-text-muted)">Slug da release a ser impactada (ex: v1_8_0_reg)</div>
+                      <div className="text-xs text-(--tc-text-muted)">Slug da run. A rota atual continua em /release/{`<slug>`}.</div>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">

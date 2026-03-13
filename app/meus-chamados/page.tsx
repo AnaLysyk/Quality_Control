@@ -10,7 +10,7 @@ function getSuporteCode(code: string | null | undefined, id: string): string {
 }
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FiPlus, FiRefreshCw } from "react-icons/fi";
+import { FiLifeBuoy, FiPlus, FiRefreshCw, FiX } from "react-icons/fi";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { useSuporteKanbanColumns } from "@/hooks/useSuporteKanbanColumns";
 import { getSuporteStatusLabel, SUPORTE_STATUS_OPTIONS, normalizeKanbanStatus, type SuporteStatus } from "@/lib/suportesStatus";
@@ -270,11 +270,11 @@ export default function MeusSuportesPage() {
       <SuporteDetailsModal
         key={selectedSuporte?.id || 'empty'}
         open={Boolean(selectedSuporte)}
-        ticket={selectedSuporte}
+        suporte={selectedSuporte}
         onClose={() => setSelectedSuporte(null)}
         canEditStatus={canMoveSupport}
         statusOptions={[]}
-        onTicketUpdated={(updated: SuporteItem) => {
+        onSuporteUpdated={(updated: SuporteItem) => {
           setSelectedSuporte(updated);
           setSuportes((current) =>
             current.map((suporte) => (suporte.id === updated.id ? updated : suporte)),
@@ -283,66 +283,115 @@ export default function MeusSuportesPage() {
       />
 
       {createOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_30px_80px_rgba(15,23,42,0.35)]">
-            <div className="flex items-center justify-between border-b border-(--tc-border,#e5e7eb) px-6 py-4">
-              <h2 className="text-lg font-semibold">Novo suporte</h2>
+        <div
+          className="ticket-detail-modal-overlay support-create-modal-overlay"
+          onClick={() => setCreateOpen(false)}
+        >
+          <div
+            className="support-create-modal-shell"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="support-create-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="support-create-modal-header">
+              <div className="support-create-modal-heading">
+                <span className="support-create-modal-icon">
+                  <FiLifeBuoy size={18} />
+                </span>
+                <div className="support-create-modal-heading-copy">
+                  <p className="support-create-modal-kicker">SUPORTE</p>
+                  <h2 id="support-create-modal-title" className="support-create-modal-title">
+                    Novo suporte
+                  </h2>
+                  <p className="support-create-modal-subtitle">
+                    Abra um chamado com titulo, descricao, tipo e prioridade.
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={() => setCreateOpen(false)}
-                className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                className="support-create-modal-close"
+                aria-label="Fechar modal de novo suporte"
+                title="Fechar"
               >
-                Fechar
+                <FiX size={16} />
               </button>
             </div>
-            <div className="px-6 py-4 space-y-3">
-              <input
-                className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                placeholder="Titulo"
-                value={createDraft.title}
-                onChange={(e) => setCreateDraft((prev) => ({ ...prev, title: e.target.value }))}
-              />
-              <textarea
-                rows={4}
-                className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                placeholder="Descreva o suporte..."
-                value={createDraft.description}
-                onChange={(e) => setCreateDraft((prev) => ({ ...prev, description: e.target.value }))}
-              />
-              <div className="grid gap-2 sm:grid-cols-2">
-                <select
-                  className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                  title="Tipo do suporte"
-                  aria-label="Tipo do suporte"
-                  value={createDraft.type}
-                  onChange={(e) => setCreateDraft((prev) => ({ ...prev, type: e.target.value }))}
-                >
-                  {TYPE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                  title="Prioridade do suporte"
-                  aria-label="Prioridade do suporte"
-                  value={createDraft.priority}
-                  onChange={(e) => setCreateDraft((prev) => ({ ...prev, priority: e.target.value }))}
-                >
-                  {PRIORITY_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+
+            <div className="support-create-modal-body">
+              <div className="support-create-modal-form">
+                <label className="support-create-modal-field" htmlFor="my-create-suporte-title">
+                  <span className="support-create-modal-label">Titulo</span>
+                  <input
+                    id="my-create-suporte-title"
+                    className="support-create-modal-input"
+                    placeholder="Digite o titulo do suporte"
+                    value={createDraft.title}
+                    onChange={(e) => setCreateDraft((prev) => ({ ...prev, title: e.target.value }))}
+                  />
+                </label>
+
+                <label className="support-create-modal-field" htmlFor="my-create-suporte-description">
+                  <span className="support-create-modal-label">Descricao</span>
+                  <textarea
+                    id="my-create-suporte-description"
+                    rows={5}
+                    className="support-create-modal-textarea"
+                    placeholder="Descreva o suporte..."
+                    value={createDraft.description}
+                    onChange={(e) => setCreateDraft((prev) => ({ ...prev, description: e.target.value }))}
+                  />
+                </label>
+
+                <div className="support-create-modal-select-grid">
+                  <label className="support-create-modal-field" htmlFor="my-create-suporte-type">
+                    <span className="support-create-modal-label">Tipo</span>
+                    <select
+                      id="my-create-suporte-type"
+                      className="support-create-modal-select"
+                      title="Tipo do suporte"
+                      aria-label="Tipo do suporte"
+                      value={createDraft.type}
+                      onChange={(e) => setCreateDraft((prev) => ({ ...prev, type: e.target.value }))}
+                    >
+                      {TYPE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="support-create-modal-field" htmlFor="my-create-suporte-priority">
+                    <span className="support-create-modal-label">Prioridade</span>
+                    <select
+                      id="my-create-suporte-priority"
+                      className="support-create-modal-select"
+                      title="Prioridade do suporte"
+                      aria-label="Prioridade do suporte"
+                      value={createDraft.priority}
+                      onChange={(e) => setCreateDraft((prev) => ({ ...prev, priority: e.target.value }))}
+                    >
+                      {PRIORITY_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                {createError && <p className="support-create-modal-error">{createError}</p>}
               </div>
             </div>
-            <div className="flex items-center justify-end gap-2 border-t border-(--tc-border,#e5e7eb) px-6 py-4">
+
+            <div className="support-create-modal-footer">
               <button
                 type="button"
                 onClick={() => setCreateOpen(false)}
-                className="rounded-lg border border-(--tc-border,#e5e7eb) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                className="support-create-modal-secondary"
               >
                 Cancelar
               </button>
@@ -350,13 +399,11 @@ export default function MeusSuportesPage() {
                 type="button"
                 onClick={handleCreateSuporte}
                 disabled={createSaving || !createDraft.title.trim()}
-                className="rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
+                className="support-create-modal-primary"
               >
+                <FiPlus size={14} />
                 {createSaving ? "Salvando..." : "Criar"}
               </button>
-              {createError && (
-                <span className="ml-4 text-xs text-red-600">{createError}</span>
-              )}
             </div>
           </div>
         </div>

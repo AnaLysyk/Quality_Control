@@ -7,7 +7,7 @@ import { notifyTicketCreated } from "@/lib/notificationService";
 import { attachAssigneeInfo, attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
-import { isItDev } from "@/lib/rbac/tickets";
+import { canAccessGlobalTicketWorkspace } from "@/lib/rbac/tickets";
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
@@ -34,7 +34,7 @@ export async function GET(req: Request) {
   const search = url.searchParams.get("search");
   const limit = Math.max(1, Math.min(500, Number(url.searchParams.get("limit") ?? 200)));
 
-  let items = isItDev(user) ? await listAllTickets() : await listTicketsForUser(user.id);
+  let items = canAccessGlobalTicketWorkspace(user) ? await listAllTickets() : await listTicketsForUser(user.id);
   if (statusFilter) {
     const statuses = statusFilter.split(",").map((value) => value.trim()).filter(Boolean);
     if (statuses.length) {
@@ -95,9 +95,7 @@ export async function POST(req: Request) {
     console.debug("[tickets POST] received body:", body);
     const localUser = await getLocalUserById(user.id);
     const assignedToUserId =
-      (isItDev(user) ||
-        hasPermissionAccess(user.permissions, "tickets", "assign") ||
-        hasPermissionAccess(user.permissions, "support", "assign")) &&
+      canAccessGlobalTicketWorkspace(user) &&
       typeof body?.assignedToUserId === "string"
         ? body?.assignedToUserId
         : null;

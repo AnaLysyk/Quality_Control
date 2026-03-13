@@ -4,17 +4,20 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 import {
   FiAlertTriangle,
   FiCopy,
+  FiGrid,
   FiPlus,
   FiRotateCcw,
   FiSave,
   FiSearch,
+  FiShield,
   FiUsers,
+  FiX,
 } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { resolveAvatarEmoji } from "@/lib/avatarCatalog";
-import { PERMISSION_MODULES, getActionLabel } from "@/lib/permissionCatalog";
+import { PERMISSION_MODULES, getActionLabel, getPermissionModule } from "@/lib/permissionCatalog";
 import { ROLE_DEFAULTS } from "@/lib/roleDefaults";
 import {
   applyPermissionOverride,
@@ -66,6 +69,13 @@ type GlobalCreateDraft = {
   email: string;
   phone: string;
   password: string;
+};
+
+type ModuleSummaryItem = {
+  id: string;
+  label: string;
+  description: string;
+  actions: string[];
 };
 
 const ROLE_FILTERS: Array<{ value: RoleFilter; label: string; hint: string }> = [
@@ -270,16 +280,7 @@ function summarizeMatrixModules(matrix: PermissionMatrix) {
       description: module.description,
       actions,
     };
-  }).filter(
-    (
-      item,
-    ): item is {
-      id: string;
-      label: string;
-      description: string;
-      actions: string[];
-    } => Boolean(item),
-  );
+  }).filter((item): item is ModuleSummaryItem => Boolean(item));
 }
 
 function summarizeRoleModules(role: EditableProfileRole) {
@@ -402,20 +403,20 @@ function SurfaceModal(props: {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center px-4 py-4 sm:px-6 sm:py-6">
       <button
         type="button"
         aria-label="Fechar modal"
-        className="absolute inset-0 bg-[rgba(2,6,23,0.58)] backdrop-blur-[2px]"
+        className="absolute inset-0 bg-[rgba(2,6,23,0.62)] backdrop-blur-[6px]"
         onClick={onClose}
       />
       <div
-        className={`relative z-[91] w-full overflow-hidden rounded-[28px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] shadow-[0_30px_80px_rgba(2,6,23,0.48)] ${
+        className={`relative z-[91] flex max-h-[calc(100vh-2rem)] w-full flex-col overflow-hidden rounded-[28px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] shadow-[0_30px_80px_rgba(2,6,23,0.48)] ${
           size === "wide" ? "max-w-6xl" : "max-w-xl"
         }`}
       >
         <div
-          className="border-b border-[color:var(--tc-border)] px-5 py-5"
+          className="border-b border-[color:var(--tc-border)] px-5 py-5 sm:px-6"
           style={{
             background:
               tone === "alert"
@@ -423,26 +424,36 @@ function SurfaceModal(props: {
                 : "linear-gradient(180deg, rgba(1,24,72,0.08), transparent)",
           }}
         >
-          <div className="flex items-start gap-3">
-            {icon ? (
-              <div
-                className={`mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${
-                  tone === "alert"
-                    ? "border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.1)] text-[color:var(--tc-accent)]"
-                    : "border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] text-[color:var(--tc-primary)]"
-                }`}
-              >
-                {icon}
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 items-start gap-3">
+              {icon ? (
+                <div
+                  className={`mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${
+                    tone === "alert"
+                      ? "border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.1)] text-[color:var(--tc-accent)]"
+                      : "border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] text-[color:var(--tc-primary)]"
+                  }`}
+                >
+                  {icon}
+                </div>
+              ) : null}
+              <div className="min-w-0">
+                <h3 className="text-lg font-semibold text-[color:var(--tc-text-primary)]">{title}</h3>
+                {description && <p className="mt-2 text-sm leading-6 text-[color:var(--tc-text-secondary)]">{description}</p>}
               </div>
-            ) : null}
-            <div>
-              <h3 className="text-lg font-semibold text-[color:var(--tc-text-primary)]">{title}</h3>
-              {description && <p className="mt-2 text-sm leading-6 text-[color:var(--tc-text-secondary)]">{description}</p>}
             </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Fechar modal"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] text-[color:var(--tc-text-muted)] transition hover:bg-[color:var(--tc-surface-2)] hover:text-[color:var(--tc-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(239,0,1,0.16)]"
+            >
+              <FiX size={18} />
+            </button>
           </div>
         </div>
-        <div className="space-y-4 px-5 py-5">{children}</div>
-        <div className="flex flex-col gap-2 border-t border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-5 py-4 sm:flex-row sm:items-center sm:justify-end">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-6">{children}</div>
+        <div className="flex flex-col gap-2 border-t border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-5 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-6">
           {footer}
         </div>
       </div>
@@ -702,6 +713,34 @@ export default function PermissionsPage() {
   );
 
   const effectiveModuleSummary = useMemo(() => summarizeMatrixModules(effectivePermissions), [effectivePermissions]);
+  const effectiveModuleGroups = useMemo(() => {
+    const groups = new Map<
+      string,
+      {
+        category: string;
+        actionsCount: number;
+        modules: ModuleSummaryItem[];
+      }
+    >();
+
+    effectiveModuleSummary.forEach((module) => {
+      const category = getPermissionModule(module.id)?.category ?? "Outros";
+      const current = groups.get(category);
+      if (current) {
+        current.modules.push(module);
+        current.actionsCount += module.actions.length;
+        return;
+      }
+
+      groups.set(category, {
+        category,
+        actionsCount: module.actions.length,
+        modules: [module],
+      });
+    });
+
+    return Array.from(groups.values());
+  }, [effectiveModuleSummary]);
 
   const hasPermissionChanges = useMemo(
     () => serializeOverride(permissionData?.override) !== serializeOverride(draftOverride),
@@ -1026,6 +1065,9 @@ export default function PermissionsPage() {
 
       await loadUsers();
       await loadPermissions(selectedUserId);
+      if (authUser?.id && authUser.id === selectedUserId) {
+        await refreshUser();
+      }
       setMessage(profileMetaChanged ? "Perfil, empresa e permissões atualizados." : "Permissões salvas.");
     } catch (error) {
       setPanelError(error instanceof Error ? error.message : "Não foi possível salvar as permissões.");
@@ -1550,7 +1592,6 @@ export default function PermissionsPage() {
       <SurfaceModal
         open={createGlobalOpen}
         title="Criar Global"
-        description="Perfil tecnico com acesso total ao sistema, sem empresa vinculada."
         onClose={() => {
           setCreateGlobalOpen(false);
           resetCreateGlobalForm();
@@ -1578,13 +1619,6 @@ export default function PermissionsPage() {
           </>
         }
       >
-        <div className="rounded-[22px] border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.04)] px-4 py-3">
-          <div className="text-sm font-semibold text-[color:var(--tc-text-primary)]">Este usuario sera criado como Global</div>
-          <div className="mt-1 text-xs leading-5 text-[color:var(--tc-text-secondary)]">
-            Use nome completo, login, e-mail, telefone e senha. Esse perfil nao recebe empresa vinculada.
-          </div>
-        </div>
-
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="space-y-2 sm:col-span-2">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Nome completo</span>
@@ -1848,8 +1882,10 @@ export default function PermissionsPage() {
       <SurfaceModal
         open={permissionsViewerOpen}
         title="Permissões ativas"
-        description="Visualização do que o usuário acessa no estado atual da edição."
+        description="Resumo do acesso atual do usuário."
         onClose={() => setPermissionsViewerOpen(false)}
+        size="wide"
+        icon={<FiShield size={20} />}
         footer={
           <button
             type="button"
@@ -1860,37 +1896,121 @@ export default function PermissionsPage() {
           </button>
         }
       >
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-[20px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Módulos com acesso</div>
-            <div className="mt-2 text-sm font-semibold text-[color:var(--tc-text-primary)]">{totalActiveModules}</div>
-          </div>
-          <div className="rounded-[20px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Permissões ativas</div>
-            <div className="mt-2 text-sm font-semibold text-[color:var(--tc-text-primary)]">{totalActiveActions}</div>
-          </div>
-        </div>
-        <ScrollArea className="max-h-[50vh]" viewportClassName="pr-5 pb-4">
-          <div className="space-y-3">
-            {effectiveModuleSummary.map((module) => (
-              <div key={`viewer-${module.id}`} className="rounded-[18px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-semibold text-[color:var(--tc-text-primary)]">{module.label}</div>
-                  <div className="rounded-full border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--tc-text-muted)]">
-                    {module.actions.length}
-                  </div>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {module.actions.map((action) => (
-                    <span key={`viewer-${module.id}-${action}`} className="rounded-full border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.06)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--tc-primary)]">
-                      {getActionLabel(action)}
-                    </span>
-                  ))}
+        <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div
+            className="rounded-[26px] border border-[color:var(--tc-border)] px-5 py-5 sm:px-6"
+            style={{ background: "linear-gradient(135deg, rgba(1,24,72,0.06), rgba(1,24,72,0.02))" }}
+          >
+            <div className="flex items-start gap-4">
+              <AvatarIdentity user={selectedUser} size="lg" />
+              <div className="min-w-0">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Usuario</div>
+                <div className="mt-1 text-xl font-semibold text-[color:var(--tc-text-primary)]">{getDisplayName(selectedUser)}</div>
+                {getUserSecondaryLabel(selectedUser) ? (
+                  <div className="mt-1 text-sm text-[color:var(--tc-text-secondary)]">{getUserSecondaryLabel(selectedUser)}</div>
+                ) : null}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="rounded-full border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.06)] px-3 py-1 text-xs font-semibold text-[color:var(--tc-primary)]">
+                    {roleLabel(profileDraft)}
+                  </span>
+                  <span
+                    className="rounded-full border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] px-3 py-1 text-xs font-semibold text-[color:var(--tc-text-secondary)]"
+                    title={draftCompanyLabel}
+                  >
+                    {draftCompanyLabel}
+                  </span>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
-        </ScrollArea>
+
+          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            <div className="rounded-[22px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-4">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--tc-text-muted)]">
+                <FiGrid size={13} />
+                Modulos
+              </div>
+              <div className="mt-3 text-2xl font-semibold text-[color:var(--tc-text-primary)]">{totalActiveModules}</div>
+            </div>
+            <div className="rounded-[22px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-4">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--tc-text-muted)]">
+                <FiShield size={13} />
+                Permissoes
+              </div>
+              <div className="mt-3 text-2xl font-semibold text-[color:var(--tc-text-primary)]">{totalActiveActions}</div>
+            </div>
+            <div className="rounded-[22px] border border-[rgba(1,24,72,0.14)] bg-[color:var(--tc-surface)] px-4 py-4">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--tc-text-muted)]">Ajustes manuais</div>
+              <div className="mt-3 text-2xl font-semibold text-[color:var(--tc-text-primary)]">{customAllowCount + customDenyCount}</div>
+              <div className="mt-2 text-xs font-medium text-[color:var(--tc-text-secondary)]">
+                +{customAllowCount} liberadas / -{customDenyCount} bloqueadas
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-[26px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)]">
+          <div className="flex flex-col gap-3 border-b border-[color:var(--tc-border)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div>
+              <div className="text-lg font-semibold text-[color:var(--tc-text-primary)]">Acessos por modulo</div>
+              <div className="mt-1 text-sm text-[color:var(--tc-text-secondary)]">Leitura direta dos modulos liberados no estado atual.</div>
+            </div>
+            <div className="rounded-full border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-3 py-1.5 text-xs font-semibold text-[color:var(--tc-text-muted)]">
+              {effectiveModuleGroups.length} categorias
+            </div>
+          </div>
+          <ScrollArea className="max-h-[58vh]" viewportClassName="p-5 pr-6 pb-5 sm:p-6 sm:pr-7 sm:pb-6">
+            {effectiveModuleGroups.length ? (
+              <div className="space-y-6">
+                {effectiveModuleGroups.map((group) => (
+                  <section key={`viewer-group-${group.category}`} className="space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-base font-semibold text-[color:var(--tc-text-primary)]">{group.category}</div>
+                      <div className="rounded-full border border-[rgba(1,24,72,0.1)] bg-[rgba(1,24,72,0.05)] px-3 py-1.5 text-xs font-semibold text-[color:var(--tc-primary)]">
+                        {group.actionsCount} permissoes
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 xl:grid-cols-2">
+                      {group.modules.map((module) => (
+                        <article
+                          key={`viewer-${group.category}-${module.id}`}
+                          className="rounded-[22px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="text-base font-semibold text-[color:var(--tc-text-primary)]">{module.label}</div>
+                            </div>
+                            <div className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-2xl border border-[rgba(1,24,72,0.12)] bg-[color:var(--tc-surface)] px-3 text-sm font-semibold text-[color:var(--tc-primary)]">
+                              {module.actions.length}
+                            </div>
+                          </div>
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            {module.actions.map((action) => (
+                              <span
+                                key={`viewer-${module.id}-${action}`}
+                                className="rounded-full border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.06)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--tc-primary)]"
+                              >
+                                {getActionLabel(action)}
+                              </span>
+                            ))}
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-[22px] border border-dashed border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-8 text-center">
+                <div className="text-base font-semibold text-[color:var(--tc-text-primary)]">Nenhuma permissão ativa encontrada</div>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--tc-text-secondary)]">
+                  Revise o perfil base e as personalizações aplicadas para liberar acesso a algum módulo.
+                </p>
+              </div>
+            )}
+          </ScrollArea>
+        </section>
       </SurfaceModal>
 
       <SurfaceModal

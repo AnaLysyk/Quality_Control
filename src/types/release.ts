@@ -21,6 +21,7 @@ export type Release = {
   slug: string;
   name: string;
   app: string;
+  qaseProject?: string;
   category?: string;
   kind?: "run" | "defect";
   runSlug?: string;

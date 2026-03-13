@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
+import { formatRunTitle } from "@/lib/runPresentation";
 
 type ManualRun = {
   slug: string;
@@ -22,7 +23,7 @@ function normalizeRuns(data: unknown[]): ManualRun[] {
       const stats = (rec.stats ?? {}) as ManualRun["stats"];
       return {
         slug: String(rec.slug ?? rec.id ?? ""),
-        name: String(rec.name ?? rec.title ?? rec.slug ?? "Run manual"),
+        name: formatRunTitle(String(rec.name ?? rec.title ?? rec.slug ?? "Run manual"), "Run manual"),
         createdAt: typeof rec.createdAt === "string" ? rec.createdAt : null,
         status: typeof rec.status === "string" ? rec.status : null,
         stats: {

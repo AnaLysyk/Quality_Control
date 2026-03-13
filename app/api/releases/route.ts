@@ -52,7 +52,8 @@ export async function POST(request: Request) {
     const name = (body.name ?? body.title ?? "").toString();
     const runIdRaw = body.runId ?? body.run_id;
     const appRaw = (body.app ?? body.project ?? "smart").toString();
-    const summary = (body.summary ?? body.description ?? "Release cadastrada pelo painel.").toString();
+    const qaseProjectRaw = (body.qaseProject ?? body.qase_project_code ?? body.projectCode ?? appRaw).toString();
+    const summary = (body.summary ?? body.description ?? "Run cadastrada pelo painel.").toString();
     const radis = (body.radis ?? body.RADIS ?? "").toString() || undefined;
 
     if (!name || runIdRaw === undefined || runIdRaw === null) {
@@ -74,6 +75,7 @@ export async function POST(request: Request) {
       runId,
       app,
       project: app,
+      qaseProject: qaseProjectRaw.trim().toUpperCase() || app.toUpperCase(),
       radis,
       source: "API",
     });
@@ -112,7 +114,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ release: payload });
   } catch (error) {
     console.error("POST /api/releases error:", error);
-    return NextResponse.json({ error: "Erro ao salvar release." }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao salvar run." }, { status: 500 });
   }
 }
 
@@ -149,6 +151,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ ok: removed });
   } catch (error) {
     console.error("DELETE /api/releases error:", error);
-    return NextResponse.json({ error: "Erro ao remover release." }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao remover run." }, { status: 500 });
   }
 }

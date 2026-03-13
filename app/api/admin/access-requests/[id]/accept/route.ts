@@ -7,7 +7,6 @@ import {
   composeAccessRequestMessage,
   normalizeAccessType,
   parseAccessRequestMessage,
-  type AccessType,
 } from "@/lib/accessRequestMessage";
 import { prisma } from "@/lib/prismaClient";
 import { requireGlobalDeveloperWithStatus } from "@/lib/rbac/requireGlobalAdmin";
@@ -16,7 +15,6 @@ import {
   normalizeRequestProfileType,
   requestProfileTypeNeedsCompany,
   toInternalAccessType,
-  type RequestProfileType,
 } from "@/lib/requestRouting";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 
@@ -172,6 +170,12 @@ async function prepareAcceptanceMessage(
     notes: parsed.notes,
     companyProfile: parsed.companyProfile,
     adminNotes,
+    originalRequest: parsed.originalRequest,
+    adjustmentRound: parsed.adjustmentRound,
+    adjustmentRequestedFields: parsed.adjustmentRequestedFields,
+    adjustmentHistory: parsed.adjustmentHistory,
+    lastAdjustmentAt: parsed.lastAdjustmentAt,
+    lastAdjustmentDiff: parsed.lastAdjustmentDiff,
   });
 
   return { message, generatedUsername };

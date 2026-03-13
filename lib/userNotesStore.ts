@@ -14,13 +14,21 @@ export const NOTE_COLOR_KEYS = [
   "orange",
 ] as const;
 
+export const NOTE_STATUS_VALUES = ["Rascunho", "Em andamento", "Concluido", "Arquivado"] as const;
+export const NOTE_PRIORITY_VALUES = ["Baixa", "Media", "Alta", "Urgente"] as const;
+
 export type NoteColor = (typeof NOTE_COLOR_KEYS)[number];
+export type NoteStatus = (typeof NOTE_STATUS_VALUES)[number];
+export type NotePriority = (typeof NOTE_PRIORITY_VALUES)[number];
 
 export type UserNote = {
   id: string;
   title: string;
   content: string;
   color: NoteColor;
+  status: NoteStatus;
+  priority: NotePriority;
+  tags: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -132,42 +140,89 @@ function normalizeColor(value: unknown): NoteColor {
   return "amber";
 }
 
+function normalizeStatus(value: unknown): NoteStatus {
+  if (typeof value === "string" && NOTE_STATUS_VALUES.includes(value as NoteStatus)) {
+    return value as NoteStatus;
+  }
+  return "Rascunho";
+}
+
+function normalizePriority(value: unknown): NotePriority {
+  if (typeof value === "string" && NOTE_PRIORITY_VALUES.includes(value as NotePriority)) {
+    return value as NotePriority;
+  }
+  return "Media";
+}
+
+function sanitizeTag(value: unknown) {
+  if (typeof value !== "string") return "";
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/,+/g, "")
+    .slice(0, 24);
+}
+
+function normalizeTags(value: unknown) {
+  const source = Array.isArray(value) ? value : typeof value === "string" ? value.split(/[,\n]/) : [];
+  const tags = source.map((item) => sanitizeTag(item)).filter(Boolean);
+  return Array.from(new Set(tags)).slice(0, 12);
+}
+
+function normalizeNote(note: Partial<UserNote> | null | undefined): UserNote {
+  return {
+    id: typeof note?.id === "string" && note.id.trim() ? note.id : randomUUID(),
+    title: typeof note?.title === "string" && note.title.trim() ? note.title.trim().slice(0, 120) : "Sem titulo",
+    content: typeof note?.content === "string" ? note.content.trim().slice(0, 12000) : "",
+    color: normalizeColor(note?.color),
+    status: normalizeStatus(note?.status),
+    priority: normalizePriority(note?.priority),
+    tags: normalizeTags(note?.tags),
+    createdAt: typeof note?.createdAt === "string" && note.createdAt ? note.createdAt : new Date().toISOString(),
+    updatedAt: typeof note?.updatedAt === "string" && note.updatedAt ? note.updatedAt : new Date().toISOString(),
+  };
+}
+
 export async function listUserNotes(userId: string) {
   // Prefer Redis if configured
   if (USE_REDIS) {
     const fromRedis = await readStoreRedis(userId);
     if (Array.isArray(fromRedis)) {
-      return fromRedis.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+      return fromRedis.map((note) => normalizeNote(note)).sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
     }
     // fallthrough to file/memory
   }
 
   if (USE_MEMORY) {
     const items = Array.isArray(memoryStore[userId]) ? memoryStore[userId] : [];
-    return items.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+    return items.map((note) => normalizeNote(note)).sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
   }
 
   // Try file store
   try {
     const store = await readStoreFile();
     const items = Array.isArray(store[userId]) ? store[userId] : [];
-    return items.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+    return items.map((note) => normalizeNote(note)).sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
   } catch {
     const items = Array.isArray(memoryStore[userId]) ? memoryStore[userId] : [];
-    return items.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+    return items.map((note) => normalizeNote(note)).sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
   }
 }
 
 export async function createUserNote(
   userId: string,
-  input: { title?: unknown; content?: unknown; color?: unknown },
+  input: { title?: unknown; content?: unknown; color?: unknown; status?: unknown; priority?: unknown; tags?: unknown },
 ) {
   const rawTitle = sanitizeText(input.title, 120);
-  const rawContent = sanitizeText(input.content, 4000);
+  const rawContent = sanitizeText(input.content, 12000);
   if (!rawTitle && !rawContent) return null;
   const title = rawTitle || "Sem titulo";
   const content = rawContent;
   const color = normalizeColor(input.color);
+  const status = normalizeStatus(input.status);
+  const priority = normalizePriority(input.priority);
+  const tags = normalizeTags(input.tags);
   if (!title && !content) {
     return null;
   }
@@ -178,6 +233,9 @@ export async function createUserNote(
     title,
     content,
     color,
+    status,
+    priority,
+    tags,
     createdAt: now,
     updatedAt: now,
   };
@@ -220,7 +278,7 @@ export async function createUserNote(
 export async function updateUserNote(
   userId: string,
   id: string,
-  patch: { title?: unknown; content?: unknown; color?: unknown },
+  patch: { title?: unknown; content?: unknown; color?: unknown; status?: unknown; priority?: unknown; tags?: unknown },
 ) {
   // Redis path
   if (USE_REDIS) {
@@ -228,11 +286,14 @@ export async function updateUserNote(
     if (Array.isArray(itemsFromRedis)) {
       const index = itemsFromRedis.findIndex((note) => note.id === id);
       if (index === -1) return null;
-      const current = itemsFromRedis[index];
+      const current = normalizeNote(itemsFromRedis[index]);
       const title = sanitizeText(patch.title, 120) || current.title;
-      const content = typeof patch.content === "string" ? sanitizeText(patch.content, 4000) : current.content;
+      const content = typeof patch.content === "string" ? sanitizeText(patch.content, 12000) : current.content;
       const color = normalizeColor(patch.color ?? current.color);
-      const updated: UserNote = { ...current, title, content, color, updatedAt: new Date().toISOString() };
+      const status = patch.status === undefined ? current.status : normalizeStatus(patch.status);
+      const priority = patch.priority === undefined ? current.priority : normalizePriority(patch.priority);
+      const tags = patch.tags === undefined ? current.tags : normalizeTags(patch.tags);
+      const updated: UserNote = { ...current, title, content, color, status, priority, tags, updatedAt: new Date().toISOString() };
       itemsFromRedis[index] = updated;
       const ok = await writeStoreRedis(userId, itemsFromRedis);
       if (ok) return updated;
@@ -244,11 +305,14 @@ export async function updateUserNote(
     const items = Array.isArray(memoryStore[userId]) ? memoryStore[userId] : [];
     const index = items.findIndex((note) => note.id === id);
     if (index === -1) return null;
-    const current = items[index];
+    const current = normalizeNote(items[index]);
     const title = sanitizeText(patch.title, 120) || current.title;
-    const content = typeof patch.content === "string" ? sanitizeText(patch.content, 4000) : current.content;
+    const content = typeof patch.content === "string" ? sanitizeText(patch.content, 12000) : current.content;
     const color = normalizeColor(patch.color ?? current.color);
-    const updated: UserNote = { ...current, title, content, color, updatedAt: new Date().toISOString() };
+    const status = patch.status === undefined ? current.status : normalizeStatus(patch.status);
+    const priority = patch.priority === undefined ? current.priority : normalizePriority(patch.priority);
+    const tags = patch.tags === undefined ? current.tags : normalizeTags(patch.tags);
+    const updated: UserNote = { ...current, title, content, color, status, priority, tags, updatedAt: new Date().toISOString() };
     items[index] = updated;
     memoryStore[userId] = items;
     return updated;
@@ -260,11 +324,14 @@ export async function updateUserNote(
     const items = Array.isArray(store[userId]) ? store[userId] : [];
     const index = items.findIndex((note) => note.id === id);
     if (index === -1) return null;
-    const current = items[index];
+    const current = normalizeNote(items[index]);
     const title = sanitizeText(patch.title, 120) || current.title;
-    const content = typeof patch.content === "string" ? sanitizeText(patch.content, 4000) : current.content;
+    const content = typeof patch.content === "string" ? sanitizeText(patch.content, 12000) : current.content;
     const color = normalizeColor(patch.color ?? current.color);
-    const updated: UserNote = { ...current, title, content, color, updatedAt: new Date().toISOString() };
+    const status = patch.status === undefined ? current.status : normalizeStatus(patch.status);
+    const priority = patch.priority === undefined ? current.priority : normalizePriority(patch.priority);
+    const tags = patch.tags === undefined ? current.tags : normalizeTags(patch.tags);
+    const updated: UserNote = { ...current, title, content, color, status, priority, tags, updatedAt: new Date().toISOString() };
     items[index] = updated;
     store[userId] = items;
     await writeStoreFile(store);
@@ -273,11 +340,14 @@ export async function updateUserNote(
     const items = Array.isArray(memoryStore[userId]) ? memoryStore[userId] : [];
     const index = items.findIndex((note) => note.id === id);
     if (index === -1) return null;
-    const current = items[index];
+    const current = normalizeNote(items[index]);
     const title = sanitizeText(patch.title, 120) || current.title;
-    const content = typeof patch.content === "string" ? sanitizeText(patch.content, 4000) : current.content;
+    const content = typeof patch.content === "string" ? sanitizeText(patch.content, 12000) : current.content;
     const color = normalizeColor(patch.color ?? current.color);
-    const updated: UserNote = { ...current, title, content, color, updatedAt: new Date().toISOString() };
+    const status = patch.status === undefined ? current.status : normalizeStatus(patch.status);
+    const priority = patch.priority === undefined ? current.priority : normalizePriority(patch.priority);
+    const tags = patch.tags === undefined ? current.tags : normalizeTags(patch.tags);
+    const updated: UserNote = { ...current, title, content, color, status, priority, tags, updatedAt: new Date().toISOString() };
     items[index] = updated;
     memoryStore[userId] = items;
     return updated;

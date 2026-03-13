@@ -1,12 +1,8 @@
-// Tipo mínimo para AuthUser para evitar erro de compilação
-type AuthUser = { role?: string | null; isGlobalAdmin?: boolean; companySlug?: string | null; companySlugs?: string[] };
-// import type { AuthUser } from "../../../lib/jwtAuth";
 import { NextRequest, NextResponse } from "next/server";
 
 import { getNextId, readKanbanStore, writeKanbanStore } from "../store";
-import type { Status } from "../types";
-import { authenticateRequest } from "@/lib/jwtAuth";
-// import type { AuthUser } from "@/lib/jwtAuth";
+import type { Card, Status } from "../types";
+import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ message }, { status });
@@ -119,7 +115,8 @@ export async function POST(request: NextRequest) {
 
   const store = await readKanbanStore();
   const existing = store.items.find(
-    (c: any) => c.project === project && c.run_id === runId && c.case_id === caseId && c.client_slug === effectiveSlug,
+    (card: Card) =>
+      card.project === project && card.run_id === runId && card.case_id === caseId && card.client_slug === effectiveSlug,
   );
   if (existing) {
     if (title) existing.title = title;

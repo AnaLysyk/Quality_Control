@@ -18,6 +18,10 @@ import {
 
 export const runtime = "nodejs";
 
+function hasOwn(obj: Record<string, unknown> | null, key: string) {
+  return !!obj && Object.prototype.hasOwnProperty.call(obj, key);
+}
+
 function normalizeRole(input?: string | null) {
   const value = (input ?? "").toLowerCase();
   if (value === "client_admin" || value === "admin" || value === "global_admin" || value === "company_admin") return "company_admin";
@@ -238,12 +242,18 @@ export async function PATCH(req: NextRequest) {
 
   const name = typeof body?.name === "string" ? body.name.trim() : null;
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : null;
-  const login = typeof body?.user === "string" ? normalizeLogin(body.user) : null;
+  const hasLogin = typeof body?.user === "string";
+  const login = hasLogin ? normalizeLogin(body?.user) : null;
   const active = typeof body?.active === "boolean" ? body.active : null;
   const clientId = typeof body?.client_id === "string" ? body.client_id : null;
   const jobTitle = typeof body?.job_title === "string" ? body.job_title.trim() || null : null;
   const linkedinUrl = typeof body?.linkedin_url === "string" ? body.linkedin_url.trim() || null : null;
-  const avatarUrl = typeof body?.avatar_url === "string" ? body.avatar_url.trim() || null : null;
+  const hasAvatarUrl = hasOwn(body as Record<string, unknown> | null, "avatar_url");
+  const avatarUrl = hasAvatarUrl
+    ? typeof body?.avatar_url === "string"
+      ? body.avatar_url.trim() || null
+      : null
+    : undefined;
   const rawRole = typeof body?.role === "string" ? body.role : "";
   const wantsGlobalAdmin = ["admin", "global_admin", "it_dev", "itdev", "developer", "dev"].includes(
     rawRole.trim().toLowerCase(),
@@ -288,11 +298,11 @@ export async function PATCH(req: NextRequest) {
       ...(fullName !== undefined ? { full_name: fullName } : {}),
       ...(name ? { name } : {}),
       ...(email ? { email } : {}),
-      ...(login ? { user: login } : {}),
+      ...(hasLogin ? { user: login ?? "" } : {}),
       ...(active !== null ? { active } : {}),
       ...(jobTitle !== null ? { job_title: jobTitle } : {}),
       ...(linkedinUrl !== null ? { linkedin_url: linkedinUrl } : {}),
-      ...(avatarUrl !== null ? { avatar_url: avatarUrl } : {}),
+      ...(hasAvatarUrl ? { avatar_url: avatarUrl ?? null } : {}),
       ...(phone !== undefined ? { phone } : {}),
       ...(rawRole
         ? {

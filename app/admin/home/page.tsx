@@ -307,19 +307,27 @@ export default function AdminHomePage() {
 
   const companyRiskText = selectedCompany?.gate?.status ?? "no_data";
 
-  const companyCards = companies.map((company) => {
-    const totalFailures = sumStats(company.stats);
-    return {
-      id: company.id,
-      slug: company.slug ?? company.id,
-      name: company.name,
-      risk: company.gate?.status ?? "no_data",
-      passRate: company.passRate,
-      defectCount: totalFailures,
-      runsTotal: company.releases?.length ?? 0,
-      gateCopy: company.gate?.status === "failed" ? "Risco alto" : company.gate?.status === "warning" ? "Atenção" : "Estável",
-    };
-  });
+  const companyCards = Array.from(
+    new Map(
+      companies.map((company) => {
+        const slug = company.slug ?? company.id;
+        const totalFailures = sumStats(company.stats);
+        return [
+          slug,
+          {
+            id: company.id,
+            slug,
+            name: company.name,
+            risk: company.gate?.status ?? "no_data",
+            passRate: company.passRate,
+            defectCount: totalFailures,
+            runsTotal: company.releases?.length ?? 0,
+            gateCopy: company.gate?.status === "failed" ? "Risco alto" : company.gate?.status === "warning" ? "Atenção" : "Estável",
+          },
+        ];
+      }),
+    ).values(),
+  );
 
   return (
     <RequireGlobalAdmin>
@@ -382,7 +390,7 @@ export default function AdminHomePage() {
                   const testSlug = slugifyTestId(selectedKey ?? company.name ?? company.id);
                   return (
                     <button
-                      key={company.id}
+                      key={company.slug}
                       type="button"
                       onClick={() => setSelectedCompanySlug(selectedKey)}
                       data-testid={testSlug ? `benchmark-row-${testSlug}` : "benchmark-row"}

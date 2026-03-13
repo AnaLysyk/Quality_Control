@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { randomUUID } from "crypto";
 
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
@@ -16,6 +15,7 @@ import {
 } from "@/lib/auth/localStore";
 
 export const runtime = "nodejs";
+const MIN_PASSWORD_LENGTH = 8;
 
 type UserItem = {
   id: string;
@@ -128,6 +128,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+  const password = typeof body?.password === "string" ? body.password : "";
   const rawLogin = typeof body?.user === "string" ? body.user : "";
   const inferredLogin = !rawLogin && typeof body?.email === "string" ? String(body.email).split("@")[0] : rawLogin;
   const login = normalizeLogin(inferredLogin);
@@ -148,6 +149,9 @@ export async function POST(req: NextRequest) {
     console.error(`[ADMIN-USERS][POST] missing-fields admin=${admin?.email ?? "-"} name='${name}' email='${email}' login='${login}'`);
     return NextResponse.json({ error: "Nome, usuario e email sao obrigatorios" }, { status: 400 });
   }
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return NextResponse.json({ error: `Senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres` }, { status: 400 });
+  }
   if (!clientId) {
     console.error(`[ADMIN-USERS][POST] missing-client admin=${admin?.email ?? "-"} clientId=${clientId}`);
     return NextResponse.json({ error: "Empresa obrigatoria para este perfil" }, { status: 400 });
@@ -163,14 +167,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Usuario ja existe" }, { status: 409 });
   }
 
-  const tempPassword = hashPasswordSha256(`${Date.now()}-${randomUUID()}`);
   let user = null;
   try {
     user = await createLocalUser({
       name,
       email,
       user: login,
-      password_hash: tempPassword,
+      password_hash: hashPasswordSha256(password),
       active: true,
       role: "user",
       globalRole: wantsGlobalAdmin ? "global_admin" : null,

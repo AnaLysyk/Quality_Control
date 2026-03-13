@@ -45,6 +45,7 @@ test("admin cria empresa e usuario", async ({ page }) => {
   await page.getByLabel(/Empresa vinculada/i).selectOption({ label: companyName });
   await page.getByLabel(/Nome completo/i).fill(userName);
   await page.getByLabel(/^Email$/i).fill(userEmail);
+  await page.getByLabel(/Senha inicial/i).fill("admin123");
   const userForm = page.locator("form").filter({ hasText: /Criar usu/i });
   await userForm.getByRole("button", { name: /Criar usu/i }).click();
 

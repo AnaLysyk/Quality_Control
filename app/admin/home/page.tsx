@@ -327,6 +327,20 @@ export default function AdminHomePage() {
         ];
       }),
     ).values(),
+  ).map((company, index) => ({
+    ...company,
+    renderKey: `company-card-${company.slug}-${index}`,
+  }));
+
+  const rankingRows = useMemo(
+    () =>
+      Array.from(new Map((ranking?.companies ?? []).map((company) => [company.slug ?? company.name, company])).values()).map(
+        (company, index) => ({
+          ...company,
+          renderKey: `ranking-company-${company.slug ?? company.name}-${index}`,
+        }),
+      ),
+    [ranking],
   );
 
   return (
@@ -390,7 +404,7 @@ export default function AdminHomePage() {
                   const testSlug = slugifyTestId(selectedKey ?? company.name ?? company.id);
                   return (
                     <button
-                      key={company.slug}
+                      key={company.renderKey}
                       type="button"
                       onClick={() => setSelectedCompanySlug(selectedKey)}
                       data-testid={testSlug ? `benchmark-row-${testSlug}` : "benchmark-row"}
@@ -620,7 +634,7 @@ export default function AdminHomePage() {
             <h2 className="text-2xl font-bold mb-4 text-(--page-text,#0b1a3c)">Ranking de Qualidade por Empresa</h2>
             {loadingRanking ? (
               <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando ranking...</p>
-            ) : ranking && ranking.companies.length > 0 ? (
+            ) : rankingRows.length > 0 ? (
               <table data-testid="ranking-table" className="min-w-full border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-xs uppercase text-(--tc-text-muted,#6b7280)">
@@ -630,8 +644,8 @@ export default function AdminHomePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {Array.from(new Map(ranking.companies.map((c) => [c.slug ?? c.name, c])).values()).map((c) => (
-                    <tr key={c.slug ?? c.name} className="bg-white hover:bg-(--tc-surface,#f9fafb) transition">
+                  {rankingRows.map((c) => (
+                    <tr key={c.renderKey} className="bg-white hover:bg-(--tc-surface,#f9fafb) transition">
                       <td className="px-2 py-1 font-semibold text-(--page-text,#0b1a3c)">{c.name}</td>
                       <td className="px-2 py-1 font-mono font-bold text-lg">{c.score}</td>
                       <td className="px-2 py-1"><Badge status={c.status} /></td>

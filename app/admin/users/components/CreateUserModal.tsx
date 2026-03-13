@@ -27,6 +27,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
   const [name, setName] = useState("");
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [role, setRole] = useState("client_user");
   const [jobTitle, setJobTitle] = useState("");
   const [linkedin, setLinkedin] = useState("");
@@ -42,8 +43,8 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
 
   const requiresClient = true;
   const canSubmit = useMemo(
-    () => !!open && (!requiresClient || !!localClientId) && !!name.trim() && !!email.trim(),
-    [open, requiresClient, localClientId, name, email],
+    () => !!open && (!requiresClient || !!localClientId) && !!name.trim() && !!email.trim() && password.length >= 8,
+    [open, requiresClient, localClientId, name, email, password],
   );
 
   useEffect(() => {
@@ -95,6 +96,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
         name: name.trim(),
         ...(login.trim() ? { user: login.trim() } : {}),
         email: email.trim(),
+        password,
         avatar_url: avatarUrl.trim() || undefined,
         role,
         client_id: localClientId,
@@ -122,7 +124,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
         toast.error(err.displayMessage);
         return;
       }
-      const okMsg = "Usuario criado. Convite enviado.";
+      const okMsg = "Usuario criado.";
       setMessage(okMsg);
       toast.success(okMsg);
       console.error(`[ADMIN-USERS-CLIENT][CREATE] success name=${name} email=${email} clientId=${localClientId}`);
@@ -148,6 +150,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
     setName("");
     setLogin("");
     setEmail("");
+    setPassword("");
     setJobTitle("");
     setLinkedin("");
     setAvatarUrl("");
@@ -165,7 +168,7 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
           <div>
             <p className="text-xs uppercase text-indigo-600">Usuario</p>
             <h3 className="text-lg font-semibold text-gray-900">Criar usuario</h3>
-            <p className="text-sm text-gray-600">Um convite sera enviado por email.</p>
+            <p className="text-sm text-gray-600">Defina uma senha inicial para liberar o primeiro acesso.</p>
           </div>
           <button type="button" className="text-sm text-gray-500" onClick={() => { resetForm(); onClose(); }}>
             Fechar
@@ -221,6 +224,18 @@ export function CreateUserModal({ open, clientId, clients, onClose, onCreated }:
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="email@empresa.com"
+                  required
+                />
+              </label>
+              <label className="block text-sm">
+                Senha inicial
+                <input
+                  type="password"
+                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Minimo 8 caracteres"
+                  minLength={8}
                   required
                 />
               </label>

@@ -11,7 +11,7 @@ jest.mock("next/navigation", () => ({
 import { CreateUserModal } from "../app/admin/users/components/CreateUserModal";
 
 describe("CreateUserModal", () => {
-  it("auto-selects the single client and enables submit when required fields filled", async () => {
+  it("auto-selects the single client and enables submit when required fields and password are filled", async () => {
     const onClose = jest.fn();
     const onCreated = jest.fn();
 
@@ -28,11 +28,14 @@ describe("CreateUserModal", () => {
     // Fill required fields
     const nameInput = screen.getByPlaceholderText("Nome do usuario") as HTMLInputElement;
     const emailInput = screen.getByPlaceholderText("email@empresa.com") as HTMLInputElement;
+    const passwordInput = screen.getByPlaceholderText("Minimo 8 caracteres") as HTMLInputElement;
+    const submit = screen.getByRole("button", { name: /Criar usuario/i }) as HTMLButtonElement;
 
     fireEvent.change(nameInput, { target: { value: "Teste Usuario" } });
     fireEvent.change(emailInput, { target: { value: "teste@exemplo.com" } });
+    expect(submit).toBeDisabled();
 
-    const submit = screen.getByRole("button", { name: /Criar usuario/i }) as HTMLButtonElement;
+    fireEvent.change(passwordInput, { target: { value: "admin123" } });
     expect(submit).not.toBeDisabled();
   });
 });

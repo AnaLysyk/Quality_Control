@@ -386,6 +386,34 @@ export function CompanyMetricsCard(props: {
     return { first, last, worst };
   }, [trendPoints]);
 
+  const trendCards = useMemo(() => {
+    if (trendSnapshot) {
+      return [
+        {
+          label: "Primeira leitura",
+          value: `${trendSnapshot.first.value ?? 0}%`,
+          note: `${trendSnapshot.first.label} · ${trendSnapshot.first.total} casos`,
+        },
+        {
+          label: "Pior ponto do período",
+          value: `${trendSnapshot.worst.value ?? 0}%`,
+          note: `${trendSnapshot.worst.label} · falhas ${trendSnapshot.worst.failRate ?? 0}% · bloqueados ${trendSnapshot.worst.blockedRate ?? 0}%`,
+        },
+        {
+          label: "Última leitura",
+          value: `${trendSnapshot.last.value ?? 0}%`,
+          note: `${trendSnapshot.last.label} · falhas ${trendSnapshot.last.failRate ?? 0}% · bloqueados ${trendSnapshot.last.blockedRate ?? 0}%`,
+        },
+      ];
+    }
+
+    return [
+      { label: "Primeira leitura", value: "--", note: "Sem leitura válida na janela" },
+      { label: "Pior ponto do período", value: "--", note: "Sem leitura válida na janela" },
+      { label: "Última leitura", value: "--", note: "Sem leitura válida na janela" },
+    ];
+  }, [trendSnapshot]);
+
   const latest = useMemo(() => {
     if (!activeApp) return company.latestRelease ?? null;
     const list = [...(releases ?? [])];
@@ -516,11 +544,11 @@ export function CompanyMetricsCard(props: {
 
   return (
     <div
-      className={`flex h-full min-h-[44rem] flex-col rounded-[28px] border bg-white shadow-sm transition ${
+      className={`flex h-full min-h-[39rem] flex-col rounded-[28px] border bg-white shadow-sm transition ${
         focused ? "border-(--tc-accent)/50 shadow-[0_18px_40px_rgba(239,0,1,0.12)]" : "border-(--tc-border)/60"
       }`}
     >
-      <div className="flex h-full flex-col space-y-4 p-5 md:p-6">
+      <div className="flex h-full flex-col space-y-3.5 p-4 md:p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-[11px] uppercase tracking-[0.28em] text-(--tc-text-muted)">Empresa</p>
@@ -582,8 +610,8 @@ export function CompanyMetricsCard(props: {
           </div>
         ) : null}
 
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(220px,0.65fr)]">
-          <div className="rounded-[24px] border border-(--tc-border)/60 bg-linear-to-b from-white to-slate-50 p-5">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_17rem]">
+          <div className="rounded-[24px] border border-(--tc-border)/60 bg-linear-to-b from-white to-slate-50 p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Distribuicao real de execucao</h3>
@@ -594,7 +622,7 @@ export function CompanyMetricsCard(props: {
               </span>
             </div>
 
-            <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center">
+            <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-center">
               <StatusChart stats={stats} hasData={total > 0} emptyLabel="Sem execucoes" />
 
               <div className="grid gap-3 sm:grid-cols-2">
@@ -613,7 +641,7 @@ export function CompanyMetricsCard(props: {
           </div>
         </div>
 
-        <div className="rounded-[24px] border border-(--tc-border)/60 bg-linear-to-b from-white to-slate-50 p-5">
+        <div className="rounded-[24px] border border-(--tc-border)/60 bg-linear-to-b from-white to-slate-50 p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Qualidade das ultimas execucoes</h3>
@@ -626,29 +654,15 @@ export function CompanyMetricsCard(props: {
           <div className="mt-4">
             <Sparkline points={trendPoints} />
           </div>
-          {trendSnapshot ? (
-            <div className="mt-3 grid gap-2 sm:grid-cols-3">
-              <div className="rounded-2xl border border-(--tc-border)/50 bg-white px-3 py-3">
-                <div className="text-[10px] uppercase tracking-[0.2em] text-(--tc-text-muted)">Primeira leitura</div>
-                <div className="mt-1 text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{trendSnapshot.first.value ?? 0}%</div>
-                <div className="text-[11px] text-(--tc-text-muted)">{trendSnapshot.first.label} · {trendSnapshot.first.total} casos</div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+            {trendCards.map((item) => (
+              <div key={item.label} className="rounded-2xl border border-(--tc-border)/50 bg-white px-3 py-3">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-(--tc-text-muted)">{item.label}</div>
+                <div className="mt-1 text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{item.value}</div>
+                <div className="text-[11px] text-(--tc-text-muted)">{item.note}</div>
               </div>
-              <div className="rounded-2xl border border-(--tc-border)/50 bg-white px-3 py-3">
-                <div className="text-[10px] uppercase tracking-[0.2em] text-(--tc-text-muted)">Pior ponto do período</div>
-                <div className="mt-1 text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{trendSnapshot.worst.value ?? 0}%</div>
-                <div className="text-[11px] text-(--tc-text-muted)">
-                  {trendSnapshot.worst.label} · falhas {trendSnapshot.worst.failRate ?? 0}% · bloqueados {trendSnapshot.worst.blockedRate ?? 0}%
-                </div>
-              </div>
-              <div className="rounded-2xl border border-(--tc-border)/50 bg-white px-3 py-3">
-                <div className="text-[10px] uppercase tracking-[0.2em] text-(--tc-text-muted)">Última leitura</div>
-                <div className="mt-1 text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{trendSnapshot.last.value ?? 0}%</div>
-                <div className="text-[11px] text-(--tc-text-muted)">
-                  {trendSnapshot.last.label} · falhas {trendSnapshot.last.failRate ?? 0}% · bloqueados {trendSnapshot.last.blockedRate ?? 0}%
-                </div>
-              </div>
-            </div>
-          ) : null}
+            ))}
+          </div>
         </div>
 
         <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-2">
@@ -656,18 +670,19 @@ export function CompanyMetricsCard(props: {
             Gate: Pass {company.gate.passRate}% · Fail {company.gate.failRate}% · Blocked {company.gate.blockedRate}% · Not Run {company.gate.notRunRate}%
           </div>
 
-          {companySlug ? (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => void handleExportPdf()}
-                disabled={exportingPdf}
-                className="inline-flex items-center justify-center rounded-xl border border-(--tc-border)/60 bg-white px-3 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-slate-50 disabled:opacity-60"
-                title="Exportar métricas em PDF"
-                aria-label="Exportar métricas em PDF"
-              >
-                <FiFileText size={16} />
-              </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void handleExportPdf()}
+              disabled={exportingPdf}
+              className="inline-flex items-center justify-center rounded-xl border border-(--tc-border)/60 bg-white px-3 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-slate-50 disabled:opacity-60"
+              title="Exportar métricas em PDF"
+              aria-label="Exportar métricas em PDF"
+            >
+              <FiFileText size={16} />
+            </button>
+            {companySlug ? (
+              <>
               <Link
                 href={`/empresas/${encodeURIComponent(companySlug)}/home`}
                 className="rounded-xl border border-(--tc-border)/60 bg-white px-4 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-slate-50"
@@ -680,10 +695,11 @@ export function CompanyMetricsCard(props: {
               >
                 Ver runs
               </Link>
-            </div>
-          ) : (
-            <div className="text-sm text-(--tc-text-muted)">Empresa sem slug</div>
-          )}
+              </>
+            ) : (
+              <div className="text-sm text-(--tc-text-muted)">Empresa sem slug</div>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -481,7 +481,7 @@ function normalizeConversationHistory(history: AssistantClientRequest["history"]
   return history
     .slice(-12)
     .map((item) => ({
-      from: item?.from === "assistant" ? "assistant" : "user",
+      from: (item?.from === "assistant" ? "assistant" : "user") as "assistant" | "user",
       text: normalizeText(item?.text, 4000),
       tool: item?.tool ?? null,
       ts: typeof item?.ts === "number" ? item.ts : undefined,

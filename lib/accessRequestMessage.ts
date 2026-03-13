@@ -228,7 +228,7 @@ function normalizeAdjustmentHistory(input: unknown): AccessRequestAdjustmentRoun
           : [],
       } satisfies AccessRequestAdjustmentRound;
     })
-    .filter((entry): entry is AccessRequestAdjustmentRound => Boolean(entry));
+    .filter((entry) => entry !== null) as AccessRequestAdjustmentRound[];
 }
 
 export function toAccessTypeLabel(accessType: AccessType): AccessTypeLabel {

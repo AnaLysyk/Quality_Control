@@ -772,7 +772,7 @@ export default function TicketsButton() {
         onTicketUpdated={(updated) => {
           setSelectedTicket(updated as TicketItem);
           setItems((current) =>
-            current.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)),
+            current.map((item) => (item.id === updated.id ? { ...item, ...updated } as TicketItem : item)),
           );
         }}
       />

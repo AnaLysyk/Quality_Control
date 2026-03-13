@@ -1097,7 +1097,7 @@ export default function AdminHomePage() {
                   </div>
                   {selectedCompany?.releases.length ? (
                     <select value={selectedRun?.slug ?? ""} onChange={(event) => setSelectedRunSlug(event.target.value || null)} className="rounded-full border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-2 text-sm font-semibold text-[color:var(--tc-text-primary)] outline-none" aria-label="Selecionar run em foco">
-                      {selectedCompany.releases.map((release) => <option key={release.slug ?? release.id} value={release.slug ?? ""}>{release.title ?? release.slug ?? release.id}</option>)}
+                      {selectedCompany.releases.map((release) => <option key={release.slug} value={release.slug ?? ""}>{release.title ?? release.slug}</option>)}
                     </select>
                   ) : null}
                 </div>
@@ -1113,7 +1113,7 @@ export default function AdminHomePage() {
                           <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">
                             {selectedCompany ? "Run atual" : `Sugestao para ${suggestedRunCompany?.name ?? "o ambiente"}`}
                           </div>
-                          <div className="text-lg font-bold text-[color:var(--tc-text-primary)]">{runInFocus.title ?? runInFocus.slug ?? runInFocus.id}</div>
+                          <div className="text-lg font-bold text-[color:var(--tc-text-primary)]">{runInFocus.title ?? runInFocus.slug}</div>
                           {!selectedCompany && suggestedRunCompany ? (
                             <p className="text-sm text-[color:var(--tc-text-muted)]">
                               {suggestedRunCompany.name} concentra {countRuns(suggestedRunCompany, ["failed", "warning"])} alertas e {formatPercent(suggestedRunCompany.passRate)} de pass rate.

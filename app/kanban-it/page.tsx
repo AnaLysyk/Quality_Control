@@ -414,10 +414,11 @@ export default function KanbanItPage() {
         setError(json?.error || "Falha ao atualizar status");
         return;
       }
+      const updatedItem = json.item;
       setSuportes((current) =>
-        current.map((suporte) => (suporte.id === json.item?.id ? json.item : suporte)),
+        current.map((suporte) => (suporte.id === updatedItem.id ? updatedItem : suporte)),
       );
-      setSelectedSuporte((current) => (current?.id === json.item.id ? json.item : current));
+      setSelectedSuporte((current) => (current?.id === updatedItem.id ? updatedItem : current));
     } catch {
       setSuportes(previous);
       setError("Falha ao atualizar status");

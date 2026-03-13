@@ -630,8 +630,8 @@ export default function AdminHomePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {ranking.companies.map((c) => (
-                    <tr key={c.slug} className="bg-white hover:bg-(--tc-surface,#f9fafb) transition">
+                  {Array.from(new Map(ranking.companies.map((c) => [c.slug ?? c.name, c])).values()).map((c) => (
+                    <tr key={c.slug ?? c.name} className="bg-white hover:bg-(--tc-surface,#f9fafb) transition">
                       <td className="px-2 py-1 font-semibold text-(--page-text,#0b1a3c)">{c.name}</td>
                       <td className="px-2 py-1 font-mono font-bold text-lg">{c.score}</td>
                       <td className="px-2 py-1"><Badge status={c.status} /></td>

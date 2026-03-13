@@ -117,7 +117,7 @@ function CompanyMark({ name, logo, selected = false }: { name: string; logo?: st
       className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[18px] border text-sm font-black shadow-[0_14px_28px_rgba(15,23,42,0.08)] ${
         selected
           ? "border-[rgba(239,0,1,0.22)] bg-[linear-gradient(135deg,rgba(1,24,72,0.95)_0%,rgba(239,0,1,0.92)_100%)] text-white"
-          : "border-[color:var(--tc-border)] bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] text-[color:var(--tc-primary)]"
+          : "border-(--tc-border) bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] text-(--tc-primary)"
       }`}
     >
       {logo && !failed ? (
@@ -141,12 +141,12 @@ function QuickCompanyStat({
 }) {
   return (
     <div className="min-w-0 space-y-1">
-      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">
         {label}
       </div>
       <div
         className={`truncate text-[1.45rem] font-black leading-none ${
-          tone === "accent" ? "text-[color:var(--tc-accent)]" : "text-[color:var(--tc-text-primary)]"
+          tone === "accent" ? "text-(--tc-accent)" : "text-(--tc-text-primary)"
         }`}
       >
         {value}
@@ -166,8 +166,8 @@ function QuickCompanyMeta({
 }) {
   return (
     <div className={`space-y-1 ${align === "right" ? "text-right" : ""}`}>
-      <div className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[color:var(--tc-text-muted)]">{label}</div>
-      <div className="text-[0.8rem] font-semibold text-[color:var(--tc-text-primary)]">{value}</div>
+      <div className="text-[9px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">{label}</div>
+      <div className="text-[0.8rem] font-semibold text-(--tc-text-primary)">{value}</div>
     </div>
   );
 }
@@ -230,7 +230,7 @@ function getEventMeta(action: string) {
     return {
       label: "Permissoes",
       icon: FiShield,
-      toneClass: "border-[rgba(1,24,72,0.14)] bg-[rgba(1,24,72,0.05)] text-[color:var(--tc-primary)]",
+      toneClass: "border-[rgba(1,24,72,0.14)] bg-[rgba(1,24,72,0.05)] text-(--tc-primary)",
     };
   }
   if (normalized.includes("created")) {
@@ -244,13 +244,13 @@ function getEventMeta(action: string) {
     return {
       label: "Atualizado",
       icon: FiRefreshCw,
-      toneClass: "border-[rgba(245,158,11,0.22)] bg-[rgba(245,158,11,0.08)] text-[color:#b45309]",
+      toneClass: "border-[rgba(245,158,11,0.22)] bg-[rgba(245,158,11,0.08)] text-[#b45309]",
     };
   }
   return {
     label: "Evento",
     icon: FiAlertTriangle,
-    toneClass: "border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] text-[color:var(--tc-text-primary)]",
+    toneClass: "border-(--tc-border) bg-(--tc-surface-2) text-(--tc-text-primary)",
   };
 }
 
@@ -294,9 +294,9 @@ function buildGlobalAttention(companies: CompanyRow[], defects: DefectItem[], ov
 }
 
 function attentionToneClass(tone: AttentionItem["tone"]) {
-  if (tone === "danger") return "border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.06)] text-[color:var(--tc-accent)]";
-  if (tone === "warning") return "border-[rgba(245,158,11,0.24)] bg-[rgba(245,158,11,0.08)] text-[color:#b45309]";
-  return "border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] text-[color:var(--tc-text-primary)]";
+  if (tone === "danger") return "border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.06)] text-(--tc-accent)";
+  if (tone === "warning") return "border-[rgba(245,158,11,0.24)] bg-[rgba(245,158,11,0.08)] text-[#b45309]";
+  return "border-(--tc-border) bg-(--tc-surface-2) text-(--tc-text-primary)";
 }
 
 export default function AdminHomePage() {
@@ -620,7 +620,7 @@ export default function AdminHomePage() {
 
   return (
     <RequireGlobalAdmin>
-      <div className="min-h-screen bg-[color:var(--page-bg,#eef3fb)] text-[color:var(--tc-text-primary)]">
+      <div className="min-h-screen bg-(--page-bg,#eef3fb) text-(--tc-text-primary)">
         <div className="tc-page-shell px-4 py-5 lg:px-8 lg:py-7">
           <section className="tc-hero-panel">
             <div className="tc-hero-grid">
@@ -628,7 +628,7 @@ export default function AdminHomePage() {
                 <div className="tc-hero-copy">
                   <p className="tc-hero-kicker">Painel executivo</p>
                   <h1 className="tc-hero-title">Dashboard de qualidade</h1>
-                  <p className="tc-hero-description max-w-[56rem] pt-1">
+                  <p className="tc-hero-description max-w-4xl pt-1">
                     Selecione a empresa e visualize informacoes de execucao, entenda quais estao em modo de atencao e quais lideram em resolucao, menos ocorrencias e mais estabilidade operacional.
                   </p>
                   {loadingOverview ? <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/72">Atualizando dados do ambiente...</p> : null}
@@ -637,18 +637,18 @@ export default function AdminHomePage() {
                     <button
                       type="button"
                       onClick={() => setRefreshKey((value) => value + 1)}
-                      className="inline-flex min-h-[3.85rem] min-w-[10.25rem] items-center gap-3 rounded-[18px] border border-white/16 bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(236,243,255,0.96)_100%)] px-4 py-3 text-[color:var(--tc-primary)] shadow-[0_16px_28px_rgba(1,24,72,0.16)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_34px_rgba(1,24,72,0.2)]"
+                      className="inline-flex min-h-[3.85rem] min-w-41 items-center gap-3 rounded-[18px] border border-white/16 bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(236,243,255,0.96)_100%)] px-4 py-3 text-(--tc-primary) shadow-[0_16px_28px_rgba(1,24,72,0.16)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_34px_rgba(1,24,72,0.2)]"
                     >
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,rgba(1,24,72,0.1)_0%,rgba(239,0,1,0.14)_100%)] text-[color:var(--tc-primary)]">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,rgba(1,24,72,0.1)_0%,rgba(239,0,1,0.14)_100%)] text-(--tc-primary)">
                         <FiRefreshCw size={15} className={loadingOverview ? "animate-spin" : ""} />
                       </span>
                       <span className="flex flex-col items-start text-left">
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Atualizar</span>
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Atualizar</span>
                         <span className="text-[0.92rem] font-extrabold">{loadingOverview ? "Atualizando..." : "Recarregar"}</span>
                       </span>
                     </button>
 
-                    <div className="flex min-h-[3.85rem] min-w-[13rem] items-center gap-3 rounded-[18px] border border-white/16 bg-white/10 px-4 py-3 text-white shadow-[0_16px_28px_rgba(1,24,72,0.16)] backdrop-blur-sm">
+                    <div className="flex min-h-[3.85rem] min-w-52 items-center gap-3 rounded-[18px] border border-white/16 bg-white/10 px-4 py-3 text-white shadow-[0_16px_28px_rgba(1,24,72,0.16)] backdrop-blur-sm">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,rgba(255,255,255,0.18)_0%,rgba(239,0,1,0.24)_100%)] text-white">
                         <FiShield size={16} />
                       </div>
@@ -677,26 +677,26 @@ export default function AdminHomePage() {
             <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
               <div className="min-w-0 space-y-3">
                 <div className="space-y-2">
-                  <h2 className="text-[1.65rem] font-black tracking-[-0.04em] text-[color:var(--tc-text-primary)]">
+                  <h2 className="text-[1.65rem] font-black tracking-[-0.04em] text-(--tc-text-primary)">
                     Selecao rapida de empresa
                   </h2>
-                  <p className="max-w-[40rem] text-[0.98rem] leading-7 text-[color:var(--tc-text-muted)]">
+                  <p className="max-w-160 text-[0.98rem] leading-7 text-(--tc-text-muted)">
                     Busque por nome ou slug, troque o contexto ativo e siga no painel sem quebrar o fluxo.
                   </p>
                 </div>
               </div>
 
-              <label className="w-full max-w-[28rem]">
+              <label className="w-full max-w-md">
                 <span className="sr-only">Buscar empresa</span>
-                <div className="flex items-center gap-3 rounded-[20px] border border-[color:var(--tc-border)] bg-white px-4 py-3 shadow-[0_14px_30px_rgba(15,23,42,0.05)] transition focus-within:border-[rgba(239,0,1,0.28)] focus-within:ring-2 focus-within:ring-[rgba(239,0,1,0.10)]">
-                  <span className="text-[color:var(--tc-text-muted)]">
+                <div className="flex items-center gap-3 rounded-[20px] border border-(--tc-border) bg-white px-4 py-3 shadow-[0_14px_30px_rgba(15,23,42,0.05)] transition focus-within:border-[rgba(239,0,1,0.28)] focus-within:ring-2 focus-within:ring-[rgba(239,0,1,0.10)]">
+                  <span className="text-(--tc-text-muted)">
                     <FiSearch size={15} />
                   </span>
                   <input
                     value={companyQuery}
                     onChange={(event) => setCompanyQuery(event.target.value)}
                     placeholder="Buscar empresa por nome ou slug"
-                    className="w-full bg-transparent text-sm font-medium text-[color:var(--tc-text-primary)] outline-none placeholder:text-[color:var(--tc-text-muted)]"
+                    className="w-full bg-transparent text-sm font-medium text-(--tc-text-primary) outline-none placeholder:text-(--tc-text-muted)"
                   />
                 </div>
               </label>
@@ -706,23 +706,23 @@ export default function AdminHomePage() {
                 <button
                   type="button"
                   onClick={() => setSelectedCompanySlug(null)}
-                  className={`group flex w-[18.25rem] shrink-0 flex-col gap-3 rounded-[24px] border p-4 text-left transition ${
+                  className={`group flex w-73 shrink-0 flex-col gap-3 rounded-3xl border p-4 text-left transition ${
                     selectedCompanySlug == null
                       ? "border-[rgba(1,24,72,0.14)] bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] shadow-[0_18px_35px_rgba(1,24,72,0.08)]"
-                      : "border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] hover:border-[rgba(239,0,1,0.18)]"
+                      : "border-(--tc-border) bg-(--tc-surface) hover:border-[rgba(239,0,1,0.18)]"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1">
-                      <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Visao global</div>
-                      <div className="text-[1rem] font-black tracking-[-0.03em] text-[color:var(--tc-text-primary)]">Ambiente inteiro</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Visao global</div>
+                      <div className="text-[1rem] font-black tracking-[-0.03em] text-(--tc-text-primary)">Ambiente inteiro</div>
                     </div>
                     <span className="tc-status-pill" data-tone="neutral"><span className="tc-status-dot" />Geral</span>
                   </div>
-                  <p className="text-[0.82rem] leading-6 text-[color:var(--tc-text-muted)]">
+                  <p className="text-[0.82rem] leading-6 text-(--tc-text-muted)">
                     Compare empresas e leia o ranking sem travar em um unico cliente.
                   </p>
-                  <div className="grid grid-cols-2 gap-4 border-t border-[color:var(--tc-border)] pt-3">
+                  <div className="grid grid-cols-2 gap-4 border-t border-(--tc-border) pt-3">
                     <QuickCompanyStat label="Empresas" value={companies.length} />
                     <QuickCompanyStat label="Pass rate" value={formatPercent(overview?.globalPassRate)} />
                   </div>
@@ -737,10 +737,10 @@ export default function AdminHomePage() {
                       type="button"
                       onClick={() => setSelectedCompanySlug(key)}
                       aria-pressed={selected}
-                      className={`group relative flex w-[18.5rem] shrink-0 flex-col gap-3 overflow-hidden rounded-[24px] border p-4 text-left transition ${
+                      className={`group relative flex w-74 shrink-0 flex-col gap-3 overflow-hidden rounded-3xl border p-4 text-left transition ${
                         selected
                           ? "border-[rgba(239,0,1,0.28)] bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] shadow-[0_24px_44px_rgba(1,24,72,0.12)] ring-1 ring-[rgba(239,0,1,0.16)]"
-                          : "border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] hover:border-[rgba(239,0,1,0.18)]"
+                          : "border-(--tc-border) bg-(--tc-surface) hover:border-[rgba(239,0,1,0.18)]"
                       }`}
                     >
                       {selected ? <span className="absolute inset-y-0 left-0 w-1.5 bg-[linear-gradient(180deg,var(--tc-primary)_0%,var(--tc-accent)_100%)]" /> : null}
@@ -748,7 +748,7 @@ export default function AdminHomePage() {
                         <div className="flex min-w-0 items-start gap-3">
                           <CompanyMark name={company.name} logo={company.logo} selected={selected} />
                           <div className="min-w-0">
-                            <div className="flex min-h-[3rem] items-center whitespace-normal break-words text-[1rem] font-black leading-5 tracking-[-0.03em] text-[color:var(--tc-text-primary)]">
+                            <div className="flex min-h-12 items-center whitespace-normal wrap-break-word text-[1rem] font-black leading-5 tracking-[-0.03em] text-(--tc-text-primary)">
                               {company.name}
                             </div>
                           </div>
@@ -760,11 +760,11 @@ export default function AdminHomePage() {
                           </span>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 border-t border-[color:var(--tc-border)] pt-3">
+                      <div className="grid grid-cols-2 gap-4 border-t border-(--tc-border) pt-3">
                         <QuickCompanyStat label="Pass rate" value={formatPercent(company.passRate)} tone={selected ? "accent" : "default"} />
                         <QuickCompanyStat label="Runs" value={company.releases.length} />
                       </div>
-                      <div className="grid grid-cols-2 gap-4 border-t border-[color:var(--tc-border)] pt-3">
+                      <div className="grid grid-cols-2 gap-4 border-t border-(--tc-border) pt-3">
                         <QuickCompanyMeta label="Alertas" value={`${countRuns(company, ["failed", "warning"])} em alerta`} />
                         <QuickCompanyMeta label="Ultima execucao" value={formatShortDate(company.latestRelease?.createdAt)} align="right" />
                       </div>
@@ -779,14 +779,14 @@ export default function AdminHomePage() {
             <section ref={companyContextRef} className="tc-panel flex h-full flex-col">
               {!selectedCompany ? (
                 <div className="flex h-full flex-col gap-5">
-                  <div className="flex flex-col gap-4 border-b border-[color:var(--tc-border)] pb-5 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="flex flex-col gap-4 border-b border-(--tc-border) pb-5 lg:flex-row lg:items-start lg:justify-between">
                     <div className="space-y-3">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-[linear-gradient(135deg,var(--tc-primary)_0%,var(--tc-primary-dark)_60%,rgba(239,0,1,0.82)_180%)] text-white shadow-[0_18px_38px_rgba(1,24,72,0.18)]">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[linear-gradient(135deg,var(--tc-primary)_0%,var(--tc-primary-dark)_60%,rgba(239,0,1,0.82)_180%)] text-white shadow-[0_18px_38px_rgba(1,24,72,0.18)]">
                         <FiShield size={24} />
                       </div>
                       <div className="space-y-2">
-                        <p className="text-lg font-bold text-[color:var(--tc-text-primary)]">Radar automatico do ambiente</p>
-                        <p className="max-w-2xl text-sm leading-6 text-[color:var(--tc-text-muted)]">
+                        <p className="text-lg font-bold text-(--tc-text-primary)">Radar automatico do ambiente</p>
+                        <p className="max-w-2xl text-sm leading-6 text-(--tc-text-muted)">
                           Mesmo sem empresa focada, o painel aponta o que merece leitura imediata: contexto mais critico, melhor operacao, ultima empresa aberta e acao global sugerida.
                         </p>
                       </div>
@@ -809,25 +809,25 @@ export default function AdminHomePage() {
 
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="tc-panel-muted">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Maior prioridade agora</div>
-                      <div className="mt-3 text-lg font-black tracking-[-0.03em] text-[color:var(--tc-text-primary)]">{mostCriticalCompany?.name ?? "Sem empresa critica"}</div>
-                      <div className="mt-2 text-sm text-[color:var(--tc-text-muted)]">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Maior prioridade agora</div>
+                      <div className="mt-3 text-lg font-black tracking-[-0.03em] text-(--tc-text-primary)">{mostCriticalCompany?.name ?? "Sem empresa critica"}</div>
+                      <div className="mt-2 text-sm text-(--tc-text-muted)">
                         {mostCriticalCompany
                           ? `${countRuns(mostCriticalCompany, ["failed", "warning"])} alertas | ${formatPercent(mostCriticalCompany.passRate)} de aprovacao`
                           : "O ambiente nao exibiu empresa critica na janela atual."}
                       </div>
                     </div>
                     <div className="tc-panel-muted">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Melhor score atual</div>
-                      <div className="mt-3 text-lg font-black tracking-[-0.03em] text-[color:var(--tc-text-primary)]">{bestCompany?.name ?? "Sem referencia"}</div>
-                      <div className="mt-2 text-sm text-[color:var(--tc-text-muted)]">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Melhor score atual</div>
+                      <div className="mt-3 text-lg font-black tracking-[-0.03em] text-(--tc-text-primary)">{bestCompany?.name ?? "Sem referencia"}</div>
+                      <div className="mt-2 text-sm text-(--tc-text-muted)">
                         {bestCompany ? `${formatPercent(bestCompany.passRate)} de pass rate | ${GATE_META[bestCompany.gate.status].label}` : "Aguardando telemetria suficiente para ranking interno."}
                       </div>
                     </div>
                     <div className="tc-panel-muted">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Ultimo contexto acessado</div>
-                      <div className="mt-3 text-lg font-black tracking-[-0.03em] text-[color:var(--tc-text-primary)]">{lastViewedCompany?.name ?? "Nenhuma empresa recente"}</div>
-                      <div className="mt-2 text-sm text-[color:var(--tc-text-muted)]">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Ultimo contexto acessado</div>
+                      <div className="mt-3 text-lg font-black tracking-[-0.03em] text-(--tc-text-primary)">{lastViewedCompany?.name ?? "Nenhuma empresa recente"}</div>
+                      <div className="mt-2 text-sm text-(--tc-text-muted)">
                         {lastViewedCompany
                           ? `${formatShortDate(lastViewedCompany.latestRelease?.createdAt)} na ultima execucao | ${countRuns(lastViewedCompany, ["failed", "warning"])} alertas`
                           : "O dashboard ainda nao recebeu um foco manual recente."}
@@ -835,12 +835,12 @@ export default function AdminHomePage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-1 flex-col rounded-[24px] border border-[color:var(--tc-border)] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-5 shadow-[0_14px_28px_rgba(15,23,42,0.04)]">
+                  <div className="flex flex-1 flex-col rounded-3xl border border-(--tc-border) bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-5 shadow-[0_14px_28px_rgba(15,23,42,0.04)]">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                       <div className="space-y-2">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Visao util sem clique</div>
-                        <h3 className="text-[1.2rem] font-extrabold tracking-[-0.03em] text-[color:var(--tc-text-primary)]">Prioridades automaticas do ambiente</h3>
-                        <p className="max-w-2xl text-sm leading-6 text-[color:var(--tc-text-muted)]">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Visao util sem clique</div>
+                        <h3 className="text-[1.2rem] font-extrabold tracking-[-0.03em] text-(--tc-text-primary)">Prioridades automaticas do ambiente</h3>
+                        <p className="max-w-2xl text-sm leading-6 text-(--tc-text-muted)">
                           Use o painel para decidir onde entrar primeiro, sem depender de selecionar empresa para ter uma leitura operacional inicial.
                         </p>
                       </div>
@@ -869,7 +869,7 @@ export default function AdminHomePage() {
                 </div>
               ) : (
                 <div className="flex h-full flex-col gap-5">
-                  <div className="flex flex-col gap-4 border-b border-[color:var(--tc-border)] pb-5 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="flex flex-col gap-4 border-b border-(--tc-border) pb-5 lg:flex-row lg:items-start lg:justify-between">
                     <div className="flex items-start gap-4">
                       <CompanyMark name={selectedCompany.name} logo={selectedCompany.logo} selected />
                       <div className="space-y-3">
@@ -883,12 +883,12 @@ export default function AdminHomePage() {
                     </div>
                     <div className="grid min-w-[16rem] gap-3 sm:grid-cols-2">
                       <div className="tc-panel-muted">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Tendencia</div>
-                        <div className="mt-2 flex items-center gap-2 text-base font-semibold text-[color:var(--tc-text-primary)]">{selectedCompany.trend.direction === "down" ? <FiTrendingDown className="text-[color:var(--tc-accent)]" /> : <FiTrendingUp className="text-emerald-600" />}{formatTrend(selectedCompany.trend)}</div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Tendencia</div>
+                        <div className="mt-2 flex items-center gap-2 text-base font-semibold text-(--tc-text-primary)">{selectedCompany.trend.direction === "down" ? <FiTrendingDown className="text-(--tc-accent)" /> : <FiTrendingUp className="text-emerald-600" />}{formatTrend(selectedCompany.trend)}</div>
                       </div>
                       <div className="tc-panel-muted">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Ultima execucao</div>
-                        <div className="mt-2 text-base font-semibold text-[color:var(--tc-text-primary)]">{formatDate(selectedCompany.latestRelease?.createdAt)}</div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Ultima execucao</div>
+                        <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{formatDate(selectedCompany.latestRelease?.createdAt)}</div>
                       </div>
                     </div>
                   </div>
@@ -902,17 +902,17 @@ export default function AdminHomePage() {
                     <div className="tc-kv"><div className="tc-kv-label">Releases em risco</div><div className="tc-kv-value">{countRuns(selectedCompany, ["failed", "warning"])}</div><div className="tc-kv-note">Soma de releases com status warning ou failed.</div></div>
                     <div className="tc-kv"><div className="tc-kv-label">Sem telemetria</div><div className="tc-kv-value">{countRuns(selectedCompany, "no_data")}</div><div className="tc-kv-note">Runs sem base suficiente para decisao automatica.</div></div>
                   </div>
-                  <div className="grid gap-3 rounded-[24px] border border-[color:var(--tc-border)] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4 shadow-[0_12px_24px_rgba(15,23,42,0.04)] lg:grid-cols-3">
+                  <div className="grid gap-3 rounded-3xl border border-(--tc-border) bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4 shadow-[0_12px_24px_rgba(15,23,42,0.04)] lg:grid-cols-3">
                     <div className="space-y-1">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--tc-text-muted)]">Acao sugerida</div>
-                      <div className="text-sm font-bold text-[color:var(--tc-text-primary)]">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Acao sugerida</div>
+                      <div className="text-sm font-bold text-(--tc-text-primary)">
                         {criticalDefects > 0 || selectedCompany.gate.status === "failed"
                           ? "Priorizar triagem tecnica imediata"
                           : countRuns(selectedCompany, ["warning"]) > 0
                             ? "Validar releases sob observacao"
                             : "Manter cadencia e monitorar contexto"}
                       </div>
-                      <div className="text-sm leading-6 text-[color:var(--tc-text-muted)]">
+                      <div className="text-sm leading-6 text-(--tc-text-muted)">
                         {criticalDefects > 0 || selectedCompany.gate.status === "failed"
                           ? "Ha sinal de risco real na empresa e o bloco de defeitos precisa de leitura rapida."
                           : countRuns(selectedCompany, ["warning"]) > 0
@@ -921,15 +921,15 @@ export default function AdminHomePage() {
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--tc-text-muted)]">Ponto sensivel</div>
-                      <div className="text-sm font-bold text-[color:var(--tc-text-primary)]">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Ponto sensivel</div>
+                      <div className="text-sm font-bold text-(--tc-text-primary)">
                         {(hoursSince(selectedCompany.latestRelease?.createdAt) ?? 0) > 72
                           ? "Execucao desatualizada"
                           : countRuns(selectedCompany, "no_data") > 0
                             ? "Runs sem telemetria completa"
                             : "Telemetria em dia"}
                       </div>
-                      <div className="text-sm leading-6 text-[color:var(--tc-text-muted)]">
+                      <div className="text-sm leading-6 text-(--tc-text-muted)">
                         {(hoursSince(selectedCompany.latestRelease?.createdAt) ?? 0) > 72
                           ? `A ultima execucao valida ja passou de ${hoursSince(selectedCompany.latestRelease?.createdAt)}h.`
                           : countRuns(selectedCompany, "no_data") > 0
@@ -938,20 +938,20 @@ export default function AdminHomePage() {
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--tc-text-muted)]">Melhor sinal</div>
-                      <div className="text-sm font-bold text-[color:var(--tc-text-primary)]">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Melhor sinal</div>
+                      <div className="text-sm font-bold text-(--tc-text-primary)">
                         {countRuns(selectedCompany, "approved") > 0
                           ? `${countRuns(selectedCompany, "approved")} runs aprovadas`
                           : "Sem aprovacao recente"}
                       </div>
-                      <div className="text-sm leading-6 text-[color:var(--tc-text-muted)]">
+                      <div className="text-sm leading-6 text-(--tc-text-muted)">
                         {countRuns(selectedCompany, "approved") > 0
                           ? "A operacao ja mostrou estabilidade suficiente para apoiar a tomada de decisao."
                           : "Se nao houver aprovacao recente, vale cruzar eventos e run em foco antes de agir."}
                       </div>
                     </div>
                   </div>
-                  <div className="mt-auto flex flex-wrap gap-3 border-t border-[color:var(--tc-border)] pt-4">
+                  <div className="mt-auto flex flex-wrap gap-3 border-t border-(--tc-border) pt-4">
                     <Link href={selectedCompany.slug ? `/empresas/${encodeURIComponent(selectedCompany.slug)}/home` : "/admin/clients"} className="tc-button-primary">
                       Abrir contexto da empresa
                     </Link>
@@ -974,7 +974,7 @@ export default function AdminHomePage() {
                 <div className="tc-panel-header">
                   <div className="space-y-2">
                     <p className="tc-panel-kicker">Atencao agora</p>
-                    <h3 className="text-[1.35rem] font-extrabold tracking-[-0.03em] text-[color:var(--tc-text-primary)]">{selectedCompany ? `Prioridades de ${selectedCompany.name}` : "Prioridades do ambiente"}</h3>
+                    <h3 className="text-[1.35rem] font-extrabold tracking-[-0.03em] text-(--tc-text-primary)">{selectedCompany ? `Prioridades de ${selectedCompany.name}` : "Prioridades do ambiente"}</h3>
                     <p className="tc-panel-description">Itens que merecem acao imediata para manter qualidade, estabilidade e cadencia de execucao.</p>
                   </div>
                 </div>
@@ -1000,7 +1000,7 @@ export default function AdminHomePage() {
                 <div className="tc-panel-header">
                   <div className="space-y-2">
                     <p className="tc-panel-kicker">Eventos recentes</p>
-                    <h3 className="text-[1.35rem] font-extrabold tracking-[-0.03em] text-[color:var(--tc-text-primary)]">Movimentos que impactam a saude</h3>
+                    <h3 className="text-[1.35rem] font-extrabold tracking-[-0.03em] text-(--tc-text-primary)">Movimentos que impactam a saude</h3>
                     <p className="tc-panel-description">Historico curto do contexto atual para entender o que mudou antes de agir.</p>
                   </div>
                 </div>
@@ -1014,7 +1014,7 @@ export default function AdminHomePage() {
                       const meta = getEventMeta(item.action);
                       const Icon = meta.icon;
                       return (
-                        <div key={item.id} className="rounded-[20px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-4">
+                        <div key={item.id} className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-4">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex min-w-0 items-start gap-3">
                               <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border ${meta.toneClass}`}>
@@ -1025,15 +1025,15 @@ export default function AdminHomePage() {
                                   <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${meta.toneClass}`}>
                                     {meta.label}
                                   </span>
-                                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">
+                                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">
                                     {item.entity_type ?? "registro"}
                                   </span>
                                 </div>
-                                <div className="truncate text-sm font-semibold text-[color:var(--tc-text-primary)]">{item.entity_label ?? "Registro da plataforma"}</div>
-                                <div className="text-xs text-[color:var(--tc-text-muted)]">Responsavel: {item.actor_email ?? "Sistema"}</div>
+                                <div className="truncate text-sm font-semibold text-(--tc-text-primary)">{item.entity_label ?? "Registro da plataforma"}</div>
+                                <div className="text-xs text-(--tc-text-muted)">Responsavel: {item.actor_email ?? "Sistema"}</div>
                               </div>
                             </div>
-                            <div className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">
+                            <div className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">
                               {formatDate(item.created_at)}
                             </div>
                           </div>
@@ -1051,37 +1051,37 @@ export default function AdminHomePage() {
               <div className="tc-panel-header">
                 <div className="space-y-2">
                   <p className="tc-panel-kicker">Defeitos abertos</p>
-                  <h3 className="text-[1.35rem] font-extrabold tracking-[-0.03em] text-[color:var(--tc-text-primary)]">{selectedCompany ? `Defeitos relevantes de ${selectedCompany.name}` : "Resumo executivo de defeitos"}</h3>
+                  <h3 className="text-[1.35rem] font-extrabold tracking-[-0.03em] text-(--tc-text-primary)">{selectedCompany ? `Defeitos relevantes de ${selectedCompany.name}` : "Resumo executivo de defeitos"}</h3>
                   <p className="tc-panel-description">Visao curta dos itens mais importantes para triagem, decisao e acompanhamento rapido.</p>
                 </div>
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <div className="tc-panel-muted"><div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Total aberto</div><div className="mt-2 text-3xl font-extrabold text-[color:var(--tc-text-primary)]">{defectScope.filter((item) => item.status !== "done").length}</div></div>
-                <div className="tc-panel-muted"><div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Falha aberta</div><div className="mt-2 text-3xl font-extrabold text-[color:var(--tc-accent)]">{defectScope.filter((item) => item.status === "fail").length}</div></div>
-                <div className="tc-panel-muted"><div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Bloqueados</div><div className="mt-2 text-3xl font-extrabold text-[color:#b45309]">{blockedDefects}</div></div>
+                <div className="tc-panel-muted"><div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Total aberto</div><div className="mt-2 text-3xl font-extrabold text-(--tc-text-primary)">{defectScope.filter((item) => item.status !== "done").length}</div></div>
+                <div className="tc-panel-muted"><div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Falha aberta</div><div className="mt-2 text-3xl font-extrabold text-(--tc-accent)">{defectScope.filter((item) => item.status === "fail").length}</div></div>
+                <div className="tc-panel-muted"><div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Bloqueados</div><div className="mt-2 text-3xl font-extrabold text-[#b45309]">{blockedDefects}</div></div>
               </div>
               <div className="mt-5 grid flex-1 gap-3">
                 {loadingDefects ? (
                   <div className="tc-empty-state">Carregando defeitos...</div>
                 ) : relevantDefects.length === 0 ? (
-                  <div className="tc-empty-state flex min-h-[10.25rem] flex-1 items-center justify-center">
+                  <div className="tc-empty-state flex min-h-41 flex-1 items-center justify-center">
                     {selectedCompany
                       ? `Nenhum defeito relevante encontrado para ${selectedCompany.name}. O foco imediato segue na saude das runs e no historico recente.`
                       : "Nenhum defeito relevante no ambiente agora. Use o ranking ou o radar automatico para abrir a empresa que mais merece leitura."}
                   </div>
                 ) : (
                   relevantDefects.map((defect) => (
-                    <div key={defect.id} className="rounded-[22px] border border-[color:var(--tc-border)] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                    <div key={defect.id} className="rounded-[22px] border border-(--tc-border) bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="space-y-2">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="tc-status-pill" data-tone={defect.status === "fail" ? "danger" : defect.status === "blocked" ? "warning" : "neutral"}><span className="tc-status-dot" />{DEFECT_LABELS[defect.status] ?? defect.status}</span>
-                            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">{defect.origin === "manual" ? "Manual" : "Qase"}</span>
+                            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">{defect.origin === "manual" ? "Manual" : "Qase"}</span>
                           </div>
-                          <h4 className="text-base font-bold text-[color:var(--tc-text-primary)]">{defect.title}</h4>
-                          <p className="text-sm text-[color:var(--tc-text-muted)]">Empresa: {defect.companyName ?? "Sem empresa vinculada"} | Run: {defect.run_id ?? "--"}</p>
+                          <h4 className="text-base font-bold text-(--tc-text-primary)">{defect.title}</h4>
+                          <p className="text-sm text-(--tc-text-muted)">Empresa: {defect.companyName ?? "Sem empresa vinculada"} | Run: {defect.run_id ?? "--"}</p>
                         </div>
-                        {defect.url ? <Link href={defect.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-[color:var(--tc-accent)]">Ver caso<FiExternalLink size={14} /></Link> : null}
+                        {defect.url ? <Link href={defect.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-(--tc-accent)">Ver caso<FiExternalLink size={14} /></Link> : null}
                       </div>
                     </div>
                   ))
@@ -1094,29 +1094,29 @@ export default function AdminHomePage() {
                 <div className="tc-panel-header">
                   <div className="space-y-2">
                     <p className="tc-panel-kicker">Run em foco</p>
-                    <h3 className="text-[1.35rem] font-extrabold tracking-[-0.03em] text-[color:var(--tc-text-primary)]">{runInFocus?.title ?? "Foco sugerido de execucao"}</h3>
+                    <h3 className="text-[1.35rem] font-extrabold tracking-[-0.03em] text-(--tc-text-primary)">{runInFocus?.title ?? "Foco sugerido de execucao"}</h3>
                   </div>
                   {selectedCompany?.releases.length ? (
-                    <select value={selectedRun?.slug ?? ""} onChange={(event) => setSelectedRunSlug(event.target.value || null)} className="rounded-full border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-2 text-sm font-semibold text-[color:var(--tc-text-primary)] outline-none" aria-label="Selecionar run em foco">
+                    <select value={selectedRun?.slug ?? ""} onChange={(event) => setSelectedRunSlug(event.target.value || null)} className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-4 py-2 text-sm font-semibold text-(--tc-text-primary) outline-none" aria-label="Selecionar run em foco">
                       {selectedCompany.releases.map((release) => <option key={release.slug} value={release.slug ?? ""}>{release.title ?? release.slug}</option>)}
                     </select>
                   ) : null}
                 </div>
                 {!runInFocus ? (
-                  <div className="mt-5 tc-empty-state flex min-h-[10.25rem] flex-1 items-center justify-center">
+                  <div className="mt-5 tc-empty-state flex min-h-41 flex-1 items-center justify-center">
                     Nenhuma run relevante foi encontrada ainda. Use o trilho superior para abrir a empresa com telemetria ativa.
                   </div>
                 ) : (
                   <div className="mt-5 flex flex-1 flex-col space-y-4">
-                    <div className="rounded-[22px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] p-4">
+                    <div className="rounded-[22px] border border-(--tc-border) bg-(--tc-surface-2) p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div className="space-y-1">
-                          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">
+                          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">
                             {selectedCompany ? "Run atual" : `Sugestao para ${suggestedRunCompany?.name ?? "o ambiente"}`}
                           </div>
-                          <div className="text-lg font-bold text-[color:var(--tc-text-primary)]">{runInFocus.title ?? runInFocus.slug}</div>
+                          <div className="text-lg font-bold text-(--tc-text-primary)">{runInFocus.title ?? runInFocus.slug}</div>
                           {!selectedCompany && suggestedRunCompany ? (
-                            <p className="text-sm text-[color:var(--tc-text-muted)]">
+                            <p className="text-sm text-(--tc-text-muted)">
                               {suggestedRunCompany.name} concentra {countRuns(suggestedRunCompany, ["failed", "warning"])} alertas e {formatPercent(suggestedRunCompany.passRate)} de pass rate.
                             </p>
                           ) : null}
@@ -1124,8 +1124,8 @@ export default function AdminHomePage() {
                         <span className="tc-status-pill" data-tone={GATE_META[runInFocus.gate.status].tone}><span className="tc-status-dot" />{GATE_META[runInFocus.gate.status].label}</span>
                       </div>
                       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                        <div className="tc-panel-muted"><div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Pass rate</div><div className="mt-2 text-2xl font-extrabold text-[color:var(--tc-text-primary)]">{formatPercent(runInFocus.passRate)}</div></div>
-                        <div className="tc-panel-muted"><div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Data da execucao</div><div className="mt-2 text-base font-bold text-[color:var(--tc-text-primary)]">{formatDate(runInFocus.createdAt ?? runInFocus.created_at)}</div></div>
+                        <div className="tc-panel-muted"><div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Pass rate</div><div className="mt-2 text-2xl font-extrabold text-(--tc-text-primary)">{formatPercent(runInFocus.passRate)}</div></div>
+                        <div className="tc-panel-muted"><div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Data da execucao</div><div className="mt-2 text-base font-bold text-(--tc-text-primary)">{formatDate(runInFocus.createdAt ?? runInFocus.created_at)}</div></div>
                       </div>
                     </div>
                     {!selectedCompany && suggestedRunCompany ? (
@@ -1136,8 +1136,8 @@ export default function AdminHomePage() {
                     <div className="space-y-3">
                       {selectedRunBars.map((bar) => (
                         <div key={bar.id} className="space-y-2">
-                          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--tc-text-muted)]"><span>{bar.label}</span><span>{bar.value}</span></div>
-                          <div className="h-2.5 rounded-full bg-[color:var(--tc-surface-2)]"><div className={`h-2.5 rounded-full ${bar.color}`} style={{ width: `${progressWidth(bar.value, Math.max(runInFocusTotal, 1))}%` }} /></div>
+                          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)"><span>{bar.label}</span><span>{bar.value}</span></div>
+                          <div className="h-2.5 rounded-full bg-(--tc-surface-2)"><div className={`bar-fill h-2.5 rounded-full ${bar.color}`} style={{ '--bar-fill': `${progressWidth(bar.value, Math.max(runInFocusTotal, 1))}%` } as React.CSSProperties} /></div>
                         </div>
                       ))}
                     </div>
@@ -1160,8 +1160,8 @@ export default function AdminHomePage() {
               {loadingRanking ? (
                 <div className="tc-empty-state">Carregando ranking...</div>
               ) : rankingRows.length ? (
-                <div className="overflow-hidden rounded-[28px] border border-[color:var(--tc-border)] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-[0_18px_38px_rgba(15,23,42,0.05)]">
-                  <div className="grid grid-cols-[4.75rem_minmax(0,1.8fr)_7rem_9rem_7rem_7rem_9rem_8rem] gap-3 border-b border-[color:var(--tc-border)] bg-[rgba(1,24,72,0.04)] px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">
+                <div className="overflow-hidden rounded-[28px] border border-(--tc-border) bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-[0_18px_38px_rgba(15,23,42,0.05)]">
+                  <div className="grid grid-cols-[4.75rem_minmax(0,1.8fr)_7rem_9rem_7rem_7rem_9rem_8rem] gap-3 border-b border-(--tc-border) bg-[rgba(1,24,72,0.04)] px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">
                     <span>Pos.</span>
                     <span>Empresa</span>
                     <span>Score</span>
@@ -1171,7 +1171,7 @@ export default function AdminHomePage() {
                     <span>Ultima execucao</span>
                     <span className="text-right">Acao</span>
                   </div>
-                  <div className="divide-y divide-[color:var(--tc-border)]">
+                  <div className="divide-y divide-(--tc-border)">
                     {rankingRows.map((company) => (
                       <div
                         key={`${company.slug}-${company.position}`}
@@ -1184,35 +1184,35 @@ export default function AdminHomePage() {
                         }`}
                       >
                         <div className="flex items-center">
-                          <div className={`flex h-10 w-10 items-center justify-center rounded-[16px] border text-sm font-black ${
+                          <div className={`flex h-10 w-10 items-center justify-center rounded-2xl border text-sm font-black ${
                             company.position === 1
-                              ? "border-[rgba(239,0,1,0.2)] bg-[rgba(239,0,1,0.08)] text-[color:var(--tc-accent)]"
-                              : "border-[rgba(1,24,72,0.08)] bg-white text-[color:var(--tc-primary)]"
+                              ? "border-[rgba(239,0,1,0.2)] bg-[rgba(239,0,1,0.08)] text-(--tc-accent)"
+                              : "border-[rgba(1,24,72,0.08)] bg-white text-(--tc-primary)"
                           }`}>
                             #{company.position}
                           </div>
                         </div>
                         <div className="min-w-0">
-                          <div className="truncate text-base font-bold text-[color:var(--tc-text-primary)]">{company.name}</div>
-                          <div className="mt-1 truncate text-sm text-[color:var(--tc-text-muted)]">{company.trendSummary}</div>
+                          <div className="truncate text-base font-bold text-(--tc-text-primary)">{company.name}</div>
+                          <div className="mt-1 truncate text-sm text-(--tc-text-muted)">{company.trendSummary}</div>
                         </div>
-                        <div className="text-[1.65rem] font-black tracking-[-0.04em] text-[color:var(--tc-text-primary)]">{company.score}</div>
+                        <div className="text-[1.65rem] font-black tracking-[-0.04em] text-(--tc-text-primary)">{company.score}</div>
                         <div>
                           <span className="tc-status-pill" data-tone={RANKING_STATUS_META[company.status].tone}>
                             <span className="tc-status-dot" />
                             {RANKING_STATUS_META[company.status].label}
                           </span>
                         </div>
-                        <div className="text-sm font-semibold text-[color:var(--tc-text-primary)]">{formatPercent(company.passRate)}</div>
-                        <div className="text-sm font-semibold text-[color:var(--tc-text-primary)]">
+                        <div className="text-sm font-semibold text-(--tc-text-primary)">{formatPercent(company.passRate)}</div>
+                        <div className="text-sm font-semibold text-(--tc-text-primary)">
                           {typeof company.alertCount === "number" ? company.alertCount : "--"}
                         </div>
-                        <div className="text-sm font-semibold text-[color:var(--tc-text-primary)]">{formatShortDate(company.latestRunAt)}</div>
+                        <div className="text-sm font-semibold text-(--tc-text-primary)">{formatShortDate(company.latestRunAt)}</div>
                         <div className="flex justify-end">
                           <button
                             type="button"
                             onClick={() => focusRankingCompany(company.slug, company.name)}
-                            className="inline-flex items-center gap-2 rounded-full border border-[rgba(1,24,72,0.08)] bg-white px-3 py-2 text-sm font-semibold text-[color:var(--tc-primary)] transition hover:border-[rgba(239,0,1,0.18)] hover:text-[color:var(--tc-accent)]"
+                            className="inline-flex items-center gap-2 rounded-full border border-[rgba(1,24,72,0.08)] bg-white px-3 py-2 text-sm font-semibold text-(--tc-primary) transition hover:border-[rgba(239,0,1,0.18)] hover:text-(--tc-accent)"
                           >
                             Abrir contexto
                             <FiArrowUpRight size={14} />

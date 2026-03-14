@@ -1,11 +1,7 @@
-const { rmSync } = require("fs");
 const { spawn } = require("child_process");
+const cleanNext = require("./clean-next");
 
-try {
-  rmSync(".next", { recursive: true, force: true });
-} catch {
-  // ignore
-}
+cleanNext();
 
 const child = spawn(process.platform === "win32" ? "npm.cmd" : "npm", ["run", "dev"], {
   stdio: "inherit",

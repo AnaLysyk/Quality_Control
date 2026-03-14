@@ -6,6 +6,7 @@ const root = path.resolve(__dirname, "..");
 const pidFile = path.join(root, ".dev.pid");
 const outFile = path.join(root, "dev.out.log");
 const errFile = path.join(root, "dev.err.log");
+const devDistDir = ".next/dev-runtime";
 
 function isRunning(pid) {
   try {
@@ -46,6 +47,12 @@ try {
   // ignore
 }
 
+try {
+  fs.rmSync(path.join(root, devDistDir), { recursive: true, force: true });
+} catch {
+  // ignore
+}
+
 const isWin = process.platform === "win32";
 
 // On Windows, `.cmd` shims (like node_modules/.bin/next.cmd) cannot be spawned
@@ -73,7 +80,7 @@ const args = isWin ? [nextJsBin, "dev", "--webpack"] : ["dev", "--webpack"];
 
 const child = spawn(command, args, {
   cwd: root,
-  env: { ...process.env },
+  env: { ...process.env, NEXT_DIST_DIR: devDistDir },
   detached: true,
   stdio: ["ignore", outFd, errFd],
 });

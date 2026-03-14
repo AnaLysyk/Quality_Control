@@ -102,3 +102,4 @@ node_modules/**/lint.log
 
 # Temporary files
 *.tmp
+.dev.pid

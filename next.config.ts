@@ -1,4 +1,7 @@
+const distDir = process.env.NEXT_DIST_DIR?.trim() || ".next";
+
 const nextConfig = {
+  distDir,
   devIndicators: {
     buildActivity: false, // esconde o indicador/loader do Next no canto
   },

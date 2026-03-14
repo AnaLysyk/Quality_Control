@@ -82,11 +82,17 @@ try {
   // ignore
 }
 
-// Clean up Next dev lock if present.
-try {
-  fs.rmSync(path.join(root, ".next", "dev", "lock"), { force: true });
-} catch {
-  // ignore
+// Clean up Next dev locks if present.
+for (const lockPath of [
+  path.join(root, ".next", "dev", "lock"),
+  path.join(root, ".next", "dev-runtime", "dev", "lock"),
+  path.join(root, ".next", "dev-turbo", "dev", "lock"),
+]) {
+  try {
+    fs.rmSync(lockPath, { force: true });
+  } catch {
+    // ignore
+  }
 }
 
 console.log(`Stopped dev server (pid ${pid}).`);

@@ -4,7 +4,8 @@ import type { AssistantClientRequest } from "@/lib/assistant/types";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 
-const ASSISTANT_ENABLED = process.env.AI_ASSISTANT_ENABLED !== "false";
+// Keep the API aligned with the client-side toggle used by ChatButton.
+const ASSISTANT_ENABLED = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
 
 export const runtime = "nodejs";
 

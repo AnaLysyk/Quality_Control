@@ -11,7 +11,7 @@ import {
 import { notifyAccessRequestCreated } from "@/lib/notificationService";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { prisma } from "@/lib/prismaClient";
-import { requireGlobalDeveloperWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import {
   normalizeRequestProfileType,
   requestProfileTypeNeedsCompany,
@@ -209,7 +209,7 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  const { admin, status } = await requireGlobalDeveloperWithStatus(req);
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
     return NextResponse.json({ message: status === 401 ? "Nao autorizado" : "Acesso proibido" }, { status });
   }

@@ -6,7 +6,7 @@
     "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true});\"",
     "build:clean": "npm run clean && npm run build",
     "dev:clean": "node scripts/dev-clean.js",
-    "dev": "cross-env NEXT_DISABLE_TURBOPACK=1 next dev",
+    "dev": "next dev --webpack",
     "dev:ci": "next dev --turbo",
     "build": "node -e \"const fs=require('fs'); if (fs.existsSync('./prisma/schema.prisma')||fs.existsSync('./schema.prisma')){ console.log('prisma schema found, running prisma generate'); require('child_process').execSync('npx prisma generate',{stdio:'inherit'}); } else { console.log('no prisma schema, skipping prisma generate'); }\" && next build",
     "start": "next start",

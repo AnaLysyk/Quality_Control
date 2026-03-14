@@ -1,18 +1,19 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  FiCheck,
+  FiChevronRight,
+  FiCopy,
+  FiFolder,
   FiLogOut,
   FiSettings,
-  FiShield,
-  FiCopy,
-  FiCheck,
   FiX,
-  FiEdit2,
-  FiFolder,
 } from "react-icons/fi";
+import UserAvatar from "@/components/UserAvatar";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useAppSettings } from "@/context/AppSettingsContext";
 import { useClientContext } from "@/context/ClientContext";
 
 type ToastState =
@@ -20,46 +21,53 @@ type ToastState =
   | { kind: "success"; message: string }
   | { kind: "error"; message: string };
 
-type AvatarKey = "rocket" | "ninja" | "robot" | "lab" | "hacker";
-
-// GIF/emoji fixos (substituíveis depois por assets reais em /public/avatars/*.gif)
-const AVATAR_OPTIONS: { key: AvatarKey; label: string; emoji: string }[] = [
-  { key: "rocket", label: "Rocket", emoji: "\u{1F680}" }, // 🚀
-  { key: "ninja", label: "Ninja", emoji: "\u{1F977}" }, // 🥷
-  { key: "robot", label: "Bot", emoji: "\u{1F916}" }, // 🤖
-  { key: "lab", label: "Lab", emoji: "\u{1F9EA}" }, // 🧪
-  { key: "hacker", label: "Hacker", emoji: "\u{1F576}" }, // 🕶
-];
-
 function MenuItem(props: {
   icon: React.ReactNode;
   label: string;
   hint?: string;
   onClick: () => void;
   autoFocus?: boolean;
+  isDarkTheme: boolean;
 }) {
-  const { icon, label, hint, onClick, autoFocus } = props;
+  const { icon, label, hint, onClick, autoFocus, isDarkTheme } = props;
   return (
     <li>
       <button
         type="button"
         onClick={onClick}
         autoFocus={autoFocus}
-        className="group flex w-full items-start gap-3 px-4 py-2.5 text-left transition-colors hover:bg-(--tc-primary,#4e8df5)/10 dark:hover:bg-(--tc-primary,#4e8df5)/12"
+        className={`group relative flex w-full items-start gap-3 rounded-[16px] px-3.5 py-2.5 text-left shadow-[0_10px_26px_rgba(15,23,42,0.06)] transition hover:-translate-y-[1px] ${
+          isDarkTheme
+            ? "border border-[#29466e] bg-[linear-gradient(180deg,#0d1a35_0%,#112243_100%)] hover:border-[#ff8a9c] hover:bg-[linear-gradient(180deg,#102042_0%,#15294f_100%)]"
+            : "border border-[#d8ddea] bg-[linear-gradient(180deg,#ffffff_0%,#fffafb_100%)] hover:border-(--tc-accent) hover:bg-[linear-gradient(180deg,#ffffff_0%,#fff5f7_100%)]"
+        }`}
       >
         <span
-          className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-primary,#4e8df5)/25 bg-(--tc-primary,#4e8df5)/10 text-(--tc-primary,#4e8df5) group-hover:bg-(--tc-primary,#4e8df5)/16 dark:border-(--tc-primary,#4e8df5)/30"
+          className={`mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-[14px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] transition ${
+            isDarkTheme
+              ? "border border-[#355483] bg-[linear-gradient(180deg,#12264c_0%,#0d1c38_100%)] text-white group-hover:border-[#ff8a9c] group-hover:text-[#ffd4db]"
+              : "border border-[#c8d4ea] bg-[linear-gradient(180deg,#ffffff_0%,#f6f9ff_100%)] text-[#081f4d] group-hover:border-(--tc-accent) group-hover:text-(--tc-accent)"
+          }`}
           aria-hidden
         >
           {icon}
         </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-medium">{label}</span>
+        <span className="min-w-0 flex-1 pt-0.5">
+          <span className={`block text-sm font-bold leading-5 ${isDarkTheme ? "text-white" : "text-[#081f4d]"}`}>{label}</span>
           {hint ? (
-            <span className="block text-xs text-(--tc-text-muted,#64748b) dark:text-(--tc-text-muted,#cbd5e1) truncate">
+            <span className={`mt-0.5 block break-words text-[11px] leading-4.5 font-medium ${isDarkTheme ? "text-[#d2def8]" : "text-[#27457d]"}`}>
               {hint}
             </span>
           ) : null}
+        </span>
+        <span
+          className={`mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-transparent transition ${
+            isDarkTheme
+              ? "text-[#d2def8] group-hover:border-[#ff8a9c] group-hover:bg-[#4d1220] group-hover:text-white"
+              : "text-[#4a6697] group-hover:border-[#f2c8cf] group-hover:bg-rose-50 group-hover:text-(--tc-accent)"
+          }`}
+        >
+          <FiChevronRight aria-hidden size={16} />
         </span>
       </button>
     </li>
@@ -68,7 +76,8 @@ function MenuItem(props: {
 
 export default function ProfileButton() {
   const router = useRouter();
-  const { user, logout } = useAuthUser();
+  const { user, loading, logout } = useAuthUser();
+  const { theme } = useAppSettings();
   const { activeClient, clients } = useClientContext();
 
   const legacyUser = (user ?? null) as
@@ -81,26 +90,33 @@ export default function ProfileButton() {
     | null;
 
   const [open, setOpen] = useState(false);
-  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [toast, setToast] = useState<ToastState>({ kind: "idle" });
   const [copied, setCopied] = useState(false);
-  const [avatarOverrideKey, setAvatarOverrideKey] = useState<AvatarKey | null>(() => {
-    if (typeof window === "undefined") return null;
-    const saved = window.localStorage.getItem("profile_avatar_icon");
-    if (typeof saved === "string" && AVATAR_OPTIONS.some((a) => a.key === saved)) return saved as AvatarKey;
-    return null;
-  });
-  const [avatarError, setAvatarError] = useState(false);
-  const hasMounted = typeof window !== "undefined";
+  const isDarkTheme = theme === "dark";
 
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
 
+  const normalizedRuntimeRole = (() => {
+    const runtimeUser =
+      (user ?? null) && typeof (user as Record<string, unknown>) === "object"
+        ? (user as Record<string, unknown>)
+        : null;
+    const permissionRole =
+      typeof runtimeUser?.permissionRole === "string" ? runtimeUser.permissionRole.toLowerCase() : "";
+    const role = typeof runtimeUser?.role === "string" ? runtimeUser.role.toLowerCase() : "";
+    const companyRole = typeof runtimeUser?.companyRole === "string" ? runtimeUser.companyRole.toLowerCase() : "";
+    return permissionRole || role || companyRole;
+  })();
+
+  const isGlobalProfile = normalizedRuntimeRole === "dev" || normalizedRuntimeRole === "it_dev";
   const isAdmin = Boolean(user?.isGlobalAdmin || legacyUser?.isGlobalAdmin || legacyUser?.roleGlobal === "ADMIN");
-  const displayName = user?.name || "Usuario";
+  const displayName = user?.fullName?.trim() || user?.name || "Usuario";
   const displayEmail = user?.email || "";
+  const displayUser = user?.username || user?.user || "";
+  const avatarLoadingPlaceholder = loading && !user?.avatarUrl;
   const companyName = (() => {
+    if (isGlobalProfile) return "Global";
     if (activeClient?.name) return activeClient.name;
     if (isAdmin) return "Admin do sistema";
 
@@ -110,11 +126,12 @@ export default function ProfileButton() {
       if (typeof name === "string" && name.trim()) return name;
     }
 
-    const userCompany = (user ?? null) && typeof (user as Record<string, unknown>) === "object"
-      ? (user as Record<string, unknown> & { company?: unknown }).company
-      : null;
+    const userCompany =
+      (user ?? null) && typeof (user as Record<string, unknown>) === "object"
+        ? ((user as Record<string, unknown> & { company?: unknown }).company ?? null)
+        : null;
 
-    if (userCompany && typeof userCompany === "object" && userCompany !== null) {
+    if (userCompany && typeof userCompany === "object") {
       const name = (userCompany as { name?: unknown }).name;
       if (typeof name === "string" && name.trim()) return name;
     }
@@ -131,17 +148,19 @@ export default function ProfileButton() {
       if (typeof slug === "string" && slug.trim()) return slug;
     }
 
-    const userCompany = (user ?? null) && typeof (user as Record<string, unknown>) === "object"
-      ? (user as Record<string, unknown> & { company?: unknown }).company
-      : null;
+    const userCompany =
+      (user ?? null) && typeof (user as Record<string, unknown>) === "object"
+        ? ((user as Record<string, unknown> & { company?: unknown }).company ?? null)
+        : null;
 
-    if (userCompany && typeof userCompany === "object" && userCompany !== null) {
+    if (userCompany && typeof userCompany === "object") {
       const slug = (userCompany as { slug?: unknown }).slug;
       if (typeof slug === "string" && slug.trim()) return slug;
     }
 
     return undefined;
   })();
+
   const companyResources = Array.isArray(legacyUser?.companyResources) ? legacyUser.companyResources : [];
   const companyCount =
     (Array.isArray(clients) ? clients.length : 0) ||
@@ -154,16 +173,9 @@ export default function ProfileButton() {
     : "/docs";
   const docsLabel = hasCompanies
     ? companyCount > 1
-      ? `Documentacoes (${companyCount} empresas)`
-      : "Documentacoes da empresa"
-    : "Abrir documentacoes";
-
-  const avatarKey: AvatarKey = useMemo(() => {
-    if (avatarOverrideKey) return avatarOverrideKey;
-    const candidate = user?.avatarKey;
-    if (typeof candidate === "string" && AVATAR_OPTIONS.some((a) => a.key === candidate)) return candidate as AvatarKey;
-    return "rocket";
-  }, [avatarOverrideKey, user?.avatarKey]);
+      ? `${companyCount} empresas disponiveis`
+      : "Arquivos da empresa atual"
+    : "Central de documentos";
 
   useEffect(() => {
     function onMouseDown(e: MouseEvent) {
@@ -175,6 +187,7 @@ export default function ProfileButton() {
         buttonRef.current?.focus();
       }
     }
+
     function onKeyDown(e: KeyboardEvent) {
       if (!open) return;
       if (e.key === "Escape") {
@@ -183,6 +196,7 @@ export default function ProfileButton() {
         buttonRef.current?.focus();
       }
     }
+
     document.addEventListener("mousedown", onMouseDown);
     document.addEventListener("keydown", onKeyDown);
     return () => {
@@ -190,17 +204,6 @@ export default function ProfileButton() {
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
-
-  const avatarIcon = useMemo(() => {
-    const found = AVATAR_OPTIONS.find((a) => a.key === avatarKey);
-    return found?.emoji || "\u{1F680}";
-  }, [avatarKey]);
-  const avatarDisplay = avatarError
-    ? displayName.slice(0, 2).toUpperCase()
-    : hasMounted
-      ? avatarIcon
-      : "\u{1F680}";
-
 
   function showToast(kind: "success" | "error", message: string) {
     setToast({ kind, message });
@@ -213,7 +216,7 @@ export default function ProfileButton() {
       await navigator.clipboard.writeText(displayEmail);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1200);
-      showToast("success", "Email copiado");
+      showToast("success", "E-mail copiado");
     } catch {
       showToast("error", "Nao foi possivel copiar");
     }
@@ -221,17 +224,23 @@ export default function ProfileButton() {
 
   async function handleLogout() {
     setOpen(false);
+    try {
+      const prefix = "chat_history_v1:";
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(prefix)) {
+          localStorage.removeItem(key);
+          i = -1;
+        }
+      }
+    } catch {
+      // ignore
+    }
     await logout();
     router.replace("/login");
   }
 
-  function selectAvatar(key: AvatarKey) {
-    setAvatarOverrideKey(key);
-    setAvatarError(false);
-    window.localStorage.setItem("profile_avatar_icon", key);
-    setShowAvatarPicker(false);
-    // TODO: opcional - chamar /api/me/avatar para persistir
-  }
+  const effectiveAvatarUrl = user?.avatarUrl ?? null;
 
   return (
     <div className="relative" ref={containerRef}>
@@ -242,84 +251,92 @@ export default function ProfileButton() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? "profile-menu" : undefined}
-        onClick={() => setOpen((v) => !v)}
-        className="relative flex h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-(--tc-surface-dark,#0f1828) text-white shadow-[0_10px_22px_rgba(0,0,0,0.28)] transition hover:border-(--tc-primary,#4e8df5) hover:shadow-[0_12px_26px_rgba(78,141,245,0.25)] focus:outline-none focus:ring-2 focus:ring-(--tc-primary,#4e8df5) focus:ring-offset-2 focus:ring-offset-transparent"
+        onClick={() => setOpen((value) => !value)}
+        className={`relative flex h-12 w-12 items-center justify-center rounded-full text-white shadow-[0_10px_22px_rgba(0,0,0,0.28)] transition focus:outline-none focus:ring-2 focus:ring-(--tc-primary,#4e8df5) focus:ring-offset-2 focus:ring-offset-transparent ${
+          effectiveAvatarUrl
+            ? "bg-transparent p-0 hover:shadow-[0_12px_26px_rgba(15,23,42,0.24)]"
+            : "border border-white/12 bg-(--tc-surface-dark,#0f1828) hover:border-(--tc-primary,#4e8df5) hover:shadow-[0_12px_26px_rgba(78,141,245,0.25)]"
+        }`}
       >
-        <div className="relative h-full w-full overflow-hidden rounded-full bg-linear-to-br from-(--tc-primary,#4e8df5) to-(--tc-surface-dark,#0f1828)">
-          <span className="flex h-full w-full items-center justify-center text-2xl" aria-hidden>
-            {avatarDisplay}
-          </span>
-        </div>
+        <UserAvatar
+          src={effectiveAvatarUrl}
+          name={displayName}
+          showFallback={!avatarLoadingPlaceholder}
+          size="sm"
+          className="h-full w-full"
+          frameClassName={effectiveAvatarUrl ? "border-0 bg-transparent ring-0 shadow-none" : "border-0 bg-linear-to-br from-(--tc-primary) to-[#7a1026] ring-0 shadow-none"}
+          fallbackClassName="text-sm font-semibold tracking-[0.18em] text-white"
+        />
       </button>
 
       {open && (
         <div
           id="profile-menu"
           aria-label="Menu de perfil"
-          ref={menuRef}
-          className="absolute right-0 mt-2 w-[min(380px,calc(100vw-1rem))] max-h-[calc(100vh-5rem)] overflow-y-auto overscroll-contain rounded-2xl border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_18px_50px_rgba(0,0,0,0.18)] dark:border-white/12 dark:bg-(--tc-surface-dark,#0f1828) dark:text-(--tc-text-inverse,#fff) dark:shadow-[0_18px_50px_rgba(0,0,0,0.4)]"
+          className={`absolute right-0 mt-2 max-h-[calc(100vh-5rem)] w-[min(396px,calc(100vw-1rem))] overflow-hidden overscroll-contain rounded-[20px] text-[#081f4d] shadow-[0_22px_54px_rgba(15,23,42,0.16)] backdrop-blur-xl ${
+            isDarkTheme
+              ? "border border-[#24395c] bg-[linear-gradient(180deg,#091226_0%,#0d1a35_46%,#13254a_100%)] text-white"
+              : "border border-[#ddd8e4] bg-[linear-gradient(180deg,#fffdfd_0%,#fff6f8_52%,#f8fbff_100%)] text-[#081f4d]"
+          }`}
         >
-          <div className="px-4 pt-4 pb-3">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div
+              className={`absolute -right-10 -top-8 h-28 w-28 rounded-full ${
+                isDarkTheme
+                  ? "bg-[radial-gradient(circle,rgba(239,0,1,0.18)_0%,rgba(239,0,1,0)_72%)]"
+                  : "bg-[radial-gradient(circle,rgba(239,0,1,0.08)_0%,rgba(239,0,1,0)_72%)]"
+              }`}
+            />
+            <div
+              className={`absolute left-[-2rem] top-20 h-36 w-36 rounded-full ${
+                isDarkTheme
+                  ? "bg-[radial-gradient(circle,rgba(78,141,245,0.18)_0%,rgba(78,141,245,0)_72%)]"
+                  : "bg-[radial-gradient(circle,rgba(10,31,82,0.06)_0%,rgba(10,31,82,0)_72%)]"
+              }`}
+            />
+          </div>
+
+          <div className="relative px-3.5 pb-3.5 pt-3.5">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-start gap-3">
-                <div className="relative h-14 w-14 shrink-0">
-                  <button
-                    type="button"
-                    aria-label="Trocar avatar"
-                    onClick={() => setShowAvatarPicker((v) => !v)}
-                    className="group relative flex h-14 w-14 items-center justify-center rounded-full border border-(--tc-primary,#4e8df5)/28 bg-(--tc-primary,#4e8df5)/12 text-2xl shadow-[0_0_18px_rgba(78,142,245,0.30)] focus:outline-none focus:ring-2 focus:ring-(--tc-primary,#4e8df5) overflow-visible dark:border-(--tc-primary,#4e8df5)/25 dark:bg-black/20"
-                  >
-                    <span className="text-2xl" aria-hidden>
-                      {avatarDisplay}
-                    </span>
-                    <span
-                      className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-(--tc-primary,#4e8df5)/50 bg-(--tc-primary,#4e8df5) text-[11px] text-white shadow-[0_4px_10px_rgba(0,0,0,0.25)]"
-                      aria-hidden
-                    >
-                      <FiEdit2 />
-                    </span>
-                  </button>
+                <UserAvatar
+                  src={effectiveAvatarUrl}
+                  name={displayName}
+                  showFallback={!avatarLoadingPlaceholder}
+                  size="md"
+                  className="h-14 w-14 shrink-0"
+                  frameClassName={
+                    effectiveAvatarUrl
+                      ? isDarkTheme
+                        ? "border-2 border-[#d2def8]/40 shadow-[0_14px_34px_rgba(15,23,42,0.18)]"
+                        : "border-2 border-white/85 shadow-[0_14px_34px_rgba(15,23,42,0.18)]"
+                      : "shadow-[0_14px_34px_rgba(15,23,42,0.18)]"
+                  }
+                  fallbackClassName="text-sm font-semibold tracking-[0.18em] text-white"
+                />
 
-                  {showAvatarPicker && (
-                    <div className="absolute left-14 top-0 z-10 w-56 rounded-xl border border-slate-200 bg-white/90 p-3 text-slate-900 shadow-[0_20px_60px_rgba(15,23,42,0.25)] backdrop-blur-xl dark:border-white/15 dark:bg-slate-900/80 dark:text-white">
-                      <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-(--tc-text-muted,#cbd5e1)">
-                        <span>Escolher avatar</span>
-                        <span className="text-[10px] lowercase">gif/emoji</span>
-                      </div>
-                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                        {AVATAR_OPTIONS.map((opt) => {
-                          const active = opt.key === avatarKey;
-                          return (
-                            <button
-                              key={opt.key}
-                              type="button"
-                              onClick={() => selectAvatar(opt.key)}
-                              className={`flex h-10 items-center justify-center rounded-lg border text-lg transition-colors ${
-                                active
-                                  ? "border-(--tc-primary,#4e8df5) bg-(--tc-primary,#4e8df5)/15 text-(--tc-primary,#4e8df5) shadow-[0_6px_20px_rgba(78,141,245,0.45)]"
-                                  : "border-slate-200 bg-white text-slate-900 hover:border-slate-400 hover:bg-slate-100 dark:border-white/15 dark:bg-slate-900/60 dark:text-white dark:hover:border-white/30 dark:hover:bg-slate-800"
-                              }`}
-                            >
-                              <span aria-hidden>{opt.emoji}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-(--tc-text-muted,#64748b) dark:text-(--tc-text-muted,#cbd5e1)">Conta</p>
-                  <div className="truncate text-sm font-medium leading-tight text-(--tc-text,#0f172a) dark:text-(--tc-text-inverse,#fff)">
+                <div className="min-w-0 pt-0.5">
+                  <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDarkTheme ? "text-[#ff8a9c]" : "text-(--tc-accent)"}`}>
+                    Conta
+                  </p>
+                  <div className={`break-words text-[1.05rem] font-extrabold leading-tight ${isDarkTheme ? "text-white" : "text-[#081f4d]"}`}>
                     {displayName}
                   </div>
+                  {displayUser ? (
+                    <div className={`break-all pt-0.5 text-[13px] font-semibold ${isDarkTheme ? "text-[#d2def8]" : "text-[#22457f]"}`}>
+                      @{displayUser}
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
               <button
                 type="button"
-                className="rounded-lg border border-transparent p-2 transition-colors hover:border-(--tc-border)/60 hover:bg-(--tc-accent-soft)"
+                className={`inline-flex h-9 w-9 items-center justify-center rounded-[14px] shadow-[0_8px_20px_rgba(15,23,42,0.08)] transition ${
+                  isDarkTheme
+                    ? "border border-[#355483] bg-[#102042] text-white hover:border-[#ff8a9c] hover:text-[#ffd4db]"
+                    : "border border-[#d5dced] bg-white text-[#5e79a8] hover:border-(--tc-accent) hover:text-(--tc-accent)"
+                }`}
                 aria-label="Fechar menu"
                 onClick={() => {
                   setOpen(false);
@@ -330,27 +347,43 @@ export default function ProfileButton() {
               </button>
             </div>
 
-            <div className="mt-3 flex flex-col gap-2">
-              <div className="flex w-full items-center gap-2 rounded-lg border border-(--tc-primary,#4e8df5)/25 bg-(--tc-primary,#4e8df5)/6 px-3 py-2 text-sm leading-tight text-(--tc-text,#0f172a) shadow-[0_8px_18px_rgba(0,0,0,0.16)] dark:border-(--tc-primary,#4e8df5)/22 dark:bg-(--tc-primary,#4e8df5)/10 dark:text-(--tc-text-inverse,#fff)">
-                <span className="flex-1 whitespace-nowrap truncate text-(--tc-text-muted,#64748b) dark:text-(--tc-text-muted,#cbd5e1)">{displayEmail || "-"}</span>
-                <button
-                  type="button"
-                  aria-label="Copiar email"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-(--tc-primary,#4e8df5)/30 bg-(--tc-primary,#4e8df5)/14 text-base text-(--tc-primary,#4e8df5) hover:bg-(--tc-primary,#4e8df5)/18 disabled:opacity-50 dark:border-(--tc-primary,#4e8df5)/28 dark:bg-(--tc-primary,#4e8df5)/18 dark:text-white dark:hover:bg-(--tc-primary,#4e8df5)/24"
-                  onClick={copyEmail}
-                  disabled={!displayEmail}
-                  title={copied ? "Copiado" : "Copiar email"}
-                >
-                  {copied ? <FiCheck aria-hidden /> : <FiCopy aria-hidden />}
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-1 text-xs">
-                <span className="inline-flex max-w-full w-fit items-center rounded-full border border-(--tc-accent,#ef0001)/55 bg-(--tc-accent,#ef0001) px-3 py-1.5 font-semibold text-[11px] tracking-[0.08em] text-white shadow-[0_10px_22px_rgba(239,0,1,0.22)]">
-                  <span className="max-w-70 truncate" title={companyName}>
+            <div className="mt-3 space-y-2.5">
+              <div
+                className={`rounded-[16px] border p-3 shadow-[0_14px_28px_rgba(15,23,42,0.08)] ${
+                  isDarkTheme
+                    ? "border-[#2d466f] bg-[linear-gradient(135deg,#0f1d3b_0%,#13264b_60%,#18305e_100%)]"
+                    : "border-[#d7ddea] bg-[linear-gradient(135deg,#fff8fa_0%,#ffffff_58%,#f5f8ff_100%)]"
+                }`}
+              >
+                <div className="flex flex-wrap gap-2">
+                  <span className={`tc-status-pill ${isGlobalProfile ? "" : ""} shadow-[0_10px_18px_rgba(0,0,0,0.12)]`} data-tone={isGlobalProfile ? "danger" : "neutral"}>
                     {companyName}
                   </span>
-                </span>
+                </div>
+
+                <div
+                  className={`mt-2.5 flex items-start gap-2 rounded-[14px] border px-3 py-2 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] ${
+                    isDarkTheme ? "border-[#355483] bg-[#0c1831]" : "border-[#d7ddea] bg-white"
+                  }`}
+                >
+                  <span className={`min-w-0 flex-1 break-all font-semibold ${isDarkTheme ? "text-white" : "text-[#081f4d]"}`}>
+                    {displayEmail || "Sem e-mail"}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Copiar e-mail"
+                    className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border text-white shadow-[0_10px_22px_rgba(15,23,42,0.12)] transition hover:bg-(--tc-accent) disabled:opacity-50 ${
+                      isDarkTheme
+                        ? "border-[#355483] bg-[#16315f] hover:border-[#ff8a9c] hover:text-white"
+                        : "border-[#ccd8ee] bg-[#102755] hover:border-(--tc-accent)"
+                    }`}
+                    onClick={() => void copyEmail()}
+                    disabled={!displayEmail}
+                    title={copied ? "Copiado" : "Copiar e-mail"}
+                  >
+                    {copied ? <FiCheck aria-hidden /> : <FiCopy aria-hidden />}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -359,8 +392,12 @@ export default function ProfileButton() {
                 className={[
                   "mt-3 rounded-xl border px-3 py-2 text-xs",
                   toast.kind === "success"
-                    ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-200"
-                    : "border-red-500/20 bg-red-500/10 text-red-200",
+                    ? isDarkTheme
+                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
+                      : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : isDarkTheme
+                      ? "border-rose-500/30 bg-rose-500/10 text-rose-200"
+                      : "border-rose-200 bg-rose-50 text-rose-700",
                 ].join(" ")}
                 role="status"
                 aria-live="polite"
@@ -370,80 +407,57 @@ export default function ProfileButton() {
             )}
           </div>
 
-          <div className="h-px bg-(--tc-border,#e5e7eb)/70 dark:bg-white/10" />
+          <div className={`h-px ${isDarkTheme ? "bg-[linear-gradient(90deg,rgba(255,138,156,0)_0%,rgba(255,138,156,0.16)_18%,rgba(132,170,255,0.24)_50%,rgba(255,138,156,0.16)_82%,rgba(255,138,156,0)_100%)]" : "bg-[linear-gradient(90deg,rgba(239,0,1,0)_0%,rgba(239,0,1,0.10)_18%,rgba(10,31,82,0.14)_50%,rgba(239,0,1,0.10)_82%,rgba(239,0,1,0)_100%)]"}`} />
 
-          <ul aria-label="Opções do menu de perfil" className="py-2">
-            <MenuItem
-              icon={<FiSettings aria-hidden />}
-              label="Meu perfil"
-              hint="Dados e preferências"
-              onClick={() => {
-                setOpen(false);
-                router.push("/settings/profile");
-              }}
-              autoFocus
-            />
-            <MenuItem
-              icon={<FiSettings aria-hidden />}
-              label="Configurações"
-              hint="Conta, segurança, aparência"
-              onClick={() => {
-                setOpen(false);
-                router.push("/settings");
-              }}
-            />
-          </ul>
-
-          <div className="h-px bg-(--tc-border,#e5e7eb)/70 dark:bg-white/10" />
-
-          <div className="px-4 pt-4 pb-3">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-(--tc-text-muted,#64748b) dark:text-(--tc-text-muted,#cbd5e1)">
-              Documentações
-            </p>
-            <ul className="mt-2 space-y-2" aria-label="Materiais">
-              <li>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 rounded-lg border border-(--tc-primary,#4e8df5)/22 bg-(--tc-primary,#4e8df5)/8 px-3 py-2 text-sm text-(--tc-text,#0f172a) transition-colors hover:bg-(--tc-primary,#4e8df5)/12 dark:text-(--tc-text-inverse,#fff) dark:border-(--tc-primary,#4e8df5)/20 dark:bg-(--tc-primary,#4e8df5)/10 dark:hover:bg-(--tc-primary,#4e8df5)/14"
-                  onClick={() => {
-                    setOpen(false);
-                    router.push(docsRoute);
-                  }}
-                >
-                  <FiFolder aria-hidden />
-                  <span className="truncate">
-                    {docsLabel}
-                  </span>
-                </button>
-              </li>
+          <div className="px-3.5 py-3">
+            <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDarkTheme ? "text-[#ff8a9c]" : "text-(--tc-accent)"}`}>Conta</p>
+            <ul aria-label="Opcoes do menu de perfil" className="mt-2 space-y-2">
+              <MenuItem
+                isDarkTheme={isDarkTheme}
+                icon={<FiSettings aria-hidden />}
+                label="Meu perfil"
+                hint="Dados, preferencias e seguranca"
+                onClick={() => {
+                  setOpen(false);
+                  router.push("/settings/profile");
+                }}
+                autoFocus
+              />
             </ul>
           </div>
 
-          {isAdmin && (
-            <>
-              <div className="h-px bg-(--tc-border,#e5e7eb)/70 dark:bg-white/10" />
-              <ul aria-label="Admin" className="py-2">
-                <MenuItem
-                  icon={<FiShield aria-hidden />}
-                  label="Administração"
-                  hint={activeClient?.name ? `Cliente: ${activeClient.name}` : "Sem empresa selecionada"}
-                  onClick={() => {
-                    setOpen(false);
-                    router.push("/admin/home");
-                  }}
-                />
-              </ul>
-            </>
-          )}
+          <div className={`h-px ${isDarkTheme ? "bg-[linear-gradient(90deg,rgba(255,138,156,0)_0%,rgba(255,138,156,0.16)_18%,rgba(132,170,255,0.24)_50%,rgba(255,138,156,0.16)_82%,rgba(255,138,156,0)_100%)]" : "bg-[linear-gradient(90deg,rgba(239,0,1,0)_0%,rgba(239,0,1,0.10)_18%,rgba(10,31,82,0.14)_50%,rgba(239,0,1,0.10)_82%,rgba(239,0,1,0)_100%)]"}`} />
 
-          <div className="h-px bg-(--tc-border,#e5e7eb)/70 dark:bg-white/10" />
+          <div className="px-3.5 py-3">
+            <p className={`text-[11px] font-extrabold uppercase tracking-[0.2em] ${isDarkTheme ? "text-[#ff8a9c]" : "text-(--tc-accent)"}`}>
+              Documentacoes
+            </p>
+            <ul className="mt-2 space-y-2" aria-label="Materiais">
+              <MenuItem
+                isDarkTheme={isDarkTheme}
+                icon={<FiFolder aria-hidden />}
+                label="Documentacoes"
+                hint={docsLabel}
+                onClick={() => {
+                  setOpen(false);
+                  router.push(docsRoute);
+                }}
+              />
+            </ul>
+          </div>
 
-          <ul aria-label="Sessão" className="p-2">
+          <div className={`h-px ${isDarkTheme ? "bg-[linear-gradient(90deg,rgba(255,138,156,0)_0%,rgba(255,138,156,0.16)_18%,rgba(132,170,255,0.24)_50%,rgba(255,138,156,0.16)_82%,rgba(255,138,156,0)_100%)]" : "bg-[linear-gradient(90deg,rgba(239,0,1,0)_0%,rgba(239,0,1,0.10)_18%,rgba(10,31,82,0.14)_50%,rgba(239,0,1,0.10)_82%,rgba(239,0,1,0)_100%)]"}`} />
+
+          <ul aria-label="Sessao" className="p-3.5 pt-2.5">
             <li>
               <button
                 type="button"
-                onClick={handleLogout}
-                className="flex w-full items-center gap-2 rounded-xl border border-transparent px-3 py-2 text-sm text-red-600 transition-colors hover:border-red-500/20 hover:bg-red-500/10 dark:text-red-300"
+                onClick={() => void handleLogout()}
+                className={`flex w-full items-center gap-2 rounded-[18px] px-4 py-3 text-sm font-semibold shadow-[0_10px_26px_rgba(15,23,42,0.05)] transition ${
+                  isDarkTheme
+                    ? "border border-[#355483] bg-[#0d1a35] text-[#ffd4db] hover:border-[#ff8a9c] hover:bg-[#4d1220] hover:text-white"
+                    : "border border-[#f0b9c3] bg-white text-[#c9485f] hover:border-[#df7a8b] hover:bg-rose-50 hover:text-[#a81f3d]"
+                }`}
               >
                 <FiLogOut aria-hidden />
                 Sair

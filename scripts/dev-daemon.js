@@ -69,11 +69,11 @@ const outFd = fs.openSync(outFile, "a");
 const errFd = fs.openSync(errFile, "a");
 
 const command = isWin ? process.execPath : nextBin;
-const args = isWin ? [nextJsBin, "dev"] : ["dev"];
+const args = isWin ? [nextJsBin, "dev", "--webpack"] : ["dev", "--webpack"];
 
 const child = spawn(command, args, {
   cwd: root,
-  env: { ...process.env, NEXT_DISABLE_TURBOPACK: "1" },
+  env: { ...process.env },
   detached: true,
   stdio: ["ignore", outFd, errFd],
 });

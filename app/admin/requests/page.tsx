@@ -10,7 +10,7 @@ type RequestRecord = {
   userName: string;
   userEmail: string;
   companyName: string;
-  type: "EMAIL_CHANGE" | "COMPANY_CHANGE" | "PASSWORD_RESET";
+  type: "EMAIL_CHANGE" | "COMPANY_CHANGE" | "PASSWORD_RESET" | "PROFILE_DELETION";
   status: "PENDING" | "APPROVED" | "REJECTED";
   payload: Record<string, unknown>;
   createdAt: string;
@@ -163,6 +163,7 @@ export default function AdminRequestsPage() {
             <option value="EMAIL_CHANGE">Email</option>
             <option value="COMPANY_CHANGE">Empresa</option>
             <option value="PASSWORD_RESET">Reset de senha</option>
+            <option value="PROFILE_DELETION">Exclusao de perfil</option>
           </select>
         </div>
 
@@ -196,6 +197,7 @@ export default function AdminRequestsPage() {
                 {req.type === "EMAIL_CHANGE" && <div>Solicitou email: {payloadString(req.payload, "newEmail")}</div>}
                 {req.type === "COMPANY_CHANGE" && <div>Solicitou empresa: {payloadString(req.payload, "newCompanyName")}</div>}
                 {req.type === "PASSWORD_RESET" && <div>Solicitou reset de senha</div>}
+                {req.type === "PROFILE_DELETION" && <div>Solicitou exclusao de perfil: {payloadString(req.payload, "reason")}</div>}
                 <div>Criado em {new Date(req.createdAt).toLocaleString()}</div>
                 {req.reviewNote && <div>Nota: {req.reviewNote}</div>}
               </div>
@@ -224,7 +226,6 @@ export default function AdminRequestsPage() {
     </div>
   );
 }
-
 
 
 

@@ -119,6 +119,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
     items.push(
       { label: "Chamados", icon: FiMessageSquare, href: "/admin/chamados" },
+      { label: "Suporte global", icon: FiColumns, href: "/admin/support" },
       { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
       { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
     );

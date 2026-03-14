@@ -1,11 +1,8 @@
-console.log('DATABASE_URL:', process.env.DATABASE_URL);
+console.log("DATABASE_URL:", process.env.DATABASE_URL);
 
 import "./loadEnv";
 import { hashPasswordSha256 } from "../lib/passwordHash";
-// PrismaClient deve ser importado após o carregamento das variáveis de ambiente
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prismaClient";
 
 async function createAnaAdmin() {
   const email = "ana.testing.company@gmail.com";
@@ -52,7 +49,7 @@ async function createAnaAdmin() {
       },
     });
 
-    console.log("Usuário admin criado ou atualizado:", { email, company: company.slug });
+    console.log("Usuario admin criado ou atualizado:", { email, company: company.slug });
   } catch (error) {
     console.error("Erro ao criar admin:", error);
   } finally {

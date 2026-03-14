@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { AuthMeResponseSchema, type AuthUser, type AuthCompany } from "@/contracts/auth";
 import { getAccessToken } from "@/lib/api";
 import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
+import { publishAuthUser, subscribeAuthUserSync } from "@/lib/authUserSync";
 
 type MeResult = {
   user: AuthUser | null;
@@ -135,11 +136,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const me = await fetchMe();
       setUser(me.user);
       setCompanies(me.companies);
+      publishAuthUser(me.user);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao carregar usuario";
       setError(msg);
       setUser(null);
       setCompanies([]);
+      publishAuthUser(null);
     } finally {
       setLoading(false);
     }
@@ -165,10 +168,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setUser(null);
     setCompanies([]);
+    publishAuthUser(null);
   };
 
   useEffect(() => {
-    refreshUser();
+    void refreshUser();
+  }, []);
+
+  useEffect(() => {
+    return subscribeAuthUserSync((nextUser) => {
+      setUser(nextUser);
+      if (!nextUser) setCompanies([]);
+      setLoading(false);
+    });
   }, []);
 
   return (

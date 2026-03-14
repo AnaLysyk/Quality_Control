@@ -7,6 +7,7 @@ import {
   getLocalUserById,
   listLocalCompanies,
   listLocalLinksForUser,
+  listLocalUsers,
   normalizeLocalRole,
   updateLocalUser,
 } from "@/lib/auth/localStore";
@@ -16,6 +17,61 @@ function errorResponse(status: number, code: string, message: string) {
     { user: null, companies: [], error: { code, message } },
     { status },
   );
+}
+
+function sanitizeText(value: unknown, max = 255): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
+}
+
+function normalizeEmail(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim().toLowerCase();
+  return trimmed || null;
+}
+
+function normalizeLogin(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim().toLowerCase();
+  return trimmed || null;
+}
+
+function hasOwn(obj: Record<string, unknown> | null, key: string) {
+  return !!obj && Object.prototype.hasOwnProperty.call(obj, key);
+}
+
+function buildUserPayload(user: Awaited<ReturnType<typeof getLocalUserById>>, access: Awaited<ReturnType<typeof getAccessContext>>) {
+  if (!user || !access) return null;
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    user: user.user ?? user.email,
+    username: user.user ?? user.email,
+    phone: user.phone ?? null,
+    fullName: user.name ?? null,
+    avatarKey: null,
+    avatarUrl: user.avatar_url ?? null,
+    active: user.active !== false,
+    status: user.active === false ? "inactive" : user.status ?? "active",
+    jobTitle: user.job_title ?? null,
+    job_title: user.job_title ?? null,
+    linkedinUrl: user.linkedin_url ?? null,
+    linkedin_url: user.linkedin_url ?? null,
+    role: access.role ?? null,
+    globalRole: access.globalRole ?? null,
+    companyRole: access.companyRole ?? null,
+    capabilities: access.capabilities ?? [],
+    companyId: access.companyId ?? null,
+    clientId: access.companyId ?? null,
+    companySlug: access.companySlug ?? null,
+    clientSlug: access.companySlug ?? null,
+    defaultClientSlug: user.default_company_slug ?? access.companySlug ?? null,
+    clientSlugs: access.companySlugs ?? [],
+    isGlobalAdmin: access.isGlobalAdmin === true,
+  };
 }
 
 export async function GET(req: Request) {
@@ -49,6 +105,7 @@ export async function GET(req: Request) {
       (typeof (company as { created_at?: string | null }).created_at === "string"
         ? (company as { created_at?: string | null }).created_at
         : null);
+
     return {
       id: company.id,
       name: company.name ?? company.company_name ?? "Empresa",
@@ -62,36 +119,9 @@ export async function GET(req: Request) {
   });
 
   return NextResponse.json({
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      phone: user.phone ?? null,
-      role: access.role ?? null,
-      globalRole: access.globalRole ?? null,
-      companyRole: access.companyRole ?? null,
-      capabilities: access.capabilities ?? [],
-      clientId: access.companyId ?? null,
-      clientSlug: access.companySlug ?? null,
-      defaultClientSlug: user.default_company_slug ?? access.companySlug ?? null,
-      clientSlugs: access.companySlugs ?? [],
-      isGlobalAdmin: access.isGlobalAdmin === true,
-    },
+    user: buildUserPayload(user, access),
     companies: companiesResponse,
   });
-}
-
-function sanitizeText(value: unknown, max = 255): string | null {
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
-}
-
-function normalizeEmail(value: unknown): string | null {
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim().toLowerCase();
-  return trimmed || null;
 }
 
 export async function PATCH(req: Request) {
@@ -102,21 +132,61 @@ export async function PATCH(req: Request) {
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   const hasName = typeof body?.name === "string";
+  const hasFullName = typeof body?.full_name === "string" || typeof body?.fullName === "string";
   const hasEmail = typeof body?.email === "string";
+  const hasUser = typeof body?.user === "string" || typeof body?.username === "string";
   const hasPhone = typeof body?.phone === "string";
+  const hasAvatarUrl = hasOwn(body, "avatar_url") || hasOwn(body, "avatarUrl");
+  const hasJobTitle = hasOwn(body, "job_title") || hasOwn(body, "jobTitle");
+  const hasLinkedinUrl = hasOwn(body, "linkedin_url") || hasOwn(body, "linkedinUrl");
 
   const name = hasName ? sanitizeText(body?.name, 120) : null;
+  const fullName = hasFullName ? sanitizeText(body?.full_name ?? body?.fullName, 120) : null;
   const email = hasEmail ? normalizeEmail(body?.email) : null;
-  const phone = (() => {
-    if (!hasPhone) return null;
-    const trimmed = String(body?.phone ?? "").trim();
-    return trimmed ? trimmed : null;
+  const login = hasUser ? normalizeLogin(body?.user ?? body?.username) : null;
+  const phone = hasPhone ? sanitizeText(body?.phone, 40) : undefined;
+  const avatarUrl = (() => {
+    if (!hasAvatarUrl) return undefined;
+    const raw = body?.avatar_url ?? body?.avatarUrl;
+    if (raw == null) return null;
+    if (typeof raw !== "string") return null;
+    const trimmed = raw.trim();
+    return trimmed || null;
+  })();
+  const jobTitle = (() => {
+    if (!hasJobTitle) return undefined;
+    const raw = body?.job_title ?? body?.jobTitle;
+    if (raw == null) return null;
+    return sanitizeText(raw, 120);
+  })();
+  const linkedinUrl = (() => {
+    if (!hasLinkedinUrl) return undefined;
+    const raw = body?.linkedin_url ?? body?.linkedinUrl;
+    if (raw == null) return null;
+    if (typeof raw !== "string") return null;
+    const trimmed = raw.trim();
+    return trimmed || null;
   })();
 
   if (hasName && !name) {
     return NextResponse.json({ error: "Nome invalido" }, { status: 400 });
   }
-  if (!name && !email && !hasPhone) {
+  if (hasFullName && !fullName) {
+    return NextResponse.json({ error: "Nome completo invalido" }, { status: 400 });
+  }
+  if (hasEmail && !email) {
+    return NextResponse.json({ error: "E-mail obrigatorio" }, { status: 400 });
+  }
+  if (
+    !hasName &&
+    !hasFullName &&
+    !hasEmail &&
+    !hasUser &&
+    !hasPhone &&
+    !hasAvatarUrl &&
+    !hasJobTitle &&
+    !hasLinkedinUrl
+  ) {
     return NextResponse.json({ error: "Nenhuma alteracao informada" }, { status: 400 });
   }
 
@@ -132,10 +202,21 @@ export async function PATCH(req: Request) {
     }
   }
 
+  if (login && login !== (user.user ?? user.email)) {
+    const users = await listLocalUsers();
+    if (users.some((item) => item.id !== user.id && (item.user ?? item.email) === login)) {
+      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+    }
+  }
+
   const updated = await updateLocalUser(user.id, {
-    ...(name ? { name } : {}),
+    ...((fullName ?? name) ? { name: fullName ?? name ?? user.name } : {}),
     ...(email ? { email } : {}),
-    ...(hasPhone ? { phone } : {}),
+    ...(hasUser ? { user: login ?? "" } : {}),
+    ...(hasPhone ? { phone: phone ?? null } : {}),
+    ...(hasAvatarUrl ? { avatar_url: avatarUrl ?? null } : {}),
+    ...(hasJobTitle ? { job_title: jobTitle ?? null } : {}),
+    ...(hasLinkedinUrl ? { linkedin_url: linkedinUrl ?? null } : {}),
   });
 
   if (!updated) {
@@ -145,13 +226,31 @@ export async function PATCH(req: Request) {
   return NextResponse.json(
     {
       ok: true,
-      user: {
-        id: updated.id,
-        email: updated.email,
-        name: updated.name,
-        phone: updated.phone ?? null,
-      },
+      user: buildUserPayload(updated, access),
     },
     { status: 200 },
   );
+}
+
+export async function DELETE(req: Request) {
+  const access = await getAccessContext(req);
+  if (!access) {
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+  }
+
+  const user = await getLocalUserById(access.userId);
+  if (!user) {
+    return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+  }
+
+  const updated = await updateLocalUser(user.id, {
+    active: false,
+    status: "blocked",
+  });
+
+  if (!updated) {
+    return NextResponse.json({ error: "Nao foi possivel desativar o usuario" }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true }, { status: 200 });
 }

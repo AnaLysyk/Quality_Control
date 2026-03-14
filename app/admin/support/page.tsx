@@ -101,8 +101,8 @@ export default function AdminSupportPage() {
       <div className="p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold">Solicitacoes de Acesso/Suporte</h1>
-            <p className="text-sm text-gray-600">Apenas admins visualizam este painel.</p>
+            <h1 className="text-2xl font-semibold">Suporte global</h1>
+            <p className="text-sm text-gray-600">Painel global para solicitacoes de acesso e atendimento administrativo.</p>
           </div>
           <button
             onClick={load}

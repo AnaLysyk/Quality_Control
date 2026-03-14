@@ -68,12 +68,6 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     return "user";
   }, [user, isGlobalAdmin]);
 
-  try {
-    // debug: expose context used by tests
-    // eslint-disable-next-line no-console
-    console.debug("[SIDEBAR] debug", { user, activeClientSlug, isGlobalAdmin, appRole, pathname });
-  } catch {}
-
   const companySlug = useMemo(() => {
     const match = pathname.match(/^\/empresas\/([^/]+)/);
     if (match?.[1]) return match[1];
@@ -118,7 +112,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     }
 
     items.push(
-      { label: "Chamados", icon: FiMessageSquare, href: "/admin/chamados" },
+      { label: "Kanban de chamados", icon: FiMessageSquare, href: "/admin/chamados" },
       { label: "Suporte global", icon: FiColumns, href: "/admin/support" },
       { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
       { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
@@ -129,7 +123,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
   const itDevNav: NavItem[] = useMemo(
     () => [
-      { label: "Chamados", icon: FiColumns, href: "/kanban-it" },
+      { label: "Kanban de chamados", icon: FiColumns, href: "/kanban-it" },
     ],
     []
   );
@@ -145,7 +139,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             { label: t("nav.testPlans"), icon: FiClipboard, href: `/empresas/${companySlug}/planos-de-teste` },
             { label: t("nav.runs"), icon: FiList, href: `/empresas/${companySlug}/runs` },
             { label: t("nav.defects"), icon: FiAlertTriangle, href: `/empresas/${companySlug}/defeitos` },
-            { label: "Chamados", icon: FiMessageSquare, href: "/meus-chamados", roles: ["client", "user", "admin"] },
+            { label: "Meus chamados", icon: FiMessageSquare, href: "/meus-chamados", roles: ["client", "user", "admin"] },
           ]
         : [],
     [companySlug, t]

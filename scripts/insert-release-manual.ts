@@ -1,15 +1,11 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prismaClient";
 
 async function main() {
-  // Buscar uma empresa existente para associar releases manuais
   const company = await prisma.company.findFirst();
   if (!company) {
     throw new Error("Nenhuma empresa encontrada para associar ReleaseManual.");
   }
 
-  // Inserir ReleaseManual de exemplo
   const releaseManual = await prisma.releaseManual.create({
     data: {
       title: "Release Manual Exemplo",
@@ -20,7 +16,6 @@ async function main() {
   });
   console.log("ReleaseManual inserido:", releaseManual);
 
-  // Buscar todos os releases manuais da empresa
   const releases = await prisma.releaseManual.findMany({
     where: { companyId: company.id },
   });

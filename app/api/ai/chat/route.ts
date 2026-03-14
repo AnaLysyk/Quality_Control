@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 
-const ASSISTANT_ENABLED = process.env.AI_ASSISTANT_ENABLED !== "false";
+const ASSISTANT_ENABLED = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
 
 export async function POST(req: Request) {
   if (!ASSISTANT_ENABLED) {

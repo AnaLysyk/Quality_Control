@@ -36,7 +36,7 @@ function MenuItem(props: {
         type="button"
         onClick={onClick}
         autoFocus={autoFocus}
-        className={`group relative flex w-full items-start gap-3 rounded-2xl px-3.5 py-2.5 text-left shadow-[0_10px_26px_rgba(15,23,42,0.06)] transition hover:-translate-y-[1px] ${
+        className={`group relative flex w-full items-start gap-3 rounded-2xl px-3.5 py-2.5 text-left shadow-[0_10px_26px_rgba(15,23,42,0.06)] transition hover:-translate-y-px ${
           isDarkTheme
             ? "border border-[#29466e] bg-[linear-gradient(180deg,#0d1a35_0%,#112243_100%)] hover:border-[#ff8a9c] hover:bg-[linear-gradient(180deg,#102042_0%,#15294f_100%)]"
             : "border border-[#d8ddea] bg-[linear-gradient(180deg,#ffffff_0%,#fffafb_100%)] hover:border-(--tc-accent) hover:bg-[linear-gradient(180deg,#ffffff_0%,#fff5f7_100%)]"
@@ -288,7 +288,7 @@ export default function ProfileButton() {
               }`}
             />
             <div
-              className={`absolute left-[-2rem] top-20 h-36 w-36 rounded-full ${
+              className={`absolute -left-8 top-20 h-36 w-36 rounded-full ${
                 isDarkTheme
                   ? "bg-[radial-gradient(circle,rgba(78,141,245,0.18)_0%,rgba(78,141,245,0)_72%)]"
                   : "bg-[radial-gradient(circle,rgba(10,31,82,0.06)_0%,rgba(10,31,82,0)_72%)]"
@@ -319,7 +319,7 @@ export default function ProfileButton() {
                   <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDarkTheme ? "text-[#ff8a9c]" : "text-(--tc-accent)"}`}>
                     Conta
                   </p>
-                  <div className={`break-words text-[1.05rem] font-extrabold leading-tight ${isDarkTheme ? "text-white" : "text-[#081f4d]"}`}>
+                  <div className={`wrap-break-word text-[1.05rem] font-extrabold leading-tight ${isDarkTheme ? "text-white" : "text-[#081f4d]"}`}>
                     {displayName}
                   </div>
                   {displayUser ? (

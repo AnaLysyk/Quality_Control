@@ -1,0 +1,37 @@
+name: Cleanup Test Data (fim do dia)
+
+on:
+  # Roda todo dia às 23:00 UTC (≈ 20:00 BRT)
+  schedule:
+    - cron: "0 23 * * *"
+  # Permite disparo manual pelo painel do GitHub Actions
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    name: Limpar dados de teste do banco
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Gerar Prisma Client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Executar limpeza de dados de teste
+        run: npx ts-node --project tsconfig.json scripts/cleanup-test-data.ts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

@@ -5,6 +5,9 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
+import { prisma } from "@/lib/prismaClient";
+
+const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
 
 export type DefectHistoryAction =
   | "created"
@@ -151,6 +154,17 @@ async function writeStore(next: Record<string, DefectHistoryEvent[]>) {
 
 export async function listDefectHistory(defectSlug: string): Promise<DefectHistoryEvent[]> {
   if (!defectSlug) return [];
+  if (USE_POSTGRES) {
+    const rows = await prisma.defectHistoryEvent.findMany({
+      where: { defectSlug },
+      orderBy: { createdAt: "desc" },
+    });
+    return rows.map((row) => ({
+      ...row,
+      action: row.action as DefectHistoryAction,
+      createdAt: row.createdAt.toISOString(),
+    }));
+  }
   const store = await readStore();
   const items = Array.isArray(store[defectSlug]) ? store[defectSlug] : [];
   return items.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
@@ -161,6 +175,24 @@ export async function appendDefectHistory(
   input: Omit<DefectHistoryEvent, "id" | "defectSlug" | "createdAt"> & { createdAt?: string },
 ) {
   if (!defectSlug) return null;
+  if (USE_POSTGRES) {
+    const row = await prisma.defectHistoryEvent.create({
+      data: {
+        id: crypto.randomUUID(),
+        defectSlug,
+        action: input.action,
+        createdAt: input.createdAt ? new Date(input.createdAt) : new Date(),
+        actorId: input.actorId ?? null,
+        actorName: input.actorName ?? null,
+        fromStatus: input.fromStatus ?? null,
+        toStatus: input.toStatus ?? null,
+        fromRunSlug: input.fromRunSlug ?? null,
+        toRunSlug: input.toRunSlug ?? null,
+        note: input.note ?? null,
+      },
+    });
+    return { ...row, action: row.action as DefectHistoryAction, createdAt: row.createdAt.toISOString() };
+  }
   const store = await readStore();
   const list = Array.isArray(store[defectSlug]) ? store[defectSlug] : [];
   const event: DefectHistoryEvent = {

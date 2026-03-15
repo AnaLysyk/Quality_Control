@@ -770,6 +770,10 @@ export default function AdminUsersPage() {
           setSelectedUser(null);
           await load();
         }}
+        onDeleted={async () => {
+          setSelectedUser(null);
+          await load();
+        }}
       />
     </div>
   );

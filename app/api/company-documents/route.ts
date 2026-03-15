@@ -4,7 +4,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import jwt from "jsonwebtoken";
 
+import { prisma } from "@/lib/prismaClient";
 import { getRedis } from "@/lib/redis";
+
+const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
 import { listLocalCompanies, listLocalLinksForUser, listLocalUsers } from "@/lib/auth/localStore";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
@@ -55,6 +58,29 @@ const STORE_PATH = path.join(getJsonStoreDir(), "company-documents-store.json");
 const HISTORY_PATH = path.join(getJsonStoreDir(), "company-documents-history.json");
 const LOCAL_UPLOAD_ROOT = path.join(getJsonStoreDir(), "company-documents-files");
 
+function pgRowToDocItem(row: {
+  id: string; companySlug: string; kind: string; title: string;
+  description?: string | null; url?: string | null; fileName?: string | null;
+  mimeType?: string | null; sizeBytes?: number | null; storagePath?: string | null;
+  createdAt: Date; createdBy?: string | null; createdByName?: string | null;
+}): CompanyDocumentItem {
+  return {
+    id: row.id,
+    companySlug: row.companySlug,
+    kind: row.kind as CompanyDocumentKind,
+    title: row.title,
+    description: row.description ?? null,
+    url: row.url ?? null,
+    fileName: row.fileName ?? null,
+    mimeType: row.mimeType ?? null,
+    sizeBytes: row.sizeBytes ?? null,
+    storagePath: row.storagePath ?? null,
+    createdAt: row.createdAt.toISOString(),
+    createdBy: row.createdBy ?? null,
+    createdByName: row.createdByName ?? null,
+  };
+}
+
 function sanitizeSlug(raw: string) {
   return raw.trim().toLowerCase().replace(/[^a-z0-9-_]/g, "-").slice(0, 80);
 }
@@ -74,6 +100,10 @@ async function ensureStore() {
 }
 
 async function readStore(): Promise<{ items: CompanyDocumentItem[] }> {
+  if (USE_POSTGRES) {
+    const rows = await prisma.companyDocument.findMany({ orderBy: { createdAt: "desc" } });
+    return { items: rows.map(pgRowToDocItem) };
+  }
   await ensureStore();
   try {
     const raw = await fs.readFile(STORE_PATH, "utf8");
@@ -100,6 +130,24 @@ async function ensureHistoryStore() {
 }
 
 async function readHistory(): Promise<{ items: DocumentHistoryEvent[] }> {
+  if (USE_POSTGRES) {
+    const rows = await prisma.documentHistoryEvent.findMany({ orderBy: { createdAt: "desc" } });
+    return {
+      items: rows.map((r) => ({
+        id: r.id,
+        companySlug: r.companySlug,
+        documentId: r.documentId ?? "",
+        action: r.action as DocumentHistoryAction,
+        kind: r.kind as CompanyDocumentKind,
+        title: r.title,
+        description: r.description ?? null,
+        url: r.url ?? null,
+        fileName: r.fileName ?? null,
+        createdAt: r.createdAt.toISOString(),
+        actorId: r.actorId ?? null,
+      })),
+    };
+  }
   await ensureHistoryStore();
   try {
     const raw = await fs.readFile(HISTORY_PATH, "utf8");
@@ -121,6 +169,24 @@ async function appendHistoryEvent(
   item: CompanyDocumentItem,
   actorId?: string | null,
 ) {
+  if (USE_POSTGRES) {
+    await prisma.documentHistoryEvent.create({
+      data: {
+        id: crypto.randomUUID(),
+        companySlug: item.companySlug,
+        documentId: item.id,
+        action,
+        kind: item.kind,
+        title: item.title,
+        description: item.description ?? null,
+        url: item.url ?? null,
+        fileName: item.fileName ?? null,
+        createdAt: new Date(),
+        actorId: actorId ?? null,
+      },
+    });
+    return;
+  }
   const history = await readHistory();
   const event: DocumentHistoryEvent = {
     id: crypto.randomUUID(),
@@ -377,9 +443,15 @@ export async function POST(req: NextRequest) {
       createdBy: auth.userId,
     };
 
-    const store = await readStore();
-    store.items.unshift(item);
-    await writeStore(store);
+    if (USE_POSTGRES) {
+      await prisma.companyDocument.create({
+        data: { ...item, createdAt: new Date(item.createdAt) },
+      });
+    } else {
+      const store = await readStore();
+      store.items.unshift(item);
+      await writeStore(store);
+    }
     await appendHistoryEvent("created", item, auth.userId);
 
     const downloadUrl = `/api/company-documents?slug=${encodeURIComponent(companySlug)}&id=${encodeURIComponent(
@@ -416,9 +488,15 @@ export async function POST(req: NextRequest) {
     createdBy: auth.userId,
   };
 
-  const store = await readStore();
-  store.items.unshift(item);
-  await writeStore(store);
+  if (USE_POSTGRES) {
+    await prisma.companyDocument.create({
+      data: { ...item, createdAt: new Date(item.createdAt) },
+    });
+  } else {
+    const store = await readStore();
+    store.items.unshift(item);
+    await writeStore(store);
+  }
   await appendHistoryEvent("created", item, auth.userId);
 
   return NextResponse.json({ ok: true, item }, { status: 200 });
@@ -435,11 +513,19 @@ export async function DELETE(req: NextRequest) {
   if (!id || !companySlug) return NextResponse.json({ error: "id e slug obrigatorios" }, { status: 400 });
   if (!canAccessCompany(auth, companySlug)) return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
 
-  const store = await readStore();
-  const idx = store.items.findIndex((i) => i.id === id && i.companySlug === companySlug);
-  if (idx === -1) return NextResponse.json({ ok: true }, { status: 200 });
-  const [removed] = store.items.splice(idx, 1);
-  await writeStore(store);
+  let removed: CompanyDocumentItem | undefined;
+  if (USE_POSTGRES) {
+    const row = await prisma.companyDocument.findFirst({ where: { id, companySlug } });
+    if (!row) return NextResponse.json({ ok: true }, { status: 200 });
+    removed = pgRowToDocItem(row);
+    await prisma.companyDocument.delete({ where: { id } });
+  } else {
+    const store = await readStore();
+    const idx = store.items.findIndex((i) => i.id === id && i.companySlug === companySlug);
+    if (idx === -1) return NextResponse.json({ ok: true }, { status: 200 });
+    [removed] = store.items.splice(idx, 1);
+    await writeStore(store);
+  }
   if (removed) {
     await appendHistoryEvent("deleted", removed, auth.userId);
   }

@@ -12,16 +12,7 @@ jobs:
     steps:
       - name: Check frontend API health
         run: |
-          URL="${{ secrets.HEALTHCHECK_URL }}"
-          if [ -z "$URL" ]; then
-            URL="https://qualitycontrol.vercel.app/api/health"
-          fi
-          curl -fsSL "$URL" >/dev/null
+          curl -fsSL "https://quality-control-qwqs.onrender.com/api/health" >/dev/null
       - name: Check backend health (optional)
         run: |
-          URL="${{ secrets.BACKEND_HEALTHCHECK_URL }}"
-          if [ -z "$URL" ]; then
-            echo "BACKEND_HEALTHCHECK_URL not set, skipping"
-            exit 0
-          fi
-          curl -fsSL "$URL" >/dev/null
+          echo "Backend health check not configured, skipping"

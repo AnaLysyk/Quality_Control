@@ -29,6 +29,7 @@ type Props = {
   clients?: ClientOption[];
   onClose: () => void;
   onSaved?: () => void | Promise<void>;
+  onDeleted?: () => void | Promise<void>;
   onDirtyChange?: (dirty: boolean) => void;
 };
 
@@ -92,7 +93,7 @@ function isDirty(a: {
   );
 }
 
-export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirtyChange }: Props) {
+export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDeleted, onDirtyChange }: Props) {
   const router = useRouter();
   const { user: authUser, refreshUser } = useAuthUser();
   const [name, setName] = useState("");
@@ -106,6 +107,8 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
   const [clientId, setClientId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const initial = useMemo(() => {
     const u = user;
@@ -176,6 +179,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
 
   useEffect(() => {
     if (!open) return;
+    setConfirmDelete(false);
     setError(null);
     setName(initial.name);
     setLogin(initial.login);
@@ -202,6 +206,39 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
   }, [open]);
 
   if (!open || !user) return null;
+
+  async function deleteUser() {
+    if (!user?.id || deleting) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+      const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        const msg = (json.error as string) || "Erro ao excluir usuario";
+        setError(msg);
+        toast.error(msg);
+        setConfirmDelete(false);
+        return;
+      }
+      toast.success("Usuario excluido.");
+      await onDeleted?.();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao excluir usuario";
+      setError(msg);
+      toast.error(msg);
+      setConfirmDelete(false);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   function handleUnauthorized() {
     const msg = "Sessao expirada. Faca login novamente.";
@@ -290,7 +327,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
 
               <div className="min-w-0">
                 <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-(--tc-accent)">Painel do usuario</p>
-                <h3 className="break-words text-[1.8rem] font-extrabold leading-tight text-[#081f4d]">{displayName}</h3>
+                <h3 className="wrap-break-word text-[1.8rem] font-extrabold leading-tight text-[#081f4d]">{displayName}</h3>
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-medium text-[#27457d]">
                   <span>@{displayLogin}</span>
                   <span className="hidden h-1 w-1 rounded-full bg-[#9ab0d8] sm:inline-block" />
@@ -330,7 +367,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
 
         <div className="grid gap-6 px-6 py-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.65fr)]">
           <div className="space-y-5">
-            <section className="rounded-[24px] border border-[#d7e0ef] bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
+            <section className="rounded-3xl border border-[#d7e0ef] bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
               <p className={sectionTitleClass}>Identidade</p>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <label className="block text-sm">
@@ -376,7 +413,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
                   <span className={labelClass}>Cargo</span>
                   <div className="mt-2">
                     <Select value={jobTitle || EMPTY_JOB_TITLE} onValueChange={(value) => setJobTitle(value === EMPTY_JOB_TITLE ? "" : value)}>
-                      <SelectTrigger className="h-[50px] rounded-2xl border-[#d8dfeb] bg-white px-4 text-sm font-medium text-[#081f4d] shadow-[0_8px_18px_rgba(15,23,42,0.04)] focus-visible:border-(--tc-accent) focus-visible:ring-4 focus-visible:ring-[#ef0001]/10">
+                      <SelectTrigger className="h-12.5 rounded-2xl border-[#d8dfeb] bg-white px-4 text-sm font-medium text-[#081f4d] shadow-[0_8px_18px_rgba(15,23,42,0.04)] focus-visible:border-(--tc-accent) focus-visible:ring-4 focus-visible:ring-[#ef0001]/10">
                         <SelectValue placeholder="Selecione uma profissao" />
                       </SelectTrigger>
                       <SelectContent className="max-h-80">
@@ -393,7 +430,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
               </div>
             </section>
 
-            <section className="rounded-[24px] border border-[#d7e0ef] bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
+            <section className="rounded-3xl border border-[#d7e0ef] bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
               <p className={sectionTitleClass}>Acesso e vinculo</p>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <label className="block text-sm md:col-span-2">
@@ -438,7 +475,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
 
                 <label className="block text-sm">
                   <span className={labelClass}>Status do acesso</span>
-                  <label className="mt-2 flex min-h-[50px] cursor-pointer items-center gap-3 rounded-2xl border border-[#d8dfeb] bg-white px-4 shadow-[0_8px_18px_rgba(15,23,42,0.04)]">
+                  <label className="mt-2 flex min-h-12.5 cursor-pointer items-center gap-3 rounded-2xl border border-[#d8dfeb] bg-white px-4 shadow-[0_8px_18px_rgba(15,23,42,0.04)]">
                     <input
                       type="checkbox"
                       checked={active}
@@ -453,7 +490,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
           </div>
 
           <div className="space-y-5">
-            <section className="rounded-[24px] border border-[#d7e0ef] bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
+            <section className="rounded-3xl border border-[#d7e0ef] bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
               <p className={sectionTitleClass}>Foto do perfil</p>
               <div className="mt-4 rounded-[22px] border border-[#d9e1ef] bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] p-5 text-center">
                 <UserAvatar
@@ -481,7 +518,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
               </label>
             </section>
 
-            <section className="rounded-[24px] border border-[#d7e0ef] bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
+            <section className="rounded-3xl border border-[#d7e0ef] bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
               <p className={sectionTitleClass}>Estado da edicao</p>
               <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm font-semibold ${stateToneClass}`}>
                 {stateLabel}
@@ -517,8 +554,35 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDirt
         ) : null}
 
         <div className="flex flex-col gap-3 border-t border-[#e3e8f2] bg-[#fbfcff] px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-sm font-medium text-[#5f77a2]">
-            {dirty ? "As alteracoes abaixo ainda nao foram salvas." : "Nenhuma alteracao pendente nesta sessao."}
+          <div className="flex items-center gap-3">
+            {confirmDelete ? (
+              <>
+                <span className="text-sm font-semibold text-rose-700">Confirmar exclusao?</span>
+                <button
+                  type="button"
+                  className="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={deleting}
+                  onClick={deleteUser}
+                >
+                  {deleting ? "Excluindo..." : "Sim, excluir"}
+                </button>
+                <button
+                  type="button"
+                  className="rounded-2xl border border-[#d7e0ef] bg-white px-4 py-2 text-sm font-semibold text-[#4f658d] transition hover:border-(--tc-accent) hover:text-(--tc-accent)"
+                  onClick={() => setConfirmDelete(false)}
+                >
+                  Cancelar
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+                onClick={() => setConfirmDelete(true)}
+              >
+                Excluir usuario
+              </button>
+            )}
           </div>
           <div className="flex justify-end gap-3">
             <button

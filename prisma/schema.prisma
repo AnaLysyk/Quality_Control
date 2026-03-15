@@ -453,3 +453,81 @@ model Defect {
 
   @@map("defects")
 }
+
+// ─── Kanban ──────────────────────────────────────────────────────────────────
+
+model KanbanCard {
+  id         Int      @id @default(autoincrement())
+  project    String
+  clientSlug String?
+  runId      Int?
+  caseId     Int?
+  title      String?
+  status     String?
+  bug        String?
+  link       String?
+  createdAt  DateTime @default(now())
+
+  @@map("kanban_cards")
+}
+
+// ─── Defect History ──────────────────────────────────────────────────────────
+
+model DefectHistoryEvent {
+  id          String   @id @default(cuid())
+  defectSlug  String
+  action      String
+  createdAt   DateTime @default(now())
+  actorId     String?
+  actorName   String?
+  fromStatus  String?
+  toStatus    String?
+  fromRunSlug String?
+  toRunSlug   String?
+  note        String?
+
+  @@index([defectSlug])
+  @@map("defect_history_events")
+}
+
+// ─── Company Documents ────────────────────────────────────────────────────────
+
+model CompanyDocument {
+  id           String   @id @default(cuid())
+  companySlug  String
+  kind         String   @default("link")
+  title        String
+  description  String?
+  url          String?
+  fileName     String?
+  mimeType     String?
+  sizeBytes    Int?
+  storagePath  String?
+  createdAt    DateTime @default(now())
+  createdBy    String?
+  createdByName String?
+
+  history DocumentHistoryEvent[]
+
+  @@index([companySlug])
+  @@map("company_documents")
+}
+
+model DocumentHistoryEvent {
+  id          String   @id @default(cuid())
+  companySlug String
+  documentId  String?
+  action      String
+  kind        String
+  title       String
+  description String?
+  url         String?
+  fileName    String?
+  createdAt   DateTime @default(now())
+  actorId     String?
+
+  document CompanyDocument? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@index([companySlug])
+  @@map("document_history_events")
+}

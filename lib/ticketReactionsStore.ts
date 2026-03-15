@@ -6,6 +6,12 @@ import fs from "node:fs/promises";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 
+const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prismaClient");
+  return prisma;
+}
+
 export type TicketReactionType = "like";
 
 export type TicketReactionRecord = {
@@ -95,12 +101,26 @@ async function writeStore(next: ReactionsStore) {
   }
 }
 
+function pgToRecord(r: { id: string; ticketId: string; commentId: string; userId: string; type: string; createdAt: Date }): TicketReactionRecord {
+  return { id: r.id, ticketId: r.ticketId, commentId: r.commentId, userId: r.userId, type: r.type as TicketReactionType, createdAt: r.createdAt.toISOString() };
+}
+
 export async function listReactionsByTicket(ticketId: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.ticketReaction.findMany({ where: { ticketId } });
+    return rows.map(pgToRecord);
+  }
   const store = await readStore();
   return store.items.filter((item) => item.ticketId === ticketId);
 }
 
 export async function listReactionsByComment(commentId: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.ticketReaction.findMany({ where: { commentId } });
+    return rows.map(pgToRecord);
+  }
   const store = await readStore();
   return store.items.filter((item) => item.commentId === commentId);
 }
@@ -111,6 +131,13 @@ export async function addReaction(input: {
   userId: string;
   type: TicketReactionType;
 }) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const existing = await prisma.ticketReaction.findFirst({ where: { commentId: input.commentId, userId: input.userId, type: input.type } });
+    if (existing) return { reaction: pgToRecord(existing), created: false };
+    const r = await prisma.ticketReaction.create({ data: { ticketId: input.ticketId, commentId: input.commentId, userId: input.userId, type: input.type } });
+    return { reaction: pgToRecord(r), created: true };
+  }
   const store = await readStore();
   const exists = store.items.find(
     (item) => item.commentId === input.commentId && item.userId === input.userId && item.type === input.type,
@@ -134,6 +161,11 @@ export async function removeReaction(input: {
   userId: string;
   type: TicketReactionType;
 }) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const result = await prisma.ticketReaction.deleteMany({ where: { commentId: input.commentId, userId: input.userId, type: input.type } });
+    return result.count > 0;
+  }
   const store = await readStore();
   const before = store.items.length;
   store.items = store.items.filter(

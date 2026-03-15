@@ -5,6 +5,12 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
+const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prismaClient");
+  return prisma;
+}
+
 export type NotificationStatus = "unread" | "closed";
 export type NotificationType =
   | "RUN_CREATED"
@@ -169,7 +175,16 @@ function appendNotification(
   return { item: notification, created: true };
 }
 
+function pgToRecord(r: { id: string; type: string; title: string; description: string; status: string; link?: string | null; companySlug?: string | null; requestId?: string | null; ticketId?: string | null; dedupeKey?: string | null; createdAt: Date; updatedAt: Date }): UserNotification {
+  return { id: r.id, type: r.type as NotificationType, title: r.title, description: r.description, status: r.status as NotificationStatus, link: r.link ?? null, companySlug: r.companySlug ?? null, requestId: r.requestId ?? null, ticketId: r.ticketId ?? null, dedupeKey: r.dedupeKey ?? null, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString() };
+}
+
 export async function listUserNotifications(userId: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.userNotification.findMany({ where: { userId }, orderBy: { createdAt: "desc" } });
+    return rows.map(pgToRecord);
+  }
   const store = await readStore();
   const items = Array.isArray(store[userId]) ? store[userId] : [];
   return items.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
@@ -189,6 +204,15 @@ export async function createUserNotification(
     dedupeKey?: string | null;
   },
 ) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    if (input.dedupeKey) {
+      const existing = await prisma.userNotification.findFirst({ where: { userId, dedupeKey: input.dedupeKey } });
+      if (existing) return pgToRecord(existing);
+    }
+    const r = await prisma.userNotification.create({ data: { userId, type: input.type, title: sanitizeText(input.title, 120, "Notificacao"), description: sanitizeText(input.description ?? "", 400), status: input.status ?? "unread", link: input.link ?? null, companySlug: input.companySlug ?? null, requestId: input.requestId ?? null, ticketId: input.ticketId ?? null, dedupeKey: input.dedupeKey ?? null } });
+    return pgToRecord(r);
+  }
   const store = await readStore();
   const { item, created } = appendNotification(store, userId, input);
   if (created) {
@@ -211,9 +235,17 @@ export async function createNotificationsForUsers(
     dedupeKey?: string | null;
   },
 ) {
+  const unique = Array.from(new Set(userIds.filter(Boolean)));
+  if (USE_POSTGRES) {
+    const created: UserNotification[] = [];
+    for (const userId of unique) {
+      const n = await createUserNotification(userId, input);
+      created.push(n);
+    }
+    return created;
+  }
   const store = await readStore();
   const created: UserNotification[] = [];
-  const unique = Array.from(new Set(userIds.filter(Boolean)));
   for (const userId of unique) {
     const { item, created: wasCreated } = appendNotification(store, userId, input);
     if (wasCreated) created.push(item);
@@ -229,6 +261,11 @@ export async function updateNotificationStatus(
   id: string,
   status: NotificationStatus,
 ) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const r = await prisma.userNotification.update({ where: { id }, data: { status } });
+    return pgToRecord(r);
+  }
   const store = await readStore();
   const items = Array.isArray(store[userId]) ? store[userId] : [];
   const idx = items.findIndex((item) => item.id === id);
@@ -246,6 +283,11 @@ export async function updateNotificationStatus(
 }
 
 export async function closeNotificationsByDedupeKey(userId: string, dedupeKey: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const result = await prisma.userNotification.updateMany({ where: { userId, dedupeKey, status: "unread" }, data: { status: "closed" } });
+    return result.count > 0;
+  }
   const store = await readStore();
   const items = (Array.isArray(store[userId]) ? store[userId] : []) as UserNotification[];
   let changed = false;
@@ -265,6 +307,11 @@ export async function closeNotificationsByDedupeKey(userId: string, dedupeKey: s
 
 export async function closeNotificationsByTicketId(userId: string, ticketId: string) {
   if (!ticketId) return false;
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const result = await prisma.userNotification.updateMany({ where: { userId, ticketId, status: "unread" }, data: { status: "closed" } });
+    return result.count > 0;
+  }
   const store = await readStore();
   const items = (Array.isArray(store[userId]) ? store[userId] : []) as UserNotification[];
   let changed = false;
@@ -283,6 +330,11 @@ export async function closeNotificationsByTicketId(userId: string, ticketId: str
 }
 
 export async function closeAllNotifications(userId: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const result = await prisma.userNotification.updateMany({ where: { userId, status: "unread" }, data: { status: "closed" } });
+    return result.count > 0;
+  }
   const store = await readStore();
   const items = (Array.isArray(store[userId]) ? store[userId] : []) as UserNotification[];
   let changed = false;

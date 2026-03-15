@@ -7,6 +7,12 @@ import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { LEGACY_SUPORTE_STATUS_MAP, normalizeKanbanStatus, type SuporteStatus } from "@/lib/suportesStatus";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 
+const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prismaClient");
+  return prisma;
+}
+
 export type SuportePriority = "low" | "medium" | "high";
 export type SuporteType = "bug" | "melhoria" | "tarefa";
 
@@ -524,6 +530,14 @@ export async function exportSuportes(filter?: (item: SuporteRecord) => boolean):
 // Backwards-compatible export alias
 export const exportTickets = exportSuportes;
 
+function pgTicketToRecord(ticket: { id: string; code: string; title: string; description: string; status: string; type: string; priority: string; tags: string[]; createdAt: Date; updatedAt: Date; createdBy: string; createdByName?: string | null; createdByEmail?: string | null; companySlug?: string | null; companyId?: string | null; assignedToUserId?: string | null; updatedBy?: string | null; events?: { type: string; payload: unknown; actorUserId?: string | null; createdAt: Date }[] }): SuporteRecord {
+  const timeline = (ticket.events ?? [])
+    .filter((e) => e.type === "STATUS_CHANGED")
+    .sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1))
+    .map((e) => { const p = (e.payload ?? {}) as Record<string, unknown>; return { from: (p.from as SuporteStatus) ?? "backlog", to: (p.to as SuporteStatus) ?? "backlog", changedById: e.actorUserId ?? "", at: e.createdAt.toISOString() }; });
+  return normalizeRecord({ id: ticket.id, code: ticket.code, title: ticket.title, description: ticket.description, status: ticket.status, type: ticket.type, priority: ticket.priority, tags: ticket.tags, createdAt: ticket.createdAt.toISOString(), updatedAt: ticket.updatedAt.toISOString(), createdBy: ticket.createdBy, createdByName: ticket.createdByName ?? null, createdByEmail: ticket.createdByEmail ?? null, companySlug: ticket.companySlug ?? null, companyId: ticket.companyId ?? null, assignedToUserId: ticket.assignedToUserId ?? null, updatedBy: ticket.updatedBy ?? null, timeline });
+}
+
 function validateImportItem(item: SuporteRecord) {
   if (!item.id || !item.title || !item.createdBy || !item.companyId) {
     throw new Error("SUPORTES_IMPORT_INVALID_ITEM");
@@ -581,6 +595,11 @@ export async function importSuportes(payload: ImportPayload, mode: ImportMode) {
 
 
 export async function listSuportesForUser(userId: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.ticket.findMany({ where: { createdBy: userId }, orderBy: { createdAt: "desc" }, include: { events: true } });
+    return rows.map(pgTicketToRecord);
+  }
   const store = await syncLegacyCodes(await readStore());
   return store.items
     .filter((item) => item.createdBy === userId)
@@ -590,12 +609,22 @@ export async function listSuportesForUser(userId: string) {
 
 
 export async function listAllSuportes() {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.ticket.findMany({ orderBy: { createdAt: "desc" }, include: { events: true } });
+    return rows.map(pgTicketToRecord);
+  }
   const store = await syncLegacyCodes(await readStore());
   return [...store.items].map((item) => normalizeRecord(item)).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 }
 
 
 export async function getSuporteById(id: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const row = await prisma.ticket.findUnique({ where: { id }, include: { events: true } });
+    return row ? pgTicketToRecord(row) : null;
+  }
   const store = await syncLegacyCodes(await readStore());
   const item = store.items.find((suporte) => suporte.id === id);
   return item ? normalizeRecord({ ...item }) : null;
@@ -622,7 +651,17 @@ export async function createSuporte(input: {
     console.error('[createSuporte] Título e descrição recebidos:', { title: input.title, description: input.description });
     return null;
   }
-
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const count = await prisma.ticket.count();
+    const nextCounter = count + 1;
+    const code = formatCode(nextCounter);
+    const row = await prisma.ticket.create({
+      data: { code, title: title || "Novo suporte", description, status: "backlog", type, priority: normalizePriority(input.priority), tags: normalizeTags(input.tags), createdBy: input.createdBy || "anonymous", createdByName: input.createdByName ?? null, createdByEmail: input.createdByEmail ?? null, companySlug: input.companySlug ?? null, companyId: input.companyId ?? null, assignedToUserId: input.assignedToUserId ?? null },
+      include: { events: true },
+    });
+    return pgTicketToRecord(row);
+  }
   const now = new Date().toISOString();
   const store = await readStore();
   let nextCounter = (store.counter ?? 0) + 1;
@@ -670,6 +709,15 @@ export async function updateSuporteForUser(
   id: string,
   patch: { title?: unknown; description?: unknown },
 ) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const current = await prisma.ticket.findFirst({ where: { id, createdBy: userId } });
+    if (!current) return null;
+    const title = sanitizeText(patch.title, 120) || current.title;
+    const description = typeof patch.description === "string" ? sanitizeText(patch.description, 2000) : current.description;
+    const row = await prisma.ticket.update({ where: { id }, data: { title, description, updatedBy: userId }, include: { events: true } });
+    return pgTicketToRecord(row);
+  }
   const store = await readStore();
   const idx = store.items.findIndex((item) => item.id === id && item.createdBy === userId);
   if (idx === -1) return null;
@@ -691,6 +739,11 @@ export async function updateSuporteForUser(
 
 
 export async function deleteSuporteForUser(userId: string, id: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const result = await prisma.ticket.deleteMany({ where: { id, createdBy: userId } });
+    return result.count > 0;
+  }
   const store = await readStore();
   const before = store.items.length;
   store.items = store.items.filter((item) => !(item.id === id && item.createdBy === userId));
@@ -703,6 +756,18 @@ export async function deleteSuporteForUser(userId: string, id: string) {
 export async function updateSuporteStatus(id: string, status: string, actorId: string) {
   const nextStatus = normalizeStatus(status);
   if (!nextStatus) return null;
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const current = await prisma.ticket.findUnique({ where: { id } });
+    if (!current) return null;
+    if (current.status === nextStatus) {
+      const row = await prisma.ticket.findUnique({ where: { id }, include: { events: true } });
+      return row ? pgTicketToRecord(row) : null;
+    }
+    const row = await prisma.ticket.update({ where: { id }, data: { status: nextStatus, updatedBy: actorId }, include: { events: true } });
+    await prisma.ticketEvent.create({ data: { ticketId: id, type: "STATUS_CHANGED", payload: { from: current.status, to: nextStatus }, actorUserId: actorId } });
+    return pgTicketToRecord({ ...row, events: [...row.events, { type: "STATUS_CHANGED", payload: { from: current.status, to: nextStatus }, actorUserId: actorId, createdAt: new Date() }] });
+  }
   const store = await readStore();
   const idx = store.items.findIndex((item) => item.id === id);
   if (idx === -1) return null;
@@ -728,6 +793,11 @@ export async function updateSuporteStatus(id: string, status: string, actorId: s
 
 
 export async function listSuporteTimeline(id: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const events = await prisma.ticketEvent.findMany({ where: { ticketId: id }, orderBy: { createdAt: "asc" } });
+    return events.map((e) => { const p = (e.payload ?? {}) as Record<string, unknown>; return { from: p.from as SuporteStatus, to: p.to as SuporteStatus, changedById: e.actorUserId ?? "", at: e.createdAt.toISOString() }; });
+  }
   const store = await readStore();
   const item = store.items.find((suporte) => suporte.id === id);
   if (!item) return null;
@@ -748,6 +818,19 @@ export async function updateSuporte(
     updatedBy: string;
   },
 ) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const current = await prisma.ticket.findUnique({ where: { id } });
+    if (!current) return null;
+    const title = sanitizeText(patch.title, 120) || current.title;
+    const description = typeof patch.description === "string" ? sanitizeText(patch.description, 2000) : current.description;
+    const type = patch.type === undefined ? current.type : normalizeType(patch.type);
+    const priority = patch.priority === undefined ? current.priority : normalizePriority(patch.priority);
+    const tags = patch.tags === undefined ? current.tags : normalizeTags(patch.tags);
+    const assignedToUserId = patch.assignedToUserId === undefined ? current.assignedToUserId : typeof patch.assignedToUserId === "string" ? patch.assignedToUserId.trim() || null : null;
+    const row = await prisma.ticket.update({ where: { id }, data: { title, description, type, priority, tags, assignedToUserId, updatedBy: patch.updatedBy }, include: { events: true } });
+    return pgTicketToRecord(row);
+  }
   const store = await readStore();
   const idx = store.items.findIndex((item) => item.id === id);
   if (idx === -1) return null;
@@ -786,6 +869,11 @@ export async function updateSuporte(
 
 
 export async function touchSuporte(id: string, updatedBy?: string | null) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const row = await prisma.ticket.update({ where: { id }, data: { updatedBy: updatedBy ?? undefined }, include: { events: true } });
+    return pgTicketToRecord(row);
+  }
   const store = await readStore();
   const idx = store.items.findIndex((item) => item.id === id);
   if (idx === -1) return null;

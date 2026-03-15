@@ -6,6 +6,12 @@ import path from "node:path";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { getJsonStorePath } from "./jsonStorePath";
 
+const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prismaClient");
+  return prisma;
+}
+
 export type RequestUser = {
   id: string;
   name?: string;
@@ -139,7 +145,16 @@ async function persist(next: RequestRecord[]) {
   await writeStore({ items: next });
 }
 
+function pgRowToRecord(r: { id: string; userId: string; userName: string; userEmail: string; companyId: string; companyName: string; type: string; payload: unknown; status: string; createdAt: Date; reviewedBy?: string | null; reviewNote?: string | null; reviewedAt?: Date | null }): RequestRecord {
+  return { id: r.id, userId: r.userId, userName: r.userName, userEmail: r.userEmail, companyId: r.companyId, companyName: r.companyName, type: r.type as RequestType, payload: (r.payload ?? {}) as Record<string, unknown>, status: r.status as RequestStatus, createdAt: r.createdAt.toISOString(), reviewedBy: r.reviewedBy ?? undefined, reviewNote: r.reviewNote ?? undefined, reviewedAt: r.reviewedAt?.toISOString() ?? undefined };
+}
+
 export async function listUserRequests(userId: string, filters?: { status?: RequestStatus; type?: RequestType }) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.request.findMany({ where: { userId, ...(filters?.status ? { status: filters.status } : {}), ...(filters?.type ? { type: filters.type } : {}) }, orderBy: { createdAt: "desc" } });
+    return rows.map(pgRowToRecord);
+  }
   const items = await loadItems();
   return items.filter(
     (req) =>
@@ -155,6 +170,14 @@ export async function listAllRequests(filters?: {
   companyId?: string;
   sort?: "createdAt_desc" | "createdAt_asc";
 }) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.request.findMany({
+      where: { ...(filters?.status ? { status: filters.status } : {}), ...(filters?.type ? { type: filters.type } : {}), ...(filters?.companyId ? { companyId: filters.companyId } : {}) },
+      orderBy: { createdAt: filters?.sort === "createdAt_asc" ? "asc" : "desc" },
+    });
+    return rows.map(pgRowToRecord);
+  }
   const items = await loadItems();
   let results = [...items];
   if (filters?.status) results = results.filter((r) => r.status === filters.status);
@@ -169,11 +192,29 @@ export async function listAllRequests(filters?: {
 }
 
 export async function getRequestById(id: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const r = await prisma.request.findUnique({ where: { id } });
+    return r ? pgRowToRecord(r) : null;
+  }
   const items = await loadItems();
   return items.find((req) => req.id === id) ?? null;
 }
 
 export async function addRequest(user: RequestUser, type: RequestType, payload: Record<string, unknown>) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const duplicate = await prisma.request.findFirst({ where: { userId: user.id, type, status: "PENDING" } });
+    if (duplicate) {
+      const err = new Error("Duplicated pending request") as Error & { code?: string };
+      err.code = "DUPLICATE";
+      throw err;
+    }
+    const r = await prisma.request.create({
+      data: { userId: user.id, userName: user.name ?? user.email ?? "Usuario", userEmail: user.email ?? "", companyId: user.companyId ?? "", companyName: user.companyName ?? "", type, payload: JSON.parse(JSON.stringify(payload)), status: "PENDING" },
+    });
+    return pgRowToRecord(r);
+  }
   const items = await loadItems();
   const duplicate = items.find((r) => r.userId === user.id && r.type === type && r.status === "PENDING");
   if (duplicate) {
@@ -210,6 +251,13 @@ export async function updateRequestStatus(
   reviewer: { id: string },
   reviewNote?: string,
 ) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const current = await prisma.request.findUnique({ where: { id } });
+    if (!current || current.status !== "PENDING") return current ? pgRowToRecord(current) : null;
+    const r = await prisma.request.update({ where: { id }, data: { status, reviewedBy: reviewer.id, reviewNote: reviewNote ?? null, reviewedAt: new Date() } });
+    return pgRowToRecord(r);
+  }
   const items = await loadItems();
   const idx = items.findIndex((r) => r.id === id);
   if (idx === -1) return null;

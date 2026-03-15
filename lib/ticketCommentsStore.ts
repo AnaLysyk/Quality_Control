@@ -6,6 +6,12 @@ import fs from "node:fs/promises";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 
+const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prismaClient");
+  return prisma;
+}
+
 export type TicketCommentRecord = {
   id: string;
   ticketId: string;
@@ -100,10 +106,19 @@ function sanitizeBody(value: unknown, max: number) {
   return value.trim().slice(0, max);
 }
 
+function pgToRecord(r: { id: string; ticketId: string; authorUserId: string; authorName?: string | null; body: string; createdAt: Date; updatedAt: Date; deletedAt?: Date | null }): TicketCommentRecord {
+  return { id: r.id, ticketId: r.ticketId, authorUserId: r.authorUserId, authorName: r.authorName ?? null, body: r.body, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString(), deletedAt: r.deletedAt?.toISOString() ?? null };
+}
+
 export async function listTicketComments(ticketId: string, opts?: { limit?: number; offset?: number }) {
-  const store = await readStore();
   const limit = Math.max(1, Math.min(200, Number(opts?.limit ?? 100)));
   const offset = Math.max(0, Number(opts?.offset ?? 0));
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.ticketComment.findMany({ where: { ticketId }, orderBy: { createdAt: "desc" }, take: limit, skip: offset });
+    return rows.map(pgToRecord);
+  }
+  const store = await readStore();
   const items = store.items
     .filter((item) => item.ticketId === ticketId)
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
@@ -118,6 +133,11 @@ export async function createTicketComment(input: {
 }) {
   const body = sanitizeBody(input.body, 2000);
   if (!body) return null;
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const r = await prisma.ticketComment.create({ data: { ticketId: input.ticketId, authorUserId: input.authorUserId, authorName: input.authorName ?? null, body } });
+    return pgToRecord(r);
+  }
   const now = new Date().toISOString();
   const comment: TicketCommentRecord = {
     id: randomUUID(),
@@ -141,13 +161,21 @@ export async function updateTicketComment(
   actorUserId: string,
   opts?: { allowWhenDeleted?: boolean },
 ) {
+  const nextBody = sanitizeBody(body, 2000);
+  if (!nextBody) return null;
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const current = await prisma.ticketComment.findUnique({ where: { id: commentId } });
+    if (!current) return null;
+    if (current.deletedAt && !opts?.allowWhenDeleted) return null;
+    const r = await prisma.ticketComment.update({ where: { id: commentId }, data: { body: nextBody } });
+    return pgToRecord(r);
+  }
   const store = await readStore();
   const idx = store.items.findIndex((item) => item.id === commentId);
   if (idx === -1) return null;
   const current = store.items[idx];
   if (current.deletedAt && !opts?.allowWhenDeleted) return null;
-  const nextBody = sanitizeBody(body, 2000);
-  if (!nextBody) return null;
   const updated: TicketCommentRecord = {
     ...current,
     body: nextBody,
@@ -159,6 +187,14 @@ export async function updateTicketComment(
 }
 
 export async function softDeleteTicketComment(commentId: string, _actorUserId: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const current = await prisma.ticketComment.findUnique({ where: { id: commentId } });
+    if (!current) return null;
+    if (current.deletedAt) return pgToRecord(current);
+    const r = await prisma.ticketComment.update({ where: { id: commentId }, data: { deletedAt: new Date() } });
+    return pgToRecord(r);
+  }
   const store = await readStore();
   void _actorUserId;
   const idx = store.items.findIndex((item) => item.id === commentId);
@@ -176,6 +212,11 @@ export async function softDeleteTicketComment(commentId: string, _actorUserId: s
 }
 
 export async function findTicketCommentById(commentId: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const r = await prisma.ticketComment.findUnique({ where: { id: commentId } });
+    return r ? pgToRecord(r) : null;
+  }
   const store = await readStore();
   const item = store.items.find((comment) => comment.id === commentId);
   return item ? { ...item } : null;

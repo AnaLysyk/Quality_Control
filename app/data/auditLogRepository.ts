@@ -4,6 +4,12 @@ import { randomUUID } from "crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prismaClient");
+  return prisma;
+}
+
 export function isAuditLogStorageConfigured() {
   return true;
 }
@@ -109,6 +115,13 @@ export async function addAuditLog(input: {
   entityLabel?: string | null;
   metadata?: unknown;
 }): Promise<void> {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    await prisma.auditLog.create({
+      data: { actor_user_id: input.actorUserId ?? null, actor_email: input.actorEmail ?? null, action: input.action, entity_type: input.entityType, entity_id: input.entityId ?? null, entity_label: input.entityLabel ?? null, metadata: input.metadata !== undefined ? JSON.parse(JSON.stringify(input.metadata)) : null },
+    });
+    return;
+  }
   const store = await readStore();
   const entry: AuditLogRow = {
     id: randomUUID(),
@@ -137,6 +150,30 @@ export async function listAuditLogs(params?: {
   startDate?: string | null;
   endDate?: string | null;
 }) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const limit = Math.max(1, Math.min(500, Number(params?.limit ?? 200)));
+    const offset = Math.max(0, Number(params?.offset ?? 0));
+    const action = (params?.action ?? "").trim();
+    const entityType = (params?.entityType ?? "").trim();
+    const actor = (params?.actor ?? "").trim();
+    const query = (params?.query ?? "").trim();
+    const startDate = params?.startDate ? new Date(params.startDate) : undefined;
+    const endDate = params?.endDate ? new Date(params.endDate) : undefined;
+    const rows = await prisma.auditLog.findMany({
+      where: {
+        ...(action ? { action } : {}),
+        ...(entityType ? { entity_type: entityType } : {}),
+        ...(actor ? { OR: [{ actor_email: { contains: actor, mode: "insensitive" } }, { actor_user_id: { contains: actor, mode: "insensitive" } }] } : {}),
+        ...(query ? { OR: [{ entity_label: { contains: query, mode: "insensitive" } }, { entity_id: { contains: query, mode: "insensitive" } }, { entity_type: { contains: query, mode: "insensitive" } }] } : {}),
+        created_at: { ...(startDate ? { gte: startDate } : {}), ...(endDate ? { lte: endDate } : {}) },
+      },
+      orderBy: { created_at: "desc" },
+      take: limit,
+      skip: offset,
+    });
+    return rows.map((r) => ({ id: r.id, created_at: r.created_at.toISOString(), actor_user_id: r.actor_user_id ?? null, actor_email: r.actor_email ?? null, action: r.action as AuditAction, entity_type: r.entity_type as AuditEntityType, entity_id: r.entity_id ?? null, entity_label: r.entity_label ?? null, metadata: r.metadata }));
+  }
   const store = await readStore();
   const limit = Math.max(1, Math.min(500, Number(params?.limit ?? 200)));
   const offset = Math.max(0, Number(params?.offset ?? 0));

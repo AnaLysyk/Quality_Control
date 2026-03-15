@@ -6,6 +6,12 @@ import fs from "node:fs/promises";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 
+const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prismaClient");
+  return prisma;
+}
+
 export type TicketEventType =
   | "CREATED"
   | "STATUS_CHANGED"
@@ -103,10 +109,19 @@ async function writeStore(next: EventsStore) {
   }
 }
 
+function pgToRecord(r: { id: string; ticketId: string; type: string; payload: unknown; actorUserId?: string | null; createdAt: Date }): TicketEventRecord {
+  return { id: r.id, ticketId: r.ticketId, type: r.type as TicketEventType, payload: (r.payload ?? null) as Record<string, unknown> | null, actorUserId: r.actorUserId ?? null, createdAt: r.createdAt.toISOString() };
+}
+
 export async function listTicketEvents(ticketId: string, opts?: { limit?: number; offset?: number }) {
-  const store = await readStore();
   const limit = Math.max(1, Math.min(200, Number(opts?.limit ?? 50)));
   const offset = Math.max(0, Number(opts?.offset ?? 0));
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.ticketEvent.findMany({ where: { ticketId }, orderBy: { createdAt: "desc" }, take: limit, skip: offset });
+    return rows.map(pgToRecord);
+  }
+  const store = await readStore();
   const items = store.items
     .filter((item) => item.ticketId === ticketId)
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
@@ -121,6 +136,11 @@ export async function appendTicketEvent(input: {
   createdAt?: string;
 }) {
   if (!input.ticketId) return null;
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const r = await prisma.ticketEvent.create({ data: { ticketId: input.ticketId, type: input.type, payload: input.payload ? JSON.parse(JSON.stringify(input.payload)) : undefined, actorUserId: input.actorUserId ?? null } });
+    return pgToRecord(r);
+  }
   const store = await readStore();
   const event: TicketEventRecord = {
     id: randomUUID(),

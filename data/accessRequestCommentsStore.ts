@@ -6,6 +6,12 @@ import path from "node:path";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { getJsonStorePath } from "./jsonStorePath";
 
+const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prismaClient");
+  return prisma;
+}
+
 export type AccessRequestComment = {
   id: string;
   requestId: string;
@@ -102,6 +108,14 @@ async function writeStore(next: StorePayload) {
 
 export async function listAccessRequestComments(requestId: string) {
   if (!requestId) return [];
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.accessRequestComment.findMany({
+      where: { requestId },
+      orderBy: { createdAt: "asc" },
+    });
+    return rows.map((r) => ({ id: r.id, requestId: r.requestId, authorRole: r.authorRole as "admin" | "requester", authorName: r.authorName, authorEmail: r.authorEmail ?? null, authorId: r.authorId ?? null, body: r.body, createdAt: r.createdAt.toISOString() }));
+  }
   const store = await readStore();
   return store.items
     .filter((item) => item.requestId === requestId)
@@ -116,6 +130,13 @@ export async function createAccessRequestComment(input: {
   authorId?: string | null;
   body: string;
 }) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const r = await prisma.accessRequestComment.create({
+      data: { requestId: input.requestId, authorRole: input.authorRole, authorName: input.authorName.trim() || "Usuario", authorEmail: input.authorEmail ?? null, authorId: input.authorId ?? null, body: input.body.trim() },
+    });
+    return { id: r.id, requestId: r.requestId, authorRole: r.authorRole as "admin" | "requester", authorName: r.authorName, authorEmail: r.authorEmail ?? null, authorId: r.authorId ?? null, body: r.body, createdAt: r.createdAt.toISOString() };
+  }
   const now = new Date().toISOString();
   const record: AccessRequestComment = {
     id: randomUUID(),

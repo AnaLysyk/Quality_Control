@@ -424,6 +424,22 @@ model UserNote {
   @@map("user_notes")
 }
 
+// ─── Audit Logs ──────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  created_at   DateTime @default(now())
+  actor_user_id String?
+  actor_email   String?
+  action        String
+  entity_type   String
+  entity_id     String?
+  entity_label  String?
+  metadata      Json?
+
+  @@map("audit_logs")
+}
+
 // ─── Defects ─────────────────────────────────────────────────────────────────
 
 model Defect {

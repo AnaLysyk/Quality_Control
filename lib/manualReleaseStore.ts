@@ -6,6 +6,16 @@ import type { Release } from "@/types/release";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
+const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prismaClient");
+  return prisma;
+}
+
+function pgToRelease(r: { id: string; slug: string; title: string; app?: string | null; qaseProject?: string | null; category?: string | null; kind?: string | null; runSlug?: string | null; runName?: string | null; companySlug?: string | null; environments: string[]; source: string; status: string; runId?: number | null; statsPass: number; statsFail: number; statsBlocked: number; statsNotRun: number; observations?: string | null; closedAt?: Date | null; createdAt: Date; updatedAt: Date }): Release {
+  return { id: r.id, slug: r.slug, name: r.title, app: r.app ?? "", qaseProject: r.qaseProject ?? undefined, category: r.category ?? undefined, kind: (r.kind as "run" | "defect") ?? "run", runSlug: r.runSlug ?? undefined, runName: r.runName ?? undefined, clientSlug: r.companySlug ?? null, environments: r.environments ?? [], source: r.source as "MANUAL" | "API", status: r.status as Release["status"], runId: r.runId ?? undefined, stats: { pass: r.statsPass, fail: r.statsFail, blocked: r.statsBlocked, notRun: r.statsNotRun }, observations: r.observations ?? undefined, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString(), closedAt: r.closedAt?.toISOString() ?? null };
+}
+
 export type ManualCaseItem = {
   id: string;
   title?: string;
@@ -100,6 +110,11 @@ async function writeRedisJson<T>(key: string, value: T) {
 }
 
 export async function readManualReleases(): Promise<Release[]> {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.release.findMany({ orderBy: { createdAt: "desc" } });
+    return rows.map(pgToRelease);
+  }
   if (!USE_MEMORY_STORE) {
     if (USE_REDIS) {
       const cached = await readRedisJson<Release[]>(REDIS_RELEASES_KEY);
@@ -124,6 +139,17 @@ export async function readManualReleases(): Promise<Release[]> {
 
 export async function writeManualReleases(releases: Release[]) {
   const next = Array.isArray(releases) ? releases.filter(Boolean) : [];
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const existingSlugs = (await prisma.release.findMany({ select: { slug: true } })).map((r) => r.slug);
+    const incomingSlugs = next.map((r) => r.slug);
+    const toDelete = existingSlugs.filter((s) => !incomingSlugs.includes(s));
+    if (toDelete.length) await prisma.release.deleteMany({ where: { slug: { in: toDelete } } });
+    for (const r of next) {
+      await prisma.release.upsert({ where: { slug: r.slug }, create: { id: r.id, slug: r.slug, title: r.name, app: r.app ?? null, qaseProject: r.qaseProject ?? null, category: r.category ?? null, kind: r.kind ?? "run", runSlug: r.runSlug ?? null, runName: r.runName ?? null, companySlug: r.clientSlug ?? null, environments: r.environments ?? [], source: r.source, status: r.status, runId: r.runId ?? null, statsPass: r.stats?.pass ?? 0, statsFail: r.stats?.fail ?? 0, statsBlocked: r.stats?.blocked ?? 0, statsNotRun: r.stats?.notRun ?? 0, observations: r.observations ?? null, closedAt: r.closedAt ? new Date(r.closedAt) : null }, update: { title: r.name, app: r.app ?? null, qaseProject: r.qaseProject ?? null, category: r.category ?? null, kind: r.kind ?? "run", runSlug: r.runSlug ?? null, runName: r.runName ?? null, companySlug: r.clientSlug ?? null, environments: r.environments ?? [], source: r.source, status: r.status, runId: r.runId ?? null, statsPass: r.stats?.pass ?? 0, statsFail: r.stats?.fail ?? 0, statsBlocked: r.stats?.blocked ?? 0, statsNotRun: r.stats?.notRun ?? 0, observations: r.observations ?? null, closedAt: r.closedAt ? new Date(r.closedAt) : null } });
+    }
+    return;
+  }
   if (!USE_MEMORY_STORE) {
     if (USE_REDIS) {
       await writeRedisJson(REDIS_RELEASES_KEY, next);
@@ -139,6 +165,16 @@ export async function writeManualReleases(releases: Release[]) {
 }
 
 export async function readManualReleaseCases(): Promise<Record<string, ManualCaseItem[]>> {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.releaseCase.findMany();
+    const result: Record<string, ManualCaseItem[]> = {};
+    for (const r of rows) {
+      if (!result[r.releaseId]) result[r.releaseId] = [];
+      result[r.releaseId].push({ id: r.id, title: r.title ?? undefined, link: r.link ?? undefined, status: r.status, bug: r.bug ?? null, fromApi: r.fromApi });
+    }
+    return result;
+  }
   if (!USE_MEMORY_STORE) {
     if (USE_REDIS) {
       const cached = await readRedisJson<Record<string, ManualCaseItem[]>>(REDIS_CASES_KEY);
@@ -163,6 +199,16 @@ export async function readManualReleaseCases(): Promise<Record<string, ManualCas
 
 export async function writeManualReleaseCases(storeValue: Record<string, ManualCaseItem[]>) {
   const next = storeValue && typeof storeValue === "object" ? storeValue : {};
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    for (const [releaseId, cases] of Object.entries(next)) {
+      await prisma.releaseCase.deleteMany({ where: { releaseId } });
+      if (cases && cases.length) {
+        await prisma.releaseCase.createMany({ data: cases.map((c) => ({ id: c.id, releaseId, title: c.title ?? null, link: c.link ?? null, status: c.status ?? "NOT_RUN", bug: c.bug ?? null, fromApi: c.fromApi ?? false })) });
+      }
+    }
+    return;
+  }
   if (!USE_MEMORY_STORE) {
     if (USE_REDIS) {
       await writeRedisJson(REDIS_CASES_KEY, next);

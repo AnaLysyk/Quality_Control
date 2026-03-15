@@ -5,6 +5,12 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
+const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prismaClient");
+  return prisma;
+}
+
 export const NOTE_COLOR_KEYS = [
   "amber",
   "sky",
@@ -184,7 +190,16 @@ function normalizeNote(note: Partial<UserNote> | null | undefined): UserNote {
   };
 }
 
+function pgToUserNote(r: { id: string; title: string; content: string; color: string; status: string; priority: string; tags: string[]; createdAt: Date; updatedAt: Date }): UserNote {
+  return normalizeNote({ id: r.id, title: r.title, content: r.content, color: r.color as NoteColor, status: r.status as NoteStatus, priority: r.priority as NotePriority, tags: r.tags, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString() });
+}
+
 export async function listUserNotes(userId: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.userNote.findMany({ where: { userId }, orderBy: { updatedAt: "desc" } });
+    return rows.map(pgToUserNote);
+  }
   // Prefer Redis if configured
   if (USE_REDIS) {
     const fromRedis = await readStoreRedis(userId);
@@ -223,6 +238,11 @@ export async function createUserNote(
   const status = normalizeStatus(input.status);
   const priority = normalizePriority(input.priority);
   const tags = normalizeTags(input.tags);
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const r = await prisma.userNote.create({ data: { userId, title, content, color, status, priority, tags } });
+    return pgToUserNote(r);
+  }
   if (!title && !content) {
     return null;
   }
@@ -280,6 +300,20 @@ export async function updateUserNote(
   id: string,
   patch: { title?: unknown; content?: unknown; color?: unknown; status?: unknown; priority?: unknown; tags?: unknown },
 ) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const current = await prisma.userNote.findFirst({ where: { id, userId } });
+    if (!current) return null;
+    const norm = pgToUserNote(current);
+    const title = sanitizeText(patch.title, 120) || norm.title;
+    const content = typeof patch.content === "string" ? sanitizeText(patch.content, 12000) : norm.content;
+    const color = normalizeColor(patch.color ?? norm.color);
+    const status = patch.status === undefined ? norm.status : normalizeStatus(patch.status);
+    const priority = patch.priority === undefined ? norm.priority : normalizePriority(patch.priority);
+    const tags = patch.tags === undefined ? norm.tags : normalizeTags(patch.tags);
+    const r = await prisma.userNote.update({ where: { id }, data: { title, content, color, status, priority, tags } });
+    return pgToUserNote(r);
+  }
   // Redis path
   if (USE_REDIS) {
     const itemsFromRedis = (await readStoreRedis(userId)) ?? [];
@@ -355,6 +389,13 @@ export async function updateUserNote(
 }
 
 export async function deleteUserNote(userId: string, id: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const existing = await prisma.userNote.findFirst({ where: { id, userId } });
+    if (!existing) return false;
+    await prisma.userNote.delete({ where: { id } });
+    return true;
+  }
   // Redis
   if (USE_REDIS) {
     const itemsFromRedis = (await readStoreRedis(userId)) ?? [];

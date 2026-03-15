@@ -6,6 +6,12 @@ import path from "node:path";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { getJsonStorePath } from "./jsonStorePath";
 
+const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prismaClient");
+  return prisma;
+}
+
 export type AccessRequestStatus = "open" | "closed" | "rejected" | "in_progress";
 
 export type AccessRequestRecord = {
@@ -104,11 +110,22 @@ async function writeStore(next: StorePayload) {
 }
 
 export async function listAccessRequests() {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.accessRequest.findMany({ orderBy: { createdAt: "desc" } });
+    return rows.map((r) => ({ id: r.id, email: r.email, message: r.description ?? r.notes ?? "", status: r.status as AccessRequestStatus, created_at: r.createdAt.toISOString(), updated_at: r.updatedAt.toISOString(), user_id: r.userId ?? null, ip_address: r.ip_address ?? null, user_agent: r.user_agent ?? null }));
+  }
   const store = await readStore();
   return [...store.items].sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 
 export async function getAccessRequestById(id: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const r = await prisma.accessRequest.findUnique({ where: { id } });
+    if (!r) return null;
+    return { id: r.id, email: r.email, message: r.description ?? r.notes ?? "", status: r.status as AccessRequestStatus, created_at: r.createdAt.toISOString(), updated_at: r.updatedAt.toISOString(), user_id: r.userId ?? null, ip_address: r.ip_address ?? null, user_agent: r.user_agent ?? null };
+  }
   const store = await readStore();
   return store.items.find((item) => item.id === id) ?? null;
 }
@@ -121,6 +138,13 @@ export async function createAccessRequest(input: {
   ip_address?: string | null;
   user_agent?: string | null;
 }) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const r = await prisma.accessRequest.create({
+      data: { email: input.email, description: input.message, status: input.status ?? "open", userId: input.user_id ?? null, ip_address: input.ip_address ?? null, user_agent: input.user_agent ?? null },
+    });
+    return { id: r.id, email: r.email, message: r.description ?? "", status: r.status as AccessRequestStatus, created_at: r.createdAt.toISOString(), updated_at: r.updatedAt.toISOString(), user_id: r.userId ?? null, ip_address: r.ip_address ?? null, user_agent: r.user_agent ?? null };
+  }
   const now = new Date().toISOString();
   const record: AccessRequestRecord = {
     id: randomUUID(),
@@ -143,6 +167,19 @@ export async function updateAccessRequest(
   id: string,
   patch: Partial<Pick<AccessRequestRecord, "email" | "message" | "status" | "user_id">>,
 ) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const r = await prisma.accessRequest.update({
+      where: { id },
+      data: {
+        ...(patch.email ? { email: patch.email } : {}),
+        ...(patch.message ? { description: patch.message } : {}),
+        ...(patch.status ? { status: patch.status } : {}),
+        ...(patch.user_id !== undefined ? { userId: patch.user_id ?? null } : {}),
+      },
+    });
+    return { id: r.id, email: r.email, message: r.description ?? "", status: r.status as AccessRequestStatus, created_at: r.createdAt.toISOString(), updated_at: r.updatedAt.toISOString(), user_id: r.userId ?? null, ip_address: r.ip_address ?? null, user_agent: r.user_agent ?? null };
+  }
   const store = await readStore();
   const index = store.items.findIndex((item) => item.id === id);
   if (index === -1) return null;

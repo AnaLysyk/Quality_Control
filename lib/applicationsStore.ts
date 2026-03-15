@@ -1,6 +1,12 @@
 import fs from "fs";
 import path from "path";
 
+const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prismaClient");
+  return prisma;
+}
+
 const DATA_PATH = path.join(process.cwd(), "data", "company-applications.json");
 
 export type AppRecord = {
@@ -57,7 +63,16 @@ function writeFile(data: ApplicationsDb) {
   fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), "utf-8");
 }
 
-export function listApplications(filter?: { companySlug?: string }) {
+function pgToRecord(r: { id: string; companyId?: string | null; companySlug?: string | null; name: string; slug: string; description?: string | null; qaseProjectCode?: string | null; source?: string | null; active: boolean; createdAt: Date; updatedAt: Date }): AppRecord {
+  return { id: r.id, companyId: r.companyId ?? undefined, companySlug: r.companySlug ?? undefined, name: r.name, slug: r.slug, description: r.description ?? null, qaseProjectCode: r.qaseProjectCode ?? null, source: r.source ?? null, active: r.active, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString() };
+}
+
+export async function listApplications(filter?: { companySlug?: string }): Promise<AppRecord[]> {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.application.findMany({ where: filter?.companySlug ? { companySlug: filter.companySlug } : undefined });
+    return rows.map(pgToRecord);
+  }
   const db = readFile();
   let items: AppRecord[] = db.items || [];
   if (filter?.companySlug) {
@@ -66,7 +81,14 @@ export function listApplications(filter?: { companySlug?: string }) {
   return items;
 }
 
-export function createApplication(input: ApplicationSeed) {
+export async function createApplication(input: ApplicationSeed): Promise<AppRecord> {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const id = `app_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
+    const qaseProjectCode = normalizeProjectCode(input.qaseProjectCode);
+    const r = await prisma.application.create({ data: { id, companyId: input.companyId ?? input.companySlug ?? null, companySlug: input.companySlug ?? input.companyId ?? null, name: input.name || "Untitled", slug: normalizeSlug(input.slug || qaseProjectCode || input.name || "untitled"), description: input.description ?? null, qaseProjectCode, source: input.source ?? null, active: typeof input.active === "boolean" ? input.active : true } });
+    return pgToRecord(r);
+  }
   const db = readFile();
   const id = `app_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
   const now = new Date().toISOString();
@@ -92,14 +114,28 @@ export function createApplication(input: ApplicationSeed) {
   return record;
 }
 
-export function syncCompanyApplications(input: {
+export async function syncCompanyApplications(input: {
   companyId?: string | null;
   companySlug?: string | null;
   projects: Array<{ code: string; title?: string | null }>;
-}) {
+}): Promise<AppRecord[]> {
   const companySlug = input.companySlug?.trim() || input.companyId?.trim() || undefined;
   const companyId = input.companyId?.trim() || input.companySlug?.trim() || undefined;
   if (!companySlug) return [];
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const synced: AppRecord[] = [];
+    const now = new Date().toISOString();
+    for (const project of input.projects) {
+      const code = normalizeProjectCode(project.code);
+      if (!code) continue;
+      const slug = normalizeSlug(code);
+      const name = (project.title ?? code).trim() || code;
+      const r = await prisma.application.upsert({ where: { slug_companySlug: { slug, companySlug } }, create: { id: `app_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`, companyId: companyId ?? null, companySlug, name, slug, qaseProjectCode: code, source: "qase", active: true }, update: { companyId: companyId ?? null, name, slug, qaseProjectCode: code, source: "qase", active: true } });
+      synced.push(pgToRecord(r));
+    }
+    return synced;
+  }
 
   const db = readFile();
   const now = new Date().toISOString();

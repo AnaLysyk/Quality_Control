@@ -17,15 +17,17 @@ interface AppShellProps {
 
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname() || "";
-  const isLogin = pathname.startsWith("/login");
+  const isLoginRoute = pathname.startsWith("/login");
+  const useMinimalShell = pathname.length === 0 || isLoginRoute;
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
+    if (!mobileOpen) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileOpen(false);
-  }, [pathname]);
+  }, [pathname, mobileOpen]);
 
-  if (isLogin) {
+  if (useMinimalShell) {
     return (
       <div className="min-h-screen w-full overflow-y-auto bg-(--page-bg) text-(--page-text)">
         {children}
@@ -42,6 +44,7 @@ export default function AppShell({ children }: AppShellProps) {
         className="fixed top-4 left-4 z-50 rounded-lg border border-(--tc-border) bg-(--tc-surface) p-2 text-(--tc-text) shadow-sm transition-colors hover:bg-(--tc-surface-2) lg:hidden"
         onClick={() => setMobileOpen(true)}
         aria-label="Abrir menu"
+        aria-expanded={mobileOpen}
       >
         <FiMenu size={20} />
       </button>

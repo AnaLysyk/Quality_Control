@@ -1,4 +1,3 @@
-"use server";
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getMockRole } from "@/lib/rbac/defects";

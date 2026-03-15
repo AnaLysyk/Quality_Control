@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.975.0",
+    "@prisma/client": "^6.19.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-select": "^2.2.6",
@@ -62,7 +63,6 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",
-    "@prisma/client": "^6.19.2",
     "@tailwindcss/postcss": "^4.0.0",
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^14.0.0",

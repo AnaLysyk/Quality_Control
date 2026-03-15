@@ -40,6 +40,14 @@ Observacoes:
   - melhoria de erro/autenticacao no `app/kanban-it/page.tsx`
   - ajustes de acessibilidade no `app/components/CreateManualReleaseButton.tsx`
   - ampliacao do tipo `role` em `data/usersStore.ts` para aceitar `global_admin`
+  - unificacao de `/profile` e `/me` para `/settings/profile`
+  - ajuste do `AppShell` para shell minima no login e fechamento mais seguro do menu mobile
+
+- Triagem manual mais recente:
+  - `feat/upstash-integration`: o que restava de perfil foi reduzido a redirecionamento e ja foi levado para a `main`
+  - `feat/chamados-fixes`: ainda mistura refatoracao grande de suporte/chamados e nao e seguro portar sem revisao funcional
+  - `e2e/stabilize-tests`: os commits restantes de login/auth/rate limit ainda trazem acoplamento alto com auth e testes
+  - `feature/testing-metric-finalize`: os commits restantes ainda misturam API, auth, testes e pipeline
 
 Commits exclusivos pequenos e mapeados:
 

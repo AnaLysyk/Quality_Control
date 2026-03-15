@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import { CompanyMetricsCard, type DefectsSummary } from "@/components/CompanyMetricsCard";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 
@@ -542,8 +541,7 @@ export default function TestMetricPage() {
   }, [searchResult, focusCompany, companies]);
 
   return (
-    <RequireGlobalAdmin>
-      <div className="min-h-screen bg-linear-to-b from-(--page-bg,#f8f8fb) to-(--page-bg,#f0f4ff) text-(--page-text,#0b1a3c)">
+    <div className="min-h-screen bg-linear-to-b from-(--page-bg,#f8f8fb) to-(--page-bg,#f0f4ff) text-(--page-text,#0b1a3c)">
         <div className="mx-auto w-full max-w-none px-4 py-8 sm:px-6 lg:px-10 xl:px-12 2xl:px-14 space-y-8">
           <section className="tc-hero-panel">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -860,7 +858,5 @@ export default function TestMetricPage() {
 
         </div>
       </div>
-    </RequireGlobalAdmin>
   );
 }
-

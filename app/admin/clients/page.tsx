@@ -8,7 +8,6 @@ import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { fetchApi } from "@/lib/api";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, readApiError, unwrapEnvelopeData } from "@/lib/apiEnvelope";
-import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import { FiCheckCircle, FiExternalLink, FiHome, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiUsers, FiX, FiXCircle } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import Breadcrumb from "@/components/Breadcrumb";
@@ -1090,13 +1089,7 @@ function AdminClientsPage() {
   );
 }
 
-export default function AdminClientsPageWithGuard() {
-  return (
-    <RequireGlobalAdmin>
-      <AdminClientsPage />
-    </RequireGlobalAdmin>
-  );
-}
+export default AdminClientsPage;
 
 type CompanyLogoProps = {
   logoUrl?: string | null;

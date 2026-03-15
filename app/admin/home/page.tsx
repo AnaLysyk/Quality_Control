@@ -13,7 +13,6 @@ import {
   FiTrendingDown,
   FiTrendingUp,
 } from "react-icons/fi";
-import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import TicketsButton from "@/components/TicketsButton";
 import { fetchApi } from "@/lib/api";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
@@ -619,8 +618,7 @@ export default function AdminHomePage() {
   ];
 
   return (
-    <RequireGlobalAdmin>
-      <div className="min-h-screen bg-[color:var(--page-bg,#eef3fb)] text-[color:var(--tc-text-primary)]">
+    <div className="min-h-screen bg-[color:var(--page-bg,#eef3fb)] text-[color:var(--tc-text-primary)]">
         <div className="tc-page-shell px-4 py-5 lg:px-8 lg:py-7">
           <section className="tc-hero-panel">
             <div className="tc-hero-grid">
@@ -1232,6 +1230,5 @@ export default function AdminHomePage() {
           <TicketsButton />
         </div>
       </div>
-    </RequireGlobalAdmin>
   );
 }

@@ -44,7 +44,7 @@ type SidebarProps = {
 export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const logoSrc = useMemo(() => (menuLogoEnv ? menuLogoEnv : "/images/tc.png"), []);
   const pathname = usePathname() || "";
-  const { user, visibility } = usePermissionAccess();
+  const { user, loading, visibility } = usePermissionAccess();
   const { activeClientSlug } = useClientContext();
   const { t } = useI18n();
 
@@ -161,6 +161,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   );
 
   const navigation = useMemo(() => {
+    if (loading) return [];
     if (!user) return publicNav;
     // If the current path is inside a company, prefer the company navigation
     if (pathname.startsWith("/empresas/") && companyNav.length) return companyNav;
@@ -168,7 +169,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     if (appRole === "it_dev") return itDevNav;
     if (companyNav.length) return companyNav;
     return publicNav;
-  }, [user, appRole, adminNav, itDevNav, companyNav, publicNav, pathname]);
+  }, [loading, user, appRole, adminNav, itDevNav, companyNav, publicNav, pathname]);
 
   function resolveModuleFromHref(href: string) {
     if (href === "/admin/users/permissions") return "permissions";

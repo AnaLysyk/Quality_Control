@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiAlertTriangle, FiTrendingDown, FiZap } from "react-icons/fi";
-import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import { toast } from "react-hot-toast";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 
@@ -205,7 +204,7 @@ export default function AdminDefeitosPage() {
   }, [payload]);
 
   return (
-    <RequireGlobalAdmin>
+    <>
       <style jsx global>{`
         @keyframes pulseUp {
           from {
@@ -391,7 +390,7 @@ export default function AdminDefeitosPage() {
           </>
         )}
       </div>
-    </RequireGlobalAdmin>
+    </>
   );
 }
 

@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import Breadcrumb from "@/components/Breadcrumb";
-import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 import { normalizeRequestProfileType, toRequestProfileTypeLabel } from "@/lib/requestRouting";
 
 type RequestRecord = {
@@ -238,10 +237,4 @@ function AdminRequestsPage() {
   );
 }
 
-export default function AdminRequestsPageWithGuard() {
-  return (
-    <RequireGlobalAdmin>
-      <AdminRequestsPage />
-    </RequireGlobalAdmin>
-  );
-}
+export default AdminRequestsPage;

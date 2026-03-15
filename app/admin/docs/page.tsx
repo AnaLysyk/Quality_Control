@@ -1,12 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
 
 export default function AdminDocsPage() {
   return (
-    <RequireGlobalAdmin>
-      <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
+    <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
         <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-10 space-y-6">
           <header className="rounded-2xl border border-(--tc-border) bg-(--tc-surface) p-5">
             <p className="text-xs uppercase tracking-[0.35em] text-(--tc-text-muted)">Admin</p>
@@ -96,6 +94,5 @@ export default function AdminDocsPage() {
           </section>
         </div>
       </div>
-    </RequireGlobalAdmin>
   );
 }

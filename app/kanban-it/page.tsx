@@ -123,6 +123,17 @@ export default function KanbanItPage() {
         credentials: "include",
         cache: "no-store",
       });
+      const contentType = res.headers.get("content-type") ?? "";
+      if (res.status === 401) {
+        setTickets([]);
+        setError("Faça login para visualizar os chamados.");
+        return;
+      }
+      if (!contentType.includes("application/json")) {
+        setTickets([]);
+        setError("Resposta inesperada do servidor ao carregar chamados.");
+        return;
+      }
       const json = (await res.json().catch(() => ({}))) as { items?: TicketItem[]; error?: string };
       if (!res.ok) {
         setTickets([]);
@@ -542,6 +553,5 @@ export default function KanbanItPage() {
     </div>
   );
 }
-
 
 

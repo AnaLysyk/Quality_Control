@@ -839,7 +839,7 @@ export default function AccessRequestClient() {
               <div
                 role="status"
                 aria-live="polite"
-                className="mt-4 shrink-0 rounded-2xl border border-emerald-300 bg-gradient-to-r from-emerald-50 to-emerald-100 px-4 py-4 shadow-[0_12px_30px_rgba(16,185,129,0.14)]"
+                className="mt-4 shrink-0 rounded-2xl border border-emerald-300 bg-linear-to-r from-emerald-50 to-emerald-100 px-4 py-4 shadow-[0_12px_30px_rgba(16,185,129,0.14)]"
               >
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-emerald-300 bg-white text-lg text-emerald-600">
@@ -1086,7 +1086,7 @@ export default function AccessRequestClient() {
                   {isCompanyAccessRequest ? "Cargo do responsavel" : "Cargo ou funcao"}
                   <div>
                     <Select value={role || EMPTY_JOB_TITLE} onValueChange={(value) => setRole(value === EMPTY_JOB_TITLE ? "" : value)}>
-                      <SelectTrigger className="h-[50px] rounded-xl border-[#011848]/15 bg-white px-4 py-3 text-sm text-[#011848] focus-visible:ring-[#ef0001]/40">
+                      <SelectTrigger className="h-12.5 rounded-xl border-[#011848]/15 bg-white px-4 py-3 text-sm text-[#011848] focus-visible:ring-[#ef0001]/40">
                         <SelectValue placeholder="Selecione uma profissao" />
                       </SelectTrigger>
                       <SelectContent className="max-h-80">
@@ -1455,6 +1455,7 @@ export default function AccessRequestClient() {
                             </span>
                           </div>
                           <select
+                            aria-label="Tipo de perfil"
                             value={lookupDraft.accessType}
                             onChange={(event) => {
                               const next = event.target.value as LookupDraft["accessType"];
@@ -1791,7 +1792,7 @@ export default function AccessRequestClient() {
                                 }
                                 disabled={!isLookupFieldEditable("jobRole")}
                               >
-                                <SelectTrigger className={`h-[50px] rounded-xl px-4 py-3 text-sm text-[#011848] focus-visible:ring-[#ef0001]/40 ${requestedLookupFields.has("jobRole") ? "border-rose-300 bg-rose-50 text-rose-700" : "border-[#011848]/15 bg-white"}`}>
+                                <SelectTrigger className={`h-12.5 rounded-xl px-4 py-3 text-sm text-[#011848] focus-visible:ring-[#ef0001]/40 ${requestedLookupFields.has("jobRole") ? "border-rose-300 bg-rose-50 text-rose-700" : "border-[#011848]/15 bg-white"}`}>
                                   <SelectValue placeholder="Selecione uma profissao" />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-80">

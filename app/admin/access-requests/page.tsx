@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import styles from "./AccessRequests.module.css";
 import { FiCheckCircle, FiClock, FiRefreshCw, FiSearch, FiSlash } from "react-icons/fi";
 import { RequireGlobalDeveloper } from "@/core/auth/RequireGlobalDeveloper";
 import { getAccessToken } from "@/lib/api";
@@ -237,17 +238,17 @@ const COMPANY_ADJUSTMENT_FIELD_OPTIONS: AdjustmentFieldOption[] = [
 ];
 
 const inputBase =
-  "mt-1 w-full rounded-[16px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] px-3.5 py-2.5 text-sm font-medium text-[color:var(--tc-text-primary)] shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition placeholder:text-[color:var(--tc-text-muted)] focus:border-[color:var(--tc-accent)] focus:outline-none focus:ring-4 focus:ring-[rgba(239,0,1,0.12)]";
+  "mt-1 w-full rounded-[16px] border border-(--tc-border) bg-(--tc-surface) px-3.5 py-2.5 text-sm font-medium text-(--tc-text-primary) shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:outline-none focus:ring-4 focus:ring-[rgba(239,0,1,0.12)]";
 
 const readOnlyInputBase =
-  "mt-1 w-full rounded-[16px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-3.5 py-2.5 text-sm font-medium text-[color:var(--tc-text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]";
+  "mt-1 w-full rounded-[16px] border border-(--tc-border) bg-(--tc-surface-2) px-3.5 py-2.5 text-sm font-medium text-(--tc-text-primary) shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]";
 
-const labelBase = "text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-accent)]";
+const labelBase = "text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-accent)";
 
 const sectionCard =
-  "rounded-[24px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]";
+  "rounded-3xl border border-(--tc-border) bg-(--tc-surface) p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]";
 const sectionMuted =
-  "rounded-[24px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]";
+  "rounded-3xl border border-(--tc-border) bg-(--tc-surface-2) p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]";
 
 function AccessRequestsPage() {
   const [items, setItems] = useState<AccessRequestItem[]>([]);
@@ -717,16 +718,13 @@ function AccessRequestsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-[color:var(--tc-text-primary)]">
-      <div className="mx-auto flex w-full max-w-[1920px] flex-col gap-5 px-2.5 py-5 sm:px-3 sm:py-6 lg:px-4 xl:px-5 2xl:px-6">
+    <div className="min-h-screen bg-transparent text-(--tc-text-primary)">
+      <div className="mx-auto flex w-full max-w-480 flex-col gap-5 px-2.5 py-5 sm:px-3 sm:py-6 lg:px-4 xl:px-5 2xl:px-6">
         <section
-          className="relative overflow-hidden rounded-[28px] border border-[color:var(--tc-border)] p-4 text-white shadow-[0_28px_72px_rgba(15,23,42,0.16)] sm:rounded-[30px] sm:p-5 xl:rounded-[32px] xl:p-6"
-          style={{
-            background: "linear-gradient(135deg, var(--tc-primary) 0%, var(--tc-primary-dark) 58%, rgba(239,0,1,0.82) 180%)",
-          }}
+          className={`relative overflow-hidden rounded-[28px] border border-(--tc-border) p-4 text-white shadow-[0_28px_72px_rgba(15,23,42,0.16)] sm:rounded-[30px] sm:p-5 xl:rounded-4xl xl:p-6 ${styles.headerCard}`}
         >
-          <div className="pointer-events-none absolute -right-10 top-0 h-28 w-28 rounded-full blur-3xl" style={{ background: "rgba(255,255,255,0.12)" }} />
-          <div className="pointer-events-none absolute bottom-0 left-1/3 h-24 w-24 rounded-full blur-3xl" style={{ background: "rgba(239,0,1,0.2)" }} />
+          <div className={`pointer-events-none absolute -right-10 top-0 h-28 w-28 rounded-full blur-3xl ${styles.blurDecorWhite}`} />
+          <div className={`pointer-events-none absolute bottom-0 left-1/3 h-24 w-24 rounded-full blur-3xl ${styles.blurDecorRed}`} />
           <div className="flex flex-wrap items-start justify-between gap-5">
             <div className="max-w-3xl">
               <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/72">Admin</p>
@@ -795,36 +793,36 @@ function AccessRequestsPage() {
         </section>
 
         {error ? (
-          <div className="rounded-[24px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-800 shadow-[0_14px_28px_rgba(225,29,72,0.08)]">
+          <div className="rounded-3xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-800 shadow-[0_14px_28px_rgba(225,29,72,0.08)]">
             {error}
           </div>
         ) : null}
 
         {successMessage ? (
-          <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800 shadow-[0_14px_28px_rgba(5,150,105,0.08)]">
+          <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800 shadow-[0_14px_28px_rgba(5,150,105,0.08)]">
             {successMessage}
           </div>
         ) : null}
 
         <div className="grid items-stretch grid-cols-1 gap-5 xl:grid-cols-[minmax(320px,380px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(360px,430px)_minmax(0,1fr)]">
-          <aside className="flex min-h-[680px] flex-col overflow-hidden rounded-[28px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] shadow-[0_20px_48px_rgba(15,23,42,0.08)] xl:h-[calc(100vh-6.5rem)] xl:min-h-0 2xl:sticky 2xl:top-4">
-            <div className="border-b border-[color:var(--tc-border)] p-5" style={{ background: "linear-gradient(180deg, rgba(1,24,72,0.08), transparent)" }}>
+          <aside className="flex min-h-170 flex-col overflow-hidden rounded-[28px] border border-(--tc-border) bg-(--tc-surface) shadow-[0_20px_48px_rgba(15,23,42,0.08)] xl:h-[calc(100vh-6.5rem)] xl:min-h-0 2xl:sticky 2xl:top-4">
+            <div className={`border-b border-(--tc-border) p-5 ${styles.asideHeader}`}>
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-[20px] font-semibold tracking-tight text-[color:var(--tc-text-primary)]">{filteredItems.length} em revisao</h2>
+                  <h2 className="text-[20px] font-semibold tracking-tight text-(--tc-text-primary)">{filteredItems.length} em revisao</h2>
                 </div>
-                <div className="rounded-full border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-3 py-1.5 text-xs font-semibold text-[color:var(--tc-text-muted)]">
+                <div className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1.5 text-xs font-semibold text-(--tc-text-muted)">
                   {statusCounters.total} total
                 </div>
               </div>
 
             <div className="relative mt-5">
-              <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--tc-accent)]" />
+              <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--tc-accent)" />
               <input
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar nome, email ou empresa"
-                className="w-full rounded-[20px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] py-3 pl-10 pr-4 text-sm font-medium text-[color:var(--tc-text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition placeholder:text-[color:var(--tc-text-muted)] focus:border-[color:var(--tc-accent)] focus:ring-4 focus:ring-[rgba(239,0,1,0.12)]"
+                className="w-full rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) py-3 pl-10 pr-4 text-sm font-medium text-(--tc-text-primary) shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:ring-4 focus:ring-[rgba(239,0,1,0.12)]"
               />
             </div>
 
@@ -844,8 +842,8 @@ function AccessRequestsPage() {
                     onClick={() => setStatusFilter(filter.value as typeof statusFilter)}
                     className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] transition ${
                       active
-                        ? "border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.1)] text-[color:var(--tc-accent)] shadow-[0_10px_24px_rgba(214,34,70,0.12)]"
-                        : "border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] text-[color:var(--tc-text-muted)] hover:border-[rgba(1,24,72,0.2)] hover:text-[color:var(--tc-text-primary)]"
+                        ? "border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.1)] text-(--tc-accent) shadow-[0_10px_24px_rgba(214,34,70,0.12)]"
+                        : "border-(--tc-border) bg-(--tc-surface) text-(--tc-text-muted) hover:border-[rgba(1,24,72,0.2)] hover:text-(--tc-text-primary)"
                     }`}
                   >
                     {filter.label}
@@ -857,9 +855,9 @@ function AccessRequestsPage() {
 
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 pr-3 [scrollbar-width:none] sm:p-5 sm:pr-4 [&::-webkit-scrollbar]:hidden">
               {loading ? (
-                <div className={`${sectionMuted} text-sm text-[color:var(--tc-text-muted)]`}>Carregando solicitacoes...</div>
+                <div className={`${sectionMuted} text-sm text-(--tc-text-muted)`}>Carregando solicitacoes...</div>
               ) : filteredItems.length === 0 ? (
-                <div className={`${sectionMuted} text-sm text-[color:var(--tc-text-muted)]`}>
+                <div className={`${sectionMuted} text-sm text-(--tc-text-muted)`}>
                   Nenhuma solicitacao encontrada para o filtro atual.
                 </div>
               ) : (
@@ -870,26 +868,21 @@ function AccessRequestsPage() {
                       key={it.id}
                       className={`rounded-[26px] border p-4 sm:p-5 transition focus-within:ring-2 focus-within:ring-[rgba(239,0,1,0.22)] ${
                         selectedRow
-                          ? "border-transparent text-white shadow-[0_20px_44px_rgba(1,24,72,0.18)]"
-                          : "border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] shadow-[0_14px_34px_rgba(15,23,42,0.06)] hover:-translate-y-0.5 hover:border-[rgba(1,24,72,0.14)] hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)]"
+                          ? `border-transparent text-white shadow-[0_20px_44px_rgba(1,24,72,0.18)] ${styles.rowSelected}`
+                          : "border-(--tc-border) bg-(--tc-surface) shadow-[0_14px_34px_rgba(15,23,42,0.06)] hover:-translate-y-0.5 hover:border-[rgba(1,24,72,0.14)] hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)]"
                       }`}
-                      style={
-                        selectedRow
-                          ? { background: "linear-gradient(135deg, var(--tc-primary) 0%, rgba(10,34,90,0.96) 62%, rgba(239,0,1,0.82) 180%)" }
-                          : undefined
-                      }
                     >
                       <button type="button" onClick={() => setSelectedId(it.id)} className="w-full text-left">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className={`truncate text-base font-semibold ${selectedRow ? "text-white" : "text-[color:var(--tc-text-primary)]"}`}>
+                            <p className={`truncate text-base font-semibold ${selectedRow ? "text-white" : "text-(--tc-text-primary)"}`}>
                               {it.fullName || it.name || "(sem nome)"}
                             </p>
-                            <p className={`mt-1 truncate text-sm font-medium ${selectedRow ? "text-white/78" : "text-[color:var(--tc-text-secondary)]"}`}>{it.email}</p>
+                            <p className={`mt-1 truncate text-sm font-medium ${selectedRow ? "text-white/78" : "text-(--tc-text-secondary)"}`}>{it.email}</p>
                           </div>
                         </div>
 
-                        <div className={`mt-4 grid gap-3 text-sm ${selectedRow ? "text-white/88" : "text-[color:var(--tc-text-secondary)]"}`}>
+                        <div className={`mt-4 grid gap-3 text-sm ${selectedRow ? "text-white/88" : "text-(--tc-text-secondary)"}`}>
                           <div className="flex flex-wrap items-center gap-2">
                             <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold ${statusBadgeClass(it.status)}`}>
                               {statusLabel(it.status)}
@@ -900,23 +893,23 @@ function AccessRequestsPage() {
                           </div>
                           <div className="grid gap-2 sm:grid-cols-2">
                             <div>
-                              <p className={`break-words pr-1 font-medium leading-5 ${selectedRow ? "text-white" : "text-[color:var(--tc-text-primary)]"}`}>{it.company || "Sem empresa"}</p>
+                              <p className={`wrap-break-word pr-1 font-medium leading-5 ${selectedRow ? "text-white" : "text-(--tc-text-primary)"}`}>{it.company || "Sem empresa"}</p>
                             </div>
                             <div>
-                              <p className={`break-words pr-1 font-medium leading-5 ${selectedRow ? "text-white/74" : "text-[color:var(--tc-text-secondary)]"}`}>{it.jobRole || "Cargo nao informado"}</p>
+                              <p className={`wrap-break-word pr-1 font-medium leading-5 ${selectedRow ? "text-white/74" : "text-(--tc-text-secondary)"}`}>{it.jobRole || "Cargo nao informado"}</p>
                             </div>
                           </div>
                         </div>
                       </button>
 
-                      <div className={`mt-4 flex items-center justify-between gap-3 border-t pt-3 ${selectedRow ? "border-white/12" : "border-[color:var(--tc-border)]"}`}>
-                        <span className={`text-xs font-medium ${selectedRow ? "text-white/72" : "text-[color:var(--tc-text-muted)]"}`}>{formatDateTime(it.createdAt)}</span>
+                      <div className={`mt-4 flex items-center justify-between gap-3 border-t pt-3 ${selectedRow ? "border-white/12" : "border-(--tc-border)"}`}>
+                        <span className={`text-xs font-medium ${selectedRow ? "text-white/72" : "text-(--tc-text-muted)"}`}>{formatDateTime(it.createdAt)}</span>
                         <button
                           type="button"
                           className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] transition ${
                             selectedRow
                               ? "border-white/15 bg-white/10 text-white hover:bg-white/16"
-                              : "border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] text-[color:var(--tc-primary)] hover:border-[color:var(--tc-accent)] hover:text-[color:var(--tc-accent)]"
+                              : "border-(--tc-border) bg-(--tc-surface) text-(--tc-primary) hover:border-(--tc-accent) hover:text-(--tc-accent)"
                           }`}
                           onClick={() => copy(it.email)}
                         >
@@ -930,38 +923,38 @@ function AccessRequestsPage() {
             </div>
           </aside>
 
-          <section className="flex min-h-[680px] flex-col overflow-hidden rounded-[28px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] shadow-[0_20px_48px_rgba(15,23,42,0.08)] xl:h-[calc(100vh-6.5rem)] xl:min-h-0">
+          <section className="flex min-h-170 flex-col overflow-hidden rounded-[28px] border border-(--tc-border) bg-(--tc-surface) shadow-[0_20px_48px_rgba(15,23,42,0.08)] xl:h-[calc(100vh-6.5rem)] xl:min-h-0">
             {!selected || !draft ? (
-              <div className={`${sectionMuted} flex min-h-[420px] flex-1 items-center justify-center p-6 sm:p-8`}>
+              <div className={`${sectionMuted} flex min-h-105 flex-1 items-center justify-center p-6 sm:p-8`}>
                 <div className="mx-auto flex w-full max-w-3xl flex-col items-center text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-[linear-gradient(135deg,var(--tc-primary)_0%,rgba(239,0,1,0.82)_180%)] text-white shadow-[0_18px_38px_rgba(1,24,72,0.16)]">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[linear-gradient(135deg,var(--tc-primary)_0%,rgba(239,0,1,0.82)_180%)] text-white shadow-[0_18px_38px_rgba(1,24,72,0.16)]">
                     <FiClock size={24} />
                   </div>
                   <div className="mt-5 space-y-2">
-                    <h3 className="text-[1.6rem] font-black tracking-[-0.04em] text-[color:var(--tc-text-primary)]">
+                    <h3 className="text-[1.6rem] font-black tracking-[-0.04em] text-(--tc-text-primary)">
                       Selecione uma solicitacao
                     </h3>
-                    <p className="max-w-2xl text-sm leading-7 text-[color:var(--tc-text-muted)]">
+                    <p className="max-w-2xl text-sm leading-7 text-(--tc-text-muted)">
                       Escolha um item na coluna da esquerda para abrir a triagem, comparar os dados enviados,
                       revisar ajustes e decidir a aprovacao com contexto completo.
                     </p>
                   </div>
 
                   <div className="mt-6 grid w-full gap-3 sm:grid-cols-3">
-                    <div className="rounded-[20px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] px-4 py-4 text-left shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--tc-text-muted)]">Abertas</div>
-                      <div className="mt-2 text-3xl font-black text-[color:var(--tc-text-primary)]">{statusCounters.open}</div>
-                      <div className="mt-2 text-sm text-[color:var(--tc-text-muted)]">Solicitacoes aguardando primeira leitura.</div>
+                    <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface) px-4 py-4 text-left shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Abertas</div>
+                      <div className="mt-2 text-3xl font-black text-(--tc-text-primary)">{statusCounters.open}</div>
+                      <div className="mt-2 text-sm text-(--tc-text-muted)">Solicitacoes aguardando primeira leitura.</div>
                     </div>
-                    <div className="rounded-[20px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] px-4 py-4 text-left shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--tc-text-muted)]">Em analise</div>
-                      <div className="mt-2 text-3xl font-black text-[color:var(--tc-text-primary)]">{statusCounters.inReview}</div>
-                      <div className="mt-2 text-sm text-[color:var(--tc-text-muted)]">Fila administrativa ativa para validacao.</div>
+                    <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface) px-4 py-4 text-left shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Em analise</div>
+                      <div className="mt-2 text-3xl font-black text-(--tc-text-primary)">{statusCounters.inReview}</div>
+                      <div className="mt-2 text-sm text-(--tc-text-muted)">Fila administrativa ativa para validacao.</div>
                     </div>
-                    <div className="rounded-[20px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] px-4 py-4 text-left shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--tc-text-muted)]">Ajustes</div>
-                      <div className="mt-2 text-3xl font-black text-[color:var(--tc-text-primary)]">{statusCounters.inProgress}</div>
-                      <div className="mt-2 text-sm text-[color:var(--tc-text-muted)]">Retornos esperando correcao do solicitante.</div>
+                    <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface) px-4 py-4 text-left shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Ajustes</div>
+                      <div className="mt-2 text-3xl font-black text-(--tc-text-primary)">{statusCounters.inProgress}</div>
+                      <div className="mt-2 text-sm text-(--tc-text-muted)">Retornos esperando correcao do solicitante.</div>
                     </div>
                   </div>
                 </div>
@@ -969,13 +962,10 @@ function AccessRequestsPage() {
             ) : (
               <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-3 [scrollbar-width:none] sm:p-4 xl:p-5 2xl:p-6 [&::-webkit-scrollbar]:hidden">
                 <div
-                  className="relative overflow-hidden rounded-[26px] border border-[color:var(--tc-border)] p-4 text-white shadow-[0_24px_56px_rgba(1,24,72,0.18)] sm:rounded-[28px] sm:p-5"
-                  style={{
-                    background: "linear-gradient(135deg, var(--tc-primary) 0%, rgba(10,34,90,0.96) 58%, rgba(239,0,1,0.82) 180%)",
-                  }}
+                  className={`relative overflow-hidden rounded-[26px] border border-(--tc-border) p-4 text-white shadow-[0_24px_56px_rgba(1,24,72,0.18)] sm:rounded-[28px] sm:p-5 ${styles.detailCard}`}
                 >
-                  <div className="pointer-events-none absolute -right-10 top-0 h-28 w-28 rounded-full blur-3xl" style={{ background: "rgba(255,255,255,0.12)" }} />
-                  <div className="pointer-events-none absolute bottom-0 left-1/3 h-24 w-24 rounded-full blur-3xl" style={{ background: "rgba(239,0,1,0.2)" }} />
+                  <div className={`pointer-events-none absolute -right-10 top-0 h-28 w-28 rounded-full blur-3xl ${styles.blurDecorWhite}`} />
+                  <div className={`pointer-events-none absolute bottom-0 left-1/3 h-24 w-24 rounded-full blur-3xl ${styles.blurDecorRed}`} />
 
                   <div className="relative grid gap-4 2xl:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.95fr)] 2xl:items-start">
                     <div>
@@ -1019,7 +1009,7 @@ function AccessRequestsPage() {
                 </div>
 
                 {selectedHasRequesterAdjustment ? (
-                  <div className="rounded-[24px] border border-amber-200 bg-amber-50 px-5 py-4 shadow-[0_14px_34px_rgba(217,119,6,0.08)]">
+                  <div className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 shadow-[0_14px_34px_rgba(217,119,6,0.08)]">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-amber-900">Solicitação reenviada com ajustes</p>
@@ -1070,8 +1060,8 @@ function AccessRequestsPage() {
                   <section className={`${sectionMuted} flex h-full flex-col`}>
                     <div className="space-y-2">
                       <p className={labelBase}>Dados enviados pelo solicitante</p>
-                      <h3 className="text-lg font-semibold text-[color:var(--tc-text-primary)]">Base original da solicitacao</h3>
-                      <p className="text-sm text-[color:var(--tc-text-secondary)]">
+                      <h3 className="text-lg font-semibold text-(--tc-text-primary)">Base original da solicitacao</h3>
+                      <p className="text-sm text-(--tc-text-secondary)">
                         Estes campos sao somente leitura e mostram exatamente o que foi enviado antes da decisao administrativa.
                       </p>
                     </div>
@@ -1129,15 +1119,15 @@ function AccessRequestsPage() {
                     </div>
 
                     {selectedOriginal?.companyProfile ? (
-                      <div className="rounded-[20px] border border-[color:var(--tc-border)] bg-white px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                      <div className="rounded-[20px] border border-(--tc-border) bg-white px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                         <div className="flex items-center justify-between gap-3">
                           <div>
                             <p className={labelBase}>Cadastro institucional original</p>
-                            <p className="mt-2 text-sm text-[color:var(--tc-text-secondary)]">
+                            <p className="mt-2 text-sm text-(--tc-text-secondary)">
                               Dados corporativos enviados junto da solicitacao.
                             </p>
                           </div>
-                          <span className="rounded-full border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-3 py-1 text-xs font-semibold text-[color:var(--tc-text-secondary)]">
+                          <span className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1 text-xs font-semibold text-(--tc-text-secondary)">
                             Original
                           </span>
                         </div>
@@ -1182,14 +1172,14 @@ function AccessRequestsPage() {
                       </div>
                     ) : null}
 
-                    <div className="mt-4 rounded-[20px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] px-4 py-3 text-sm shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                    <div className="mt-4 rounded-[20px] border border-(--tc-border) bg-(--tc-surface) px-4 py-3 text-sm shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                       <div className="flex flex-wrap items-center justify-between gap-3">
-                        <span className="font-semibold text-[color:var(--tc-text-primary)]">Senha informada na solicitacao</span>
+                        <span className="font-semibold text-(--tc-text-primary)">Senha informada na solicitacao</span>
                         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${draft.passwordProvided ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
                           {draft.passwordProvided ? "Preenchida" : "Ausente"}
                         </span>
                       </div>
-                      <p className="mt-2 text-xs text-[color:var(--tc-text-secondary)]">
+                      <p className="mt-2 text-xs text-(--tc-text-secondary)">
                         A aprovacao so pode seguir quando a solicitacao ja tiver uma senha definida pelo solicitante.
                       </p>
                     </div>
@@ -1199,8 +1189,8 @@ function AccessRequestsPage() {
                   <section className={`${sectionCard} flex h-full flex-col`}>
                     <div className="space-y-2">
                       <p className={labelBase}>Base administrativa e devolvida</p>
-                      <h3 className="text-lg font-semibold text-[color:var(--tc-text-primary)]">Versao atual da triagem</h3>
-                      <p className="text-sm text-[color:var(--tc-text-secondary)]">
+                      <h3 className="text-lg font-semibold text-(--tc-text-primary)">Versao atual da triagem</h3>
+                      <p className="text-sm text-(--tc-text-secondary)">
                         Edite o que precisa ser aprovado e acompanhe a versao que voltou do solicitante para nova analise.
                       </p>
                     </div>
@@ -1395,15 +1385,15 @@ function AccessRequestsPage() {
                     </fieldset>
 
                     {selected.companyProfile ? (
-                      <div className="mt-4 rounded-[20px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
+                      <div className="mt-4 rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
                         <div className="flex items-center justify-between gap-3">
                           <div>
                             <p className={labelBase}>Base devolvida / ajustada</p>
-                            <p className="mt-2 text-sm text-[color:var(--tc-text-secondary)]">
+                            <p className="mt-2 text-sm text-(--tc-text-secondary)">
                               Versao atual dos dados institucionais que seguem junto da solicitacao.
                             </p>
                           </div>
-                          <span className="rounded-full border border-[color:var(--tc-border)] bg-white px-3 py-1 text-xs font-semibold text-[color:var(--tc-text-secondary)]">
+                          <span className="rounded-full border border-(--tc-border) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text-secondary)">
                             Atual
                           </span>
                         </div>
@@ -1469,29 +1459,29 @@ function AccessRequestsPage() {
                   ) : null}
 
                   {selected.adjustmentHistory.length > 0 ? (
-                    <div className="mt-5 rounded-[20px] border border-[color:var(--tc-border)] bg-white px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                    <div className="mt-5 rounded-[20px] border border-(--tc-border) bg-white px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <p className={labelBase}>Rodadas de ajuste</p>
-                          <p className="mt-2 text-sm text-[color:var(--tc-text-secondary)]">
+                          <p className="mt-2 text-sm text-(--tc-text-secondary)">
                             Historico de devolucoes, retorno do solicitante e campos marcados por rodada.
                           </p>
                         </div>
-                        <span className="rounded-full border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-3 py-1 text-xs font-semibold text-[color:var(--tc-text-secondary)]">
+                        <span className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1 text-xs font-semibold text-(--tc-text-secondary)">
                           {selected.adjustmentHistory.length} rodada(s)
                         </span>
                       </div>
 
                       <div className="mt-4 grid gap-3 lg:grid-cols-2">
                         {[...selected.adjustmentHistory].reverse().map((round) => (
-                          <div key={`round-${round.round}`} className="rounded-[18px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-4">
+                          <div key={`round-${round.round}`} className="rounded-[18px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-4">
                             <div className="flex flex-wrap items-center justify-between gap-2">
-                              <span className="text-sm font-semibold text-[color:var(--tc-text-primary)]">{round.round}º ajuste</span>
-                              <span className="text-xs font-medium text-[color:var(--tc-text-muted)]">
+                              <span className="text-sm font-semibold text-(--tc-text-primary)">{round.round}º ajuste</span>
+                              <span className="text-xs font-medium text-(--tc-text-muted)">
                                 {formatDateTime(round.requestedAt)}
                               </span>
                             </div>
-                            <p className="mt-2 text-sm text-[color:var(--tc-text-secondary)]">
+                            <p className="mt-2 text-sm text-(--tc-text-secondary)">
                               {round.requestMessage?.trim() || "Sem mensagem registrada nesta rodada."}
                             </p>
                             <div className="mt-3 flex flex-wrap gap-2">
@@ -1504,7 +1494,7 @@ function AccessRequestsPage() {
                                 </span>
                               ))}
                             </div>
-                            <p className="mt-3 text-xs font-medium text-[color:var(--tc-text-muted)]">
+                            <p className="mt-3 text-xs font-medium text-(--tc-text-muted)">
                               {round.requesterReturnedAt
                                 ? `Respondida em ${formatDateTime(round.requesterReturnedAt)}`
                                 : "Ainda aguardando retorno do solicitante."}
@@ -1537,7 +1527,7 @@ function AccessRequestsPage() {
 
                     <div className="comments-chat-input">
                       <textarea
-                        className={`${inputBase} mt-0 min-h-[120px] resize-none`}
+                        className={`${inputBase} mt-0 min-h-30 resize-none`}
                         rows={4}
                         placeholder={commentsLocked ? "Solicitacao finalizada" : "Descreva o ajuste, a observacao interna ou o motivo da decisao"}
                         value={commentDraft}
@@ -1548,15 +1538,15 @@ function AccessRequestsPage() {
                   </div>
 
                   {!commentsLocked ? (
-                    <div className="mt-4 rounded-[20px] border border-[color:var(--tc-border)] bg-white px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                    <div className="mt-4 rounded-[20px] border border-(--tc-border) bg-white px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
                           <p className={labelBase}>Campos para correcao</p>
-                          <p className="mt-2 text-sm text-[color:var(--tc-text-secondary)]">
+                          <p className="mt-2 text-sm text-(--tc-text-secondary)">
                             Ao solicitar ajuste, marque os campos que o solicitante pode corrigir. Os demais permanecem somente leitura.
                           </p>
                         </div>
-                        <span className="rounded-full border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-3 py-1 text-xs font-semibold text-[color:var(--tc-text-secondary)]">
+                        <span className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1 text-xs font-semibold text-(--tc-text-secondary)">
                           {adjustmentFieldsDraft.length} campo(s)
                         </span>
                       </div>
@@ -1577,7 +1567,7 @@ function AccessRequestsPage() {
                               className={`inline-flex items-center rounded-full border px-3 py-2 text-xs font-semibold transition ${
                                 selectedField
                                   ? "border-rose-300 bg-rose-50 text-rose-700 shadow-[0_8px_18px_rgba(225,29,72,0.1)]"
-                                  : "border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] text-[color:var(--tc-text-secondary)] hover:border-[rgba(239,0,1,0.28)] hover:text-[color:var(--tc-text-primary)]"
+                                  : "border-(--tc-border) bg-(--tc-surface-2) text-(--tc-text-secondary) hover:border-[rgba(239,0,1,0.28)] hover:text-(--tc-text-primary)"
                               }`}
                               title={option.hint}
                             >
@@ -1589,7 +1579,7 @@ function AccessRequestsPage() {
                     </div>
                   ) : null}
 
-                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--tc-border)] pt-4">
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-(--tc-border) pt-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={`inline-flex rounded-full px-3 py-1.5 text-xs font-semibold ${draft.passwordProvided ? "border border-emerald-300 bg-emerald-100 text-emerald-800" : "border border-rose-300 bg-rose-100 text-rose-800"}`}>
                         {draft.passwordProvided ? "Senha valida" : "Senha ausente"}

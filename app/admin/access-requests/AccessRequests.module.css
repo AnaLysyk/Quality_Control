@@ -1,0 +1,23 @@
+.headerCard {
+  background: linear-gradient(135deg, var(--tc-primary) 0%, var(--tc-primary-dark) 58%, rgba(239, 0, 1, 0.82) 180%);
+}
+
+.blurDecorWhite {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.blurDecorRed {
+  background: rgba(239, 0, 1, 0.2);
+}
+
+.asideHeader {
+  background: linear-gradient(180deg, rgba(1, 24, 72, 0.08), transparent);
+}
+
+.rowSelected {
+  background: linear-gradient(135deg, var(--tc-primary) 0%, rgba(10, 34, 90, 0.96) 62%, rgba(239, 0, 1, 0.82) 180%);
+}
+
+.detailCard {
+  background: linear-gradient(135deg, var(--tc-primary) 0%, rgba(10, 34, 90, 0.96) 58%, rgba(239, 0, 1, 0.82) 180%);
+}

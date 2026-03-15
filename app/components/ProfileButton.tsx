@@ -36,7 +36,7 @@ function MenuItem(props: {
         type="button"
         onClick={onClick}
         autoFocus={autoFocus}
-        className={`group relative flex w-full items-start gap-3 rounded-[16px] px-3.5 py-2.5 text-left shadow-[0_10px_26px_rgba(15,23,42,0.06)] transition hover:-translate-y-[1px] ${
+        className={`group relative flex w-full items-start gap-3 rounded-2xl px-3.5 py-2.5 text-left shadow-[0_10px_26px_rgba(15,23,42,0.06)] transition hover:-translate-y-[1px] ${
           isDarkTheme
             ? "border border-[#29466e] bg-[linear-gradient(180deg,#0d1a35_0%,#112243_100%)] hover:border-[#ff8a9c] hover:bg-[linear-gradient(180deg,#102042_0%,#15294f_100%)]"
             : "border border-[#d8ddea] bg-[linear-gradient(180deg,#ffffff_0%,#fffafb_100%)] hover:border-(--tc-accent) hover:bg-[linear-gradient(180deg,#ffffff_0%,#fff5f7_100%)]"
@@ -55,7 +55,7 @@ function MenuItem(props: {
         <span className="min-w-0 flex-1 pt-0.5">
           <span className={`block text-sm font-bold leading-5 ${isDarkTheme ? "text-white" : "text-[#081f4d]"}`}>{label}</span>
           {hint ? (
-            <span className={`mt-0.5 block break-words text-[11px] leading-4.5 font-medium ${isDarkTheme ? "text-[#d2def8]" : "text-[#27457d]"}`}>
+            <span className={`mt-0.5 block wrap-break-word text-[11px] leading-4.5 font-medium ${isDarkTheme ? "text-[#d2def8]" : "text-[#27457d]"}`}>
               {hint}
             </span>
           ) : null}
@@ -349,7 +349,7 @@ export default function ProfileButton() {
 
             <div className="mt-3 space-y-2.5">
               <div
-                className={`rounded-[16px] border p-3 shadow-[0_14px_28px_rgba(15,23,42,0.08)] ${
+                className={`rounded-2xl border p-3 shadow-[0_14px_28px_rgba(15,23,42,0.08)] ${
                   isDarkTheme
                     ? "border-[#2d466f] bg-[linear-gradient(135deg,#0f1d3b_0%,#13264b_60%,#18305e_100%)]"
                     : "border-[#d7ddea] bg-[linear-gradient(135deg,#fff8fa_0%,#ffffff_58%,#f5f8ff_100%)]"

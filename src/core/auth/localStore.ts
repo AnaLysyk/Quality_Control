@@ -75,6 +75,18 @@ const USE_MEMORY_STORE =
   (!USE_REDIS && process.env.VERCEL === "1");
 let warnedFsFailure = false;
 
+// ── PostgreSQL mode ──────────────────────────────────────────────────────────
+// Set AUTH_STORE=postgres (e.g. in Render env vars) to persist all auth data
+// in PostgreSQL instead of the local JSON file. The JSON/Redis path is kept as
+// the fallback for local development.
+export const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+
+let _pgStore: typeof import("./pgStore") | null = null;
+async function pg() {
+  if (!_pgStore) _pgStore = await import("./pgStore");
+  return _pgStore;
+}
+
 type GlobalAuthStore = {
   __qcLocalAuthStore?: LocalAuthStore;
   __qcLocalAuthStoreInit?: boolean;
@@ -141,6 +153,7 @@ export async function suggestNextUniqueLogin(input: {
   excludeUserId?: string;
   avoid?: string[] | null;
 }) {
+  if (USE_POSTGRES) return (await pg()).pgSuggestNextUniqueLogin(input);
   const store = await readLocalAuthStore();
   const base = slugifyLoginSeed(input.seed);
   const taken = new Set(
@@ -334,6 +347,7 @@ async function storeExists() {
 }
 
 export async function readLocalAuthStore(): Promise<LocalAuthStore> {
+  if (USE_POSTGRES) return (await pg()).pgReadLocalAuthStore();
   if (USE_REDIS) {
     const redisStore = await readStoreFromRedis();
     if (redisStore) return cloneStore(redisStore);
@@ -357,6 +371,7 @@ export async function readLocalAuthStore(): Promise<LocalAuthStore> {
 }
 
 export async function writeLocalAuthStore(store: LocalAuthStore): Promise<void> {
+  if (USE_POSTGRES) return; // PG mode: individual CRUD ops handle persistence
   const payload: LocalAuthStore = {
     users: store.users ?? [],
     companies: store.companies ?? [],
@@ -396,16 +411,19 @@ async function loadStoreForWrite(): Promise<LocalAuthStore> {
 }
 
 export async function listLocalUsers(): Promise<LocalAuthUser[]> {
+  if (USE_POSTGRES) return (await pg()).pgListLocalUsers();
   const store = await readLocalAuthStore();
   return [...store.users];
 }
 
 export async function listLocalCompanies(): Promise<LocalAuthCompany[]> {
+  if (USE_POSTGRES) return (await pg()).pgListLocalCompanies();
   const store = await readLocalAuthStore();
   return [...store.companies].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 }
 
 export async function listLocalMemberships(): Promise<LocalAuthMembership[]> {
+  if (USE_POSTGRES) return (await pg()).pgListLocalMemberships();
   const store = await readLocalAuthStore();
   return [...(store.memberships ?? [])];
 }
@@ -415,6 +433,7 @@ export async function listLocalLinks(): Promise<LocalAuthMembership[]> {
 }
 
 export async function findLocalUserByEmailOrId(identifier: string): Promise<LocalAuthUser | null> {
+  if (USE_POSTGRES) return (await pg()).pgFindLocalUserByEmailOrId(identifier);
   const normalized = normalizeLogin(identifier);
   const store = await readLocalAuthStore();
   const byLogin = store.users.find((user) => normalizeLogin(user.user ?? user.email ?? "") === normalized);
@@ -426,18 +445,21 @@ export async function findLocalUserByEmailOrId(identifier: string): Promise<Loca
 }
 
 export async function getLocalUserById(id: string): Promise<LocalAuthUser | null> {
+  if (USE_POSTGRES) return (await pg()).pgGetLocalUserById(id);
   const store = await readLocalAuthStore();
   const user = store.users.find((item) => item.id === id);
   return user ? { ...user } : null;
 }
 
 export async function findLocalCompanyById(id: string): Promise<LocalAuthCompany | null> {
+  if (USE_POSTGRES) return (await pg()).pgFindLocalCompanyById(id);
   const store = await readLocalAuthStore();
   const company = store.companies.find((item) => item.id === id);
   return company ? { ...company } : null;
 }
 
 export async function findLocalCompanyBySlug(slug: string): Promise<LocalAuthCompany | null> {
+  if (USE_POSTGRES) return (await pg()).pgFindLocalCompanyBySlug(slug);
   const normalized = normalizeSlug(slug);
   const store = await readLocalAuthStore();
   const company = store.companies.find((item) => normalizeSlug(item.slug ?? "") === normalized);
@@ -445,11 +467,13 @@ export async function findLocalCompanyBySlug(slug: string): Promise<LocalAuthCom
 }
 
 export async function listLocalLinksForUser(userId: string): Promise<LocalAuthMembership[]> {
+  if (USE_POSTGRES) return (await pg()).pgListLocalLinksForUser(userId);
   const store = await readLocalAuthStore();
   return (store.memberships ?? []).filter((m) => m.userId === userId).map((m) => ({ ...m }));
 }
 
 export async function listLocalLinksForCompany(companyId: string): Promise<LocalAuthMembership[]> {
+  if (USE_POSTGRES) return (await pg()).pgListLocalLinksForCompany(companyId);
   const store = await readLocalAuthStore();
   return (store.memberships ?? []).filter((m) => m.companyId === companyId).map((m) => ({ ...m }));
 }
@@ -471,6 +495,7 @@ export async function createLocalUser(input: {
   linkedin_url?: string | null;
   phone?: string | null;
 }): Promise<LocalAuthUser> {
+  if (USE_POSTGRES) return (await pg()).pgCreateLocalUser(input);
   const store = await loadStoreForWrite();
   const email = normalizeLogin(input.email);
   const fullName = (input.full_name ?? input.name ?? input.email ?? "").trim();
@@ -511,6 +536,7 @@ export async function updateLocalUser(
   id: string,
   patch: Partial<Omit<LocalAuthUser, "id" | "password_hash">> & { password_hash?: string | null },
 ): Promise<LocalAuthUser | null> {
+  if (USE_POSTGRES) return (await pg()).pgUpdateLocalUser(id, patch);
   const store = await loadStoreForWrite();
   const idx = store.users.findIndex((user) => user.id === id);
   if (idx === -1) return null;
@@ -556,6 +582,7 @@ export async function updateLocalUser(
 }
 
 export async function createLocalCompany(input: Partial<LocalAuthCompany> & { name: string; slug?: string | null }) {
+  if (USE_POSTGRES) return (await pg()).pgCreateLocalCompany(input);
   const store = await loadStoreForWrite();
   const normalizedName = normalizeComparableFullName(input.name ?? "");
   const normalizedTaxId =
@@ -602,6 +629,7 @@ export async function createLocalCompany(input: Partial<LocalAuthCompany> & { na
 }
 
 export async function updateLocalCompany(id: string, patch: Partial<LocalAuthCompany>): Promise<LocalAuthCompany | null> {
+  if (USE_POSTGRES) return (await pg()).pgUpdateLocalCompany(id, patch);
   const store = await loadStoreForWrite();
   const idx = store.companies.findIndex((company) => company.id === id);
   if (idx === -1) return null;
@@ -623,6 +651,7 @@ export async function updateLocalCompany(id: string, patch: Partial<LocalAuthCom
 }
 
 export async function deleteLocalCompany(id: string): Promise<boolean> {
+  if (USE_POSTGRES) return (await pg()).pgDeleteLocalCompany(id);
   const store = await loadStoreForWrite();
   const idx = store.companies.findIndex((company) => company.id === id);
   if (idx === -1) return false;
@@ -638,6 +667,7 @@ export async function upsertLocalLink(input: {
   role?: string | null;
   capabilities?: string[] | null;
 }) {
+  if (USE_POSTGRES) return (await pg()).pgUpsertLocalLink(input);
   const store = await loadStoreForWrite();
   const memberships = store.memberships ?? [];
   const idx = memberships.findIndex(
@@ -666,6 +696,7 @@ export async function upsertLocalLink(input: {
 }
 
 export async function removeLocalLink(userId: string, companyId: string) {
+  if (USE_POSTGRES) return (await pg()).pgRemoveLocalLink(userId, companyId);
   const store = await loadStoreForWrite();
   const before = (store.memberships ?? []).length;
   store.memberships = (store.memberships ?? []).filter(

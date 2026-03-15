@@ -9,6 +9,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: AUTH_STORE
+        value: postgres
       - key: AUTH_COOKIE_SECURE
         value: "true"
       - key: NEXT_PUBLIC_SITE_URL

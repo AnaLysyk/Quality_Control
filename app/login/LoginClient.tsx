@@ -176,7 +176,7 @@ export default function LoginClient() {
         styles.loginContainer +
         " " +
         styles.loginFixedTheme +
-        " relative isolate z-[2147483647] pointer-events-auto"
+        " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative isolate z-[2147483647] overflow-x-hidden overflow-y-auto px-4 py-10 pointer-events-auto sm:px-6 md:px-10"
       }
     >
       <div className="absolute inset-0 pointer-events-none">
@@ -190,32 +190,26 @@ export default function LoginClient() {
         <div className="absolute top-1/2 right-2 w-14 h-14 bg-[#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
       </div>
 
-      <div className="relative z-10 max-h-[calc(100svh-1rem)] w-full max-w-lg space-y-4 overflow-y-auto pr-1 [scrollbar-width:none] sm:max-h-[calc(100svh-2rem)] sm:max-w-xl sm:space-y-6 md:max-w-2xl [&::-webkit-scrollbar]:hidden">
+      <div className="relative z-10 w-full max-w-lg space-y-8 sm:max-w-xl md:max-w-2xl">
         <div className="text-center">
-          <div
-            className={`relative mx-auto w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 mb-4 sm:mb-6 ${styles.logoWrapper}`}
-          >
-            <div className="absolute inset-0 rounded-full bg-linear-to-r from-[#011848] to-[#ef0001] shadow-lg"></div>
-            <div className="absolute inset-1 rounded-full bg-transparent flex items-center justify-center overflow-hidden">
-              <div className="relative w-[85%] h-[85%]">
-                <Image
-                  src="/images/tc.png"
-                  alt="Logo Quality Control"
-                  fill
-                  priority
-                  className="select-none pointer-events-none object-contain object-center animate-spin-slower"
-                />
-              </div>
-            </div>
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-r from-[#011848] to-[#ef0001] shadow-lg sm:h-24 sm:w-24">
+            <Image
+              src="/images/tc.png"
+              alt="Logo Quality Control"
+              width={64}
+              height={64}
+              priority
+              className="h-12 w-12 animate-spin-slower select-none object-contain object-center pointer-events-none sm:h-16 sm:w-16"
+            />
           </div>
-          <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-bold text-[#011848] mb-2 leading-tight drop-shadow-sm">
+          <h2 className="mb-2 text-3xl font-bold leading-tight text-[#011848] drop-shadow-sm sm:text-4xl">
             Quality Control
           </h2>
           <p className="text-[#011848] font-medium drop-shadow-sm">Bem-vindo, entre na sua conta</p>
         </div>
 
         <form
-          className="mx-auto w-full max-w-sm min-w-0 rounded-2xl border border-[#011848]/10 bg-white p-5 shadow-2xl sm:max-w-md sm:p-7"
+          className="mx-auto w-full max-w-sm min-w-0 rounded-2xl border border-[#011848]/10 bg-white/90 p-5 shadow-2xl backdrop-blur-sm sm:max-w-md sm:p-8"
           onSubmit={handleSubmit}
         >
           <div className="space-y-4">

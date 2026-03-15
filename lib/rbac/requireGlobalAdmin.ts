@@ -6,6 +6,9 @@ import jwt from "jsonwebtoken";
 import { getRedis } from "@/lib/redis";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
 
+const DEBUG_AUTH_HEADERS = process.env.DEBUG_AUTH_HEADERS === "true";
+const SENSITIVE_HEADER_NAMES = new Set(["authorization", "cookie", "set-cookie", "x-api-key"]);
+
 type AdminSession = {
   id: string;
   email: string;
@@ -35,40 +38,58 @@ export async function extractAccessToken(req: Request): Promise<string | null> {
   return store.get("access_token")?.value || store.get("auth_token")?.value || null;
 }
 
-async function readSessionUser(req: Request): Promise<SessionUser | null> {
-    // Log headers para depuração
-    try {
-      const allHeaders = Array.from((req.headers as any).entries ? req.headers.entries() : []);
-      console.error('[AUTH][readSessionUser] headers:', JSON.stringify(allHeaders));
-    } catch (e) {
-      console.error('[AUTH][readSessionUser] erro ao logar headers:', e);
+function serializeDebugHeaders(req: Request): Array<[string, string]> {
+  if (typeof req.headers?.entries !== "function") return [];
+
+  return Array.from(req.headers.entries()).map(([key, value]) => {
+    if (SENSITIVE_HEADER_NAMES.has(key.toLowerCase())) {
+      return [key, "[redacted]"];
     }
-    // Permite autenticação fake para testes E2E
-    let testAdmin = false;
-    let testRole = 'admin';
-    if (req.headers) {
-      // Suporte tanto para .get quanto para iterables
-      if (typeof req.headers.get === 'function') {
-        testAdmin = req.headers.get('x-test-admin') === 'true';
-        testRole = req.headers.get('x-test-role') || 'admin';
-      } else if (typeof req.headers.entries === 'function') {
-        for (const [key, value] of req.headers.entries()) {
-          if (key.toLowerCase() === 'x-test-admin' && value === 'true') testAdmin = true;
-          if (key.toLowerCase() === 'x-test-role') testRole = value;
-        }
+    if (value.length > 160) {
+      return [key, `${value.slice(0, 157)}...`];
+    }
+    return [key, value];
+  });
+}
+
+async function readSessionUser(req: Request): Promise<SessionUser | null> {
+  if (DEBUG_AUTH_HEADERS) {
+    try {
+      console.info("[AUTH][readSessionUser] headers:", JSON.stringify(serializeDebugHeaders(req)));
+    } catch (error) {
+      console.error("[AUTH][readSessionUser] failed to serialize headers:", error);
+    }
+  }
+
+  // Allows fake auth in E2E runs via test headers.
+  let testAdmin = false;
+  let testRole = "admin";
+  if (req.headers) {
+    if (typeof req.headers.get === "function") {
+      testAdmin = req.headers.get("x-test-admin") === "true";
+      testRole = req.headers.get("x-test-role") || "admin";
+    } else if (typeof req.headers.entries === "function") {
+      for (const [key, value] of req.headers.entries()) {
+        if (key.toLowerCase() === "x-test-admin" && value === "true") testAdmin = true;
+        if (key.toLowerCase() === "x-test-role") testRole = value;
       }
     }
-    if (testAdmin) {
-      console.error('[AUTH][readSessionUser] testRole:', testRole);
-      return {
-        userId: 'test-admin',
-        id: 'test-admin',
-        email: 'admin@teste.com',
-        role: testRole,
-        isGlobalAdmin: ['admin', 'dev', 'global_admin', 'super-admin'].includes(testRole),
-        globalRole: testRole === 'admin' || testRole === 'global_admin' ? 'global_admin' : undefined,
-      };
+  }
+
+  if (testAdmin) {
+    if (DEBUG_AUTH_HEADERS) {
+      console.info("[AUTH][readSessionUser] testRole:", testRole);
     }
+    return {
+      userId: "test-admin",
+      id: "test-admin",
+      email: "admin@teste.com",
+      role: testRole,
+      isGlobalAdmin: ["admin", "dev", "global_admin", "super-admin"].includes(testRole),
+      globalRole: testRole === "admin" || testRole === "global_admin" ? "global_admin" : undefined,
+    };
+  }
+
   const token = await extractAccessToken(req);
   if (token) {
     const secret = getJwtSecret();
@@ -155,8 +176,7 @@ export async function requireGlobalAdmin(
 export async function requireGlobalAdminWithStatus(
   req: Request,
   opts?: { token?: string | null },
-): Promise<{ admin: AdminSession | null; status: 200 | 401 | 403 }>
-{
+): Promise<{ admin: AdminSession | null; status: 200 | 401 | 403 }> {
   const admin = await requireGlobalAdmin(req, opts);
   if (admin) return { admin, status: 200 };
 

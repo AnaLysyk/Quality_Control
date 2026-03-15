@@ -8,8 +8,6 @@
 .loginFixedTheme {
   /* Keep login visuals consistent regardless of global theme */
   color-scheme: light;
-  --background: #ffffff;
-  --foreground: #0b1a3c;
   --tc-border: rgba(15, 23, 42, 0.1);
   --tc-input-bg: #eef4ff;
   --tc-text: #0b1a3c;
@@ -20,27 +18,6 @@
   --tc-surface-2: #f8fafc;
   --page-bg: #f4f6fb;
   --page-text: #0b1a3c;
-}
-
-.logoWrapper {
-  animation: logoIntro 1.2s ease-out forwards;
-  opacity: 0;
-  transform: translateY(10px) scale(0.96);
-}
-
-@keyframes logoIntro {
-  0% {
-    opacity: 0;
-    transform: translateY(10px) scale(0.96);
-  }
-  60% {
-    opacity: 1;
-    transform: translateY(0) scale(1.03);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 @media (max-width: 640px) {

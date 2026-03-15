@@ -25,6 +25,7 @@ import { useClientContext } from "@/context/ClientContext";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
+const debugSidebar = process.env.NEXT_PUBLIC_DEBUG_SIDEBAR === "true";
 
 type AppRole = "admin" | "client" | "user" | "it_dev";
 
@@ -68,10 +69,18 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     return "user";
   }, [user, isGlobalAdmin]);
 
-  try {
-    // debug: expose context used by tests
-    console.debug("[SIDEBAR] debug", { user, activeClientSlug, isGlobalAdmin, appRole, pathname });
-  } catch {}
+  if (debugSidebar) {
+    try {
+      console.debug("[SIDEBAR] debug", {
+        userId: user?.id ?? null,
+        role: user?.role ?? null,
+        activeClientSlug,
+        isGlobalAdmin,
+        appRole,
+        pathname,
+      });
+    } catch {}
+  }
 
   const companySlug = useMemo(() => {
     const match = pathname.match(/^\/empresas\/([^/]+)/);
@@ -362,4 +371,3 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     </>
   );
 }
-

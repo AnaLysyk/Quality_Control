@@ -71,7 +71,7 @@ input[type="password"]::-ms-clear {
   --tc-accent-soft: rgba(239, 0, 1, 0.12);
 
   /* Watermark */
-  --tc-watermark-opacity: 0.08;
+  --tc-watermark-opacity: 0.04;
 
   /* STATUS / MÉTRICAS */
   --stat-pass: #7cd343;
@@ -144,7 +144,7 @@ input[type="password"]::-ms-clear {
   --surface-primary: #0f1725;
   --surface-secondary: #131d2d;
   --surface-border: rgba(148, 163, 184, 0.16);
-  --tc-watermark-opacity: 0.045;
+  --tc-watermark-opacity: 0.028;
   --tc-accent-soft: rgba(239, 0, 1, 0.18);
 }
 
@@ -353,7 +353,7 @@ video {
   --tc-input-bg: #ffffff;
   --tc-text-inverse: #0b1220;
   --page-bg: #edf2ff;
-  --tc-watermark-opacity: 0.045;
+  --tc-watermark-opacity: 0.03;
 }
 
 .metrics-shell {

@@ -86,15 +86,18 @@
     },
     {
       "id": "usr_dev",
-      "name": "Dev",
-      "email": "dev",
-      "user": "dev",
+      "name": "Ana Paula Lysyk",
+      "full_name": "Ana Paula Lysyk",
+      "email": "paulalysyk1234@gmail.com",
+      "user": "ana.paula.lysyk",
       "password_hash": "87274af01876341455b32d805946f272871bb42effa6604dccf28bb027afa82b",
       "globalRole": "global_admin",
+      "role": "admin",
       "status": "active",
       "active": true,
       "is_global_admin": true,
       "default_company_slug": "griaule",
+      "job_title": "Analista de Testes",
       "createdAt": "2026-02-03T00:00:00Z"
     },
     {

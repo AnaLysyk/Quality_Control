@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import styles from "./page.module.css";
 import {
   FiAlertTriangle,
   FiArrowUpRight,
@@ -1134,7 +1135,7 @@ export default function AdminHomePage() {
                       {selectedRunBars.map((bar) => (
                         <div key={bar.id} className="space-y-2">
                           <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)"><span>{bar.label}</span><span>{bar.value}</span></div>
-                          <div className="h-2.5 rounded-full bg-(--tc-surface-2)"><div className={`h-2.5 rounded-full ${bar.color}`} style={{ width: `${progressWidth(bar.value, Math.max(runInFocusTotal, 1))}%` }} /></div>
+                          <div className="h-2.5 rounded-full bg-(--tc-surface-2)"><div className={`h-2.5 rounded-full ${bar.color} ${styles.barFill}`} ref={(el) => { if (el) el.style.setProperty('--bar-w', `${progressWidth(bar.value, Math.max(runInFocusTotal, 1))}%`); }} /></div>
                         </div>
                       ))}
                     </div>

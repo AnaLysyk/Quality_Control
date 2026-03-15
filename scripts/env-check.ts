@@ -46,4 +46,16 @@ if (missing.length) {
   fail(`ENV_MISSING_REQUIRED: ${missing.join(", ")}`);
 }
 
+const hasKvRedis =
+  !!process.env.KV_REST_API_URL?.trim() && !!process.env.KV_REST_API_TOKEN?.trim();
+const hasUpstashRedis =
+  !!process.env.UPSTASH_REDIS_REST_URL?.trim() &&
+  !!process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
+
+if (!hasKvRedis && !hasUpstashRedis) {
+  console.warn(
+    "ENV_WARN_OPTIONAL: Redis nao configurado. Em producao/Render isso pode quebrar refresh de sessao e tornar o fallback em memoria instavel entre requisicoes.",
+  );
+}
+
 console.log("ENV_OK");

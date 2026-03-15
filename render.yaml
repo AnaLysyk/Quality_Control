@@ -1,0 +1,27 @@
+services:
+  - type: web
+    runtime: node
+    name: controle de qualidade
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /login
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: AUTH_COOKIE_SECURE
+        value: "true"
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://quality-control-qwqs.onrender.com
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      - key: QASE_API_TOKEN
+        sync: false
+      - key: QASE_PROJECT_MAP
+        sync: false

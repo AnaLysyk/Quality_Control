@@ -49,6 +49,21 @@ npm run build
 npm run test:e2e:smoke
 ```
 
+## Render
+
+Para o deploy na Render, o minimo recomendado e:
+
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
+- `NEXT_PUBLIC_SITE_URL=https://quality-control-qwqs.onrender.com`
+- `AUTH_COOKIE_SECURE=true`
+
+Sem Redis configurado, o app cai no fallback em memoria de [lib/redis.ts](/C:/Users/Testing%20Company/painel-qa/lib/redis.ts) e a sessao pode ficar inconsistente entre rotas server-side e APIs. O sintoma tipico no Render e login funcionar em `/api/me`, mas `/admin` redirecionar de volta para `/login`.
+
+O repositório agora inclui [render.yaml](/C:/Users/Testing%20Company/painel-qa/render.yaml) com a configuracao base do servico e das variaveis. Para servicos Render ja existentes, os segredos continuam precisando ser cadastrados manualmente no painel.
+
 ## Credenciais de teste (E2E)
 
 Quando `E2E_USE_JSON=1`, o login usa o arquivo `data/local-auth-store.json` (ou `data/local-auth-store.sample.json` como fallback).

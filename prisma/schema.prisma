@@ -1,0 +1,369 @@
+// Prisma Schema — Quality Control
+// Provider: PostgreSQL (Render)
+// Gerado automaticamente com base nos tipos do projeto
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+model User {
+  id                 String    @id @default(cuid())
+  name               String
+  full_name          String?
+  email              String    @unique
+  user               String?   @unique
+  password_hash      String
+  globalRole         String?
+  role               String?   @default("user")
+  status             String    @default("active")
+  active             Boolean   @default(true)
+  is_global_admin    Boolean   @default(false)
+  avatar_key         String?
+  avatar_url         String?
+  job_title          String?
+  linkedin_url       String?
+  phone              String?
+  default_company_slug String?
+  lastLoginAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  memberships        Membership[]
+  links              UserCompanyLink[]
+  tickets            Ticket[]         @relation("TicketCreatedBy")
+  assignedTickets    Ticket[]         @relation("TicketAssignedTo")
+  ticketComments     TicketComment[]
+  notifications      UserNotification[]
+  notes              UserNote[]
+  accessRequests     AccessRequest[]
+  requests           Request[]
+
+  @@map("users")
+}
+
+model Company {
+  id           String   @id @default(cuid())
+  name         String
+  company_name String?
+  slug         String   @unique
+  status       String   @default("active")
+  active       Boolean  @default(true)
+  tax_id       String?
+  address      String?
+  phone        String?
+  website      String?
+  logo_url     String?
+  docs_link    String?
+  notes        String?
+  cep          String?
+  linkedin_url String?
+  qase_project_code  String?
+  jira_base_url      String?
+  jira_email         String?
+  jira_api_token     String?
+  integration_mode   String?  @default("none")
+  short_description  String?
+  internal_notes     String?
+  created_by   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships  Membership[]
+  links        UserCompanyLink[]
+  tickets      Ticket[]
+  releases     Release[]
+  applications Application[]
+
+  @@map("companies")
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  userId    String
+  companyId String
+  role      String?  @default("user")
+  capabilities String[] @default([])
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId])
+  @@map("memberships")
+}
+
+model UserCompanyLink {
+  id          String   @id @default(cuid())
+  userId      String
+  companyId   String
+  role        String?
+  permissions String[] @default([])
+  active      Boolean  @default(true)
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId])
+  @@map("user_company_links")
+}
+
+// ─── Releases ────────────────────────────────────────────────────────────────
+
+model Release {
+  id           String   @id @default(cuid())
+  slug         String
+  name         String
+  app          String?
+  qaseProject  String?
+  category     String?
+  kind         String?  @default("run")
+  runSlug      String?
+  runName      String?
+  companySlug  String?
+  environments String[] @default([])
+  source       String   @default("MANUAL")
+  status       String   @default("DRAFT")
+  runId        Int?
+  statsPass    Int      @default(0)
+  statsFail    Int      @default(0)
+  statsBlocked Int      @default(0)
+  statsNotRun  Int      @default(0)
+  observations String?
+  closedAt     DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  companyId    String?
+  company      Company? @relation(fields: [companyId], references: [id])
+  cases        ReleaseCase[]
+
+  @@unique([slug, companySlug])
+  @@map("releases")
+}
+
+model ReleaseCase {
+  id        String  @id @default(cuid())
+  releaseId String
+  title     String?
+  link      String?
+  status    String  @default("NOT_RUN")
+  bug       String?
+  fromApi   Boolean @default(false)
+
+  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+
+  @@map("release_cases")
+}
+
+// ─── Tickets / Suporte ───────────────────────────────────────────────────────
+
+model Ticket {
+  id              String   @id @default(cuid())
+  code            String
+  title           String
+  description     String
+  status          String   @default("backlog")
+  type            String   @default("tarefa")
+  priority        String   @default("medium")
+  tags            String[] @default([])
+  companySlug     String?
+  companyId       String?
+  createdBy       String
+  createdByName   String?
+  createdByEmail  String?
+  assignedToUserId String?
+  updatedBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  company         Company? @relation(fields: [companyId], references: [id])
+  creator         User     @relation("TicketCreatedBy", fields: [createdBy], references: [id])
+  assignee        User?    @relation("TicketAssignedTo", fields: [assignedToUserId], references: [id])
+  comments        TicketComment[]
+  events          TicketEvent[]
+  reactions       TicketReaction[]
+
+  @@map("tickets")
+}
+
+model TicketComment {
+  id           String    @id @default(cuid())
+  ticketId     String
+  authorUserId String
+  authorName   String?
+  body         String
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author   User   @relation(fields: [authorUserId], references: [id])
+  reactions TicketReaction[]
+
+  @@map("ticket_comments")
+}
+
+model TicketEvent {
+  id          String   @id @default(cuid())
+  ticketId    String
+  type        String
+  payload     Json?
+  actorUserId String?
+  createdAt   DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("ticket_events")
+}
+
+model TicketReaction {
+  id        String   @id @default(cuid())
+  ticketId  String
+  commentId String
+  userId    String
+  type      String   @default("like")
+  createdAt DateTime @default(now())
+
+  ticket  Ticket        @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  comment TicketComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId, type])
+  @@map("ticket_reactions")
+}
+
+// ─── Access Requests ─────────────────────────────────────────────────────────
+
+model AccessRequest {
+  id           String    @id @default(cuid())
+  email        String
+  name         String?
+  fullName     String?
+  username     String?
+  phone        String?
+  jobRole      String?
+  company      String?
+  clientId     String?
+  accessType   String    @default("testing_company_user")
+  profileType  String?
+  title        String?
+  description  String?
+  notes        String?
+  status       String    @default("open")
+  adminNotes   String?
+  userId       String?
+  ip_address   String?
+  user_agent   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  requestedBy  User?     @relation(fields: [userId], references: [id])
+  comments     AccessRequestComment[]
+
+  @@map("access_requests")
+}
+
+model AccessRequestComment {
+  id          String   @id @default(cuid())
+  requestId   String
+  authorRole  String   @default("requester")
+  authorName  String
+  authorEmail String?
+  authorId    String?
+  body        String
+  createdAt   DateTime @default(now())
+
+  request AccessRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@map("access_request_comments")
+}
+
+// ─── Admin Requests ──────────────────────────────────────────────────────────
+
+model Request {
+  id          String   @id @default(cuid())
+  userId      String
+  userName    String
+  userEmail   String
+  companyId   String
+  companyName String
+  type        String
+  payload     Json     @default("{}")
+  status      String   @default("PENDING")
+  reviewedBy  String?
+  reviewNote  String?
+  reviewedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("requests")
+}
+
+// ─── Applications ────────────────────────────────────────────────────────────
+
+model Application {
+  id               String   @id @default(cuid())
+  companyId        String?
+  companySlug      String?
+  name             String
+  slug             String
+  description      String?
+  qaseProjectCode  String?
+  source           String?
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  company Company? @relation(fields: [companyId], references: [id])
+
+  @@unique([slug, companySlug])
+  @@map("applications")
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+model UserNotification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String
+  title       String
+  description String
+  status      String   @default("unread")
+  link        String?
+  companySlug String?
+  requestId   String?
+  ticketId    String?
+  dedupeKey   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_notifications")
+}
+
+// ─── User Notes ──────────────────────────────────────────────────────────────
+
+model UserNote {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  content   String
+  color     String   @default("amber")
+  status    String   @default("Rascunho")
+  priority  String   @default("Baixa")
+  tags      String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_notes")
+}

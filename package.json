@@ -30,6 +30,7 @@
     "seed:griaule": "npx tsx scripts/seed-griaule.ts",
     "seed:all": "npm run seed:ana-admin && npm run seed:quality-alert && npm run seed:griaule",
     "audit:branches": "node scripts/audit-branches.js",
+    "inventory:branches": "node scripts/export-branch-inventory.js",
     "postinstall": "node scripts/fix-server-only.js"
   },
   "dependencies": {

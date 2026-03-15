@@ -8,6 +8,7 @@ Status em 2026-03-14:
 - Branches sem patch exclusivo em relacao a `main` podem ser removidas para reduzir ruido operacional.
 - Antes de deploy ou release, rode `npm run audit:branches`.
 - O snapshot mais recente da auditoria de branches foi salvo em `docs/branch-audit-main-2026-03-14.md`.
+- O inventario detalhado por branch remota fica em `docs/branch-inventory/` e pode ser regenerado com `npm run inventory:branches`.
 
 Branches com trabalho ainda fora da `main`:
 

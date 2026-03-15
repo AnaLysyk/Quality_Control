@@ -79,11 +79,15 @@ let warnedFsFailure = false;
 // Set AUTH_STORE=postgres (e.g. in Render env vars) to persist all auth data
 // in PostgreSQL instead of the local JSON file. The JSON/Redis path is kept as
 // the fallback for local development.
-export const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+// Also auto-detect: if DATABASE_URL is present and AUTH_STORE is not explicitly
+// set to something else, default to postgres.
+export const USE_POSTGRES =
+  process.env.AUTH_STORE === "postgres" ||
+  (!!process.env.DATABASE_URL && process.env.AUTH_STORE !== "json" && process.env.AUTH_STORE !== "redis" && process.env.AUTH_STORE !== "memory");
 
 if (typeof process !== "undefined") {
   const backend = USE_POSTGRES ? "PostgreSQL" : process.env.LOCAL_AUTH_STORE === "redis" ? "Redis" : "JSON/Memory";
-  console.log(`[AUTH-STORE] Backend: ${backend} (AUTH_STORE=${process.env.AUTH_STORE ?? "<unset>"})`);
+  console.log(`[AUTH-STORE] Backend: ${backend} (AUTH_STORE=${process.env.AUTH_STORE ?? "<unset>"}, DATABASE_URL=${process.env.DATABASE_URL ? "set" : "unset"})`);
 }
 
 let _pgStore: typeof import("./pgStore") | null = null;

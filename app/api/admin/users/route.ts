@@ -17,6 +17,7 @@ import {
 } from "@/lib/auth/localStore";
 
 export const runtime = "nodejs";
+export const revalidate = 0;
 
 function hasOwn(obj: Record<string, unknown> | null, key: string) {
   return !!obj && Object.prototype.hasOwnProperty.call(obj, key);

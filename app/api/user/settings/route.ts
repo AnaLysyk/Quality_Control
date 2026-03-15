@@ -3,6 +3,8 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
+export const revalidate = 0;
+
 let fs: typeof import("fs/promises") | undefined;
 let path: typeof import("path") | undefined;
 if (typeof process !== "undefined" && process.release?.name === "node") {

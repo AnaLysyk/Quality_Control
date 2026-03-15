@@ -6,11 +6,13 @@ const config: JestConfigWithTsJest = {
   moduleNameMapper: {
     "^@/contracts/(.*)$": "<rootDir>/packages/contracts/src/$1",
     "^@/lib/(.*)$": "<rootDir>/lib/$1",
-    "^@/data/(.*)$": "<rootDir>/app/data/$1",
+    "^@/core/(.*)$": "<rootDir>/src/core/$1",
+    "^@/data/(.*)$": ["<rootDir>/data/$1", "<rootDir>/app/data/$1"],
     "^@/(.*)$": "<rootDir>/app/$1",
     "^server-only$": "<rootDir>/tests/mocks/server-only.js",
   },
   reporters: ["default"],
+  setupFiles: ["<rootDir>/tests/setup-env.js"],
   // setupFiles removido pois o arquivo não existe mais
   transform: {
     "^.+\\.(ts|tsx)$": [

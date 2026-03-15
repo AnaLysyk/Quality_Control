@@ -4,6 +4,8 @@ import { getAccessContext } from "@/lib/auth/session";
 import { createLocalCompany, findLocalCompanyById, listLocalCompanies } from "@/lib/auth/localStore";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
+export const revalidate = 0;
+
 // GET: Lista empresas
 export async function GET(req: NextRequest) {
   const access = await getAccessContext(req);

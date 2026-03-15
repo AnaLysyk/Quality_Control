@@ -12,6 +12,7 @@ import {
 import { listUserNotes } from "@/lib/userNotesStore";
 
 export const runtime = "nodejs";
+export const revalidate = 0;
 
 type DefectRecord = {
   createdBy?: string | null;

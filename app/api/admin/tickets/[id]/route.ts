@@ -4,6 +4,8 @@ import { getTicketById, updateTicketStatus } from "@/lib/ticketsStore";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 import { canMoveTicket, canViewTicket } from "@/lib/rbac/tickets";
 
+export const revalidate = 0;
+
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {

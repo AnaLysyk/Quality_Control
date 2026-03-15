@@ -4155,10 +4155,32 @@ video {
   }
 }
 
-/* Sidebar hover expand */
+/* ─── Layout tokens (used by MainWrapper & floating buttons) ──── */
+:root {
+  --topbar-h: 4rem;      /* clearance for fixed top bar (= pt-16) */
+  --content-pr: 5rem;    /* right padding to clear floating action strip */
+}
+@media (min-width: 640px)  { :root { --content-pr: 5.5rem; } }
+@media (min-width: 1024px) { :root { --content-pr: 5rem; } }
+@media (min-width: 1280px) { :root { --content-pr: 5.5rem; } }
+@media (min-width: 1536px) { :root { --content-pr: 6.5rem; } }
+
+/* ─── Sidebar hover expand ──────────────────────────────────── */
 .app-shell {
   --sidebar-collapsed: 76px;
   --sidebar-expanded: 260px;
+}
+
+/* ─── Zoom-responsive sidebar ────────────────────────────────
+   At 1024-1200 px (either small screen or ~120%+ browser zoom)
+   use a slightly thinner collapsed sidebar so the content area
+   retains usable width without triggering the mobile layout.
+   ──────────────────────────────────────────────────────────── */
+@media (min-width: 1024px) and (max-width: 1200px) {
+  .app-shell {
+    --sidebar-collapsed: 60px;
+    --sidebar-expanded: 220px;
+  }
 }
 
 .sidebar-logo-icon {
@@ -4423,14 +4445,38 @@ video {
   justify-content: flex-end;
 }
 
+/* ─── Generic zoom-adaptive modal utilities ────────────────────────────────
+   Use .tc-modal-overlay on the backdrop wrapper and .tc-modal-panel on the
+   dialog box itself. Works at any browser zoom level. z-index left to the
+   consumer (add a Tailwind z-* class alongside).
+   ────────────────────────────────────────────────────────────────────────── */
+.tc-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding: clamp(0.5rem, 2vh, 1.5rem) clamp(0.5rem, 2vw, 1rem);
+}
+
+.tc-modal-panel {
+  position: relative;
+  margin: auto;
+  width: 100%;
+  max-height: min(calc(100dvh - 1.5rem), calc(100vh - 1.5rem));
+  overflow-y: auto;
+}
+
 .ticket-detail-modal-overlay {
   position: fixed;
   inset: 0;
   z-index: 12000;
   display: flex;
-  align-items: center;
+  align-items: flex-start;     /* allow tall modals to scroll rather than clip */
   justify-content: center;
-  padding: 1rem;
+  overflow-y: auto;            /* overlay scrolls when content taller than viewport */
+  padding: clamp(0.5rem, 2vh, 1.25rem) clamp(0.5rem, 2vw, 1.25rem);
   background: rgba(2, 6, 23, 0.62);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
@@ -4438,7 +4484,8 @@ video {
 
 .ticket-detail-modal-shell {
   display: flex;
-  max-height: calc(100vh - 2rem);
+  margin: auto;               /* re-center in scrollable flex container */
+  max-height: min(calc(100dvh - 1.5rem), calc(100vh - 1.5rem)); /* dvh adapts to browser bar & zoom */
   width: min(100%, 80rem);
   flex-direction: column;
   overflow: hidden;
@@ -6265,7 +6312,7 @@ video {
 .support-create-modal-shell {
   display: flex;
   width: min(100%, 36rem);
-  max-height: min(42rem, calc(100vh - 2rem));
+  max-height: min(42rem, calc(100dvh - 1.5rem));
   flex-direction: column;
   overflow: hidden;
   border-radius: 28px;
@@ -6500,6 +6547,17 @@ video {
   box-shadow: none;
 }
 
+/* Collapse ticket-detail 2-col grid at 1100 px — covers ~115%+ browser zoom */
+@media (max-width: 1100px) {
+  .ticket-detail-modal-grid {
+    grid-template-columns: 1fr;
+  }
+  .ticket-detail-panel-primary {
+    border-right: 0;
+    border-bottom: 1px solid var(--tc-border);
+  }
+}
+
 @media (max-width: 1024px) {
   .support-board-stat-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6618,7 +6676,7 @@ video {
   }
 
   .ticket-detail-modal-overlay {
-    padding: 0.75rem;
+    padding: 0.4rem 0.5rem;
   }
 
   .support-create-modal-shell {

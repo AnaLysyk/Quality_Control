@@ -8,6 +8,8 @@ import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { listAdminUserItems } from "@/lib/adminUsers";
 
+export const revalidate = 0;
+
 function buildSupportAssigneeOptions(items: Awaited<ReturnType<typeof listAdminUserItems>>) {
   return items
     .filter(

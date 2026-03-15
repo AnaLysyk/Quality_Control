@@ -44,6 +44,7 @@ model User {
   notes              UserNote[]
   accessRequests     AccessRequest[]
   requests           Request[]
+  permissionOverride UserPermissionOverride?
 
   @@map("users")
 }
@@ -320,7 +321,6 @@ model AccessRequest {
   updatedAt    DateTime  @updatedAt
 
   requestedBy  User?     @relation(fields: [userId], references: [id])
-  comments     AccessRequestComment[]
 
   @@map("access_requests")
 }
@@ -334,8 +334,6 @@ model AccessRequestComment {
   authorId    String?
   body        String
   createdAt   DateTime @default(now())
-
-  request AccessRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
 
   @@map("access_request_comments")
 }
@@ -530,4 +528,23 @@ model DocumentHistoryEvent {
 
   @@index([companySlug])
   @@map("document_history_events")
+}
+
+// ─── Permission Overrides ─────────────────────────────────────────────────────
+
+/// Overrides de permissão por usuário — sobrepõem os defaults do perfil (ROLE_DEFAULTS).
+/// allow: ações extras concedidas além do padrão do perfil.
+/// deny:  ações removidas do padrão do perfil.
+/// Administradores gerenciam isso via painel; o sistema lê desta tabela no lugar do arquivo JSON.
+model UserPermissionOverride {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  allow     Json     @default("{}")
+  deny      Json     @default("{}")
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_permission_overrides")
 }

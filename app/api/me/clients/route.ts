@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { getAccessContext } from "@/lib/auth/session";
 import { listLocalCompanies, listLocalLinksForUser, normalizeLocalRole } from "@/lib/auth/localStore";
 
+export const revalidate = 0;
+
 export async function GET(req: Request) {
   const access = await getAccessContext(req);
   if (!access) {

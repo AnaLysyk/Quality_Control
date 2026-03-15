@@ -577,8 +577,8 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
       {loading && <div className="mt-4 text-sm text-gray-500">Carregando...</div>}
 
       {editingId !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
-          <div className="w-full max-w-lg max-h-[calc(100vh-3rem)] overflow-y-auto bg-white p-4 rounded shadow space-y-3">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-6">
+          <div className="my-auto w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto bg-white p-4 rounded shadow space-y-3">
             <h4 className="text-lg font-medium">Editar card</h4>
             <div className="space-y-2">
               <div>

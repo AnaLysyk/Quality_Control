@@ -8,6 +8,8 @@ import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketCommentAdded } from "@/lib/notificationService";
 import { canCommentTicket } from "@/lib/rbac/tickets";
 
+export const revalidate = 0;
+
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
 }

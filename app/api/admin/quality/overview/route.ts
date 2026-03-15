@@ -19,6 +19,8 @@ import { apiFail, apiOk } from "@/lib/apiResponse";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { listLocalCompanies, type LocalAuthCompany } from "@/lib/auth/localStore";
 
+export const revalidate = 0;
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 type ClientRow = {

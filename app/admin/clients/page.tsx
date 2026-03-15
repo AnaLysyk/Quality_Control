@@ -1332,8 +1332,8 @@ function CompanyActionModal({
         ];
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center bg-[rgba(2,10,28,0.62)] px-4 py-6 backdrop-blur-[3px]">
-      <div className="w-full max-w-2xl overflow-hidden rounded-[30px] border border-white/12 bg-(--tc-surface,#ffffff) shadow-[0_32px_90px_rgba(15,23,42,0.5)]">
+    <div className="fixed inset-0 z-60 flex items-start justify-center overflow-y-auto bg-[rgba(2,10,28,0.62)] px-4 py-6 backdrop-blur-[3px]">
+      <div className="my-auto w-full max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overflow-hidden rounded-[30px] border border-white/12 bg-(--tc-surface,#ffffff) shadow-[0_32px_90px_rgba(15,23,42,0.5)]">
         <div className={`relative overflow-hidden bg-linear-to-r ${headerClasses} px-6 py-6 text-white`}>
           <div className="pointer-events-none absolute -left-8 top-0 h-28 w-28 rounded-full bg-white/8 blur-3xl" />
           <div className="pointer-events-none absolute right-0 top-4 h-28 w-28 rounded-full bg-[#ef0001]/20 blur-3xl" />
@@ -1812,8 +1812,8 @@ function CompanyUsers({ clientId, companyName, disabled = false }: CompanyUsersP
       </div>
 
       {openLinkModal && (
-        <div className="fixed inset-0 z-70 flex items-center justify-center bg-[rgba(2,10,28,0.48)] px-4 py-6 backdrop-blur-[2px]">
-          <div className="w-full max-w-xl overflow-hidden rounded-[28px] border border-white/10 bg-(--tc-surface,#ffffff) shadow-[0_28px_80px_rgba(15,23,42,0.32)]">
+        <div className="fixed inset-0 z-70 flex items-start justify-center overflow-y-auto bg-[rgba(2,10,28,0.48)] px-4 py-6 backdrop-blur-[2px]">
+          <div className="my-auto w-full max-w-xl max-h-[calc(100dvh-2rem)] overflow-y-auto overflow-hidden rounded-[28px] border border-white/10 bg-(--tc-surface,#ffffff) shadow-[0_28px_80px_rgba(15,23,42,0.32)]">
             <div className="bg-linear-to-r from-[#04153d] via-[#0b1e3c] to-[#7a1026] px-5 py-5 text-white">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">Usuários</p>
               <div className="mt-2 flex items-start justify-between gap-3">

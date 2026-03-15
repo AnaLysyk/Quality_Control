@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import { getAccessContext } from "@/lib/auth/session";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { isAvatarKey } from "@/lib/avatarCatalog";
+import { NO_STORE_HEADERS } from "@/lib/http/noStore";
+
+export const revalidate = 0;
 
 function errorResponse(status: number, code: string, message: string) {
   return NextResponse.json({ user: null, error: { code, message } }, { status });
@@ -42,5 +45,5 @@ export async function GET(req: Request) {
       clientSlug: access.companySlug ?? null,
       isGlobalAdmin: access.isGlobalAdmin === true,
     },
-  });
+  }, { headers: NO_STORE_HEADERS });
 }

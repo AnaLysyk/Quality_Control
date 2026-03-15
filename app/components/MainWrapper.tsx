@@ -14,19 +14,25 @@ export default function MainWrapper({ children }: MainWrapperProps) {
   const isUsersManagementRoute = pathname.startsWith("/admin/users");
   const isUsersPermissionsRoute = pathname.startsWith("/admin/users/permissions");
 
+  // Left padding grows with viewport; right padding uses --content-pr to always
+  // clear the fixed floating action strip regardless of breakpoint.
+  const leftPx = isUsersPermissionsRoute
+    ? "px-2 sm:px-2.5 lg:px-3 xl:px-4 2xl:px-5"
+    : isUsersManagementRoute
+    ? "px-2.5 sm:px-3 lg:px-4 xl:px-5 2xl:px-6"
+    : isAccessRequestsRoute || isAdminClientsRoute
+    ? "px-2 sm:px-3 lg:px-4 xl:px-5 2xl:px-6"
+    : "px-2.5 sm:px-4 lg:px-5 xl:px-6 2xl:px-8";
+
+  const bottomPb = isUsersPermissionsRoute
+    ? "pb-4 sm:pb-5"
+    : isUsersManagementRoute || isAccessRequestsRoute
+    ? "pb-4 sm:pb-5 lg:pb-6"
+    : "pb-8";
+
   return (
     <main
-      className={`flex-1 w-full min-h-full min-w-0 overflow-x-hidden pt-16 ${
-        isUsersPermissionsRoute
-          ? "px-2 pb-4 sm:px-2.5 sm:pb-5 lg:px-3 lg:pr-24 xl:px-4 xl:pr-28 2xl:px-5 2xl:pr-32"
-          : isUsersManagementRoute
-          ? "px-2.5 pb-4 sm:px-3 sm:pb-5 lg:px-4 lg:pr-28 xl:px-5 xl:pr-32 2xl:px-6 2xl:pr-36"
-          : isAccessRequestsRoute
-          ? "px-2 pb-5 pr-16 sm:px-3 sm:pb-6 sm:pr-18 lg:px-4 lg:pr-20 xl:px-5 xl:pr-24 2xl:px-6 2xl:pr-28"
-          : isAdminClientsRoute
-          ? "px-2 pb-8 pr-16 sm:px-3 sm:pr-18 lg:px-4 lg:pr-20 xl:px-6 xl:pr-24 2xl:px-8 2xl:pr-28"
-          : "px-2.5 pb-8 pr-16 sm:px-4 sm:pr-18 lg:px-6 lg:pr-20 xl:px-8 xl:pr-24 2xl:px-10 2xl:pr-28"
-      }`}
+      className={`flex-1 w-full min-h-full min-w-0 overflow-x-hidden pt-(--topbar-h) pr-(--content-pr) ${leftPx} ${bottomPb}`}
     >
       {children}
     </main>

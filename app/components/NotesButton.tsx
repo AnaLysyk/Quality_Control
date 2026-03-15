@@ -627,7 +627,7 @@ function renderRichContent(content: string) {
 
         items.push(
           <li key={`check-${innerIndex}`} className="notes-rich-check-item">
-            <input type="checkbox" checked={checked} readOnly className="notes-rich-checkbox" />
+            <input type="checkbox" checked={checked} readOnly className="notes-rich-checkbox" aria-label={itemText} />
             <span>{renderInlineWithBreaks(itemText, `check-${innerIndex}`)}</span>
           </li>,
         );

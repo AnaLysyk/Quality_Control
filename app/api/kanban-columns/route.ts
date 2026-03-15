@@ -5,6 +5,8 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { isDevRole } from "@/lib/rbac/devAccess";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 
+export const revalidate = 0;
+
 type KanbanColumn = {
   key: string;
   label: string;

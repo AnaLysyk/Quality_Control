@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import {
@@ -143,12 +143,12 @@ function statusLabel(value?: string | null) {
 
 function toneForOverride(state: "allow" | "deny" | "default") {
   if (state === "allow") {
-    return "border-[rgba(16,185,129,0.22)] bg-[rgba(16,185,129,0.12)] text-[color:var(--tc-text-primary)]";
+    return "border-[rgba(16,185,129,0.22)] bg-[rgba(16,185,129,0.12)] text-(--tc-text-primary)";
   }
   if (state === "deny") {
-    return "border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.1)] text-[color:var(--tc-text-primary)]";
+    return "border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.1)] text-(--tc-text-primary)";
   }
-  return "border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] text-[color:var(--tc-text-muted)]";
+  return "border-(--tc-border) bg-(--tc-surface-2) text-(--tc-text-muted)";
 }
 
 function badgeLabel(state: "allow" | "deny" | "default") {
@@ -162,15 +162,15 @@ function roleTone(value?: string | null, selected = false) {
 
   const normalized = (value ?? "").toLowerCase();
   if (normalized === "admin" || normalized === "global_admin") {
-    return "border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.08)] text-[color:var(--tc-primary)]";
+    return "border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.08)] text-(--tc-primary)";
   }
   if (normalized === "dev" || normalized === "it_dev") {
     return "border border-[rgba(59,130,246,0.18)] bg-[rgba(59,130,246,0.12)] text-[#2563eb]";
   }
   if (normalized === "company" || normalized === "client_admin") {
-    return "border border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.1)] text-[color:var(--tc-accent)]";
+    return "border border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.1)] text-(--tc-accent)";
   }
-  return "border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] text-[color:var(--tc-text-muted)]";
+  return "border border-(--tc-border) bg-(--tc-surface-2) text-(--tc-text-muted)";
 }
 
 function statusTone(value?: string | null, selected = false) {
@@ -178,7 +178,7 @@ function statusTone(value?: string | null, selected = false) {
 
   const normalized = (value ?? "").toLowerCase();
   if (normalized === "inactive" || normalized === "blocked") {
-    return "border border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.1)] text-[color:var(--tc-accent)]";
+    return "border border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.1)] text-(--tc-accent)";
   }
   if (normalized === "invited") {
     return "border border-[rgba(245,158,11,0.22)] bg-[rgba(245,158,11,0.12)] text-[#b45309]";
@@ -225,7 +225,7 @@ function AvatarIdentity(props: {
       className={`flex shrink-0 items-center justify-center overflow-hidden ${wrapperClass} ${
         selected
           ? "border border-white/20 bg-white/10 text-white"
-          : "border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] text-[color:var(--tc-primary)]"
+          : "border border-(--tc-border) bg-(--tc-surface) text-(--tc-primary)"
       }`}
     >
       {user?.avatar_url ? (
@@ -403,7 +403,7 @@ function SurfaceModal(props: {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center px-4 py-4 sm:px-6 sm:py-6">
+    <div className="fixed inset-0 z-90 flex items-start justify-center overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
       <button
         type="button"
         aria-label="Fechar modal"
@@ -411,18 +411,12 @@ function SurfaceModal(props: {
         onClick={onClose}
       />
       <div
-        className={`relative z-[91] flex max-h-[calc(100vh-2rem)] w-full flex-col overflow-hidden rounded-[28px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] shadow-[0_30px_80px_rgba(2,6,23,0.48)] ${
+        className={`relative z-91 my-auto flex max-h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-[28px] border border-(--tc-border) bg-(--tc-surface) shadow-[0_30px_80px_rgba(2,6,23,0.48)] ${
           size === "wide" ? "max-w-6xl" : "max-w-xl"
         }`}
       >
         <div
-          className="border-b border-[color:var(--tc-border)] px-5 py-5 sm:px-6"
-          style={{
-            background:
-              tone === "alert"
-                ? "linear-gradient(180deg, rgba(239,0,1,0.08), rgba(1,24,72,0.05))"
-                : "linear-gradient(180deg, rgba(1,24,72,0.08), transparent)",
-          }}
+          className={`border-b border-(--tc-border) px-5 py-5 sm:px-6 ${tone === "alert" ? "[background:linear-gradient(180deg,rgba(239,0,1,0.08),rgba(1,24,72,0.05))]" : "[background:linear-gradient(180deg,rgba(1,24,72,0.08),transparent)]"}`}
         >
           <div className="flex items-start justify-between gap-4">
             <div className="flex min-w-0 items-start gap-3">
@@ -430,30 +424,30 @@ function SurfaceModal(props: {
                 <div
                   className={`mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${
                     tone === "alert"
-                      ? "border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.1)] text-[color:var(--tc-accent)]"
-                      : "border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] text-[color:var(--tc-primary)]"
+                      ? "border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.1)] text-(--tc-accent)"
+                      : "border-(--tc-border) bg-(--tc-surface-2) text-(--tc-primary)"
                   }`}
                 >
                   {icon}
                 </div>
               ) : null}
               <div className="min-w-0">
-                <h3 className="text-lg font-semibold text-[color:var(--tc-text-primary)]">{title}</h3>
-                {description && <p className="mt-2 text-sm leading-6 text-[color:var(--tc-text-secondary)]">{description}</p>}
+                <h3 className="text-lg font-semibold text-(--tc-text-primary)">{title}</h3>
+                {description && <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary)">{description}</p>}
               </div>
             </div>
             <button
               type="button"
               onClick={onClose}
               aria-label="Fechar modal"
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] text-[color:var(--tc-text-muted)] transition hover:bg-[color:var(--tc-surface-2)] hover:text-[color:var(--tc-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(239,0,1,0.16)]"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface) text-(--tc-text-muted) transition hover:bg-(--tc-surface-2) hover:text-(--tc-text-primary) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(239,0,1,0.16)]"
             >
               <FiX size={18} />
             </button>
           </div>
         </div>
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-6">{children}</div>
-        <div className="flex flex-col gap-2 border-t border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-5 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-6">
+        <div className="flex flex-col gap-2 border-t border-(--tc-border) bg-(--tc-surface-2) px-5 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-6">
           {footer}
         </div>
       </div>
@@ -1096,17 +1090,13 @@ export default function PermissionsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[2200px] space-y-3 px-0 pb-2 pt-1 sm:space-y-4">
+    <div className="mx-auto max-w-550 space-y-3 px-0 pb-2 pt-1 sm:space-y-4">
       <section
-        className="relative overflow-hidden rounded-[28px] border border-[color:var(--tc-border)] p-4 text-white sm:rounded-[32px] sm:p-5 xl:p-6"
-        style={{
-          background: "linear-gradient(135deg, var(--tc-primary) 0%, var(--tc-primary-dark) 56%, rgba(239,0,1,0.88) 170%)",
-          boxShadow: "0 32px 90px rgba(1, 24, 72, 0.22)",
-        }}
+        className="relative overflow-hidden rounded-[28px] border border-(--tc-border) p-4 text-white sm:rounded-4xl sm:p-5 xl:p-6 [background:linear-gradient(135deg,var(--tc-primary)_0%,var(--tc-primary-dark)_56%,rgba(239,0,1,0.88)_170%)] shadow-[0_32px_90px_rgba(1,24,72,0.22)]"
       >
-        <div className="pointer-events-none absolute -left-16 top-0 h-48 w-48 rounded-full blur-3xl" style={{ background: "rgba(255,255,255,0.12)" }} />
-        <div className="pointer-events-none absolute right-0 top-8 h-56 w-56 rounded-full blur-3xl" style={{ background: "rgba(239,0,1,0.3)" }} />
-        <div className="pointer-events-none absolute bottom-0 left-1/3 h-44 w-44 rounded-full blur-3xl" style={{ background: "rgba(59,130,246,0.22)" }} />
+        <div className="pointer-events-none absolute -left-16 top-0 h-48 w-48 rounded-full blur-3xl bg-[rgba(255,255,255,0.12)]" />
+        <div className="pointer-events-none absolute right-0 top-8 h-56 w-56 rounded-full blur-3xl bg-[rgba(239,0,1,0.3)]" />
+        <div className="pointer-events-none absolute bottom-0 left-1/3 h-44 w-44 rounded-full blur-3xl bg-[rgba(59,130,246,0.22)]" />
 
         <div className="relative space-y-4">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -1134,22 +1124,22 @@ export default function PermissionsPage() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="min-w-0 rounded-[24px] border border-white/15 bg-white/12 px-4 py-4 shadow-[0_16px_36px_rgba(1,24,72,0.18)] backdrop-blur-sm">
+            <div className="min-w-0 rounded-3xl border border-white/15 bg-white/12 px-4 py-4 shadow-[0_16px_36px_rgba(1,24,72,0.18)] backdrop-blur-sm">
               <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/78">Usuários vinculados</div>
               <div className="mt-2 text-3xl font-semibold text-white">{testingCompanyUsersCount}</div>
               <div className="mt-1 text-xs text-white/84">Contas de usuários ligadas a empresas</div>
             </div>
-            <div className="min-w-0 rounded-[24px] border border-white/15 bg-white/12 px-4 py-4 shadow-[0_16px_36px_rgba(1,24,72,0.18)] backdrop-blur-sm">
+            <div className="min-w-0 rounded-3xl border border-white/15 bg-white/12 px-4 py-4 shadow-[0_16px_36px_rgba(1,24,72,0.18)] backdrop-blur-sm">
               <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/78">Contas de acesso cadastradas</div>
               <div className="mt-2 text-3xl font-semibold text-white">{users.length}</div>
               <div className="mt-1 text-xs text-white/84">Total de usuários com login na plataforma</div>
             </div>
-            <div className="min-w-0 rounded-[24px] border border-white/15 bg-white/12 px-4 py-4 shadow-[0_16px_36px_rgba(1,24,72,0.18)] backdrop-blur-sm">
+            <div className="min-w-0 rounded-3xl border border-white/15 bg-white/12 px-4 py-4 shadow-[0_16px_36px_rgba(1,24,72,0.18)] backdrop-blur-sm">
               <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/78">Resultados atuais</div>
               <div className="mt-2 text-3xl font-semibold text-white">{filteredUsers.length}</div>
               <div className="mt-1 text-xs text-white/84">Lista filtrada por busca e perfil</div>
             </div>
-            <div className="min-w-0 rounded-[24px] border border-white/15 bg-white/12 px-4 py-4 shadow-[0_16px_36px_rgba(1,24,72,0.18)] backdrop-blur-sm">
+            <div className="min-w-0 rounded-3xl border border-white/15 bg-white/12 px-4 py-4 shadow-[0_16px_36px_rgba(1,24,72,0.18)] backdrop-blur-sm">
               <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/78">Empresas cadastradas</div>
               <div className="mt-2 text-3xl font-semibold text-white">{companies.length}</div>
               <div className="mt-1 text-xs text-white/84">Empresas disponíveis na base da plataforma</div>
@@ -1160,31 +1150,30 @@ export default function PermissionsPage() {
 
       <div className="grid items-stretch gap-4 xl:grid-cols-[348px_minmax(0,1fr)] 2xl:grid-cols-[368px_minmax(0,1fr)]">
         <aside
-          className="flex min-h-[760px] flex-col overflow-hidden rounded-[28px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] xl:sticky xl:top-4 xl:h-[calc(100vh-6.5rem)]"
-          style={{ boxShadow: "0 20px 60px rgba(15, 23, 42, 0.08)" }}
+          className="flex min-h-190 flex-col overflow-hidden rounded-[28px] border border-(--tc-border) bg-(--tc-surface) xl:sticky xl:top-4 xl:h-[calc(100vh-6.5rem)] shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
         >
-          <div className="border-b border-[color:var(--tc-border)] p-4 sm:p-5" style={{ background: "linear-gradient(180deg, rgba(1,24,72,0.08), transparent)" }}>
+          <div className="border-b border-(--tc-border) p-4 sm:p-5 [background:linear-gradient(180deg,rgba(1,24,72,0.08),transparent)]">
             <div className="space-y-4">
               <div className="space-y-1">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--tc-accent)]">Usuários</p>
-                <h2 className="text-[20px] font-semibold tracking-tight text-[color:var(--tc-text-primary)]">Selecione um usuário para editar permissões</h2>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-accent)">Usuários</p>
+                <h2 className="text-[20px] font-semibold tracking-tight text-(--tc-text-primary)">Selecione um usuário para editar permissões</h2>
               </div>
 
               <label className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Busca</span>
-                <div className="flex items-center gap-3 rounded-[20px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-3 py-2.5 focus-within:border-[color:var(--tc-accent)] focus-within:ring-2 focus-within:ring-[rgba(239,0,1,0.14)]">
-                  <FiSearch className="text-[color:var(--tc-accent)]" />
+                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Busca</span>
+                <div className="flex items-center gap-3 rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2.5 focus-within:border-(--tc-accent) focus-within:ring-2 focus-within:ring-[rgba(239,0,1,0.14)]">
+                  <FiSearch className="text-(--tc-accent)" />
                   <input
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Buscar por nome, usuário, e-mail ou empresa"
-                    className="w-full bg-transparent text-sm text-[color:var(--tc-text-primary)] outline-none placeholder:text-[color:var(--tc-text-muted)]"
+                    className="w-full bg-transparent text-sm text-(--tc-text-primary) outline-none placeholder:text-(--tc-text-muted)"
                   />
                 </div>
               </label>
 
               <label className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Tipo de perfil</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Tipo de perfil</span>
                 <Select value={roleFilter} onValueChange={(value) => setRoleFilter(value as RoleFilter)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecionar tipo de perfil" />
@@ -1200,7 +1189,7 @@ export default function PermissionsPage() {
               </label>
 
               {query.trim() ? (
-                <div className="text-sm font-medium text-[color:var(--tc-text-secondary)]">
+                <div className="text-sm font-medium text-(--tc-text-secondary)">
                   {filteredUsers.length} {filteredUsers.length === 1 ? "resultado" : "resultados"}
                 </div>
               ) : null}
@@ -1209,14 +1198,14 @@ export default function PermissionsPage() {
 
           <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-5 pt-3 [scrollbar-gutter:stable]">
             <div className="min-w-0 pr-2">
-            {usersLoading && <p className="px-2 py-4 text-sm text-[color:var(--tc-text-muted)]">Carregando usuários...</p>}
+            {usersLoading && <p className="px-2 py-4 text-sm text-(--tc-text-muted)">Carregando usuários...</p>}
             {usersError && !usersLoading && (
-              <p className="rounded-2xl border border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.08)] px-4 py-3 text-sm text-[color:var(--tc-accent)]">
+              <p className="rounded-2xl border border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.08)] px-4 py-3 text-sm text-(--tc-accent)">
                 {friendlyUiError(usersError, "Não foi possível carregar a lista de usuários agora.")}
               </p>
             )}
             {!usersLoading && !usersError && filteredUsers.length === 0 && (
-              <p className="px-2 py-4 text-sm text-[color:var(--tc-text-muted)]">
+              <p className="px-2 py-4 text-sm text-(--tc-text-muted)">
                 Nenhum usuário encontrado para a combinação atual de busca e perfil.
               </p>
             )}
@@ -1229,22 +1218,11 @@ export default function PermissionsPage() {
                     key={user.id}
                     type="button"
                     onClick={() => setSelectedUserId(user.id)}
-                    className={`group box-border w-full overflow-hidden rounded-[22px] border px-3.5 py-3 text-left transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(239,0,1,0.22)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--tc-surface)] ${
+                    className={`group box-border w-full overflow-hidden rounded-[22px] border px-3.5 py-3 text-left transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(239,0,1,0.22)] focus-visible:ring-offset-2 focus-visible:ring-offset-(--tc-surface) ${
                       selected
-                        ? "border-[rgba(1,24,72,0.08)] text-white"
-                        : "border-[color:var(--tc-border)] text-[color:var(--tc-text-primary)] hover:border-[rgba(1,24,72,0.12)]"
+                        ? "border-[rgba(1,24,72,0.08)] text-white [background:linear-gradient(135deg,rgba(1,24,72,0.94)_0%,rgba(8,42,108,0.94)_78%)] shadow-[0_16px_28px_rgba(1,24,72,0.16)]"
+                        : "border-(--tc-border) text-(--tc-text-primary) hover:border-[rgba(1,24,72,0.12)] [background:linear-gradient(180deg,var(--tc-surface)_0%,var(--tc-surface-2)_100%)] shadow-[0_8px_18px_rgba(15,23,42,0.04)]"
                     }`}
-                    style={
-                      selected
-                        ? {
-                            background: "linear-gradient(135deg, rgba(1,24,72,0.94) 0%, rgba(8,42,108,0.94) 78%)",
-                            boxShadow: "0 16px 28px rgba(1, 24, 72, 0.16)",
-                          }
-                        : {
-                            background: "linear-gradient(180deg, var(--tc-surface) 0%, var(--tc-surface-2) 100%)",
-                            boxShadow: "0 8px 18px rgba(15, 23, 42, 0.04)",
-                          }
-                    }
                   >
                     <div className="flex items-start gap-3">
                       <AvatarIdentity user={user} selected={selected} />
@@ -1254,7 +1232,7 @@ export default function PermissionsPage() {
                           <div className="min-w-0">
                             <p className="truncate text-sm font-semibold">{getDisplayName(user)}</p>
                             {getUserSecondaryLabel(user) ? (
-                              <p className={`truncate text-[11px] ${selected ? "text-white/76" : "text-[color:var(--tc-text-secondary)]"}`}>
+                              <p className={`truncate text-[11px] ${selected ? "text-white/76" : "text-(--tc-text-secondary)"}`}>
                                 {getUserSecondaryLabel(user)}
                               </p>
                             ) : null}
@@ -1288,24 +1266,18 @@ export default function PermissionsPage() {
         </aside>
 
         <section
-          className="flex min-h-[760px] flex-col overflow-hidden rounded-[32px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] xl:h-[calc(100vh-6.5rem)]"
-          style={{ boxShadow: "0 20px 60px rgba(15, 23, 42, 0.08)" }}
+          className="flex min-h-190 flex-col overflow-hidden rounded-4xl border border-(--tc-border) bg-(--tc-surface) xl:h-[calc(100vh-6.5rem)] shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
         >
           {!selectedUser && (
             <div className="flex min-h-0 flex-1 items-center justify-center p-8 text-center">
               <div className="max-w-md space-y-4">
                 <div
-                  className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-[24px] text-white"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, var(--tc-primary) 0%, var(--tc-primary-dark) 58%, rgba(239,0,1,0.82) 180%)",
-                    boxShadow: "0 18px 40px rgba(1, 24, 72, 0.22)",
-                  }}
+                  className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-3xl text-white [background:linear-gradient(135deg,var(--tc-primary)_0%,var(--tc-primary-dark)_58%,rgba(239,0,1,0.82)_180%)] shadow-[0_18px_40px_rgba(1,24,72,0.22)]"
                 >
                   <FiUsers size={24} />
                 </div>
-                <h2 className="text-xl font-semibold text-[color:var(--tc-text-primary)]">Selecione um usuário</h2>
-                <p className="text-sm leading-6 text-[color:var(--tc-text-muted)]">
+                <h2 className="text-xl font-semibold text-(--tc-text-primary)">Selecione um usuário</h2>
+                <p className="text-sm leading-6 text-(--tc-text-muted)">
                   Escolha um usuário na coluna da esquerda para revisar o perfil base, ajustar permissões e salvar as alterações.
                 </p>
               </div>
@@ -1315,15 +1287,10 @@ export default function PermissionsPage() {
           {selectedUser && (
               <div className="flex min-h-0 flex-1 flex-col gap-4 p-3 sm:p-4">
               <header
-                className="relative overflow-hidden rounded-[24px] border border-[rgba(1,24,72,0.12)] p-3 text-white sm:rounded-[28px] sm:p-4"
-                style={{
-                  background:
-                    "linear-gradient(135deg, var(--tc-primary) 0%, rgba(10,34,90,0.96) 62%, rgba(239,0,1,0.82) 180%)",
-                  boxShadow: "0 22px 56px rgba(1, 24, 72, 0.18)",
-                }}
+                className="relative overflow-hidden rounded-3xl border border-[rgba(1,24,72,0.12)] p-3 text-white sm:rounded-[28px] sm:p-4 [background:linear-gradient(135deg,var(--tc-primary)_0%,rgba(10,34,90,0.96)_62%,rgba(239,0,1,0.82)_180%)] shadow-[0_22px_56px_rgba(1,24,72,0.18)]"
               >
-                <div className="pointer-events-none absolute -right-10 top-0 h-28 w-28 rounded-full blur-3xl" style={{ background: "rgba(255,255,255,0.12)" }} />
-                <div className="pointer-events-none absolute bottom-0 left-1/3 h-24 w-24 rounded-full blur-3xl" style={{ background: "rgba(239,0,1,0.2)" }} />
+                <div className="pointer-events-none absolute -right-10 top-0 h-28 w-28 rounded-full blur-3xl bg-[rgba(255,255,255,0.12)]" />
+                <div className="pointer-events-none absolute bottom-0 left-1/3 h-24 w-24 rounded-full blur-3xl bg-[rgba(239,0,1,0.2)]" />
 
                 <div className="relative flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                   <div className="min-w-0 space-y-2">
@@ -1369,15 +1336,15 @@ export default function PermissionsPage() {
                   <div className="flex flex-wrap items-center gap-2 text-xs">
                     {canEditProfileBase ? (
                       <Select value={profileDraft} onValueChange={(value) => startProfileComparison(normalizeRole(value))}>
-                        <SelectTrigger className="h-auto min-w-[210px] rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white shadow-none focus-visible:ring-white/60 data-[placeholder]:text-white/72">
+                        <SelectTrigger className="h-auto min-w-52.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white shadow-none focus-visible:ring-white/60 data-placeholder:text-white/72">
                           Perfil de origem: {roleLabel(profileDraft)}
                         </SelectTrigger>
                         <SelectContent className="min-w-[18rem]">
                           {availableProfileOptions.map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               <div className="flex flex-col">
-                                <span className="font-semibold text-[color:var(--tc-text-primary)]">{option.label}</span>
-                                <span className="text-xs text-[color:var(--tc-text-muted)]">{option.hint}</span>
+                                <span className="font-semibold text-(--tc-text-primary)">{option.label}</span>
+                                <span className="text-xs text-(--tc-text-muted)">{option.hint}</span>
                               </div>
                             </SelectItem>
                           ))}
@@ -1385,7 +1352,7 @@ export default function PermissionsPage() {
                       </Select>
                     ) : (
                       <div
-                        className="inline-flex min-w-[210px] items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/88"
+                        className="inline-flex min-w-52.5 items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/88"
                         title="Somente o perfil Global pode alterar ou criar perfis privilegiados."
                       >
                         Perfil de origem: {roleLabel(profileDraft)}
@@ -1410,34 +1377,34 @@ export default function PermissionsPage() {
                 </div>
               </header>
 
-              {panelLoading && <p className="text-sm text-[color:var(--tc-text-muted)]">Carregando permissões...</p>}
+              {panelLoading && <p className="text-sm text-(--tc-text-muted)">Carregando permissões...</p>}
               {panelError && (
-                <p className="rounded-[22px] border border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.08)] px-4 py-3 text-sm text-[color:var(--tc-accent)]">
+                <p className="rounded-[22px] border border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.08)] px-4 py-3 text-sm text-(--tc-accent)">
                   {friendlyUiError(panelError, "Não foi possível carregar ou salvar as permissões agora.")}
                 </p>
               )}
               {message && (
-                <p className="rounded-[22px] border border-[rgba(16,185,129,0.22)] bg-[rgba(16,185,129,0.12)] px-4 py-3 text-sm text-[color:var(--tc-text-primary)]">
+                <p className="rounded-[22px] border border-[rgba(16,185,129,0.22)] bg-[rgba(16,185,129,0.12)] px-4 py-3 text-sm text-(--tc-text-primary)">
                   {message}
                 </p>
               )}
 
               {!panelLoading && permissionData && (
-                <section className="flex min-h-0 flex-1 flex-col rounded-[30px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] shadow-[0_16px_36px_rgba(15,23,42,0.05)]">
-                  <div className="border-b border-[color:var(--tc-border)] px-5 py-5 sm:px-6">
+                <section className="flex min-h-0 flex-1 flex-col rounded-[30px] border border-(--tc-border) bg-(--tc-surface) shadow-[0_16px_36px_rgba(15,23,42,0.05)]">
+                  <div className="border-b border-(--tc-border) px-5 py-5 sm:px-6">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                       <div className="space-y-1">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--tc-accent)]">Permissões por módulo</p>
-                        <h3 className="text-lg font-semibold text-[color:var(--tc-text-primary)]">Selecione um módulo e ajuste as ações ao lado</h3>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-accent)">Permissões por módulo</p>
+                        <h3 className="text-lg font-semibold text-(--tc-text-primary)">Selecione um módulo e ajuste as ações ao lado</h3>
                       </div>
-                      <div className="rounded-full border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-3 py-1.5 text-xs font-semibold text-[color:var(--tc-text-muted)]">
+                      <div className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1.5 text-xs font-semibold text-(--tc-text-muted)">
                         {PERMISSION_MODULES.length} módulos cadastrados
                       </div>
                     </div>
                   </div>
 
                   <div className="grid min-h-0 flex-1 gap-4 p-4 sm:p-5 xl:grid-cols-[248px_minmax(0,1fr)]">
-                    <section className="flex min-h-0 flex-col rounded-[22px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] p-2">
+                    <section className="flex min-h-0 flex-col rounded-[22px] border border-(--tc-border) bg-(--tc-surface-2) p-2">
                       <ScrollArea className="min-h-0 flex-1" viewportClassName="pr-5">
                         <div className="space-y-1.5">
                           {PERMISSION_MODULES.map((module) => {
@@ -1452,33 +1419,33 @@ export default function PermissionsPage() {
                                 key={module.id}
                                 type="button"
                                 onClick={() => setOpenModule(module.id)}
-                                className={`w-full rounded-[14px] border border-[color:var(--tc-border)] px-3 py-2 text-left transition-colors ${
+                                className={`w-full rounded-[14px] border border-(--tc-border) px-3 py-2 text-left transition-colors ${
                                   selected
                                     ? "border-[rgba(239,0,1,0.14)] bg-[rgba(239,0,1,0.05)]"
-                                    : "bg-[color:var(--tc-surface)] hover:bg-white"
+                                    : "bg-(--tc-surface) hover:bg-white"
                                 }`}
                               >
-                                <div className="flex min-h-[42px] items-center justify-between gap-3">
+                                <div className="flex min-h-10.5 items-center justify-between gap-3">
                                   <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2">
                                       <span
-                                        className={`h-2 w-2 rounded-full ${selected ? "bg-[color:var(--tc-accent)]" : "bg-[color:var(--tc-border)]"}`}
+                                        className={`h-2 w-2 rounded-full ${selected ? "bg-(--tc-accent)" : "bg-(--tc-border)"}`}
                                       />
-                                      <div className="text-[13px] font-semibold leading-5 text-[color:var(--tc-text-primary)]">{module.label}</div>
+                                      <div className="text-[13px] font-semibold leading-5 text-(--tc-text-primary)">{module.label}</div>
                                     </div>
                                   </div>
                                   <div
                                     className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                                       selected
-                                        ? "border border-[rgba(239,0,1,0.16)] bg-[rgba(239,0,1,0.08)] text-[color:var(--tc-accent)]"
-                                        : "border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] text-[color:var(--tc-text-muted)]"
+                                        ? "border border-[rgba(239,0,1,0.16)] bg-[rgba(239,0,1,0.08)] text-(--tc-accent)"
+                                        : "border border-(--tc-border) bg-(--tc-surface-2) text-(--tc-text-muted)"
                                     }`}
                                   >
                                     {checkedCount}/{module.actions.length}
                                   </div>
                                 </div>
                                 {customCount > 0 ? (
-                                  <div className="mt-1 text-[10px] font-semibold text-[color:var(--tc-accent)]">
+                                  <div className="mt-1 text-[10px] font-semibold text-(--tc-accent)">
                                     {customCount} ajustes
                                   </div>
                                 ) : null}
@@ -1490,22 +1457,22 @@ export default function PermissionsPage() {
                     </section>
 
                     {activeModule && (
-                      <section className="flex min-h-0 flex-col rounded-[24px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)]">
-                        <div className="border-b border-[color:var(--tc-border)] px-4 py-4 sm:px-5">
+                      <section className="flex min-h-0 flex-col rounded-3xl border border-(--tc-border) bg-(--tc-surface)">
+                        <div className="border-b border-(--tc-border) px-4 py-4 sm:px-5">
                           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                             <div className="space-y-1">
-                              <div className="inline-flex rounded-full border border-[rgba(239,0,1,0.12)] bg-[rgba(239,0,1,0.06)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--tc-accent)]">
+                              <div className="inline-flex rounded-full border border-[rgba(239,0,1,0.12)] bg-[rgba(239,0,1,0.06)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-accent)">
                                 {activeModule.category}
                               </div>
-                              <h4 className="text-lg font-semibold text-[color:var(--tc-text-primary)]">{activeModule.label}</h4>
-                              <p className="text-sm leading-6 text-[color:var(--tc-text-secondary)]">{activeModule.description}</p>
+                              <h4 className="text-lg font-semibold text-(--tc-text-primary)">{activeModule.label}</h4>
+                              <p className="text-sm leading-6 text-(--tc-text-secondary)">{activeModule.description}</p>
                             </div>
 
                             <div className="flex flex-wrap gap-2 text-[11px] font-semibold">
-                              <span className="rounded-full border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-3 py-1 text-[color:var(--tc-text-muted)]">
+                              <span className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1 text-(--tc-text-muted)">
                                 {(effectivePermissions[activeModule.id] ?? []).length} ativas
                               </span>
-                              <span className="rounded-full border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.06)] px-3 py-1 text-[color:var(--tc-primary)]">
+                              <span className="rounded-full border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.06)] px-3 py-1 text-(--tc-primary)">
                                 {activeModule.actions.length} ações
                               </span>
                             </div>
@@ -1521,21 +1488,21 @@ export default function PermissionsPage() {
                               return (
                                 <label
                                   key={`${activeModule.id}:${action}`}
-                                  className={`flex flex-col items-start gap-2 rounded-[16px] border px-3 py-2.5 transition sm:flex-row sm:items-center sm:justify-between ${
+                                  className={`flex flex-col items-start gap-2 rounded-2xl border px-3 py-2.5 transition sm:flex-row sm:items-center sm:justify-between ${
                                     checked
                                       ? "border-[rgba(1,24,72,0.16)] bg-[rgba(1,24,72,0.04)] shadow-[0_12px_24px_rgba(1,24,72,0.06)]"
-                                      : "border-[color:var(--tc-border)] bg-[color:var(--tc-surface)]"
+                                      : "border-(--tc-border) bg-(--tc-surface)"
                                   }`}
                                 >
                                   <div className="min-w-0">
                                     <div className="flex flex-wrap items-center gap-2">
-                                      <span className={`h-2.5 w-2.5 rounded-full ${checked ? "bg-[color:var(--tc-accent)]" : "bg-[color:var(--tc-border)]"}`} />
-                                      <span className="text-sm font-medium text-[color:var(--tc-text-primary)]">{getActionLabel(action)}</span>
+                                      <span className={`h-2.5 w-2.5 rounded-full ${checked ? "bg-(--tc-accent)" : "bg-(--tc-border)"}`} />
+                                      <span className="text-sm font-medium text-(--tc-text-primary)">{getActionLabel(action)}</span>
                                       <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${toneForOverride(overrideState)}`}>
                                         {badgeLabel(overrideState)}
                                       </span>
                                     </div>
-                                    <p className="mt-1 text-xs leading-5 text-[color:var(--tc-text-secondary)]">
+                                    <p className="mt-1 text-xs leading-5 text-(--tc-text-secondary)">
                                       {activeModule.label} - {getActionLabel(action)}
                                     </p>
                                   </div>
@@ -1548,8 +1515,7 @@ export default function PermissionsPage() {
                                         toggleOverride(roleDefaultsPreview, current, activeModule.id, action, event.target.checked),
                                       )
                                     }
-                                    className="h-4 w-4 rounded border-[color:var(--tc-border)] self-end sm:self-auto"
-                                    style={{ accentColor: "var(--tc-accent)" }}
+                                    className="h-4 w-4 rounded border-(--tc-border) self-end sm:self-auto accent-(--tc-accent)"
                                   />
                                 </label>
                               );
@@ -1559,7 +1525,7 @@ export default function PermissionsPage() {
                       </section>
                     )}
                   </div>
-                  <div className="border-t border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] px-4 py-3 sm:px-5">
+                  <div className="border-t border-(--tc-border) bg-(--tc-surface) px-4 py-3 sm:px-5">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div
                         className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
@@ -1574,8 +1540,7 @@ export default function PermissionsPage() {
                         type="button"
                         onClick={() => void handleSave()}
                         disabled={saving || panelLoading || !hasDraftChanges || (roleNeedsCompany(profileDraft) && !companyDraft)}
-                        className="inline-flex items-center justify-center gap-2 rounded-[16px] px-4 py-2.5 text-sm font-medium text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(239,0,1,0.18)] disabled:opacity-60"
-                        style={{ background: "linear-gradient(135deg, var(--tc-accent) 0%, var(--tc-accent-hover) 100%)" }}
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-medium text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(239,0,1,0.18)] disabled:opacity-60 [background:linear-gradient(135deg,var(--tc-accent)_0%,var(--tc-accent-hover)_100%)]"
                       >
                         <FiSave size={16} />
                         {saving ? "Salvando..." : "Salvar alterações"}
@@ -1604,7 +1569,7 @@ export default function PermissionsPage() {
                 setCreateGlobalOpen(false);
                 resetCreateGlobalForm();
               }}
-              className="inline-flex items-center justify-center rounded-[16px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] px-4 py-2.5 text-sm font-medium text-[color:var(--tc-text-primary)] transition hover:bg-[color:var(--tc-surface)]"
+              className="inline-flex items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 py-2.5 text-sm font-medium text-(--tc-text-primary) transition hover:bg-(--tc-surface)"
             >
               Cancelar
             </button>
@@ -1612,7 +1577,7 @@ export default function PermissionsPage() {
               type="button"
               onClick={() => void handleCreateGlobal()}
               disabled={createGlobalLoading}
-              className="inline-flex items-center justify-center rounded-[16px] bg-[color:var(--tc-accent)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-2xl bg-(--tc-accent) px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
             >
               {createGlobalLoading ? "Criando..." : "Criar Global"}
             </button>
@@ -1621,49 +1586,49 @@ export default function PermissionsPage() {
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="space-y-2 sm:col-span-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Nome completo</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Nome completo</span>
             <input
               value={createGlobalDraft.fullName}
               onChange={(event) => setCreateGlobalDraft((current) => ({ ...current, fullName: event.target.value }))}
-              className="w-full rounded-[16px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-3 py-2.5 text-sm text-[color:var(--tc-text-primary)] outline-none focus:border-[color:var(--tc-accent)]"
+              className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2.5 text-sm text-(--tc-text-primary) outline-none focus:border-(--tc-accent)"
               placeholder="Nome completo"
             />
           </label>
           <label className="space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Usuario</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Usuario</span>
             <input
               value={createGlobalDraft.user}
               onChange={(event) => setCreateGlobalDraft((current) => ({ ...current, user: event.target.value }))}
-              className="w-full rounded-[16px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-3 py-2.5 text-sm text-[color:var(--tc-text-primary)] outline-none focus:border-[color:var(--tc-accent)]"
+              className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2.5 text-sm text-(--tc-text-primary) outline-none focus:border-(--tc-accent)"
               placeholder="login.global"
             />
           </label>
           <label className="space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">E-mail</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">E-mail</span>
             <input
               type="email"
               value={createGlobalDraft.email}
               onChange={(event) => setCreateGlobalDraft((current) => ({ ...current, email: event.target.value }))}
-              className="w-full rounded-[16px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-3 py-2.5 text-sm text-[color:var(--tc-text-primary)] outline-none focus:border-[color:var(--tc-accent)]"
+              className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2.5 text-sm text-(--tc-text-primary) outline-none focus:border-(--tc-accent)"
               placeholder="global@testingcompany.test"
             />
           </label>
           <label className="space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Telefone</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Telefone</span>
             <input
               value={createGlobalDraft.phone}
               onChange={(event) => setCreateGlobalDraft((current) => ({ ...current, phone: event.target.value }))}
-              className="w-full rounded-[16px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-3 py-2.5 text-sm text-[color:var(--tc-text-primary)] outline-none focus:border-[color:var(--tc-accent)]"
+              className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2.5 text-sm text-(--tc-text-primary) outline-none focus:border-(--tc-accent)"
               placeholder="+55 11 99999-9999"
             />
           </label>
           <label className="space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Senha</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Senha</span>
             <input
               type="password"
               value={createGlobalDraft.password}
               onChange={(event) => setCreateGlobalDraft((current) => ({ ...current, password: event.target.value }))}
-              className="w-full rounded-[16px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-3 py-2.5 text-sm text-[color:var(--tc-text-primary)] outline-none focus:border-[color:var(--tc-accent)]"
+              className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2.5 text-sm text-(--tc-text-primary) outline-none focus:border-(--tc-accent)"
               placeholder="Minimo de 8 caracteres"
               autoComplete="new-password"
             />
@@ -1671,7 +1636,7 @@ export default function PermissionsPage() {
         </div>
 
         {createGlobalError ? (
-          <div className="rounded-[18px] border border-[rgba(239,0,1,0.16)] bg-[rgba(239,0,1,0.08)] px-4 py-3 text-sm text-[color:var(--tc-accent)]">
+          <div className="rounded-[18px] border border-[rgba(239,0,1,0.16)] bg-[rgba(239,0,1,0.08)] px-4 py-3 text-sm text-(--tc-accent)">
             {createGlobalError}
           </div>
         ) : null}
@@ -1690,14 +1655,14 @@ export default function PermissionsPage() {
             <button
               type="button"
               onClick={() => setProfileComparisonOpen(false)}
-              className="inline-flex items-center justify-center rounded-[16px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] px-4 py-2.5 text-sm font-medium text-[color:var(--tc-text-primary)] transition hover:bg-[color:var(--tc-surface)]"
+              className="inline-flex items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 py-2.5 text-sm font-medium text-(--tc-text-primary) transition hover:bg-(--tc-surface)"
             >
               Cancelar
             </button>
             <button
               type="button"
               onClick={confirmProfileChange}
-              className="inline-flex items-center justify-center rounded-[16px] bg-[color:var(--tc-accent)] px-4 py-2.5 text-sm font-semibold text-white"
+              className="inline-flex items-center justify-center rounded-2xl bg-(--tc-accent) px-4 py-2.5 text-sm font-semibold text-white"
             >
               Confirmar alteração
             </button>
@@ -1705,51 +1670,50 @@ export default function PermissionsPage() {
         }
       >
         <div
-          className="rounded-[24px] border border-[rgba(239,0,1,0.18)] px-5 py-4"
-          style={{ background: "linear-gradient(135deg, rgba(239,0,1,0.08), rgba(1,24,72,0.04))" }}
+          className="rounded-3xl border border-[rgba(239,0,1,0.18)] px-5 py-4 [background:linear-gradient(135deg,rgba(239,0,1,0.08),rgba(1,24,72,0.04))]"
         >
-          <div className="text-lg font-semibold text-[color:var(--tc-text-primary)]">A troca de perfil redefine a base do usuário.</div>
-          <p className="mt-2 text-sm leading-6 text-[color:var(--tc-text-secondary)]">
+          <div className="text-lg font-semibold text-(--tc-text-primary)">A troca de perfil redefine a base do usuário.</div>
+          <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary)">
             Ao confirmar esta alteração, o perfil selecionado substituirá o perfil atual. Permissões e dados vinculados ao perfil de origem podem deixar de existir ou não ser recuperáveis.
           </p>
         </div>
 
         <div className="grid gap-3 lg:grid-cols-[220px_220px_minmax(0,1fr)_minmax(0,1fr)]">
-          <div className="rounded-[20px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Perfil atual</div>
-            <div className="mt-2 text-base font-semibold text-[color:var(--tc-text-primary)]">{roleLabel(profileDraft)}</div>
+          <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Perfil atual</div>
+            <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{roleLabel(profileDraft)}</div>
           </div>
           <div className="rounded-[20px] border border-[rgba(239,0,1,0.14)] bg-[rgba(239,0,1,0.06)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Novo perfil</div>
-            <div className="mt-2 text-base font-semibold text-[color:var(--tc-text-primary)]">{roleLabel(profileModalRole)}</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Novo perfil</div>
+            <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{roleLabel(profileModalRole)}</div>
           </div>
           <div className="rounded-[20px] border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.05)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Permissões atuais</div>
-            <div className="mt-2 text-sm font-semibold text-[color:var(--tc-text-primary)]">{profileChangePreview.currentCount} permissões</div>
-            <div className="mt-1 text-xs leading-5 text-[color:var(--tc-text-secondary)]">{roleHint(profileDraft)}</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Permissões atuais</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{profileChangePreview.currentCount} permissões</div>
+            <div className="mt-1 text-xs leading-5 text-(--tc-text-secondary)">{roleHint(profileDraft)}</div>
           </div>
           <div className="rounded-[20px] border border-[rgba(239,0,1,0.14)] bg-[rgba(239,0,1,0.06)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Permissões do novo perfil</div>
-            <div className="mt-2 text-sm font-semibold text-[color:var(--tc-text-primary)]">{profileChangePreview.nextCount} permissões</div>
-            <div className="mt-1 text-xs leading-5 text-[color:var(--tc-text-secondary)]">{roleHint(profileModalRole)}</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Permissões do novo perfil</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{profileChangePreview.nextCount} permissões</div>
+            <div className="mt-1 text-xs leading-5 text-(--tc-text-secondary)">{roleHint(profileModalRole)}</div>
           </div>
         </div>
 
         <div className="grid gap-4 xl:grid-cols-2">
-          <section className="rounded-[24px] border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.04)]">
+          <section className="rounded-3xl border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.04)]">
             <div className="border-b border-[rgba(1,24,72,0.08)] px-5 py-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Perfil atual</div>
-              <div className="mt-2 text-base font-semibold text-[color:var(--tc-text-primary)]">{roleLabel(profileDraft)}</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Perfil atual</div>
+              <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{roleLabel(profileDraft)}</div>
             </div>
             <ScrollArea className="max-h-[44vh]" viewportClassName="p-4 pr-5 pb-5">
               <div className="space-y-3">
                 {currentRoleModules.map((module) => (
                   <div key={`current-${module.id}`} className="rounded-[18px] border border-[rgba(1,24,72,0.1)] bg-white/60 px-4 py-3">
-                    <div className="text-sm font-semibold text-[color:var(--tc-text-primary)]">{module.label}</div>
-                    <div className="mt-1 text-xs leading-5 text-[color:var(--tc-text-secondary)]">{module.description}</div>
+                    <div className="text-sm font-semibold text-(--tc-text-primary)">{module.label}</div>
+                    <div className="mt-1 text-xs leading-5 text-(--tc-text-secondary)">{module.description}</div>
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {module.actions.map((action) => (
-                        <span key={`current-${module.id}-${action}`} className="rounded-full border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.06)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--tc-primary)]">
+                        <span key={`current-${module.id}-${action}`} className="rounded-full border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.06)] px-2.5 py-1 text-[11px] font-semibold text-(--tc-primary)">
                           {getActionLabel(action)}
                         </span>
                       ))}
@@ -1760,20 +1724,20 @@ export default function PermissionsPage() {
             </ScrollArea>
           </section>
 
-          <section className="rounded-[24px] border border-[rgba(239,0,1,0.14)] bg-[rgba(239,0,1,0.05)]">
+          <section className="rounded-3xl border border-[rgba(239,0,1,0.14)] bg-[rgba(239,0,1,0.05)]">
             <div className="border-b border-[rgba(239,0,1,0.08)] px-5 py-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Novo perfil</div>
-              <div className="mt-2 text-base font-semibold text-[color:var(--tc-text-primary)]">{roleLabel(profileModalRole)}</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Novo perfil</div>
+              <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{roleLabel(profileModalRole)}</div>
             </div>
             <ScrollArea className="max-h-[44vh]" viewportClassName="p-4 pr-5 pb-5">
               <div className="space-y-3">
                 {nextRoleModules.map((module) => (
                   <div key={`next-${module.id}`} className="rounded-[18px] border border-[rgba(239,0,1,0.12)] bg-white/70 px-4 py-3">
-                    <div className="text-sm font-semibold text-[color:var(--tc-text-primary)]">{module.label}</div>
-                    <div className="mt-1 text-xs leading-5 text-[color:var(--tc-text-secondary)]">{module.description}</div>
+                    <div className="text-sm font-semibold text-(--tc-text-primary)">{module.label}</div>
+                    <div className="mt-1 text-xs leading-5 text-(--tc-text-secondary)">{module.description}</div>
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {module.actions.map((action) => (
-                        <span key={`next-${module.id}-${action}`} className="rounded-full border border-[rgba(239,0,1,0.12)] bg-[rgba(239,0,1,0.06)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--tc-accent)]">
+                        <span key={`next-${module.id}-${action}`} className="rounded-full border border-[rgba(239,0,1,0.12)] bg-[rgba(239,0,1,0.06)] px-2.5 py-1 text-[11px] font-semibold text-(--tc-accent)">
                           {getActionLabel(action)}
                         </span>
                       ))}
@@ -1786,18 +1750,18 @@ export default function PermissionsPage() {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-[20px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Perde na troca</div>
-            <div className="mt-2 text-sm font-semibold text-[color:var(--tc-text-primary)]">{profileChangePreview.lostCount} permissões</div>
+          <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Perde na troca</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{profileChangePreview.lostCount} permissões</div>
             {profileChangePreview.lostPreview.length > 0 && (
-              <div className="mt-2 text-xs leading-5 text-[color:var(--tc-text-secondary)]">{profileChangePreview.lostPreview.join(" | ")}</div>
+              <div className="mt-2 text-xs leading-5 text-(--tc-text-secondary)">{profileChangePreview.lostPreview.join(" | ")}</div>
             )}
           </div>
-          <div className="rounded-[20px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Ganha na troca</div>
-            <div className="mt-2 text-sm font-semibold text-[color:var(--tc-text-primary)]">{profileChangePreview.gainedCount} permissões</div>
+          <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Ganha na troca</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{profileChangePreview.gainedCount} permissões</div>
             {profileChangePreview.gainedPreview.length > 0 && (
-              <div className="mt-2 text-xs leading-5 text-[color:var(--tc-text-secondary)]">{profileChangePreview.gainedPreview.join(" | ")}</div>
+              <div className="mt-2 text-xs leading-5 text-(--tc-text-secondary)">{profileChangePreview.gainedPreview.join(" | ")}</div>
             )}
           </div>
           <div className="rounded-[20px] border border-[rgba(245,158,11,0.28)] bg-[rgba(245,158,11,0.12)] px-4 py-3">
@@ -1829,7 +1793,7 @@ export default function PermissionsPage() {
                 setProfileRequirementsOpen(false);
                 setProfileComparisonOpen(true);
               }}
-              className="inline-flex items-center justify-center rounded-[16px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] px-4 py-2.5 text-sm font-medium text-[color:var(--tc-text-primary)] transition hover:bg-[color:var(--tc-surface)]"
+              className="inline-flex items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 py-2.5 text-sm font-medium text-(--tc-text-primary) transition hover:bg-(--tc-surface)"
             >
               Voltar
             </button>
@@ -1837,7 +1801,7 @@ export default function PermissionsPage() {
               type="button"
               onClick={confirmProfileRequirements}
               disabled={!profileModalCompany}
-              className="inline-flex items-center justify-center rounded-[16px] bg-[color:var(--tc-accent)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-2xl bg-(--tc-accent) px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
             >
               Concluir mudança
             </button>
@@ -1845,13 +1809,13 @@ export default function PermissionsPage() {
         }
       >
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-[20px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Perfil atual</div>
-            <div className="mt-2 text-sm font-semibold text-[color:var(--tc-text-primary)]">{roleLabel(profileDraft)}</div>
+          <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Perfil atual</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{roleLabel(profileDraft)}</div>
           </div>
           <div className="rounded-[20px] border border-[rgba(239,0,1,0.14)] bg-[rgba(239,0,1,0.06)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Novo perfil</div>
-            <div className="mt-2 text-sm font-semibold text-[color:var(--tc-text-primary)]">{roleLabel(profileModalRole)}</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Novo perfil</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{roleLabel(profileModalRole)}</div>
           </div>
         </div>
 
@@ -1860,7 +1824,7 @@ export default function PermissionsPage() {
         </div>
 
         <label className="space-y-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--tc-text-muted)]">Empresa principal</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Empresa principal</span>
           <Select value={profileModalCompany} onValueChange={setProfileModalCompany}>
             <SelectTrigger>
               <SelectValue placeholder="Selecione a empresa obrigatória" />
@@ -1875,8 +1839,8 @@ export default function PermissionsPage() {
           </Select>
         </label>
 
-        {companiesLoading && <p className="text-xs text-[color:var(--tc-text-muted)]">Carregando empresas...</p>}
-        {companiesError && <p className="text-xs text-[color:var(--tc-accent)]">{friendlyUiError(companiesError, "Não foi possível carregar as empresas agora.")}</p>}
+        {companiesLoading && <p className="text-xs text-(--tc-text-muted)">Carregando empresas...</p>}
+        {companiesError && <p className="text-xs text-(--tc-accent)">{friendlyUiError(companiesError, "Não foi possível carregar as empresas agora.")}</p>}
       </SurfaceModal>
 
       <SurfaceModal
@@ -1890,7 +1854,7 @@ export default function PermissionsPage() {
           <button
             type="button"
             onClick={() => setPermissionsViewerOpen(false)}
-            className="inline-flex items-center justify-center rounded-[16px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] px-4 py-2.5 text-sm font-medium text-[color:var(--tc-text-primary)] transition hover:bg-[color:var(--tc-surface)]"
+            className="inline-flex items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 py-2.5 text-sm font-medium text-(--tc-text-primary) transition hover:bg-(--tc-surface)"
           >
             Fechar
           </button>
@@ -1898,23 +1862,22 @@ export default function PermissionsPage() {
       >
         <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div
-            className="rounded-[26px] border border-[color:var(--tc-border)] px-5 py-5 sm:px-6"
-            style={{ background: "linear-gradient(135deg, rgba(1,24,72,0.06), rgba(1,24,72,0.02))" }}
+            className="rounded-[26px] border border-(--tc-border) px-5 py-5 sm:px-6 [background:linear-gradient(135deg,rgba(1,24,72,0.06),rgba(1,24,72,0.02))]"
           >
             <div className="flex items-start gap-4">
               <AvatarIdentity user={selectedUser} size="lg" />
               <div className="min-w-0">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Usuario</div>
-                <div className="mt-1 text-xl font-semibold text-[color:var(--tc-text-primary)]">{getDisplayName(selectedUser)}</div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Usuario</div>
+                <div className="mt-1 text-xl font-semibold text-(--tc-text-primary)">{getDisplayName(selectedUser)}</div>
                 {getUserSecondaryLabel(selectedUser) ? (
-                  <div className="mt-1 text-sm text-[color:var(--tc-text-secondary)]">{getUserSecondaryLabel(selectedUser)}</div>
+                  <div className="mt-1 text-sm text-(--tc-text-secondary)">{getUserSecondaryLabel(selectedUser)}</div>
                 ) : null}
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <span className="rounded-full border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.06)] px-3 py-1 text-xs font-semibold text-[color:var(--tc-primary)]">
+                  <span className="rounded-full border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.06)] px-3 py-1 text-xs font-semibold text-(--tc-primary)">
                     {roleLabel(profileDraft)}
                   </span>
                   <span
-                    className="rounded-full border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] px-3 py-1 text-xs font-semibold text-[color:var(--tc-text-secondary)]"
+                    className="rounded-full border border-(--tc-border) bg-(--tc-surface) px-3 py-1 text-xs font-semibold text-(--tc-text-secondary)"
                     title={draftCompanyLabel}
                   >
                     {draftCompanyLabel}
@@ -1925,37 +1888,37 @@ export default function PermissionsPage() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-            <div className="rounded-[22px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-4">
-              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--tc-text-muted)]">
+            <div className="rounded-[22px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-4">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">
                 <FiGrid size={13} />
                 Modulos
               </div>
-              <div className="mt-3 text-2xl font-semibold text-[color:var(--tc-text-primary)]">{totalActiveModules}</div>
+              <div className="mt-3 text-2xl font-semibold text-(--tc-text-primary)">{totalActiveModules}</div>
             </div>
-            <div className="rounded-[22px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-4">
-              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--tc-text-muted)]">
+            <div className="rounded-[22px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-4">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">
                 <FiShield size={13} />
                 Permissoes
               </div>
-              <div className="mt-3 text-2xl font-semibold text-[color:var(--tc-text-primary)]">{totalActiveActions}</div>
+              <div className="mt-3 text-2xl font-semibold text-(--tc-text-primary)">{totalActiveActions}</div>
             </div>
-            <div className="rounded-[22px] border border-[rgba(1,24,72,0.14)] bg-[color:var(--tc-surface)] px-4 py-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--tc-text-muted)]">Ajustes manuais</div>
-              <div className="mt-3 text-2xl font-semibold text-[color:var(--tc-text-primary)]">{customAllowCount + customDenyCount}</div>
-              <div className="mt-2 text-xs font-medium text-[color:var(--tc-text-secondary)]">
+            <div className="rounded-[22px] border border-[rgba(1,24,72,0.14)] bg-(--tc-surface) px-4 py-4">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Ajustes manuais</div>
+              <div className="mt-3 text-2xl font-semibold text-(--tc-text-primary)">{customAllowCount + customDenyCount}</div>
+              <div className="mt-2 text-xs font-medium text-(--tc-text-secondary)">
                 +{customAllowCount} liberadas / -{customDenyCount} bloqueadas
               </div>
             </div>
           </div>
         </section>
 
-        <section className="rounded-[26px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)]">
-          <div className="flex flex-col gap-3 border-b border-[color:var(--tc-border)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <section className="rounded-[26px] border border-(--tc-border) bg-(--tc-surface)">
+          <div className="flex flex-col gap-3 border-b border-(--tc-border) px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <div>
-              <div className="text-lg font-semibold text-[color:var(--tc-text-primary)]">Acessos por modulo</div>
-              <div className="mt-1 text-sm text-[color:var(--tc-text-secondary)]">Leitura direta dos modulos liberados no estado atual.</div>
+              <div className="text-lg font-semibold text-(--tc-text-primary)">Acessos por modulo</div>
+              <div className="mt-1 text-sm text-(--tc-text-secondary)">Leitura direta dos modulos liberados no estado atual.</div>
             </div>
-            <div className="rounded-full border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-3 py-1.5 text-xs font-semibold text-[color:var(--tc-text-muted)]">
+            <div className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1.5 text-xs font-semibold text-(--tc-text-muted)">
               {effectiveModuleGroups.length} categorias
             </div>
           </div>
@@ -1965,8 +1928,8 @@ export default function PermissionsPage() {
                 {effectiveModuleGroups.map((group) => (
                   <section key={`viewer-group-${group.category}`} className="space-y-3">
                     <div className="flex items-center justify-between gap-3">
-                      <div className="text-base font-semibold text-[color:var(--tc-text-primary)]">{group.category}</div>
-                      <div className="rounded-full border border-[rgba(1,24,72,0.1)] bg-[rgba(1,24,72,0.05)] px-3 py-1.5 text-xs font-semibold text-[color:var(--tc-primary)]">
+                      <div className="text-base font-semibold text-(--tc-text-primary)">{group.category}</div>
+                      <div className="rounded-full border border-[rgba(1,24,72,0.1)] bg-[rgba(1,24,72,0.05)] px-3 py-1.5 text-xs font-semibold text-(--tc-primary)">
                         {group.actionsCount} permissoes
                       </div>
                     </div>
@@ -1975,13 +1938,13 @@ export default function PermissionsPage() {
                       {group.modules.map((module) => (
                         <article
                           key={`viewer-${group.category}-${module.id}`}
-                          className="rounded-[22px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]"
+                          className="rounded-[22px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]"
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0">
-                              <div className="text-base font-semibold text-[color:var(--tc-text-primary)]">{module.label}</div>
+                              <div className="text-base font-semibold text-(--tc-text-primary)">{module.label}</div>
                             </div>
-                            <div className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-2xl border border-[rgba(1,24,72,0.12)] bg-[color:var(--tc-surface)] px-3 text-sm font-semibold text-[color:var(--tc-primary)]">
+                            <div className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-2xl border border-[rgba(1,24,72,0.12)] bg-(--tc-surface) px-3 text-sm font-semibold text-(--tc-primary)">
                               {module.actions.length}
                             </div>
                           </div>
@@ -1989,7 +1952,7 @@ export default function PermissionsPage() {
                             {module.actions.map((action) => (
                               <span
                                 key={`viewer-${module.id}-${action}`}
-                                className="rounded-full border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.06)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--tc-primary)]"
+                                className="rounded-full border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.06)] px-2.5 py-1 text-[11px] font-semibold text-(--tc-primary)"
                               >
                                 {getActionLabel(action)}
                               </span>
@@ -2002,9 +1965,9 @@ export default function PermissionsPage() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-[22px] border border-dashed border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-8 text-center">
-                <div className="text-base font-semibold text-[color:var(--tc-text-primary)]">Nenhuma permissão ativa encontrada</div>
-                <p className="mt-2 text-sm leading-6 text-[color:var(--tc-text-secondary)]">
+              <div className="rounded-[22px] border border-dashed border-(--tc-border) bg-(--tc-surface-2) px-4 py-8 text-center">
+                <div className="text-base font-semibold text-(--tc-text-primary)">Nenhuma permissão ativa encontrada</div>
+                <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary)">
                   Revise o perfil base e as personalizações aplicadas para liberar acesso a algum módulo.
                 </p>
               </div>
@@ -2026,14 +1989,14 @@ export default function PermissionsPage() {
             <button
               type="button"
               onClick={() => setRestoreModalOpen(false)}
-              className="inline-flex items-center justify-center rounded-[16px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] px-4 py-2.5 text-sm font-medium text-[color:var(--tc-text-primary)] transition hover:bg-[color:var(--tc-surface)]"
+              className="inline-flex items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 py-2.5 text-sm font-medium text-(--tc-text-primary) transition hover:bg-(--tc-surface)"
             >
               Cancelar
             </button>
             <button
               type="button"
               onClick={handleResetDraft}
-              className="inline-flex items-center justify-center rounded-[16px] bg-[color:var(--tc-accent)] px-4 py-2.5 text-sm font-semibold text-white"
+              className="inline-flex items-center justify-center rounded-2xl bg-(--tc-accent) px-4 py-2.5 text-sm font-semibold text-white"
             >
               Confirmar restauração
             </button>
@@ -2041,56 +2004,55 @@ export default function PermissionsPage() {
         }
       >
         <div
-          className="rounded-[24px] border border-[rgba(239,0,1,0.18)] px-5 py-4"
-          style={{ background: "linear-gradient(135deg, rgba(239,0,1,0.08), rgba(1,24,72,0.04))" }}
+          className="rounded-3xl border border-[rgba(239,0,1,0.18)] px-5 py-4 [background:linear-gradient(135deg,rgba(239,0,1,0.08),rgba(1,24,72,0.04))]"
         >
-          <div className="text-lg font-semibold text-[color:var(--tc-text-primary)]">A restauração substitui o estado atual da edição.</div>
-          <p className="mt-2 text-sm leading-6 text-[color:var(--tc-text-secondary)]">
+          <div className="text-lg font-semibold text-(--tc-text-primary)">A restauração substitui o estado atual da edição.</div>
+          <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary)">
             Ao confirmar, o sistema remove personalizações que não pertencem ao perfil de origem salvo e recalcula o contexto operacional do usuário. Revise o impacto em perfil, vínculo e permissões antes de continuar.
           </p>
         </div>
 
         <div className="grid gap-3 lg:grid-cols-[220px_220px_minmax(0,1fr)_minmax(0,1fr)]">
-          <div className="rounded-[20px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Perfil atual</div>
-            <div className="mt-2 text-base font-semibold text-[color:var(--tc-text-primary)]">{roleLabel(profileDraft)}</div>
+          <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Perfil atual</div>
+            <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{roleLabel(profileDraft)}</div>
           </div>
           <div className="rounded-[20px] border border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.08)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Após restaurar</div>
-            <div className="mt-2 text-base font-semibold text-[color:var(--tc-text-primary)]">{roleLabel(originalRole)}</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Após restaurar</div>
+            <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{roleLabel(originalRole)}</div>
           </div>
-          <div className="rounded-[20px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface-2)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Vínculo atual</div>
-            <div className="mt-2 text-sm font-semibold text-[color:var(--tc-text-primary)]">
+          <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Vínculo atual</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">
               {resetCurrentCompanyLabel}
             </div>
           </div>
           <div className="rounded-[20px] border border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.08)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Vínculo restaurado</div>
-            <div className="mt-2 text-sm font-semibold text-[color:var(--tc-text-primary)]">{resetTargetCompanyLabel}</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Vínculo restaurado</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{resetTargetCompanyLabel}</div>
           </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-[20px] border border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.08)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Base atual</div>
-            <div className="mt-2 text-sm font-semibold text-[color:var(--tc-text-primary)]">{resetPreview.currentCount} permissões ativas</div>
-            <div className="mt-1 text-xs leading-5 text-[color:var(--tc-text-secondary)]">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Base atual</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{resetPreview.currentCount} permissões ativas</div>
+            <div className="mt-1 text-xs leading-5 text-(--tc-text-secondary)">
               {resetWillChangeRole
                 ? `A edição atual está operando como ${roleLabel(profileDraft)}.`
                 : `A edição atual segue a base ${roleLabel(profileDraft)}.`}
             </div>
           </div>
           <div className="rounded-[20px] border border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.08)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Origem restaurada</div>
-            <div className="mt-2 text-sm font-semibold text-[color:var(--tc-text-primary)]">{resetPreview.nextCount} permissões padrão</div>
-            <div className="mt-1 text-xs leading-5 text-[color:var(--tc-text-secondary)]">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Origem restaurada</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{resetPreview.nextCount} permissões padrão</div>
+            <div className="mt-1 text-xs leading-5 text-(--tc-text-secondary)">
               {`A base salva volta para ${roleLabel(originalRole)} sem personalizações manuais.`}
             </div>
           </div>
           <div className="rounded-[20px] border border-[rgba(245,158,11,0.28)] bg-[rgba(245,158,11,0.12)] px-4 py-3">
             <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#92400e]">Impacto da restauração</div>
-            <div className="mt-2 text-sm font-semibold text-[color:var(--tc-text-primary)]">
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">
               {resetWillChangeRole || resetWillChangeCompany ? "Perfil ou vínculo serão alterados" : "Base e vínculo já estão alinhados"}
             </div>
             <div className="mt-1 text-xs leading-5 text-[#a16207]">
@@ -2102,19 +2064,19 @@ export default function PermissionsPage() {
         </div>
 
         <div className="grid gap-4 xl:grid-cols-2">
-          <section className="rounded-[24px] border border-[rgba(239,0,1,0.14)] bg-[rgba(239,0,1,0.05)]">
+          <section className="rounded-3xl border border-[rgba(239,0,1,0.14)] bg-[rgba(239,0,1,0.05)]">
             <div className="border-b border-[rgba(239,0,1,0.08)] px-5 py-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Atual</div>
-              <div className="mt-2 text-base font-semibold text-[color:var(--tc-text-primary)]">{roleLabel(profileDraft)}</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Atual</div>
+              <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{roleLabel(profileDraft)}</div>
             </div>
             <ScrollArea className="max-h-[38vh]" viewportClassName="p-4 pr-5 pb-5">
               <div className="space-y-3">
                 {effectiveModuleSummary.map((module) => (
                   <div key={`restore-current-${module.id}`} className="rounded-[18px] border border-[rgba(239,0,1,0.12)] bg-white/70 px-4 py-3">
-                    <div className="text-sm font-semibold text-[color:var(--tc-text-primary)]">{module.label}</div>
+                    <div className="text-sm font-semibold text-(--tc-text-primary)">{module.label}</div>
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {module.actions.map((action) => (
-                        <span key={`restore-current-${module.id}-${action}`} className="rounded-full border border-[rgba(239,0,1,0.12)] bg-[rgba(239,0,1,0.06)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--tc-accent)]">
+                        <span key={`restore-current-${module.id}-${action}`} className="rounded-full border border-[rgba(239,0,1,0.12)] bg-[rgba(239,0,1,0.06)] px-2.5 py-1 text-[11px] font-semibold text-(--tc-accent)">
                           {getActionLabel(action)}
                         </span>
                       ))}
@@ -2125,16 +2087,16 @@ export default function PermissionsPage() {
             </ScrollArea>
           </section>
 
-          <section className="rounded-[24px] border border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.06)]">
+          <section className="rounded-3xl border border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.06)]">
             <div className="border-b border-[rgba(16,185,129,0.12)] px-5 py-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Padrão restaurado</div>
-              <div className="mt-2 text-base font-semibold text-[color:var(--tc-text-primary)]">{roleLabel(originalRole)}</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Padrão restaurado</div>
+              <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{roleLabel(originalRole)}</div>
             </div>
             <ScrollArea className="max-h-[38vh]" viewportClassName="p-4 pr-5 pb-5">
               <div className="space-y-3">
                 {resetTargetModules.map((module) => (
                   <div key={`restore-next-${module.id}`} className="rounded-[18px] border border-[rgba(16,185,129,0.16)] bg-white/80 px-4 py-3">
-                    <div className="text-sm font-semibold text-[color:var(--tc-text-primary)]">{module.label}</div>
+                    <div className="text-sm font-semibold text-(--tc-text-primary)">{module.label}</div>
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {module.actions.map((action) => (
                         <span key={`restore-next-${module.id}-${action}`} className="rounded-full border border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.08)] px-2.5 py-1 text-[11px] font-semibold text-[#047857]">
@@ -2151,21 +2113,21 @@ export default function PermissionsPage() {
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-[20px] border border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.08)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Em vermelho: será removido</div>
-            <div className="mt-2 text-sm font-semibold text-[color:var(--tc-text-primary)]">{resetPreview.lostCount} permissões</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Em vermelho: será removido</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{resetPreview.lostCount} permissões</div>
             {resetPreview.lostPreview.length > 0 ? (
-              <div className="mt-2 text-xs leading-5 text-[color:var(--tc-text-secondary)]">{resetPreview.lostPreview.join(" | ")}</div>
+              <div className="mt-2 text-xs leading-5 text-(--tc-text-secondary)">{resetPreview.lostPreview.join(" | ")}</div>
             ) : (
-              <div className="mt-2 text-xs leading-5 text-[color:var(--tc-text-secondary)]">Nenhuma permissão fora da origem atual será perdida.</div>
+              <div className="mt-2 text-xs leading-5 text-(--tc-text-secondary)">Nenhuma permissão fora da origem atual será perdida.</div>
             )}
           </div>
           <div className="rounded-[20px] border border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.08)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">Em verde: volta ao padrão</div>
-            <div className="mt-2 text-sm font-semibold text-[color:var(--tc-text-primary)]">{resetPreview.gainedCount} permissões</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Em verde: volta ao padrão</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{resetPreview.gainedCount} permissões</div>
             {resetPreview.gainedPreview.length > 0 ? (
-              <div className="mt-2 text-xs leading-5 text-[color:var(--tc-text-secondary)]">{resetPreview.gainedPreview.join(" | ")}</div>
+              <div className="mt-2 text-xs leading-5 text-(--tc-text-secondary)">{resetPreview.gainedPreview.join(" | ")}</div>
             ) : (
-              <div className="mt-2 text-xs leading-5 text-[color:var(--tc-text-secondary)]">O padrão já está alinhado com o que a origem exige.</div>
+              <div className="mt-2 text-xs leading-5 text-(--tc-text-secondary)">O padrão já está alinhado com o que a origem exige.</div>
             )}
           </div>
         </div>

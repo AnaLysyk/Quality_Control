@@ -15,8 +15,10 @@ import {
 } from "@/lib/auth/localStore";
 import { isAvatarKey } from "@/lib/avatarCatalog";
 import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
+import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 
 export const runtime = "nodejs";
+export const revalidate = 0;
 
 const AVATAR_BASE_DIR = path.join(process.cwd(), "data", "s3");
 
@@ -124,7 +126,7 @@ export async function GET(req: Request) {
       isGlobalAdmin: access.isGlobalAdmin === true,
     },
     companies: companiesResponse,
-  });
+  }, { headers: NO_STORE_HEADERS });
 }
 
 function sanitizeText(value: unknown, max = 255): string | null {

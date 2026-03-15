@@ -8,6 +8,7 @@ import { deleteLocalCompany, listLocalCompanies, updateLocalCompany, type LocalA
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export const runtime = "nodejs";
+export const revalidate = 0;
 
 const jsonError = (message: string, status: number) =>
   NextResponse.json(ErrorResponseSchema.parse({ error: message }), { status });

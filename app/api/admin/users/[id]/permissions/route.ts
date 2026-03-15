@@ -6,6 +6,8 @@ import { notifyUserAccessUpdated } from '@/lib/notificationService';
 import { requireGlobalAdminWithStatus } from '@/lib/rbac/requireGlobalAdmin';
 import { resolvePermissionAccessForUser } from '@/lib/serverPermissionAccess';
 
+export const revalidate = 0;
+
 function countPermissionActions(input: Record<string, string[] | undefined> | null | undefined) {
   return Object.values(input ?? {}).reduce((total, actions) => total + (Array.isArray(actions) ? actions.length : 0), 0);
 }

@@ -14,6 +14,8 @@ import { getAccessContext } from "@/lib/auth/session";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
+export const revalidate = 0;
+
 function normalizeLogin(value?: string | null) {
   return (value ?? "").trim().toLowerCase();
 }

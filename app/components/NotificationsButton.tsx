@@ -328,8 +328,8 @@ export default function NotificationsButton() {
       )}
 
       {detailsOpen && selected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_30px_60px_rgba(15,23,42,0.35)]">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4">
+          <div className="my-auto w-full max-w-2xl rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_30px_60px_rgba(15,23,42,0.35)] max-h-[calc(100dvh-2rem)] overflow-y-auto">
             <div className="flex items-start justify-between gap-4 border-b border-(--tc-border,#e5e7eb) px-5 py-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Notificacao</p>

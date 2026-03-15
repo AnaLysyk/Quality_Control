@@ -4,6 +4,8 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { getMockRole } from "@/lib/rbac/defects";
 import { readAlertsStore } from "@/lib/qualityAlert";
 
+export const revalidate = 0;
+
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   const mockRole = await getMockRole();

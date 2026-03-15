@@ -14,6 +14,8 @@ import {
 import { getAccessContext } from "@/lib/auth/session";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
+export const revalidate = 0;
+
 type PermissionRole = "admin" | "dev" | "company" | "user";
 
 function hasOwn(obj: Record<string, unknown> | null, key: string) {

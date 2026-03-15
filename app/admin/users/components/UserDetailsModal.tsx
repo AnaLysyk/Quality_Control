@@ -310,7 +310,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
       onClick={onClose}
     >
       <div
-        className="mx-auto w-full max-w-5xl overflow-hidden rounded-[28px] border border-[#d7e0ef] bg-[#fcfdff] shadow-[0_32px_90px_rgba(15,23,42,0.22)]"
+        className="mx-auto w-full max-w-5xl max-h-[calc(100dvh-2rem)] overflow-y-auto overflow-hidden rounded-[28px] border border-[#d7e0ef] bg-[#fcfdff] shadow-[0_32px_90px_rgba(15,23,42,0.22)]"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="border-b border-[#e3e8f2] bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] px-6 py-6">

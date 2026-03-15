@@ -4,6 +4,8 @@ import { listAllRequests, type RequestStatus, type RequestType } from "@/data/re
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { canReviewerAccessQueue, resolveGenericRequestQueue } from "@/lib/requestReviewAccess";
 
+export const revalidate = 0;
+
 function isRequestStatus(value: string | null): value is RequestStatus {
   return value === "PENDING" || value === "APPROVED" || value === "REJECTED";
 }

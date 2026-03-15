@@ -5,6 +5,8 @@ import type { Status } from "./types";
 import { getAuthContext } from "@/lib/rbac";
 import type { AuthUser } from "@/lib/jwtAuth";
 
+export const revalidate = 0;
+
 function jsonError(message: string, status: number) {
   return NextResponse.json({ message }, { status });
 }

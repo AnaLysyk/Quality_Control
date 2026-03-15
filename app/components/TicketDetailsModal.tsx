@@ -420,27 +420,10 @@ export default function TicketDetailsModal({
       role="dialog"
       aria-modal="true"
       onMouseDown={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 12000,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "0.5rem",
-      }}
     >
       <div
         className="ticket-detail-modal-shell"
         onMouseDown={(event) => event.stopPropagation()}
-        style={{
-          position: "relative",
-          display: "flex",
-          width: "min(100%, 86rem)",
-          maxHeight: "calc(100vh - 0.5rem)",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
       >
         <div className="ticket-detail-modal-header">
           <div className="ticket-detail-modal-heading">
@@ -511,6 +494,7 @@ export default function TicketDetailsModal({
                             setDraft((current) => ({ ...current, type: event.target.value as TicketType }))
                           }
                           className="ticket-detail-select"
+                          aria-label="Tipo"
                           data-kind="type"
                           data-value={draft.type}
                           data-tone={getTypeTone(draft.type)}
@@ -530,6 +514,7 @@ export default function TicketDetailsModal({
                             setDraft((current) => ({ ...current, priority: event.target.value as TicketPriority }))
                           }
                           className="ticket-detail-select"
+                          aria-label="Prioridade"
                           data-kind="priority"
                           data-value={draft.priority}
                           data-tone={getPriorityTone(draft.priority)}
@@ -548,6 +533,7 @@ export default function TicketDetailsModal({
                             value={draft.status}
                             onChange={(event) => setDraft((current) => ({ ...current, status: event.target.value }))}
                             className="ticket-detail-select"
+                            aria-label="Status"
                             data-kind="status"
                             data-value={draft.status}
                             data-tone={getStatusTone(draft.status)}

@@ -5,6 +5,8 @@ import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { canEditTicketContent, canViewTicket } from "@/lib/rbac/tickets";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 
+export const revalidate = 0;
+
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {

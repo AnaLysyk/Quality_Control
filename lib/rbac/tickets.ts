@@ -1,4 +1,5 @@
 import type { AuthUser } from "@/lib/jwtAuth";
+import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import type { TicketRecord } from "@/lib/ticketsStore";
 
 export function isTicketAdmin(user: AuthUser | null) {
@@ -9,51 +10,95 @@ export function isTicketAdmin(user: AuthUser | null) {
 
 export function isItDev(user: AuthUser | null) {
   if (!user) return false;
-  if (isTicketAdmin(user)) return true;
   const role = (user.role ?? "").toLowerCase();
-  return role === "it_dev" || role === "itdev" || role === "developer" || role === "dev";
+  const permissionRole = (user.permissionRole ?? "").toLowerCase();
+  const companyRole = (user.companyRole ?? "").toLowerCase();
+  return (
+    role === "it_dev" ||
+    role === "itdev" ||
+    role === "developer" ||
+    role === "dev" ||
+    permissionRole === "dev" ||
+    companyRole === "it_dev"
+  );
 }
 
-function hasCompanyAccess(user: AuthUser, ticket: TicketRecord) {
-  if (user.companyId && ticket.companyId) {
-    return user.companyId === ticket.companyId;
-  }
-  if (ticket.companySlug && Array.isArray(user.companySlugs) && user.companySlugs.length) {
-    return user.companySlugs.includes(ticket.companySlug);
-  }
-  if (!ticket.companyId && !ticket.companySlug) return true;
-  return false;
+export function canManageAllTickets(user: AuthUser | null) {
+  if (!user) return false;
+  return (
+    isItDev(user) ||
+    isTicketAdmin(user) ||
+    hasPermissionAccess(user.permissions, "tickets", "view_all")
+  );
+}
+
+export function canAccessGlobalTicketWorkspace(user: AuthUser | null) {
+  if (!user) return false;
+  return (
+    canManageAllTickets(user) &&
+    (
+      hasPermissionAccess(user.permissions, "tickets", "view_all") ||
+      hasPermissionAccess(user.permissions, "tickets", "assign") ||
+      hasPermissionAccess(user.permissions, "tickets", "status") ||
+      hasPermissionAccess(user.permissions, "support", "assign") ||
+      hasPermissionAccess(user.permissions, "support", "status") ||
+      isItDev(user)
+    )
+  );
+}
+
+export function hasTicketEnteredSupportFlow(ticket: TicketRecord | null | undefined) {
+  if (!ticket) return false;
+  return ticket.status !== "backlog" || Boolean(ticket.assignedToUserId);
 }
 
 export function canViewTicket(user: AuthUser | null, ticket: TicketRecord) {
   if (!user) return false;
-  if (isItDev(user)) return true;
-  if (ticket.createdBy === user.id) return true;
-  const role = (user.role ?? "").toLowerCase();
-  if (role === "company" && hasCompanyAccess(user, ticket)) return true;
-  return false;
+  if (
+    !hasPermissionAccess(user.permissions, "tickets", "view") &&
+    !hasPermissionAccess(user.permissions, "support", "view")
+  ) {
+    return false;
+  }
+  if (canAccessGlobalTicketWorkspace(user)) return true;
+  return ticket.createdBy === user.id;
 }
 
 export function canCommentTicket(user: AuthUser | null, ticket: TicketRecord) {
-  return canViewTicket(user, ticket);
+  return (
+    canViewTicket(user, ticket) &&
+    (hasPermissionAccess(user?.permissions, "tickets", "comment") ||
+      hasPermissionAccess(user?.permissions, "support", "comment"))
+  );
 }
 
 export function canEditTicketContent(user: AuthUser | null, ticket: TicketRecord) {
   if (!user) return false;
-  if (isItDev(user)) return true;
-  return ticket.createdBy === user.id;
+  if (canAccessGlobalTicketWorkspace(user)) return true;
+  if (!hasPermissionAccess(user.permissions, "tickets", "edit")) return false;
+  return ticket.createdBy === user.id && !hasTicketEnteredSupportFlow(ticket);
 }
 
 export function canAssignTicket(user: AuthUser | null, ticket?: TicketRecord) {
   if (!user) return false;
-  if (!isItDev(user)) return false;
-  if (!ticket) return true;
-  return true;
+  if (
+    !hasPermissionAccess(user.permissions, "tickets", "assign") &&
+    !hasPermissionAccess(user.permissions, "support", "assign")
+  ) {
+    return false;
+  }
+  if (!ticket) return false;
+  return canAccessGlobalTicketWorkspace(user);
 }
 
 export function canMoveTicket(user: AuthUser | null, ticket?: TicketRecord) {
   if (!user) return false;
-  if (!isItDev(user)) return false;
-  if (!ticket) return true;
-  return true;
+  if (
+    !hasPermissionAccess(user.permissions, "tickets", "status") &&
+    !hasPermissionAccess(user.permissions, "support", "status")
+  ) {
+    return false;
+  }
+  if (!ticket) return false;
+  return canAccessGlobalTicketWorkspace(user);
 }

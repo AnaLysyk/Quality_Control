@@ -5,6 +5,10 @@ import { listTicketEvents } from "@/lib/ticketEventsStore";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { canViewTicket } from "@/lib/rbac/tickets";
 
+function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
+  return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
+}
+
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
@@ -37,7 +41,7 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
     const actor = event.actorUserId ? actorMap.get(event.actorUserId) ?? null : null;
     return {
       ...event,
-      actorName: actor?.name ?? null,
+      actorName: resolveDisplayName(actor),
       actorEmail: actor?.email ?? null,
     };
   });

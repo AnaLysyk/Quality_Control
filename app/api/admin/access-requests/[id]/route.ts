@@ -1,91 +1,65 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismaClient";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
-import { shouldUseJsonStore } from "@/lib/storeMode";
+
 import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
+import {
+  composeAccessRequestMessage,
+  normalizeAccessType,
+  parseAccessRequestMessage,
+} from "@/lib/accessRequestMessage";
+import { prisma } from "@/lib/prismaClient";
+import { requireGlobalDeveloperWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { canReviewerAccessQueue, isGlobalReviewer, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
+import {
+  normalizeRequestProfileType,
+  resolveReviewQueue,
+  toInternalAccessType,
+} from "@/lib/requestRouting";
+import { shouldUseJsonStore } from "@/lib/storeMode";
 
-type AccessType = "user" | "admin" | "company";
-
-function normalizeAccessType(value?: string | null): AccessType | null {
-  if (!value) return null;
-  const v = value.trim().toLowerCase();
-  if (
-    v === "usuario da empresa" ||
-    v === "usuÃ¡rio da empresa" ||
-    v === "usuario" ||
-    v === "user"
-  ) {
-    return "user";
-  }
-  if (v === "admin do sistema" || v === "administrador" || v === "admin") {
-    return "admin";
-  }
-  if (v === "admin da empresa" || v === "empresa" || v === "company") {
-    return "company";
-  }
-  return null;
-}
-
-function composeAccessRequestMessage(input: {
-  email: string;
-  name: string;
-  role: string;
-  company: string;
-  clientId: string | null;
-  accessType: AccessType;
-  notes: string;
-  adminNotes?: string | null;
-}) {
-  const payload = {
-    v: 1,
-    kind: "access_request",
-    email: input.email,
-    name: input.name,
-    jobRole: input.role,
-    company: input.company,
-    clientId: input.clientId,
-    accessType: input.accessType,
-    notes: input.notes || null,
-  };
-
-  const lines = [
-    `ACCESS_REQUEST_V1 ${JSON.stringify(payload)}`,
-    "Solicitacao de acesso ao admin",
-    `Tipo de acesso: ${input.accessType === "admin" ? "Admin do sistema" : input.accessType === "company" ? "Admin da empresa" : "UsuÃ¡rio da empresa"}`,
-    `Empresa: ${input.company}${input.clientId ? ` (id: ${input.clientId})` : ""}`,
-    `Cargo: ${input.role}`,
-    `Nome: ${input.name}`,
-    `Email: ${input.email}`,
-    input.notes ? `Observacoes: ${input.notes}` : "",
-  ].filter(Boolean);
-
-  if (input.adminNotes && input.adminNotes.trim()) {
-    lines.push(`ADMIN_NOTES: ${input.adminNotes.trim()}`);
-  }
-
-  return lines.join("\n");
-}
+type AccessRequestBody = {
+  email?: string;
+  name?: string;
+  full_name?: string | null;
+  user?: string | null;
+  phone?: string | null;
+  role?: string;
+  company?: string;
+  client_id?: string | null;
+  access_type?: string;
+  title?: string;
+  description?: string;
+  notes?: string;
+  admin_notes?: string | null;
+};
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  const { admin, status } = await requireGlobalDeveloperWithStatus(req);
   if (!admin) {
     return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
   }
 
-  const body = (await req.json().catch(() => null)) as {
-    email?: string;
-    name?: string;
-    role?: string;
-    company?: string;
-    client_id?: string | null;
-    access_type?: string;
-    notes?: string;
-    admin_notes?: string | null;
-  } | null;
-
+  const body = (await req.json().catch(() => null)) as AccessRequestBody | null;
   if (!body) {
     return NextResponse.json({ error: "Payload invalido" }, { status: 400 });
   }
+
+  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  const name = typeof body.name === "string" ? body.name.trim() : "";
+  const fullName = typeof body.full_name === "string" ? body.full_name.trim() : null;
+  const username = typeof body.user === "string" ? body.user.trim().toLowerCase() : null;
+  const phone = typeof body.phone === "string" ? body.phone.trim() : null;
+  const role = typeof body.role === "string" ? body.role.trim() : "";
+  const company = typeof body.company === "string" ? body.company.trim() : "";
+  const clientId = typeof body.client_id === "string" && body.client_id.trim() ? body.client_id.trim() : null;
+  const title = typeof body.title === "string" ? body.title.trim() : "";
+  const description = typeof body.description === "string" ? body.description.trim() : "";
+  const profileType =
+    normalizeRequestProfileType(body.access_type) ??
+    normalizeRequestProfileType(body.role) ??
+    "testing_company_user";
+  const accessType = normalizeAccessType(body.access_type) ?? toInternalAccessType(profileType);
+  const notes = typeof body.notes === "string" ? body.notes.trim() : "";
+  const adminNotes = typeof body.admin_notes === "string" ? body.admin_notes.trim() : null;
 
   const { id } = await context.params;
   if (shouldUseJsonStore()) {
@@ -93,29 +67,45 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     if (!existing) {
       return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
     }
+    if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
+      return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+    }
+    if (!isGlobalReviewer(admin) && resolveReviewQueue(profileType) === "global_only") {
+      return NextResponse.json({ error: "Somente Global pode encaminhar solicitacoes tecnicas" }, { status: 403 });
+    }
 
-    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : existing.email;
-    const name = typeof body.name === "string" ? body.name.trim() : "";
-    const role = typeof body.role === "string" ? body.role.trim() : "";
-    const company = typeof body.company === "string" ? body.company.trim() : "";
-    const clientId =
-      typeof body.client_id === "string" && body.client_id.trim() ? body.client_id.trim() : null;
-    const accessType = normalizeAccessType(body.access_type) ?? "user";
-    const notes = typeof body.notes === "string" ? body.notes.trim() : "";
-    const adminNotes = typeof body.admin_notes === "string" ? body.admin_notes.trim() : null;
+    const parsed = parseAccessRequestMessage(existing.message, existing.email);
 
     const message = composeAccessRequestMessage({
-      email,
-      name,
-      role,
-      company,
-      clientId,
+      email: email || parsed.email || existing.email,
+      name: fullName || parsed.fullName || name || parsed.name,
+      fullName: fullName || parsed.fullName || name || parsed.name,
+      username: username ?? parsed.username,
+      phone: phone || parsed.phone,
+      passwordHash: parsed.passwordHash,
+      role: role || parsed.jobRole,
+      company: company || parsed.company || "(nao informado)",
+      clientId: clientId ?? parsed.clientId,
       accessType,
-      notes,
+      profileType,
+      title: title || parsed.title,
+      description: description || parsed.description,
+      notes: notes || parsed.notes,
       adminNotes,
+      companyProfile: parsed.companyProfile,
+      originalRequest: parsed.originalRequest,
+      adjustmentRound: parsed.adjustmentRound,
+      adjustmentRequestedFields: parsed.adjustmentRequestedFields,
+      adjustmentHistory: parsed.adjustmentHistory,
+      lastAdjustmentAt: parsed.lastAdjustmentAt,
+      lastAdjustmentDiff: parsed.lastAdjustmentDiff,
     });
 
-    const updated = await updateAccessRequest(id, { email, message });
+    const updated = await updateAccessRequest(id, {
+      email: email || existing.email,
+      message,
+    });
+
     if (!updated) {
       return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
     }
@@ -131,47 +121,114 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     });
   }
 
-  const existing = await prisma.supportRequest.findUnique({ where: { id } });
-  if (!existing) {
-    return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
-  }
+  try {
+    const existing = await prisma.supportRequest.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+    }
+    if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
+      return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+    }
+    if (!isGlobalReviewer(admin) && resolveReviewQueue(profileType) === "global_only") {
+      return NextResponse.json({ error: "Somente Global pode encaminhar solicitacoes tecnicas" }, { status: 403 });
+    }
 
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : existing.email;
-  const name = typeof body.name === "string" ? body.name.trim() : "";
-  const role = typeof body.role === "string" ? body.role.trim() : "";
-  const company = typeof body.company === "string" ? body.company.trim() : "";
-  const clientId =
-    typeof body.client_id === "string" && body.client_id.trim() ? body.client_id.trim() : null;
-  const accessType = normalizeAccessType(body.access_type) ?? "user";
-  const notes = typeof body.notes === "string" ? body.notes.trim() : "";
-  const adminNotes = typeof body.admin_notes === "string" ? body.admin_notes.trim() : null;
+    const parsed = parseAccessRequestMessage(existing.message, existing.email);
 
-  const message = composeAccessRequestMessage({
-    email,
-    name,
-    role,
-    company,
-    clientId,
-    accessType,
-    notes,
-    adminNotes,
-  });
+    const message = composeAccessRequestMessage({
+      email: email || parsed.email || existing.email,
+      name: fullName || parsed.fullName || name || parsed.name,
+      fullName: fullName || parsed.fullName || name || parsed.name,
+      username: username ?? parsed.username,
+      phone: phone || parsed.phone,
+      passwordHash: parsed.passwordHash,
+      role: role || parsed.jobRole,
+      company: company || parsed.company || "(nao informado)",
+      clientId: clientId ?? parsed.clientId,
+      accessType,
+      profileType,
+      title: title || parsed.title,
+      description: description || parsed.description,
+      notes: notes || parsed.notes,
+      adminNotes,
+      companyProfile: parsed.companyProfile,
+      originalRequest: parsed.originalRequest,
+      adjustmentRound: parsed.adjustmentRound,
+      adjustmentRequestedFields: parsed.adjustmentRequestedFields,
+      adjustmentHistory: parsed.adjustmentHistory,
+      lastAdjustmentAt: parsed.lastAdjustmentAt,
+      lastAdjustmentDiff: parsed.lastAdjustmentDiff,
+    });
 
-  const updated = await prisma.supportRequest.update({
-    where: { id },
-    data: {
-      email,
+    const updated = await prisma.supportRequest.update({
+      where: { id },
+      data: {
+        email: email || existing.email,
+        message,
+      },
+    });
+
+    return NextResponse.json({
+      item: {
+        id: updated.id,
+        email: updated.email,
+        message: updated.message,
+        status: updated.status,
+        created_at: updated.created_at.toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error("[ACCESS-REQUESTS][PATCH][PRISMA_FALLBACK]", error);
+    const existing = await getAccessRequestById(id);
+    if (!existing) {
+      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+    }
+    if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
+      return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+    }
+    if (!isGlobalReviewer(admin) && resolveReviewQueue(profileType) === "global_only") {
+      return NextResponse.json({ error: "Somente Global pode encaminhar solicitacoes tecnicas" }, { status: 403 });
+    }
+
+    const parsed = parseAccessRequestMessage(existing.message, existing.email);
+    const message = composeAccessRequestMessage({
+      email: email || parsed.email || existing.email,
+      name: fullName || parsed.fullName || name || parsed.name,
+      fullName: fullName || parsed.fullName || name || parsed.name,
+      username: username ?? parsed.username,
+      phone: phone || parsed.phone,
+      passwordHash: parsed.passwordHash,
+      role: role || parsed.jobRole,
+      company: company || parsed.company || "(nao informado)",
+      clientId: clientId ?? parsed.clientId,
+      accessType,
+      profileType,
+      title: title || parsed.title,
+      description: description || parsed.description,
+      notes: notes || parsed.notes,
+      adminNotes,
+      companyProfile: parsed.companyProfile,
+      originalRequest: parsed.originalRequest,
+      adjustmentRound: parsed.adjustmentRound,
+      adjustmentRequestedFields: parsed.adjustmentRequestedFields,
+      adjustmentHistory: parsed.adjustmentHistory,
+      lastAdjustmentAt: parsed.lastAdjustmentAt,
+      lastAdjustmentDiff: parsed.lastAdjustmentDiff,
+    });
+
+    const updated = await updateAccessRequest(id, {
+      email: email || existing.email,
       message,
-    },
-  });
+    });
 
-  return NextResponse.json({
-    item: {
-      id: updated.id,
-      email: updated.email,
-      message: updated.message,
-      status: updated.status,
-      created_at: updated.created_at.toISOString(),
-    },
-  });
+    return NextResponse.json({
+      item: {
+        id: updated?.id ?? id,
+        email: updated?.email ?? existing.email,
+        message: updated?.message ?? message,
+        status: updated?.status ?? existing.status,
+        created_at: updated?.created_at ?? existing.created_at,
+      },
+    });
+  }
 }

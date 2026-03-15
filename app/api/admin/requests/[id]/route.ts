@@ -1,26 +1,22 @@
-import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { NextResponse } from "next/server";
+
 import { getRequestById, updateRequestStatus, type RequestStatus } from "@/data/requestsStore";
-import { getRedis } from "@/lib/redis";
+import { getLocalUserById, updateLocalUser } from "@/lib/auth/localStore";
 import { emailService } from "@/lib/email";
-import { getLocalUserById } from "@/lib/auth/localStore";
-import { notifyPasswordResetStatus } from "@/lib/notificationService";
+import { notifyPasswordResetStatus, notifyProfileDeletionStatus } from "@/lib/notificationService";
+import { getRedis } from "@/lib/redis";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { canReviewerAccessQueue, resolveGenericRequestQueue } from "@/lib/requestReviewAccess";
 
 function isFinalStatus(value: string | null): value is Exclude<RequestStatus, "PENDING"> {
   return value === "APPROVED" || value === "REJECTED";
 }
 
-export async function PATCH(
-  req: Request,
-  context: { params: Promise<{ id: string }> }
-) {
-  const authUser = await authenticateRequest(req);
-  if (!authUser) {
-    return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
-  }
-  if (!authUser.isGlobalAdmin) {
-    return NextResponse.json({ message: "Sem permissao" }, { status: 403 });
+export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ message: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
   }
 
   const body = (await req.json().catch(() => null)) as { status?: string; reviewNote?: string } | null;
@@ -34,6 +30,9 @@ export async function PATCH(
   const requestRecord = await getRequestById(id);
   if (!requestRecord) {
     return NextResponse.json({ message: "Solicitacao nao encontrada" }, { status: 404 });
+  }
+  if (!canReviewerAccessQueue(admin, resolveGenericRequestQueue(requestRecord))) {
+    return NextResponse.json({ message: "Sem permissao para esta solicitacao" }, { status: 403 });
   }
   if (requestRecord.status !== "PENDING") {
     return NextResponse.json({ item: requestRecord });
@@ -57,7 +56,21 @@ export async function PATCH(
     }
   }
 
-  const updated = await updateRequestStatus(id, nextStatus, { id: authUser.id }, body?.reviewNote);
+  if (nextStatus === "APPROVED" && requestRecord.type === "PROFILE_DELETION") {
+    const user = await getLocalUserById(requestRecord.userId);
+    if (!user) {
+      return NextResponse.json({ message: "Usuario nao encontrado" }, { status: 404 });
+    }
+    const updatedUser = await updateLocalUser(user.id, {
+      active: false,
+      status: "blocked",
+    });
+    if (!updatedUser) {
+      return NextResponse.json({ message: "Nao foi possivel desativar o perfil" }, { status: 500 });
+    }
+  }
+
+  const updated = await updateRequestStatus(id, nextStatus, { id: admin.id }, body?.reviewNote);
   if (updated && updated.type === "PASSWORD_RESET") {
     try {
       await notifyPasswordResetStatus(updated, nextStatus);
@@ -65,5 +78,13 @@ export async function PATCH(
       console.error("Falha ao notificar status de reset", err);
     }
   }
+  if (updated && updated.type === "PROFILE_DELETION") {
+    try {
+      await notifyProfileDeletionStatus(updated, nextStatus);
+    } catch (err) {
+      console.error("Falha ao notificar status de exclusao de perfil", err);
+    }
+  }
+
   return NextResponse.json({ item: updated });
 }

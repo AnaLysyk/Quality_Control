@@ -10,14 +10,7 @@ export async function GET(req: Request) {
   }
 
   const allowAll = isItDev(user);
-  const companyId = user.companyId ?? null;
-  const companySlug = user.companySlug ?? null;
-
   const filter = (item: TicketRecord) => {
-    const sameCompany =
-      (companyId && item.companyId === companyId) ||
-      (companySlug && item.companySlug === companySlug);
-    if (!sameCompany) return false;
     if (allowAll) return true;
     return item.createdBy === user.id;
   };

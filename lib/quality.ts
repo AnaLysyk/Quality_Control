@@ -119,7 +119,17 @@ export async function getCompanyDefects(slug: string, _period: string = "30d") {
   }));
 }
 import { ReleaseEntry } from "@/release/data";
-export type Stats = { pass: number; fail: number; blocked: number; notRun: number };
+export type Stats = {
+  pass: number;
+  fail: number;
+  blocked: number;
+  notRun: number;
+  defectCount?: number;
+  runsTotal?: number;
+  passRate?: number;
+  score?: number;
+  status?: string;
+};
 
 export type ReleaseWithStats = ReleaseEntry & {
   createdAtValue: number;
@@ -132,6 +142,8 @@ export type TrendPoint = {
   label: string;
   value: number | null;
   total: number;
+  failRate: number | null;
+  blockedRate: number | null;
 };
 
 export type TrendSummary = {
@@ -266,8 +278,13 @@ export function buildTrendPoints(releases: ReleaseWithStats[], period: number): 
   return buckets.map((bucket) => {
     const total = sumStats(bucket.stats);
     const value = total > 0 ? toPercent(bucket.stats.pass, total) : null;
-    const label = new Date(bucket.start + bucketSize - DAY_MS / 2).toISOString().slice(5, 10);
-    return { label, value, total };
+    const failRate = total > 0 ? toPercent(bucket.stats.fail, total) : null;
+    const blockedRate = total > 0 ? toPercent(bucket.stats.blocked, total) : null;
+    const label = new Date(bucket.start + bucketSize - DAY_MS / 2).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+    });
+    return { label, value, total, failRate, blockedRate };
   });
 }
 
@@ -374,6 +391,7 @@ export type CompanyRow = {
     title?: string;
     createdAt?: string;
   };
+  createdAt?: string;
 };
 
 function resolveCompanyKey(

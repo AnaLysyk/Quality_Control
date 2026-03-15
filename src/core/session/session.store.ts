@@ -182,6 +182,7 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     normalizeLocalRole(user.role ?? null) === "it_dev" ||
     links.some((link) => normalizeLocalRole(link.role ?? null) === "it_dev");
   const hasFullCompanyAccess = isGlobalAdmin || hasDevRole;
+  const shouldBindCompanyContext = !hasFullCompanyAccess;
   const allowedCompanies = hasFullCompanyAccess
     ? companies
     : companies.filter((company) => links.some((link) => link.companyId === company.id));
@@ -193,11 +194,13 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
 
   // 7) Define empresa primaria com fallback inteligente.
   const primaryCompany =
-    allowedCompanies.find((company) => company.id === session.companyId) ??
-    allowedCompanies.find((company) => company.slug === session.companySlug) ??
-    allowedCompanies.find((company) => company.slug === user.default_company_slug) ??
-    allowedCompanies[0] ??
-    null;
+    shouldBindCompanyContext
+      ? allowedCompanies.find((company) => company.id === session.companyId) ??
+        allowedCompanies.find((company) => company.slug === session.companySlug) ??
+        allowedCompanies.find((company) => company.slug === user.default_company_slug) ??
+        allowedCompanies[0] ??
+        null
+      : null;
 
   const primaryLink = primaryCompany ? links.find((link) => link.companyId === primaryCompany.id) ?? null : null;
 
@@ -227,8 +230,8 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     globalRole: isGlobalAdmin ? "global_admin" : null,
     companyRole,
     capabilities,
-    companyId: session.companyId ?? primaryCompany?.id ?? null,
-    companySlug: session.companySlug ?? primaryCompany?.slug ?? null,
+    companyId: shouldBindCompanyContext ? session.companyId ?? primaryCompany?.id ?? null : null,
+    companySlug: shouldBindCompanyContext ? session.companySlug ?? primaryCompany?.slug ?? null : null,
     companySlugs,
   };
 }

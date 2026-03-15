@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -9,7 +9,7 @@ import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequ
 
 type Stats = { pass: number; fail: number; blocked: number; notRun: number };
 
-type TrendPoint = { label: string; value: number | null; total: number };
+type TrendPoint = { label: string; value: number | null; total: number; failRate: number | null; blockedRate: number | null };
 
 type GateStatus = "approved" | "warning" | "failed" | "no_data";
 
@@ -87,22 +87,6 @@ type AdminDefectsResponse = {
   error?: string;
 };
 
-type AuditLogRow = {
-  id: string;
-  created_at: string;
-  actor_email: string | null;
-  action: string;
-  entity_type: string;
-  entity_id: string | null;
-  entity_label: string | null;
-};
-
-type AuditLogsResponse = {
-  items: AuditLogRow[];
-  retentionDays: number;
-  warning: string | null;
-};
-
 function normalizeQuery(value: string) {
   return value
     .normalize("NFKD")
@@ -126,13 +110,6 @@ function formatDate(iso?: string) {
   return new Date(time).toLocaleDateString("pt-BR");
 }
 
-function formatDateTime(iso?: string) {
-  if (!iso) return "-";
-  const time = Date.parse(iso);
-  if (!Number.isFinite(time)) return "-";
-  return new Date(time).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
-}
-
 function gateLabel(status: GateStatus) {
   if (status === "approved") return "Estavel";
   if (status === "warning") return "Atencao";
@@ -153,51 +130,146 @@ function isCriticalSeverity(severityRaw?: string) {
   return s.includes("critical") || s.includes("blocker");
 }
 
-function actionLabel(action: string) {
-  const a = (action ?? "").toString();
-  if (a === "client.created") return "Nova empresa criada";
-  if (a === "client.updated") return "Empresa atualizada";
-  if (a === "client.deleted") return "Empresa removida";
-  if (a === "run.created") return "Nova run executada";
-  if (a === "run.deleted") return "Run removida";
-  if (a === "user.created") return "Usuario criado";
-  if (a === "user.updated") return "Usuario atualizado";
-  return a;
-}
-
 function GlobalTrendSparkline({ points }: { points: TrendPoint[] }) {
-  const vals = points.map((p) => p.value).filter((v): v is number => typeof v === "number" && Number.isFinite(v));
-  if (!vals.length) {
-    return <div className="h-12 rounded-2xl bg-white/70 border border-(--tc-border)/40" />;
+  const validPoints = points.filter((point) => typeof point.value === "number" && Number.isFinite(point.value));
+  if (!validPoints.length) {
+    return (
+      <div className="flex h-44 items-center justify-center rounded-2xl border border-white/18 bg-white/12 text-[11px] font-medium text-white/68">
+        Sem série de pass rate na janela
+      </div>
+    );
   }
-  const min = Math.min(...vals);
-  const max = Math.max(...vals);
-  const w = 260;
-  const h = 48;
-  const pad = 8;
+
+  const QUALITY_TARGET = 85;
+  const w = 780;
+  const h = 180;
+  const left = 42;
+  const right = 72;
+  const top = 12;
+  const bottom = 30;
+  const plotRight = w - right;
+  const plotW = w - left - right;
+  const plotH = h - top - bottom;
+  const displayPoints = validPoints;
+  const ticks = [100, 85, 70, 50, 0];
   const toX = (i: number) => {
-    if (points.length <= 1) return pad;
-    return pad + (i * (w - pad * 2)) / (points.length - 1);
+    if (displayPoints.length <= 1) return left + plotW / 2;
+    return left + (i * plotW) / (displayPoints.length - 1);
   };
-  const toY = (value: number) => {
-    const range = Math.max(1, max - min);
-    const t = (value - min) / range;
-    return pad + (1 - t) * (h - pad * 2);
-  };
-  const path = points
-    .map((p, i) => {
-      if (typeof p.value !== "number" || !Number.isFinite(p.value)) return null;
-      const x = toX(i);
-      const y = toY(p.value);
-      return `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
+  const toY = (value: number) => top + ((100 - value) / 100) * plotH;
+
+  const coords = displayPoints
+    .map((point, index) => {
+      if (typeof point.value !== "number" || !Number.isFinite(point.value)) return null;
+      return { point, x: toX(index), y: toY(point.value) };
     })
-    .filter(Boolean)
+    .filter((entry): entry is { point: TrendPoint; x: number; y: number } => Boolean(entry));
+
+  const path = coords
+    .map((entry, index) => `${index === 0 ? "M" : "L"}${entry.x.toFixed(1)} ${entry.y.toFixed(1)}`)
     .join(" ");
 
+  const area = coords.length
+    ? `${path} L${coords[coords.length - 1].x.toFixed(1)} ${(top + plotH).toFixed(1)} L${coords[0].x.toFixed(1)} ${(top + plotH).toFixed(1)} Z`
+    : "";
+
+  const zoneY = {
+    healthy: toY(100),
+    attention: toY(85),
+    risk: toY(70),
+    floor: toY(0),
+  };
+  const zoneLabelDisplayX = plotRight - 10;
+  const zoneLabelY = {
+    healthy: (zoneY.healthy + zoneY.attention) / 2,
+    attention: (zoneY.attention + zoneY.risk) / 2,
+    risk: (zoneY.risk + zoneY.floor) / 2,
+  };
+  const currentPoint = coords[coords.length - 1] ?? null;
+  const currentTone =
+    !currentPoint || (currentPoint.point.value ?? 0) >= 85
+      ? "rgba(16,185,129,0.96)"
+      : (currentPoint.point.value ?? 0) >= 70
+        ? "rgba(245,158,11,0.96)"
+        : "rgba(239,68,68,0.96)";
+
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="h-12 w-full rounded-2xl bg-white/70 border border-(--tc-border)/40">
-      <path d={path} fill="none" stroke="var(--tc-accent,#ef0001)" strokeWidth="2.5" />
-    </svg>
+    <div className="rounded-2xl border border-white/18 bg-[linear-gradient(180deg,rgba(255,255,255,0.10),rgba(255,255,255,0.03))] p-3">
+      <svg viewBox={`0 0 ${w} ${h}`} className="h-44 w-full">
+        <rect x={left} y={zoneY.healthy} width={plotW} height={zoneY.attention - zoneY.healthy} rx="12" fill="rgba(16,185,129,0.22)" />
+        <rect x={left} y={zoneY.attention} width={plotW} height={zoneY.risk - zoneY.attention} rx="12" fill="rgba(245,158,11,0.2)" />
+        <rect x={left} y={zoneY.risk} width={plotW} height={zoneY.floor - zoneY.risk} rx="12" fill="rgba(239,68,68,0.18)" />
+
+        <text x={zoneLabelDisplayX} y={zoneLabelY.healthy} textAnchor="end" dominantBaseline="middle" fontSize="11" fontWeight="700" fill="rgba(220,252,231,0.96)">Saudável</text>
+        <text x={zoneLabelDisplayX} y={zoneLabelY.attention} textAnchor="end" dominantBaseline="middle" fontSize="11" fontWeight="700" fill="rgba(254,243,199,0.96)">Atenção</text>
+        <text x={zoneLabelDisplayX} y={zoneLabelY.risk} textAnchor="end" dominantBaseline="middle" fontSize="11" fontWeight="700" fill="rgba(254,226,226,0.96)">Risco</text>
+
+        {ticks.map((tick) => {
+          const y = toY(tick);
+          return (
+            <g key={tick}>
+              <line x1={left} y1={y} x2={plotRight} y2={y} stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
+              <text x={left - 8} y={y + 4} textAnchor="end" fontSize="11" fill="rgba(255,255,255,0.72)">
+                {tick}%
+              </text>
+            </g>
+          );
+        })}
+
+        <line
+          x1={left}
+          y1={toY(QUALITY_TARGET)}
+          x2={plotRight}
+          y2={toY(QUALITY_TARGET)}
+          stroke="rgba(255,255,255,0.78)"
+          strokeWidth="1.5"
+          strokeDasharray="5 4"
+        />
+        <text x={left + 8} y={toY(QUALITY_TARGET) - 8} textAnchor="start" fontSize="11" fontWeight="700" fill="rgba(255,255,255,0.9)">
+          Meta 85%
+        </text>
+
+        {area ? <path d={area} fill="rgba(255,255,255,0.12)" /> : null}
+        <path d={path} fill="none" stroke="rgba(219,234,254,0.98)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+
+        {coords.map((entry, index) => (
+          <g key={`${entry.x}-${entry.y}-${index}`}>
+            {index === coords.length - 1 ? (
+              <circle cx={entry.x} cy={entry.y} r="8" fill="rgba(255,255,255,0.18)" />
+            ) : null}
+            <circle
+              cx={entry.x}
+              cy={entry.y}
+              r={index === coords.length - 1 ? 5.5 : 4}
+              fill={index === coords.length - 1 ? currentTone : "var(--tc-accent,#ef0001)"}
+              stroke="rgba(255,255,255,0.96)"
+              strokeWidth={index === coords.length - 1 ? "2" : "1.5"}
+            />
+            <title>{`${entry.point.label} | pass rate ${entry.point.value ?? 0}% | runs ${entry.point.total} | falhas ${entry.point.failRate ?? 0}% | bloqueados ${entry.point.blockedRate ?? 0}%${entry.point.value === 0 ? " | sem aprovações nesta janela" : ""}`}</title>
+          </g>
+        ))}
+
+        {displayPoints.map((point, index) => (
+          <text
+            key={`${point.label}-${index}`}
+            x={toX(index)}
+            y={h - 8}
+            textAnchor={index === 0 ? "start" : index === displayPoints.length - 1 ? "end" : "middle"}
+            fontSize="11"
+            fill="rgba(255,255,255,0.72)"
+          >
+            {point.label}
+          </text>
+        ))}
+      </svg>
+      <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-white/78">
+        <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-white" />Pass rate</span>
+        <span className="inline-flex items-center gap-2"><span className="h-[2px] w-4 bg-white/80 [background-image:repeating-linear-gradient(to_right,currentColor_0,currentColor_4px,transparent_4px,transparent_8px)]" />Meta 85%</span>
+        <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />Saudável</span>
+        <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-amber-300/80" />Atenção</span>
+        <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-red-400/80" />Risco</span>
+      </div>
+    </div>
   );
 }
 
@@ -221,9 +293,6 @@ export default function TestMetricPage() {
   const loadedDefectsRef = useRef<Set<string>>(new Set());
   const [globalDefects, setGlobalDefects] = useState<{ loaded: boolean; criticalOpen: number | null; error?: string | null }>(
     { loaded: false, criticalOpen: null, error: null }
-  );
-  const [audit, setAudit] = useState<{ loaded: boolean; items: AuditLogRow[]; warning: string | null }>(
-    { loaded: false, items: [], warning: null }
   );
   const carouselRef = useRef<HTMLDivElement | null>(null);
 
@@ -291,35 +360,6 @@ export default function TestMetricPage() {
     };
   }, [handleUnauthorized]);
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const res = await fetch("/api/admin/audit-logs?limit=20", { cache: "no-store", credentials: "include" });
-        if (res.status === 401) {
-          if (!cancelled) handleUnauthorized();
-          return;
-        }
-        const raw = await res.json().catch(() => null);
-        const json = unwrapEnvelopeData<AuditLogsResponse>(raw);
-        if (!res.ok || !json) {
-          if (!cancelled) setAudit({ loaded: true, items: [], warning: "Movimento recente indisponível" });
-          return;
-        }
-        const items = Array.isArray(json.items) ? json.items : [];
-        const rawWarning = json.warning ?? null;
-        const warning = rawWarning ? "Movimento recente limitado (logs não configurados neste ambiente)" : null;
-        if (!cancelled) setAudit({ loaded: true, items, warning });
-      } catch {
-        if (!cancelled) setAudit({ loaded: true, items: [], warning: "Movimento recente indisponível" });
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [handleUnauthorized]);
-
   const companies = useMemo(() => {
     const list = overview?.companies ?? [];
     return list.filter((c) => c.active !== false);
@@ -343,6 +383,18 @@ export default function TestMetricPage() {
     });
     return count;
   }, [companies]);
+
+  const globalTrendMeta = useMemo(() => {
+    const source = overview?.trendPoints ?? [];
+    const valid = source.filter((point) => typeof point.value === "number" && Number.isFinite(point.value));
+    if (!valid.length) return null;
+
+    const first = valid[0];
+    const last = valid[valid.length - 1];
+    const worst = valid.reduce((currentWorst, point) => ((point.value ?? 0) < (currentWorst.value ?? 0) ? point : currentWorst), valid[0]);
+
+    return { first, last, worst };
+  }, [overview]);
 
   const attentionNow = useMemo(() => {
     const now = Date.now();
@@ -368,15 +420,6 @@ export default function TestMetricPage() {
 
     return { companiesNeedingAttention, staleRiskReleases, staleDays };
   }, [companies, period]);
-
-  const recentReleases = useMemo(() => {
-    const list: Array<{ company: CompanyRow; release: ReleaseRow }> = [];
-    companies.forEach((company) => {
-      (company.releases ?? []).forEach((release) => list.push({ company, release }));
-    });
-    list.sort((a, b) => (b.release.createdAtValue ?? 0) - (a.release.createdAtValue ?? 0));
-    return list.slice(0, 10);
-  }, [companies]);
 
   const activeCompany = companies[activeIndex] ?? null;
   const activeCompanySlug = activeCompany?.slug ?? null;
@@ -501,44 +544,44 @@ export default function TestMetricPage() {
   return (
     <RequireGlobalAdmin>
       <div className="min-h-screen bg-linear-to-b from-(--page-bg,#f8f8fb) to-(--page-bg,#f0f4ff) text-(--page-text,#0b1a3c)">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-10 space-y-8">
-          <header className="rounded-[28px] bg-white/80 p-6 sm:p-8 shadow-xl">
+        <div className="mx-auto w-full max-w-none px-4 py-8 sm:px-6 lg:px-10 xl:px-12 2xl:px-14 space-y-8">
+          <section className="tc-hero-panel">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div className="space-y-2">
-                <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent,#ef0001)">Admin · Métricas</p>
-                <h1 className="text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">
+              <div className="space-y-3">
+                <p className="text-xs uppercase tracking-[0.5em] text-white/80">Admin · Métricas</p>
+                <h1 className="text-4xl md:text-5xl font-extrabold text-white">
                   Visão global multiempresa
                 </h1>
-                <p className="text-sm text-(--tc-text-secondary,#4b5563) max-w-3xl">
+                <p className="max-w-3xl text-sm leading-7 text-white/85">
                   Entenda a saúde de qualidade de todas as empresas em segundos. Busque e compare sem trocar de tela.
                 </p>
               </div>
 
               <div className="flex flex-col gap-2 md:items-end">
-                <div className="inline-flex rounded-2xl border border-(--tc-border)/60 bg-white p-1">
+                <div className="inline-flex rounded-full border border-white/15 bg-white/10 p-1 shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
                   {[7, 30, 90].map((days) => (
                     <button
                       key={days}
                       type="button"
                       onClick={() => setPeriod(days as 7 | 30 | 90)}
-                      className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                        className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                         period === days
-                          ? "bg-(--tc-accent,#ef0001) text-white"
-                          : "text-(--tc-text-muted) hover:bg-slate-50"
+                          ? "bg-white text-(--tc-primary,#011848)"
+                          : "text-white/75 hover:bg-white/10 hover:text-white"
                       }`}
                     >
                       {days}d
                     </button>
                   ))}
                 </div>
-                <div className="text-xs text-(--tc-text-muted)">Última execução: {formatDate(activeCompany?.latestRelease?.createdAt)}</div>
+                <div className="text-xs font-medium text-white/80">Última execução: {formatDate(activeCompany?.latestRelease?.createdAt)}</div>
               </div>
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-4">
-              <div className="rounded-2xl border border-(--tc-border)/60 bg-white p-5">
-                <div className="text-[11px] uppercase tracking-[0.24em] text-(--tc-text-muted)">Empresas monitoradas</div>
-                <div className="mt-1 text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">{companyCounts.total}</div>
+              <div className="rounded-[24px] border border-white/12 bg-white/10 p-5 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
+                <div className="text-[11px] uppercase tracking-[0.24em] text-white/70">Empresas monitoradas</div>
+                <div className="mt-1 text-3xl font-extrabold text-white">{companyCounts.total}</div>
                 <div className="mt-2 flex flex-wrap gap-2 text-xs">
                   <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-semibold text-emerald-700">🟢 {companyCounts.stable}</span>
                   <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 font-semibold text-amber-700">🟡 {companyCounts.attention}</span>
@@ -547,32 +590,32 @@ export default function TestMetricPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-(--tc-border)/60 bg-white p-5">
-                <div className="text-[11px] uppercase tracking-[0.24em] text-(--tc-text-muted)">Pass rate global</div>
-                <div className="mt-1 text-3xl font-extrabold text-(--tc-accent,#ef0001)">
+              <div className="rounded-[24px] border border-white/12 bg-white/10 p-5 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
+                <div className="text-[11px] uppercase tracking-[0.24em] text-white/70">Pass rate global</div>
+                <div className="mt-1 text-3xl font-extrabold text-white">
                   {overview?.globalPassRate == null ? "—" : `${overview.globalPassRate}%`}
                 </div>
-                <div className="mt-2 text-xs text-(--tc-text-muted)">
+                <div className="mt-2 text-xs text-white/75">
                   Cobertura: {overview?.coverage?.percent ?? 0}% ({overview?.coverage?.withStats ?? 0}/{overview?.coverage?.total ?? 0})
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-(--tc-border)/60 bg-white p-5">
-                <div className="text-[11px] uppercase tracking-[0.24em] text-(--tc-text-muted)">Releases em risco</div>
-                <div className="mt-1 text-3xl font-extrabold text-red-600">{releaseRiskCount}</div>
-                <div className="mt-2 text-xs text-(--tc-text-muted)">no período ({period}d)</div>
+              <div className="rounded-[24px] border border-white/12 bg-white/10 p-5 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
+                <div className="text-[11px] uppercase tracking-[0.24em] text-white/70">Releases em risco</div>
+                <div className="mt-1 text-3xl font-extrabold text-white">{releaseRiskCount}</div>
+                <div className="mt-2 text-xs font-medium text-white/78">no período ({period}d)</div>
               </div>
 
-              <div className="rounded-2xl border border-(--tc-border)/60 bg-white p-5">
-                <div className="text-[11px] uppercase tracking-[0.24em] text-(--tc-text-muted)">Defeitos críticos abertos</div>
-                <div className="mt-1 text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">
+              <div className="rounded-[24px] border border-white/12 bg-white/10 p-5 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
+                <div className="text-[11px] uppercase tracking-[0.24em] text-white/72">Defeitos críticos abertos</div>
+                <div className="mt-1 text-3xl font-extrabold text-white">
                   {!globalDefects.loaded ? "…" : globalDefects.criticalOpen == null ? "—" : globalDefects.criticalOpen}
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-3">
-                  <div className="text-xs text-(--tc-text-muted)">{globalDefects.error ? globalDefects.error : "Fonte: Qase (global)"}</div>
+                  <div className="text-xs font-medium text-white/78">{globalDefects.error ? globalDefects.error : "Fonte: Qase (global)"}</div>
                   <Link
                     href="/admin/defeitos"
-                    className="shrink-0 rounded-xl border border-(--tc-border)/60 bg-white px-3 py-2 text-xs font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-slate-50"
+                    className="shrink-0 rounded-full border border-white/15 bg-white/12 px-3 py-2 text-xs font-semibold text-white hover:bg-white/18"
                   >
                     Abrir
                   </Link>
@@ -580,23 +623,55 @@ export default function TestMetricPage() {
               </div>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-(--tc-border)/60 bg-white p-5 space-y-2">
+            <div className="mt-4 rounded-[24px] border border-white/12 bg-white/10 p-5 space-y-2 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
               <div className="flex items-center justify-between">
-                <div className="text-[11px] uppercase tracking-[0.24em] text-(--tc-text-muted)">Trend global</div>
-                <div className="text-xs text-(--tc-text-muted)">
-                  {overview?.trendSummary?.direction === "up" ? "+" : overview?.trendSummary?.direction === "down" ? "-" : ""}
-                  {Math.abs(overview?.trendSummary?.delta ?? 0)}pp
+                <div className="text-[11px] uppercase tracking-[0.24em] text-white/72">Qualidade por janela</div>
+                <div className="text-xs font-medium text-white/78">
+                  {(overview?.trendSummary?.delta ?? 0) === 0
+                    ? "Sem variação"
+                    : `${overview?.trendSummary?.direction === "up" ? "+" : "-"}${Math.abs(overview?.trendSummary?.delta ?? 0)} pp`}
                 </div>
               </div>
               <GlobalTrendSparkline points={overview?.trendPoints ?? []} />
+              {globalTrendMeta ? (
+                <div className="grid gap-2 pt-1 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-white/12 bg-white/8 px-3 py-2">
+                    <div className="text-[10px] uppercase tracking-[0.22em] text-white/60">Primeira leitura</div>
+                    <div className="mt-1 text-sm font-semibold text-white">
+                      {`${globalTrendMeta.first.value ?? 0}%`}
+                    </div>
+                    <div className="text-[11px] text-white/68">
+                      {globalTrendMeta.first.label} · {globalTrendMeta.first.total} runs
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-white/12 bg-white/8 px-3 py-2">
+                    <div className="text-[10px] uppercase tracking-[0.22em] text-white/60">Pior ponto do período</div>
+                    <div className="mt-1 text-sm font-semibold text-white">
+                      {`${globalTrendMeta.worst.value ?? 0}%`}
+                    </div>
+                    <div className="text-[11px] text-white/68">
+                      {globalTrendMeta.worst.label} · falhas {globalTrendMeta.worst.failRate ?? 0}% · bloqueados {globalTrendMeta.worst.blockedRate ?? 0}%
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-white/12 bg-white/8 px-3 py-2">
+                    <div className="text-[10px] uppercase tracking-[0.22em] text-white/60">Última leitura</div>
+                    <div className="mt-1 text-sm font-semibold text-white">
+                      {`${globalTrendMeta.last.value ?? 0}%`}
+                    </div>
+                    <div className="text-[11px] text-white/68">
+                      {globalTrendMeta.last.label} · falhas {globalTrendMeta.last.failRate ?? 0}% · bloqueados {globalTrendMeta.last.blockedRate ?? 0}%
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </div>
-          </header>
+          </section>
 
-          <section className="rounded-[28px] bg-white/80 p-6 sm:p-7 shadow-xl space-y-5">
+          <section className="tc-panel space-y-5">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="space-y-1">
                 <h2 className="text-lg sm:text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Empresas</h2>
-                <p className="text-sm text-(--tc-text-secondary,#4b5563)">
+                <p className="text-sm font-medium text-(--tc-text-primary,#0b1a3c)/82">
                   Busque por empresa, aplicação ou release. O carrossel foca automaticamente.
                 </p>
               </div>
@@ -658,7 +733,7 @@ export default function TestMetricPage() {
                       <div
                         key={company.id}
                         data-carousel-index={index}
-                        className="flex-none w-full md:w-180 lg:w-215 snap-center"
+                        className="flex h-full flex-none w-full snap-center md:w-[50rem] lg:w-[54rem] xl:w-[58rem]"
                         onFocus={() => setActiveIndex(index)}
                       >
                         <CompanyMetricsCard
@@ -692,7 +767,7 @@ export default function TestMetricPage() {
             )}
           </section>
 
-          <section className="rounded-[28px] bg-white/80 p-6 sm:p-7 shadow-xl space-y-5">
+          <section className="tc-panel space-y-5">
             <div className="space-y-1">
               <h2 className="text-lg sm:text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Atenção agora</h2>
               <p className="text-sm text-(--tc-text-secondary,#4b5563)">
@@ -783,77 +858,9 @@ export default function TestMetricPage() {
             </div>
           </section>
 
-          <section className="rounded-[28px] bg-white/80 p-6 sm:p-7 shadow-xl space-y-5">
-            <div className="space-y-1">
-              <h2 className="text-lg sm:text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Movimento recente</h2>
-              <p className="text-sm text-(--tc-text-secondary,#4b5563)">O que mudou recentemente no sistema.</p>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-(--tc-border)/60 bg-white p-5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Eventos (audit logs)</h3>
-                  <span className="text-xs text-(--tc-text-muted)">{audit.loaded ? `${audit.items.length} itens` : "carregando…"}</span>
-                </div>
-
-                {audit.warning && (
-                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-                    {audit.warning}
-                  </div>
-                )}
-
-                {audit.loaded && audit.items.length === 0 ? (
-                  <div className="text-sm text-(--tc-text-muted)">Sem eventos recentes (ou audit logs não configurado).</div>
-                ) : (
-                  <div className="space-y-2">
-                    {audit.items.slice(0, 10).map((item) => (
-                      <div key={item.id} className="rounded-xl border border-(--tc-border)/60 bg-slate-50 px-4 py-3">
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{actionLabel(item.action)}</div>
-                          <div className="text-[11px] text-(--tc-text-muted)">{formatDateTime(item.created_at)}</div>
-                        </div>
-                        <div className="mt-1 text-[11px] text-(--tc-text-muted)">
-                          {item.entity_label ?? item.entity_id ?? ""}{item.actor_email ? ` · ${item.actor_email}` : ""}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="rounded-2xl border border-(--tc-border)/60 bg-white p-5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Novas releases</h3>
-                  <span className="text-xs text-(--tc-text-muted)">últimas {recentReleases.length}</span>
-                </div>
-
-                {recentReleases.length === 0 ? (
-                  <div className="text-sm text-(--tc-text-muted)">Sem releases no período.</div>
-                ) : (
-                  <div className="space-y-2">
-                    {recentReleases.map(({ company, release }) => (
-                      <div
-                        key={`${company.id}-${release.slug ?? release.title ?? "release"}-${release.createdAtValue ?? 0}`}
-                        className="flex items-center justify-between gap-3 rounded-xl border border-(--tc-border)/60 bg-slate-50 px-4 py-3"
-                      >
-                        <div className="min-w-0">
-                          <div className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c) truncate" title={release.title ?? release.slug ?? ""}>
-                            {release.title ?? release.slug ?? "Release"}
-                          </div>
-                          <div className="text-[11px] text-(--tc-text-muted)">{company.name} · {formatDate(release.createdAt ?? release.created_at)}</div>
-                        </div>
-                        <div className="shrink-0 rounded-full border border-(--tc-border)/60 bg-white px-3 py-1 text-[11px] font-semibold text-(--tc-text-muted)">
-                          {gateLabel((release.gate?.status ?? "no_data") as GateStatus)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </section>
         </div>
       </div>
     </RequireGlobalAdmin>
   );
 }
+

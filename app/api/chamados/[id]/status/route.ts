@@ -1,19 +1,38 @@
-import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { NextRequest, NextResponse } from "next/server";
 import { getTicketById, updateTicketStatus } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { getTicketStatusLabel } from "@/lib/ticketsStatus";
-import { notifyTicketStatusChanged } from "@/lib/notificationService";
-import { canMoveTicket } from "@/lib/rbac/tickets";
-import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 
-export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
+// Máquina de estados: define transições permitidas
+const TICKET_STATE_MACHINE: Record<string, string[]> = {
+  backlog: ["doing"],
+  doing: ["review", "backlog"],
+  review: ["done", "doing"],
+  done: [],
+};
+
+// Função para validar transição
+function isValidTransition(from: string, to: string) {
+  return Array.isArray(TICKET_STATE_MACHINE[from]) && TICKET_STATE_MACHINE[from].includes(to);
+}
+import { notifyTicketStatusChanged } from "@/lib/notificationService";
+import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
+import { authenticateRequest } from "@/lib/jwtAuth";
+import { canMoveTicket } from "@/lib/rbac/tickets";
+
+export async function PATCH(
+  req: NextRequest,
+  context: { params: { id: string } } | { params: Promise<{ id: string }> }
+) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
-
-  const { id } = await context.params;
+  // Next.js App Router: context.params pode ser Promise
+  const params = (context.params && typeof (context.params as any).then === 'function')
+    ? await (context.params as Promise<{ id: string }>)
+    : (context.params as { id: string });
+  const id = params.id;
   const body = await req.json().catch(() => ({}));
   const nextStatus = typeof body?.status === "string" ? body.status : "";
   const reason = typeof body?.reason === "string" ? body.reason.trim() : null;
@@ -24,6 +43,25 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   }
   if (!canMoveTicket(user, current)) {
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+  }
+
+
+  // Valida transição de status
+  const fromStatus = String(current.status);
+  const toStatus = String(nextStatus);
+  if (!isValidTransition(fromStatus, toStatus)) {
+    return NextResponse.json({ error: `Transição não permitida: ${getTicketStatusLabel(fromStatus)} → ${getTicketStatusLabel(toStatus)}` }, { status: 400 });
+  }
+
+  // Regra: não pode ir para DONE sem comentário de dev
+  if (toStatus === "done") {
+    // Busca comentários do ticket
+    const commentsRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/chamados/${id}/comments`, { headers: { "Content-Type": "application/json" }, credentials: "include" });
+    const commentsJson = await commentsRes.json().catch(() => ({}));
+    const hasDevComment = Array.isArray(commentsJson.items) && commentsJson.items.some((c: any) => c.authorUserId === user.id && !c.deletedAt);
+    if (!hasDevComment) {
+      return NextResponse.json({ error: "Para concluir (DONE), é obrigatório pelo menos 1 comentário seu neste chamado." }, { status: 400 });
+    }
   }
 
   const updated = await updateTicketStatus(id, nextStatus, user.id);

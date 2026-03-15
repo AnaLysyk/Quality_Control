@@ -44,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         const storedTheme = parsed && isValid(parsed.theme) ? parsed.theme : "light";
         const useDark = storedTheme === "dark";
         root.classList.toggle("dark", useDark);
+        root.classList.toggle("theme-light", !useDark);
         root.style.colorScheme = useDark ? "dark" : "light";
       } catch (err) {
         /* ignore */

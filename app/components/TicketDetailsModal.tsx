@@ -1,926 +1,763 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { isDevRole } from "@/lib/rbac/devAccess";
-import { FiHeart, FiMessageSquare, FiRefreshCw, FiX } from "react-icons/fi";
+import { createPortal } from "react-dom";
+import { FiEdit2, FiMessageSquare, FiSave, FiSend, FiX } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { TICKET_STATUS_OPTIONS, getTicketStatusLabel, type TicketStatus } from "@/lib/ticketsStatus";
+import { TICKET_STATUS_OPTIONS } from "@/lib/ticketsStatus";
+import type { TicketPriority, TicketType } from "@/lib/ticketsStore";
 
-type TicketItem = {
+type TicketStatusOption = { value: string; label: string };
+type TicketAssigneeOption = {
   id: string;
-  title: string;
-  description: string;
-  status: TicketStatus;
-  type?: string | null;
-  code?: string | null;
-  priority?: string | null;
-  tags?: string[];
-  createdAt: string;
-  updatedAt: string;
-  createdBy?: string | null;
-  createdByName?: string | null;
-  createdByEmail?: string | null;
-  assignedToUserId?: string | null;
-  assignedToName?: string | null;
-  assignedToEmail?: string | null;
-  companySlug?: string | null;
-  companyId?: string | null;
+  label: string;
+  email?: string | null;
+  role?: string | null;
 };
 
 type TicketComment = {
   id: string;
-  ticketId: string;
   authorUserId: string;
   authorName?: string | null;
+  authorLogin?: string | null;
+  authorEmail?: string | null;
+  authorAvatarUrl?: string | null;
   body: string;
   createdAt: string;
-  updatedAt: string;
   deletedAt?: string | null;
-  reactions?: { like: number };
-  viewerHasLiked?: boolean;
 };
 
-type TicketEvent = {
+type TicketShape = {
   id: string;
-  ticketId: string;
-  type: string;
-  payload?: Record<string, unknown> | null;
-  actorUserId?: string | null;
-  actorName?: string | null;
-  actorEmail?: string | null;
-  createdAt: string;
+  title?: string | null;
+  subject?: string | null;
+  description?: string | null;
+  body?: string | null;
+  status?: string | null;
+  type?: TicketType | null;
+  priority?: TicketPriority | null;
+  code?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  createdBy?: string | null;
+  createdByName?: string | null;
+  createdByEmail?: string | null;
+  createdByLogin?: string | null;
+  createdByAvatarUrl?: string | null;
+  companySlug?: string | null;
+  assignedToUserId?: string | null;
+  assignedToName?: string | null;
+  assignedToEmail?: string | null;
 };
 
-type TimelineItem = {
-  from: TicketStatus;
-  to: TicketStatus;
-  changedById: string;
-  at: string;
+type TicketCapabilities = {
+  canEditContent: boolean;
+  canAssign: boolean;
+  canMoveStatus: boolean;
 };
 
-type AssigneeItem = {
-  id: string;
-  name: string;
-  email: string;
-  role?: string | null;
-  active?: boolean;
+type TicketDraft = {
+  title: string;
+  description: string;
+  type: TicketType;
+  priority: TicketPriority;
+  status: string;
 };
 
-type Props = {
+type TicketDetailsModalProps = {
   open: boolean;
-  ticket: TicketItem | null;
+  ticket: TicketShape | null;
   onClose: () => void;
   canEditStatus?: boolean;
-  statusOptions?: Array<{ value: TicketStatus; label: string }>;
-  onTicketUpdated?: (ticket: TicketItem) => void;
+  statusOptions?: TicketStatusOption[];
+  onTicketUpdated?: (updated: TicketShape) => void;
 };
 
-const EVENT_LABELS: Record<string, string> = {
-  CREATED: "Chamado criado",
-  STATUS_CHANGED: "Status alterado",
-  COMMENT_ADDED: "Comentario adicionado",
-  COMMENT_UPDATED: "Comentario atualizado",
-  COMMENT_DELETED: "Comentario removido",
-  REACTION_ADDED: "Reacao adicionada",
-  ASSIGNED: "Chamado atribuido",
-  UPDATED: "Detalhes atualizados",
-};
-
-const TYPE_OPTIONS = [
-  { value: "bug", label: "Bug" },
-  { value: "melhoria", label: "Melhoria" },
-  { value: "tarefa", label: "Tarefa" },
-];
-
-const PRIORITY_OPTIONS = [
-  { value: "low", label: "Baixa" },
-  { value: "medium", label: "Média" },
-  { value: "high", label: "Alta" },
-];
-
-function formatEventLabel(event: TicketEvent, options?: Array<{ value: TicketStatus; label: string }>) {
-  const base = EVENT_LABELS[event.type] ?? event.type;
-  if (event.type === "STATUS_CHANGED") {
-    const from = event.payload?.from ? String(event.payload.from) : "";
-    const to = event.payload?.to ? String(event.payload.to) : "";
-    if (from && to) {
-      return `${base}: ${getTicketStatusLabel(from as TicketStatus, options)} -> ${getTicketStatusLabel(to as TicketStatus, options)}`;
-    }
-  }
-  return base;
+function formatDateTime(value?: string | null) {
+  if (!value) return "-";
+  const parsed = Date.parse(value);
+  if (!Number.isFinite(parsed)) return "-";
+  return new Date(parsed).toLocaleString("pt-BR");
 }
 
-export default function TicketDetailsModal({ open, ticket, onClose, canEditStatus, statusOptions, onTicketUpdated }: Props) {
+function getTicketCode(ticket: TicketShape | null | undefined) {
+  if (!ticket?.id) return "-";
+  const code = typeof ticket.code === "string" ? ticket.code.trim().toUpperCase() : "";
+  if (code) return code;
+  return `SP-${ticket.id.slice(0, 6).toUpperCase()}`;
+}
+
+function getAuthorLabel(ticket: TicketShape | null | undefined) {
+  return ticket?.createdByName || ticket?.createdByEmail || ticket?.createdBy || "-";
+}
+
+function getAssigneeLabel(ticket: TicketShape | null | undefined) {
+  return ticket?.assignedToName || ticket?.assignedToEmail || (ticket?.assignedToUserId ? "Responsavel vinculado" : "Aguardando atendimento");
+}
+
+function sortComments(items: TicketComment[]) {
+  return [...items]
+    .filter((item) => !item.deletedAt)
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+}
+
+function getCommentInitials(entry: TicketComment, mine: boolean) {
+  const source = entry.authorName || entry.authorLogin || entry.authorEmail || (mine ? "Voce" : "Suporte");
+  return source
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("") || "?";
+}
+
+function getCommentHandle(entry: TicketComment) {
+  return entry.authorLogin || entry.authorEmail || null;
+}
+
+function getLabelInitials(label?: string | null) {
+  const source = (label ?? "").trim();
+  if (!source) return "?";
+  return source
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+}
+
+function getStatusTone(status?: string | null) {
+  const normalized = (status ?? "").toLowerCase();
+  if (normalized === "done") return "positive";
+  if (normalized === "review") return "progress";
+  if (normalized === "doing") return "warning";
+  return "neutral";
+}
+
+function getTypeTone(type?: TicketType | null) {
+  if (type === "bug") return "danger";
+  if (type === "melhoria") return "progress";
+  return "neutral";
+}
+
+const TICKET_TYPE_OPTIONS: { value: TicketType; label: string }[] = [
+  { value: "tarefa", label: "Tarefa" },
+  { value: "bug", label: "Bug" },
+  { value: "melhoria", label: "Melhoria" },
+];
+
+const TICKET_PRIORITY_OPTIONS: { value: TicketPriority; label: string }[] = [
+  { value: "low", label: "Baixa" },
+  { value: "medium", label: "Media" },
+  { value: "high", label: "Alta" },
+];
+const COMMENT_MAX_LENGTH = 2000;
+
+function getPriorityTone(priority?: TicketPriority | null) {
+  if (priority === "high") return "danger";
+  if (priority === "medium") return "warning";
+  if (priority === "low") return "positive";
+  return "neutral";
+}
+
+function toDraft(ticket: TicketShape | null): TicketDraft {
+  return {
+    title: ticket?.title || ticket?.subject || "",
+    description: ticket?.description || ticket?.body || "",
+    type: ticket?.type ?? "tarefa",
+    priority: ticket?.priority ?? "medium",
+    status: ticket?.status ?? "backlog",
+  };
+}
+
+export default function TicketDetailsModal({
+  open,
+  ticket,
+  onClose,
+  canEditStatus,
+  statusOptions = TICKET_STATUS_OPTIONS,
+  onTicketUpdated,
+}: TicketDetailsModalProps) {
   const { user } = useAuthUser();
-  const [tab, setTab] = useState<"details" | "comments" | "history" | "timeline">("details");
-  const [comments, setComments] = useState<TicketComment[]>([]);
-  const [events, setEvents] = useState<TicketEvent[]>([]);
-  const [loadingComments, setLoadingComments] = useState(false);
-  const [loadingEvents, setLoadingEvents] = useState(false);
-  const [commentBody, setCommentBody] = useState("");
-  const [commentError, setCommentError] = useState<string | null>(null);
-  const [commentSaving, setCommentSaving] = useState(false);
-  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
-  const [editingCommentBody, setEditingCommentBody] = useState("");
-  const [editingSaving, setEditingSaving] = useState(false);
-  const [statusUpdating, setStatusUpdating] = useState(false);
-  const [statusError, setStatusError] = useState<string | null>(null);
-  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
-  const [timelineLoading, setTimelineLoading] = useState(false);
-  const [assignees, setAssignees] = useState<AssigneeItem[]>([]);
-  const [assigneesLoading, setAssigneesLoading] = useState(false);
-  const [assigneeError, setAssigneeError] = useState<string | null>(null);
-  const [assigning, setAssigning] = useState(false);
-  const [selectedAssignee, setSelectedAssignee] = useState("");
-  const [editingDetails, setEditingDetails] = useState(false);
-  const [detailsDraft, setDetailsDraft] = useState({
-    title: "",
-    description: "",
-    priority: "medium",
-    type: "tarefa",
+  const [mounted, setMounted] = useState(false);
+  const [currentTicket, setCurrentTicket] = useState<TicketShape | null>(ticket);
+  const [draft, setDraft] = useState<TicketDraft>(toDraft(ticket));
+  const [capabilities, setCapabilities] = useState<TicketCapabilities>({
+    canEditContent: false,
+    canAssign: false,
+    canMoveStatus: false,
   });
-  const [detailsSaving, setDetailsSaving] = useState(false);
-  const [detailsError, setDetailsError] = useState<string | null>(null);
+  const [assigneeOptions, setAssigneeOptions] = useState<TicketAssigneeOption[]>([]);
+  const [assigneeDraft, setAssigneeDraft] = useState("");
+  const [savingAssignee, setSavingAssignee] = useState(false);
+  const [editingAssignee, setEditingAssignee] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [comments, setComments] = useState<TicketComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentDraft, setCommentDraft] = useState("");
+  const [sendingComment, setSendingComment] = useState(false);
+  const [loadingTicket, setLoadingTicket] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const ticketId = ticket?.id ?? null;
-  const codeLabel = ticket?.code ?? null;
-  const assignedLabel =
-    ticket?.assignedToName ||
-    ticket?.assignedToEmail ||
-    (ticket?.assignedToUserId ? `UID: ${ticket.assignedToUserId}` : "Nao atribuido");
-  const isDev = isDevRole(user?.role);
-  const canAssign = Boolean(user && isDev);
-  const canEditDetails = Boolean(user && isDev);
-  const selectableStatusOptions = statusOptions ?? TICKET_STATUS_OPTIONS;
-
-  const tagsLabel = useMemo(() => {
-    const tags = Array.isArray(ticket?.tags) ? ticket?.tags : [];
-    return tags.length ? tags.join(", ") : "Sem tags";
-  }, [ticket?.tags]);
-
-  useEffect(() => {
-    if (!open || !ticketId) return;
-    fetch("/api/notifications/read-all", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ ticketId }),
-    }).catch(() => null);
-  }, [open, ticketId]);
-
-  useEffect(() => {
-    if (!open) {
-      setEditingCommentId(null);
-      setEditingCommentBody("");
-      setCommentBody("");
-      setTab("details");
-      setEditingDetails(false);
-      setDetailsError(null);
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (!open || !ticket) return;
-    setDetailsDraft({
-      title: ticket.title ?? "",
-      description: ticket.description ?? "",
-      priority: ticket.priority ?? "medium",
-      type: ticket.type ?? "tarefa",
-    });
-    setEditingDetails(false);
-    setDetailsError(null);
-  }, [open, ticket]);
-
-  useEffect(() => {
-    if (!open) return;
-    setSelectedAssignee(ticket?.assignedToUserId ?? "");
-  }, [open, ticket?.assignedToUserId]);
-
-  useEffect(() => {
-    if (!open || !canAssign) return;
-    let active = true;
-    setAssigneesLoading(true);
-    setAssigneeError(null);
-    const endpoint = ticket?.companyId
-      ? `/api/admin/users?client_id=${encodeURIComponent(ticket.companyId)}`
-      : "/api/admin/users";
-    fetch(endpoint, { credentials: "include", cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => {
-        if (!active) return;
-        const items = Array.isArray(data?.items) ? (data.items as AssigneeItem[]) : [];
-        const filtered = items.filter((item) => {
-          const role = (item.role ?? "").toLowerCase();
-          return role === "it_dev" || role === "dev" || role === "developer";
-        });
-        setAssignees(filtered);
-      })
-      .catch((err) => {
-        if (!active) return;
-        const msg = err instanceof Error ? err.message : "Erro ao carregar desenvolvedores";
-        setAssignees([]);
-        setAssigneeError(msg);
-      })
-      .finally(() => {
-        if (!active) return;
-        setAssigneesLoading(false);
+  const loadTicket = useCallback(async () => {
+    if (!ticket?.id) return;
+    setLoadingTicket(true);
+    try {
+      const res = await fetch(`/api/tickets/${encodeURIComponent(ticket.id)}`, {
+        credentials: "include",
+        cache: "no-store",
       });
-    return () => {
-      active = false;
-    };
-  }, [open, canAssign, ticket?.companyId]);
+      const json = (await res.json().catch(() => ({}))) as {
+        item?: TicketShape;
+        assigneeOptions?: TicketAssigneeOption[];
+        capabilities?: Partial<TicketCapabilities>;
+        error?: string;
+      };
+      if (!res.ok || !json.item) {
+        throw new Error(json?.error || "Erro ao carregar chamado");
+      }
+      setCurrentTicket(json.item);
+      setDraft(toDraft(json.item));
+      setAssigneeOptions(Array.isArray(json.assigneeOptions) ? json.assigneeOptions : []);
+      setAssigneeDraft(json.item.assignedToUserId ?? "");
+      setCapabilities({
+        canEditContent: Boolean(json.capabilities?.canEditContent),
+        canAssign: Boolean(json.capabilities?.canAssign),
+        canMoveStatus: canEditStatus === true || Boolean(json.capabilities?.canMoveStatus),
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Erro ao carregar chamado";
+      setError(message);
+    } finally {
+      setLoadingTicket(false);
+    }
+  }, [canEditStatus, ticket?.id]);
 
   const loadComments = useCallback(async () => {
-    if (!ticketId) return;
-    setLoadingComments(true);
-    setCommentError(null);
+    if (!ticket?.id) return;
+    setCommentsLoading(true);
     try {
-      const res = await fetch(`/api/chamados/${ticketId}/comments`, { credentials: "include", cache: "no-store" });
+      const res = await fetch(`/api/tickets/${encodeURIComponent(ticket.id)}/comments`, {
+        credentials: "include",
+        cache: "no-store",
+      });
       const json = (await res.json().catch(() => ({}))) as { items?: TicketComment[]; error?: string };
       if (!res.ok) {
-        setCommentError(json?.error || "Erro ao carregar comentarios");
-        setComments([]);
-        return;
+        throw new Error(json?.error || "Erro ao carregar comentarios");
       }
-      setComments(Array.isArray(json.items) ? json.items : []);
+      setComments(sortComments(Array.isArray(json.items) ? json.items : []));
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao carregar comentarios";
-      setCommentError(msg);
+      const message = err instanceof Error ? err.message : "Erro ao carregar comentarios";
+      setError(message);
     } finally {
-      setLoadingComments(false);
+      setCommentsLoading(false);
     }
-  }, [ticketId]);
-
-  const loadEvents = useCallback(async () => {
-    if (!ticketId) return;
-    setLoadingEvents(true);
-    try {
-      const res = await fetch(`/api/chamados/${ticketId}/events`, { credentials: "include", cache: "no-store" });
-      const json = (await res.json().catch(() => ({}))) as { items?: TicketEvent[] };
-      if (!res.ok) {
-        setEvents([]);
-        return;
-      }
-      setEvents(Array.isArray(json.items) ? json.items : []);
-    } finally {
-      setLoadingEvents(false);
-    }
-  }, [ticketId]);
-
-  const loadTimeline = useCallback(async () => {
-    if (!ticketId) return;
-    setTimelineLoading(true);
-    try {
-      const res = await fetch(`/api/chamados/${ticketId}/timeline`, { credentials: "include", cache: "no-store" });
-      const json = (await res.json().catch(() => ({}))) as { items?: TimelineItem[] };
-      if (!res.ok) {
-        setTimelineItems([]);
-        return;
-      }
-      const items = Array.isArray(json.items) ? json.items : [];
-      setTimelineItems(items);
-    } finally {
-      setTimelineLoading(false);
-    }
-  }, [ticketId]);
+  }, [ticket?.id]);
 
   useEffect(() => {
-    if (!open) return;
-    loadComments();
-    loadEvents();
-    loadTimeline();
-  }, [open, loadComments, loadEvents, loadTimeline]);
+    setMounted(true);
+  }, []);
 
-  async function submitComment() {
-    if (!ticketId) return;
-    setCommentSaving(true);
-    setCommentError(null);
+  useEffect(() => {
+    if (!open || !ticket?.id) return;
+    setCurrentTicket(ticket);
+    setAssigneeDraft(ticket.assignedToUserId ?? "");
+    setDraft(toDraft(ticket));
+    setAssigneeOptions([]);
+    setCommentDraft("");
+    setEditingAssignee(false);
+    setError(null);
+    void loadTicket();
+    void loadComments();
+  }, [open, ticket, loadTicket, loadComments]);
+
+  useEffect(() => {
+    if (!mounted || !open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mounted, open]);
+
+  const title = useMemo(
+    () => currentTicket?.title || currentTicket?.subject || `#${currentTicket?.id ?? "-"}`,
+    [currentTicket],
+  );
+  const description = useMemo(
+    () => currentTicket?.description || currentTicket?.body || "Sem descricao.",
+    [currentTicket],
+  );
+  const canEditContent = capabilities.canEditContent;
+  const canMoveStatus = capabilities.canMoveStatus;
+  const canEditTicket = canEditContent || canMoveStatus;
+  const commentLength = commentDraft.length;
+  const hasAssigneeSaved = Boolean(currentTicket?.assignedToUserId);
+  const assigneeChanged = assigneeDraft !== (currentTicket?.assignedToUserId ?? "");
+  const canSaveAssignee = Boolean(assigneeDraft) && assigneeChanged && !savingAssignee;
+  const draftChanged = useMemo(() => {
+    if (!currentTicket) return false;
+    return (
+      draft.title !== (currentTicket.title || currentTicket.subject || "") ||
+      draft.description !== (currentTicket.description || currentTicket.body || "") ||
+      draft.type !== (currentTicket.type ?? "tarefa") ||
+      draft.priority !== (currentTicket.priority ?? "medium") ||
+      draft.status !== (currentTicket.status ?? "backlog")
+    );
+  }, [currentTicket, draft]);
+
+  async function handleSaveDraft() {
+    if (!ticket?.id || !currentTicket) return;
+    setSavingDraft(true);
+    setError(null);
     try {
-      const res = await fetch(`/api/chamados/${ticketId}/comments`, {
+      let nextTicket: TicketShape = currentTicket;
+
+      if (canEditContent) {
+        const res = await fetch(`/api/tickets/${encodeURIComponent(ticket.id)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            title: draft.title,
+            description: draft.description,
+            type: draft.type,
+            priority: draft.priority,
+          }),
+        });
+        const json = (await res.json().catch(() => ({}))) as { item?: TicketShape; error?: string };
+        if (!res.ok || !json.item) {
+          throw new Error(json?.error || "Erro ao salvar chamado");
+        }
+        nextTicket = json.item;
+      }
+
+      if (canMoveStatus && draft.status !== (nextTicket.status ?? "backlog")) {
+        const res = await fetch(`/api/tickets/${encodeURIComponent(ticket.id)}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ status: draft.status }),
+        });
+        const json = (await res.json().catch(() => ({}))) as { item?: TicketShape; error?: string };
+        if (!res.ok || !json.item) {
+          throw new Error(json?.error || "Erro ao atualizar status");
+        }
+        nextTicket = json.item;
+      }
+
+      setCurrentTicket(nextTicket);
+      setDraft(toDraft(nextTicket));
+      onTicketUpdated?.(nextTicket);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Erro ao salvar chamado";
+      setError(message);
+    } finally {
+      setSavingDraft(false);
+    }
+  }
+
+  async function handleSaveAssignee() {
+    if (!ticket?.id) return;
+    setSavingAssignee(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/tickets/${encodeURIComponent(ticket.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ assignedToUserId: assigneeDraft || null }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { item?: TicketShape; error?: string };
+      if (!res.ok || !json.item) {
+        throw new Error(json?.error || "Erro ao salvar responsavel");
+      }
+      setCurrentTicket(json.item);
+      setAssigneeDraft(json.item.assignedToUserId ?? "");
+      setEditingAssignee(false);
+      onTicketUpdated?.(json.item);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Erro ao salvar responsavel";
+      setError(message);
+    } finally {
+      setSavingAssignee(false);
+    }
+  }
+
+  async function handleSendComment() {
+    if (!ticket?.id || !commentDraft.trim()) return;
+    setSendingComment(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/tickets/${encodeURIComponent(ticket.id)}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ body: commentBody }),
+        body: JSON.stringify({ body: commentDraft }),
       });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setCommentError(json?.error || "Erro ao salvar comentario");
-        return;
+      const json = (await res.json().catch(() => ({}))) as { item?: TicketComment; error?: string };
+      if (!res.ok || !json.item) {
+        throw new Error(json?.error || "Erro ao enviar comentario");
       }
-      setCommentBody("");
-      await loadComments();
-      await loadEvents();
+      setComments((current) => sortComments([...current, json.item as TicketComment]));
+      setCommentDraft("");
+      await loadTicket();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao salvar comentario";
-      setCommentError(msg);
+      const message = err instanceof Error ? err.message : "Erro ao enviar comentario";
+      setError(message);
     } finally {
-      setCommentSaving(false);
+      setSendingComment(false);
     }
   }
 
-  async function toggleLike(comment: TicketComment) {
-    if (!ticketId) return;
-    const hasLiked = comment.viewerHasLiked;
-    const endpoint = hasLiked
-      ? `/api/comments/${comment.id}/reactions/like`
-      : `/api/comments/${comment.id}/reactions`;
-    const method = hasLiked ? "DELETE" : "POST";
-    const body = hasLiked ? undefined : JSON.stringify({ type: "like" });
-    await fetch(endpoint, {
-      method,
-      headers: hasLiked ? undefined : { "Content-Type": "application/json" },
-      credentials: "include",
-      body,
-    });
-    await loadComments();
-  }
+  if (!open || !ticket || !mounted) return null;
 
-  function startEditComment(comment: TicketComment) {
-    setEditingCommentId(comment.id);
-    setEditingCommentBody(comment.body);
-  }
-
-  function cancelEditComment() {
-    setEditingCommentId(null);
-    setEditingCommentBody("");
-  }
-
-  async function saveEditComment(comment: TicketComment) {
-    setEditingSaving(true);
-    try {
-      const res = await fetch(`/api/comments/${comment.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ body: editingCommentBody }),
-      });
-      if (!res.ok) return;
-      await loadComments();
-      await loadEvents();
-      cancelEditComment();
-    } finally {
-      setEditingSaving(false);
-    }
-  }
-
-  async function deleteComment(comment: TicketComment) {
-    const res = await fetch(`/api/comments/${comment.id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-    if (res.ok) {
-      await loadComments();
-      await loadEvents();
-    }
-  }
-
-  function startEditDetails() {
-    if (!ticket) return;
-    setDetailsDraft({
-      title: ticket.title ?? "",
-      description: ticket.description ?? "",
-      priority: ticket.priority ?? "medium",
-      type: ticket.type ?? "tarefa",
-    });
-    setDetailsError(null);
-    setEditingDetails(true);
-  }
-
-  function cancelEditDetails() {
-    if (!ticket) return;
-    setDetailsDraft({
-      title: ticket.title ?? "",
-      description: ticket.description ?? "",
-      priority: ticket.priority ?? "medium",
-      type: ticket.type ?? "tarefa",
-    });
-    setDetailsError(null);
-    setEditingDetails(false);
-  }
-
-  async function saveDetails() {
-    if (!ticketId) return;
-    setDetailsSaving(true);
-    setDetailsError(null);
-    try {
-      const res = await fetch(`/api/chamados/${ticketId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          title: detailsDraft.title,
-          description: detailsDraft.description,
-          priority: detailsDraft.priority,
-          type: detailsDraft.type,
-        }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok || !json?.item) {
-        setDetailsError(json?.error || "Erro ao atualizar chamado");
-        return;
-      }
-      onTicketUpdated?.(json.item as TicketItem);
-      setEditingDetails(false);
-      await loadEvents();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao atualizar chamado";
-      setDetailsError(msg);
-    } finally {
-      setDetailsSaving(false);
-    }
-  }
-
-  async function updateStatus(nextStatus: TicketStatus) {
-    if (!ticketId) return;
-    setStatusUpdating(true);
-    setStatusError(null);
-    try {
-      const res = await fetch(`/api/chamados/${ticketId}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ status: nextStatus }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setStatusError(json?.error || "Erro ao atualizar status");
-        return;
-      }
-      if (json?.item && onTicketUpdated) {
-        onTicketUpdated(json.item);
-      }
-      await loadEvents();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao atualizar status";
-      setStatusError(msg);
-    } finally {
-      setStatusUpdating(false);
-    }
-  }
-
-  async function updateAssignment(nextAssignee: string) {
-    if (!ticketId) return;
-    setAssigning(true);
-    setAssigneeError(null);
-    try {
-      const res = await fetch(`/api/chamados/${ticketId}/assign`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ assignedToUserId: nextAssignee || null }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok || !json?.item) {
-        setAssigneeError(json?.error || "Erro ao atribuir");
-        return;
-      }
-      setSelectedAssignee(json.item.assignedToUserId ?? "");
-      onTicketUpdated?.(json.item as TicketItem);
-      await loadEvents();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao atribuir";
-      setAssigneeError(msg);
-    } finally {
-      setAssigning(false);
-    }
-  }
-
-  if (!open || !ticket) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-3xl rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_30px_80px_rgba(15,23,42,0.35)]">
-        <div className="flex items-start justify-between gap-4 border-b border-(--tc-border,#e5e7eb) px-6 py-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Chamado</p>
-            <h2 className="text-lg font-semibold text-(--tc-text,#0f172a)">{ticket.title}</h2>
+  return createPortal(
+    <div
+      className="ticket-detail-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 12000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "0.5rem",
+      }}
+    >
+      <div
+        className="ticket-detail-modal-shell"
+        onMouseDown={(event) => event.stopPropagation()}
+        style={{
+          position: "relative",
+          display: "flex",
+          width: "min(100%, 86rem)",
+          maxHeight: "calc(100vh - 0.5rem)",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        <div className="ticket-detail-modal-header">
+          <div className="ticket-detail-modal-heading">
+            <div className="ticket-detail-modal-icon">
+              <FiMessageSquare size={20} />
+            </div>
+            <div className="min-w-0">
+              <p className="tc-panel-kicker">Atendimento</p>
+              <h2 className="tc-panel-title">Chamado em acompanhamento</h2>
+              <p className="tc-panel-description">
+              Dados do chamado fixos na esquerda e conversa ativa com o suporte na direita.
+              </p>
+            </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fechar modal"
+            className="ticket-detail-modal-close"
+            aria-label="Fechar detalhes do chamado"
             title="Fechar"
-            className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
           >
-            <FiX />
+            <FiX size={18} />
           </button>
         </div>
 
-        <div className="flex items-center gap-2 border-b border-(--tc-border,#e5e7eb) px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em]">
-          {(["details", "comments", "history", "timeline"] as const).map((key) => {
-            const label = key === "details" ? "Detalhes" : key === "comments" ? "Comentarios" : key === "history" ? "Historico" : "Timeline";
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setTab(key)}
-                aria-label={`Ir para ${label}`}
-                title={`Ir para ${label}`}
-                className={`rounded-full px-3 py-1 ${
-                  tab === key ? "bg-(--tc-accent,#ef0001) text-white" : "text-(--tc-text-muted,#6b7280)"
-                }`}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="px-6 py-4 space-y-4 max-h-[70vh] overflow-auto">
-          {tab === "details" && (
-            <>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Codigo</p>
-                  <p className="text-sm font-semibold">{codeLabel ?? "CH-000000"}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Status</p>
-                  <p className="text-sm font-semibold">{getTicketStatusLabel(ticket.status, selectableStatusOptions)}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Prioridade</p>
-                  <p className="text-sm font-semibold">{ticket.priority ?? "medium"}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Tipo</p>
-                  <p className="text-sm font-semibold">{ticket.type || "Nao informado"}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Atribuido</p>
-                  <p className="text-sm font-semibold">{assignedLabel}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Tags</p>
-                  <p className="text-sm font-semibold">{tagsLabel}</p>
-                </div>
-              </div>
-              {canAssign && (
-                <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4 space-y-2">
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
-                    Responsavel pelo ticket
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <label className="sr-only" htmlFor="ticket-assignee-select">
-                      Responsavel pelo ticket
-                    </label>
-                    <select
-                      id="ticket-assignee-select"
-                      aria-label="Responsavel pelo ticket"
-                      title="Responsavel pelo ticket"
-                      className="rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
-                      value={selectedAssignee}
-                      onChange={(e) => updateAssignment(e.target.value)}
-                      disabled={assigning || assigneesLoading}
-                    >
-                      <option value="">Sem responsavel</option>
-                      {assignees.map((assignee) => (
-                        <option key={assignee.id} value={assignee.id}>
-                          {assignee.name || assignee.email}
-                        </option>
-                      ))}
-                    </select>
-                    {user?.id && (
-                      <button
-                        type="button"
-                        onClick={() => updateAssignment(user.id)}
-                        disabled={assigning || selectedAssignee === user.id}
-                        className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.3em]"
-                      >
-                        Assumir
-                      </button>
-                    )}
-                    {assigneesLoading && <span className="text-xs text-(--tc-text-muted,#6b7280)">Carregando...</span>}
-                  </div>
-                  {assigneeError && <p className="text-xs text-red-600">{assigneeError}</p>}
-                  {!assigneesLoading && assignees.length === 0 && (
-                    <p className="text-xs text-(--tc-text-muted,#6b7280)">Nenhum desenvolvedor disponivel.</p>
+        <div className="ticket-detail-modal-grid">
+          <section className="ticket-detail-panel ticket-detail-panel-primary">
+            <div className="ticket-detail-stack">
+              <div className="ticket-detail-requester-shell">
+                <div className="ticket-detail-requester-avatar" aria-hidden="true">
+                  {currentTicket?.createdByAvatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={currentTicket.createdByAvatarUrl} alt="" className="ticket-detail-requester-avatar-image" />
+                  ) : (
+                    <span>{getLabelInitials(getAuthorLabel(currentTicket))}</span>
                   )}
                 </div>
-              )}
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Descricao</p>
-                <p className="mt-2 text-sm whitespace-pre-wrap text-(--tc-text-secondary,#4b5563)">
-                  {ticket.description || "Sem descricao."}
-                </p>
-              </div>
-              <div className="grid gap-2 text-xs text-(--tc-text-muted,#6b7280)">
-                <p>
-                  Criado em {new Date(ticket.createdAt).toLocaleString("pt-BR")}
-                  {ticket.createdByName || ticket.createdByEmail
-                    ? ` por ${ticket.createdByName || ticket.createdByEmail}`
-                    : ""}
-                </p>
-                <p>Atualizado em {new Date(ticket.updatedAt).toLocaleString("pt-BR")}</p>
-                {ticket.companySlug && <p>Empresa: {ticket.companySlug}</p>}
+                <div className="ticket-detail-requester-main">
+                  <p className="ticket-detail-requester-name">{getAuthorLabel(currentTicket)}</p>
+                  <div className="ticket-detail-requester-meta">
+                    {currentTicket?.createdByLogin ? (
+                      <span>@{currentTicket.createdByLogin.replace(/^@+/, "")}</span>
+                    ) : null}
+                    {currentTicket?.companySlug ? <span>{currentTicket.companySlug}</span> : null}
+                  </div>
+                </div>
               </div>
 
-              {canEditDetails && !editingDetails && (
-                <button
-                  type="button"
-                  onClick={startEditDetails}
-                  className="inline-flex items-center gap-2 rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
-                >
-                  Editar chamado
-                </button>
-              )}
+              <div className="ticket-detail-edit-panel ticket-detail-edit-panel-flat">
+                {canEditContent ? (
+                  <>
+                    <div className="ticket-detail-field-shell">
+                      <p className="tc-kv-label">Titulo</p>
+                      <input
+                        value={draft.title}
+                        onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
+                        className="ticket-detail-input"
+                        placeholder="Titulo do chamado"
+                      />
+                    </div>
 
-              {canEditDetails && editingDetails && (
-                <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4 space-y-3">
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
-                    Editar detalhes
-                  </p>
-                  <div className="space-y-2">
-                    <input
-                      className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                      placeholder="Titulo"
-                      value={detailsDraft.title}
-                      onChange={(e) => setDetailsDraft((prev) => ({ ...prev, title: e.target.value }))}
-                    />
-                    <textarea
-                      rows={4}
-                      className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                      placeholder="Descreva o chamado..."
-                      value={detailsDraft.description}
-                      onChange={(e) => setDetailsDraft((prev) => ({ ...prev, description: e.target.value }))}
-                    />
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <label className="sr-only" htmlFor="ticket-type-select">
-                      Tipo do chamado
-                    </label>
-                    <select
-                      id="ticket-type-select"
-                      aria-label="Tipo do chamado"
-                      title="Tipo do chamado"
-                      className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                      value={detailsDraft.type}
-                      onChange={(e) => setDetailsDraft((prev) => ({ ...prev, type: e.target.value }))}
-                    >
-                      {TYPE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                    <label className="sr-only" htmlFor="ticket-priority-select">
-                      Prioridade do chamado
-                    </label>
-                    <select
-                      id="ticket-priority-select"
-                      aria-label="Prioridade do chamado"
-                      title="Prioridade do chamado"
-                      className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                      value={detailsDraft.priority}
-                      onChange={(e) => setDetailsDraft((prev) => ({ ...prev, priority: e.target.value }))}
-                    >
-                      {PRIORITY_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={saveDetails}
-                      disabled={detailsSaving}
-                      className="rounded-lg bg-(--tc-surface-dark,#0b1a3c) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
-                    >
-                      {detailsSaving ? "Salvando" : "Salvar"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={cancelEditDetails}
-                      className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                  {detailsError && <p className="text-xs text-red-600">{detailsError}</p>}
-                </div>
-              )}
-              {canEditStatus && (
-                <div className="mt-4 rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4 space-y-2">
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
-                    Atualizar status
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <label className="sr-only" htmlFor="ticket-status-select">
-                      Atualizar status
-                    </label>
-                    <select
-                      id="ticket-status-select"
-                      aria-label="Atualizar status do chamado"
-                      title="Atualizar status do chamado"
-                      className="rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
-                      value={ticket.status}
-                      onChange={(e) => updateStatus(e.target.value as TicketStatus)}
-                      disabled={statusUpdating}
-                    >
-                      {selectableStatusOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                    {statusUpdating && <span className="text-xs text-(--tc-text-muted,#6b7280)">Salvando...</span>}
-                  </div>
-                  {statusError && <p className="text-xs text-red-600">{statusError}</p>}
-                </div>
-              )}
-            </>
-          )}
-
-          {tab === "comments" && (
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-4 space-y-2">
-                <textarea
-                  rows={4}
-                  className="w-full rounded-xl border border-(--tc-border,#e5e7eb) px-3 py-2 text-sm"
-                  placeholder="Escreva um comentario..."
-                  value={commentBody}
-                  onChange={(e) => setCommentBody(e.target.value)}
-                />
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={submitComment}
-                    disabled={commentSaving || !commentBody.trim()}
-                    className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
-                  >
-                    <FiMessageSquare size={14} /> {commentSaving ? "Enviando" : "Comentar"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={loadComments}
-                    aria-label="Recarregar comentarios"
-                    title="Recarregar comentarios"
-                    className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
-                  >
-                    <FiRefreshCw size={14} />
-                  </button>
-                </div>
-                {commentError && <p className="text-xs text-red-600">{commentError}</p>}
-              </div>
-
-              {loadingComments && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
-              {!loadingComments && comments.length === 0 && (
-                <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhum comentario ainda.</p>
-              )}
-
-              <div className="space-y-3">
-                {comments.map((comment) => (
-                  <div key={comment.id} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-semibold text-(--tc-text,#0f172a)">
-                          {comment.authorName || comment.authorUserId}
-                        </p>
-                        <p className="text-[11px] text-(--tc-text-muted,#6b7280)">
-                          {new Date(comment.createdAt).toLocaleString("pt-BR")}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => toggleLike(comment)}
-                          aria-label={comment.viewerHasLiked ? "Remover curtida" : "Curtir comentario"}
-                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] ${
-                            comment.viewerHasLiked
-                              ? "border-rose-200 bg-rose-50 text-rose-600"
-                              : "border-(--tc-border,#e5e7eb) text-(--tc-text-muted,#6b7280)"
-                          }`}
+                    <div className="ticket-detail-edit-grid">
+                      <div className="ticket-detail-field-shell">
+                        <p className="tc-kv-label">Tipo</p>
+                        <select
+                          value={draft.type}
+                          onChange={(event) =>
+                            setDraft((current) => ({ ...current, type: event.target.value as TicketType }))
+                          }
+                          className="ticket-detail-select"
+                          data-kind="type"
+                          data-value={draft.type}
+                          data-tone={getTypeTone(draft.type)}
                         >
-                          <FiHeart size={12} />
-                          {comment.reactions?.like ?? 0}
-                        </button>
-                        {(comment.authorUserId === user?.id || isDev) && !comment.deletedAt && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => startEditComment(comment)}
-                              className="rounded-full border border-(--tc-border,#e5e7eb) px-2 py-1 text-[11px] text-(--tc-text-muted,#6b7280)"
-                            >
-                              Editar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => deleteComment(comment)}
-                              className="rounded-full border border-rose-200 px-2 py-1 text-[11px] text-rose-600"
-                            >
-                              Excluir
-                            </button>
-                          </>
-                        )}
+                          {TICKET_TYPE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="ticket-detail-field-shell">
+                        <p className="tc-kv-label">Prioridade</p>
+                        <select
+                          value={draft.priority}
+                          onChange={(event) =>
+                            setDraft((current) => ({ ...current, priority: event.target.value as TicketPriority }))
+                          }
+                          className="ticket-detail-select"
+                          data-kind="priority"
+                          data-value={draft.priority}
+                          data-tone={getPriorityTone(draft.priority)}
+                        >
+                          {TICKET_PRIORITY_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {canMoveStatus ? (
+                        <div className="ticket-detail-field-shell">
+                          <p className="tc-kv-label">Status</p>
+                          <select
+                            value={draft.status}
+                            onChange={(event) => setDraft((current) => ({ ...current, status: event.target.value }))}
+                            className="ticket-detail-select"
+                            data-kind="status"
+                            data-value={draft.status}
+                            data-tone={getStatusTone(draft.status)}
+                          >
+                            {statusOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="ticket-detail-field-shell">
+                      <p className="tc-kv-label">Descricao</p>
+                      <textarea
+                        value={draft.description}
+                        onChange={(event) =>
+                          setDraft((current) => ({ ...current, description: event.target.value }))
+                        }
+                        rows={4}
+                        className="ticket-detail-textarea"
+                        placeholder="Descreva o chamado"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="ticket-detail-field-shell ticket-detail-field-shell-readonly ticket-detail-field-inline">
+                      <p className="tc-kv-label">Titulo</p>
+                      <p className="ticket-detail-main-title">{title}</p>
+                    </div>
+                    <div className="ticket-detail-field-shell ticket-detail-field-shell-readonly ticket-detail-field-inline">
+                      <p className="tc-kv-label">Descricao</p>
+                      <div className="ticket-detail-copy-card whitespace-pre-wrap">
+                        {description}
                       </div>
                     </div>
-                    {editingCommentId === comment.id ? (
-                      <div className="mt-2 space-y-2">
-                        <textarea
-                          rows={3}
-                          aria-label="Editar comentario"
-                          placeholder="Edite o comentario..."
-                          className="w-full rounded-xl border border-(--tc-border,#e5e7eb) px-3 py-2 text-sm"
-                          value={editingCommentBody}
-                          onChange={(e) => setEditingCommentBody(e.target.value)}
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => saveEditComment(comment)}
-                            disabled={editingSaving}
-                            className="rounded-lg bg-(--tc-surface-dark,#0b1a3c) px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
-                          >
-                            Salvar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={cancelEditComment}
-                            className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em]"
-                          >
-                            Cancelar
-                          </button>
-                        </div>
+                  </>
+                )}
+
+                <div className="ticket-detail-inline-meta">
+                  <span><strong>Chamado:</strong> {getTicketCode(currentTicket)}</span>
+                  <span><strong>Criado em:</strong> {formatDateTime(currentTicket?.createdAt)}</span>
+                  <span><strong>Atualizado:</strong> {formatDateTime(currentTicket?.updatedAt)}</span>
+                  {loadingTicket ? <span>Atualizando dados...</span> : null}
+                </div>
+
+                {canEditTicket ? (
+                  <div className="ticket-detail-form-actions">
+                    <button
+                      type="button"
+                      onClick={handleSaveDraft}
+                      disabled={savingDraft || !draftChanged}
+                      className="ticket-detail-primary-btn"
+                    >
+                      <FiSave size={14} />
+                      {savingDraft ? "Salvando..." : "Salvar alteracoes"}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+
+              {assigneeOptions.length > 0 ? (
+                <div className="ticket-detail-assign-panel ticket-detail-section-shell">
+                  {!editingAssignee && hasAssigneeSaved ? (
+                    <div className="ticket-detail-assignee-readonly">
+                      <div className="ticket-detail-assignee-copy">
+                        <p className="tc-kv-label">Responsavel</p>
+                        <p className="ticket-detail-assignee-name">{getAssigneeLabel(currentTicket)}</p>
                       </div>
-                    ) : (
-                      <p className="mt-2 text-sm whitespace-pre-wrap text-(--tc-text-secondary,#4b5563)">
-                        {comment.deletedAt ? "Comentario removido." : comment.body}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingAssignee(true)}
+                        className="ticket-detail-icon-btn"
+                        aria-label="Editar responsavel"
+                        title="Editar responsavel"
+                      >
+                        <FiEdit2 size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="ticket-detail-assign-grid">
+                      <div className="flex-1">
+                        <p className="tc-kv-label">Selecionar responsavel</p>
+                        <select
+                          value={assigneeDraft}
+                          onChange={(event) => setAssigneeDraft(event.target.value)}
+                          className="ticket-detail-select"
+                          aria-label="Selecionar responsavel pelo chamado"
+                          title="Selecionar responsavel pelo chamado"
+                        >
+                          <option value="">Selecione um responsavel</option>
+                          {assigneeOptions.map((option) => (
+                            <option key={option.id} value={option.id}>
+                              {option.label}
+                              {option.email ? ` - ${option.email}` : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleSaveAssignee}
+                        disabled={!canSaveAssignee}
+                        className="ticket-detail-primary-btn"
+                      >
+                        {savingAssignee ? "Salvando..." : "Salvar responsavel"}
+                      </button>
+                    </div>
+                  )}
+                  <p className="ticket-detail-note">
+                    O chamado so pode ser movido no kanban depois que o responsavel estiver salvo.
+                  </p>
+                </div>
+              ) : null}
             </div>
-          )}
+          </section>
 
-          {tab === "history" && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Historico</p>
-                <button
-                  type="button"
-                  onClick={loadEvents}
-                  aria-label="Recarregar historico"
-                  title="Recarregar historico"
-                  className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em]"
-                >
-                  Atualizar
-                </button>
+          <section className="ticket-detail-panel ticket-detail-panel-secondary">
+            <div className="ticket-detail-chat-header">
+              <div className="ticket-detail-chat-icon">
+                <FiMessageSquare size={18} />
               </div>
-              {loadingEvents && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
-              {!loadingEvents && events.length === 0 && (
-                <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhum evento registrado.</p>
-              )}
-              <div className="space-y-2">
-                {events.map((event) => (
-                  <div key={event.id} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3">
-                    <p className="text-sm font-semibold text-(--tc-text,#0f172a)">{formatEventLabel(event, selectableStatusOptions)}</p>
-                    <p className="text-[11px] text-(--tc-text-muted,#6b7280)">
-                      {event.actorName || event.actorEmail || event.actorUserId || "Sistema"} •{" "}
-                      {new Date(event.createdAt).toLocaleString("pt-BR")}
-                    </p>
-                  </div>
-                ))}
+              <div>
+                <p className="ticket-detail-chat-title">Comentarios do chamado</p>
+                <p className="ticket-detail-chat-description">
+                  Perfis globais acompanham e respondem todos. Perfis de empresa respondem apenas os proprios chamados.
+                </p>
               </div>
             </div>
-          )}
 
-          {tab === "timeline" && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Timeline</p>
-                <button
-                  type="button"
-                  onClick={loadTimeline}
-                  aria-label="Recarregar timeline"
-                  title="Recarregar timeline"
-                  className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em]"
-                >
-                  Atualizar
-                </button>
+            <div className="ticket-detail-comments">
+            <div className="comments-chat">
+              <div
+                className={`comments-chat-list${!commentsLoading && comments.length === 0 ? " comments-chat-list-empty" : ""}`}
+                aria-live="polite"
+              >
+                {commentsLoading ? (
+                  <p className="comments-chat-empty">Carregando conversa...</p>
+                ) : comments.length === 0 ? (
+                  <p className="comments-chat-empty">Nenhum comentario ainda.</p>
+                ) : (
+                  comments.map((entry) => {
+                    const mine = entry.authorUserId === user?.id;
+                    const handle = getCommentHandle(entry);
+                    return (
+                      <div key={entry.id} className={`comments-chat-message ${mine ? "mine" : "other"}`}>
+                        <div className="comments-chat-author-row">
+                          <div className="comments-chat-avatar" aria-hidden="true">
+                            {entry.authorAvatarUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={entry.authorAvatarUrl} alt="" className="comments-chat-avatar-image" />
+                            ) : (
+                              <span>{getCommentInitials(entry, mine)}</span>
+                            )}
+                          </div>
+                          <div className="comments-chat-author-stack">
+                            <div className="comments-chat-author">
+                              {entry.authorName || (mine ? "Voce" : "Atendimento")}
+                            </div>
+                            {handle ? (
+                              <div className="comments-chat-handle">
+                                @{handle.replace(/^@+/, "")}
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div className="comments-chat-bubble whitespace-pre-wrap">{entry.body}</div>
+                        <div className="comments-chat-meta">{formatDateTime(entry.createdAt)}</div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
-              {timelineLoading && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
-              {!timelineLoading && timelineItems.length === 0 && (
-                <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma movimentacao registrada.</p>
-              )}
-              <div className="space-y-2">
-                {timelineItems.map((item, idx) => (
-                  <div key={`${item.at}-${idx}`} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3">
-                    <p className="text-sm font-semibold text-(--tc-text,#0f172a)">
-                      {getTicketStatusLabel(item.from, selectableStatusOptions)}{" -> "}{getTicketStatusLabel(item.to, selectableStatusOptions)}
-                    </p>
-                    <p className="text-[11px] text-(--tc-text-muted,#6b7280)">
-                      {item.changedById} • {new Date(item.at).toLocaleString("pt-BR")}
-                    </p>
+
+              <div className="comments-chat-input">
+                <textarea
+                  value={commentDraft}
+                  onChange={(event) => setCommentDraft(event.target.value)}
+                  className="ticket-detail-textarea"
+                  rows={4}
+                  maxLength={COMMENT_MAX_LENGTH}
+                  placeholder="Escreva uma resposta ou atualizacao para este chamado"
+                />
+                <div className="comments-chat-actions">
+                  <div className="comments-chat-status">
+                    {error ? <span className="ticket-detail-chat-error">{error}</span> : <span className="ticket-detail-chat-note">Os comentarios ficam visiveis para quem tem acesso a este chamado.</span>}
+                    <span className="ticket-detail-chat-counter" data-limit={commentLength >= COMMENT_MAX_LENGTH ? "max" : commentLength >= COMMENT_MAX_LENGTH * 0.9 ? "warning" : "ok"}>
+                      {commentLength}/{COMMENT_MAX_LENGTH} caracteres
+                    </span>
                   </div>
-                ))}
+                  <button
+                    type="button"
+                    onClick={handleSendComment}
+                    disabled={sendingComment || !commentDraft.trim()}
+                    className="ticket-detail-primary-btn"
+                  >
+                    <FiSend size={15} />
+                    {sendingComment ? "Enviando..." : "Responder"}
+                  </button>
+                </div>
               </div>
             </div>
-          )}
+            </div>
+          </section>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

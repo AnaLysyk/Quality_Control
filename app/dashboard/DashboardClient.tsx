@@ -1,16 +1,18 @@
-﻿"use client";
+"use client";
 
-import { useAuthUser, type AuthUser } from "@/hooks/useAuthUser";
+import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { FiArrowRight, FiCompass, FiLogOut, FiSettings } from "react-icons/fi";
+import { useAuthUser, type AuthUser } from "@/hooks/useAuthUser";
 import { hasCapability, type Capability } from "@/lib/permissions";
 import { useSystemMetrics } from "@/hooks/useSystemMetrics";
+import Breadcrumb from "@/components/Breadcrumb";
 
 export default function DashboardClient() {
   const { user, loading: userLoading } = useAuthUser();
   const router = useRouter();
-  const { metrics, loading: metricsLoading } = useSystemMetrics();
+  const { metrics, loading: metricsLoading, error: metricsError } = useSystemMetrics();
 
   useEffect(() => {
     if (!userLoading && !user) {
@@ -18,7 +20,7 @@ export default function DashboardClient() {
     }
   }, [userLoading, user, router]);
 
-  const handleLogout = async () => {
+  async function handleLogout() {
     try {
       const response = await fetch("/api/auth/logout", {
         method: "POST",
@@ -29,333 +31,266 @@ export default function DashboardClient() {
 
       if (response.ok) {
         router.push("/login");
-      } else {
-        console.error("Logout failed");
       }
-    } catch (error) {
-      console.error("Logout error:", error);
+    } catch {
+      router.push("/login");
     }
-  };
+  }
 
   if (userLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <div className="tc-empty-state min-h-[320px]">Carregando painel.</div>;
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">Redirecionando...</div>
-    );
+    return <div className="tc-empty-state min-h-[320px]">Redirecionando para login.</div>;
   }
 
   const safeUser: Partial<AuthUser> = user ?? {};
   const capabilities = (Array.isArray(safeUser.capabilities) ? safeUser.capabilities : []) as Capability[];
-  const isGlobalAdmin = safeUser?.isGlobalAdmin === true || safeUser?.globalRole === "global_admin";
+  const isGlobalAdmin = safeUser.isGlobalAdmin === true || safeUser.globalRole === "global_admin";
+  const companySlug = typeof safeUser.companySlug === "string" ? safeUser.companySlug : null;
+  const roleLabel = typeof safeUser.role === "string" && safeUser.role.trim() ? safeUser.role : "usuario";
+  const displayName = safeUser.fullName?.trim() || safeUser.name || "Usuario";
+  const displayUsername = safeUser.username || safeUser.user || null;
+  const displayAvatarUrl = typeof safeUser.avatarUrl === "string" ? safeUser.avatarUrl : null;
+  const avatarFallback = (() => {
+    const value = displayName.trim();
+    const parts = value.split(/\s+/).filter(Boolean);
+    if (parts.length <= 1) return value.slice(0, 2).toUpperCase();
+    return `${parts[0]?.slice(0, 1) ?? ""}${parts[parts.length - 1]?.slice(0, 1) ?? ""}`.toUpperCase();
+  })();
+  const companyHomeHref = companySlug ? `/empresas/${encodeURIComponent(companySlug)}/home` : "/empresas";
+  const runsHref = companySlug ? `/empresas/${encodeURIComponent(companySlug)}/runs` : "/runs";
+
+  const quickLinks = [
+    {
+      title: "Minha conta",
+      description: "Atualize dados, senha e preferencias do usuario.",
+      href: "/settings/profile",
+      kicker: "Conta",
+    },
+    {
+      title: "Solicitacoes",
+      description: "Abra pedidos de troca de e-mail ou empresa.",
+      href: "/requests",
+      kicker: "Fluxo",
+    },
+    {
+      title: "Contexto da empresa",
+      description: "Acesse o painel principal do cliente ativo.",
+      href: companyHomeHref,
+      kicker: "Empresa",
+    },
+  ];
+
+  if (hasCapability(capabilities, "run:read")) {
+    quickLinks.push({
+      title: "Runs",
+      description: "Consulte execucoes recentes e acompanhe resultados.",
+      href: runsHref,
+      kicker: "Qualidade",
+    });
+  }
+
+  if (isGlobalAdmin) {
+    quickLinks.push({
+      title: "Administracao",
+      description: "Abra o painel para empresas, usuarios e gestao.",
+      href: "/admin/home",
+      kicker: "Admin",
+    });
+    quickLinks.push({
+      title: "Empresas",
+      description: "Veja a base de empresas cadastradas na plataforma.",
+      href: "/admin/clients",
+      kicker: "Cadastro",
+    });
+  } else if (hasCapability(capabilities, "company:write")) {
+    quickLinks.push({
+      title: "Empresas",
+      description: "Consulte a carteira de empresas com acesso permitido.",
+      href: "/empresas",
+      kicker: "Cadastro",
+    });
+  }
+
+  const overviewCards = [
+    {
+      label: "Perfil",
+      value: roleLabel,
+      note: isGlobalAdmin ? "Acesso administrativo ativo." : "Permissoes conforme o contexto atual.",
+    },
+    {
+      label: "Empresa",
+      value: companySlug ?? "Sem empresa",
+      note: companySlug ? "Contexto principal carregado na sessao." : "Sem vinculo ativo na sessao.",
+    },
+    {
+      label: "Usuarios",
+      value: metrics && isGlobalAdmin ? String(metrics.overview.totalUsers) : "--",
+      note: "Base total visivel no painel.",
+    },
+    {
+      label: "Runs 30d",
+      value: metrics && isGlobalAdmin ? String(metrics.overview.totalTestRuns) : "--",
+      note: "Volume de execucoes no periodo.",
+    },
+  ];
+
+  const systemCards = metrics
+    ? [
+        { label: "Usuarios", value: metrics.overview.totalUsers, note: "Contas cadastradas na plataforma." },
+        { label: "Empresas", value: metrics.overview.totalCompanies, note: "Empresas com cadastro ativo." },
+        { label: "Runs", value: metrics.overview.totalReleases, note: "Execucoes registradas no sistema." },
+        { label: "Testes 30d", value: metrics.overview.totalTestRuns, note: "Execucoes consideradas no recorte." },
+        { label: "Sessoes", value: metrics.overview.activeSessions, note: "Sessoes autenticadas ativas." },
+      ]
+    : [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <button
-              onClick={handleLogout}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-            >
-              Logout
-            </button>
-          </div>
-          <div className="mt-6">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Bem-vindo, {safeUser.name}!
-                </h3>
-                <div className="mt-5">
-                  <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">Email</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{safeUser.email}</dd>
-                    </div>
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">Empresa</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{String(safeUser.companySlug ?? 'N/A')}</dd>
-                    </div>
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">Role</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{String(safeUser.role ?? 'N/A')}</dd>
-                    </div>
-                  </dl>
+    <div className="min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
+      <div className="tc-page-shell py-4 sm:py-6">
+        <Breadcrumb items={[{ label: "Painel" }]} />
+
+        <section className="tc-hero-panel">
+          <div className="tc-hero-grid">
+            <div className="space-y-5">
+              <div className="flex items-start gap-4">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[22px] border border-white/14 bg-white/10 text-lg font-bold tracking-[0.22em] text-white">
+                  {displayAvatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={displayAvatarUrl} alt={displayName} className="h-full w-full object-cover" />
+                  ) : (
+                    avatarFallback
+                  )}
                 </div>
+
+                <div className="tc-hero-copy">
+                  <p className="tc-hero-kicker">Painel inicial</p>
+                  <h1 className="tc-hero-title">Visao geral do usuario</h1>
+                  <p className="tc-hero-description">
+                    Base inicial para navegar pela plataforma com o mesmo padrao visual das telas principais de administracao.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 text-xs font-semibold">
+                <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-white/92">
+                  {displayName}
+                </span>
+                {displayUsername ? (
+                  <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-white/92">
+                    @{displayUsername}
+                  </span>
+                ) : null}
+                <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-white/92">
+                  {safeUser.email ?? "Sem e-mail"}
+                </span>
+              </div>
+
+              <div className="tc-hero-actions">
+                <Link href="/settings/profile" className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/18 bg-white/8 px-4 text-sm font-semibold text-white transition hover:bg-white/12">
+                  <FiSettings size={14} />
+                  Minha conta
+                </Link>
+                <button type="button" onClick={() => void handleLogout()} className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/18 bg-white/8 px-4 text-sm font-semibold text-white transition hover:bg-white/12">
+                  <FiLogOut size={14} />
+                  Sair
+                </button>
               </div>
             </div>
 
-            {/* System Metrics */}
-            {isGlobalAdmin && (
-              <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                    Métricas do Sistema
-                  </h3>
-
-                  {metricsLoading ? (
-                    <div className="animate-pulse">
-                      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
-                        {[...Array(5)].map((_, i) => (
-                          <div key={i} className="bg-gray-200 h-20 rounded"></div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : metrics ? (
-                    <>
-                      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
-                        <div className="bg-gray-50 overflow-hidden rounded-lg">
-                          <div className="p-5">
-                            <div className="flex items-center">
-                              <div className="shrink-0">
-                                <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                              </div>
-                              <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                  <dt className="text-sm font-medium text-gray-500 truncate">Usuários</dt>
-                                  <dd className="text-lg font-medium text-gray-900">{metrics.overview.totalUsers}</dd>
-                                </dl>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="bg-gray-50 overflow-hidden rounded-lg">
-                          <div className="p-5">
-                            <div className="flex items-center">
-                              <div className="shrink-0">
-                                <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                </svg>
-                              </div>
-                              <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                  <dt className="text-sm font-medium text-gray-500 truncate">Empresas</dt>
-                                  <dd className="text-lg font-medium text-gray-900">{metrics.overview.totalCompanies}</dd>
-                                </dl>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="bg-gray-50 overflow-hidden rounded-lg">
-                          <div className="p-5">
-                            <div className="flex items-center">
-                              <div className="shrink-0">
-                                <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                </svg>
-                              </div>
-                              <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                  <dt className="text-sm font-medium text-gray-500 truncate">Releases</dt>
-                                  <dd className="text-lg font-medium text-gray-900">{metrics.overview.totalReleases}</dd>
-                                </dl>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="bg-gray-50 overflow-hidden rounded-lg">
-                          <div className="p-5">
-                            <div className="flex items-center">
-                              <div className="shrink-0">
-                                <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                              </div>
-                              <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                  <dt className="text-sm font-medium text-gray-500 truncate">Testes (30d)</dt>
-                                  <dd className="text-lg font-medium text-gray-900">{metrics.overview.totalTestRuns}</dd>
-                                </dl>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="bg-gray-50 overflow-hidden rounded-lg">
-                          <div className="p-5">
-                            <div className="flex items-center">
-                              <div className="shrink-0">
-                                <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                                </svg>
-                              </div>
-                              <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                  <dt className="text-sm font-medium text-gray-500 truncate">Sessões Ativas</dt>
-                                  <dd className="text-lg font-medium text-gray-900">{metrics.overview.activeSessions}</dd>
-                                </dl>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Test Status Breakdown */}
-                      <div className="mt-6">
-                        <h4 className="text-sm font-medium text-gray-900 mb-3">Status dos Testes (30 dias)</h4>
-                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-green-600">{metrics.testStats.passed}</div>
-                            <div className="text-xs text-gray-500">Aprovados</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-red-600">{metrics.testStats.failed}</div>
-                            <div className="text-xs text-gray-500">Falharam</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-yellow-600">{metrics.testStats.blocked}</div>
-                            <div className="text-xs text-gray-500">Bloqueados</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-gray-600">{metrics.testStats.skipped}</div>
-                            <div className="text-xs text-gray-500">Pulados</div>
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  ) : null}
+            <div className="tc-hero-stat-grid">
+              {overviewCards.map((card) => (
+                <div key={card.label} className="tc-hero-stat">
+                  <div className="tc-hero-stat-label">{card.label}</div>
+                  <div className="tc-hero-stat-value">{card.value}</div>
+                  <div className="tc-hero-stat-note">{card.note}</div>
                 </div>
-              </div>
-            )}
-
-            {/* Quick Actions Grid */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {/* Dashboard Access - Always visible */}
-              <div className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="p-5">
-                  <div className="flex items-center">
-                    <div className="shrink-0">
-                      <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">Dashboard</dt>
-                        <dd className="text-lg font-medium text-gray-900">Visão Geral</dd>
-                      </dl>
-                    </div>
-                  </div>
-                  <div className="mt-5">
-                    <div className="text-sm text-gray-600">
-                      Acesse métricas e estatísticas do sistema
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Admin Panel - Only for admin+ */}
-              {isGlobalAdmin && (
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-5">
-                    <div className="flex items-center">
-                      <div className="shrink-0">
-                        <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </div>
-                      <div className="ml-5 w-0 flex-1">
-                        <dl>
-                          <dt className="text-sm font-medium text-gray-500 truncate">Admin</dt>
-                          <dd className="text-lg font-medium text-gray-900">Painel Administrativo</dd>
-                        </dl>
-                      </div>
-                    </div>
-                    <div className="mt-5">
-                      <div className="text-sm text-gray-600">
-                        Gerencie usuários, empresas e configurações
-                      </div>
-                      <div className="mt-3">
-                        <a
-                          href="/admin"
-                          className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-                        >
-                          Acessar →
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Companies - Only for admin+ */}
-              {isGlobalAdmin || hasCapability(capabilities, "company:write") ? (
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-5">
-                    <div className="flex items-center">
-                      <div className="shrink-0">
-                        <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                      </div>
-                      <div className="ml-5 w-0 flex-1">
-                        <dl>
-                          <dt className="text-sm font-medium text-gray-500 truncate">Empresas</dt>
-                          <dd className="text-lg font-medium text-gray-900">Gestão de Empresas</dd>
-                        </dl>
-                      </div>
-                    </div>
-                    <div className="mt-5">
-                      <div className="text-sm text-gray-600">
-                        Visualize e gerencie empresas cadastradas
-                      </div>
-                      <div className="mt-3">
-                        <Link
-                          href="/empresas"
-                          className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-                        >
-                          Acessar →
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-
-              {/* Profile - For all users */}
-              <div className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="p-5">
-                  <div className="flex items-center">
-                    <div className="shrink-0">
-                      <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">Perfil</dt>
-                        <dd className="text-lg font-medium text-gray-900">Minha Conta</dd>
-                      </dl>
-                    </div>
-                  </div>
-                  <div className="mt-5">
-                    <div className="text-sm text-gray-600">
-                      Gerencie suas informações pessoais e configurações
-                    </div>
-                    <div className="mt-3">
-                      <a
-                        href="/profile"
-                        className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-                      >
-                        Acessar →
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
-        </div>
+        </section>
+
+        {metricsError ? (
+          <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">{metricsError}</div>
+        ) : null}
+
+        {isGlobalAdmin ? (
+          <section className="tc-panel">
+            <div className="tc-panel-header">
+              <div>
+                <p className="tc-panel-kicker">Metricas do sistema</p>
+                <h2 className="tc-panel-title">Panorama administrativo</h2>
+                <p className="tc-panel-description">Leitura rapida dos principais numeros do sistema para o perfil global.</p>
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+              {metricsLoading && !metrics
+                ? Array.from({ length: 5 }).map((_, index) => (
+                    <div key={index} className="tc-panel-muted min-h-[120px] animate-pulse" />
+                  ))
+                : systemCards.map((card) => (
+                    <div key={card.label} className="tc-kv">
+                      <div className="tc-kv-label">{card.label}</div>
+                      <div className="tc-kv-value">{card.value}</div>
+                      <div className="tc-kv-note">{card.note}</div>
+                    </div>
+                  ))}
+            </div>
+
+            {metrics ? (
+              <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <div className="tc-panel-muted">
+                  <div className="tc-kv-label">Aprovados</div>
+                  <div className="tc-kv-value">{metrics.testStats.passed}</div>
+                  <div className="tc-kv-note">Resultados aprovados no periodo.</div>
+                </div>
+                <div className="tc-panel-muted">
+                  <div className="tc-kv-label">Falharam</div>
+                  <div className="tc-kv-value">{metrics.testStats.failed}</div>
+                  <div className="tc-kv-note">Casos com falha registrada.</div>
+                </div>
+                <div className="tc-panel-muted">
+                  <div className="tc-kv-label">Bloqueados</div>
+                  <div className="tc-kv-value">{metrics.testStats.blocked}</div>
+                  <div className="tc-kv-note">Execucoes impedidas por dependencia.</div>
+                </div>
+                <div className="tc-panel-muted">
+                  <div className="tc-kv-label">Nao executados</div>
+                  <div className="tc-kv-value">{metrics.testStats.skipped}</div>
+                  <div className="tc-kv-note">Itens fora da execucao no recorte.</div>
+                </div>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
+        <section className="tc-panel">
+          <div className="tc-panel-header">
+            <div>
+              <p className="tc-panel-kicker">Acoes</p>
+              <h2 className="tc-panel-title">Navegacao principal</h2>
+              <p className="tc-panel-description">Entradas principais do sistema em cards mais limpos e consistentes com o resto do produto.</p>
+            </div>
+            <FiCompass size={20} className="text-(--tc-text-muted,#6b7280)" />
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {quickLinks.map((item) => (
+              <Link key={`${item.kicker}-${item.title}`} href={item.href} className="tc-link-card">
+                <span className="tc-link-kicker">{item.kicker}</span>
+                <span className="tc-link-title">{item.title}</span>
+                <span className="tc-link-text">{item.description}</span>
+                <span className="inline-flex items-center gap-2 text-sm font-semibold text-(--tc-accent,#ef0001)">
+                  Abrir
+                  <FiArrowRight size={14} />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );

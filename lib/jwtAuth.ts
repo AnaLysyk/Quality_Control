@@ -1,10 +1,11 @@
-
 import "server-only";
 
 import { getAccessContext } from "@/lib/auth/session";
 import { findUserByEmailOrId } from "@/lib/simpleAuth";
-import { listLocalCompanies, listLocalLinksForUser, normalizeLocalRole } from "@/lib/auth/localStore";
+import { listLocalCompanies, listLocalLinksForUser, normalizeLocalRole, toLegacyRole } from "@/lib/auth/localStore";
 import { resolveCapabilities } from "@/lib/permissions";
+import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
+import type { PermissionMatrix } from "@/lib/permissionMatrix";
 
 export type AuthUser = {
   id: string;
@@ -17,16 +18,14 @@ export type AuthUser = {
   companyId?: string | null;
   companySlug?: string | null;
   companySlugs?: string[];
+  permissions?: PermissionMatrix;
+  permissionRole?: string | null;
 };
 
-/**
- * Auth helper used by API routes.
- * - Prefer access_token (JWT) / session_id / auth_token (legacy) cookies.
- * - Fallback: Authorization Bearer <email|id> or ?user= for local tooling.
- */
 export async function authenticateRequest(req: Request): Promise<AuthUser | null> {
   const access = await getAccessContext(req);
   if (access) {
+    const permissionAccess = await resolvePermissionAccessForUser(access.userId);
     return {
       id: access.userId,
       email: access.email,
@@ -38,6 +37,8 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
       companyId: access.companyId,
       companySlug: access.companySlug,
       companySlugs: access.companySlugs,
+      permissions: permissionAccess.permissions,
+      permissionRole: permissionAccess.roleKey,
     };
   }
 
@@ -59,11 +60,16 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   const isGlobalAdmin =
     (user as { is_global_admin?: boolean; globalRole?: string | null }).is_global_admin === true ||
     (user as { globalRole?: string | null }).globalRole === "global_admin";
-  const allowedCompanies = isGlobalAdmin
+  const hasDevRole =
+    normalizeLocalRole((user as { role?: string | null }).role ?? null) === "it_dev" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "it_dev");
+  const hasFullCompanyAccess = isGlobalAdmin || hasDevRole;
+  const shouldBindCompanyContext = !hasFullCompanyAccess;
+  const allowedCompanies = hasFullCompanyAccess
     ? companies
     : companies.filter((company) => links.some((link) => link.companyId === company.id));
-  if (!isGlobalAdmin && allowedCompanies.length === 0) return null;
-  const primary = allowedCompanies[0] ?? null;
+  if (!hasFullCompanyAccess && allowedCompanies.length === 0) return null;
+  const primary = shouldBindCompanyContext ? allowedCompanies[0] ?? null : null;
   const companySlugs = allowedCompanies
     .map((company) => company.slug)
     .filter((slug): slug is string => typeof slug === "string" && slug.length > 0);
@@ -71,13 +77,7 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   const rawRole = primaryLink?.role ?? (user as { role?: string | null }).role ?? null;
   const normalizedRole = normalizeLocalRole(rawRole);
   const companyRole = normalizedRole;
-  const effectiveRole = isGlobalAdmin
-    ? "admin"
-    : normalizedRole === "it_dev"
-      ? "it_dev"
-      : normalizedRole === "company_admin"
-        ? "company"
-        : "user";
+  const effectiveRole = toLegacyRole(companyRole, isGlobalAdmin);
   const capabilities = resolveCapabilities({
     globalRole: isGlobalAdmin ? "global_admin" : null,
     companyRole:
@@ -90,6 +90,7 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
             : "user",
     membershipCapabilities: primaryLink?.capabilities ?? null,
   });
+  const permissionAccess = await resolvePermissionAccessForUser(user.id);
 
   return {
     id: user.id,
@@ -99,8 +100,10 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
     globalRole: isGlobalAdmin ? "global_admin" : null,
     companyRole,
     capabilities,
-    companyId: primary?.id ?? null,
-    companySlug: primary?.slug ?? null,
+    companyId: shouldBindCompanyContext ? primary?.id ?? null : null,
+    companySlug: shouldBindCompanyContext ? primary?.slug ?? null : null,
     companySlugs,
+    permissions: permissionAccess.permissions,
+    permissionRole: permissionAccess.roleKey,
   };
 }

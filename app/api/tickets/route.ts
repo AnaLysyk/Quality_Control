@@ -4,28 +4,28 @@ import { getLocalUserById } from "@/lib/auth/localStore";
 import { createTicket, listAllTickets, listTicketsForUser } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketCreated } from "@/lib/notificationService";
-import { canAssignTicket, isItDev } from "@/lib/rbac/tickets";
 import { attachAssigneeInfo, attachAssigneeToTicket } from "@/lib/ticketsPresenter";
-import { withCompanyValidation } from "@/lib/middleware/withCompanyValidation";
+import { hasPermissionAccess } from "@/lib/permissionMatrix";
+import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
+import { canAccessGlobalTicketWorkspace } from "@/lib/rbac/tickets";
+
+function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
+  return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
+}
 
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
-
-  const url = new URL(req.url);
-  const role = (user.role ?? "").toLowerCase();
-  const allowAll = isItDev(user);
-  const allowCompanyScope = role === "company";
-  let scope = (url.searchParams.get("scope") ?? "mine").toLowerCase();
-  if (scope === "mine" && allowCompanyScope) {
-    scope = "all";
-  }
-  if (scope === "all" && !(allowAll || allowCompanyScope)) {
+  if (
+    !hasPermissionAccess(user.permissions, "tickets", "view") &&
+    !hasPermissionAccess(user.permissions, "support", "view")
+  ) {
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
 
+  const url = new URL(req.url);
   const statusFilter = url.searchParams.get("status");
   const companyFilter = url.searchParams.get("companyId") ?? url.searchParams.get("companySlug");
   const assignedTo = url.searchParams.get("assignedTo");
@@ -34,18 +34,7 @@ export async function GET(req: Request) {
   const search = url.searchParams.get("search");
   const limit = Math.max(1, Math.min(500, Number(url.searchParams.get("limit") ?? 200)));
 
-  let items = scope === "all" ? await listAllTickets() : await listTicketsForUser(user.id);
-  if (scope === "all" && !allowAll) {
-    if (user.companyId) {
-      items = items.filter((ticket) => ticket.companyId === user.companyId);
-    } else if (user.companySlug) {
-      items = items.filter((ticket) => ticket.companySlug === user.companySlug);
-    } else if (Array.isArray(user.companySlugs) && user.companySlugs.length) {
-      items = items.filter((ticket) => ticket.companySlug && user.companySlugs?.includes(ticket.companySlug));
-    } else {
-      items = [];
-    }
-  }
+  let items = canAccessGlobalTicketWorkspace(user) ? await listAllTickets() : await listTicketsForUser(user.id);
   if (statusFilter) {
     const statuses = statusFilter.split(",").map((value) => value.trim()).filter(Boolean);
     if (statuses.length) {
@@ -84,12 +73,32 @@ export async function GET(req: Request) {
   return NextResponse.json({ items: enriched }, { status: 200 });
 }
 
-export const POST = withCompanyValidation(async (user, companyId, req) => {
+export async function POST(req: Request) {
   try {
+    const user = await authenticateRequest(req);
+    if (!user) {
+      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    }
+    if (
+      !hasPermissionAccess(user.permissions, "tickets", "create") &&
+      !hasPermissionAccess(user.permissions, "support", "create")
+    ) {
+      return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    }
     const body = await req.json().catch(() => ({}));
+    const requestedCompanyId = typeof body?.companyId === "string" ? body.companyId : null;
+    const targetCompanyId = requestedCompanyId ?? user.companyId ?? null;
+    if (requestedCompanyId) {
+      assertCompanyAccess(user, requestedCompanyId);
+    }
+    // Log received payload for debugging when creation fails
+    console.debug("[tickets POST] received body:", body);
     const localUser = await getLocalUserById(user.id);
     const assignedToUserId =
-      canAssignTicket(user) && typeof body?.assignedToUserId === "string" ? body.assignedToUserId : null;
+      canAccessGlobalTicketWorkspace(user) &&
+      typeof body?.assignedToUserId === "string"
+        ? body?.assignedToUserId
+        : null;
     const tags =
       Array.isArray(body?.tags) ? body.tags : typeof body?.tags === "string" ? body.tags.split(",") : undefined;
 
@@ -101,13 +110,14 @@ export const POST = withCompanyValidation(async (user, companyId, req) => {
       tags,
       assignedToUserId,
       createdBy: user.id,
-      createdByName: localUser?.name ?? null,
+      createdByName: resolveDisplayName(localUser),
       createdByEmail: localUser?.email ?? null,
       companySlug: user.companySlug ?? null,
-      companyId: companyId ?? user.companyId ?? null,
+      companyId: targetCompanyId,
     });
 
     if (!ticket) {
+      console.warn("[tickets POST] createTicket returned null — body:", body);
       return NextResponse.json({ error: "Informe titulo ou descricao" }, { status: 400 });
     }
 
@@ -115,7 +125,7 @@ export const POST = withCompanyValidation(async (user, companyId, req) => {
       ticketId: ticket.id,
       type: "CREATED",
       actorUserId: user.id,
-      payload: { title: ticket.title },
+      payload: { title: ticket.title, role: user.role ?? null },
     }).catch((err) => {
       console.error("Falha ao registrar evento de chamado:", err);
     });
@@ -127,8 +137,9 @@ export const POST = withCompanyValidation(async (user, companyId, req) => {
     const enriched = await attachAssigneeToTicket(ticket);
     return NextResponse.json({ item: enriched }, { status: 201 });
   } catch (err) {
+
     const message = err instanceof Error ? err.message : "Erro ao criar chamado";
     console.error("[tickets] Falha ao criar chamado:", err);
     return NextResponse.json({ error: message }, { status: 500 });
   }
-});
+}

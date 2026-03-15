@@ -54,8 +54,6 @@ const DEFAULT_ITEMS: RequestRecord[] = [
   },
 ];
 
-let cache: RequestRecord[] | null = null;
-
 async function ensureFileStore() {
   await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
   try {
@@ -132,24 +130,17 @@ async function writeStore(next: StorePayload) {
   await writeFileStore(next);
 }
 
-async function loadCache() {
-  if (USE_REDIS) {
-    const store = await readStore();
-    return store.items;
-  }
-  if (cache) return cache;
+async function loadItems() {
   const store = await readStore();
-  cache = store.items;
-  return cache;
+  return store.items;
 }
 
 async function persist(next: RequestRecord[]) {
-  cache = USE_REDIS ? null : next;
   await writeStore({ items: next });
 }
 
 export async function listUserRequests(userId: string, filters?: { status?: RequestStatus; type?: RequestType }) {
-  const items = await loadCache();
+  const items = await loadItems();
   return items.filter(
     (req) =>
       req.userId === userId &&
@@ -164,7 +155,7 @@ export async function listAllRequests(filters?: {
   companyId?: string;
   sort?: "createdAt_desc" | "createdAt_asc";
 }) {
-  const items = await loadCache();
+  const items = await loadItems();
   let results = [...items];
   if (filters?.status) results = results.filter((r) => r.status === filters.status);
   if (filters?.type) results = results.filter((r) => r.type === filters.type);
@@ -178,12 +169,12 @@ export async function listAllRequests(filters?: {
 }
 
 export async function getRequestById(id: string) {
-  const items = await loadCache();
+  const items = await loadItems();
   return items.find((req) => req.id === id) ?? null;
 }
 
 export async function addRequest(user: RequestUser, type: RequestType, payload: Record<string, unknown>) {
-  const items = await loadCache();
+  const items = await loadItems();
   const duplicate = items.find((r) => r.userId === user.id && r.type === type && r.status === "PENDING");
   if (duplicate) {
     const err = new Error("Duplicated pending request") as Error & { code?: string };
@@ -219,7 +210,7 @@ export async function updateRequestStatus(
   reviewer: { id: string },
   reviewNote?: string,
 ) {
-  const items = await loadCache();
+  const items = await loadItems();
   const idx = items.findIndex((r) => r.id === id);
   if (idx === -1) return null;
   const req = items[idx];

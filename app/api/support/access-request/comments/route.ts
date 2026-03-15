@@ -116,7 +116,7 @@ async function findRequestByLookup(email: string, name: string): Promise<Support
   const match = items.find((item) => {
     if (normalizeLookup(item.email ?? "") !== normalizedEmail) return false;
     const parsed = parseAccessRequestMessage(String(item.message ?? ""), String(item.email ?? ""));
-    return normalizeLookup(parsed.name ?? "") === normalizedName;
+    return normalizeLookup(parsed.fullName || parsed.name || "") === normalizedName;
   });
   return match ?? null;
 }
@@ -149,14 +149,22 @@ export async function POST(req: Request) {
   }
 
   const parsed = parseAccessRequestMessage(String(request.message ?? ""), String(request.email ?? ""));
-  if (normalizeLookup(parsed.name ?? "") !== normalizeLookup(name) || normalizeLookup(request.email ?? "") !== normalizeLookup(email)) {
+  if (
+    normalizeLookup(parsed.fullName || parsed.name || "") !== normalizeLookup(name) ||
+    normalizeLookup(request.email ?? "") !== normalizeLookup(email)
+  ) {
     return NextResponse.json({ error: "Dados nao conferem com a solicitacao." }, { status: 403 });
   }
+  if (request.status === "rejected" || request.status === "closed") {
+    return NextResponse.json({ error: "Esta solicitacao ja foi finalizada e nao aceita novos comentarios." }, { status: 409 });
+  }
+
+  const authorName = parsed.fullName || parsed.name || name;
 
   const record = await createAccessRequestComment({
     requestId: request.id,
     authorRole: "requester",
-    authorName: name,
+    authorName,
     authorEmail: email,
     body: comment,
   });
@@ -164,8 +172,9 @@ export async function POST(req: Request) {
   await notifyAccessRequestComment({
     requestId: request.id,
     commentId: record.id,
-    authorName: name,
+    authorName,
     body: comment,
+    reviewQueue: parsed.reviewQueue,
   });
 
   return NextResponse.json({ item: record }, { status: 200 });

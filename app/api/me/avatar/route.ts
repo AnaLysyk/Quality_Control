@@ -102,7 +102,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Nao foi possivel atualizar o avatar" }, { status: 500 });
     }
 
-    const displayName = (typeof updated.name === "string" ? updated.name.trim() : "") || updated.email;
+    const displayName =
+      (typeof updated.full_name === "string" ? updated.full_name.trim() : "") ||
+      (typeof updated.name === "string" ? updated.name.trim() : "") ||
+      updated.email;
 
     return NextResponse.json(
       {
@@ -122,7 +125,7 @@ export async function POST(req: Request) {
           job_title: updated.job_title ?? null,
           linkedinUrl: updated.linkedin_url ?? null,
           linkedin_url: updated.linkedin_url ?? null,
-          fullName: updated.name ?? null,
+          fullName: updated.full_name ?? null,
         },
       },
       { status: 200 },

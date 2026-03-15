@@ -93,6 +93,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const name = (body.name ?? "").toString().trim();
     const app = (body.app ?? "").toString().trim() || "SMART";
+    const qaseProject = (body.qaseProject ?? body.qase_project_code ?? app).toString().trim().toUpperCase();
     const environments = Array.isArray(body.environments) ? body.environments.map((env: unknown) => String(env)) : [];
     const clientSlug = body.clientSlug ? String(body.clientSlug).trim() : null;
     const role = await resolveDefectRole(effectiveAuthUser, clientSlug);
@@ -118,6 +119,7 @@ export async function POST(req: Request) {
       slug: body.slug ? slugifyRelease(body.slug) : slugifyRelease(name),
       name,
       app,
+      qaseProject,
       kind,
       environments,
       clientSlug: clientSlug && clientSlug.length > 0 ? clientSlug : null,
@@ -190,6 +192,6 @@ export async function POST(req: Request) {
     return NextResponse.json(payload, { status: 201 });
   } catch (error) {
     console.error("POST /releases-manual error", error);
-    return NextResponse.json({ message: "Erro ao salvar release manual" }, { status: 500 });
+    return NextResponse.json({ message: "Erro ao salvar run manual" }, { status: 500 });
   }
 }

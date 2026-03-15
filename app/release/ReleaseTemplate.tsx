@@ -17,6 +17,7 @@ import { QualityGateHistory } from "./QualityGateHistory";
 import { readQualityGateHistory } from "@/lib/qualityGateHistory";
 import { calculateQualityScore } from "@/lib/qualityScore";
 import { getReleaseTimeline } from "@/lib/releaseTimeline";
+import { formatRunText, formatRunTitle } from "@/lib/runPresentation";
 import { cookies, headers } from "next/headers";
 
 type AnyRelease = (Release & { name?: string }) | (ReleaseEntry & { name?: string });
@@ -172,6 +173,11 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
           String((releaseData as ReleaseEntry).runId ?? 0),
         )}${companySlug ? `&slug=${encodeURIComponent(companySlug)}` : ""}`
       : undefined;
+  const displayTitle = formatRunTitle(
+    (releaseData as { name?: string }).name ?? (releaseData as ReleaseEntry).title ?? releaseData.slug ?? "Run",
+    "Run",
+  );
+  const displaySummary = formatRunText((releaseData as ReleaseEntry).summary);
 
   return (
     <div className="min-h-screen bg-linear-to-b from-white via-white to-[#e6f0ff] text-[#0b1a3c] px-4 py-6 md:px-10 md:py-10">
@@ -179,15 +185,8 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="space-y-1">
             <p className="text-xs uppercase tracking-[0.28em] text-(--tc-accent)">Run</p>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-[#0b1a3c]">
-              {(releaseData as { name?: string }).name ??
-                (releaseData as ReleaseEntry).title ??
-                releaseData.slug ??
-                "Run"}
-            </h1>
-            {(releaseData as ReleaseEntry).summary && (
-              <p className="text-(--tc-text-secondary)">{(releaseData as ReleaseEntry).summary}</p>
-            )}
+            <h1 className="text-3xl md:text-4xl font-extrabold text-[#0b1a3c]">{displayTitle}</h1>
+            {displaySummary && <p className="text-(--tc-text-secondary)">{displaySummary}</p>}
           </div>
           <div className="flex flex-col items-start md:items-end gap-2">
             <div className="flex flex-wrap items-center gap-2">
@@ -213,7 +212,7 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
                 href={`/api/empresas/${encodeURIComponent(companySlug || "griaule")}/releases/${encodeURIComponent(
                   releaseData.slug,
                 )}/export?format=csv`}
-                download={`release-${releaseData.slug}.csv`}
+                download={`run-${releaseData.slug}.csv`}
                 className="inline-flex items-center rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280) hover:border-(--tc-accent,#ef0001)"
               >
                 Exportar
@@ -223,7 +222,7 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
                 href={`/api/empresas/${encodeURIComponent(companySlug || "griaule")}/releases/${encodeURIComponent(
                   releaseData.slug,
                 )}/export?format=pdf`}
-                download={`release-${releaseData.slug}.pdf`}
+                download={`run-${releaseData.slug}.pdf`}
                 className="inline-flex items-center rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280) hover:border-(--tc-accent,#ef0001)"
               >
                 Exportar PDF

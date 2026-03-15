@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { getTicketById, updateTicket, updateTicketStatus } from "@/lib/ticketsStore";
+import { getTicketById, updateTicketStatus } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { getTicketStatusLabel } from "@/lib/ticketsStatus";
-import { notifyTicketAssigned, notifyTicketStatusChanged } from "@/lib/notificationService";
-import { canMoveTicket, isItDev } from "@/lib/rbac/tickets";
+import { notifyTicketStatusChanged } from "@/lib/notificationService";
+import { canManageAllTickets, canMoveTicket } from "@/lib/rbac/tickets";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
@@ -25,26 +25,16 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   if (!canMoveTicket(user, current)) {
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
+  if (canManageAllTickets(user) && !current.assignedToUserId) {
+    return NextResponse.json(
+      { error: "Selecione e salve um responsavel antes de mover o chamado" },
+      { status: 400 },
+    );
+  }
 
   const updated = await updateTicketStatus(id, nextStatus, user.id);
   if (!updated) {
     return NextResponse.json({ error: "Status invalido" }, { status: 400 });
-  }
-
-  let finalTicket = updated;
-  if (!current.assignedToUserId && isItDev(user)) {
-    const assigned = await updateTicket(id, {
-      assignedToUserId: user.id,
-      updatedBy: user.id,
-    });
-    if (assigned) {
-      finalTicket = assigned;
-      notifyTicketAssigned({
-        ticket: finalTicket,
-        assigneeId: user.id,
-        actorId: user.id,
-      }).catch((err) => console.error("Falha ao notificar atribuicao:", err));
-    }
   }
 
   appendTicketEvent({
@@ -59,12 +49,12 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   }).catch((err) => console.error("Falha ao registrar status:", err));
 
   notifyTicketStatusChanged({
-    ticket: finalTicket,
+    ticket: updated,
     actorId: user.id,
     nextStatusLabel: getTicketStatusLabel(updated.status),
     reason,
   }).catch((err) => console.error("Falha ao notificar status:", err));
 
-  const enriched = await attachAssigneeToTicket(finalTicket);
+  const enriched = await attachAssigneeToTicket(updated);
   return NextResponse.json({ item: enriched }, { status: 200 });
 }

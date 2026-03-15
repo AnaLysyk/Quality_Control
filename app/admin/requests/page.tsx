@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import Breadcrumb from "@/components/Breadcrumb";
+import { RequireGlobalAdmin } from "@/components/RequireGlobalAdmin";
+import { normalizeRequestProfileType, toRequestProfileTypeLabel } from "@/lib/requestRouting";
 
 type RequestRecord = {
   id: string;
@@ -22,7 +24,7 @@ function payloadString(payload: Record<string, unknown>, key: string): string {
   return typeof value === "string" ? value : "";
 }
 
-export default function AdminRequestsPage() {
+function AdminRequestsPage() {
   const router = useRouter();
   const [items, setItems] = useState<RequestRecord[]>([]);
   const [loading, setLoading] = useState(false);
@@ -61,7 +63,7 @@ export default function AdminRequestsPage() {
       }
 
       if (res.status === 403) {
-        setMessage("Sem permissÃ£o (faÃ§a login como admin)");
+        setMessage("Sem permissao para esta fila de solicitacoes.");
         setItems([]);
         return;
       }
@@ -197,7 +199,16 @@ export default function AdminRequestsPage() {
                 {req.type === "EMAIL_CHANGE" && <div>Solicitou email: {payloadString(req.payload, "newEmail")}</div>}
                 {req.type === "COMPANY_CHANGE" && <div>Solicitou empresa: {payloadString(req.payload, "newCompanyName")}</div>}
                 {req.type === "PASSWORD_RESET" && <div>Solicitou reset de senha</div>}
-                {req.type === "PROFILE_DELETION" && <div>Solicitou exclusao de perfil: {payloadString(req.payload, "reason")}</div>}
+                {req.type === "PROFILE_DELETION" && <div>Solicitou exclusao de perfil</div>}
+                {req.type === "PROFILE_DELETION" && payloadString(req.payload, "reason") && <div>Motivo: {payloadString(req.payload, "reason")}</div>}
+                {typeof req.payload?.profileType === "string" && (
+                  <div>
+                    Tipo de perfil:{" "}
+                    {toRequestProfileTypeLabel(
+                      normalizeRequestProfileType(req.payload.profileType as string) ?? "testing_company_user",
+                    )}
+                  </div>
+                )}
                 <div>Criado em {new Date(req.createdAt).toLocaleString()}</div>
                 {req.reviewNote && <div>Nota: {req.reviewNote}</div>}
               </div>
@@ -227,5 +238,10 @@ export default function AdminRequestsPage() {
   );
 }
 
-
-
+export default function AdminRequestsPageWithGuard() {
+  return (
+    <RequireGlobalAdmin>
+      <AdminRequestsPage />
+    </RequireGlobalAdmin>
+  );
+}

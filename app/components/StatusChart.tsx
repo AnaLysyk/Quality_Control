@@ -69,9 +69,9 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
   };
 
   return (
-    <div className="w-full flex flex-col items-center gap-4" role="img" aria-label={ariaLabel}>
+    <div className="w-full flex flex-col items-center gap-3" role="img" aria-label={ariaLabel}>
       <div className="relative w-full flex items-center justify-center">
-        <div className="w-full max-w-90 aspect-square sm:max-w-105 md:max-w-130">
+        <div className="w-full max-w-96 aspect-square sm:max-w-110 md:max-w-124">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart margin={{ top: 16, right: 16, bottom: 16, left: 16 }}>
               <Pie
@@ -159,4 +159,3 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
     </div>
   );
 }
-

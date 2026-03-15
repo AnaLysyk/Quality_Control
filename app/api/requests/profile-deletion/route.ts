@@ -1,32 +1,42 @@
 import { NextResponse } from "next/server";
 
 import { addRequest } from "@/data/requestsStore";
-import { getAccessContext } from "@/lib/auth/session";
 import { getLocalUserById } from "@/lib/auth/localStore";
+import { authenticateRequest } from "@/lib/jwtAuth";
+import { notifyProfileDeletionRequest } from "@/lib/notificationService";
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
+}
 
 export async function POST(request: Request) {
-  const access = await getAccessContext(request);
-  if (!access) {
+  const authUser = await authenticateRequest(request);
+  if (!authUser) {
     return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
   }
 
-  const body = (await request.json().catch(() => null)) as { reason?: unknown } | null;
-  const reason = typeof body?.reason === "string" ? body.reason.trim() : "";
+  const body = (await request.json().catch(() => null)) as unknown;
+  const rec = asRecord(body);
+  const reason = typeof rec?.reason === "string" ? rec.reason.trim() : "";
   if (!reason) {
     return NextResponse.json({ message: "Motivo obrigatorio" }, { status: 400 });
   }
 
-  const localUser = await getLocalUserById(access.userId);
-  const userName = localUser?.name?.trim() || access.userId;
+  const localUser = await getLocalUserById(authUser.id);
+  const userName =
+    (typeof localUser?.full_name === "string" ? localUser.full_name.trim() : "") ||
+    (typeof localUser?.name === "string" ? localUser.name.trim() : "") ||
+    authUser.email;
 
   try {
     const record = await addRequest(
       {
-        id: access.userId,
+        id: authUser.id,
         name: userName,
-        email: localUser?.email ?? "",
-        companyId: access.companyId ?? "",
-        companyName: access.companySlug ?? "",
+        email: authUser.email,
+        companyId: authUser.companyId ?? "",
+        companyName: authUser.companySlug ?? "",
       },
       "PROFILE_DELETION",
       {
@@ -35,9 +45,10 @@ export async function POST(request: Request) {
       },
     );
 
+    await notifyProfileDeletionRequest(record).catch(() => undefined);
     return NextResponse.json(record, { status: 201 });
   } catch (err: unknown) {
-    const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
+    const code = asRecord(err)?.code;
     if (code === "DUPLICATE") {
       return NextResponse.json({ message: "Ja existe uma solicitacao pendente" }, { status: 409 });
     }

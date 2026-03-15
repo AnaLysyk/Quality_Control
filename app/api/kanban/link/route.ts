@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getNextId, readKanbanStore, writeKanbanStore } from "../store";
-import type { Status } from "../types";
-import { getAuthContext } from "@/lib/rbac";
-import type { AuthUser } from "@/lib/jwtAuth";
+import type { Card, Status } from "../types";
+import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ message }, { status });
@@ -79,8 +78,8 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   if (!body) return jsonError("JSON invalido", 400);
 
-  const auth = await getAuthContext(request);
-  if (!auth) return jsonError("Nao autorizado", 401);
+  const user = await authenticateRequest(request);
+  if (!user) return jsonError("Nao autorizado", 401);
 
   const record = body as Record<string, unknown>;
   const project = asProject(record.project);
@@ -89,11 +88,13 @@ export async function POST(request: NextRequest) {
 
   const requestedSlug = asSlug(record.slug);
   let effectiveSlug: string | null = null;
-  if (requestedSlug) {
-    if (!auth.companySlugs.includes(requestedSlug)) return jsonError("Acesso proibido", 403);
-    effectiveSlug = requestedSlug;
+  if (isAdmin(user)) {
+    effectiveSlug = requestedSlug ?? user.companySlug ?? null;
   } else {
-    effectiveSlug = auth.companySlugs[0] ?? null;
+    const allowed = resolveAllowedSlugs(user);
+    if (!allowed.length) return jsonError("slug e obrigatorio", 400);
+    if (requestedSlug && !allowed.includes(requestedSlug)) return jsonError("Acesso proibido", 403);
+    effectiveSlug = requestedSlug ?? user.companySlug ?? allowed[0] ?? null;
   }
 
   if (!effectiveSlug) return jsonError("slug e obrigatorio", 400);
@@ -114,7 +115,8 @@ export async function POST(request: NextRequest) {
 
   const store = await readKanbanStore();
   const existing = store.items.find(
-    (c) => c.project === project && c.run_id === runId && c.case_id === caseId && c.client_slug === effectiveSlug,
+    (card: Card) =>
+      card.project === project && card.run_id === runId && card.case_id === caseId && card.client_slug === effectiveSlug,
   );
   if (existing) {
     if (title) existing.title = title;

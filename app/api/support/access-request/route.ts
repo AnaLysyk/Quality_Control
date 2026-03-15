@@ -1,20 +1,53 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismaClient";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { shouldUseJsonStore } from "@/lib/storeMode";
+
 import { createAccessRequest, listAccessRequests } from "@/data/accessRequestsStore";
+import { findLocalCompanyById } from "@/lib/auth/localStore";
+import { authenticateRequest } from "@/lib/jwtAuth";
+import {
+  composeAccessRequestMessage,
+  normalizeAccessType,
+  type AccessType,
+} from "@/lib/accessRequestMessage";
+import { notifyAccessRequestCreated } from "@/lib/notificationService";
+import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { prisma } from "@/lib/prismaClient";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import {
+  normalizeRequestProfileType,
+  requestProfileTypeNeedsCompany,
+  resolveReviewQueue,
+  resolveRequestQueueMessage,
+  toInternalAccessType,
+  toRequestProfileTypeLabel,
+  type RequestProfileType,
+} from "@/lib/requestRouting";
+import { shouldUseJsonStore } from "@/lib/storeMode";
 
 type Payload = {
   email?: string;
   company?: string;
   client_id?: string;
+  company_name?: string;
+  company_tax_id?: string;
+  company_zip?: string;
+  company_address?: string;
+  company_phone?: string;
+  company_website?: string;
+  company_linkedin?: string;
+  company_description?: string;
+  company_notes?: string;
   name?: string;
+  full_name?: string;
+  user?: string;
+  phone?: string;
   role?: string;
   access_type?: string;
+  profile_type?: string;
+  title?: string;
+  description?: string;
+  password?: string;
   notes?: string;
 };
-
-type AccessType = "user" | "admin" | "company";
 
 function sanitize(value: unknown, max = 255): string {
   if (typeof value !== "string") return "";
@@ -23,93 +56,69 @@ function sanitize(value: unknown, max = 255): string {
   return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
 }
 
-function normalizeAccessType(value: string): AccessType | null {
-  const v = value.trim().toLowerCase();
-  if (
-    v === "usuario comum" ||
-    v === "usuário comum" ||
-    v === "usuário da empresa" ||
-    v === "usuario da empresa" ||
-    v === "user" ||
-    v === "common"
-  ) {
-    return "user";
-  }
-  if (v === "admin do sistema" || v === "administrador do sistema" || v === "administrador" || v === "admin") {
-    return "admin";
-  }
-  if (v === "admin da empresa" || v === "administrador da empresa" || v === "empresa" || v === "company") {
-    return "company";
-  }
-  return null;
-}
-
-function accessTypeLabel(value: AccessType): string {
-  if (value === "admin") return "Admin do sistema";
-  if (value === "company") return "Admin da empresa";
-  return "Usuário da empresa";
-}
-
-function mapAccessTypeToRole(value: AccessType): "global_admin" | "client_admin" | "client_user" {
-  if (value === "admin") return "global_admin";
-  if (value === "company") return "client_admin";
-  return "client_user";
-}
-
-function composeAccessRequestMessage(input: {
-  email: string;
-  name: string;
-  role: string;
-  company: string;
-  clientId: string | null;
-  accessType: AccessType;
-  notes: string;
-}): string {
-  const payload = {
-    v: 1,
-    kind: "access_request",
-    email: input.email,
-    name: input.name,
-    jobRole: input.role,
-    company: input.company,
-    clientId: input.clientId,
-    accessType: input.accessType,
-    mappedAppRole: mapAccessTypeToRole(input.accessType),
-    notes: input.notes || null,
-  };
-
-  return [
-    `ACCESS_REQUEST_V1 ${JSON.stringify(payload)}`,
-    "Solicitacao de acesso ao admin",
-    `Tipo de acesso: ${accessTypeLabel(input.accessType)}`,
-    `Empresa: ${input.company}${input.clientId ? ` (id: ${input.clientId})` : ""}`,
-    `Cargo: ${input.role}`,
-    `Nome: ${input.name}`,
-    `Email: ${input.email}`,
-    input.notes ? `Observacoes: ${input.notes}` : "",
-  ]
-    .filter(Boolean)
-    .join("\n");
-}
-
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as Payload;
   const email = sanitize(body.email, 255).toLowerCase();
   const company = sanitize(body.company, 255);
   const clientId = sanitize(body.client_id, 128);
-  const name = sanitize(body.name, 255);
+  const fullName = sanitize(body.full_name, 255) || sanitize(body.name, 255);
+  const name = fullName;
+  const username = sanitize(body.user, 120).toLowerCase();
+  const phone = sanitize(body.phone, 64);
   const role = sanitize(body.role, 255);
   const notes = sanitize(body.notes, 1000);
+  const title = sanitize(body.title, 255);
+  const description = sanitize(body.description, 2000);
+  const password = sanitize(body.password, 128);
+  const companyProfile = {
+    companyName: sanitize(body.company_name, 255),
+    companyTaxId: sanitize(body.company_tax_id, 64),
+    companyZip: sanitize(body.company_zip, 32),
+    companyAddress: sanitize(body.company_address, 255),
+    companyPhone: sanitize(body.company_phone, 64),
+    companyWebsite: sanitize(body.company_website, 255),
+    companyLinkedin: sanitize(body.company_linkedin, 255),
+    companyDescription: sanitize(body.company_description, 1000),
+    companyNotes: sanitize(body.company_notes, 1000),
+  };
   const accessTypeRaw = sanitize(body.access_type, 40);
-  const accessType = accessTypeRaw ? normalizeAccessType(accessTypeRaw) : null;
+  const profileTypeRaw = sanitize(body.profile_type, 80);
+  const profileType =
+    normalizeRequestProfileType(profileTypeRaw) ??
+    normalizeRequestProfileType(accessTypeRaw) ??
+    null;
+  const accessType = profileType ? toInternalAccessType(profileType) : accessTypeRaw ? normalizeAccessType(accessTypeRaw) : null;
 
-  if (!email || !name || !role || !accessType) {
-    return NextResponse.json({ message: "Campos obrigatórios ausentes" }, { status: 400 });
+  if (!email || !name || !fullName || !role || !phone || !password || !title || !description || !profileType || !accessType) {
+    return NextResponse.json({ message: "Campos obrigatorios ausentes" }, { status: 400 });
+  }
+  if (password.length < 8) {
+    return NextResponse.json({ message: "Senha obrigatoria com pelo menos 8 caracteres" }, { status: 400 });
   }
 
-  // For non-admin access, a company is required.
-  if (accessType !== "admin" && !(company || clientId)) {
-    return NextResponse.json({ message: "Empresa e obrigatoria para este tipo de acesso" }, { status: 400 });
+  let resolvedCompanyName = company || "";
+  let resolvedClientId = clientId || null;
+
+  if (requestProfileTypeNeedsCompany(profileType)) {
+    if (!resolvedClientId) {
+      return NextResponse.json(
+        { message: "Selecione uma empresa cadastrada para vincular ao perfil Usuario" },
+        { status: 400 },
+      );
+    }
+
+    const selectedCompany = await findLocalCompanyById(resolvedClientId);
+    if (!selectedCompany) {
+      return NextResponse.json({ message: "Empresa selecionada nao encontrada" }, { status: 404 });
+    }
+
+    resolvedCompanyName = (selectedCompany.name ?? selectedCompany.company_name ?? "").trim() || "Empresa";
+  } else if (profileType === "company_user") {
+    if (!companyProfile.companyName) {
+      return NextResponse.json({ message: "Informe o nome ou razao social da empresa" }, { status: 400 });
+    }
+    resolvedCompanyName = companyProfile.companyName;
+    resolvedClientId = null;
   }
 
   const authUser = await authenticateRequest(req);
@@ -120,16 +129,24 @@ export async function POST(req: Request) {
   const composedMessage = composeAccessRequestMessage({
     email,
     name,
+    fullName: fullName || null,
+    username: username || null,
+    phone: phone || null,
+    passwordHash: hashPasswordSha256(password),
     role,
-    company: company || "(nao informado)",
-    clientId: clientId || null,
+    company: resolvedCompanyName || "(nao informado)",
+    clientId: resolvedClientId,
     accessType,
+    profileType,
+    title,
+    description,
     notes,
+    companyProfile,
   });
 
   const useJson = shouldUseJsonStore();
   if (useJson) {
-    await createAccessRequest({
+    const created = await createAccessRequest({
       email,
       message: composedMessage,
       status: "open",
@@ -137,9 +154,15 @@ export async function POST(req: Request) {
       user_agent,
       user_id: userId,
     });
+    await notifyAccessRequestCreated({
+      requestId: created.id,
+        requesterName: fullName,
+      profileType,
+      reviewQueue: resolveReviewQueue(profileType),
+    });
   } else {
     try {
-      await prisma.supportRequest.create({
+      const created = await prisma.supportRequest.create({
         data: {
           email,
           message: composedMessage,
@@ -149,10 +172,16 @@ export async function POST(req: Request) {
           user_id: userId,
         },
       });
+      await notifyAccessRequestCreated({
+        requestId: created.id,
+        requesterName: fullName,
+        profileType,
+        reviewQueue: resolveReviewQueue(profileType),
+      });
     } catch (error) {
       console.error("Erro ao registrar support_request:", error);
       try {
-        await createAccessRequest({
+        const created = await createAccessRequest({
           email,
           message: composedMessage,
           status: "open",
@@ -160,25 +189,29 @@ export async function POST(req: Request) {
           user_agent,
           user_id: userId,
         });
+        await notifyAccessRequestCreated({
+          requestId: created.id,
+          requesterName: fullName,
+          profileType,
+          reviewQueue: resolveReviewQueue(profileType),
+        });
       } catch (jsonError) {
         console.error("Fallback JSON store falhou:", jsonError);
-        return NextResponse.json({ message: "Erro interno ao registrar solicitação" }, { status: 500 });
+        return NextResponse.json({ message: "Erro interno ao registrar solicitacao" }, { status: 500 });
       }
     }
   }
+
   return NextResponse.json({
     ok: true,
-    message: "Solicitação enviada. O administrador será notificado.",
+    message: resolveRequestQueueMessage(resolveReviewQueue(profileType)),
   });
 }
 
 export async function GET(req: Request) {
-  // Apenas admins podem listar
-  const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-
-  if (!authUser.isGlobalAdmin) {
-    return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ message: status === 401 ? "Nao autorizado" : "Acesso proibido" }, { status });
   }
 
   const useJson = shouldUseJsonStore();
@@ -198,5 +231,3 @@ export async function GET(req: Request) {
     return NextResponse.json({ items });
   }
 }
-
-

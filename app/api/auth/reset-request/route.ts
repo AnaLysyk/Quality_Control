@@ -2,11 +2,18 @@ import { NextResponse } from "next/server";
 import { addRequest } from "@/data/requestsStore";
 import { findLocalUserByEmailOrId, listLocalCompanies, listLocalLinksForUser } from "@/lib/auth/localStore";
 import { notifyPasswordResetRequest } from "@/lib/notificationService";
+import {
+  deriveProfileTypeFromAccount,
+  normalizeRequestProfileType,
+  resolveReviewQueue,
+  resolveRequestQueueMessage,
+} from "@/lib/requestRouting";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const login = typeof body?.user === "string" ? body.user.trim().toLowerCase() : "";
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+  const rawProfileType = typeof body?.profile_type === "string" ? body.profile_type : "";
 
   if (!login || !email) {
     return NextResponse.json({ error: "Usuario e email obrigatorios" }, { status: 400 });
@@ -19,6 +26,15 @@ export async function POST(req: Request) {
   if ((user.email ?? "").toLowerCase() !== email) {
     return NextResponse.json({ error: "Usuario e email nao conferem" }, { status: 400 });
   }
+
+  const profileType =
+    normalizeRequestProfileType(rawProfileType) ??
+    deriveProfileTypeFromAccount({
+      role: user.role,
+      globalRole: user.globalRole ?? null,
+      isGlobalAdmin: user.is_global_admin === true,
+    });
+  const reviewQueue = resolveReviewQueue(profileType);
 
   const [links, companies] = await Promise.all([
     listLocalLinksForUser(user.id),
@@ -38,13 +54,17 @@ export async function POST(req: Request) {
     requestRecord = await addRequest(
       {
         id: user.id,
-        name: user.name,
+        name: user.full_name?.trim() || user.name,
         email: user.email,
         companyId: preferredCompany?.id,
         companyName: preferredCompanyName,
       },
       "PASSWORD_RESET",
-      { reason: "forgot_password" },
+      {
+        reason: "forgot_password",
+        profileType,
+        reviewQueue,
+      },
     );
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
@@ -61,5 +81,5 @@ export async function POST(req: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, message: resolveRequestQueueMessage(reviewQueue) });
 }

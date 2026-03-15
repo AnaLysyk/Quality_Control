@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
+import { formatRunTitle } from "@/lib/runPresentation";
 
 type ManualRun = {
   slug: string;
@@ -22,7 +23,7 @@ function normalizeRuns(data: unknown[]): ManualRun[] {
       const stats = (rec.stats ?? {}) as ManualRun["stats"];
       return {
         slug: String(rec.slug ?? rec.id ?? ""),
-        name: String(rec.name ?? rec.title ?? rec.slug ?? "Run manual"),
+        name: formatRunTitle(String(rec.name ?? rec.title ?? rec.slug ?? "Run manual"), "Run manual"),
         createdAt: typeof rec.createdAt === "string" ? rec.createdAt : null,
         status: typeof rec.status === "string" ? rec.status : null,
         stats: {
@@ -99,11 +100,11 @@ export default function CompanyRunsPage() {
             {filteredRuns.length === 0 && (
               <p className="text-sm text-(--tc-text-muted)">Nenhuma run encontrada.</p>
             )}
-            {filteredRuns.map((run) => {
+            {filteredRuns.map((run, idx) => {
               const total = run.stats.pass + run.stats.fail + run.stats.blocked + run.stats.notRun;
               const passRate = total > 0 ? Math.round((run.stats.pass / total) * 100) : 0;
               return (
-                <div key={run.slug} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-4">
+                <div key={`${run.slug ?? 'run'}-${run.createdAt ?? idx}`} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-4">
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <Link
                       href={`/empresas/${encodeURIComponent(companySlug ?? "")}/runs/${encodeURIComponent(run.slug)}`}

@@ -1,9 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getAppMeta } from "@/lib/appMeta";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useClientContext } from "@/context/ClientContext";
+import { stripRunPrefix } from "@/lib/runPresentation";
 
 type NewManualRelease = {
   name: string;
@@ -108,7 +110,7 @@ export function CreateManualReleaseButton({
   redirectToRun?: boolean;
   onCreated?: (release: { slug?: string; name?: string; title?: string }) => void;
 }) {
-  const { user, loading } = useAuthUser();
+  useAuthUser();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -116,20 +118,8 @@ export function CreateManualReleaseButton({
   const [form, setForm] = useState<NewManualRelease>(initialState);
   const [cases, setCases] = useState<ManualCaseDraft[]>([]);
   const [caseDraft, setCaseDraft] = useState<ManualCaseDraft>({ ...initialCaseDraft });
-  const nameInputId = "manual-release-name";
-  const appSelectId = "manual-release-app";
-  const observationsId = "manual-release-observations";
-  const statInputIds = {
-    pass: "manual-release-pass",
-    fail: "manual-release-fail",
-    blocked: "manual-release-blocked",
-    notRun: "manual-release-not-run",
-  } as const;
 
-  const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
-  const canCreate = Boolean(user?.isGlobalAdmin || role === "admin" || role === "company");
-
-  if (loading || !canCreate) return null;
+  // Sempre exibe o botão, ignorando loading/user
 
   const apps = [
     "SMART",
@@ -141,8 +131,42 @@ export function CreateManualReleaseButton({
     "GMT",
   ];
 
+  const { activeClientSlug } = useClientContext();
+  const [applications, setApplications] = useState<
+    Array<{ id: string; name: string; slug: string; companySlug?: string | null; qaseProjectCode?: string | null }>
+  >([]);
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const slug = companySlug ?? activeClientSlug ?? undefined;
+    (async () => {
+      try {
+        const q = slug ? `?companySlug=${encodeURIComponent(slug)}` : "";
+        const res = await fetch(`/api/applications${q}`, { cache: "no-store" });
+        const data = await res.json().catch(() => null);
+        const items = Array.isArray(data?.items) ? (data.items as Array<Record<string, unknown>>) : [];
+        const mapped = items.map((it) => ({
+          id: typeof it.id === "string" ? it.id : "",
+          name: typeof it.name === "string" ? it.name : "",
+          slug: typeof it.slug === "string" ? it.slug : "",
+          companySlug: typeof it.companySlug === "string" ? it.companySlug : null,
+          qaseProjectCode: typeof it.qaseProjectCode === "string" ? it.qaseProjectCode : null,
+        }));
+        setApplications(mapped);
+        if (mapped.length > 0) {
+          setSelectedApplicationId(mapped[0].id);
+          setForm((prev) => ({ ...prev, app: mapped[0].slug || mapped[0].name }));
+        }
+      } catch {
+        setApplications([]);
+      }
+    })();
+  }, [open, companySlug, activeClientSlug]);
+
   const total = form.pass + form.fail + form.blocked + form.notRun;
-  const appMeta = getAppMeta(form.app.toLowerCase(), form.app);
+  const selectedApplication = applications.find((application) => application.id === selectedApplicationId) ?? null;
+  const appMeta = getAppMeta((selectedApplication?.slug || form.app).toLowerCase(), selectedApplication?.name || form.app);
 
   const handleFailClick = () => {
     if (form.fail === 0) {
@@ -191,7 +215,8 @@ export function CreateManualReleaseButton({
   });
 
   const handleSubmit = async () => {
-    if (!form.name.trim()) return;
+    const cleanedName = stripRunPrefix(form.name);
+    if (!cleanedName) return;
     setSaving(true);
     setSubmitError(null);
     try {
@@ -201,8 +226,9 @@ export function CreateManualReleaseButton({
         credentials: "include",
           body: JSON.stringify({
             kind: "run",
-            name: form.name.trim(),
-            app: form.app,
+            name: cleanedName,
+            app: selectedApplication?.slug || form.app,
+            qaseProject: selectedApplication?.qaseProjectCode || form.app.toUpperCase(),
             slug: form.slug,
             ...(companySlug ? { clientSlug: companySlug } : {}),
             stats: {
@@ -311,9 +337,8 @@ export function CreateManualReleaseButton({
                 <div className="min-w-0 space-y-6">
                   <div className="grid gap-4 sm:grid-cols-3">
                     <div className="space-y-1">
-                      <label htmlFor={nameInputId} className="text-sm font-semibold text-(--tc-text-muted)">Título</label>
+                      <label className="text-sm font-semibold text-(--tc-text-muted)">Título</label>
                       <input
-                        id={nameInputId}
                         className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
                         data-testid="run-title"
                         value={form.name}
@@ -331,27 +356,52 @@ export function CreateManualReleaseButton({
                     </div>
 
                     <div className="space-y-1">
-                      <label htmlFor={appSelectId} className="text-sm font-semibold text-(--tc-text-muted)">Aplicação</label>
-                      <select
-                        id={appSelectId}
-                        aria-label="Selecionar aplicação"
-                        className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
-                        value={form.app}
-                        onChange={(e) => setForm((prev) => ({ ...prev, app: e.target.value }))}
-                      >
-                        {apps.map((app) => (
-                          <option key={app} value={app}>
-                            {app}
-                          </option>
-                        ))}
-                      </select>
+                      <label className="text-sm font-semibold text-(--tc-text-muted)">Aplicação</label>
+                      {applications.length > 0 ? (
+                        <select
+                          aria-label="Selecionar aplicação"
+                          className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
+                          value={selectedApplicationId ?? ""}
+                          onChange={(e) => {
+                            const nextId = e.target.value;
+                            setSelectedApplicationId(nextId);
+                            const nextApplication = applications.find((app) => app.id === nextId) ?? null;
+                            if (nextApplication) {
+                              setForm((prev) => ({ ...prev, app: nextApplication.slug || nextApplication.name }));
+                            }
+                          }}
+                        >
+                          {applications.map((app) => (
+                            <option key={app.id} value={app.id}>
+                              {app.name}
+                              {app.qaseProjectCode ? ` (${app.qaseProjectCode})` : ""}
+                              {app.companySlug ? ` - ${app.companySlug}` : ""}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <select
+                          aria-label="Selecionar aplicação"
+                          className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
+                          value={form.app}
+                          onChange={(e) => setForm((prev) => ({ ...prev, app: e.target.value }))}
+                        >
+                          {apps.map((app) => (
+                            <option key={app} value={app}>
+                              {app}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                       <div className="text-xs text-(--tc-text-muted)">
-                        {appMeta.label} • cor aplicada automaticamente
+                        {selectedApplication?.qaseProjectCode
+                          ? `Projeto Qase: ${selectedApplication.qaseProjectCode}`
+                          : `${appMeta.label} • cor aplicada automaticamente`}
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-sm font-semibold text-(--tc-text-muted)">Release (slug)</label>
+                      <label className="text-sm font-semibold text-(--tc-text-muted)">Run (slug)</label>
                       <input
                         className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
                         data-testid="run-slug"
@@ -359,16 +409,14 @@ export function CreateManualReleaseButton({
                         onChange={(e) => setForm((prev) => ({ ...prev, slug: e.target.value }))}
                         placeholder="Ex: v1_8_0_reg"
                       />
-                      <div className="text-xs text-(--tc-text-muted)">Slug da release a ser impactada (ex: v1_8_0_reg)</div>
+                      <div className="text-xs text-(--tc-text-muted)">Slug da run. A rota atual continua em /release/{`<slug>`}.</div>
                     </div>
                   </div>
-
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     {(["pass", "fail", "blocked", "notRun"] as const).map((key) => (
                       <div key={key} className="space-y-1">
-                        <label htmlFor={statInputIds[key]} className="text-xs uppercase tracking-wide text-(--tc-text-muted)">{key}</label>
+                        <label className="text-xs uppercase tracking-wide text-(--tc-text-muted)">{key}</label>
                         <input
-                          id={statInputIds[key]}
                           type="number"
                           min={0}
                           aria-label={`Total ${key}`}
@@ -408,9 +456,8 @@ export function CreateManualReleaseButton({
                   </div>
 
                   <div className="space-y-1">
-                    <label htmlFor={observationsId} className="text-sm font-semibold text-(--tc-text-muted)">Observações</label>
+                    <label className="text-sm font-semibold text-(--tc-text-muted)">Observações</label>
                     <textarea
-                      id={observationsId}
                       className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
                       rows={3}
                       value={form.observations}

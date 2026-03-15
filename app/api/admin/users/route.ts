@@ -1,71 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAccessContext } from "@/lib/auth/session";
+import { getAdminUserItem, listAdminUserItems } from "@/lib/adminUsers";
 import {
   createLocalUser,
-  listLocalLinksForCompany,
+  findLocalCompanyById,
   listLocalLinksForUser,
   listLocalUsers,
-  normalizeLocalRole,
+  removeLocalLink,
   updateLocalUser,
   upsertLocalLink,
 } from "@/lib/auth/localStore";
 
 export const runtime = "nodejs";
-const MIN_PASSWORD_LENGTH = 8;
 
-type UserItem = {
-  id: string;
-  name: string;
-  email: string;
-  user?: string;
-  role?: string;
-  client_id?: string | null;
-  active?: boolean;
-  job_title?: string | null;
-  linkedin_url?: string | null;
-  avatar_url?: string | null;
-};
-
-function mapUser(
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    user?: string;
-    active?: boolean;
-    job_title?: string | null;
-    linkedin_url?: string | null;
-    avatar_url?: string | null;
-    globalRole?: string | null;
-    is_global_admin?: boolean;
-  },
-  link?: { role?: string | null; companyId?: string | null },
-) {
-  const role = normalizeLocalRole(link?.role ?? "user");
-  const isGlobalAdmin = user.globalRole === "global_admin" || user.is_global_admin === true;
-  const mappedRole = isGlobalAdmin
-    ? "global_admin"
-    : role === "company_admin"
-      ? "client_admin"
-      : role === "it_dev"
-        ? "it_dev"
-        : "client_user";
-  return {
-    id: user.id,
-    name: user.name ?? "",
-    email: user.email,
-    user: user.user ?? user.email ?? "",
-    role: mappedRole,
-    client_id: link?.companyId ?? null,
-    active: user.active !== false,
-    job_title: user.job_title ?? null,
-    linkedin_url: user.linkedin_url ?? null,
-    avatar_url: user.avatar_url ?? null,
-  };
+function hasOwn(obj: Record<string, unknown> | null, key: string) {
+  return !!obj && Object.prototype.hasOwnProperty.call(obj, key);
 }
 
 function normalizeRole(input?: string | null) {
@@ -78,6 +32,48 @@ function normalizeRole(input?: string | null) {
 
 function normalizeLogin(value?: string | null) {
   return (value ?? "").trim().toLowerCase();
+}
+
+function slugifyLoginSeed(value?: string | null) {
+  const normalized = (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ".")
+    .replace(/^\.+|\.+$/g, "")
+    .replace(/\.{2,}/g, ".");
+
+  return normalized || "usuario";
+}
+
+function buildUniqueLogin(
+  existingUsers: Array<{ email: string; user?: string | null }>,
+  preferredLogin: string,
+  fallbackSeed: string,
+) {
+  const taken = new Set(existingUsers.map((user) => normalizeLogin(user.user ?? user.email)));
+  const normalizedPreferred = normalizeLogin(preferredLogin);
+  if (normalizedPreferred) return normalizedPreferred;
+
+  const base = slugifyLoginSeed(fallbackSeed);
+  if (!taken.has(base)) return base;
+
+  let counter = 2;
+  while (taken.has(`${base}.${counter}`)) {
+    counter += 1;
+  }
+  return `${base}.${counter}`;
+}
+
+function roleNeedsCompany(role: string, wantsGlobalAdmin: boolean) {
+  if (wantsGlobalAdmin) return false;
+  return role === "viewer";
+}
+
+function isGlobalDeveloperAccess(access: Awaited<ReturnType<typeof getAccessContext>> | null) {
+  const role = (access?.role ?? "").toLowerCase();
+  const companyRole = (access?.companyRole ?? "").toLowerCase();
+  return role === "it_dev" || companyRole === "it_dev";
 }
 
 export async function GET(req: NextRequest) {
@@ -94,27 +90,16 @@ export async function GET(req: NextRequest) {
     if (!access.companyId) {
       return NextResponse.json({ error: "Sem empresa vinculada" }, { status: 403 });
     }
-    const links = await listLocalLinksForCompany(access.companyId);
-    const users = await listLocalUsers();
-    const byId = new Map(users.map((user) => [user.id, user]));
-    const items: UserItem[] = links.map((link) => mapUser(byId.get(link.userId) ?? { id: link.userId, name: "", email: "", active: true }, { role: link.role, companyId: link.companyId }));
+    const items = await listAdminUserItems({ companyId: access.companyId });
     return NextResponse.json({ items }, { status: 200 });
   }
 
   if (clientId) {
-    const links = await listLocalLinksForCompany(clientId);
-    const users = await listLocalUsers();
-    const byId = new Map(users.map((user) => [user.id, user]));
-    const items: UserItem[] = links.map((link) => mapUser(byId.get(link.userId) ?? { id: link.userId, name: "", email: "", active: true }, { role: link.role, companyId: link.companyId }));
+    const items = await listAdminUserItems({ companyId: clientId });
     return NextResponse.json({ items }, { status: 200 });
   }
 
-  const users = await listLocalUsers();
-  const items: UserItem[] = [];
-  for (const user of users) {
-    const link = (await listLocalLinksForUser(user.id))[0];
-    items.push(mapUser(user, link ? { role: link.role, companyId: link.companyId } : undefined));
-  }
+  const items = await listAdminUserItems();
 
   return NextResponse.json({ items }, { status: 200 });
 }
@@ -124,20 +109,29 @@ export async function POST(req: NextRequest) {
   if (!admin) {
     return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
   }
+  const access = await getAccessContext(req);
+  const canManagePrivilegedProfiles = isGlobalDeveloperAccess(access);
 
   const body = await req.json().catch(() => null);
+  const fullName =
+    typeof body?.full_name === "string"
+      ? body.full_name.trim() || null
+      : typeof body?.fullName === "string"
+        ? body.fullName.trim() || null
+        : null;
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
-  const password = typeof body?.password === "string" ? body.password : "";
   const rawLogin = typeof body?.user === "string" ? body.user : "";
-  const inferredLogin = !rawLogin && typeof body?.email === "string" ? String(body.email).split("@")[0] : rawLogin;
-  const login = normalizeLogin(inferredLogin);
   const clientId = typeof body?.client_id === "string" ? body.client_id : null;
+  const phone = typeof body?.phone === "string" ? body.phone.trim() || null : null;
+  const password = typeof body?.password === "string" ? body.password : null;
   const jobTitle = typeof body?.job_title === "string" ? body.job_title.trim() || null : null;
   const linkedinUrl = typeof body?.linkedin_url === "string" ? body.linkedin_url.trim() || null : null;
   const avatarUrl = typeof body?.avatar_url === "string" ? body.avatar_url.trim() || null : null;
   const rawRole = typeof body?.role === "string" ? body.role : "";
-  const wantsGlobalAdmin = rawRole.trim().toLowerCase() === "global_admin";
+  const wantsGlobalAdmin = ["admin", "global_admin", "it_dev", "itdev", "developer", "dev"].includes(
+    rawRole.trim().toLowerCase(),
+  );
   const role = normalizeRole(rawRole);
   const capabilities = Array.isArray(body?.capabilities)
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
@@ -145,56 +139,77 @@ export async function POST(req: NextRequest) {
 
   console.debug(`[ADMIN-USERS][POST] admin=${admin?.email ?? "-"} name=${name} email=${email} clientId=${clientId} role=${rawRole}`);
 
-  if (!name || !email || !login) {
-    console.error(`[ADMIN-USERS][POST] missing-fields admin=${admin?.email ?? "-"} name='${name}' email='${email}' login='${login}'`);
-    return NextResponse.json({ error: "Nome, usuario e email sao obrigatorios" }, { status: 400 });
+  if (!name || !email) {
+    console.error(`[ADMIN-USERS][POST] missing-fields admin=${admin?.email ?? "-"} name='${name}' email='${email}'`);
+    return NextResponse.json({ error: "Nome e e-mail sao obrigatorios" }, { status: 400 });
   }
-  if (password.length < MIN_PASSWORD_LENGTH) {
-    return NextResponse.json({ error: `Senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres` }, { status: 400 });
+  if (wantsGlobalAdmin && !canManagePrivilegedProfiles) {
+    return NextResponse.json({ error: "Somente Global pode criar perfis privilegiados" }, { status: 403 });
   }
-  if (!clientId) {
+  if (clientId) {
+    const selectedCompany = await findLocalCompanyById(clientId);
+    if (!selectedCompany) {
+      return NextResponse.json({ error: "Empresa nao encontrada" }, { status: 404 });
+    }
+  }
+  if (roleNeedsCompany(role, wantsGlobalAdmin) && !clientId) {
     console.error(`[ADMIN-USERS][POST] missing-client admin=${admin?.email ?? "-"} clientId=${clientId}`);
     return NextResponse.json({ error: "Empresa obrigatoria para este perfil" }, { status: 400 });
   }
+  if (wantsGlobalAdmin && (!password || password.trim().length < 8)) {
+    return NextResponse.json({ error: "Senha obrigatoria com pelo menos 8 caracteres para criar Global" }, { status: 400 });
+  }
 
   const users = await listLocalUsers();
+  const login = buildUniqueLogin(
+    users,
+    rawLogin,
+    fullName || name || email.split("@")[0] || "usuario",
+  );
+
   if (users.some((user) => normalizeLogin(user.email) === email)) {
     console.error(`[ADMIN-USERS][POST] duplicate-email admin=${admin?.email ?? "-"} email=${email}`);
-    return NextResponse.json({ error: "E-mail ja existe" }, { status: 409 });
+    return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
   }
   if (users.some((user) => normalizeLogin(user.user ?? user.email) === login)) {
     console.error(`[ADMIN-USERS][POST] duplicate-user admin=${admin?.email ?? "-"} login=${login}`);
-    return NextResponse.json({ error: "Usuario ja existe" }, { status: 409 });
+    return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
   }
 
+  const tempPassword = hashPasswordSha256(`${Date.now()}-${randomUUID()}`);
+  const passwordHash = password && password.trim() ? hashPasswordSha256(password.trim()) : tempPassword;
   let user = null;
   try {
     user = await createLocalUser({
+      full_name: fullName,
       name,
       email,
       user: login,
-      password_hash: hashPasswordSha256(password),
+      password_hash: passwordHash,
       active: true,
-      role: "user",
+      role: role === "it_dev" ? "it_dev" : "user",
       globalRole: wantsGlobalAdmin ? "global_admin" : null,
       is_global_admin: wantsGlobalAdmin,
       job_title: jobTitle || null,
       linkedin_url: linkedinUrl || null,
       avatar_url: avatarUrl || null,
+      phone,
     });
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
     console.error(`[ADMIN-USERS][POST] createLocalUser error admin=${admin?.email ?? "-"} code=${code} err=${String(err)}`);
     if (code === "DUPLICATE_EMAIL") {
-      return NextResponse.json({ error: "E-mail ja existe" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
     }
     if (code === "DUPLICATE_USER") {
-      return NextResponse.json({ error: "Usuario ja existe" }, { status: 409 });
+      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
     }
     throw err;
   }
 
-  await upsertLocalLink({ userId: user.id, companyId: clientId, role, capabilities });
+  if (clientId && !wantsGlobalAdmin) {
+    await upsertLocalLink({ userId: user.id, companyId: clientId, role, capabilities });
+  }
 
   await addAuditLogSafe({
     actorUserId: admin.id,
@@ -207,7 +222,8 @@ export async function POST(req: NextRequest) {
   });
 
   console.error(`[ADMIN-USERS][POST] created admin=${admin?.email ?? "-"} user=${user?.email ?? user?.id}`);
-  return NextResponse.json({ ok: true }, { status: 201 });
+  const item = user ? await getAdminUserItem(user.id) : null;
+  return NextResponse.json({ ok: true, item }, { status: 201 });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -215,6 +231,8 @@ export async function PATCH(req: NextRequest) {
   if (!admin) {
     return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
   }
+  const access = await getAccessContext(req);
+  const canManagePrivilegedProfiles = isGlobalDeveloperAccess(access);
 
   const body = await req.json().catch(() => null);
   const userId = typeof body?.id === "string" ? body.id : "";
@@ -224,45 +242,101 @@ export async function PATCH(req: NextRequest) {
 
   const name = typeof body?.name === "string" ? body.name.trim() : null;
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : null;
-  const login = typeof body?.user === "string" ? normalizeLogin(body.user) : null;
+  const hasLogin = typeof body?.user === "string";
+  const login = hasLogin ? normalizeLogin(body?.user) : null;
   const active = typeof body?.active === "boolean" ? body.active : null;
   const clientId = typeof body?.client_id === "string" ? body.client_id : null;
   const jobTitle = typeof body?.job_title === "string" ? body.job_title.trim() || null : null;
   const linkedinUrl = typeof body?.linkedin_url === "string" ? body.linkedin_url.trim() || null : null;
-  const avatarUrl = typeof body?.avatar_url === "string" ? body.avatar_url.trim() || null : null;
+  const hasAvatarUrl = hasOwn(body as Record<string, unknown> | null, "avatar_url");
+  const avatarUrl = hasAvatarUrl
+    ? typeof body?.avatar_url === "string"
+      ? body.avatar_url.trim() || null
+      : null
+    : undefined;
   const rawRole = typeof body?.role === "string" ? body.role : "";
-  const wantsGlobalAdmin = rawRole.trim().toLowerCase() === "global_admin";
+  const wantsGlobalAdmin = ["admin", "global_admin", "it_dev", "itdev", "developer", "dev"].includes(
+    rawRole.trim().toLowerCase(),
+  );
   const role = normalizeRole(rawRole);
+  const fullName =
+    typeof body?.full_name === "string"
+      ? body.full_name.trim() || null
+      : typeof body?.fullName === "string"
+        ? body.fullName.trim() || null
+        : undefined;
+  const phone = typeof body?.phone === "string" ? body.phone.trim() || null : undefined;
   const capabilities = Array.isArray(body?.capabilities)
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
+  const selectedCompany = clientId ? await findLocalCompanyById(clientId) : null;
+
+  if (wantsGlobalAdmin && !canManagePrivilegedProfiles) {
+    return NextResponse.json({ error: "Somente Global pode promover perfis privilegiados" }, { status: 403 });
+  }
+  if (clientId && !selectedCompany) {
+    return NextResponse.json({ error: "Empresa nao encontrada" }, { status: 404 });
+  }
+
+  const existingLinks = rawRole ? await listLocalLinksForUser(userId) : [];
+  if (rawRole && roleNeedsCompany(role, wantsGlobalAdmin) && !clientId && existingLinks.length === 0) {
+    return NextResponse.json({ error: "Empresa obrigatoria para este perfil" }, { status: 400 });
+  }
 
   if (email || login) {
     const users = await listLocalUsers();
     if (email && users.some((user) => user.id !== userId && normalizeLogin(user.email) === email)) {
-      return NextResponse.json({ error: "E-mail ja existe" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
     }
     if (login && users.some((user) => user.id !== userId && normalizeLogin(user.user ?? user.email) === login)) {
-      return NextResponse.json({ error: "Usuario ja existe" }, { status: 409 });
+      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
     }
   }
-
-  const updated = await updateLocalUser(userId, {
-    ...(name ? { name } : {}),
-    ...(email ? { email } : {}),
-    ...(login ? { user: login } : {}),
-    ...(active !== null ? { active } : {}),
-    ...(jobTitle !== null ? { job_title: jobTitle } : {}),
-    ...(linkedinUrl !== null ? { linkedin_url: linkedinUrl } : {}),
-    ...(avatarUrl !== null ? { avatar_url: avatarUrl } : {}),
-    ...(rawRole ? { globalRole: wantsGlobalAdmin ? "global_admin" : null, is_global_admin: wantsGlobalAdmin } : {}),
-  });
+  let updated = null;
+  try {
+    updated = await updateLocalUser(userId, {
+      ...(fullName !== undefined ? { full_name: fullName } : {}),
+      ...(name ? { name } : {}),
+      ...(email ? { email } : {}),
+      ...(hasLogin ? { user: login ?? "" } : {}),
+      ...(active !== null ? { active } : {}),
+      ...(jobTitle !== null ? { job_title: jobTitle } : {}),
+      ...(linkedinUrl !== null ? { linkedin_url: linkedinUrl } : {}),
+      ...(hasAvatarUrl ? { avatar_url: avatarUrl ?? null } : {}),
+      ...(phone !== undefined ? { phone } : {}),
+      ...(rawRole
+        ? {
+            role: role === "it_dev" ? "it_dev" : "user",
+            globalRole: wantsGlobalAdmin ? "global_admin" : null,
+            is_global_admin: wantsGlobalAdmin,
+            ...(wantsGlobalAdmin
+              ? { default_company_slug: null }
+              : selectedCompany
+                ? { default_company_slug: selectedCompany.slug }
+                : {}),
+          }
+        : {}),
+    });
+  } catch (err) {
+    const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
+    if (code === "DUPLICATE_EMAIL") {
+      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+    }
+    if (code === "DUPLICATE_USER") {
+      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+    }
+    throw err;
+  }
 
   if (!updated) {
     return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
   }
 
-  if (clientId) {
+  if (rawRole && !roleNeedsCompany(role, wantsGlobalAdmin) && existingLinks.length > 0) {
+    for (const link of existingLinks) {
+      await removeLocalLink(userId, link.companyId);
+    }
+  } else if (rawRole && roleNeedsCompany(role, wantsGlobalAdmin) && clientId) {
     await upsertLocalLink({ userId, companyId: clientId, role, capabilities });
   }
 

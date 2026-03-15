@@ -1,17 +1,26 @@
 ﻿"use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { FiPlus, FiRefreshCw } from "react-icons/fi";
-import { useAuthUser } from "@/hooks/useAuthUser";
-import { useTicketKanbanColumns } from "@/hooks/useTicketKanbanColumns";
-import { getTicketStatusLabel, normalizeKanbanStatus, type TicketStatus } from "@/lib/ticketsStatus";
-import TicketDetailsModal from "@/components/TicketDetailsModal";
+function getSuporteCode(code: string | null | undefined, id: string): string {
+  const raw = typeof code === "string" ? code.trim().toUpperCase() : "";
+  if (raw && raw.startsWith("SP-")) {
+    const match = raw.match(/^SP-(\d{4,})$/i);
+    if (match) return raw;
+  }
+  return `SP-${id.slice(0, 6).toUpperCase()}`;
+}
 
-type TicketItem = {
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { FiLifeBuoy, FiPlus, FiRefreshCw, FiX } from "react-icons/fi";
+import { usePermissionAccess } from "@/hooks/usePermissionAccess";
+import { useSuporteKanbanColumns } from "@/hooks/useSuporteKanbanColumns";
+import { getSuporteStatusLabel, SUPORTE_STATUS_OPTIONS, normalizeKanbanStatus, type SuporteStatus } from "@/lib/suportesStatus";
+import SuporteDetailsModal from "@/components/SuporteDetailsModal";
+
+type SuporteItem = {
   id: string;
   title: string;
   description: string;
-  status: TicketStatus;
+  status: SuporteStatus;
   type?: string | null;
   code?: string | null;
   priority?: string | null;
@@ -45,8 +54,6 @@ const TYPE_OPTIONS = [
 function isDevRole(role: string | null | undefined) {
   const value = (role ?? "").toLowerCase();
   return (
-    value === "admin" ||
-    value === "global_admin" ||
     value === "it_dev" ||
     value === "itdev" ||
     value === "developer" ||
@@ -67,15 +74,15 @@ function formatDate(iso?: string | null) {
   if (!Number.isFinite(time)) return "-";
   return new Date(time).toLocaleDateString("pt-BR");
 }
-
-export default function MeusChamadosPage() {
-  const { user, loading } = useAuthUser();
-  const [tickets, setTickets] = useState<TicketItem[]>([]);
-  const [loadingTickets, setLoadingTickets] = useState(false);
+export default function MeusSuportesPage() {
+  const { user, loading, can } = usePermissionAccess();
+  const canViewSupport = can("support", "view") || can("tickets", "view");
+  const canCreateSupport = can("support", "create") || can("tickets", "create");
+  const canMoveSupport = isDevRole(user?.role) || can("support", "status") || can("tickets", "status");
+  const [suportes, setSuportes] = useState<SuporteItem[]>([]);
+  const [loadingSuportes, setLoadingSuportes] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dragging, setDragging] = useState<{ id: string; from: TicketStatus } | null>(null);
-  const [selectedTicket, setSelectedTicket] = useState<TicketItem | null>(null);
-
+  const [selectedSuporte, setSelectedSuporte] = useState<SuporteItem | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createDraft, setCreateDraft] = useState({
     title: "",
@@ -83,441 +90,319 @@ export default function MeusChamadosPage() {
     type: "tarefa",
     priority: "medium",
   });
-  const [creating, setCreating] = useState(false);
+  // Cards horizontais, sem colunas, drag ou statusOptions
   const [createError, setCreateError] = useState<string | null>(null);
+  const [createSaving, setCreateSaving] = useState(false);
 
-  const [editingColumnKey, setEditingColumnKey] = useState<string | null>(null);
-  const [editingColumnLabel, setEditingColumnLabel] = useState("");
-  const [addingColumn, setAddingColumn] = useState(false);
-  const [newColumnLabel, setNewColumnLabel] = useState("");
-
-  const canManage = useMemo(() => isDevRole(user?.role ?? ""), [user?.role]);
-  const statusKeys = useMemo(
-    () => tickets.map((ticket) => normalizeKanbanStatus(ticket.status)),
-    [tickets],
-  );
-  const { columns, statusOptions, addColumn, renameColumn } = useTicketKanbanColumns(statusKeys);
-
-  const grouped = useMemo(() => {
-    const map: Record<ColumnKey, TicketItem[]> = {};
-    columns.forEach((col) => {
-      map[col.key] = [];
-    });
-    for (const ticket of tickets) {
-      const normalized = normalizeKanbanStatus(ticket.status) as ColumnKey;
-      if (map[normalized]) map[normalized].push(ticket);
-    }
-    return map;
-  }, [tickets, columns]);
-
-  const loadTickets = useCallback(async () => {
-    if (!user) return;
-    setLoadingTickets(true);
+  // Função para recarregar suportes
+  const reloadSuportes = useCallback(async () => {
+    setLoadingSuportes(true);
     setError(null);
     try {
-      const res = await fetch("/api/chamados?scope=mine", { credentials: "include", cache: "no-store" });
-      const json = (await res.json().catch(() => ({}))) as { items?: TicketItem[]; error?: string };
+      const res = await fetch("/api/suportes", {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const json = (await res.json().catch(() => ({}))) as { items?: SuporteItem[]; error?: string };
       if (!res.ok) {
-        setTickets([]);
-        setError(json?.error || "Erro ao carregar chamados");
+        setSuportes([]);
+        setError(json?.error || "Erro ao carregar suportes");
         return;
       }
-      setTickets(Array.isArray(json.items) ? json.items : []);
+      setSuportes(Array.isArray(json.items) ? json.items : []);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao carregar chamados";
+      const msg = err instanceof Error ? err.message : "Erro ao carregar suportes";
       setError(msg);
     } finally {
-      setLoadingTickets(false);
+      setLoadingSuportes(false);
     }
-  }, [user]);
+  }, []);
 
-  useEffect(() => {
-    if (!user) return;
-    loadTickets();
-  }, [user, loadTickets]);
-
-  async function submitCreate() {
-    setCreating(true);
+  async function handleCreateSuporte() {
+    if (!createDraft.title.trim()) return;
+    setCreateSaving(true);
     setCreateError(null);
     try {
-      const res = await fetch("/api/chamados", {
+      const res = await fetch("/api/suportes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          title: createDraft.title,
-          description: createDraft.description,
+          title: createDraft.title.trim(),
+          description: createDraft.description.trim(),
           type: createDraft.type,
           priority: createDraft.priority,
         }),
       });
-      const json = (await res.json().catch(() => ({}))) as { item?: TicketItem; error?: string };
-      if (!res.ok || !json.item) {
-        setCreateError(json?.error || "Erro ao criar chamado");
-        return;
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || "Erro ao criar suporte");
       }
       setCreateOpen(false);
       setCreateDraft({ title: "", description: "", type: "tarefa", priority: "medium" });
-      setTickets((current) => [json.item as TicketItem, ...current]);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao criar chamado";
-      setCreateError(msg);
-    } finally {
-      setCreating(false);
+      setCreateSaving(false);
+      // Atualiza lista sem reload
+      await reloadSuportes();
+    } catch (e) {
+      setCreateError(e instanceof Error ? e.message : "Erro ao criar suporte");
+      setCreateSaving(false);
     }
   }
 
-  function startEditColumn(key: string, label: string) {
-    if (!canManage) return;
-    setEditingColumnKey(key);
-    setEditingColumnLabel(label);
-  }
-
-  function commitEditColumn() {
-    if (!editingColumnKey) return;
-    renameColumn(editingColumnKey, editingColumnLabel);
-    setEditingColumnKey(null);
-    setEditingColumnLabel("");
-  }
-
-  function cancelEditColumn() {
-    setEditingColumnKey(null);
-    setEditingColumnLabel("");
-  }
-
-  function startAddColumn() {
-    if (!canManage) return;
-    setAddingColumn(true);
-    setNewColumnLabel("");
-  }
-
-  function commitAddColumn() {
-    const created = addColumn(newColumnLabel);
-    setAddingColumn(false);
-    setNewColumnLabel("");
-    return created;
-  }
-
-  function handleDragStart(ticket: TicketItem) {
-    if (!canManage) return;
-    setDragging({ id: ticket.id, from: ticket.status });
-  }
-
-  async function updateStatus(ticketId: string, nextStatus: TicketStatus) {
-    const previous = tickets;
-    setTickets((current) =>
-      current.map((ticket) => (ticket.id === ticketId ? { ...ticket, status: nextStatus } : ticket)),
+  async function updateStatus(suporteId: string, nextStatus: SuporteStatus) {
+    const previous = suportes;
+    setSuportes((current) =>
+      current.map((suporte) => (suporte.id === suporteId ? { ...suporte, status: nextStatus } : suporte)),
     );
     try {
-      const res = await fetch(`/api/chamados/${ticketId}/status`, {
+      const res = await fetch(`/api/suportes/${suporteId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ status: nextStatus }),
       });
-      const json = (await res.json().catch(() => ({}))) as { item?: TicketItem; error?: string };
+      const json = (await res.json().catch(() => ({}))) as { item?: SuporteItem; error?: string };
       if (!res.ok || !json.item) {
-        setTickets(previous);
+        setSuportes(previous);
         setError(json?.error || "Falha ao atualizar status");
         return;
       }
-      setTickets((current) =>
-        current.map((ticket) => (ticket.id === json.item?.id ? json.item : ticket)),
+      setSuportes((current) =>
+        current.map((suporte) => (suporte.id === json.item?.id ? json.item : suporte)),
       );
     } catch {
-      setTickets(previous);
+      setSuportes(previous);
       setError("Falha ao atualizar status");
     }
-  }
-
-  async function handleDrop(toStatus: TicketStatus) {
-    if (!dragging) return;
-    if (dragging.from === toStatus) {
-      setDragging(null);
-      return;
-    }
-    const ticketId = dragging.id;
-    setDragging(null);
-    await updateStatus(ticketId, toStatus);
   }
 
   if (loading) {
     return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Carregando...</div>;
   }
 
-  if (!user) {
+  if (!user || !canViewSupport) {
     return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Acesso restrito.</div>;
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
+    <div className="p-4 sm:p-6 space-y-6 min-h-[80vh] bg-(--page-bg)">
+      <header className="flex flex-col sm:flex-row flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Chamados</h1>
+          <h1 className="text-2xl font-semibold">Suportes</h1>
           <p className="text-sm text-(--tc-text-muted,#6b7280)">
-            Acompanhe seus chamados e converse com o time.
+            Acompanhe seus suportes e converse com o time.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={loadTickets}
-            className="inline-flex items-center gap-2 rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
-          >
-            <FiRefreshCw size={14} /> Atualizar
-          </button>
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
-          >
-            <FiPlus size={14} /> Chamado
-          </button>
+          {canCreateSupport && (
+            <button
+              type="button"
+              aria-label="Criar suporte"
+              onClick={() => setCreateOpen(true)}
+              className="inline-flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
+            >
+              <FiPlus size={14} /> Suporte
+            </button>
+          )}
         </div>
       </header>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
-      {loadingTickets && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
+      {loadingSuportes && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
 
-      {canManage && (
-        <div className="flex flex-wrap items-center gap-2">
-          {!addingColumn && (
-            <button
-              type="button"
-              onClick={startAddColumn}
-              className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+
+      {/* Responsivo: grid em telas médias/grandes, carrossel horizontal em mobile */}
+      <div className="w-full py-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {suportes.map((suporte) => (
+            <div
+              key={suporte.id}
+              className="w-80 shrink-0 rounded-3xl border-2 border-(--tc-border,#e5e7eb) shadow-[0_8px_32px_rgba(15,23,42,0.10)] p-5 min-h-80 flex flex-col bg-(--tc-surface,#f9fafb) transition hover:shadow-[0_16px_48px_rgba(15,23,42,0.13)]"
             >
-              + Coluna
-            </button>
-          )}
-          {addingColumn && (
-            <input
-              value={newColumnLabel}
-              autoFocus
-              onChange={(e) => setNewColumnLabel(e.target.value)}
-              onBlur={commitAddColumn}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  commitAddColumn();
-                }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setAddingColumn(false);
-                  setNewColumnLabel("");
-                }
-              }}
-              className="w-56 rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-xs"
-              placeholder="Nome da coluna"
-            />
-          )}
-        </div>
-      )}
-
-      <section className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
-        {columns.map((column) => (
-          <div
-            key={column.key}
-            className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-3 min-h-80"
-            onDragOver={
-              canManage
-                ? (e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = "move";
-                  }
-                : undefined
-            }
-            onDrop={canManage ? () => handleDrop(column.key) : undefined}
-          >
-            <div className="flex items-center justify-between">
-              {editingColumnKey === column.key ? (
-                <input
-                  value={editingColumnLabel}
-                  autoFocus
-                  onChange={(e) => setEditingColumnLabel(e.target.value)}
-                  onBlur={commitEditColumn}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      commitEditColumn();
-                    }
-                    if (e.key === "Escape") {
-                      e.preventDefault();
-                      cancelEditColumn();
-                    }
-                  }}
-                  className="w-full rounded-md border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
-                />
-              ) : (
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[15px] font-bold uppercase tracking-[0.25em] text-(--tc-accent,#ef0001)">
+                  {getSuporteCode(suporte.code, suporte.id)}
+                </p>
+                <span className="text-[13px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                  {getSuporteStatusLabel(normalizeKanbanStatus(suporte.status), [])}
+                </span>
                 <button
                   type="button"
-                  onClick={() => (canManage ? startEditColumn(column.key, column.label) : undefined)}
-                  className="text-left text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)"
+                  className="ml-2 rounded-full border border-(--tc-accent,#ef0001) px-2 py-1 text-xs font-semibold uppercase tracking-[0.2em] bg-(--tc-accent,#ef0001) text-white hover:bg-(--tc-accent-dark,#c20000)"
+                  aria-label={`Abrir detalhes do suporte ${suporte.title}`}
+                  title="Abrir detalhes"
+                  onClick={() => setSelectedSuporte(suporte)}
                 >
-                  {column.label}
+                  Detalhes
                 </button>
-              )}
-              <span className="text-xs text-(--tc-text-muted,#6b7280)">
-                {grouped[column.key]?.length ?? 0}
-              </span>
+              </div>
+              <p className="mt-2 text-lg font-semibold wrap-break-word">{suporte.title || 'Sem titulo'}</p>
+              <p className="mt-1 text-[14px] text-(--tc-text-muted,#6b7280) wrap-break-word">{shortText(suporte.description, 100)}</p>
+              <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                <span className="bg-(--tc-accent,#ef0001)/10 px-2 py-1 rounded">Tipo: {suporte.type || 'tarefa'}</span>
+                <span className="bg-(--tc-accent,#ef0001)/10 px-2 py-1 rounded">Prioridade: {suporte.priority || 'medium'}</span>
+              </div>
+              <div className="mt-2 text-[11px] text-(--tc-text-muted,#6b7280) space-y-1">
+                <p>Criador: <span className="font-semibold text-(--tc-accent,#ef0001)">{suporte.createdByName || suporte.createdByEmail || suporte.createdBy || '-'}</span></p>
+                <p>Criado: <span className="font-semibold">{formatDate(suporte.createdAt)}</span></p>
+                <p>Atualizado: <span className="font-semibold">{formatDate(suporte.updatedAt)}</span></p>
+              </div>
+              <div className="mt-3">
+                <label className="sr-only" htmlFor={`status-${suporte.id}`}>Status</label>
+                <select
+                  id={`status-${suporte.id}`}
+                  aria-label="Status do suporte"
+                  title="Status do suporte"
+                  className="w-full rounded-lg border-2 border-(--tc-accent,#ef0001) bg-(--tc-surface,#f9fafb) px-2 py-1 text-[11px] text-(--tc-accent,#ef0001) font-bold cursor-not-allowed"
+                  value={normalizeKanbanStatus(suporte.status)}
+                  disabled
+                  tabIndex={-1}
+                >
+                  <option value={normalizeKanbanStatus(suporte.status)}>{getSuporteStatusLabel(normalizeKanbanStatus(suporte.status), [])}</option>
+                </select>
+                <p className="mt-2 text-xs font-semibold text-(--tc-accent,#ef0001) bg-(--tc-accent,#ef0001)/10 rounded px-2 py-1 border border-(--tc-accent,#ef0001)">Você não tem permissão para mover o suporte</p>
+              </div>
             </div>
-            <div className="mt-3 space-y-3">
-              {(grouped[column.key] ?? []).map((ticket) => {
-                const creatorLabel = ticket.createdByName || ticket.createdByEmail || ticket.createdBy || "-";
-                return (
-                  <div key={ticket.id} className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 text-left shadow-sm">
-                    <button
-                      type="button"
-                      draggable={canManage}
-                      onDragStart={(event) => {
-                        if (!canManage) return;
-                        event.dataTransfer.setData("text/plain", ticket.id);
-                        event.dataTransfer.effectAllowed = "move";
-                        handleDragStart(ticket);
-                      }}
-                      onDragEnd={() => setDragging(null)}
-                      onClick={() => setSelectedTicket(ticket)}
-                      className="w-full text-left"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                          {ticket.code || `CH-${ticket.id.slice(0, 6).toUpperCase()}`}
-                        </p>
-                        <span className="text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                          {getTicketStatusLabel(normalizeKanbanStatus(ticket.status), statusOptions)}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-sm font-semibold">{ticket.title || "Sem titulo"}</p>
-                      <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">
-                        {shortText(ticket.description, 100)}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                        <span>Tipo: {ticket.type || "tarefa"}</span>
-                        <span>Prioridade: {ticket.priority || "medium"}</span>
-                      </div>
-                      <div className="mt-2 text-[11px] text-(--tc-text-muted,#6b7280) space-y-1">
-                        <p>Criador: {creatorLabel}</p>
-                        <p>Data: {formatDate(ticket.createdAt)}</p>
-                      </div>
-                    </button>
-                    {canManage && (
-                      <div className="mt-3">
-                        <label className="sr-only" htmlFor={`status-${ticket.id}`}>
-                          Status
-                        </label>
-                        <select
-                          id={`status-${ticket.id}`}
-                          aria-label="Status do chamado"
-                          title="Status do chamado"
-                          className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-2 py-1 text-[11px]"
-                          value={normalizeKanbanStatus(ticket.status)}
-                          onChange={(e) => updateStatus(ticket.id, e.target.value as TicketStatus)}
-                        >
-                          {statusOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-              {(grouped[column.key] ?? []).length === 0 && (
-                <p className="text-xs text-(--tc-text-muted,#6b7280)">Sem chamados</p>
-              )}
-            </div>
-          </div>
-        ))}
-      </section>
+          ))}
+        </div>
+      </div>
 
-      <TicketDetailsModal
-        open={Boolean(selectedTicket)}
-        ticket={selectedTicket}
-        onClose={() => setSelectedTicket(null)}
-        canEditStatus={canManage}
-        statusOptions={statusOptions}
-        onTicketUpdated={(updated) => {
-          setSelectedTicket(updated);
-          setTickets((current) =>
-            current.map((ticket) => (ticket.id === updated.id ? updated : ticket)),
+      <SuporteDetailsModal
+        key={selectedSuporte?.id || 'empty'}
+        open={Boolean(selectedSuporte)}
+        suporte={selectedSuporte}
+        onClose={() => setSelectedSuporte(null)}
+        canEditStatus={canMoveSupport}
+        statusOptions={[]}
+        onSuporteUpdated={(updated: SuporteItem) => {
+          setSelectedSuporte(updated);
+          setSuportes((current) =>
+            current.map((suporte) => (suporte.id === updated.id ? updated : suporte)),
           );
         }}
       />
 
       {createOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_30px_80px_rgba(15,23,42,0.35)]">
-            <div className="flex items-center justify-between border-b border-(--tc-border,#e5e7eb) px-6 py-4">
-              <h2 className="text-lg font-semibold">Novo chamado</h2>
+        <div
+          className="ticket-detail-modal-overlay support-create-modal-overlay"
+          onClick={() => setCreateOpen(false)}
+        >
+          <div
+            className="support-create-modal-shell"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="support-create-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="support-create-modal-header">
+              <div className="support-create-modal-heading">
+                <span className="support-create-modal-icon">
+                  <FiLifeBuoy size={18} />
+                </span>
+                <div className="support-create-modal-heading-copy">
+                  <p className="support-create-modal-kicker">SUPORTE</p>
+                  <h2 id="support-create-modal-title" className="support-create-modal-title">
+                    Novo suporte
+                  </h2>
+                  <p className="support-create-modal-subtitle">
+                    Abra um chamado com titulo, descricao, tipo e prioridade.
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={() => setCreateOpen(false)}
-                className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                className="support-create-modal-close"
+                aria-label="Fechar modal de novo suporte"
+                title="Fechar"
               >
-                Fechar
+                <FiX size={16} />
               </button>
             </div>
-            <div className="px-6 py-4 space-y-3">
-              <input
-                className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                placeholder="Titulo"
-                value={createDraft.title}
-                onChange={(e) => setCreateDraft((prev) => ({ ...prev, title: e.target.value }))}
-              />
-              <textarea
-                rows={4}
-                className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                placeholder="Descreva o chamado..."
-                value={createDraft.description}
-                onChange={(e) => setCreateDraft((prev) => ({ ...prev, description: e.target.value }))}
-              />
-              <div className="grid gap-2 sm:grid-cols-2">
-                <select
-                  className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                  title="Tipo do chamado"
-                  aria-label="Tipo do chamado"
-                  value={createDraft.type}
-                  onChange={(e) => setCreateDraft((prev) => ({ ...prev, type: e.target.value }))}
-                >
-                  {TYPE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-white px-3 py-2 text-sm"
-                  title="Prioridade do chamado"
-                  aria-label="Prioridade do chamado"
-                  value={createDraft.priority}
-                  onChange={(e) => setCreateDraft((prev) => ({ ...prev, priority: e.target.value }))}
-                >
-                  {PRIORITY_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+
+            <div className="support-create-modal-body">
+              <div className="support-create-modal-form">
+                <label className="support-create-modal-field" htmlFor="my-create-suporte-title">
+                  <span className="support-create-modal-label">Titulo</span>
+                  <input
+                    id="my-create-suporte-title"
+                    className="support-create-modal-input"
+                    placeholder="Digite o titulo do suporte"
+                    value={createDraft.title}
+                    onChange={(e) => setCreateDraft((prev) => ({ ...prev, title: e.target.value }))}
+                  />
+                </label>
+
+                <label className="support-create-modal-field" htmlFor="my-create-suporte-description">
+                  <span className="support-create-modal-label">Descricao</span>
+                  <textarea
+                    id="my-create-suporte-description"
+                    rows={5}
+                    className="support-create-modal-textarea"
+                    placeholder="Descreva o suporte..."
+                    value={createDraft.description}
+                    onChange={(e) => setCreateDraft((prev) => ({ ...prev, description: e.target.value }))}
+                  />
+                </label>
+
+                <div className="support-create-modal-select-grid">
+                  <label className="support-create-modal-field" htmlFor="my-create-suporte-type">
+                    <span className="support-create-modal-label">Tipo</span>
+                    <select
+                      id="my-create-suporte-type"
+                      className="support-create-modal-select"
+                      title="Tipo do suporte"
+                      aria-label="Tipo do suporte"
+                      value={createDraft.type}
+                      onChange={(e) => setCreateDraft((prev) => ({ ...prev, type: e.target.value }))}
+                    >
+                      {TYPE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="support-create-modal-field" htmlFor="my-create-suporte-priority">
+                    <span className="support-create-modal-label">Prioridade</span>
+                    <select
+                      id="my-create-suporte-priority"
+                      className="support-create-modal-select"
+                      title="Prioridade do suporte"
+                      aria-label="Prioridade do suporte"
+                      value={createDraft.priority}
+                      onChange={(e) => setCreateDraft((prev) => ({ ...prev, priority: e.target.value }))}
+                    >
+                      {PRIORITY_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                {createError && <p className="support-create-modal-error">{createError}</p>}
               </div>
-              {createError && <p className="text-sm text-red-600">{createError}</p>}
             </div>
-            <div className="flex items-center justify-end gap-2 border-t border-(--tc-border,#e5e7eb) px-6 py-4">
+
+            <div className="support-create-modal-footer">
               <button
                 type="button"
                 onClick={() => setCreateOpen(false)}
-                className="rounded-lg border border-(--tc-border,#e5e7eb) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                className="support-create-modal-secondary"
               >
                 Cancelar
               </button>
               <button
                 type="button"
-                onClick={submitCreate}
-                disabled={creating}
-                className="rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-60"
+                onClick={handleCreateSuporte}
+                disabled={createSaving || !createDraft.title.trim()}
+                className="support-create-modal-primary"
               >
-                {creating ? "Criando..." : "Criar"}
+                <FiPlus size={14} />
+                {createSaving ? "Salvando..." : "Criar"}
               </button>
             </div>
           </div>
@@ -526,6 +411,3 @@ export default function MeusChamadosPage() {
     </div>
   );
 }
-
-
-

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import styles from "./LoginClient.module.css";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { FiEye, FiEyeOff } from "react-icons/fi";
@@ -20,12 +20,104 @@ export default function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { refreshUser } = useAuthUser();
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   const [user, setUser] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const previousRootAttr = html.getAttribute("data-login-route");
+    const previousBodyAttr = body.getAttribute("data-login-route");
+    const inlineTargets = [html, body];
+    const inlineKeys = ["opacity", "filter", "backdrop-filter", "pointer-events"] as const;
+    const previousInline = inlineTargets.map((target) => ({
+      target,
+      styles: inlineKeys.map((key) => ({
+        key,
+        value: target.style.getPropertyValue(key),
+        priority: target.style.getPropertyPriority(key),
+      })),
+    }));
+
+    html.setAttribute("data-login-route", "true");
+    body.setAttribute("data-login-route", "true");
+    for (const target of inlineTargets) {
+      target.style.setProperty("opacity", "1", "important");
+      target.style.setProperty("filter", "none", "important");
+      target.style.setProperty("backdrop-filter", "none", "important");
+      target.style.setProperty("pointer-events", "auto", "important");
+    }
+
+    // Defensive cleanup: if a fullscreen overlay leaks from another route/component,
+    // keep login interactive by disabling that overlay while this page is mounted.
+    const root = rootRef.current;
+    if (!root) return;
+
+    const changed: Array<{
+      element: HTMLElement;
+      pointerEvents: string;
+      opacity: string;
+    }> = [];
+
+    const isLikelyOverlay = (element: HTMLElement) => {
+      if (root.contains(element)) return false;
+      const style = window.getComputedStyle(element);
+      if (style.display === "none" || style.visibility === "hidden") return false;
+      if (style.position !== "fixed" && style.position !== "absolute") return false;
+
+      const rect = element.getBoundingClientRect();
+      const coversViewport = rect.width >= window.innerWidth * 0.95 && rect.height >= window.innerHeight * 0.95;
+      if (!coversViewport) return false;
+
+      const zIndex = Number.parseInt(style.zIndex || "0", 10);
+      if (Number.isNaN(zIndex) || zIndex < 40) return false;
+
+      const hasBackdrop = style.backdropFilter !== "none";
+      const hasVisibleTint =
+        style.backgroundColor !== "rgba(0, 0, 0, 0)" &&
+        style.backgroundColor !== "transparent";
+      return hasBackdrop || hasVisibleTint;
+    };
+
+    const nodes = Array.from(document.documentElement.querySelectorAll<HTMLElement>("*"));
+    for (const element of nodes) {
+      if (!isLikelyOverlay(element)) continue;
+      changed.push({
+        element,
+        pointerEvents: element.style.pointerEvents,
+        opacity: element.style.opacity,
+      });
+      element.style.pointerEvents = "none";
+      element.style.opacity = "0";
+    }
+
+    return () => {
+      if (previousRootAttr === null) html.removeAttribute("data-login-route");
+      else html.setAttribute("data-login-route", previousRootAttr);
+      if (previousBodyAttr === null) body.removeAttribute("data-login-route");
+      else body.setAttribute("data-login-route", previousBodyAttr);
+
+      for (const entry of previousInline) {
+        for (const style of entry.styles) {
+          if (style.value) {
+            entry.target.style.setProperty(style.key, style.value, style.priority);
+          } else {
+            entry.target.style.removeProperty(style.key);
+          }
+        }
+      }
+
+      for (const entry of changed) {
+        entry.element.style.pointerEvents = entry.pointerEvents;
+        entry.element.style.opacity = entry.opacity;
+      }
+    };
+  }, []);
 
   function resolvePostLoginRedirect(nextParam: string | null, authUser: AuthUserShape | null) {
     const safeNext = typeof nextParam === "string" && nextParam.startsWith("/") ? nextParam : "";
@@ -79,11 +171,12 @@ export default function LoginClient() {
 
   return (
     <div
+      ref={rootRef}
       className={
         styles.loginContainer +
         " " +
         styles.loginFixedTheme +
-        " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative overflow-x-hidden overflow-y-auto px-4 py-8 sm:px-6 sm:py-10 md:px-10"
+        " relative isolate z-[2147483647] pointer-events-auto"
       }
     >
       <div className="absolute inset-0 pointer-events-none">
@@ -97,7 +190,7 @@ export default function LoginClient() {
         <div className="absolute top-1/2 right-2 w-14 h-14 bg-[#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
       </div>
 
-      <div className="max-w-lg w-full space-y-6 sm:space-y-8 relative z-10 sm:max-w-xl md:max-w-2xl">
+      <div className="relative z-10 max-h-[calc(100svh-1rem)] w-full max-w-lg space-y-4 overflow-y-auto pr-1 [scrollbar-width:none] sm:max-h-[calc(100svh-2rem)] sm:max-w-xl sm:space-y-6 md:max-w-2xl [&::-webkit-scrollbar]:hidden">
         <div className="text-center">
           <div
             className={`relative mx-auto w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 mb-4 sm:mb-6 ${styles.logoWrapper}`}
@@ -122,7 +215,7 @@ export default function LoginClient() {
         </div>
 
         <form
-          className="bg-white/90 backdrop-blur-sm p-5 sm:p-8 rounded-2xl shadow-2xl border border-[#011848]/10 w-full max-w-sm sm:max-w-md mx-auto min-w-0"
+          className="mx-auto w-full max-w-sm min-w-0 rounded-2xl border border-[#011848]/10 bg-white p-5 shadow-2xl sm:max-w-md sm:p-7"
           onSubmit={handleSubmit}
         >
           <div className="space-y-4">

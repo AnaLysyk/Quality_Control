@@ -62,9 +62,45 @@ type RunStatsResult = {
 type QaseRuntimeContext = {
   client: QaseClient;
   projectCode: string;
+  projectCodes: string[];
   slugKey: string;
   hasToken: boolean;
 };
+
+function normalizeProjectCode(value: string | null | undefined) {
+  const trimmed = value?.trim().toUpperCase();
+  return trimmed ? trimmed : "";
+}
+
+function normalizeProjectCodes(values: Array<string | null | undefined>) {
+  return Array.from(new Set(values.map((value) => normalizeProjectCode(value)).filter(Boolean)));
+}
+
+function resolveProjectCode(input: {
+  projectArg?: string;
+  configuredProject?: string;
+  configuredProjects?: string[];
+}) {
+  const projectCodes = normalizeProjectCodes([
+    input.configuredProject,
+    ...(input.configuredProjects ?? []),
+    FALLBACK_PROJECT,
+  ]);
+  const requestedProject = normalizeProjectCode(input.projectArg);
+
+  if (requestedProject) {
+    const canonicalProject = projectCodes.find((code) => code === requestedProject);
+    return {
+      projectCode: canonicalProject ?? requestedProject,
+      projectCodes,
+    };
+  }
+
+  return {
+    projectCode: normalizeProjectCode(input.configuredProject) || projectCodes[0] || "",
+    projectCodes,
+  };
+}
 
 function normalizeQaseEntity(raw: unknown): RawQaseEntity {
   const obj = (raw ?? {}) as Record<string, unknown>;
@@ -95,7 +131,11 @@ async function buildQaseContext(projectArg: string | undefined, slug?: string): 
   const settings = normalizedSlug ? await getClientQaseSettings(normalizedSlug) : null;
 
   const token = settings?.token ?? FALLBACK_TOKEN;
-  const projectCode = projectArg || settings?.projectCode || FALLBACK_PROJECT || "";
+  const { projectCode, projectCodes } = resolveProjectCode({
+    projectArg,
+    configuredProject: settings?.projectCode,
+    configuredProjects: settings?.projectCodes,
+  });
   const slugKey = settings?.slug ?? (normalizedSlug || "global");
 
   const client = createQaseClient({
@@ -106,6 +146,7 @@ async function buildQaseContext(projectArg: string | undefined, slug?: string): 
   return {
     client,
     projectCode,
+    projectCodes,
     slugKey,
     hasToken: Boolean(token),
   };

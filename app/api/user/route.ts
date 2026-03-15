@@ -17,16 +17,17 @@ export async function POST(req: NextRequest) {
 
   const users = await listLocalUsers();
   if (users.some((user) => user.email.toLowerCase() === email)) {
-    return NextResponse.json({ error: "E-mail ja existe" }, { status: 409 });
+    return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
   }
   if (users.some((user) => (user.user ?? user.email).toLowerCase() === login)) {
-    return NextResponse.json({ error: "Usuario ja existe" }, { status: 409 });
+    return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
   }
 
   const hash = hashPasswordSha256(password);
   let user = null;
   try {
     user = await createLocalUser({
+      full_name: name,
       email,
       user: login,
       name,
@@ -37,10 +38,10 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
     if (code === "DUPLICATE_EMAIL") {
-      return NextResponse.json({ error: "E-mail ja existe" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
     }
     if (code === "DUPLICATE_USER") {
-      return NextResponse.json({ error: "Usuario ja existe" }, { status: 409 });
+      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
     }
     throw err;
   }

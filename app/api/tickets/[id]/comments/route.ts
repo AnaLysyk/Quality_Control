@@ -1,12 +1,37 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { getLocalUserById } from "@/lib/auth/localStore";
+import { getLocalUserById, listLocalUsers } from "@/lib/auth/localStore";
 import { getTicketById, touchTicket } from "@/lib/ticketsStore";
 import { listTicketComments, createTicketComment } from "@/lib/ticketCommentsStore";
 import { listReactionsByTicket } from "@/lib/ticketReactionsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketCommentAdded } from "@/lib/notificationService";
 import { canCommentTicket } from "@/lib/rbac/tickets";
+
+function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
+  return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
+}
+
+function buildCommentAuthorPayload(
+  comment: {
+    authorUserId: string;
+    authorName?: string | null;
+  },
+  user: {
+    email?: string | null;
+    user?: string | null;
+    avatar_url?: string | null;
+    full_name?: string | null;
+    name?: string | null;
+  } | null | undefined,
+) {
+  return {
+    authorName: comment.authorName ?? resolveDisplayName(user),
+    authorLogin: user?.user ?? null,
+    authorEmail: user?.email ?? null,
+    authorAvatarUrl: user?.avatar_url ?? null,
+  };
+}
 
 function isRateLimited(lastCreatedAt?: string | null) {
   if (!lastCreatedAt) return false;
@@ -34,6 +59,8 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
   const offset = Number(url.searchParams.get("offset") ?? 0);
   const comments = await listTicketComments(id, { limit, offset });
   const reactions = await listReactionsByTicket(id);
+  const users = await listLocalUsers();
+  const userById = new Map(users.map((item) => [item.id, item]));
 
   const reactionMap = new Map<string, { like: number; viewerHasLiked: boolean }>();
   for (const reaction of reactions) {
@@ -49,8 +76,10 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
 
   const items = comments.map((comment) => {
     const reactionInfo = reactionMap.get(comment.id) ?? { like: 0, viewerHasLiked: false };
+    const author = userById.get(comment.authorUserId);
     return {
       ...comment,
+      ...buildCommentAuthorPayload(comment, author),
       reactions: { like: reactionInfo.like },
       viewerHasLiked: reactionInfo.viewerHasLiked,
     };
@@ -84,7 +113,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   const comment = await createTicketComment({
     ticketId: id,
     authorUserId: user.id,
-    authorName: localUser?.name ?? null,
+    authorName: resolveDisplayName(localUser),
     body: body?.body,
   });
 
@@ -92,7 +121,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     return NextResponse.json({ error: "Comentario invalido" }, { status: 400 });
   }
 
-  touchTicket(id, user.id).catch(() => null);
+  await touchTicket(id, user.id).catch(() => null);
 
   appendTicketEvent({
     ticketId: id,
@@ -105,8 +134,11 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     ticket,
     comment,
     actorId: user.id,
-    actorName: localUser?.name ?? null,
+    actorName: resolveDisplayName(localUser),
   }).catch((err) => console.error("Falha ao notificar comentario:", err));
 
-  return NextResponse.json({ item: comment }, { status: 201 });
+  return NextResponse.json(
+    { item: { ...comment, ...buildCommentAuthorPayload(comment, localUser) } },
+    { status: 201 },
+  );
 }

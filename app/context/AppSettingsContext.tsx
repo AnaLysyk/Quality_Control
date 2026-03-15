@@ -188,6 +188,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement;
     const applyTheme = (useDark: boolean) => {
       root.classList.toggle("dark", useDark);
+      root.classList.toggle("theme-light", !useDark);
       root.style.colorScheme = useDark ? "dark" : "light";
     };
 

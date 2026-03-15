@@ -9,14 +9,14 @@
 
 - app/api: 79 arquivos
 - data/companies: 73 arquivos
-- app/components: 31 arquivos
+- app/components: 32 arquivos
 - data/backups: 30 arquivos
 - data/versions: 20 arquivos
-- scripts: 15 arquivos
+- scripts: 16 arquivos
 - data/company-documents-files: 13 arquivos
 - app/admin: 11 arquivos
 - tests: 8 arquivos
-- public: 6 arquivos
+- docs/branch-inventory: 7 arquivos
 
 ## Top Files
 

@@ -11,12 +11,12 @@
 - app/components: 19 arquivos
 - data/company-documents-files: 12 arquivos
 - app/admin: 11 arquivos
-- scripts: 9 arquivos
+- scripts: 10 arquivos
 - app/login: 7 arquivos
+- docs/branch-inventory: 7 arquivos
 - src: 7 arquivos
 - lib/rbac: 6 arquivos
 - app/empresas: 5 arquivos
-- docs/recovery: 3 arquivos
 
 ## Top Files
 

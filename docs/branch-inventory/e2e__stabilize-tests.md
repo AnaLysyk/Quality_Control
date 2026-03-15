@@ -10,8 +10,8 @@
 - app/api: 113 arquivos
 - app/components: 45 arquivos
 - src: 26 arquivos
+- scripts: 25 arquivos
 - data/versions: 24 arquivos
-- scripts: 24 arquivos
 - app/admin: 20 arquivos
 - data/company-documents-files: 18 arquivos
 - ai_applying: 9 arquivos
@@ -33,8 +33,8 @@
 - data/company-documents-store.json (461 linhas alteradas)
 - app/components/ProfileButton.tsx (446 linhas alteradas)
 - lib/reporting/releaseExport.ts (444 linhas alteradas)
+- app/profile/page.tsx (415 linhas alteradas)
 - app/clients/components/CreateClientModal.tsx (393 linhas alteradas)
-- data/access-requests.json (356 linhas alteradas)
 
 ## Commits
 

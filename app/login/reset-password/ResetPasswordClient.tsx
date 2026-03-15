@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import loginStyles from "../LoginClient.module.css";
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 128;
@@ -22,7 +23,7 @@ export default function ResetPasswordClient() {
 
   useEffect(() => {
     if (!token) {
-      setError("Token de reset inválido ou ausente.");
+      setError("Token de redefinição inválido ou ausente.");
     }
   }, [token]);
 
@@ -30,7 +31,7 @@ export default function ResetPasswordClient() {
     e.preventDefault();
 
     if (!token) {
-      setError("Token de reset inválido.");
+      setError("Token de redefinição inválido.");
       return;
     }
 
@@ -67,7 +68,7 @@ export default function ResetPasswordClient() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Erro ao redefinir senha");
+        throw new Error(data.error || "Erro ao redefinir senha.");
       }
 
       setSuccess("Senha redefinida com sucesso! Você será redirecionado para o login.");
@@ -78,31 +79,37 @@ export default function ResetPasswordClient() {
       }, 3000);
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro desconhecido");
+      setError(err instanceof Error ? err.message : "Erro desconhecido.");
     } finally {
       setLoading(false);
     }
   };
 
+  const containerClass =
+    `${loginStyles.loginContainer} ${loginStyles.loginFixedTheme} ` +
+    "relative flex min-h-svh items-center justify-center overflow-x-hidden overflow-y-auto " +
+    "bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] px-4 py-6 sm:px-6 sm:py-8";
+
   if (!token) {
     return (
-      <div className="min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 overflow-x-hidden overflow-y-auto">
-        <div className="max-w-md w-full space-y-8">
-          <div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              Link Inválido
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              Este link de reset de senha é inválido ou expirou.
+      <div className={containerClass}>
+        <div className="relative z-10 w-full max-w-sm">
+          <div className="rounded-2xl border border-[#011848]/10 bg-white/90 p-6 shadow-2xl backdrop-blur-sm sm:p-8">
+            <h2 className="mb-2 text-2xl font-bold text-[#011848]">Link inválido</h2>
+            <p className="mb-6 text-sm text-[#4b5563]">
+              Este link de redefinição de senha é inválido ou expirou.
             </p>
-          </div>
-          <div className="text-center">
             <Link
               href="/login/forgot-password"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
+              className="block w-full rounded-lg bg-linear-to-r from-[#011848] to-[#ef0001] py-3 px-4 text-center font-medium text-white hover:from-[#011848]/90 hover:to-[#ef0001]/90 transition-all duration-200"
             >
-              Solicitar novo reset de senha
+              Solicitar novo link
             </Link>
+            <div className="mt-4 text-center">
+              <Link href="/login" className="text-sm font-medium text-[#011848] hover:text-[#ef0001]">
+                Voltar ao login
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -110,34 +117,38 @@ export default function ResetPasswordClient() {
   }
 
   return (
-    <div className="min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 overflow-x-hidden overflow-y-auto">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Redefinir Senha
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Digite sua nova senha
-          </p>
+    <div className={containerClass}>
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-6 left-6 h-32 w-32 rounded-full bg-[#011848] opacity-20 blur-2xl animate-ping" />
+        <div className="absolute bottom-6 right-6 h-28 w-28 rounded-full bg-[#ef0001] opacity-20 blur-2xl animate-pulse" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-sm space-y-5 sm:max-w-md sm:space-y-6">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-[#011848] drop-shadow-sm">Redefinir senha</h2>
+          <p className="mt-1 font-medium text-[#011848]">Digite e confirme sua nova senha.</p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form
+          className="w-full rounded-2xl border border-[#011848]/10 bg-white/90 p-5 shadow-2xl backdrop-blur-sm sm:p-7"
+          onSubmit={handleSubmit}
+        >
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
+            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {error}
             </div>
           )}
 
           {success && (
-            <div className="rounded-md bg-green-50 p-4">
-              <div className="text-sm text-green-700">{success}</div>
+            <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              {success}
             </div>
           )}
 
-          <div className="rounded-md shadow-sm -space-y-px">
+          <div className="space-y-4">
             <div>
-              <label htmlFor="new-password" className="sr-only">
-                Nova Senha
+              <label htmlFor="new-password" className="mb-1 block text-sm font-semibold text-[#011848]">
+                Nova senha
               </label>
               <input
                 id="new-password"
@@ -145,15 +156,15 @@ export default function ResetPasswordClient() {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Nova senha"
+                className="form-control-user w-full rounded-lg border border-[#011848]/20 bg-white px-4 py-3 text-[#011848] caret-[#ef0001] placeholder:text-[#9aa3b2] focus:border-transparent focus:ring-2 focus:ring-[#ef0001] transition-all duration-200"
+                placeholder="Mínimo 8 caracteres"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
               />
             </div>
             <div>
-              <label htmlFor="confirm-password" className="sr-only">
-                Confirmar Nova Senha
+              <label htmlFor="confirm-password" className="mb-1 block text-sm font-semibold text-[#011848]">
+                Confirmar nova senha
               </label>
               <input
                 id="confirm-password"
@@ -161,29 +172,24 @@ export default function ResetPasswordClient() {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Confirmar nova senha"
+                className="form-control-user w-full rounded-lg border border-[#011848]/20 bg-white px-4 py-3 text-[#011848] caret-[#ef0001] placeholder:text-[#9aa3b2] focus:border-transparent focus:ring-2 focus:ring-[#ef0001] transition-all duration-200"
+                placeholder="Repita a nova senha"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
             </div>
           </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Redefinindo..." : "Redefinir Senha"}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-6 w-full rounded-lg bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 font-medium text-white transition-all duration-200 hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:ring-2 focus:ring-[#ef0001] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? "Redefinindo..." : "Redefinir senha"}
+          </button>
 
-          <div className="text-center">
-            <Link
-              href="/login"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
+          <div className="mt-6 text-center">
+            <Link href="/login" className="text-sm font-medium text-[#011848] hover:text-[#ef0001]">
               Voltar ao login
             </Link>
           </div>

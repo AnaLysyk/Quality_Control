@@ -176,7 +176,7 @@ export default function LoginClient() {
         styles.loginContainer +
         " " +
         styles.loginFixedTheme +
-        " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative isolate z-2147483647 overflow-x-hidden overflow-y-auto px-4 py-10 pointer-events-auto sm:px-6 md:px-10"
+        " min-h-svh flex items-center justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative isolate z-2147483647 overflow-x-hidden overflow-y-auto px-4 py-6 pointer-events-auto sm:px-6 sm:py-10 md:px-10"
       }
     >
       <div className="absolute inset-0 pointer-events-none">
@@ -190,7 +190,7 @@ export default function LoginClient() {
         <div className="absolute top-1/2 right-2 w-14 h-14 bg-[#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
       </div>
 
-      <div className="relative z-10 w-full max-w-lg space-y-8 sm:max-w-xl md:max-w-2xl">
+      <div className="relative z-10 w-full max-w-lg space-y-5 sm:max-w-xl sm:space-y-8 md:max-w-2xl">
         <div className="text-center">
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-r from-[#011848] to-[#ef0001] shadow-lg sm:h-24 sm:w-24">
             <Image
@@ -215,7 +215,7 @@ export default function LoginClient() {
           <div className="space-y-4">
             <div>
               <label htmlFor="user" className="block text-sm font-medium text-[#011848] mb-1">
-                Usuario
+                Usuário
               </label>
               <input
                 id="user"
@@ -223,7 +223,7 @@ export default function LoginClient() {
                 type="text"
                 required
                 className="form-control-user w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
-                placeholder="usuario"
+                placeholder="usuário"
                 autoComplete="username"
                 value={user}
                 onChange={(e) => setUser(e.target.value)}

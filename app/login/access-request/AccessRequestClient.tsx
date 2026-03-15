@@ -17,23 +17,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const ACCESS_OPTIONS = [
   {
     value: "testing_company_user",
-    label: "Usuario Testing Company",
-    hint: "Usuario da plataforma com empresa vinculada.",
+    label: "Usuário Testing Company",
+    hint: "Usuário da plataforma com empresa vinculada.",
   },
   {
     value: "company_user",
-    label: "Usuario Empresa",
-    hint: "Conta institucional da propria empresa.",
+    label: "Usuário da Empresa",
+    hint: "Conta institucional da própria empresa.",
   },
   {
     value: "testing_company_lead",
-    label: "Usuario Lider TC",
+    label: "Usuário Líder TC",
     hint: "Perfil administrativo do sistema.",
   },
   {
     value: "technical_support",
-    label: "Suporte tecnico",
-    hint: "Perfil tecnico global com acesso total.",
+    label: "Suporte Técnico",
+    hint: "Perfil técnico global com acesso total.",
   },
 ];
 const EMPTY_JOB_TITLE = "__empty_job_title__";
@@ -109,26 +109,26 @@ const BASE_ADJUSTMENT_FIELD_OPTIONS: AdjustmentFieldOption[] = [
   { field: "profileType", label: "Perfil" },
   { field: "company", label: "Empresa" },
   { field: "fullName", label: "Nome completo" },
-  { field: "username", label: "Usuario sugerido" },
+  { field: "username", label: "Usuário sugerido" },
   { field: "email", label: "E-mail" },
   { field: "phone", label: "Telefone" },
   { field: "jobRole", label: "Cargo" },
-  { field: "title", label: "Titulo" },
-  { field: "description", label: "Descricao" },
-  { field: "notes", label: "Observacoes" },
+  { field: "title", label: "Título" },
+  { field: "description", label: "Descrição" },
+  { field: "notes", label: "Observações" },
   { field: "password", label: "Senha" },
 ];
 
 const COMPANY_ADJUSTMENT_FIELD_OPTIONS: AdjustmentFieldOption[] = [
-  { field: "companyName", label: "Razao social" },
+  { field: "companyName", label: "Razão social" },
   { field: "companyTaxId", label: "CNPJ" },
   { field: "companyZip", label: "CEP" },
-  { field: "companyAddress", label: "Endereco" },
+  { field: "companyAddress", label: "Endereço" },
   { field: "companyPhone", label: "Telefone da empresa" },
   { field: "companyWebsite", label: "Website" },
   { field: "companyLinkedin", label: "LinkedIn" },
-  { field: "companyDescription", label: "Descricao da empresa" },
-  { field: "companyNotes", label: "Observacoes da empresa" },
+  { field: "companyDescription", label: "Descrição da empresa" },
+  { field: "companyNotes", label: "Observações da empresa" },
 ];
 
 type LookupDraft = {
@@ -162,7 +162,7 @@ function emptyCompanyRequestDraft(): CompanyRequestDraft {
   };
 }
 
-function textOrFallback(value: string | null | undefined, fallback = "Nao informado") {
+function textOrFallback(value: string | null | undefined, fallback = "Não informado") {
   return value && value.trim() ? value : fallback;
 }
 

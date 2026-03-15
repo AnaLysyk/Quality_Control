@@ -6,10 +6,10 @@ import loginStyles from "../LoginClient.module.css";
 import styles from "./ForgotPasswordClient.module.css";
 
 const PROFILE_OPTIONS = [
-  { value: "testing_company_user", label: "Usuario Testing Company" },
-  { value: "company_user", label: "Usuario Empresa" },
-  { value: "testing_company_lead", label: "Usuario Lider TC" },
-  { value: "technical_support", label: "Suporte tecnico" },
+  { value: "testing_company_user", label: "Usuário Testing Company" },
+  { value: "company_user", label: "Usuário da Empresa" },
+  { value: "testing_company_lead", label: "Usuário Líder TC" },
+  { value: "technical_support", label: "Suporte Técnico" },
 ] as const;
 
 export default function ForgotPasswordClient() {
@@ -28,13 +28,13 @@ export default function ForgotPasswordClient() {
     const normalizedLogin = login.trim().toLowerCase();
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedLogin || !normalizedEmail) {
-      setError("Informe seu usuario e e-mail.");
+      setError("Informe seu usuário e e-mail.");
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(normalizedEmail)) {
-      setError("E-mail invalido.");
+      setError("E-mail inválido.");
       return;
     }
 
@@ -56,10 +56,10 @@ export default function ForgotPasswordClient() {
       const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data?.error || "Nao foi possivel registrar sua solicitacao.");
+        throw new Error(data?.error || "Não foi possível registrar sua solicitação.");
       }
 
-      setSuccess(typeof data?.message === "string" ? data.message : "Solicitacao registrada com sucesso.");
+      setSuccess(typeof data?.message === "string" ? data.message : "Solicitação registrada com sucesso.");
       setLogin("");
       setEmail("");
       setProfileType("testing_company_user");
@@ -117,7 +117,7 @@ export default function ForgotPasswordClient() {
           <div className="space-y-4">
             <div>
               <label htmlFor="login" className="mb-2 block text-sm font-semibold text-[#011848]">
-                Usuario
+                Usuário
               </label>
               <input
                 id="login"
@@ -126,7 +126,7 @@ export default function ForgotPasswordClient() {
                 autoComplete="username"
                 required
                 className="form-control-user w-full rounded-xl border border-[#011848]/15 bg-white px-4 py-3 text-[#011848] caret-[#ef0001] placeholder:text-[#9aa3b2] focus:border-[#ef0001]/60 focus:ring-2 focus:ring-[#ef0001]/40"
-                placeholder="Seu usuario"
+                placeholder="Seu usuário"
                 value={login}
                 onChange={(e) => setLogin(e.target.value)}
               />
@@ -174,7 +174,7 @@ export default function ForgotPasswordClient() {
             disabled={loading}
             className="mt-6 w-full rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 font-semibold text-white transition-all duration-200 hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:ring-2 focus:ring-[#ef0001]/60 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Enviando..." : "Enviar solicitacao"}
+            {loading ? "Enviando..." : "Enviar solicitação"}
           </button>
 
           <div className="mt-6 text-center">

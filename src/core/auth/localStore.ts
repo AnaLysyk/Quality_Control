@@ -81,6 +81,11 @@ let warnedFsFailure = false;
 // the fallback for local development.
 export const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
 
+if (typeof process !== "undefined") {
+  const backend = USE_POSTGRES ? "PostgreSQL" : process.env.LOCAL_AUTH_STORE === "redis" ? "Redis" : "JSON/Memory";
+  console.log(`[AUTH-STORE] Backend: ${backend} (AUTH_STORE=${process.env.AUTH_STORE ?? "<unset>"})`);
+}
+
 let _pgStore: typeof import("./pgStore") | null = null;
 async function pg() {
   if (!_pgStore) _pgStore = await import("./pgStore");

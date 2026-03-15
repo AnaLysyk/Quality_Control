@@ -221,6 +221,7 @@ export async function pgCreateLocalUser(input: {
   }
 
   try {
+    console.log(`[PG-STORE] Creating user: email=${email} login=${login}`);
     const user = await prisma.user.create({
       data: {
         name: input.name.trim() || email,
@@ -240,8 +241,10 @@ export async function pgCreateLocalUser(input: {
         phone: input.phone ?? null,
       },
     });
+    console.log(`[PG-STORE] User created OK: id=${user.id} email=${user.email}`);
     return toLocalUser(user);
   } catch (err) {
+    console.error(`[PG-STORE] Error creating user: ${err}`);
     if (isPrismaUniqueViolation(err, "email")) throw pgDuplicateEmailError();
     if (isPrismaUniqueViolation(err, "user")) throw pgDuplicateUserError();
     throw err;

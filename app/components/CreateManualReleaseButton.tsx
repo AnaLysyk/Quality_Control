@@ -116,6 +116,15 @@ export function CreateManualReleaseButton({
   const [form, setForm] = useState<NewManualRelease>(initialState);
   const [cases, setCases] = useState<ManualCaseDraft[]>([]);
   const [caseDraft, setCaseDraft] = useState<ManualCaseDraft>({ ...initialCaseDraft });
+  const nameInputId = "manual-release-name";
+  const appSelectId = "manual-release-app";
+  const observationsId = "manual-release-observations";
+  const statInputIds = {
+    pass: "manual-release-pass",
+    fail: "manual-release-fail",
+    blocked: "manual-release-blocked",
+    notRun: "manual-release-not-run",
+  } as const;
 
   const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
   const canCreate = Boolean(user?.isGlobalAdmin || role === "admin" || role === "company");
@@ -302,8 +311,9 @@ export function CreateManualReleaseButton({
                 <div className="min-w-0 space-y-6">
                   <div className="grid gap-4 sm:grid-cols-3">
                     <div className="space-y-1">
-                      <label className="text-sm font-semibold text-(--tc-text-muted)">Título</label>
+                      <label htmlFor={nameInputId} className="text-sm font-semibold text-(--tc-text-muted)">Título</label>
                       <input
+                        id={nameInputId}
                         className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
                         data-testid="run-title"
                         value={form.name}
@@ -321,8 +331,9 @@ export function CreateManualReleaseButton({
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-sm font-semibold text-(--tc-text-muted)">Aplicação</label>
+                      <label htmlFor={appSelectId} className="text-sm font-semibold text-(--tc-text-muted)">Aplicação</label>
                       <select
+                        id={appSelectId}
                         aria-label="Selecionar aplicação"
                         className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
                         value={form.app}
@@ -355,8 +366,9 @@ export function CreateManualReleaseButton({
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     {(["pass", "fail", "blocked", "notRun"] as const).map((key) => (
                       <div key={key} className="space-y-1">
-                        <label className="text-xs uppercase tracking-wide text-(--tc-text-muted)">{key}</label>
+                        <label htmlFor={statInputIds[key]} className="text-xs uppercase tracking-wide text-(--tc-text-muted)">{key}</label>
                         <input
+                          id={statInputIds[key]}
                           type="number"
                           min={0}
                           aria-label={`Total ${key}`}
@@ -396,8 +408,9 @@ export function CreateManualReleaseButton({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-sm font-semibold text-(--tc-text-muted)">Observações</label>
+                    <label htmlFor={observationsId} className="text-sm font-semibold text-(--tc-text-muted)">Observações</label>
                     <textarea
+                      id={observationsId}
                       className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
                       rows={3}
                       value={form.observations}

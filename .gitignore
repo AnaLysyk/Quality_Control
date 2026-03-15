@@ -88,6 +88,10 @@ docs/adr/
 # local auth data (keep sample file tracked)
 data/local-auth-store.json
 data/release-manual-store.json
+data/backups/
+data/user-notes.json
+data/*.lock
+data/*-debug.log
 
 # Editor/IDE
 .vscode/

@@ -1,0 +1,14 @@
+diff --git a/tsconfig.json b/tsconfig.json
+index e54ba9e..95c2b63 100644
+--- a/tsconfig.json
++++ b/tsconfig.json
+@@ -72,7 +72,8 @@
+     "**/*.ts",
+     "**/*.tsx",
+     ".next/dev/types/**/*.ts",
+-    ".next/dev/dev/types/**/*.ts"
++    ".next/dev/dev/types/**/*.ts",
++    ".next/types/**/*.ts"
+   ],
+   "exclude": [
+     "node_modules",

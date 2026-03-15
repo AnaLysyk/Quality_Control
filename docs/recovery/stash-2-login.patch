@@ -1,0 +1,162 @@
+diff --git a/app/login/LoginClient.module.css b/app/login/LoginClient.module.css
+index 726c321..2e8a649 100644
+--- a/app/login/LoginClient.module.css
++++ b/app/login/LoginClient.module.css
+@@ -1,3 +1,31 @@
++/* Logo da empresa (imagem) */
++.logoImage {
++  z-index: 2;
++  position: relative;
++  width: 88px;
++  height: 88px;
++  object-fit: contain;
++}
++
++/* Corrige o texto "ou" entre os links */
++.orTextPrint {
++  color: #b0b0b0;
++  font-size: 0.97rem;
++  font-weight: 500;
++  margin: 4px 0 2px 0;
++  display: block;
++  text-align: center;
++}
++
++/* Additional styles for premium login */
++.bubblePrint {
++  position: absolute;
++  border-radius: 50%;
++  opacity: 0.32;
++  filter: blur(16px);
++  animation: bubble-anim 18s ease-in-out infinite alternate;
++}
++/* Other styles can be added here as needed */
+ @media (prefers-reduced-motion: reduce) {
+   .bubblePremium,
+   .logoGradientAnimated,
+diff --git a/app/login/LoginClient.tsx b/app/login/LoginClient.tsx
+index dd624f6..444441a 100644
+--- a/app/login/LoginClient.tsx
++++ b/app/login/LoginClient.tsx
+@@ -45,64 +45,74 @@ export default function LoginClient() {
+   }
+ 
+   return (
+-    <div className={styles.bgLoginPremium + " min-h-screen flex items-center justify-center relative overflow-hidden"}>
+-      {/* Animated bubbles premium */}
+-      <div className={styles.bubblePremium + ' ' + styles.bubble1}></div>
+-      <div className={styles.bubblePremium + ' ' + styles.bubble2}></div>
+-      <div className={styles.bubblePremium + ' ' + styles.bubble3}></div>
+-      <div className={styles.bubblePremium + ' ' + styles.bubble4}></div>
++    <div className={styles.bgLoginPrint + " min-h-screen flex flex-col items-center justify-center relative"}>
++      {/* Bolhas animadas premium */}
++      <div className={styles.bubblePrint + ' ' + styles.bubblePrint1 + ' bubble1'} aria-hidden="true"></div>
++      <div className={styles.bubblePrint + ' ' + styles.bubblePrint2 + ' bubble2'} aria-hidden="true"></div>
++      <div className={styles.bubblePrint + ' ' + styles.bubblePrint3 + ' bubble3'} aria-hidden="true"></div>
++      <div className={styles.bubblePrint + ' ' + styles.bubblePrint4 + ' bubble4'} aria-hidden="true"></div>
+ 
+-      <div className="flex flex-col items-center gap-8 relative z-10">
+-        {/* Premium logo */}
++      <div className="flex flex-col items-center mb-8 z-10">
++        {/* Logo animado premium */}
+         <div className={styles.logoEnergyPremium}>
+-          <div className={styles.logoHalo}></div>
+-          <div className={styles.logoGradientAnimated}></div>
+-          <div className={styles.logoGlass}></div>
+-          <div className={styles.logoInner}>
+-            <Image src="/logo.svg" alt="Logo" fill className="object-contain" />
+-          </div>
++          <span className={styles.logoGradientAnimated}></span>
++          <span className={styles.logoGlass}></span>
++          <span className={styles.logoInner}>
++            <Image src="/logo.svg" alt="Logo Testing Company" width={88} height={88} className={styles.logoImage} />
++          </span>
++          <span className={styles.logoHalo}></span>
+         </div>
+-
+-        {/* Premium login card */}
+-        <form className={styles.loginCardPremium + " w-full max-w-md space-y-5"} onSubmit={handleSubmit} autoComplete="off">
+-          <h1 className={styles.title}>Login</h1>
+-          <label className={styles.label} htmlFor="user">Usuário</label>
+-          <input
+-            className={styles.inputPremium}
+-            id="user"
+-            type="text"
+-            value={user}
+-            onChange={e => setUser(e.target.value)}
+-            autoFocus
+-            autoComplete="username"
+-            disabled={loading}
+-          />
+-          <label className={styles.label} htmlFor="password">Senha</label>
++        <h1 className={styles.titlePrint + ' bg-linear-to-r'}>
++          Quality Control
++        </h1>
++        <p className={styles.subtitlePrint}>
++          Bem-vindo, entre na sua conta
++        </p>
++      </div>
++      <form className={styles.cardPrint + " z-10"} onSubmit={handleSubmit} autoComplete="off">
++        <label className={styles.labelPrint} htmlFor="user">Usuário</label>
++        <input
++          className={styles.inputPrint}
++          id="user"
++          type="text"
++          value={user}
++          onChange={e => setUser(e.target.value)}
++          autoFocus
++          autoComplete="username"
++          disabled={loading}
++          placeholder="usuario"
++        />
++        <label className={styles.labelPrint} htmlFor="password">Senha</label>
++        <div className={styles.inputPasswordWrapper}>
+           <input
+-            className={styles.inputPremium}
++            className={styles.inputPrint}
+             id="password"
+             type="password"
+             value={password}
+             onChange={e => setPassword(e.target.value)}
+             autoComplete="current-password"
+             disabled={loading}
++            placeholder="********"
+           />
+-          {error && <div className={styles.error}>{error}</div>}
+-          <button
+-            className={styles.loginButtonPremium}
+-            type="submit"
+-            disabled={loading}
+-          >
+-            {loading && <span className={styles.spinner} />}
+-            <span className={loading ? styles.buttonTextHidden : ""}>
+-              Entrar
+-            </span>
+-          </button>
+-          <div className={styles.links}>
+-            <Link href="/reset-password" className={styles.link}>Esqueceu a senha?</Link>
+-          </div>
+-        </form>
+-      </div>
++        </div>
++        {error && <div className={styles.errorPrint} role="alert">{error}</div>}
++        <button
++          className={styles.buttonPrint + " gradientBtnPrint"}
++          type="submit"
++          disabled={loading}
++        >
++          Entrar
++        </button>
++        <div className={styles.linksPrint}>
++          <Link href="/login/forgot-password" className={styles.linkPrint}>
++            Esqueci minha senha
++          </Link>
++          <span className={styles.orTextPrint}>ou</span>
++          <Link href="/login/access-request" className={styles.accessLinkPrint}>
++            Solicitar acesso
++          </Link>
++        </div>
++      </form>
+     </div>
+   );
+ }

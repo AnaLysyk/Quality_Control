@@ -1,0 +1,31 @@
+diff --git a/app/components/CompanyMetricsCard.tsx b/app/components/CompanyMetricsCard.tsx
+index 30c834f..f460e9b 100644
+--- a/app/components/CompanyMetricsCard.tsx
++++ b/app/components/CompanyMetricsCard.tsx
+@@ -570,7 +570,9 @@ export function CompanyMetricsCard(props: {
+                 </span>
+               ) : null}
+             </div>
+-            <div className="mt-2 text-[11px] text-(--tc-text-muted)">{dataAgeLabel}</div>
++            <div className="mt-2 inline-flex items-center rounded-full border border-(--tc-border)/60 bg-slate-50 px-3 py-1 text-[11px] font-medium text-(--tc-text-muted)">
++              Dados: {dataAgeLabel}
++            </div>
+           </div>
+ 
+           <div className="shrink-0 text-right">
+@@ -675,11 +677,12 @@ export function CompanyMetricsCard(props: {
+               type="button"
+               onClick={() => void handleExportPdf()}
+               disabled={exportingPdf}
+-              className="inline-flex items-center justify-center rounded-xl border border-(--tc-border)/60 bg-white px-3 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-slate-50 disabled:opacity-60"
+-              title="Exportar métricas em PDF"
+-              aria-label="Exportar métricas em PDF"
++              className="inline-flex items-center justify-center gap-2 rounded-xl border border-(--tc-border)/60 bg-white px-3.5 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-slate-50 disabled:opacity-60"
++              title="Exportar relatório completo da empresa em PDF"
++              aria-label="Exportar relatório completo da empresa em PDF"
+             >
+               <FiFileText size={16} />
++              <span>{exportingPdf ? "Gerando PDF" : "PDF"}</span>
+             </button>
+             {companySlug ? (
+               <>

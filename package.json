@@ -8,7 +8,7 @@
     "dev:clean": "node scripts/dev-clean.js",
     "dev": "next dev --webpack",
     "dev:ci": "next dev --turbo",
-    "build": "node -e \"const fs=require('fs'),cp=require('child_process'); if (fs.existsSync('./prisma/schema.prisma')||fs.existsSync('./schema.prisma')){ console.log('prisma schema found, running prisma generate'); cp.execSync('npx prisma generate',{stdio:'inherit'}); if(process.env.DATABASE_URL){ console.log('DATABASE_URL found, running prisma migrate deploy'); cp.execSync('npx prisma migrate deploy',{stdio:'inherit'}); } else { console.log('no DATABASE_URL, skipping prisma migrate deploy'); } } else { console.log('no prisma schema, skipping prisma generate'); }\" && next build",
+    "build": "node -e \"const fs=require('fs'),cp=require('child_process'); if (fs.existsSync('./prisma/schema.prisma')||fs.existsSync('./schema.prisma')){ console.log('prisma schema found, running prisma generate'); cp.execSync('npx prisma generate',{stdio:'inherit'}); if(process.env.DATABASE_URL){ console.log('DATABASE_URL found, resolving any failed migrations...'); try{ cp.execSync('npx prisma migrate resolve --rolled-back 20250601000000_init_postgres',{stdio:'inherit'}); }catch(e){ console.log('migrate resolve skipped (no failed migration or already clean)'); } console.log('running prisma migrate deploy'); cp.execSync('npx prisma migrate deploy',{stdio:'inherit'}); } else { console.log('no DATABASE_URL, skipping prisma migrate deploy'); } } else { console.log('no prisma schema, skipping prisma generate'); }\" && next build",
     "start": "next start",
     "lint": "eslint --max-warnings 9999",
     "test": "jest --config jest.config.ts --passWithNoTests --testMatch \"**/tests/**/*.test.ts?(x)\"",

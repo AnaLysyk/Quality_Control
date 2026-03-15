@@ -32,6 +32,10 @@ Observacoes:
 - `feat/upstash-integration` e `feat/chamados-fixes` ainda mostram muitos patches fora da `main`; nao e seguro fazer merge cego.
 - Parte dos commits fora da `main` mexe em E2E, logs, backups e dados de suporte. Isso precisa de triagem antes de entrar no fluxo principal.
 - O cherry-pick direto de `359bf80` (`fix/create-user-modal-single-client`) foi abortado porque ele tenta reintroduzir fluxo antigo de autenticacao/cookies em arquivos que hoje estao mais novos na `main`.
+- Trechos seguros ja portados manualmente para a `main`:
+  - melhoria de erro/autenticacao no `app/kanban-it/page.tsx`
+  - ajustes de acessibilidade no `app/components/CreateManualReleaseButton.tsx`
+  - ampliacao do tipo `role` em `data/usersStore.ts` para aceitar `global_admin`
 
 Commits exclusivos pequenos e mapeados:
 

@@ -6,6 +6,8 @@ Status em 2026-03-14:
 - Ainda existem branches com patches fora da `main`. Elas nao devem ser apagadas antes de uma revisao tecnica, porque algumas contem trabalho real misturado com commits de sync, backup e debug.
 - Os stashes locais foram arquivados nesta mesma branch em `docs/recovery/` para que deixem de existir apenas no computador local.
 - Branches sem patch exclusivo em relacao a `main` podem ser removidas para reduzir ruido operacional.
+- Antes de deploy ou release, rode `npm run audit:branches`.
+- O snapshot mais recente da auditoria de branches foi salvo em `docs/branch-audit-main-2026-03-14.md`.
 
 Branches com trabalho ainda fora da `main`:
 
@@ -32,6 +34,7 @@ Observacoes:
 - `feat/upstash-integration` e `feat/chamados-fixes` ainda mostram muitos patches fora da `main`; nao e seguro fazer merge cego.
 - Parte dos commits fora da `main` mexe em E2E, logs, backups e dados de suporte. Isso precisa de triagem antes de entrar no fluxo principal.
 - O cherry-pick direto de `359bf80` (`fix/create-user-modal-single-client`) foi abortado porque ele tenta reintroduzir fluxo antigo de autenticacao/cookies em arquivos que hoje estao mais novos na `main`.
+- A auditoria atual mostra que as branches restantes ainda tocam `data/`, auth/session, CI ou E2E. Por isso nao e seguro absorver tudo na `main` via merge cego ou merge `-s ours` sem revisao.
 - Trechos seguros ja portados manualmente para a `main`:
   - melhoria de erro/autenticacao no `app/kanban-it/page.tsx`
   - ajustes de acessibilidade no `app/components/CreateManualReleaseButton.tsx`

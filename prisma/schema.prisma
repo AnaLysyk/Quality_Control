@@ -238,6 +238,22 @@ model TicketReaction {
   @@map("ticket_reactions")
 }
 
+// ─── Support / Access Requests ──────────────────────────────────────────────
+
+model SupportRequest {
+  id         String   @id @default(cuid())
+  email      String
+  message    String
+  status     String   @default("open")
+  ip_address String?
+  user_agent String?
+  user_id    String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("support_requests")
+}
+
 // ─── Access Requests ─────────────────────────────────────────────────────────
 
 model AccessRequest {
@@ -366,4 +382,18 @@ model UserNote {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_notes")
+}
+
+// ─── Defects ─────────────────────────────────────────────────────────────────
+
+model Defect {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  companyId       String
+  releaseManualId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("defects")
 }

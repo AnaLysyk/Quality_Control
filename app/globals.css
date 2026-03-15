@@ -3870,7 +3870,12 @@ video {
 .tc-hero-stat-grid {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 640px) {
+  .tc-hero-stat-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
 }
 
 .tc-hero-stat {
@@ -4157,10 +4162,10 @@ video {
 
 /* ─── Layout tokens (used by MainWrapper & floating buttons) ──── */
 :root {
-  --topbar-h: 4rem;      /* clearance for fixed top bar (= pt-16) */
-  --content-pr: 5rem;    /* right padding to clear floating action strip */
+  --topbar-h: 3.5rem;    /* clearance for fixed top bar — mobile */
+  --content-pr: 3.5rem;  /* right padding to clear floating action strip — mobile */
 }
-@media (min-width: 640px)  { :root { --content-pr: 5.5rem; } }
+@media (min-width: 640px)  { :root { --topbar-h: 4rem; --content-pr: 5.5rem; } }
 @media (min-width: 1024px) { :root { --content-pr: 5rem; } }
 @media (min-width: 1280px) { :root { --content-pr: 5.5rem; } }
 @media (min-width: 1536px) { :root { --content-pr: 6.5rem; } }

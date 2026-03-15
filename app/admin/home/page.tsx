@@ -704,7 +704,7 @@ export default function AdminHomePage() {
                 <button
                   type="button"
                   onClick={() => setSelectedCompanySlug(null)}
-                  className={`group flex w-[18.25rem] shrink-0 flex-col gap-3 rounded-[24px] border p-4 text-left transition ${
+                  className={`group flex w-[75vw] min-w-[16rem] max-w-[18.25rem] sm:w-[18.25rem] shrink-0 flex-col gap-3 rounded-[24px] border p-4 text-left transition ${
                     selectedCompanySlug == null
                       ? "border-[rgba(1,24,72,0.14)] bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] shadow-[0_18px_35px_rgba(1,24,72,0.08)]"
                       : "border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] hover:border-[rgba(239,0,1,0.18)]"
@@ -734,7 +734,7 @@ export default function AdminHomePage() {
                       type="button"
                       onClick={() => setSelectedCompanySlug(key)}
                       aria-pressed={selected}
-                      className={`group relative flex w-[18.5rem] shrink-0 flex-col gap-3 overflow-hidden rounded-[24px] border p-4 text-left transition ${
+                      className={`group relative flex w-[75vw] min-w-[16rem] max-w-[18.5rem] sm:w-[18.5rem] shrink-0 flex-col gap-3 overflow-hidden rounded-[24px] border p-4 text-left transition ${
                         selected
                           ? "border-[rgba(239,0,1,0.28)] bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] shadow-[0_24px_44px_rgba(1,24,72,0.12)] ring-1 ring-[rgba(239,0,1,0.16)]"
                           : "border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] hover:border-[rgba(239,0,1,0.18)]"
@@ -1157,8 +1157,8 @@ export default function AdminHomePage() {
               {loadingRanking ? (
                 <div className="tc-empty-state">Carregando ranking...</div>
               ) : rankingRows.length ? (
-                <div className="overflow-hidden rounded-[28px] border border-[color:var(--tc-border)] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-[0_18px_38px_rgba(15,23,42,0.05)]">
-                  <div className="grid grid-cols-[4.75rem_minmax(0,1.8fr)_7rem_9rem_7rem_7rem_9rem_8rem] gap-3 border-b border-[color:var(--tc-border)] bg-[rgba(1,24,72,0.04)] px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">
+                <div className="overflow-x-auto overflow-hidden rounded-[28px] border border-[color:var(--tc-border)] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-[0_18px_38px_rgba(15,23,42,0.05)]">
+                  <div className="min-w-[52rem] grid grid-cols-[4.75rem_minmax(0,1.8fr)_7rem_9rem_7rem_7rem_9rem_8rem] gap-3 border-b border-[color:var(--tc-border)] bg-[rgba(1,24,72,0.04)] px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--tc-text-muted)]">
                     <span>Pos.</span>
                     <span>Empresa</span>
                     <span>Score</span>
@@ -1172,7 +1172,7 @@ export default function AdminHomePage() {
                     {rankingRows.map((company) => (
                       <div
                         key={`${company.slug}-${company.position}`}
-                        className={`grid grid-cols-[4.75rem_minmax(0,1.8fr)_7rem_9rem_7rem_7rem_9rem_8rem] items-center gap-3 px-5 py-4 transition hover:bg-[rgba(1,24,72,0.03)] ${
+                        className={`min-w-[52rem] grid grid-cols-[4.75rem_minmax(0,1.8fr)_7rem_9rem_7rem_7rem_9rem_8rem] items-center gap-3 px-5 py-4 transition hover:bg-[rgba(1,24,72,0.03)] ${
                           company.position <= 3 ? "bg-[rgba(1,24,72,0.015)]" : ""
                         } ${
                           selectedCompany && normalizeText(selectedCompany.name) === normalizeText(company.name)

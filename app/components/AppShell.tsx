@@ -41,7 +41,7 @@ export default function AppShell({ children }: AppShellProps) {
 
       <button
         type="button"
-        className="fixed top-4 left-4 z-50 rounded-lg border border-(--tc-border) bg-(--tc-surface) p-2 text-(--tc-text) shadow-sm transition-colors hover:bg-(--tc-surface-2) lg:hidden"
+        className="fixed top-3 left-3 z-50 rounded-lg border border-(--tc-border) bg-(--tc-surface) p-2 text-(--tc-text) shadow-sm transition-colors hover:bg-(--tc-surface-2) sm:top-4 sm:left-4 lg:hidden"
         onClick={() => setMobileOpen(true)}
         aria-label="Abrir menu"
         aria-expanded={mobileOpen}
@@ -49,10 +49,10 @@ export default function AppShell({ children }: AppShellProps) {
         <FiMenu size={20} />
       </button>
 
-      <div className="fixed top-4 right-4 z-40 flex items-center gap-2">
+      <div className="fixed top-3 right-3 z-40 flex items-center gap-1 sm:top-4 sm:right-4 sm:gap-2">
         <NotificationsButton />
         <TicketsButton />
-        <NotesButton />
+        <span className="hidden sm:inline-flex"><NotesButton /></span>
         <ProfileButton />
       </div>
 

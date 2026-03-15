@@ -71,9 +71,12 @@ function roleNeedsCompany(role: string, wantsGlobalAdmin: boolean) {
 }
 
 function isGlobalDeveloperAccess(access: Awaited<ReturnType<typeof getAccessContext>> | null) {
+  if (!access) return false;
+  // global_admin users (is_global_admin flag) can manage all privileged profiles
+  if (access.isGlobalAdmin === true) return true;
   const role = (access?.role ?? "").toLowerCase();
   const companyRole = (access?.companyRole ?? "").toLowerCase();
-  return role === "it_dev" || companyRole === "it_dev";
+  return role === "it_dev" || companyRole === "it_dev" || role === "global_admin" || role === "admin";
 }
 
 export async function GET(req: NextRequest) {

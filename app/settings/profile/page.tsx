@@ -274,9 +274,9 @@ function HeroMetric({
   note?: string;
 }) {
   return (
-    <div className="rounded-[18px] border border-white/14 bg-white/[0.08] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+    <div className="rounded-[18px] border border-white/14 bg-white/8 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
       <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">{label}</div>
-      <div className="mt-2 min-h-[2.5rem] text-[1.75rem] leading-[1.02] font-extrabold text-white sm:text-[1.95rem]" title={value}>
+      <div className="mt-2 min-h-10 text-[1.75rem] leading-[1.02] font-extrabold text-white sm:text-[1.95rem]" title={value}>
         {value}
       </div>
       {note ? <div className="mt-1 text-xs font-medium text-white/72">{note}</div> : null}
@@ -935,6 +935,8 @@ export default function SettingsProfilePage() {
                   value={profileFullName}
                   onChange={(event) => setProfileFullName(event.target.value)}
                   disabled={profileLoading || loading}
+                  title="Nome completo"
+                  placeholder="Ex.: Maria Silva"
                   required
                 />
               </Field>
@@ -969,6 +971,8 @@ export default function SettingsProfilePage() {
                   value={profileEmail}
                   onChange={(event) => setProfileEmail(event.target.value)}
                   disabled={profileLoading || loading}
+                  title="E-mail"
+                  placeholder="seu@email.com"
                   required
                 />
               </Field>
@@ -1094,6 +1098,7 @@ export default function SettingsProfilePage() {
                     value={theme}
                     onChange={(event) => setTheme(event.target.value as Theme)}
                     disabled={profileLoading || settingsLoading}
+                    title="Tema"
                   >
                     <option value="system">Automatico</option>
                     <option value="light">Claro</option>
@@ -1107,6 +1112,7 @@ export default function SettingsProfilePage() {
                     value={language}
                     onChange={(event) => setLanguage(event.target.value as Language)}
                     disabled={profileLoading || settingsLoading}
+                    title="Idioma"
                   >
                     <option value="pt-BR">Portugues Brasil</option>
                     <option value="en-US">English US</option>
@@ -1129,7 +1135,7 @@ export default function SettingsProfilePage() {
           <section className={`${surfaceClass} space-y-5`}>
             <PanelHeader title="Foto do perfil" />
 
-            <div className="rounded-[24px] border border-(--tc-border) bg-white px-6 py-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] dark:bg-(--tc-surface-2)">
+            <div className="rounded-3xl border border-(--tc-border) bg-white px-6 py-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] dark:bg-(--tc-surface-2)">
               <div className="flex flex-col items-center gap-4 text-center">
                 <UserAvatar
                   src={previewAvatarUrl || null}
@@ -1152,6 +1158,7 @@ export default function SettingsProfilePage() {
                   type="file"
                   accept="image/*"
                   className="hidden"
+                  aria-label="Selecionar foto de perfil"
                   onChange={(event) => void handleAvatarUpload(event.target.files?.[0])}
                 />
               </div>
@@ -1223,6 +1230,8 @@ export default function SettingsProfilePage() {
                 value={currentPassword}
                 onChange={(event) => setCurrentPassword(event.target.value)}
                 autoComplete="current-password"
+                title="Senha atual"
+                placeholder="••••••••"
                 required
               />
             </Field>
@@ -1234,6 +1243,8 @@ export default function SettingsProfilePage() {
                 value={newPassword}
                 onChange={(event) => setNewPassword(event.target.value)}
                 autoComplete="new-password"
+                title="Nova senha"
+                placeholder="••••••••"
                 required
               />
             </Field>
@@ -1245,6 +1256,8 @@ export default function SettingsProfilePage() {
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 autoComplete="new-password"
+                title="Confirmar nova senha"
+                placeholder="••••••••"
                 required
               />
             </Field>
@@ -1270,7 +1283,7 @@ export default function SettingsProfilePage() {
               <Feedback message={companiesError} tone="error" />
 
               {!companiesError && uniqueCompanies.length === 0 ? (
-                <div className="tc-empty-state min-h-[180px]">
+                <div className="tc-empty-state min-h-45">
                   Nenhuma empresa vinculada encontrada para este usuario.
                 </div>
               ) : null}
@@ -1412,7 +1425,7 @@ export default function SettingsProfilePage() {
                 <label className="flex flex-col gap-2 text-sm text-(--tc-text-primary)">
                   <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-(--tc-accent) dark:text-[#ff8a8a]">Motivo</span>
                   <textarea
-                    className="min-h-[140px] w-full rounded-xl border border-slate-400 bg-white px-4 py-3 text-sm font-medium text-[#0b1f52] outline-none transition placeholder:text-[#345388] focus:border-(--tc-accent) focus:bg-rose-50/60 focus:ring-2 focus:ring-(--tc-accent)/18 dark:border-slate-500 dark:bg-[#0f1b2d] dark:text-[#d7e5ff] dark:placeholder:text-[#b4cbff] dark:focus:bg-rose-500/10"
+                    className="min-h-35 w-full rounded-xl border border-slate-400 bg-white px-4 py-3 text-sm font-medium text-[#0b1f52] outline-none transition placeholder:text-[#345388] focus:border-(--tc-accent) focus:bg-rose-50/60 focus:ring-2 focus:ring-(--tc-accent)/18 dark:border-slate-500 dark:bg-[#0f1b2d] dark:text-[#d7e5ff] dark:placeholder:text-[#b4cbff] dark:focus:bg-rose-500/10"
                     value={deleteRequestReason}
                     onChange={(event) => setDeleteRequestReason(event.target.value)}
                     placeholder="Descreva o motivo da exclusao do perfil."

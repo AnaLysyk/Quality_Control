@@ -1443,13 +1443,13 @@ function AccessRequestsPage() {
                 <section className={sectionMuted}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#d62246]">Historico e observacoes</p>
-                      <h3 className="mt-2 text-lg font-semibold text-[#0f172a]">Conversa com o solicitante</h3>
-                      <p className="mt-1 text-sm text-[#526889]">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-(--tc-accent)">Historico e observacoes</p>
+                      <h3 className="mt-2 text-lg font-semibold text-(--tc-text-primary)">Conversa com o solicitante</h3>
+                      <p className="mt-1 text-sm text-(--tc-text-secondary)">
                         Use esse bloco para pedir complemento ou registrar a decisao tomada.
                       </p>
                     </div>
-                    {commentLoading ? <span className="text-sm font-medium text-[#6d83a2]">Carregando...</span> : null}
+                    {commentLoading ? <span className="text-sm font-medium text-(--tc-text-muted)">Carregando...</span> : null}
                   </div>
 
                   {commentError ? (
@@ -1596,7 +1596,7 @@ function AccessRequestsPage() {
                       type="button"
                       onClick={saveChanges}
                       disabled={saving || !dirty}
-                      className="rounded-full border border-[#0b1a3c] bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.28em] text-[#0b1a3c] transition hover:-translate-y-0.5 hover:bg-[#0b1a3c] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-full border border-(--tc-primary) bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.28em] text-(--tc-primary) transition hover:-translate-y-0.5 hover:bg-(--tc-primary) hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {saving ? "Salvando..." : dirty ? "Salvar analise" : "Sem alteracoes"}
                     </button>
@@ -1625,7 +1625,7 @@ function AccessRequestsPage() {
                       onClick={acceptRequest}
                       aria-label="Aprovar solicitacao"
                       disabled={acceptDisabled}
-                      className="rounded-full bg-[#0b1a3c] px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.28em] text-white shadow-[0_14px_30px_rgba(11,26,60,0.2)] transition hover:-translate-y-0.5 hover:bg-[#102a63] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-full bg-(--tc-primary) px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.28em] text-white shadow-[0_14px_30px_rgba(1,24,72,0.2)] transition hover:-translate-y-0.5 hover:bg-[rgba(1,24,72,0.88)] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {accepting ? "Aprovando..." : "Aprovar acesso"}
                     </button>

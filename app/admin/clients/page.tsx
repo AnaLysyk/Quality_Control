@@ -1,14 +1,14 @@
 ﻿"use client";
 
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CreateClientModal, type ClientFormValues } from "@/clients/components/CreateClientModal";
 import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { fetchApi } from "@/lib/api";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, readApiError, unwrapEnvelopeData } from "@/lib/apiEnvelope";
-import { FiCheckCircle, FiExternalLink, FiHome, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiUsers, FiX, FiXCircle } from "react-icons/fi";
+import { FiCheckCircle, FiExternalLink, FiHome, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiUpload, FiUsers, FiX, FiXCircle } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import Breadcrumb from "@/components/Breadcrumb";
 
@@ -180,6 +180,41 @@ function AdminClientsPage() {
   const [activeTab, setActiveTab] = useState<"visao" | "pessoas">("visao");
   const [openCreate, setOpenCreate] = useState(false);
   const [companyAction, setCompanyAction] = useState<null | "activate" | "deactivate" | "delete">(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
+
+  async function handleLogoFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (logoInputRef.current) logoInputRef.current.value = "";
+    if (!file || !selectedId) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Envie uma imagem valida (PNG, JPG, SVG…)");
+      return;
+    }
+    setLogoUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`/api/clients/${selectedId}/logo`, {
+        method: "POST",
+        body: fd,
+        credentials: "include",
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error((payload as { error?: string }).error || "Nao foi possivel enviar o logo");
+        return;
+      }
+      const logoUrl = (payload as { logoUrl?: string }).logoUrl ?? "";
+      setForm((f) => ({ ...f, logoUrl }));
+      setItems((prev) => prev.map((c) => (c.id === selectedId ? { ...c, logoUrl } : c)));
+      toast.success("Logo atualizado");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao enviar logo");
+    } finally {
+      setLogoUploading(false);
+    }
+  }
 
   const selected = useMemo(() => items.find((c) => c.id === selectedId) ?? null, [items, selectedId]);
   const currentActive = form.active ?? selected?.active ?? false;
@@ -541,7 +576,7 @@ function AdminClientsPage() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 lg:max-w-[520px] lg:justify-end">
+              <div className="flex flex-wrap items-center gap-2 lg:max-w-130 lg:justify-end">
                 {isGlobalAdmin && (
                   <button
                     type="button"
@@ -642,7 +677,7 @@ function AdminClientsPage() {
           {loading ? (
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {Array.from({ length: 6 }).map((_, index) => (
-                <div key={index} className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5">
+                <div key={index} className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5">
                   <div className="h-4 w-28 animate-pulse rounded-full bg-slate-200" />
                   <div className="mt-4 flex items-start gap-3">
                     <div className="h-12 w-12 animate-pulse rounded-xl bg-slate-200" />
@@ -662,7 +697,7 @@ function AdminClientsPage() {
               type="button"
               key={client.id}
               onClick={() => openModal(client.id)}
-              className="flex h-full w-full flex-col overflow-hidden rounded-[24px] border border-(--tc-border,#d7deea) bg-white p-4 text-left transition hover:border-(--tc-accent,#ef0001)/35 hover:shadow-[0_14px_32px_rgba(15,23,42,0.06)] focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+              className="flex h-full w-full flex-col overflow-hidden rounded-3xl border border-(--tc-border,#d7deea) bg-white p-4 text-left transition hover:border-(--tc-accent,#ef0001)/35 hover:shadow-[0_14px_32px_rgba(15,23,42,0.06)] focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
             >
                 <div className="flex h-full flex-col gap-4">
                   <div className="flex items-start gap-3">
@@ -727,7 +762,7 @@ function AdminClientsPage() {
           {filteredItems.length === 0 && (
             <div className="col-span-full text-sm text-(--tc-text-muted,#6b7280)">
               {isGlobalAdmin ? (
-                <div className="mt-2 rounded-[24px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-8 text-center">
+                <div className="mt-2 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-8 text-center">
                   <p className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">
                     {items.length === 0 ? "Nenhuma empresa cadastrada" : "Nenhuma empresa encontrada"}
                   </p>
@@ -905,13 +940,48 @@ function AdminClientsPage() {
                       editable={isEditing}
                       onChange={(v) => setForm((f) => ({ ...f, linkedinUrl: v }))}
                     />
-                    <DetailField
-                      label="Logo da empresa (URL)"
-                      value={isEditing ? form.logoUrl ?? "" : (form.logoUrl ?? selected.logoUrl ?? "")}
-                      editable={isEditing}
-                      onChange={(v) => setForm((f) => ({ ...f, logoUrl: v }))}
-                      placeholder="https://example.com/logo.png"
-                    />
+                    <div className="block text-sm text-(--tc-text-primary)">
+                      <span className="mb-1 block">Logo da empresa (URL ou upload)</span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          className={`min-w-0 flex-1 rounded-lg border border-(--tc-border) px-3 py-2 text-sm text-(--tc-text-primary) ${
+                            isEditing
+                              ? "bg-(--tc-surface) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30 focus:border-(--tc-accent)"
+                              : "bg-(--tc-surface-2) text-(--tc-text-secondary)"
+                          }`}
+                          value={isEditing ? form.logoUrl ?? "" : (form.logoUrl ?? selected.logoUrl ?? "")}
+                          readOnly={!isEditing}
+                          onChange={(e) => setForm((f) => ({ ...f, logoUrl: e.target.value }))}
+                          placeholder="https://example.com/logo.png"
+                          autoComplete="off"
+                          spellCheck={false}
+                        />
+                        {isEditing && (
+                          <>
+                            <input
+                              ref={logoInputRef}
+                              type="file"
+                              accept="image/*"
+                              aria-label="Enviar logo da empresa"
+                              title="Enviar logo da empresa"
+                              className="sr-only"
+                              onChange={handleLogoFileChange}
+                            />
+                            <button
+                              type="button"
+                              title="Enviar logo da empresa"
+                              aria-label="Enviar logo da empresa"
+                              disabled={logoUploading}
+                              onClick={() => logoInputRef.current?.click()}
+                              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm font-medium text-(--tc-text-primary) transition hover:bg-(--tc-surface-2) disabled:opacity-60"
+                            >
+                              <FiUpload className="h-4 w-4" />
+                              {logoUploading ? "Enviando…" : "Upload"}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </SectionCard>
 
@@ -1262,7 +1332,7 @@ function CompanyActionModal({
         ];
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[rgba(2,10,28,0.62)] px-4 py-6 backdrop-blur-[3px]">
+    <div className="fixed inset-0 z-60 flex items-center justify-center bg-[rgba(2,10,28,0.62)] px-4 py-6 backdrop-blur-[3px]">
       <div className="w-full max-w-2xl overflow-hidden rounded-[30px] border border-white/12 bg-(--tc-surface,#ffffff) shadow-[0_32px_90px_rgba(15,23,42,0.5)]">
         <div className={`relative overflow-hidden bg-linear-to-r ${headerClasses} px-6 py-6 text-white`}>
           <div className="pointer-events-none absolute -left-8 top-0 h-28 w-28 rounded-full bg-white/8 blur-3xl" />
@@ -1273,15 +1343,15 @@ function CompanyActionModal({
             </div>
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
-                <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] !text-white ${eyebrowChip}`}>
+                <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white! ${eyebrowChip}`}>
                   Ação sensível
                 </span>
-                <span className="inline-flex rounded-full border border-white/12 bg-white/8 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] !text-white">
+                <span className="inline-flex rounded-full border border-white/12 bg-white/8 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white!">
                   {actionTag}
                 </span>
               </div>
-              <h3 className="text-[28px] font-extrabold leading-tight tracking-[-0.02em] !text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)]">{title}</h3>
-              <p className="max-w-2xl text-sm leading-6 !text-white/95">{description}</p>
+              <h3 className="text-[28px] font-extrabold leading-tight tracking-[-0.02em] text-white! drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)]">{title}</h3>
+              <p className="max-w-2xl text-sm leading-6 text-white/95!">{description}</p>
             </div>
           </div>
         </div>
@@ -1742,7 +1812,7 @@ function CompanyUsers({ clientId, companyName, disabled = false }: CompanyUsersP
       </div>
 
       {openLinkModal && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[rgba(2,10,28,0.48)] px-4 py-6 backdrop-blur-[2px]">
+        <div className="fixed inset-0 z-70 flex items-center justify-center bg-[rgba(2,10,28,0.48)] px-4 py-6 backdrop-blur-[2px]">
           <div className="w-full max-w-xl overflow-hidden rounded-[28px] border border-white/10 bg-(--tc-surface,#ffffff) shadow-[0_28px_80px_rgba(15,23,42,0.32)]">
             <div className="bg-linear-to-r from-[#04153d] via-[#0b1e3c] to-[#7a1026] px-5 py-5 text-white">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">Usuários</p>

@@ -73,7 +73,7 @@ function getInitials(name?: string | null) {
 }
 
 function roleLabel(permissionRole?: string | null) {
-  if (permissionRole === "admin") return "Lider TC";
+  if (permissionRole === "admin") return "Admin Global";
   if (permissionRole === "dev") return "Suporte Tecnico";
   if (permissionRole === "company") return "Empresa";
   return "Testing Company";
@@ -168,7 +168,7 @@ function UserCard({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 md:max-w-[220px] md:justify-end">
+        <div className="flex flex-wrap gap-2 md:max-w-55 md:justify-end">
           <span
             className={`inline-flex max-w-full rounded-full border px-3 py-1.5 text-sm font-semibold ${roleTone(user.permission_role)}`}
             title={contextBadgeLabel(user, companyLabel)}
@@ -196,7 +196,7 @@ function UserStatusSection({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-[24px] border border-(--tc-border,#d7deea) bg-white p-4 sm:p-5">
+    <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-4 sm:p-5">
       <div className="flex items-center justify-between border-b border-(--tc-border,#d7deea) pb-4">
         <h3 className="text-lg font-bold text-(--tc-text-primary,#0b1a3c)">{title}</h3>
         <span className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-3 py-1 text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">
@@ -414,10 +414,10 @@ export default function AdminUsersPage() {
 
     if (activeTab === "admin") {
       return {
-        title: "Criar Lider TC",
-        subtitle: "Cadastre lideres da Testing Company com acesso administrativo.",
-        submitLabel: "Criar Lider TC",
-        initialRole: "admin",
+        title: "Criar Admin Global",
+        subtitle: "Cadastre perfis de Suporte Tecnico Global com acesso total ao sistema.",
+        submitLabel: "Criar Admin Global",
+        initialRole: "global_admin",
         lockRole: true,
         showCompanyField: false,
         requireCompanySelection: false,
@@ -462,7 +462,7 @@ export default function AdminUsersPage() {
 
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
-      <div className="mx-auto flex w-full max-w-[2200px] flex-col gap-4 px-0 py-0">
+      <div className="mx-auto flex w-full max-w-550 flex-col gap-4 px-0 py-0">
         <Breadcrumb
           items={[
             { label: "Admin", href: "/admin/home" },
@@ -471,7 +471,7 @@ export default function AdminUsersPage() {
           ]}
         />
 
-        <section className="overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,#031843_0%,#082457_38%,#3a174f_72%,#9f1025_100%)] px-6 py-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:px-8">
+        <section className="overflow-hidden rounded-4xl border border-white/10 bg-[linear-gradient(135deg,#031843_0%,#082457_38%,#3a174f_72%,#9f1025_100%)] px-6 py-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:px-8">
           <div className="flex flex-col gap-5">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Gestao de usuarios</p>
@@ -491,7 +491,7 @@ export default function AdminUsersPage() {
                 <FiUser className="h-4 w-4" /> {testingUsersCount} usuarios Testing Company
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiShield className="h-4 w-4" /> {adminUsersCount} lideres TC
+                <FiShield className="h-4 w-4" /> {adminUsersCount} admins globais
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
                 <FiTool className="h-4 w-4" /> {supportUsersCount} suporte tecnico
@@ -506,16 +506,16 @@ export default function AdminUsersPage() {
               <h2 className="text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">Gestao por contexto</h2>
               <div className="mt-4">
                 <TabsList className="grid w-full grid-cols-1 gap-2 rounded-[22px] bg-(--tc-surface-alt,#f8fafc) p-1.5 sm:grid-cols-2 xl:grid-cols-4">
-                  <TabsTrigger value="company" className="min-h-[60px] rounded-[18px] px-4 text-sm font-semibold leading-5">
+                  <TabsTrigger value="company" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
                     Usuarios por empresa
                   </TabsTrigger>
-                  <TabsTrigger value="testing" className="min-h-[60px] rounded-[18px] px-4 text-sm font-semibold leading-5">
+                  <TabsTrigger value="testing" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
                     Usuarios Testing Company
                   </TabsTrigger>
-                  <TabsTrigger value="admin" className="min-h-[60px] rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Lider TC
+                  <TabsTrigger value="admin" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
+                    Admin Global
                   </TabsTrigger>
-                  <TabsTrigger value="support" className="min-h-[60px] rounded-[18px] px-4 text-sm font-semibold leading-5">
+                  <TabsTrigger value="support" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
                     Suporte Tecnico
                   </TabsTrigger>
                 </TabsList>
@@ -534,7 +534,7 @@ export default function AdminUsersPage() {
                 <button
                   type="button"
                   onClick={() => setOpenCreate(true)}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 lg:min-w-[280px]"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 lg:min-w-70"
                 >
                   <FiUserPlus className="h-4 w-4" /> {createModalConfig.submitLabel}
                 </button>
@@ -546,7 +546,7 @@ export default function AdminUsersPage() {
             {loading ? (
               <div className="mt-6 grid gap-5 xl:grid-cols-2">
                 {Array.from({ length: 4 }).map((_, index) => (
-                  <div key={index} className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5">
+                  <div key={index} className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5">
                     <div className="h-4 w-28 animate-pulse rounded-full bg-slate-200" />
                     <div className="mt-4 space-y-3">
                       {Array.from({ length: 3 }).map((__, rowIndex) => (
@@ -566,7 +566,7 @@ export default function AdminUsersPage() {
 
                 <TabsContent value="company" className="mt-0">
                   {companySections.length === 0 ? (
-                    <div className="flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-[24px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
+                    <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
                       <FiUsers className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
                       <div>
                         <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhuma empresa com usuarios</h3>
@@ -608,7 +608,7 @@ export default function AdminUsersPage() {
 
                 <TabsContent value="testing" className="mt-0">
                   {testingCompanyUsers.length === 0 ? (
-                    <div className="flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-[24px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
+                    <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
                       <FiUsers className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
                       <div>
                         <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum usuario Testing Company</h3>
@@ -655,11 +655,11 @@ export default function AdminUsersPage() {
 
                 <TabsContent value="admin" className="mt-0">
                   {adminUsers.length === 0 ? (
-                    <div className="flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-[24px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
+                    <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
                       <FiShield className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
                       <div>
-                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum Lider TC encontrado</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual nao encontrou lideres com esse status.</p>
+                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum Admin Global encontrado</h3>
+                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual nao encontrou admins globais com esse status.</p>
                       </div>
                     </div>
                   ) : (
@@ -669,13 +669,13 @@ export default function AdminUsersPage() {
                           id: "active",
                           title: "Ativos",
                           users: adminActiveUsers,
-                          emptyMessage: "Nenhum Lider TC ativo neste recorte.",
+                          emptyMessage: "Nenhum Admin Global ativo neste recorte.",
                         },
                         {
                           id: "inactive",
                           title: "Inativos",
                           users: adminInactiveUsers,
-                          emptyMessage: "Nenhum Lider TC inativo neste recorte.",
+                          emptyMessage: "Nenhum Admin Global inativo neste recorte.",
                         },
                       ].map((group) => (
                         <UserStatusSection
@@ -697,7 +697,7 @@ export default function AdminUsersPage() {
 
                 <TabsContent value="support" className="mt-0">
                   {supportUsers.length === 0 ? (
-                    <div className="flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-[24px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
+                    <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
                       <FiTool className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
                       <div>
                         <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum suporte tecnico encontrado</h3>

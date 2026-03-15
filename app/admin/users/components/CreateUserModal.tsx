@@ -283,7 +283,7 @@ export function CreateUserModal({
                     value={jobTitle || EMPTY_JOB_TITLE}
                     onValueChange={(value) => setJobTitle(value === EMPTY_JOB_TITLE ? "" : value)}
                   >
-                    <SelectTrigger className="h-[42px] rounded-lg border-gray-200 bg-white px-3 py-2 text-sm focus-visible:ring-indigo-500/30">
+                    <SelectTrigger className="h-10.5 rounded-lg border-gray-200 bg-white px-3 py-2 text-sm focus-visible:ring-indigo-500/30">
                       <SelectValue placeholder="Selecione uma profissao" />
                     </SelectTrigger>
                     <SelectContent className="max-h-80">
@@ -333,7 +333,7 @@ export function CreateUserModal({
               </label>
               <div className="block text-sm">
                 Foto atual
-                <div className="mt-1 flex h-[42px] items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3">
+                <div className="mt-1 flex h-10.5 items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3">
                   {avatarUrl.trim() ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={avatarUrl.trim()} alt="Preview da foto" className="h-8 w-8 rounded-full object-cover" />

@@ -83,17 +83,33 @@ CREATE TABLE "user_company_links" (
 );
 
 -- CreateTable
+CREATE TABLE "user_companies" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "company_id" TEXT NOT NULL,
+    "role" TEXT NOT NULL DEFAULT 'user',
+
+    CONSTRAINT "user_companies_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "releases" (
     "id" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "summary" TEXT,
     "app" TEXT,
+    "project" TEXT,
     "qaseProject" TEXT,
     "category" TEXT,
     "kind" TEXT DEFAULT 'run',
     "runSlug" TEXT,
     "runName" TEXT,
     "companySlug" TEXT,
+    "companyId" TEXT,
+    "clientId" TEXT,
+    "clientName" TEXT,
+    "radis" TEXT,
     "environments" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "source" TEXT NOT NULL DEFAULT 'MANUAL',
     "status" TEXT NOT NULL DEFAULT 'DRAFT',
@@ -106,7 +122,6 @@ CREATE TABLE "releases" (
     "closedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "companyId" TEXT,
 
     CONSTRAINT "releases_pkey" PRIMARY KEY ("id")
 );
@@ -122,6 +137,28 @@ CREATE TABLE "release_cases" (
     "fromApi" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "release_cases_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "release_manuals" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'draft',
+    "companyId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "release_manuals_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "test_runs" (
+    "id" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "test_runs_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -183,6 +220,21 @@ CREATE TABLE "ticket_reactions" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "ticket_reactions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "support_requests" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "message" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'open',
+    "ip_address" TEXT,
+    "user_agent" TEXT,
+    "user_id" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "support_requests_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -297,87 +349,48 @@ CREATE TABLE "user_notes" (
     CONSTRAINT "user_notes_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "defects" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT,
+    "companyId" TEXT NOT NULL,
+    "releaseManualId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "defects_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
-
--- CreateIndex
 CREATE UNIQUE INDEX "users_user_key" ON "users"("user");
-
--- CreateIndex
 CREATE UNIQUE INDEX "companies_slug_key" ON "companies"("slug");
-
--- CreateIndex
 CREATE UNIQUE INDEX "memberships_userId_companyId_key" ON "memberships"("userId", "companyId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "user_company_links_userId_companyId_key" ON "user_company_links"("userId", "companyId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "releases_slug_companySlug_key" ON "releases"("slug", "companySlug");
-
--- CreateIndex
-CREATE UNIQUE INDEX "ticket_reactions_commentId_userId_type_key" ON "ticket_reactions"("commentId", "userId", "type");
-
--- CreateIndex
+CREATE UNIQUE INDEX "user_companies_user_id_company_id_key" ON "user_companies"("user_id", "company_id");
+CREATE UNIQUE INDEX "releases_slug_key" ON "releases"("slug");
 CREATE UNIQUE INDEX "applications_slug_companySlug_key" ON "applications"("slug", "companySlug");
+CREATE UNIQUE INDEX "ticket_reactions_commentId_userId_type_key" ON "ticket_reactions"("commentId", "userId", "type");
 
 -- AddForeignKey
 ALTER TABLE "memberships" ADD CONSTRAINT "memberships_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "memberships" ADD CONSTRAINT "memberships_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "user_company_links" ADD CONSTRAINT "user_company_links_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "user_company_links" ADD CONSTRAINT "user_company_links_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "releases" ADD CONSTRAINT "releases_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "release_cases" ADD CONSTRAINT "release_cases_releaseId_fkey" FOREIGN KEY ("releaseId") REFERENCES "releases"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "tickets" ADD CONSTRAINT "tickets_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "tickets" ADD CONSTRAINT "tickets_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "tickets" ADD CONSTRAINT "tickets_assignedToUserId_fkey" FOREIGN KEY ("assignedToUserId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "ticket_comments" ADD CONSTRAINT "ticket_comments_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "tickets"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "ticket_comments" ADD CONSTRAINT "ticket_comments_authorUserId_fkey" FOREIGN KEY ("authorUserId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "ticket_events" ADD CONSTRAINT "ticket_events_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "tickets"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "ticket_reactions" ADD CONSTRAINT "ticket_reactions_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "tickets"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "ticket_reactions" ADD CONSTRAINT "ticket_reactions_commentId_fkey" FOREIGN KEY ("commentId") REFERENCES "ticket_comments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "access_requests" ADD CONSTRAINT "access_requests_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "access_request_comments" ADD CONSTRAINT "access_request_comments_requestId_fkey" FOREIGN KEY ("requestId") REFERENCES "access_requests"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "requests" ADD CONSTRAINT "requests_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "applications" ADD CONSTRAINT "applications_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "user_notifications" ADD CONSTRAINT "user_notifications_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "user_notes" ADD CONSTRAINT "user_notes_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-

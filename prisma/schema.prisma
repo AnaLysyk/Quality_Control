@@ -118,15 +118,21 @@ model UserCompanyLink {
 
 model Release {
   id           String   @id @default(cuid())
-  slug         String
-  name         String
+  slug         String   @unique
+  title        String
+  summary      String?
   app          String?
+  project      String?
   qaseProject  String?
   category     String?
   kind         String?  @default("run")
   runSlug      String?
   runName      String?
   companySlug  String?
+  companyId    String?
+  clientId     String?
+  clientName   String?
+  radis        String?
   environments String[] @default([])
   source       String   @default("MANUAL")
   status       String   @default("DRAFT")
@@ -140,11 +146,9 @@ model Release {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  companyId    String?
   company      Company? @relation(fields: [companyId], references: [id])
   cases        ReleaseCase[]
 
-  @@unique([slug, companySlug])
   @@map("releases")
 }
 
@@ -238,7 +242,43 @@ model TicketReaction {
   @@map("ticket_reactions")
 }
 
-// ─── Support / Access Requests ──────────────────────────────────────────────
+// ─── User ↔ Company join (seed scripts) ─────────────────────────────────────
+
+model UserCompany {
+  id         String @id @default(cuid())
+  user_id    String
+  company_id String
+  role       String @default("user")
+
+  @@unique([user_id, company_id], name: "user_id_company_id")
+  @@map("user_companies")
+}
+
+// ─── Release Manual ──────────────────────────────────────────────────────────
+
+model ReleaseManual {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      String   @default("draft")
+  companyId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("release_manuals")
+}
+
+// ─── Test Run ─────────────────────────────────────────────────────────────────
+
+model TestRun {
+  id        String   @id @default(cuid())
+  status    String
+  createdAt DateTime @default(now())
+
+  @@map("test_runs")
+}
+
+// ─── Support / Access Requests ───────────────────────────────────────────────
 
 model SupportRequest {
   id         String   @id @default(cuid())

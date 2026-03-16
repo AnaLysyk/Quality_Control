@@ -8,7 +8,7 @@ import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { fetchApi } from "@/lib/api";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, readApiError, unwrapEnvelopeData } from "@/lib/apiEnvelope";
-import { FiCheckCircle, FiExternalLink, FiHome, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiUpload, FiUsers, FiX, FiXCircle } from "react-icons/fi";
+import { FiCheckCircle, FiExternalLink, FiEye, FiEyeOff, FiHome, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiUpload, FiUsers, FiX, FiXCircle } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import Breadcrumb from "@/components/Breadcrumb";
 
@@ -1490,23 +1490,40 @@ function DetailField({
   type?: string;
   placeholder?: string;
 }) {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = type === "password";
+  const resolvedType = isPassword && showPassword ? "text" : type;
+
   return (
     <label className="block text-sm text-(--tc-text-primary)">
       {label}
-      <input
-        className={`mt-1 w-full rounded-lg border border-(--tc-border) px-3 py-2 text-sm text-(--tc-text-primary) ${
-          editable
-            ? "bg-(--tc-surface) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30 focus:border-(--tc-accent)"
-            : "bg-(--tc-surface-2) text-(--tc-text-secondary)"
-        }`}
-        value={value}
-        type={type}
-        readOnly={!editable}
-        onChange={(e) => onChange?.(e.target.value)}
-        placeholder={placeholder}
-        autoComplete="off"
-        spellCheck={false}
-      />
+      <div className="relative mt-1">
+        <input
+          className={`w-full rounded-lg border border-(--tc-border) px-3 py-2 text-sm text-(--tc-text-primary) ${isPassword ? "pr-10" : ""} ${
+            editable
+              ? "bg-(--tc-surface) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30 focus:border-(--tc-accent)"
+              : "bg-(--tc-surface-2) text-(--tc-text-secondary)"
+          }`}
+          value={value}
+          type={resolvedType}
+          readOnly={!editable}
+          onChange={(e) => onChange?.(e.target.value)}
+          placeholder={placeholder}
+          autoComplete="off"
+          spellCheck={false}
+        />
+        {isPassword && editable ? (
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute inset-y-0 right-2 flex items-center text-(--tc-text-muted) hover:text-(--tc-text-primary)"
+            aria-label={showPassword ? "Esconder token" : "Mostrar token"}
+            tabIndex={-1}
+          >
+            {showPassword ? <FiEyeOff size={16} aria-hidden /> : <FiEye size={16} aria-hidden />}
+          </button>
+        ) : null}
+      </div>
     </label>
   );
 }

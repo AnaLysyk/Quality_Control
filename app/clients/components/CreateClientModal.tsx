@@ -3,6 +3,7 @@
 import type { FormEvent } from "react";
 import { useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 export type ClientIntegrationMode = "qase" | "manual";
 
@@ -64,6 +65,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
   const [active, setActive] = useState(true);
   const [integrationMode, setIntegrationMode] = useState<ClientIntegrationMode>("manual");
   const [qaseToken, setQaseToken] = useState("");
+  const [showQaseToken, setShowQaseToken] = useState(false);
   const [qaseProjectCode, setQaseProjectCode] = useState("");
   const [qaseProjects, setQaseProjects] = useState<QaseProjectOption[]>([]);
   const [selectedQaseProjectCodes, setSelectedQaseProjectCodes] = useState<string[]>([]);
@@ -458,18 +460,29 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
                   <label className="block text-sm">
                     Token da Qase
-                    <input
-                      className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
-                      type="password"
-                      value={qaseToken}
-                      onChange={(e) => {
-                        setQaseToken(e.target.value);
-                        resetQaseSelection();
-                      }}
-                      placeholder="Token da conta"
-                      autoComplete="off"
-                      spellCheck={false}
-                    />
+                    <div className="relative mt-1">
+                      <input
+                        className="w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 pr-10 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+                        type={showQaseToken ? "text" : "password"}
+                        value={qaseToken}
+                        onChange={(e) => {
+                          setQaseToken(e.target.value);
+                          resetQaseSelection();
+                        }}
+                        placeholder="Token da conta"
+                        autoComplete="off"
+                        spellCheck={false}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowQaseToken((v) => !v)}
+                        className="absolute inset-y-0 right-2 flex items-center text-(--tc-text-muted) hover:text-(--tc-text)"
+                        aria-label={showQaseToken ? "Esconder token" : "Mostrar token"}
+                        tabIndex={-1}
+                      >
+                        {showQaseToken ? <FiEyeOff size={16} aria-hidden /> : <FiEye size={16} aria-hidden />}
+                      </button>
+                    </div>
                   </label>
 
                   <button

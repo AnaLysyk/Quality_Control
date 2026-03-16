@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
-import { FiEye, FiEyeOff } from "react-icons/fi";
+import { FiCheck, FiCloudLightning, FiEye, FiEyeOff, FiLink2, FiSearch, FiZap } from "react-icons/fi";
 
 export type ClientIntegrationMode = "qase" | "manual";
 
@@ -419,38 +419,43 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
             />
           </label>
 
-          <fieldset className="md:col-span-2 rounded-lg border border-(--tc-border) bg-(--tc-surface-2) p-3">
-            <legend className="px-1 text-sm font-semibold text-(--tc-text)">Integracao</legend>
-            <p className="mt-1 text-xs text-(--tc-text-muted)">
+          <fieldset className="md:col-span-2 rounded-xl border-2 border-(--tc-accent)/20 bg-[linear-gradient(180deg,var(--tc-surface-2)_0%,rgba(239,0,1,0.03)_100%)] p-4">
+            <legend className="flex items-center gap-2 px-2 text-sm font-bold text-(--tc-text)">
+              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-(--tc-accent,#ef0001) text-white"><FiLink2 size={12} /></span>
+              Integracao
+            </legend>
+            <p className="mt-1 text-xs leading-5 text-(--tc-text-muted)">
               Se a empresa tiver Qase, informe o token, busque os projetos e selecione as aplicacoes. Cada projeto selecionado sera tratado como uma aplicacao separada no painel, permitindo gerenciar diferentes produtos ou softwares de forma independente.
             </p>
 
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <label className="flex items-start gap-2 rounded-md border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm">
+              <label className={`flex cursor-pointer items-start gap-3 rounded-lg border-2 px-3 py-3 text-sm transition ${integrationMode === "manual" ? "border-(--tc-primary,#011848) bg-(--tc-surface) shadow-sm" : "border-(--tc-border) bg-(--tc-surface) hover:border-(--tc-primary)/30"}`}>
                 <input
                   type="radio"
                   name="integrationMode"
                   value="manual"
                   checked={integrationMode === "manual"}
                   onChange={() => setIntegrationMode("manual")}
+                  className="mt-0.5"
                 />
                 <span>
-                  <span className="font-medium">Sem integracao no momento</span>
-                  <span className="block text-xs text-(--tc-text-muted)">Entrada manual de run, aplicacoes e kanban.</span>
+                  <span className="font-semibold text-(--tc-text)">Sem integracao no momento</span>
+                  <span className="mt-0.5 block text-xs text-(--tc-text-muted)">Entrada manual de run, aplicacoes e kanban.</span>
                 </span>
               </label>
 
-              <label className="flex items-start gap-2 rounded-md border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm">
+              <label className={`flex cursor-pointer items-start gap-3 rounded-lg border-2 px-3 py-3 text-sm transition ${integrationMode === "qase" ? "border-(--tc-accent,#ef0001) bg-(--tc-accent-soft,rgba(239,0,1,0.05)) shadow-sm" : "border-(--tc-border) bg-(--tc-surface) hover:border-(--tc-accent)/30"}`}>
                 <input
                   type="radio"
                   name="integrationMode"
                   value="qase"
                   checked={integrationMode === "qase"}
                   onChange={() => setIntegrationMode("qase")}
+                  className="mt-0.5 accent-(--tc-accent,#ef0001)"
                 />
                 <span>
-                  <span className="font-medium">Integrar com Qase agora</span>
-                  <span className="block text-xs text-(--tc-text-muted)">Token + selecao dos projetos reais da conta.</span>
+                  <span className="flex items-center gap-1.5 font-semibold text-(--tc-text)"><FiZap size={13} className="text-(--tc-accent,#ef0001)" />Integrar com Qase agora</span>
+                  <span className="mt-0.5 block text-xs text-(--tc-text-muted)">Token + selecao dos projetos reais da conta.</span>
                 </span>
               </label>
             </div>
@@ -487,10 +492,11 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
 
                   <button
                     type="button"
-                    className="mt-6 rounded-lg border border-(--tc-accent) px-4 py-2 text-sm font-semibold text-(--tc-accent) transition hover:bg-(--tc-accent-soft) disabled:opacity-60"
+                    className="mt-6 inline-flex items-center gap-2 rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-60"
                     onClick={() => void handleFetchQaseProjects()}
                     disabled={loadingQaseProjects}
                   >
+                    <FiSearch size={14} />
                     {loadingQaseProjects ? "Buscando..." : "Buscar projetos"}
                   </button>
                 </div>
@@ -505,8 +511,8 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
                   <div className="space-y-3 rounded-xl border border-(--tc-border) bg-(--tc-surface) p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
-                        <p className="text-sm font-semibold text-(--tc-text)">Projetos encontrados</p>
-                        <p className="text-xs text-(--tc-text-muted)">
+                        <p className="flex items-center gap-2 text-sm font-semibold text-(--tc-text)"><FiCloudLightning size={14} className="text-(--tc-accent,#ef0001)" />Projetos encontrados</p>
+                        <p className="mt-0.5 text-xs text-(--tc-text-muted)">
                           {selectedQaseProjectCodes.length} de {qaseProjects.length} selecionado(s). Cada projeto vira uma aplicacao independente no painel, com suas proprias runs, metricas e kanban.
                         </p>
                       </div>
@@ -529,26 +535,37 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
                     </div>
 
                     <div className="grid gap-2 sm:grid-cols-2">
-                      {qaseProjects.map((project) => (
-                        <label
-                          key={project.code}
-                          className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-3 text-sm transition ${
-                            selectedQaseProjectCodes.includes(project.code)
-                              ? "border-(--tc-accent) bg-(--tc-accent-soft)"
-                              : "border-(--tc-border) bg-(--tc-surface-2)"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedQaseProjectCodes.includes(project.code)}
-                            onChange={() => toggleSelectedQaseProject(project.code)}
-                          />
-                          <span className="min-w-0">
-                            <span className="block font-semibold text-(--tc-text)">{project.title}</span>
-                            <span className="block text-xs uppercase tracking-[0.2em] text-(--tc-text-muted)">{project.code}</span>
-                          </span>
-                        </label>
-                      ))}
+                      {qaseProjects.map((project) => {
+                        const isSelected = selectedQaseProjectCodes.includes(project.code);
+                        return (
+                          <label
+                            key={project.code}
+                            className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 px-3 py-3 text-sm transition ${
+                              isSelected
+                                ? "border-(--tc-accent,#ef0001) bg-(--tc-accent-soft,rgba(239,0,1,0.05)) shadow-sm"
+                                : "border-(--tc-border) bg-(--tc-surface-2) hover:border-(--tc-accent)/30"
+                            }`}
+                          >
+                            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded ${
+                              isSelected
+                                ? "bg-(--tc-accent,#ef0001) text-white"
+                                : "border border-(--tc-border) bg-(--tc-surface)"
+                            }`}>
+                              {isSelected ? <FiCheck size={12} /> : null}
+                            </span>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSelectedQaseProject(project.code)}
+                              className="sr-only"
+                            />
+                            <span className="min-w-0">
+                              <span className="block font-semibold text-(--tc-text)">{project.title}</span>
+                              <span className="block text-xs uppercase tracking-[0.2em] text-(--tc-text-muted)">{project.code}</span>
+                            </span>
+                          </label>
+                        );
+                      })}
                     </div>
 
                     <label className="block text-sm">
@@ -573,15 +590,16 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
                     </label>
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-dashed border-(--tc-border) bg-(--tc-surface) px-3 py-3 text-sm text-(--tc-text-muted)">
-                    Informe o token e clique em &quot;Buscar projetos&quot; para selecionar as aplicacoes da empresa. Cada projeto da Qase sera cadastrado como uma aplicacao independente.
+                  <div className="flex items-center gap-3 rounded-lg border border-dashed border-(--tc-accent)/30 bg-(--tc-accent-soft,rgba(239,0,1,0.03)) px-4 py-4 text-sm text-(--tc-text-muted)">
+                    <FiSearch size={18} className="shrink-0 text-(--tc-accent,#ef0001) opacity-60" />
+                    <span>Informe o token e clique em &quot;Buscar projetos&quot; para selecionar as aplicacoes da empresa. Cada projeto da Qase sera cadastrado como uma aplicacao independente.</span>
                   </div>
                 )}
               </div>
             ) : null}
 
             <div className="mt-4 rounded-lg border border-(--tc-border) bg-(--tc-surface) p-3">
-              <p className="text-sm font-semibold text-(--tc-text)">Jira (opcional)</p>
+              <p className="flex items-center gap-2 text-sm font-semibold text-(--tc-text)"><span className="flex h-5 w-5 items-center justify-center rounded bg-(--tc-primary,#011848) text-white"><FiLink2 size={10} /></span>Jira (opcional)</p>
               <p className="mt-1 text-xs text-(--tc-text-muted)">Se quiser, ja deixe o Jira configurado para esta empresa.</p>
               <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <label className="block text-sm sm:col-span-2">

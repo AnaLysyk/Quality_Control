@@ -420,7 +420,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
           <fieldset className="md:col-span-2 rounded-lg border border-(--tc-border) bg-(--tc-surface-2) p-3">
             <legend className="px-1 text-sm font-semibold text-(--tc-text)">Integracao</legend>
             <p className="mt-1 text-xs text-(--tc-text-muted)">
-              Se a empresa tiver Qase, informe o token, busque os projetos e selecione as aplicacoes que devem entrar no painel.
+              Se a empresa tiver Qase, informe o token, busque os projetos e selecione as aplicacoes. Cada projeto selecionado sera tratado como uma aplicacao separada no painel, permitindo gerenciar diferentes produtos ou softwares de forma independente.
             </p>
 
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -494,7 +494,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
                       <div>
                         <p className="text-sm font-semibold text-(--tc-text)">Projetos encontrados</p>
                         <p className="text-xs text-(--tc-text-muted)">
-                          {selectedQaseProjectCodes.length} selecionado(s). Cada projeto selecionado vira uma aplicacao no painel.
+                          {selectedQaseProjectCodes.length} de {qaseProjects.length} selecionado(s). Cada projeto vira uma aplicacao independente no painel, com suas proprias runs, metricas e kanban.
                         </p>
                       </div>
                       <div className="flex gap-2">
@@ -561,7 +561,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
                   </div>
                 ) : (
                   <div className="rounded-lg border border-dashed border-(--tc-border) bg-(--tc-surface) px-3 py-3 text-sm text-(--tc-text-muted)">
-                    Informe o token e clique em &quot;Buscar projetos&quot; para selecionar as aplicacoes da empresa.
+                    Informe o token e clique em &quot;Buscar projetos&quot; para selecionar as aplicacoes da empresa. Cada projeto da Qase sera cadastrado como uma aplicacao independente.
                   </div>
                 )}
               </div>

@@ -16,6 +16,7 @@ export type AppRecord = {
   name: string;
   slug: string;
   description?: string | null;
+  imageUrl?: string | null;
   qaseProjectCode?: string | null;
   source?: string | null;
   active: boolean;
@@ -63,8 +64,8 @@ function writeFile(data: ApplicationsDb) {
   fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), "utf-8");
 }
 
-function pgToRecord(r: { id: string; companyId?: string | null; companySlug?: string | null; name: string; slug: string; description?: string | null; qaseProjectCode?: string | null; source?: string | null; active: boolean; createdAt: Date; updatedAt: Date }): AppRecord {
-  return { id: r.id, companyId: r.companyId ?? undefined, companySlug: r.companySlug ?? undefined, name: r.name, slug: r.slug, description: r.description ?? null, qaseProjectCode: r.qaseProjectCode ?? null, source: r.source ?? null, active: r.active, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString() };
+function pgToRecord(r: { id: string; companyId?: string | null; companySlug?: string | null; name: string; slug: string; description?: string | null; imageUrl?: string | null; qaseProjectCode?: string | null; source?: string | null; active: boolean; createdAt: Date; updatedAt: Date }): AppRecord {
+  return { id: r.id, companyId: r.companyId ?? undefined, companySlug: r.companySlug ?? undefined, name: r.name, slug: r.slug, description: r.description ?? null, imageUrl: r.imageUrl ?? null, qaseProjectCode: r.qaseProjectCode ?? null, source: r.source ?? null, active: r.active, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString() };
 }
 
 export async function listApplications(filter?: { companySlug?: string }): Promise<AppRecord[]> {
@@ -112,6 +113,31 @@ export async function createApplication(input: ApplicationSeed): Promise<AppReco
   db.counter = (db.counter || 0) + 1;
   writeFile(db);
   return record;
+}
+
+export async function updateApplication(id: string, input: { name?: string; description?: string | null; imageUrl?: string | null; active?: boolean }): Promise<AppRecord | null> {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const existing = await prisma.application.findUnique({ where: { id } });
+    if (!existing) return null;
+    const r = await prisma.application.update({ where: { id }, data: { name: input.name ?? existing.name, description: input.description !== undefined ? input.description : existing.description, imageUrl: input.imageUrl !== undefined ? input.imageUrl : (existing as Record<string, unknown>).imageUrl as string | null ?? null, active: input.active ?? existing.active } });
+    return pgToRecord(r);
+  }
+  const db = readFile();
+  const idx = db.items.findIndex((item) => item.id === id);
+  if (idx < 0) return null;
+  const current = db.items[idx];
+  const updated: AppRecord = {
+    ...current,
+    name: input.name ?? current.name,
+    description: input.description !== undefined ? input.description : current.description,
+    imageUrl: input.imageUrl !== undefined ? input.imageUrl : current.imageUrl,
+    active: input.active ?? current.active,
+    updatedAt: new Date().toISOString(),
+  };
+  db.items[idx] = updated;
+  writeFile(db);
+  return updated;
 }
 
 export async function syncCompanyApplications(input: {

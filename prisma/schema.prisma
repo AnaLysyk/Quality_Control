@@ -369,6 +369,7 @@ model Application {
   name             String
   slug             String
   description      String?
+  imageUrl         String?
   qaseProjectCode  String?
   source           String?
   active           Boolean  @default(true)

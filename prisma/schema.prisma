@@ -65,6 +65,7 @@ model Company {
   notes        String?
   cep          String?
   linkedin_url String?
+  qase_token   String?
   qase_project_code  String?
   jira_base_url      String?
   jira_email         String?

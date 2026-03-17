@@ -71,6 +71,9 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
   const [selectedQaseProjectCodes, setSelectedQaseProjectCodes] = useState<string[]>([]);
   const [loadingQaseProjects, setLoadingQaseProjects] = useState(false);
   const [qaseProjectsError, setQaseProjectsError] = useState<string | null>(null);
+  const [showAddManual, setShowAddManual] = useState(false);
+  const [manualName, setManualName] = useState("");
+  const [manualCode, setManualCode] = useState("");
   const [jiraBaseUrl, setJiraBaseUrl] = useState("");
   const [jiraEmail, setJiraEmail] = useState("");
   const [jiraApiToken, setJiraApiToken] = useState("");
@@ -192,6 +195,38 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
       setQaseProjectsError(message);
     } finally {
       setLoadingQaseProjects(false);
+    }
+  }
+
+  function addManualProject() {
+    const code = (manualCode || "").trim().toUpperCase();
+    const name = (manualName || "").trim() || code;
+    if (!code) {
+      setQaseProjectsError("Informe o codigo do projeto Qase.");
+      return;
+    }
+    // avoid duplicates
+    if (qaseProjects.some((p) => p.code === code) || selectedQaseProjectCodes.includes(code)) {
+      setQaseProjectsError("Projeto ja adicionado.");
+      return;
+    }
+    // Determine status by checking fetched projects
+    const existsInFetched = qaseProjects.some((p) => p.code === code);
+    const project: QaseProjectOption = { code, title: name };
+    setQaseProjects((prev) => [...prev, project]);
+    setSelectedQaseProjectCodes((prev) => [...prev, code]);
+    if (!qaseProjectCode) setQaseProjectCode(code);
+    setManualCode("");
+    setManualName("");
+    setShowAddManual(false);
+    setQaseProjectsError(null);
+  }
+
+  function removeSelectedProject(code: string) {
+    setSelectedQaseProjectCodes((current) => current.filter((c) => c !== code));
+    if (qaseProjectCode === code) {
+      const remaining = selectedQaseProjectCodes.filter((c) => c !== code);
+      setQaseProjectCode(remaining[0] ?? "");
     }
   }
 
@@ -568,6 +603,19 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
                       })}
                     </div>
 
+                    <div className="mt-2">
+                      {/* Selected chips */}
+                      <div className="flex flex-wrap gap-2">
+                        {selectedProjects.map((p) => (
+                          <span key={p.code} className="inline-flex items-center gap-2 rounded-full bg-(--tc-surface) px-3 py-1 text-sm">
+                            <strong className="uppercase tracking-wide">{p.code}</strong>
+                            <span className="text-(--tc-text-muted)">{p.title}</span>
+                            <button type="button" onClick={() => removeSelectedProject(p.code)} className="ml-2 text-xs text-(--tc-text-muted)">x</button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
                     <label className="block text-sm">
                       Projeto principal
                       <select
@@ -588,6 +636,25 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
                         ))}
                       </select>
                     </label>
+                    {/* Manual add controls */}
+                    <div className="mt-2 flex gap-2">
+                      <button type="button" className="rounded-md border border-(--tc-border) px-3 py-1 text-xs font-semibold" onClick={() => setShowAddManual((s) => !s)}>
+                        {showAddManual ? "Cancelar" : "Adicionar manualmente"}
+                      </button>
+                      <button type="button" className="rounded-md border border-(--tc-border) px-3 py-1 text-xs font-semibold" onClick={handleFetchQaseProjects}>
+                        Buscar novamente
+                      </button>
+                    </div>
+
+                    {showAddManual && (
+                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                        <input placeholder="Nome amigavel (opcional)" value={manualName} onChange={(e) => setManualName(e.target.value)} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+                        <div className="flex gap-2">
+                          <input placeholder="Codigo Qase (ex: SFQ)" value={manualCode} onChange={(e) => setManualCode(e.target.value)} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+                          <button type="button" onClick={addManualProject} className="rounded-md bg-(--tc-accent,#ef0001) px-3 py-1 text-xs text-white">Adicionar</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="flex items-center gap-3 rounded-lg border border-dashed border-(--tc-accent)/30 bg-(--tc-accent-soft,rgba(239,0,1,0.03)) px-4 py-4 text-sm text-(--tc-text-muted)">

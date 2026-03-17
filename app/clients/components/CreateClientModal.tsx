@@ -71,6 +71,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
   const [selectedQaseProjectCodes, setSelectedQaseProjectCodes] = useState<string[]>([]);
   const [loadingQaseProjects, setLoadingQaseProjects] = useState(false);
   const [qaseProjectsError, setQaseProjectsError] = useState<string | null>(null);
+  const [searchProjects, setSearchProjects] = useState("");
   const [showAddManual, setShowAddManual] = useState(false);
   const [manualName, setManualName] = useState("");
   const [manualCode, setManualCode] = useState("");
@@ -158,7 +159,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ token, all: true }),
       });
       const data = (await res.json().catch(() => null)) as { items?: QaseProjectOption[]; error?: string } | null;
       if (!res.ok) {
@@ -551,6 +552,9 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
                           {selectedQaseProjectCodes.length} de {qaseProjects.length} selecionado(s). Cada projeto vira uma aplicacao independente no painel, com suas proprias runs, metricas e kanban.
                         </p>
                       </div>
+                      <div className="w-full sm:w-auto">
+                        <input value={searchProjects} onChange={(e) => setSearchProjects(e.target.value)} placeholder="Filtrar projetos por nome ou codigo" className="mt-1 w-full sm:w-64 rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)" />
+                      </div>
                       <div className="flex gap-2">
                         <button
                           type="button"
@@ -570,7 +574,13 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
                     </div>
 
                     <div className="grid gap-2 sm:grid-cols-2">
-                      {qaseProjects.map((project) => {
+                      {qaseProjects
+                        .filter((p) => {
+                          const q = searchProjects.trim().toLowerCase();
+                          if (!q) return true;
+                          return p.code.toLowerCase().includes(q) || (p.title || "").toLowerCase().includes(q);
+                        })
+                        .map((project) => {
                         const isSelected = selectedQaseProjectCodes.includes(project.code);
                         return (
                           <label

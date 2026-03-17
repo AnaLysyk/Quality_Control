@@ -162,8 +162,17 @@ export async function POST(req: NextRequest) {
     created_by: admin.email || admin.id,
   });
 
-  if (normalizedProjectCodes?.length) {
-    syncCompanyApplications({
+  console.error('[CLIENTS][POST] company stored:', JSON.stringify(company));
+
+  if (Array.isArray((input as any).qase_projects) && (input as any).qase_projects.length) {
+    const projects = (input as any).qase_projects
+      .filter((p: unknown): p is Record<string, unknown> => typeof p === "object" && p !== null)
+      .map((p: Record<string, unknown>) => ({ code: typeof p.code === "string" ? p.code.trim().toUpperCase() : "", title: typeof p.title === "string" ? p.title.trim() : undefined, imageUrl: typeof p.imageUrl === "string" ? p.imageUrl.trim() : null }));
+    if (projects.length) {
+      await syncCompanyApplications({ companyId: company.id, companySlug: company.slug, projects });
+    }
+  } else if (normalizedProjectCodes?.length) {
+    await syncCompanyApplications({
       companyId: company.id,
       companySlug: company.slug,
       projects: normalizedProjectCodes.map((code) => ({ code })),

@@ -24,6 +24,15 @@ export const metadata: Metadata = {
   title: "Quality Control",
   description: "Monitoramento inteligente de qualidade em tempo real.",
 };
+// Add default icons so browsers show the app logo in the tab
+metadata.icons = {
+  icon: [
+    { url: "/images/tc.png", type: "image/png" }
+  ],
+  apple: [
+    { url: "/images/tc.png" }
+  ]
+};
 
 export const viewport: Viewport = {
   width: "device-width",

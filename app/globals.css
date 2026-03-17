@@ -258,8 +258,10 @@ body::before {
     radial-gradient(circle at 78% 68%, rgba(1, 24, 72, 0.06), transparent 42%),
     url("/images/tc.png");
   background-repeat: no-repeat, no-repeat, no-repeat;
-  background-size: 900px 900px, 900px 900px, min(820px, 85vw);
-  background-position: -240px -260px, calc(100% + 220px) calc(100% + 260px), 50% 52%;
+  /* responsive background sizes to adapt on zoom and smaller viewports */
+  background-size: min(50vw, 900px) min(50vw, 900px), min(50vw, 900px) min(50vw, 900px), min(820px, 85vw);
+  /* use vw/vh offsets instead of fixed px so positions scale with zoom */
+  background-position: calc(-15vw) calc(-15vh), calc(100% + 15vw) calc(100% + 15vh), 50% 52%;
   opacity: var(--tc-watermark-opacity);
   filter: grayscale(100%);
 }

@@ -8,7 +8,7 @@ import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { fetchApi } from "@/lib/api";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, readApiError, unwrapEnvelopeData } from "@/lib/apiEnvelope";
-import { FiCheckCircle, FiExternalLink, FiEye, FiEyeOff, FiHome, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiUpload, FiUsers, FiX, FiXCircle } from "react-icons/fi";
+import { FiCheckCircle, FiExternalLink, FiEye, FiEyeOff, FiHome, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiUpload, FiUsers, FiX, FiXCircle, FiCloudLightning } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import Breadcrumb from "@/components/Breadcrumb";
 
@@ -177,6 +177,16 @@ function AdminClientsPage() {
   const [form, setForm] = useState<Partial<Client>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Qase integration UI states
+  const [qaseProjects, setQaseProjects] = useState<Array<{ code: string; title: string; status?: "valid" | "invalid" | "unknown" }>>([]);
+  const [loadingQaseProjects, setLoadingQaseProjects] = useState(false);
+  const [qaseProjectsError, setQaseProjectsError] = useState<string | null>(null);
+  const [searchProjects, setSearchProjects] = useState("");
+  const [onlyValid, setOnlyValid] = useState(false);
+  const [displayLimit, setDisplayLimit] = useState(10);
+  const [projectsOpen, setProjectsOpen] = useState(false);
+  const projectsRef = useRef<HTMLDivElement | null>(null);
+  const [validatingProjects, setValidatingProjects] = useState(false);
   const [activeTab, setActiveTab] = useState<"visao" | "pessoas">("visao");
   const [openCreate, setOpenCreate] = useState(false);
   const [companyAction, setCompanyAction] = useState<null | "activate" | "deactivate" | "delete">(null);
@@ -544,7 +554,35 @@ function AdminClientsPage() {
             "Empresa criada sem integraÃ§Ã£o. VocÃª pode configurar Qase depois (token + project code) ou seguir em modo manual.",
           );
         }
-        toast.success("Empresa cadastrada");
+        // Show richer feedback when Qase integration data was provided
+        try {
+          const messages: string[] = [];
+          if (created.qase_token) messages.push("Token salvo");
+          const providedCodes = Array.isArray(created.qase_project_codes) ? created.qase_project_codes : undefined;
+          if (providedCodes && providedCodes.length) messages.push(`Projetos vinculados: ${providedCodes.length}`);
+
+          // fetch created applications to show how many were generated
+          if (created.slug) {
+            try {
+              const appsRes = await fetchApi(`/api/applications?companySlug=${encodeURIComponent(created.slug)}`);
+              if (appsRes.ok) {
+                const appsJson = await appsRes.json().catch(() => null);
+                const apps = Array.isArray(appsJson?.items) ? appsJson.items : [];
+                if (apps.length) messages.push(`Aplicações geradas: ${apps.length}`);
+              }
+            } catch {
+              // ignore applications fetch errors
+            }
+          }
+
+          if (messages.length) {
+            toast.success(messages.join(" — "));
+          } else {
+            toast.success("Empresa cadastrada");
+          }
+        } catch (err) {
+          toast.success("Empresa cadastrada");
+        }
         return created;
       }
       return null;
@@ -990,44 +1028,174 @@ function AdminClientsPage() {
                   title="Integracao com Qase"
                   description="A empresa guarda o contexto base da integracao para projetos e aplicacoes."
                 >
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <DetailSelectField
-                      label="Modo de integracao"
-                      value={(isEditing ? (form.integrationMode ?? "manual") : currentIntegrationMode) as string}
-                      editable={isEditing}
-                      options={[
-                        { value: "manual", label: "Manual" },
-                        { value: "qase", label: "Qase" },
-                      ]}
-                      onChange={(v) => setForm((f) => ({ ...f, integrationMode: v as "qase" | "manual" }))}
-                    />
-                    <DetailField
-                      label="Qase Project Code"
-                      value={isEditing ? form.qaseProjectCode ?? "" : currentQaseProject ?? ""}
-                      editable={isEditing}
-                      onChange={(v) => setForm((f) => ({ ...f, qaseProjectCode: v }))}
-                    />
-                    <DetailTextArea
-                      label="Qase Project Codes"
-                      value={isEditing ? (((form.qaseProjectCodes !== undefined ? form.qaseProjectCodes : selected.qaseProjectCodes) ?? null)?.join("\n") ?? "") : currentQaseProjects ?? ""}
-                      editable={isEditing}
-                      onChange={(v) => {
-                        const codes = v
-                          .split(/[\s,;|]+/g)
-                          .map((code) => code.trim().toUpperCase())
-                          .filter(Boolean);
-                        const uniq = codes.length ? Array.from(new Set(codes)) : null;
-                        setForm((f) => ({ ...f, qaseProjectCodes: uniq }));
-                      }}
-                    />
-                    <DetailField
-                      label="Token da Qase"
-                      value={isEditing ? form.qaseToken ?? "" : currentHasQaseToken ? "Configurado" : "Nao configurado"}
-                      editable={isEditing}
-                      onChange={(v) => setForm((f) => ({ ...f, qaseToken: v }))}
-                      type={isEditing ? "password" : "text"}
-                      placeholder={isEditing ? "Deixe em branco para manter" : undefined}
-                    />
+                  <div className="space-y-3">
+                    {isEditing ? (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_auto] items-center">
+                          <label className="block text-sm md:col-span-2">
+                            Token da Qase
+                            <div className="relative mt-2">
+                                <input
+                                type="password"
+                                value={form.qaseToken ?? ""}
+                                onChange={(e) => setForm((f) => ({ ...f, qaseToken: e.target.value }))}
+                                placeholder="Deixe em branco para manter"
+                                className="mt-1 h-10 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#fff) px-3 text-sm"
+                              />
+                            </div>
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const token = (form.qaseToken ?? "").toString().trim();
+                              if (!token) {
+                                setQaseProjectsError("Informe o token da Qase antes de buscar os projetos.");
+                                return;
+                              }
+                              setLoadingQaseProjects(true);
+                              setQaseProjectsError(null);
+                              try {
+                                const res = await fetchApi("/api/admin/qase/projects", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ token, all: true }),
+                                });
+                                const data = await res.json().catch(() => null);
+                                if (!res.ok) throw new Error((data && (data.error || data.message)) || "Erro ao buscar projetos");
+                                const items = Array.isArray(data?.items) ? data.items.map((it: any) => ({ code: String(it.code).trim().toUpperCase(), title: String(it.title || it.code).trim(), status: "valid" as const })) : [];
+                                setQaseProjects(items);
+                                const existing = Array.isArray(form.qaseProjectCodes) ? form.qaseProjectCodes.map((c) => String(c).trim().toUpperCase()) : [];
+                                const preserved = existing.filter((c) => items.some((i: any) => i.code === c));
+                                setForm((f) => ({ ...f, qaseProjectCodes: preserved.length ? preserved : items.length === 1 ? [items[0].code] : existing }));
+                                setForm((f) => ({ ...f, qaseProjectCode: (f.qaseProjectCode ?? items[0]?.code ?? f.qaseProjectCode) }));
+                              } catch (err) {
+                                const msg = err instanceof Error ? err.message : "Erro ao buscar projetos";
+                                setQaseProjects([]);
+                                setQaseProjectsError(msg);
+                              } finally {
+                                setLoadingQaseProjects(false);
+                              }
+                            }}
+                            className="inline-flex items-center gap-2 h-10 rounded-lg bg-linear-to-b from-(--tc-accent,#ff4b4b) to-(--tc-accent-dark,#c30000) px-4 text-sm font-semibold text-white shadow-lg transition duration-150 hover:opacity-95"
+                          >
+                            {loadingQaseProjects ? "Buscando..." : "Buscar projetos"}
+                          </button>
+
+                        </div>
+
+                        {qaseProjectsError ? <div className="text-xs text-amber-800">{qaseProjectsError}</div> : null}
+
+                        {qaseProjects.length > 0 ? (
+                          <div className="space-y-3 rounded-xl border border-(--tc-border) bg-(--tc-surface) p-3">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-semibold">Projetos encontrados</p>
+                                <p className="text-xs text-(--tc-text-muted)">Selecione os projetos que deseja vincular — cada projeto vira uma aplicação independente.</p>
+                              </div>
+                              <div className="text-sm text-(--tc-text-muted)">{Math.min(displayLimit, qaseProjects.filter((p) => {
+                                const q = searchProjects.trim().toLowerCase();
+                                if (onlyValid && p.status !== "valid") return false;
+                                if (!q) return true;
+                                return p.code.toLowerCase().includes(q) || p.title.toLowerCase().includes(q);
+                              }).length)} carregados • {(Array.isArray(form.qaseProjectCodes) ? form.qaseProjectCodes.length : 0)} selecionado{(Array.isArray(form.qaseProjectCodes) && form.qaseProjectCodes.length !== 1) ? "s" : ""}</div>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              <div className="relative flex-1">
+                                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-(--tc-text-muted)" />
+                                <input value={searchProjects} onChange={(e) => setSearchProjects(e.target.value)} placeholder="Filtrar projetos" className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) pl-10 pr-3 py-2 text-sm text-(--tc-text)" />
+                              </div>
+                              <label className="ml-2 flex items-center gap-2 text-xs text-(--tc-text-muted)"><input type="checkbox" checked={onlyValid} onChange={(e) => setOnlyValid(e.target.checked)} className="h-4 w-4" /> Mostrar apenas válidos</label>
+                            </div>
+
+                            <div className="grid gap-2">
+                              {(() => {
+                                const filtered = qaseProjects.filter((p) => {
+                                  const q = searchProjects.trim().toLowerCase();
+                                  if (onlyValid && p.status !== "valid") return false;
+                                  if (!q) return true;
+                                  return p.code.toLowerCase().includes(q) || p.title.toLowerCase().includes(q);
+                                });
+                                const visible = filtered.slice(0, displayLimit);
+                                return visible.map((p) => {
+                                  const selected = Array.isArray(form.qaseProjectCodes) && form.qaseProjectCodes.includes(p.code);
+                                  return (
+                                    <label key={p.code} className={`flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm transition border ${selected ? "border-2 border-(--tc-accent,#ef0001) bg-(--tc-accent-soft,rgba(255,230,230,0.9))" : "border-transparent hover:border-(--tc-border) hover:bg-(--tc-surface-2)"}`}>
+                                      <input type="checkbox" checked={selected} onChange={() => {
+                                        const code = p.code;
+                                        const current = Array.isArray(form.qaseProjectCodes) ? [...form.qaseProjectCodes] : [];
+                                        if (current.includes(code)) {
+                                          setForm((f) => ({ ...f, qaseProjectCodes: current.filter((c) => c !== code) }));
+                                        } else {
+                                          setForm((f) => ({ ...f, qaseProjectCodes: [...current, code] }));
+                                        }
+                                      }} className="h-5 w-5" />
+                                      <div className="flex items-center gap-3 min-w-0">
+                                        <span className="flex h-8 w-8 items-center justify-center rounded-md bg-(--tc-surface-2) text-(--tc-text-muted)"><FiCloudLightning size={14} /></span>
+                                        <div className="min-w-0">
+                                          <div className="flex items-center gap-2">
+                                            <span className="block font-semibold text-(--tc-text)">{p.title}</span>
+                                            {p.status && <span className={`text-xs font-semibold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full ${p.status === "valid" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : p.status === "invalid" ? "bg-rose-50 text-rose-700 border border-rose-200" : "bg-slate-100 text-slate-600 border border-slate-200"}`}>{p.status === "valid" ? "Válido" : p.status === "invalid" ? "Inválido" : "Pendente"}</span>}
+                                          </div>
+                                          <span className="text-xs text-(--tc-text-muted)">{p.code}</span>
+                                        </div>
+                                      </div>
+                                    </label>
+                                  );
+                                });
+                              })()}
+                            </div>
+
+                            <div className="mt-2 flex items-center justify-between">
+                              <div className="text-xs text-(--tc-text-muted)">Exibindo {Math.min(displayLimit, qaseProjects.filter((p) => {
+                                const q = searchProjects.trim().toLowerCase();
+                                if (onlyValid && p.status !== "valid") return false;
+                                if (!q) return true;
+                                return p.code.toLowerCase().includes(q) || p.title.toLowerCase().includes(q);
+                              }).length)} de {qaseProjects.length} carregados</div>
+                              <div className="flex items-center gap-2">
+                                {qaseProjects.filter((p) => {
+                                  const q = searchProjects.trim().toLowerCase();
+                                  if (onlyValid && p.status !== "valid") return false;
+                                  if (!q) return true;
+                                  return p.code.toLowerCase().includes(q) || p.title.toLowerCase().includes(q);
+                                }).length > displayLimit ? (
+                                  <button type="button" onClick={() => setDisplayLimit((d) => d + 10)} className="rounded-md px-3 py-1 text-xs font-semibold hover:bg-(--tc-surface-2)">Carregar mais</button>
+                                ) : null}
+                                <button type="button" onClick={() => setProjectsOpen(false)} className="rounded-md border px-3 py-1 text-xs font-semibold">Fechar</button>
+                              </div>
+                            </div>
+
+                            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                              <div>
+                                <label className="block text-sm">Projeto principal
+                                  <select className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm" value={form.qaseProjectCode ?? ""} onChange={(e) => setForm((f) => ({ ...f, qaseProjectCode: e.target.value }))} disabled={!(Array.isArray(form.qaseProjectCodes) && form.qaseProjectCodes.length)}>
+                                    <option value="">{(Array.isArray(form.qaseProjectCodes) && form.qaseProjectCodes.length) ? "Selecione o projeto principal" : "Selecione primeiro os projetos vinculados"}</option>
+                                    {(Array.isArray(form.qaseProjectCodes) ? form.qaseProjectCodes : []).map((code) => {
+                                      const proj = qaseProjects.find((p) => p.code === code);
+                                      return <option key={code} value={code}>{proj ? `${proj.title} (${proj.code})` : code}</option>;
+                                    })}
+                                  </select>
+                                </label>
+                              </div>
+                              <div className="flex flex-col justify-center">
+                                <div className="text-sm font-medium">Aplicações que serão criadas</div>
+                                <div className="mt-1 text-xs text-(--tc-text-muted)">{(Array.isArray(form.qaseProjectCodes) ? form.qaseProjectCodes.length : 0)} aplicação{(Array.isArray(form.qaseProjectCodes) && form.qaseProjectCodes.length !== 1) ? "s" : ""}</div>
+                              </div>
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <div className="text-sm">
+                        {currentHasQaseToken ? (
+                          <div>Conexão: configurada — Projetos: {currentQaseProjects ?? "-"}</div>
+                        ) : (
+                          <div>Sem token da Qase configurado</div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </SectionCard>
 

@@ -4,7 +4,7 @@ import { listApplications, createApplication } from "../../../lib/applicationsSt
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const companySlug = url.searchParams.get("companySlug") || undefined;
-  const items = listApplications(companySlug ? { companySlug } : undefined);
+  const items = await listApplications(companySlug ? { companySlug } : undefined);
   return NextResponse.json({ items });
 }
 

@@ -47,6 +47,7 @@ type PrismaCompany = {
   notes: string | null;
   cep: string | null;
   linkedin_url: string | null;
+  qase_token: string | null;
   qase_project_code: string | null;
   jira_base_url: string | null;
   jira_email: string | null;
@@ -106,6 +107,7 @@ function toLocalCompany(c: PrismaCompany): LocalAuthCompany {
     notes: c.notes,
     cep: c.cep,
     linkedin_url: c.linkedin_url,
+    qase_token: c.qase_token ?? undefined,
     qase_project_code: c.qase_project_code,
     jira_base_url: c.jira_base_url,
     jira_email: c.jira_email,
@@ -356,6 +358,7 @@ export async function pgCreateLocalCompany(
       jira_base_url: (input.jira_base_url as string | null | undefined) ?? null,
       jira_email: (input.jira_email as string | null | undefined) ?? null,
       jira_api_token: (input.jira_api_token as string | null | undefined) ?? null,
+      qase_token: (input.qase_token as string | null | undefined) ?? null,
       integration_mode: (input.integration_mode as string | null | undefined) ?? "none",
       short_description: (input.short_description as string | null | undefined) ?? null,
       internal_notes: (input.internal_notes as string | null | undefined) ?? null,
@@ -394,6 +397,7 @@ export async function pgUpdateLocalCompany(
       ...(patch.qase_project_code !== undefined
         ? { qase_project_code: (patch.qase_project_code as string | null) ?? null }
         : {}),
+      ...(patch.qase_token !== undefined ? { qase_token: (patch.qase_token as string | null) ?? null } : {}),
       ...(patch.jira_base_url !== undefined
         ? { jira_base_url: (patch.jira_base_url as string | null) ?? null }
         : {}),

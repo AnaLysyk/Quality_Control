@@ -1,6 +1,20 @@
 {
   "items": [
     {
+      "id": "3f9c3473-963e-4ff6-a4d1-b0313bbf081e",
+      "created_at": "2026-03-17T06:53:28.411Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmmu9adxj00001spwuulwssfp",
+      "entity_label": "Test Co nlfu",
+      "metadata": {
+        "slug": "testco-1773730402552-rnpb",
+        "active": true
+      }
+    },
+    {
       "id": "093bb888-7076-4d26-9233-5be87795dd71",
       "created_at": "2026-03-17T06:42:13.107Z",
       "actor_user_id": "usr_dev",

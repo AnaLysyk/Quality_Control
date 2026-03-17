@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="8" ry="8" fill="#011848" />
+  <linearGradient id="g" x1="0" x2="1">
+    <stop offset="0" stop-color="#011848" />
+    <stop offset="1" stop-color="#ef0001" />
+  </linearGradient>
+  <rect x="2" y="2" width="60" height="60" rx="6" ry="6" fill="url(#g)" />
+  <text x="50%" y="52%" font-family="Poppins, Arial, sans-serif" font-weight="700" font-size="28" fill="#fff" text-anchor="middle" alignment-baseline="middle">TC</text>
+</svg>

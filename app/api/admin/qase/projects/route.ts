@@ -21,6 +21,8 @@ export async function POST(req: NextRequest) {
   const requestedToken = typeof body?.token === "string" ? body.token.trim() : "";
   const requestedSlug = typeof body?.companySlug === "string" ? body.companySlug.trim().toLowerCase() : "";
   const requestedBaseUrl = typeof body?.baseUrl === "string" ? body.baseUrl.trim() : "";
+  const fetchAll = Boolean(body?.all);
+  const pageLimit = typeof body?.limit === "number" && body.limit > 0 ? Math.min(200, body.limit) : 100;
 
   const settings = !requestedToken && requestedSlug ? await getClientQaseSettings(requestedSlug) : null;
   const token = requestedToken || settings?.token || "";
@@ -37,32 +39,79 @@ export async function POST(req: NextRequest) {
   });
 
   try {
-    const { data } = await client.getWithStatus<{ result?: { entities?: unknown[] } }>("/project");
-    const entities = Array.isArray(data.result?.entities) ? data.result.entities : [];
-    const items = entities
-      .map((item) => {
-        const record = asRecord(item) ?? {};
-        const code =
-          typeof record.code === "string"
-            ? record.code.trim().toUpperCase()
-            : typeof record.project === "string"
-              ? record.project.trim().toUpperCase()
-              : "";
-        const title =
-          typeof record.title === "string"
-            ? record.title.trim()
-            : typeof record.name === "string"
-              ? record.name.trim()
-              : code;
-        if (!code) return null;
-        return {
-          code,
-          title: title || code,
-        };
-      })
-      .filter((item): item is { code: string; title: string } => Boolean(item));
+    const items: Array<{ code: string; title: string }> = [];
 
-    return NextResponse.json({ items }, { status: 200 });
+    if (!fetchAll) {
+      const { data } = await client.getWithStatus<{ result?: { entities?: unknown[] } }>("/project");
+      const entities = Array.isArray(data.result?.entities) ? data.result.entities : [];
+      const pageItems = entities
+        .map((item) => {
+          const record = asRecord(item) ?? {};
+          const code =
+            typeof record.code === "string"
+              ? record.code.trim().toUpperCase()
+              : typeof record.project === "string"
+                ? record.project.trim().toUpperCase()
+                : "";
+          const title =
+            typeof record.title === "string"
+              ? record.title.trim()
+              : typeof record.name === "string"
+                ? record.name.trim()
+                : code;
+          if (!code) return null;
+          return {
+            code,
+            title: title || code,
+          };
+        })
+        .filter((item): item is { code: string; title: string } => Boolean(item));
+      items.push(...pageItems);
+    } else {
+      // fetch all pages using limit/offset until fewer results returned
+      let offset = 0;
+      while (true) {
+        const path = `/project?limit=${pageLimit}&offset=${offset}`;
+        const { data } = await client.getWithStatus<{ result?: { entities?: unknown[] } }>(path);
+        const entities = Array.isArray(data.result?.entities) ? data.result.entities : [];
+        const pageItems = entities
+          .map((item) => {
+            const record = asRecord(item) ?? {};
+            const code =
+              typeof record.code === "string"
+                ? record.code.trim().toUpperCase()
+                : typeof record.project === "string"
+                  ? record.project.trim().toUpperCase()
+                  : "";
+            const title =
+              typeof record.title === "string"
+                ? record.title.trim()
+                : typeof record.name === "string"
+                  ? record.name.trim()
+                  : code;
+            if (!code) return null;
+            return {
+              code,
+              title: title || code,
+            };
+          })
+          .filter((item): item is { code: string; title: string } => Boolean(item));
+        if (pageItems.length === 0) break;
+        items.push(...pageItems);
+        if (pageItems.length < pageLimit) break;
+        offset += pageLimit;
+      }
+    }
+
+    // dedupe by code
+    const seen = new Set<string>();
+    const deduped = items.filter((it) => {
+      if (seen.has(it.code)) return false;
+      seen.add(it.code);
+      return true;
+    });
+
+    return NextResponse.json({ items: deduped }, { status: 200 });
   } catch (error) {
     const statusCode = error instanceof QaseError ? error.status : 500;
     const message =

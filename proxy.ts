@@ -16,6 +16,10 @@ function readCookieValue(cookieHeader: string, name: string): string | null {
 
 export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  // Serve project logo at /favicon.ico so older browsers/tools find it
+  if (pathname === "/favicon.ico") {
+    return NextResponse.rewrite(new URL("/images/tc.png", req.url));
+  }
   const isPublicAsset =
     pathname.startsWith("/images") ||
     pathname.startsWith("/public") ||

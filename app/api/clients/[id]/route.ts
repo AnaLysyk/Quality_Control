@@ -171,8 +171,15 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
 
   if (!updated) return jsonError("Empresa nao encontrada", 404);
 
-  if (nextProjectCodes?.length) {
-    syncCompanyApplications({
+  if (Array.isArray((input as any).qase_projects) && (input as any).qase_projects.length) {
+    const projects = (input as any).qase_projects
+      .filter((p: unknown): p is Record<string, unknown> => typeof p === "object" && p !== null)
+      .map((p: Record<string, unknown>) => ({ code: typeof p.code === "string" ? p.code.trim().toUpperCase() : "", title: typeof p.title === "string" ? p.title.trim() : undefined, imageUrl: typeof p.imageUrl === "string" ? p.imageUrl.trim() : null }));
+    if (projects.length) {
+      await syncCompanyApplications({ companyId: updated.id, companySlug: updated.slug, projects });
+    }
+  } else if (nextProjectCodes?.length) {
+    await syncCompanyApplications({
       companyId: updated.id,
       companySlug: updated.slug,
       projects: nextProjectCodes.map((code) => ({ code })),

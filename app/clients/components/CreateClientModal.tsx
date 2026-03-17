@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 import { FiCheck, FiCloudLightning, FiEye, FiEyeOff, FiLink2, FiSearch, FiZap } from "react-icons/fi";
 
@@ -23,14 +23,19 @@ export type ClientFormValues = {
   qaseToken?: string;
   qaseProjectCode?: string;
   qaseProjectCodes?: string[];
+  qase_projects?: { code: string; title?: string; imageUrl?: string | null; status?: "unknown" | "valid" | "invalid" }[];
   jiraBaseUrl?: string;
   jiraEmail?: string;
   jiraApiToken?: string;
 };
 
+type ProjectStatus = "unknown" | "valid" | "invalid";
+
 type QaseProjectOption = {
   code: string;
   title: string;
+  status?: ProjectStatus;
+  imageUrl?: string | null;
 };
 
 type Props = {
@@ -63,7 +68,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
   const [notes, setNotes] = useState("");
   const [description, setDescription] = useState("");
   const [active, setActive] = useState(true);
-  const [integrationMode, setIntegrationMode] = useState<ClientIntegrationMode>("manual");
+  // integrationMode removed: Qase fields are always visible
   const [qaseToken, setQaseToken] = useState("");
   const [showQaseToken, setShowQaseToken] = useState(false);
   const [qaseProjectCode, setQaseProjectCode] = useState("");
@@ -71,8 +76,16 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
   const [selectedQaseProjectCodes, setSelectedQaseProjectCodes] = useState<string[]>([]);
   const [loadingQaseProjects, setLoadingQaseProjects] = useState(false);
   const [qaseProjectsError, setQaseProjectsError] = useState<string | null>(null);
+  const [testingQase, setTestingQase] = useState(false);
+  const [qaseTestStatus, setQaseTestStatus] = useState<"idle" | "ok" | "error">("idle");
+  const [qaseTestMessage, setQaseTestMessage] = useState<string | null>(null);
   const [searchProjects, setSearchProjects] = useState("");
   const [showAddManual, setShowAddManual] = useState(false);
+  const [onlyValid, setOnlyValid] = useState(false);
+  const [projectsOpen, setProjectsOpen] = useState(false);
+  const [displayLimit, setDisplayLimit] = useState(10);
+  const projectsRef = useRef<HTMLDivElement | null>(null);
+  const [validatingProjects, setValidatingProjects] = useState(false);
   const [manualName, setManualName] = useState("");
   const [manualCode, setManualCode] = useState("");
   const [jiraBaseUrl, setJiraBaseUrl] = useState("");
@@ -81,6 +94,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdClientId, setCreatedClientId] = useState<string | null>(clientId ?? null);
+  const [loadingClient, setLoadingClient] = useState(false);
 
   const selectedProjects = useMemo(
     () => qaseProjects.filter((project) => selectedQaseProjectCodes.includes(project.code)),
@@ -88,6 +102,66 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
   );
 
   if (!open) return null;
+
+  useEffect(() => {
+    if (!clientId) return;
+    let mounted = true;
+    (async () => {
+      setLoadingClient(true);
+      try {
+        const res = await fetch(`/api/clients/${encodeURIComponent(clientId as string)}`, { credentials: "include" });
+        if (!res.ok) return;
+        const data = await res.json().catch(() => null);
+        if (!data) return;
+        if (!mounted) return;
+        // populate fields
+        setName((data.name as string) ?? "");
+        setTaxId((data.tax_id as string) ?? "");
+        setZip((data.cep as string) ?? "");
+        setAddress((data.address as string) ?? "");
+        setPhone((data.phone as string) ?? "");
+        setWebsite((data.website as string) ?? "");
+        setLogoUrl((data.logo_url as string) ?? "");
+        setLinkedin((data.linkedin_url as string) ?? "");
+        setNotes((data.notes as string) ?? "");
+        setDescription((data.short_description as string) ?? "");
+        setActive(typeof data.active === "boolean" ? data.active : true);
+        setQaseToken((data.qase_token as string) ?? "");
+        const codes = Array.isArray(data.qase_project_codes) ? data.qase_project_codes.map((c: any) => (typeof c === "string" ? c : String(c))) : [];
+        setSelectedQaseProjectCodes(codes.map((c: string) => c.trim().toUpperCase()));
+        setQaseProjectCode((data.qase_project_code as string) ?? (codes?.[0] ?? ""));
+      } catch {
+        // ignore
+      } finally {
+        setLoadingClient(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [clientId]);
+
+  // close projects dropdown when clicking outside or pressing Escape
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (!projectsOpen) return;
+      const el = projectsRef.current;
+      if (!el) return;
+      if (e.target && el.contains(e.target as Node)) return;
+      setProjectsOpen(false);
+    }
+
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setProjectsOpen(false);
+    }
+
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [projectsOpen]);
 
   function resetQaseSelection() {
     setQaseProjectCode("");
@@ -109,7 +183,6 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
     setNotes("");
     setDescription("");
     setActive(true);
-    setIntegrationMode("manual");
     setQaseToken("");
     resetQaseSelection();
     setJiraBaseUrl("");
@@ -172,6 +245,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
             .map((item) => ({
               code: item.code.trim().toUpperCase(),
               title: item.title?.trim() || item.code.trim().toUpperCase(),
+              status: "valid" as ProjectStatus,
             }))
         : [];
 
@@ -199,6 +273,21 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
     }
   }
 
+  async function validateProjectCode(token: string, code: string) {
+    try {
+      const res = await fetch("/api/admin/qase/projects/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ token, code }),
+      });
+      const data = await res.json().catch(() => null);
+      return res.ok && data?.valid === true;
+    } catch {
+      return false;
+    }
+  }
+
   function addManualProject() {
     const code = (manualCode || "").trim().toUpperCase();
     const name = (manualName || "").trim() || code;
@@ -211,9 +300,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
       setQaseProjectsError("Projeto ja adicionado.");
       return;
     }
-    // Determine status by checking fetched projects
-    const existsInFetched = qaseProjects.some((p) => p.code === code);
-    const project: QaseProjectOption = { code, title: name };
+    const project: QaseProjectOption = { code, title: name, status: "unknown" };
     setQaseProjects((prev) => [...prev, project]);
     setSelectedQaseProjectCodes((prev) => [...prev, code]);
     if (!qaseProjectCode) setQaseProjectCode(code);
@@ -221,6 +308,46 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
     setManualName("");
     setShowAddManual(false);
     setQaseProjectsError(null);
+    // try validate in background
+    (async () => {
+      const token = qaseToken.trim();
+      if (!token) return;
+      const ok = await validateProjectCode(token, code);
+      setQaseProjects((prev) => prev.map((p) => (p.code === code ? { ...p, status: ok ? "valid" : "invalid" } : p)));
+    })();
+  }
+
+  useEffect(() => {
+    const hasPending = qaseProjects.some((p) => !p.status || p.status === "unknown");
+    const token = qaseToken.trim();
+    if (qaseProjects.length > 0 && hasPending && token && !validatingProjects) {
+      void validatePendingProjects();
+    }
+    // only when qaseProjects or qaseToken changes
+  }, [qaseProjects, qaseToken]);
+
+  async function validatePendingProjects() {
+    const token = qaseToken.trim();
+    if (!token) {
+      setQaseProjects((prev) => prev.map((p) => (p.status ? p : { ...p, status: "unknown" })));
+      return;
+    }
+    setValidatingProjects(true);
+    try {
+      for (const project of qaseProjects) {
+        if (project.status === "valid" || project.status === "invalid") continue;
+        try {
+          // validate sequentially to avoid burst
+          // eslint-disable-next-line no-await-in-loop
+          const ok = await validateProjectCode(token, project.code);
+          setQaseProjects((prev) => prev.map((p) => (p.code === project.code ? { ...p, status: ok ? "valid" : "invalid" } : p)));
+        } catch {
+          setQaseProjects((prev) => prev.map((p) => (p.code === project.code ? { ...p, status: "unknown" } : p)));
+        }
+      }
+    } finally {
+      setValidatingProjects(false);
+    }
   }
 
   function removeSelectedProject(code: string) {
@@ -241,22 +368,21 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
       return;
     }
 
-    if (integrationMode === "qase") {
+    // Validate Qase-related fields only when user selected projects or provided a token
+    {
       const token = qaseToken.trim();
       const selectedCodes = uniqCodes(selectedQaseProjectCodes);
       const primaryProject = qaseProjectCode.trim().toUpperCase();
 
-      if (!token) {
-        setError("Informe o token da Qase ou selecione 'Sem integracao no momento'.");
-        return;
-      }
-      if (!selectedCodes.length) {
-        setError("Busque os projetos na Qase e selecione ao menos uma aplicacao.");
-        return;
-      }
-      if (!primaryProject || !selectedCodes.includes(primaryProject)) {
-        setError("Selecione o projeto principal da integracao.");
-        return;
+      if (selectedCodes.length > 0) {
+        if (!token) {
+          setError("Informe o token da Qase para vincular projetos.");
+          return;
+        }
+        if (!primaryProject || !selectedCodes.includes(primaryProject)) {
+          setError("Selecione o projeto principal da integracao.");
+          return;
+        }
       }
     }
 
@@ -287,6 +413,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
     setBusy(true);
     try {
       const selectedCodes = uniqCodes(selectedQaseProjectCodes);
+      const qaseProjectsPayload = selectedProjects.map((p) => ({ code: p.code, title: p.title, imageUrl: p.imageUrl ?? null, status: p.status ?? "unknown" }));
       const result = await onCreate({
         name: name.trim(),
         taxId: taxId.trim() || undefined,
@@ -299,10 +426,11 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
         notes: notes.trim() || undefined,
         description: description.trim() || undefined,
         active,
-        integrationMode,
-        qaseToken: integrationMode === "qase" ? qaseToken.trim() || undefined : undefined,
-        qaseProjectCode: integrationMode === "qase" ? qaseProjectCode.trim().toUpperCase() || undefined : undefined,
-        qaseProjectCodes: integrationMode === "qase" ? selectedCodes : undefined,
+        integrationMode: "qase",
+        qaseToken: qaseToken.trim() || undefined,
+        qaseProjectCode: selectedCodes.length ? qaseProjectCode.trim().toUpperCase() || undefined : undefined,
+        qaseProjectCodes: selectedCodes.length ? selectedCodes : undefined,
+        qase_projects: qaseProjectsPayload.length ? qaseProjectsPayload : undefined,
         jiraBaseUrl: jiraUrl || undefined,
         jiraEmail: jiraMail || undefined,
         jiraApiToken: jiraToken || undefined,
@@ -314,7 +442,31 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
       setCreatedClientId(newId);
       resetForm();
       onClose();
-      toast.success("Empresa cadastrada");
+      try {
+        const messages: string[] = [];
+        if (qaseToken.trim()) messages.push("Token salvo");
+        if (Array.isArray(selectedQaseProjectCodes) && selectedQaseProjectCodes.length) messages.push(`Projetos vinculados: ${selectedQaseProjectCodes.length}`);
+        if (newId) {
+          try {
+            const appsRes = await fetch(`/api/applications?companySlug=${encodeURIComponent(newId)}`);
+            if (appsRes.ok) {
+              const appsJson = await appsRes.json().catch(() => null);
+              const apps = Array.isArray(appsJson?.items) ? appsJson.items : [];
+              if (apps.length) messages.push(`Aplicações geradas: ${apps.length}`);
+            }
+          } catch {
+            // ignore
+          }
+        }
+        if (messages.length) {
+          toast.success(messages.join(" — "));
+        } else {
+          toast.success("Empresa cadastrada");
+        }
+      } catch {
+        toast.success("Empresa cadastrada");
+      }
+
       if (newId && onOpenUser) {
         onOpenUser(newId);
       }
@@ -432,7 +584,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
           </label>
 
           <label className="block text-sm">
-            Upload de logo
+            Upload de logo 📤
             <input
               type="file"
               accept="image/*"
@@ -464,78 +616,54 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
               Se a empresa tiver Qase, informe o token, busque os projetos e selecione as aplicacoes. Cada projeto selecionado sera tratado como uma aplicacao separada no painel, permitindo gerenciar diferentes produtos ou softwares de forma independente.
             </p>
 
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <label className={`flex cursor-pointer items-start gap-3 rounded-lg border-2 px-3 py-3 text-sm transition ${integrationMode === "manual" ? "border-(--tc-primary,#011848) bg-(--tc-surface) shadow-sm" : "border-(--tc-border) bg-(--tc-surface) hover:border-(--tc-primary)/30"}`}>
-                <input
-                  type="radio"
-                  name="integrationMode"
-                  value="manual"
-                  checked={integrationMode === "manual"}
-                  onChange={() => setIntegrationMode("manual")}
-                  className="mt-0.5"
-                />
-                <span>
-                  <span className="font-semibold text-(--tc-text)">Sem integracao no momento</span>
-                  <span className="mt-0.5 block text-xs text-(--tc-text-muted)">Entrada manual de run, aplicacoes e kanban.</span>
-                </span>
-              </label>
-
-              <label className={`flex cursor-pointer items-start gap-3 rounded-lg border-2 px-3 py-3 text-sm transition ${integrationMode === "qase" ? "border-(--tc-accent,#ef0001) bg-(--tc-accent-soft,rgba(239,0,1,0.05)) shadow-sm" : "border-(--tc-border) bg-(--tc-surface) hover:border-(--tc-accent)/30"}`}>
-                <input
-                  type="radio"
-                  name="integrationMode"
-                  value="qase"
-                  checked={integrationMode === "qase"}
-                  onChange={() => setIntegrationMode("qase")}
-                  className="mt-0.5 accent-(--tc-accent,#ef0001)"
-                />
-                <span>
-                  <span className="flex items-center gap-1.5 font-semibold text-(--tc-text)"><FiZap size={13} className="text-(--tc-accent,#ef0001)" />Integrar com Qase agora</span>
-                  <span className="mt-0.5 block text-xs text-(--tc-text-muted)">Token + selecao dos projetos reais da conta.</span>
-                </span>
-              </label>
+            <div className="mt-3">
+              <p className="text-sm font-semibold text-(--tc-text)"><FiZap size={13} className="text-(--tc-accent,#ef0001)" /> Integração com Qase</p>
+              <p className="mt-1 text-xs text-(--tc-text-muted)">Informe o token da Qase (novo ou já salvo) e clique em "Buscar projetos" para carregar os projetos disponíveis. Selecione os projetos que deseja vincular — cada projeto selecionado será cadastrado como uma aplicação da empresa.</p>
             </div>
 
-            {integrationMode === "qase" ? (
-              <div className="mt-4 space-y-4">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
-                  <label className="block text-sm">
-                    Token da Qase
-                    <div className="relative mt-1">
-                      <input
-                        className="w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 pr-10 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
-                        type={showQaseToken ? "text" : "password"}
-                        value={qaseToken}
-                        onChange={(e) => {
-                          setQaseToken(e.target.value);
-                          resetQaseSelection();
-                        }}
-                        placeholder="Token da conta"
-                        autoComplete="off"
-                        spellCheck={false}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowQaseToken((v) => !v)}
-                        className="absolute inset-y-0 right-2 flex items-center text-(--tc-text-muted) hover:text-(--tc-text)"
-                        aria-label={showQaseToken ? "Esconder token" : "Mostrar token"}
-                        tabIndex={-1}
-                      >
-                        {showQaseToken ? <FiEyeOff size={16} aria-hidden /> : <FiEye size={16} aria-hidden />}
-                      </button>
-                    </div>
-                  </label>
+            <div className="mt-4 space-y-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] items-center">
+                <label className="block text-sm sm:col-span-2">
+                  Token da Qase
+                  <div className="relative mt-2">
+                    <input
+                      className="w-full h-10 rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#fff) px-3 pr-10 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+                      type={showQaseToken ? "text" : "password"}
+                      value={qaseToken}
+                      onChange={(e) => {
+                        setQaseToken(e.target.value);
+                        resetQaseSelection();
+                      }}
+                      placeholder="Token da conta"
+                      autoComplete="off"
+                      spellCheck={false}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowQaseToken((v) => !v)}
+                      className="absolute right-3 top-3 flex items-center text-(--tc-text-muted) hover:text-(--tc-text)"
+                      aria-label={showQaseToken ? "Esconder token" : "Mostrar token"}
+                      tabIndex={-1}
+                    >
+                      {showQaseToken ? <FiEyeOff size={16} aria-hidden /> : <FiEye size={16} aria-hidden />}
+                    </button>
+                  </div>
+                </label>
 
-                  <button
-                    type="button"
-                    className="mt-6 inline-flex items-center gap-2 rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-60"
-                    onClick={() => void handleFetchQaseProjects()}
-                    disabled={loadingQaseProjects}
-                  >
-                    <FiSearch size={14} />
-                    {loadingQaseProjects ? "Buscando..." : "Buscar projetos"}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 h-10 rounded-lg bg-linear-to-b from-(--tc-accent,#ff4b4b) to-(--tc-accent-dark,#c30000) px-4 text-sm font-semibold text-white shadow-lg transition duration-150 hover:opacity-95 disabled:opacity-60"
+                  onClick={() => void handleFetchQaseProjects()}
+                  disabled={loadingQaseProjects || !qaseToken}
+                >
+                  <FiSearch size={14} />
+                  {loadingQaseProjects ? "Buscando..." : "Buscar projetos"}
+                </button>
+              </div>
+
+              {!qaseToken ? (
+                <div className="mt-2 text-sm text-amber-600">Sem token da Qase configurado</div>
+              ) : null}
 
                 {qaseProjectsError ? (
                   <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
@@ -543,137 +671,150 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
                   </div>
                 ) : null}
 
+                {qaseTestMessage ? (
+                  <div className={`mt-2 rounded-md px-3 py-2 text-sm ${qaseTestStatus === "ok" ? "border border-green-200 bg-green-50 text-green-800" : "border border-rose-200 bg-rose-50 text-rose-800"}`}>
+                    {qaseTestMessage}
+                  </div>
+                ) : null}
+
                 {qaseProjects.length > 0 ? (
-                  <div className="space-y-3 rounded-xl border border-(--tc-border) bg-(--tc-surface) p-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="space-y-4 rounded-xl border border-(--tc-border) bg-(--tc-surface) p-4">
+                    <div className="flex items-center justify-between">
                       <div>
-                        <p className="flex items-center gap-2 text-sm font-semibold text-(--tc-text)"><FiCloudLightning size={14} className="text-(--tc-accent,#ef0001)" />Projetos encontrados</p>
-                        <p className="mt-0.5 text-xs text-(--tc-text-muted)">
-                          {selectedQaseProjectCodes.length} de {qaseProjects.length} selecionado(s). Cada projeto vira uma aplicacao independente no painel, com suas proprias runs, metricas e kanban.
-                        </p>
+                        <p className="flex items-center gap-2 text-sm font-semibold text-(--tc-text)"><FiCloudLightning size={14} className="text-(--tc-accent,#ef0001)" /> Projetos encontrados</p>
+                        <p className="mt-1 text-xs text-(--tc-text-muted)">Selecione os projetos que deseja vincular — cada projeto vira uma aplicação independente.</p>
                       </div>
-                      <div className="w-full sm:w-auto">
-                        <input value={searchProjects} onChange={(e) => setSearchProjects(e.target.value)} placeholder="Filtrar projetos por nome ou codigo" className="mt-1 w-full sm:w-64 rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)" />
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          className="rounded-md border border-(--tc-border) px-3 py-1 text-xs font-semibold text-(--tc-text-secondary) hover:bg-(--tc-surface-2)"
-                          onClick={selectAllQaseProjects}
-                        >
-                          Selecionar todos
-                        </button>
-                        <button
-                          type="button"
-                          className="rounded-md border border-(--tc-border) px-3 py-1 text-xs font-semibold text-(--tc-text-secondary) hover:bg-(--tc-surface-2)"
-                          onClick={clearQaseProjects}
-                        >
-                          Limpar
-                        </button>
-                      </div>
+                      <div className="text-sm text-(--tc-text-muted)">{Math.min(displayLimit, qaseProjects.filter((p) => {
+                        const q = searchProjects.trim().toLowerCase();
+                        if (onlyValid && p.status !== "valid") return false;
+                        if (!q) return true;
+                        return p.code.toLowerCase().includes(q) || (p.title || "").toLowerCase().includes(q);
+                      }).length)} carregados • {selectedProjects.length} selecionado{selectedProjects.length !== 1 ? "s" : ""}</div>
                     </div>
 
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {qaseProjects
-                        .filter((p) => {
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex-1">
+                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-(--tc-text-muted)" />
+                        <input value={searchProjects} onChange={(e) => setSearchProjects(e.target.value)} placeholder="Filtrar projetos" className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) pl-10 pr-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)" />
+                      </div>
+                      <label className="ml-2 flex items-center gap-2 text-xs text-(--tc-text-muted)">
+                        <input type="checkbox" checked={onlyValid} onChange={(e) => setOnlyValid(e.target.checked)} className="h-4 w-4" />
+                        <span>Mostrar apenas válidos</span>
+                      </label>
+                    </div>
+
+                    <div className="grid gap-2">
+                      {(() => {
+                        const filtered = qaseProjects.filter((p) => {
                           const q = searchProjects.trim().toLowerCase();
+                          if (onlyValid && p.status !== "valid") return false;
                           if (!q) return true;
                           return p.code.toLowerCase().includes(q) || (p.title || "").toLowerCase().includes(q);
-                        })
-                        .map((project) => {
-                        const isSelected = selectedQaseProjectCodes.includes(project.code);
-                        return (
-                          <label
-                            key={project.code}
-                            className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 px-3 py-3 text-sm transition ${
-                              isSelected
-                                ? "border-(--tc-accent,#ef0001) bg-(--tc-accent-soft,rgba(239,0,1,0.05)) shadow-sm"
-                                : "border-(--tc-border) bg-(--tc-surface-2) hover:border-(--tc-accent)/30"
-                            }`}
-                          >
-                            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded ${
-                              isSelected
-                                ? "bg-(--tc-accent,#ef0001) text-white"
-                                : "border border-(--tc-border) bg-(--tc-surface)"
-                            }`}>
-                              {isSelected ? <FiCheck size={12} /> : null}
-                            </span>
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => toggleSelectedQaseProject(project.code)}
-                              className="sr-only"
-                            />
-                            <span className="min-w-0">
-                              <span className="block font-semibold text-(--tc-text)">{project.title}</span>
-                              <span className="block text-xs uppercase tracking-[0.2em] text-(--tc-text-muted)">{project.code}</span>
-                            </span>
-                          </label>
-                        );
-                      })}
+                        });
+                        const visible = filtered.slice(0, displayLimit);
+                        return visible.map((project) => {
+                          const isSelected = selectedQaseProjectCodes.includes(project.code);
+                          return (
+                            <label
+                              key={project.code}
+                              className={`flex cursor-pointer items-center gap-3 rounded-lg px-4 py-3 text-sm transition border ${isSelected ? "border-2 border-(--tc-accent,#ef0001) bg-(--tc-accent-soft,rgba(255,230,230,0.9))" : "border-transparent hover:border-(--tc-border) hover:bg-(--tc-surface-2)"}`}
+                            >
+                              <input type="checkbox" checked={isSelected} onChange={() => toggleSelectedQaseProject(project.code)} className="h-5 w-5" />
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-(--tc-surface-2) text-(--tc-text-muted)"><FiCloudLightning size={14} /></span>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="block font-semibold text-(--tc-text)">{project.title}</span>
+                                    {project.status && (
+                                      <span className={`text-xs font-semibold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full ${project.status === "valid" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : project.status === "invalid" ? "bg-rose-50 text-rose-700 border border-rose-200" : "bg-slate-100 text-slate-600 border border-slate-200"}`}>
+                                        {project.status === "valid" ? "Válido" : project.status === "invalid" ? "Inválido" : "Pendente"}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="block text-xs text-(--tc-text-muted)">{project.code}</span>
+                                </div>
+                              </div>
+                            </label>
+                          );
+                        });
+                      })()}
                     </div>
 
-                    <div className="mt-2">
-                      {/* Selected chips */}
-                      <div className="flex flex-wrap gap-2">
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="text-xs text-(--tc-text-muted)">Exibindo {Math.min(displayLimit, qaseProjects.filter((p) => {
+                        const q = searchProjects.trim().toLowerCase();
+                        if (onlyValid && p.status !== "valid") return false;
+                        if (!q) return true;
+                        return p.code.toLowerCase().includes(q) || (p.title || "").toLowerCase().includes(q);
+                      }).length)} de {qaseProjects.length} carregados</div>
+                      <div className="flex items-center gap-2">
+                        {qaseProjects.filter((p) => {
+                          const q = searchProjects.trim().toLowerCase();
+                          if (onlyValid && p.status !== "valid") return false;
+                          if (!q) return true;
+                          return p.code.toLowerCase().includes(q) || (p.title || "").toLowerCase().includes(q);
+                        }).length > displayLimit ? (
+                          <button type="button" onClick={() => setDisplayLimit((d) => d + 10)} className="rounded-md px-3 py-1 text-xs font-semibold text-(--tc-text) hover:bg-(--tc-surface-2)">Carregar mais</button>
+                        ) : null}
+                        <button type="button" onClick={() => setProjectsOpen(false)} className="rounded-md border px-3 py-1 text-xs font-semibold">Fechar</button>
+                      </div>
+                    </div>
+
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-medium">{selectedProjects.length} projeto{selectedProjects.length !== 1 ? "s" : ""} selecionado{selectedProjects.length !== 1 ? "s" : ""}</div>
+                        {selectedProjects.length > 0 && <div className="text-xs text-(--tc-text-muted)">{selectedProjects.length} selecionado(s)</div>}
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-3">
                         {selectedProjects.map((p) => (
-                          <span key={p.code} className="inline-flex items-center gap-2 rounded-full bg-(--tc-surface) px-3 py-1 text-sm">
-                            <strong className="uppercase tracking-wide">{p.code}</strong>
-                            <span className="text-(--tc-text-muted)">{p.title}</span>
+                          <span key={p.code} className="inline-flex items-center gap-3 rounded-full border-2 border-(--tc-accent,#ef0001) bg-(--tc-accent-soft,rgba(255,230,230,0.9)) px-4 py-2 text-sm shadow-sm">
+                            <div className="flex items-center justify-center h-6 w-6 rounded-full bg-white text-(--tc-accent,#ef0001)"><FiCheck size={14} /></div>
+                            <div className="flex flex-col text-left">
+                              <strong className="text-sm">{p.title}</strong>
+                              <span className="text-xs text-(--tc-text-muted)">{p.code}</span>
+                            </div>
                             <button type="button" onClick={() => removeSelectedProject(p.code)} className="ml-2 text-xs text-(--tc-text-muted)">x</button>
                           </span>
                         ))}
                       </div>
                     </div>
 
-                    <label className="block text-sm">
-                      Projeto principal
-                      <select
-                        className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
-                        value={qaseProjectCode}
-                        onChange={(e) => {
-                          const code = e.target.value;
-                          setQaseProjectCode(code);
-                          setSelectedQaseProjectCodes((current) => (current.includes(code) ? current : [...current, code]));
-                        }}
-                        disabled={selectedProjects.length === 0}
-                      >
-                        <option value="">{selectedProjects.length ? "Selecione o projeto principal" : "Selecione primeiro os projetos"}</option>
-                        {selectedProjects.map((project) => (
-                          <option key={project.code} value={project.code}>
-                            {project.title} ({project.code})
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    {/* Manual add controls */}
-                    <div className="mt-2 flex gap-2">
-                      <button type="button" className="rounded-md border border-(--tc-border) px-3 py-1 text-xs font-semibold" onClick={() => setShowAddManual((s) => !s)}>
-                        {showAddManual ? "Cancelar" : "Adicionar manualmente"}
-                      </button>
-                      <button type="button" className="rounded-md border border-(--tc-border) px-3 py-1 text-xs font-semibold" onClick={handleFetchQaseProjects}>
-                        Buscar novamente
-                      </button>
-                    </div>
-
-                    {showAddManual && (
-                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                        <input placeholder="Nome amigavel (opcional)" value={manualName} onChange={(e) => setManualName(e.target.value)} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
-                        <div className="flex gap-2">
-                          <input placeholder="Codigo Qase (ex: SFQ)" value={manualCode} onChange={(e) => setManualCode(e.target.value)} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
-                          <button type="button" onClick={addManualProject} className="rounded-md bg-(--tc-accent,#ef0001) px-3 py-1 text-xs text-white">Adicionar</button>
-                        </div>
+                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-sm">Projeto principal
+                          <select
+                            className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+                            value={qaseProjectCode}
+                            onChange={(e) => {
+                              const code = e.target.value;
+                              setQaseProjectCode(code);
+                              setSelectedQaseProjectCodes((current) => (current.includes(code) ? current : [...current, code]));
+                            }}
+                            disabled={selectedProjects.length === 0}
+                          >
+                            <option value="">{selectedProjects.length ? "Selecione o projeto principal" : "Selecione primeiro os projetos vinculados"}</option>
+                            {selectedProjects.map((project) => (
+                              <option key={project.code} value={project.code}>
+                                {project.title} ({project.code})
+                              </option>
+                            ))}
+                          </select>
+                        </label>
                       </div>
-                    )}
+                      <div className="flex flex-col justify-center">
+                        <div className="text-sm font-medium">Aplicações que serão criadas</div>
+                        <div className="mt-1 text-xs text-(--tc-text-muted)">{selectedProjects.length} aplicação{selectedProjects.length !== 1 ? "s" : ""}</div>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3 rounded-lg border border-dashed border-(--tc-accent)/30 bg-(--tc-accent-soft,rgba(239,0,1,0.03)) px-4 py-4 text-sm text-(--tc-text-muted)">
                     <FiSearch size={18} className="shrink-0 text-(--tc-accent,#ef0001) opacity-60" />
-                    <span>Informe o token e clique em &quot;Buscar projetos&quot; para selecionar as aplicacoes da empresa. Cada projeto da Qase sera cadastrado como uma aplicacao independente.</span>
+                    <span>Informe o token e clique em "Buscar projetos" para selecionar as aplicações da empresa. Cada projeto da Qase será cadastrado como uma aplicação independente.</span>
                   </div>
                 )}
               </div>
-            ) : null}
+            
 
             <div className="mt-4 rounded-lg border border-(--tc-border) bg-(--tc-surface) p-3">
               <p className="flex items-center gap-2 text-sm font-semibold text-(--tc-text)"><span className="flex h-5 w-5 items-center justify-center rounded bg-(--tc-primary,#011848) text-white"><FiLink2 size={10} /></span>Jira (opcional)</p>

@@ -9,8 +9,8 @@ export type RequestProfileType =
 export type RequestProfileTypeLabel =
   | "Usuario Testing Company"
   | "Usuario Empresa"
-  | "Usuario Lider TC"
-  | "Suporte tecnico";
+  | "Lider TC"
+  | "Suporte Tecnico";
 
 export type ReviewQueue = "admin_and_global" | "global_only";
 
@@ -21,8 +21,8 @@ function normalizeText(value: string) {
 export function toRequestProfileTypeLabel(profileType: RequestProfileType): RequestProfileTypeLabel {
   if (profileType === "testing_company_user") return "Usuario Testing Company";
   if (profileType === "company_user") return "Usuario Empresa";
-  if (profileType === "testing_company_lead") return "Usuario Lider TC";
-  return "Suporte tecnico";
+  if (profileType === "testing_company_lead") return "Lider TC";
+  return "Suporte Tecnico";
 }
 
 export function normalizeRequestProfileType(value: string | null | undefined): RequestProfileType | null {

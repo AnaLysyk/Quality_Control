@@ -8,8 +8,8 @@ import styles from "./ForgotPasswordClient.module.css";
 const PROFILE_OPTIONS = [
   { value: "testing_company_user", label: "Usuário Testing Company" },
   { value: "company_user", label: "Usuário da Empresa" },
-  { value: "testing_company_lead", label: "Usuário Líder TC" },
-  { value: "technical_support", label: "Suporte Técnico" },
+  { value: "testing_company_lead", label: "Lider TC" },
+  { value: "technical_support", label: "Suporte Tecnico" },
 ] as const;
 
 export default function ForgotPasswordClient() {

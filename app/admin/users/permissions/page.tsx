@@ -80,8 +80,8 @@ type ModuleSummaryItem = {
 
 const ROLE_FILTERS: Array<{ value: RoleFilter; label: string; hint: string }> = [
   { value: "all", label: "Todos", hint: "Todos os tipos de perfil" },
-  { value: "admin", label: "Usuario Lider TC", hint: "Perfil administrativo" },
-  { value: "dev", label: "Suporte tecnico", hint: "Perfil Global" },
+  { value: "admin", label: "Lider TC", hint: "Perfil administrativo" },
+  { value: "dev", label: "Suporte Tecnico", hint: "Perfil Global" },
   { value: "company", label: "Usuario Empresa", hint: "Conta institucional da empresa" },
   { value: "user", label: "Usuario Testing Company", hint: "Usuario vinculado" },
 ];

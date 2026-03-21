@@ -1,3 +1,49 @@
+Resumo das alterações
+-------------------
+
+- Adiciona suporte a múltiplas integrações por empresa (`CompanyIntegration`).
+- Migrações Prisma para `CompanyIntegration` e enum `Role`.
+- Script de backfill para migrar campos legados (Qase/Jira) para `company_integrations`.
+- Endpoints API atualizados (`/api/clients`) para aceitar e retornar `integrations`.
+- Frontend: modal de criação/edição de clientes envia `integrations` (compatibilidade legada preservada).
+- Tests: testes de integração adicionados para persistência de integrações.
+- Corrige workflow `.github/workflows/sync-jira.yml` (YAML parse).
+
+Notas de migração
+-----------------
+
+1. Rodar migrations Prisma:
+
+```bash
+npx prisma migrate deploy
+npx prisma generate
+```
+
+2. Executar backfill (opcional, para migrar dados legados):
+
+```bash
+npm run backfill:company-integrations
+```
+
+3. Verificar variáveis do GitHub Actions:
+
+- Adicionar `JIRA_SYNC_BEARER` em Secrets e `SITE_BASE_URL` e `JIRA_SYNC_COMPANIES` em Variables (repo/org) para o workflow `sync-jira` não exibir avisos.
+
+Testes e verificação
+--------------------
+
+- `npx tsc --noEmit` — sem erros depois das alterações.
+- `npm test` — suite principal executou; há logs esperados de criação de usuários (unique constraints em testes paralelos são normais).
+- Recomendo rodar CI completo em branch para validar geração do Prisma Client em ambiente limpo.
+
+Pontos a revisar antes do merge
+-------------------------------
+
+- Remover casts `any` usados como mitigação temporária em `pgStore` e scripts de seed.
+- Validar secrets/variables necessários no repositório/orga.
+- Revisar scripts de migrations/backfill em staging antes de rodar em produção.
+
+Pull request criado automaticamente pelo agente — por favor revise os diffs e descrições.
 # PR: chore: remove prisma; add BackendClient, test and httpx
 
 ## Resumo

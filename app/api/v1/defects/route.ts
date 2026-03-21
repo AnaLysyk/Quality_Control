@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { isCompanyUser } from "@/lib/rbac/companyAccess";
+import { getQaseIntegrationSettings } from "@/lib/integrations";
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
@@ -64,9 +65,9 @@ function normalizeDefectList(entities: unknown[], projectCode?: string): Defect[
     .filter(Boolean) as Defect[];
 }
 
-async function fetchProjectDefects(projectCode: string): Promise<Defect[]> {
+async function fetchProjectDefects(projectCode: string, token: string): Promise<Defect[]> {
   const res = await fetch(`${QASE_BASE_URL}/v1/defect/${encodeURIComponent(projectCode)}?limit=100&offset=0`, {
-    headers: { Token: QASE_TOKEN, Accept: "application/json" },
+    headers: { Token: token, Accept: "application/json" },
     cache: "no-store",
   });
 
@@ -88,14 +89,18 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, error: { message: "Sem permissao" } }, { status: 403 });
   }
 
-  const project = normalizeString(url.searchParams.get("project")) || "ALL";
+  const project = normalizeString(url.searchParams.get("project")) || null;
 
-  if (!QASE_TOKEN) {
+  const companySlug = auth.companySlug ?? null;
+  const qaseSettings = companySlug ? await getQaseIntegrationSettings(companySlug) : null;
+  const tokenToUse = (qaseSettings && qaseSettings.token) ? qaseSettings.token : QASE_TOKEN;
+
+  if (!tokenToUse) {
     return NextResponse.json({ success: true, data: [], warning: "QASE_API_TOKEN ausente" }, { status: 200 });
   }
 
-  const projects = project.toUpperCase() === "ALL" ? PROJECTS_FALLBACK : [project];
-  const lists = await Promise.all(projects.map((p) => fetchProjectDefects(p)));
+  const projects = project ? [project] : qaseSettings?.projects?.length ? qaseSettings.projects : PROJECTS_FALLBACK;
+  const lists = await Promise.all(projects.map((p) => fetchProjectDefects(p, tokenToUse)));
   const merged = lists.flat();
 
   return NextResponse.json({ success: true, data: merged }, { status: 200 });

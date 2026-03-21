@@ -35,6 +35,17 @@ export const ClientSchema = z
     jira_api_token: z.string().optional().nullable(),
     integration_mode: z.enum(["none", "qase", "jira", "manual", "other"]).optional().nullable(),
     integration_type: z.enum(["none", "qase", "jira", "manual", "other"]).optional().nullable(),
+    integrations: z
+      .array(
+        z.object({
+          id: z.string().optional(),
+          type: z.enum(["QASE", "JIRA", "MANUAL", "OTHER"]),
+          config: z.record(z.string(), z.any()).optional().nullable(),
+          createdAt: z.string().optional().nullable(),
+        }),
+      )
+      .optional()
+      .nullable(),
     short_description: z.string().optional().nullable(),
     internal_notes: z.string().optional().nullable(),
     extra_notes: z.string().optional().nullable(),
@@ -76,6 +87,14 @@ export const ClientCreateRequestSchema = z
     jira_email: OptionalStringSchema.optional(),
     jira_api_token: OptionalStringSchema.optional(),
     integration_mode: z.enum(["none", "qase", "jira", "manual", "other"]).optional(),
+    integrations: z
+      .array(
+        z.object({
+          type: z.enum(["QASE", "JIRA", "MANUAL", "OTHER"]),
+          config: z.record(z.string(), z.any()).optional().nullable(),
+        }),
+      )
+      .optional(),
     status: z.enum(["active", "inactive", "archived"]).optional(),
     slug: OptionalStringSchema.optional(),
     active: z.boolean().optional(),

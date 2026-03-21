@@ -36,6 +36,8 @@ type Props = {
 const ROLE_OPTIONS = [
   { value: "client_admin", label: "Empresa" },
   { value: "client_user", label: "Usuario" },
+  { value: "leader_tc", label: "Líder TC" },
+  { value: "technical_support", label: "Suporte Técnico" },
   { value: "it_dev", label: "Global" },
   { value: "global_admin", label: "Admin" },
 ] as const;

@@ -21,7 +21,7 @@ model User {
   user               String?   @unique
   password_hash      String
   globalRole         String?
-  role               String?   @default("user")
+  role               Role?     @default(user)
   status             String    @default("active")
   active             Boolean   @default(true)
   is_global_admin    Boolean   @default(false)
@@ -71,6 +71,7 @@ model Company {
   jira_email         String?
   jira_api_token     String?
   integration_mode   String?  @default("none")
+  integrations       CompanyIntegration[]
   short_description  String?
   internal_notes     String?
   created_by   String?
@@ -86,11 +87,46 @@ model Company {
   @@map("companies")
 }
 
+enum IntegrationType {
+  QASE
+  JIRA
+  MANUAL
+  OTHER
+
+}
+
+// Enum for application roles — values match existing string roles in DB
+enum Role {
+  admin
+  it_dev
+  dev
+  company_admin
+  company
+  user
+  viewer
+  support
+  leader_tc
+  technical_support
+}
+
+model CompanyIntegration {
+  id         String          @id @default(cuid())
+  companyId  String
+  type       IntegrationType
+  // store credentials/config per integration as JSON (encrypted at rest recommended)
+  config     Json?
+  createdAt  DateTime        @default(now())
+
+  company    Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("company_integrations")
+}
+
 model Membership {
   id        String   @id @default(cuid())
   userId    String
   companyId String
-  role      String?  @default("user")
+  role      Role?    @default(user)
   capabilities String[] @default([])
   createdAt DateTime @default(now())
 
@@ -105,7 +141,7 @@ model UserCompanyLink {
   id          String   @id @default(cuid())
   userId      String
   companyId   String
-  role        String?
+  role        Role?
   permissions String[] @default([])
   active      Boolean  @default(true)
 
@@ -207,7 +243,6 @@ model TicketComment {
   body         String
   deletedAt    DateTime?
   createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
 
   ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   author   User   @relation(fields: [authorUserId], references: [id])
@@ -250,7 +285,7 @@ model UserCompany {
   id         String @id @default(cuid())
   user_id    String
   company_id String
-  role       String @default("user")
+  role       Role   @default(user)
 
   @@unique([user_id, company_id], name: "user_id_company_id")
   @@map("user_companies")

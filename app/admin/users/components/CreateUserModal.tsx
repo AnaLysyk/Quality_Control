@@ -28,6 +28,8 @@ type Props = {
 const ROLE_OPTIONS = [
   { value: "client_admin", label: "Empresa" },
   { value: "client_user", label: "Usuario" },
+  { value: "leader_tc", label: "Líder TC" },
+  { value: "technical_support", label: "Suporte Técnico" },
 ];
 const EMPTY_JOB_TITLE = "__empty_job_title__";
 
@@ -37,7 +39,7 @@ export function CreateUserModal({
   clients,
   onClose,
   onCreated,
-  initialRole = "client_user",
+  initialRole = "admin",
   lockRole = false,
   showCompanyField = true,
   requireCompanySelection = false,
@@ -259,7 +261,7 @@ export function CreateUserModal({
                     className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Minimo de 8 caracteres"
+                    placeholder="Minimo 8 caracteres"
                     required
                   />
                   <span className="mt-1 block text-xs text-gray-500">Obrigatoria para criar perfil admin/global.</span>

@@ -76,6 +76,9 @@ function mapCompany(company: LocalAuthCompany) {
     jira_api_token: asString(company.jira_api_token),
     integration_mode: asString(company.integration_mode),
     integration_type: asString((company as { integration_type?: unknown }).integration_type),
+    integrations: Array.isArray((company as any).integrations)
+      ? (company as any).integrations.map((i: any) => ({ id: i.id ?? undefined, type: i.type, config: i.config ?? undefined, createdAt: i.createdAt ?? undefined }))
+      : undefined,
     short_description: asString(company.short_description),
     internal_notes: asString(company.internal_notes),
     extra_notes: asString(company.extra_notes),
@@ -123,6 +126,22 @@ export async function POST(req: NextRequest) {
 
   const integrationType = (input as { integration_type?: string | null }).integration_type ?? null;
   const normalizedProjectCodes = normalizeProjectCodes(input.qase_project_codes) ?? normalizeProjectCodes(input.qase_project_code);
+  // build integrations array (support legacy qase/jira fields)
+  const integrations: Array<{ type: string; config?: Record<string, unknown> }> = [];
+  if (input.integrations && Array.isArray((input as any).integrations)) {
+    for (const it of (input as any).integrations) {
+      if (!it || typeof it !== "object") continue;
+      integrations.push({ type: it.type, config: it.config ?? {} });
+    }
+  }
+  // legacy Qase
+  if (input.qase_token || normalizedProjectCodes?.length) {
+    integrations.push({ type: "QASE", config: { token: input.qase_token ?? null, projects: normalizedProjectCodes ?? [] } });
+  }
+  // legacy Jira
+  if (input.jira_api_token || input.jira_base_url) {
+    integrations.push({ type: "JIRA", config: { baseUrl: input.jira_base_url ?? null, email: input.jira_email ?? null, apiToken: input.jira_api_token ?? null } });
+  }
   const legacyProjectCode = input.qase_project_code ?? normalizedProjectCodes?.[0] ?? null;
   const resolvedNotes =
     input.notes ??
@@ -156,6 +175,7 @@ export async function POST(req: NextRequest) {
     jira_api_token: input.jira_api_token ?? null,
     integration_mode: input.integration_mode ?? "manual",
     integration_type: integrationType ?? input.integration_mode ?? "manual",
+    integrations: integrations.length ? integrations : undefined,
     status: input.status ?? "active",
     active: input.active ?? true,
     created_at: new Date().toISOString(),
@@ -169,13 +189,14 @@ export async function POST(req: NextRequest) {
       .filter((p: unknown): p is Record<string, unknown> => typeof p === "object" && p !== null)
       .map((p: Record<string, unknown>) => ({ code: typeof p.code === "string" ? p.code.trim().toUpperCase() : "", title: typeof p.title === "string" ? p.title.trim() : undefined, imageUrl: typeof p.imageUrl === "string" ? p.imageUrl.trim() : null }));
     if (projects.length) {
-      await syncCompanyApplications({ companyId: company.id, companySlug: company.slug, projects });
+      await syncCompanyApplications({ companyId: company.id, companySlug: company.slug, projects, source: "qase" });
     }
   } else if (normalizedProjectCodes?.length) {
     await syncCompanyApplications({
       companyId: company.id,
       companySlug: company.slug,
       projects: normalizedProjectCodes.map((code) => ({ code })),
+      source: "qase",
     });
   }
 

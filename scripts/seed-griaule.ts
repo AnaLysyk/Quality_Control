@@ -33,8 +33,8 @@ async function upsertUser(email: string, name: string, passwordHash: string) {
 async function upsertLink(userId: string, companyId: string, role: string) {
   return prisma.userCompany.upsert({
     where: { user_id_company_id: { user_id: userId, company_id: companyId } },
-    update: { role },
-    create: { user_id: userId, company_id: companyId, role },
+    update: { role: role as any },
+    create: { user_id: userId, company_id: companyId, role: role as any },
   });
 }
 

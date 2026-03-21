@@ -61,11 +61,21 @@ function normalizeProjectCodes(value: unknown): string[] {
 export async function getClientQaseSettings(slug: string): Promise<QaseSettings | null> {
   if (!slug) return null;
   const company = await findLocalCompanyBySlug(slug);
+  // Prefer integrations stored on the company (new model). Fall back to legacy fields.
+  const companyIntegration = Array.isArray((company as any)?.integrations)
+    ? (company as any).integrations.find((it: any) => String(it?.type ?? "").toUpperCase() === "QASE")
+    : null;
 
   const companyToken =
-    typeof company?.qase_token === "string" && company.qase_token.trim() ? company.qase_token.trim() : null;
-  const companyProjectCode = normalizeProjectCode(company?.qase_project_code);
+    (companyIntegration && companyIntegration.config && typeof companyIntegration.config.token === "string" && companyIntegration.config.token.trim())
+      ? companyIntegration.config.token.trim()
+      : typeof company?.qase_token === "string" && company.qase_token.trim()
+      ? company.qase_token.trim()
+      : null;
+
+  const companyProjectCode = normalizeProjectCode(companyIntegration?.config?.projects ? (Array.isArray(companyIntegration.config.projects) ? companyIntegration.config.projects[0] : company?.qase_project_code) : company?.qase_project_code);
   const companyProjectCodes = [
+    ...(companyIntegration && Array.isArray(companyIntegration.config?.projects) ? companyIntegration.config.projects.map(String) : []),
     ...normalizeProjectCodes(company?.qase_project_codes),
     ...normalizeProjectCodes(company?.qase_project_code),
   ];

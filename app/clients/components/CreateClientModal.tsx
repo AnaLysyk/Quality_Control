@@ -27,6 +27,7 @@ export type ClientFormValues = {
   jiraBaseUrl?: string;
   jiraEmail?: string;
   jiraApiToken?: string;
+  integrations?: { type: string; config?: Record<string, unknown> }[];
 };
 
 type ProjectStatus = "unknown" | "valid" | "invalid";
@@ -414,6 +415,15 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
     try {
       const selectedCodes = uniqCodes(selectedQaseProjectCodes);
       const qaseProjectsPayload = selectedProjects.map((p) => ({ code: p.code, title: p.title, imageUrl: p.imageUrl ?? null, status: p.status ?? "unknown" }));
+      const integrationsPayload: { type: string; config?: Record<string, unknown> }[] = [];
+      // build integrations array for multi-integration support
+      if (qaseToken.trim() || (selectedCodes.length > 0)) {
+        integrationsPayload.push({ type: "QASE", config: { token: qaseToken.trim() || null, projects: selectedCodes.length ? selectedCodes : undefined } });
+      }
+      if (jiraUrl || jiraMail || jiraToken) {
+        integrationsPayload.push({ type: "JIRA", config: { baseUrl: jiraUrl || null, email: jiraMail || null, apiToken: jiraToken || null } });
+      }
+
       const result = await onCreate({
         name: name.trim(),
         taxId: taxId.trim() || undefined,
@@ -426,7 +436,6 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
         notes: notes.trim() || undefined,
         description: description.trim() || undefined,
         active,
-        integrationMode: "qase",
         qaseToken: qaseToken.trim() || undefined,
         qaseProjectCode: selectedCodes.length ? qaseProjectCode.trim().toUpperCase() || undefined : undefined,
         qaseProjectCodes: selectedCodes.length ? selectedCodes : undefined,
@@ -434,6 +443,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
         jiraBaseUrl: jiraUrl || undefined,
         jiraEmail: jiraMail || undefined,
         jiraApiToken: jiraToken || undefined,
+        integrations: integrationsPayload.length ? integrationsPayload : undefined,
       });
 
       if (result === null || result === undefined) return;

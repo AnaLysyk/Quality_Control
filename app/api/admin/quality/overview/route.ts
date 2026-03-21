@@ -59,7 +59,10 @@ function mapLocalCompanies(companies: LocalAuthCompany[]): ClientRow[] {
     name: (company.name ?? company.company_name ?? "").toString() || null,
     slug: company.slug ?? null,
     logo_url: (company as { logo_url?: string | null }).logo_url ?? null,
-    qase_project_code: (company as { qase_project_code?: string | null }).qase_project_code ?? null,
+    qase_project_code:
+      Array.isArray((company as any).integrations)
+        ? (((company as any).integrations.find((it: any) => String(it?.type ?? "").toUpperCase() === "QASE")?.config?.projects ?? []) as any[])[0] ?? (company as any).qase_project_code ?? null
+        : (company as { qase_project_code?: string | null }).qase_project_code ?? null,
     active: company.active ?? true,
   }));
 }

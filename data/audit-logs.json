@@ -1,6 +1,146 @@
 {
   "items": [
     {
+      "id": "2e9a517f-a453-4c71-9bc3-67c51db36443",
+      "created_at": "2026-03-21T20:48:23.273Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn0svgzk000r1sys8m2rvqsv",
+      "entity_label": "Test Co p0rg",
+      "metadata": {
+        "slug": "testco-1774126098531-e8hg",
+        "active": true
+      }
+    },
+    {
+      "id": "a3e9b2e1-8c15-4770-9fa1-ca111f5537fc",
+      "created_at": "2026-03-21T20:43:03.555Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn0somdv000o1sys5xqt7dtz",
+      "entity_label": "Test Co 96ov",
+      "metadata": {
+        "slug": "testco-1774125777111-szed",
+        "active": true
+      }
+    },
+    {
+      "id": "26a40a11-f9ad-4113-b58d-b203bfdaa7ea",
+      "created_at": "2026-03-21T20:34:46.389Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn0sdzd9000l1sysfjwjgkin",
+      "entity_label": "Test Co 55vo",
+      "metadata": {
+        "slug": "testco-1774125282377-g035",
+        "active": true
+      }
+    },
+    {
+      "id": "e21e8781-9919-48d8-b9d7-50a4b30f6f77",
+      "created_at": "2026-03-21T20:31:01.923Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn0s95ci000i1sysyekykt8o",
+      "entity_label": "Test Co ueh0",
+      "metadata": {
+        "slug": "testco-1774125049645-trct",
+        "active": true
+      }
+    },
+    {
+      "id": "23f51acf-162f-4f97-bead-97b11d3fb004",
+      "created_at": "2026-03-21T20:24:49.586Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn0s169f000f1sysim4nb230",
+      "entity_label": "Test Co lapa",
+      "metadata": {
+        "slug": "testco-1774124679740-bnwz",
+        "active": true
+      }
+    },
+    {
+      "id": "b0537586-0c15-4174-8237-56eed57fdb21",
+      "created_at": "2026-03-20T22:14:54.742Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmmzgiw3k000c1sys8vsyd5jc",
+      "entity_label": "Test Co 5cej",
+      "metadata": {
+        "slug": "testco-1774044890520-z0kh",
+        "active": true
+      }
+    },
+    {
+      "id": "9cdada52-4efd-49af-b596-62ae50224bca",
+      "created_at": "2026-03-20T22:03:47.864Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmmzg4m9r00091sysp8bpoz5v",
+      "entity_label": "Test Co ppd1",
+      "metadata": {
+        "slug": "testco-1774044226305-ivy4",
+        "active": true
+      }
+    },
+    {
+      "id": "839e1b5b-ab29-45b0-a5c2-187c71e044bc",
+      "created_at": "2026-03-20T21:59:17.756Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmmzfyt6w00061sys0lcbqbli",
+      "entity_label": "Test Co ucx1",
+      "metadata": {
+        "slug": "testco-1774043953841-z6g2",
+        "active": true
+      }
+    },
+    {
+      "id": "0bce432e-5860-470d-986f-ab2b8535f949",
+      "created_at": "2026-03-20T21:51:43.218Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmmzfp33i00031syspmoi2gvt",
+      "entity_label": "Test Co 9t6u",
+      "metadata": {
+        "slug": "testco-1774043501451-bhi7",
+        "active": true
+      }
+    },
+    {
+      "id": "5230209d-fcb5-4261-89d7-a70069f22439",
+      "created_at": "2026-03-20T21:48:28.726Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmmzfkwcq00001syshgayqjfy",
+      "entity_label": "Test Co y3vz",
+      "metadata": {
+        "slug": "testco-1774043299238-y9bu",
+        "active": true
+      }
+    },
+    {
       "id": "3f9c3473-963e-4ff6-a4d1-b0313bbf081e",
       "created_at": "2026-03-17T06:53:28.411Z",
       "actor_user_id": "test-admin",

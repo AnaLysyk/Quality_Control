@@ -1629,7 +1629,7 @@ export default function PermissionsPage() {
               value={createGlobalDraft.password}
               onChange={(event) => setCreateGlobalDraft((current) => ({ ...current, password: event.target.value }))}
               className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2.5 text-sm text-(--tc-text-primary) outline-none focus:border-(--tc-accent)"
-              placeholder="Minimo de 8 caracteres"
+              placeholder="Minimo 8 caracteres"
               autoComplete="new-password"
             />
           </label>

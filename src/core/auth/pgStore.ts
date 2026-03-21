@@ -53,6 +53,8 @@ type PrismaCompany = {
   jira_email: string | null;
   jira_api_token: string | null;
   integration_mode: string | null;
+  // relations
+  integrations?: { id: string; type: string; config: unknown | null; createdAt: Date }[] | null;
   short_description: string | null;
   internal_notes: string | null;
   createdAt: Date;
@@ -76,7 +78,7 @@ function toLocalUser(u: PrismaUser): LocalAuthUser {
     user: u.user ?? u.email,
     password_hash: u.password_hash,
     globalRole: u.globalRole === "global_admin" ? "global_admin" : null,
-    role: u.role ?? "user",
+    role: (u.role as string) ?? "user",
     status: (u.status as LocalAuthUser["status"]) ?? "active",
     active: u.active,
     is_global_admin: u.is_global_admin,
@@ -113,6 +115,9 @@ function toLocalCompany(c: PrismaCompany): LocalAuthCompany {
     jira_email: c.jira_email,
     jira_api_token: c.jira_api_token,
     integration_mode: c.integration_mode,
+    integrations: Array.isArray(c.integrations)
+      ? c.integrations.map((i) => ({ id: i.id, type: i.type, config: i.config ?? undefined, createdAt: i.createdAt.toISOString() }))
+      : undefined,
     short_description: c.short_description,
     internal_notes: c.internal_notes,
     createdAt: c.createdAt.toISOString(),
@@ -124,10 +129,15 @@ function toLocalMembership(m: PrismaMembership): LocalAuthMembership {
     id: m.id,
     userId: m.userId,
     companyId: m.companyId,
-    role: m.role as LocalAuthMembership["role"],
+    role: (m.role as string) as LocalAuthMembership["role"],
     capabilities: m.capabilities,
     createdAt: m.createdAt.toISOString(),
   };
+}
+
+// keep identity here — database stores legacy labels now
+function mapRoleEnumToLegacy(_r?: string | null): string {
+  return (_r ?? "user");
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -146,10 +156,14 @@ function pgNormalizeSlug(v: string): string {
 
 function pgNormalizeMembershipRole(role?: string | null): string {
   const n = (role ?? "").toLowerCase();
-  if (n === "company_admin" || n === "user" || n === "viewer") return n;
+  // Map inputs to legacy role labels stored in DB
+  if (n === "admin") return "admin";
   if (n === "it_dev" || n === "itdev" || n === "developer" || n === "dev") return "it_dev";
-  if (n === "admin" || n === "client_admin" || n === "company") return "company_admin";
-  if (n === "read_only") return "viewer";
+  if (n === "company_admin" || n === "client_admin" || n === "company") return "company_admin";
+  if (n === "support" || n === "technical_support") return "technical_support";
+  if (n === "leader_tc" || n === "lider_tc") return "leader_tc";
+  if (n === "viewer" || n === "read_only") return "viewer";
+  if (n === "user") return "user";
   return "user";
 }
 
@@ -231,7 +245,7 @@ export async function pgCreateLocalUser(input: {
         email,
         user: login,
         password_hash: input.password_hash,
-        role: input.role ?? "user",
+        role: pgNormalizeMembershipRole(input.role ?? "user") as any,
         globalRole: input.globalRole ?? null,
         status: input.status ?? "active",
         active: input.active ?? true,
@@ -274,7 +288,7 @@ export async function pgUpdateLocalUser(
         ...(patch.full_name !== undefined ? { full_name: patch.full_name ?? null } : {}),
         ...(nextEmail ? { email: nextEmail } : {}),
         ...(typeof patch.user === "string" ? { user: nl(patch.user) || undefined } : {}),
-        ...(typeof patch.role === "string" ? { role: patch.role } : {}),
+        ...(typeof patch.role === "string" ? { role: patch.role as any } : {}),
         ...(patch.globalRole !== undefined ? { globalRole: patch.globalRole } : {}),
         ...(typeof patch.status === "string" ? { status: patch.status } : {}),
         ...(typeof patch.active === "boolean" ? { active: patch.active } : {}),
@@ -301,18 +315,18 @@ export async function pgUpdateLocalUser(
 // ── Company ───────────────────────────────────────────────────────────────────
 
 export async function pgFindLocalCompanyById(id: string): Promise<LocalAuthCompany | null> {
-  const c = await prisma.company.findUnique({ where: { id } });
+  const c = await prisma.company.findUnique({ where: { id }, include: { integrations: true } });
   return c ? toLocalCompany(c) : null;
 }
 
 export async function pgFindLocalCompanyBySlug(slug: string): Promise<LocalAuthCompany | null> {
   const normalized = pgNormalizeSlug(slug);
-  const c = await prisma.company.findUnique({ where: { slug: normalized } });
+  const c = await prisma.company.findUnique({ where: { slug: normalized }, include: { integrations: true } });
   return c ? toLocalCompany(c) : null;
 }
 
 export async function pgListLocalCompanies(): Promise<LocalAuthCompany[]> {
-  const companies = await prisma.company.findMany({ orderBy: { name: "asc" } });
+  const companies = await prisma.company.findMany({ orderBy: { name: "asc" }, include: { integrations: true } });
   return companies.map(toLocalCompany);
 }
 
@@ -364,6 +378,23 @@ export async function pgCreateLocalCompany(
       internal_notes: (input.internal_notes as string | null | undefined) ?? null,
     },
   });
+  // If integrations provided, create them
+  if (Array.isArray((input as any).integrations) && (input as any).integrations.length) {
+    const items = (input as any).integrations
+      .filter((it: any) => it && typeof it === "object")
+      .map((it: any) => ({ companyId: company.id, type: it.type, config: it.config ?? {} }));
+    for (const it of items) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        await prisma.companyIntegration.create({ data: it });
+      } catch (e) {
+        console.warn("[PG-STORE] failed to create company integration", e);
+      }
+    }
+  }
+  // re-fetch with integrations
+  const full = await prisma.company.findUnique({ where: { id: company.id }, include: { integrations: true } });
+  return toLocalCompany(full as PrismaCompany);
   return toLocalCompany(company);
 }
 
@@ -416,6 +447,27 @@ export async function pgUpdateLocalCompany(
         : {}),
     },
   });
+  // handle integrations patch: replace existing integrations if provided
+  if (Array.isArray((patch as any).integrations)) {
+    try {
+      await prisma.companyIntegration.deleteMany({ where: { companyId: id } });
+    } catch (e) {
+      console.warn("[PG-STORE] failed to delete old integrations", e);
+    }
+    const items = (patch as any).integrations
+      .filter((it: any) => it && typeof it === "object")
+      .map((it: any) => ({ companyId: id, type: it.type, config: it.config ?? {} }));
+    for (const it of items) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        await prisma.companyIntegration.create({ data: it });
+      } catch (e) {
+        console.warn("[PG-STORE] failed to create integration during update", e);
+      }
+    }
+  }
+  const full = await prisma.company.findUnique({ where: { id }, include: { integrations: true } });
+  return full ? toLocalCompany(full as PrismaCompany) : null;
   return toLocalCompany(company);
 }
 
@@ -442,15 +494,16 @@ export async function pgUpsertLocalLink(input: {
     create: {
       userId: input.userId,
       companyId: input.companyId,
-      role,
+      role: role as any,
       capabilities: input.capabilities ?? [],
     },
     update: {
-      role,
+      role: role as any,
       ...(input.capabilities ? { capabilities: input.capabilities } : {}),
     },
   });
-  return role;
+  // Return legacy role string for backwards compatibility
+  return mapRoleEnumToLegacy(role);
 }
 
 export async function pgRemoveLocalLink(userId: string, companyId: string): Promise<boolean> {

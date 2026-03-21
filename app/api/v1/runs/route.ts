@@ -2,6 +2,7 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 import { canCreateRun, getRunMockRole, resolveRunRole } from "@/lib/rbac/runs";
 import { isCompanyUser } from "@/lib/rbac/companyAccess";
+import { getQaseIntegrationSettings } from "@/lib/integrations";
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
@@ -49,8 +50,13 @@ export async function GET(request: Request) {
     });
   }
 
-  const project = normalizeString(url.searchParams.get("project")) || DEFAULT_PROJECT;
-  if (!project) {
+  const project = normalizeString(url.searchParams.get("project")) || null;
+  const companySlug = auth?.companySlug ?? null;
+  const qaseSettings = companySlug ? await getQaseIntegrationSettings(companySlug) : null;
+  const tokenToUse = (qaseSettings && qaseSettings.token) ? qaseSettings.token : QASE_TOKEN;
+  const effectiveProject = project || (qaseSettings?.projects && qaseSettings.projects[0]) || DEFAULT_PROJECT;
+
+  if (!effectiveProject) {
     return apiFail(request, "Missing project", {
       status: 400,
       code: "VALIDATION_ERROR",
@@ -58,13 +64,13 @@ export async function GET(request: Request) {
     });
   }
 
-  if (!QASE_TOKEN) {
+  if (!tokenToUse) {
     const out = { data: [], warning: "QASE_API_TOKEN ausente" };
     return apiOk(request, out, "OK", { extra: out });
   }
 
-  const res = await fetch(`${QASE_BASE_URL}/v1/run/${encodeURIComponent(project)}?limit=50`, {
-    headers: { Token: QASE_TOKEN, Accept: "application/json" },
+  const res = await fetch(`${QASE_BASE_URL}/v1/run/${encodeURIComponent(effectiveProject)}?limit=50`, {
+    headers: { Token: tokenToUse, Accept: "application/json" },
     cache: "no-store",
   });
 
@@ -124,12 +130,12 @@ export async function POST(request: Request) {
   }
 
   const rec = asRecord(body) ?? {};
-  const project = normalizeString(rec.project) || DEFAULT_PROJECT;
+  const project = normalizeString(rec.project) || null;
   const title = normalizeString(rec.title);
   const description = normalizeString(rec.description) || "";
   const customType = normalizeString(rec.custom_type);
 
-  if (!project || !title) {
+  if (!project && !DEFAULT_PROJECT) {
     return apiFail(request, "Missing project or title", {
       status: 400,
       code: "VALIDATION_ERROR",
@@ -137,7 +143,20 @@ export async function POST(request: Request) {
     });
   }
 
-  if (!QASE_TOKEN) {
+  const companySlug = auth?.companySlug ?? null;
+  const qaseSettings = companySlug ? await getQaseIntegrationSettings(companySlug) : null;
+  const tokenToUse = (qaseSettings && qaseSettings.token) ? qaseSettings.token : QASE_TOKEN;
+  const effectiveProject = project || (qaseSettings?.projects && qaseSettings.projects[0]) || DEFAULT_PROJECT;
+
+  if (!effectiveProject || !title) {
+    return apiFail(request, "Missing project or title", {
+      status: 400,
+      code: "VALIDATION_ERROR",
+      extra: { error: { message: "Missing project or title" } },
+    });
+  }
+
+  if (!tokenToUse) {
     return apiFail(request, "QASE_API_TOKEN ausente", {
       status: 503,
       code: "ENV_MISSING",
@@ -153,9 +172,9 @@ export async function POST(request: Request) {
     payload.custom_fields = { custom_type: customType };
   }
 
-  const res = await fetch(`${QASE_BASE_URL}/v1/run/${encodeURIComponent(project)}`, {
+  const res = await fetch(`${QASE_BASE_URL}/v1/run/${encodeURIComponent(effectiveProject)}`, {
     method: "POST",
-    headers: { Token: QASE_TOKEN, Accept: "application/json", "Content-Type": "application/json" },
+    headers: { Token: tokenToUse, Accept: "application/json", "Content-Type": "application/json" },
     body: JSON.stringify(payload),
     cache: "no-store",
   });

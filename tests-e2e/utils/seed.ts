@@ -96,8 +96,8 @@ export async function seedDbUserCompany({ userEmail = "teste@example.com", compa
   if (!user || !company) throw new Error("Usuario ou empresa nao encontrados para vincular.");
   await prisma.userCompany.upsert({
     where: { user_id_company_id: { user_id: user.id, company_id: company.id } },
-    update: { role },
-    create: { user_id: user.id, company_id: company.id, role },
+    update: { role: role as any },
+    create: { user_id: user.id, company_id: company.id, role: role as any },
   });
 }
 

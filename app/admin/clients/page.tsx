@@ -158,6 +158,33 @@ function mapClient(row: Record<string, unknown>): Client {
     jiraBaseUrl: readNullableString(row.jira_base_url),
     jiraEmail: readNullableString(row.jira_email),
     jiraApiToken: null,
+    // parse new integrations array when present
+    ...(() => {
+      const integrations = (row as any).integrations;
+      if (!Array.isArray(integrations)) return {};
+      const out: Partial<Client> = {};
+      for (const it of integrations) {
+        if (!it || typeof it !== "object") continue;
+        const type = String(it.type || "").toUpperCase();
+        const cfg = it.config ?? {};
+        if (type === "QASE") {
+          if (typeof cfg.token === "string" && cfg.token.trim()) {
+            out.hasQaseToken = true;
+            out.qaseToken = cfg.token;
+          }
+          if (Array.isArray(cfg.projects) && cfg.projects.length) {
+            out.qaseProjectCodes = Array.from(new Set([...(out.qaseProjectCodes ?? []), ...cfg.projects.map((p: any) => (typeof p === "string" ? p.trim().toUpperCase() : String(p).trim().toUpperCase()))]));
+            if (!out.qaseProjectCode && out.qaseProjectCodes && out.qaseProjectCodes.length) out.qaseProjectCode = out.qaseProjectCodes[0];
+          }
+        }
+        if (type === "JIRA") {
+          if (typeof cfg.baseUrl === "string" && cfg.baseUrl.trim()) out.jiraBaseUrl = cfg.baseUrl;
+          if (typeof cfg.email === "string" && cfg.email.trim()) out.jiraEmail = cfg.email;
+          if (typeof cfg.apiToken === "string" && cfg.apiToken.trim()) out.jiraApiToken = cfg.apiToken;
+        }
+      }
+      return out;
+    })(),
     active: readBoolean(row.active),
     createdAt: readNullableString(row.created_at),
     updatedAt: readNullableString(row.updated_at),
@@ -243,7 +270,11 @@ function AdminClientsPage() {
     ((form.qaseProjectCodes !== undefined ? form.qaseProjectCodes : selected?.qaseProjectCodes) ?? null)?.join(", ") ?? null;
   const currentHasQaseToken = hasQaseTokenConfigured(form) || hasQaseTokenConfigured(selected);
   const hasQaseIntegration = currentHasQaseToken;
-  const currentIntegrationMode = hasQaseIntegration ? "Qase" : "Manual";
+  const hasJiraIntegration = Boolean(form.jiraBaseUrl ?? selected?.jiraBaseUrl ?? form.jiraApiToken ?? selected?.jiraApiToken);
+  const integrationLabels = [] as string[];
+  if (hasQaseIntegration) integrationLabels.push("Qase");
+  if (hasJiraIntegration) integrationLabels.push("Jira");
+  const currentIntegrationMode = integrationLabels.length ? integrationLabels.join(", ") : "Manual";
   const filteredItems = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return items;
@@ -524,12 +555,23 @@ function AdminClientsPage() {
         active: data.active,
         description: data.description,
         integration_mode: data.integrationMode,
-        qase_token: data.integrationMode === "qase" ? data.qaseToken : undefined,
+        qase_token: data.qaseToken || undefined,
         qase_project_code: legacyProjectCode,
-        qase_project_codes: data.integrationMode === "qase" ? normalizedCodes : undefined,
+        qase_project_codes: normalizedCodes,
         jira_base_url: data.jiraBaseUrl,
         jira_email: data.jiraEmail,
         jira_api_token: data.jiraApiToken,
+        // new integrations array for explicit multi-integration support
+        integrations: (() => {
+          const items: any[] = [];
+          if (data.qaseToken || (Array.isArray(data.qaseProjectCodes) && data.qaseProjectCodes.length)) {
+            items.push({ type: "QASE", config: { token: data.qaseToken || null, projects: data.qaseProjectCodes || [] } });
+          }
+          if (data.jiraBaseUrl || data.jiraApiToken || data.jiraEmail) {
+            items.push({ type: "JIRA", config: { baseUrl: data.jiraBaseUrl || null, email: data.jiraEmail || null, apiToken: data.jiraApiToken || null } });
+          }
+          return items.length ? items : undefined;
+        })(),
       };
       const res = await fetchApi("/api/clients", {
         method: "POST",
@@ -769,7 +811,12 @@ function AdminClientsPage() {
                   <div className="mt-3 grid gap-2">
                     <div className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-2.5 py-2">
                       <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Integração</span>
-                      <span className="truncate text-sm font-semibold text-slate-900">{client.hasQaseToken ? "Qase" : "Manual"}</span>
+                      <span className="truncate text-sm font-semibold text-slate-900">{(() => {
+                        const labels: string[] = [];
+                        if (client.hasQaseToken) labels.push("Qase");
+                        if (client.jiraBaseUrl || client.jiraApiToken || client.jiraEmail) labels.push("Jira");
+                        return labels.length ? labels.join(", ") : "Manual";
+                      })()}</span>
                     </div>
                     <div className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-2.5 py-2">
                       <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500">CNPJ</span>

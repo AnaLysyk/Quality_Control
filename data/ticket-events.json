@@ -1,6 +1,49 @@
 {
   "items": [
     {
+      "id": "2b9a0c45-4420-4656-b8d1-efae533a0393",
+      "ticketId": "5bff39a4-6af9-4d78-84ab-2c051ae274d4",
+      "type": "CREATED",
+      "payload": {
+        "title": "Casos de testes para inserir no Qase",
+        "role": "admin"
+      },
+      "actorUserId": "usr_dev",
+      "createdAt": "2026-03-18T17:56:51.812Z"
+    },
+    {
+      "id": "2588d18d-b1b6-4d94-a645-cec676754df1",
+      "ticketId": "4503a718-ab63-41b0-b95f-c39fb8c9ca7d",
+      "type": "ASSIGNED",
+      "payload": {
+        "from": null,
+        "to": "usr_f601a299"
+      },
+      "actorUserId": "usr_dev",
+      "createdAt": "2026-03-18T15:47:08.010Z"
+    },
+    {
+      "id": "bba59b1d-0b5f-416a-b83d-f930dbcc4bae",
+      "ticketId": "4503a718-ab63-41b0-b95f-c39fb8c9ca7d",
+      "type": "COMMENT_ADDED",
+      "payload": {
+        "commentId": "21ecc9ad-7fed-4b99-9335-8c962a410d96"
+      },
+      "actorUserId": "usr_dev",
+      "createdAt": "2026-03-18T15:46:58.487Z"
+    },
+    {
+      "id": "3d6cdac6-c150-49b6-a241-69937ccae7bb",
+      "ticketId": "4503a718-ab63-41b0-b95f-c39fb8c9ca7d",
+      "type": "CREATED",
+      "payload": {
+        "title": "sdfdfd",
+        "role": "admin"
+      },
+      "actorUserId": "usr_dev",
+      "createdAt": "2026-03-18T15:43:42.247Z"
+    },
+    {
       "id": "evt_001",
       "ticketId": "tck_001",
       "type": "CREATED",

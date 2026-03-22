@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { FiMenu } from "react-icons/fi";
 import MainWrapper from "./MainWrapper";
@@ -21,10 +21,14 @@ export default function AppShell({ children }: AppShellProps) {
   const useMinimalShell = pathname.length === 0 || isLoginRoute;
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const prevPathRef = useRef(pathname);
+
   useEffect(() => {
-    if (!mobileOpen) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMobileOpen(false);
+    // Close mobile menu only when the route actually changes.
+    if (prevPathRef.current !== pathname) {
+      setMobileOpen(false);
+      prevPathRef.current = pathname;
+    }
   }, [pathname, mobileOpen]);
 
   if (useMinimalShell) {

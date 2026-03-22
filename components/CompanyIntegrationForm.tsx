@@ -58,6 +58,14 @@ export function CompanyIntegrationForm({ companyId, variant = "admin" }: Company
     }
     const maybeToken = (data as Record<string, unknown>)?.qase_token;
     setForm({ qase_token: typeof maybeToken === "string" ? maybeToken : undefined });
+    // initialize selected projects from loaded company (supports legacy single code)
+    const existingCodes = (data as any)?.qase_project_codes;
+    const legacyCode = (data as any)?.qase_project_code;
+    if (Array.isArray(existingCodes) && existingCodes.length) {
+      setSelectedProjects(existingCodes.map((c: any) => (typeof c === "string" ? c.trim().toUpperCase() : String(c).trim().toUpperCase())));
+    } else if (typeof legacyCode === "string" && legacyCode.trim()) {
+      setSelectedProjects([legacyCode.trim().toUpperCase()]);
+    }
   }, [data]);
 
   if (loading) return <div>Carregando...</div>;
@@ -112,8 +120,16 @@ export function CompanyIntegrationForm({ companyId, variant = "admin" }: Company
       setMessage("Dados salvos com sucesso.");
       if (updated && typeof updated === "object") {
         setData((prev: any) => ({ ...prev, ...updated }));
+        // ensure local selectedProjects reflects persisted value
+        const persisted = (updated as any).qase_project_codes ?? (updated as any).qase_project_code ? (Array.isArray((updated as any).qase_project_codes) ? (updated as any).qase_project_codes : [(updated as any).qase_project_code]) : undefined;
+        if (Array.isArray(persisted)) {
+          setSelectedProjects(persisted.map((c: any) => (typeof c === "string" ? c.trim().toUpperCase() : String(c).trim().toUpperCase())));
+        }
       } else {
         setData((prev: any) => ({ ...prev, ...payload }));
+        if (payload.qase_project_codes && Array.isArray(payload.qase_project_codes)) {
+          setSelectedProjects(payload.qase_project_codes.map((c: any) => (typeof c === "string" ? c.trim().toUpperCase() : String(c).trim().toUpperCase())));
+        }
       }
       setTokenSaved(Boolean(form.qase_token && form.qase_token.length > 0));
     } catch {

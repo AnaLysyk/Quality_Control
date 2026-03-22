@@ -7,8 +7,8 @@ export type RequestProfileType =
   | "technical_support";
 
 export type RequestProfileTypeLabel =
-  | "Usuario Testing Company"
-  | "Usuario Empresa"
+  | "Usuarios Testing Company"
+  | "Usuarios da empresa"
   | "Lider TC"
   | "Suporte Tecnico";
 
@@ -19,8 +19,8 @@ function normalizeText(value: string) {
 }
 
 export function toRequestProfileTypeLabel(profileType: RequestProfileType): RequestProfileTypeLabel {
-  if (profileType === "testing_company_user") return "Usuario Testing Company";
-  if (profileType === "company_user") return "Usuario Empresa";
+  if (profileType === "testing_company_user") return "Usuarios Testing Company";
+  if (profileType === "company_user") return "Usuarios da empresa";
   if (profileType === "testing_company_lead") return "Lider TC";
   return "Suporte Tecnico";
 }

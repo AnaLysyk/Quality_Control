@@ -114,6 +114,7 @@ export async function POST(req: NextRequest) {
   }
 
   const input = parsed.data;
+  try {
   const name = (input.company_name || input.name || "").trim();
   if (!name) {
     return jsonError("Campo 'name' ou 'company_name' e obrigatorio", 400);
@@ -211,6 +212,9 @@ export async function POST(req: NextRequest) {
     entityLabel: payload.name,
     metadata: { slug: payload.slug, active: payload.active },
   });
-
   return NextResponse.json(payload, { status: 201 });
+  } catch (err) {
+    console.error('[CLIENTS][POST] error while creating client:', err);
+    return jsonError('Erro interno ao criar empresa', 500);
+  }
 }

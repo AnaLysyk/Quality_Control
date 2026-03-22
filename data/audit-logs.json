@@ -1,6 +1,90 @@
 {
   "items": [
     {
+      "id": "8844f521-bd3b-4879-8561-726ad2187bad",
+      "created_at": "2026-03-21T23:39:52.578Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "c162e8d7-4355-4bff-b987-2921927bd742",
+      "created_at": "2026-03-21T23:38:14.487Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "ca20130f-44e9-489a-b643-2af1f9196202",
+      "created_at": "2026-03-21T23:37:07.883Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "3dab7018-9067-40ed-a159-4fb102995a7b",
+      "created_at": "2026-03-21T23:35:46.385Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "0a4067db-dd20-4993-9d2a-4e44c6b96d42",
+      "created_at": "2026-03-21T23:34:06.266Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "37eba963-c883-4514-9032-40d7f2cc7292",
+      "created_at": "2026-03-21T23:34:02.511Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
       "id": "0d6778d0-53dd-4248-8d09-8d8c5f1871fa",
       "created_at": "2026-03-21T23:21:55.901Z",
       "actor_user_id": "test-admin",

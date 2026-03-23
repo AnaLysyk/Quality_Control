@@ -6,8 +6,9 @@ import { FiMenu } from "react-icons/fi";
 import MainWrapper from "./MainWrapper";
 import SidebarVisibility from "./SidebarVisibility";
 import ProfileButton from "./ProfileButton";
-import NotesButton from "./NotesButton";
-import NotificationsButton from "./NotificationsButton";
+import dynamic from "next/dynamic";
+const NotesButton = dynamic(() => import("./NotesButton"), { ssr: false, loading: () => <div className="w-8" /> });
+const NotificationsButton = dynamic(() => import("./NotificationsButton"), { ssr: false, loading: () => <div className="w-8" /> });
 import TicketsButton from "./TicketsButton";
 import ChatButton from "./ChatButton";
 

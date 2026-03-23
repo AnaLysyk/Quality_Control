@@ -9,7 +9,8 @@ function getSuporteCode(code: string | null | undefined, id: string): string {
   return `SP-${id.slice(0, 6).toUpperCase()}`;
 }
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useSWRSupports } from "./useSWRSupports";
 import { FiLifeBuoy, FiPlus, FiRefreshCw, FiX } from "react-icons/fi";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { useSuporteKanbanColumns } from "@/hooks/useSuporteKanbanColumns";
@@ -80,8 +81,15 @@ export default function MeusSuportesPage() {
   const canCreateSupport = can("support", "create") || can("tickets", "create");
   const canMoveSupport = isDevRole(user?.role) || can("support", "status") || can("tickets", "status");
   const [suportes, setSuportes] = useState<SuporteItem[]>([]);
-  const [loadingSuportes, setLoadingSuportes] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { supports, loading: loadingSuportes, error: swrError, refetch } = useSWRSupports();
+  // Sincroniza estado local com SWR
+  React.useEffect(() => {
+    setSuportes(supports);
+  }, [supports]);
+  React.useEffect(() => {
+    setError(swrError ? (swrError.message || String(swrError)) : null);
+  }, [swrError]);
   const [selectedSuporte, setSelectedSuporte] = useState<SuporteItem | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createDraft, setCreateDraft] = useState({
@@ -95,28 +103,10 @@ export default function MeusSuportesPage() {
   const [createSaving, setCreateSaving] = useState(false);
 
   // Função para recarregar suportes
+  // reloadSuportes agora apenas chama refetch do SWR
   const reloadSuportes = useCallback(async () => {
-    setLoadingSuportes(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/suportes", {
-        credentials: "include",
-        cache: "no-store",
-      });
-      const json = (await res.json().catch(() => ({}))) as { items?: SuporteItem[]; error?: string };
-      if (!res.ok) {
-        setSuportes([]);
-        setError(json?.error || "Erro ao carregar suportes");
-        return;
-      }
-      setSuportes(Array.isArray(json.items) ? json.items : []);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao carregar suportes";
-      setError(msg);
-    } finally {
-      setLoadingSuportes(false);
-    }
-  }, []);
+    await refetch();
+  }, [refetch]);
 
   async function handleCreateSuporte() {
     if (!createDraft.title.trim()) return;

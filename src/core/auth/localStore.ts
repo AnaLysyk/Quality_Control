@@ -35,6 +35,7 @@ export type LocalAuthCompany = {
   active?: boolean;
   company_name?: string | null;
   createdAt?: string | null;
+  qase_project_codes?: string[] | null;
   [key: string]: unknown;
 };
 

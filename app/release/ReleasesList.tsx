@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useSWRReleases } from "./useSWRReleases";
 
 import { getAppMeta } from "@/lib/appMeta";
 import { formatRunText, formatRunTitle } from "@/lib/runPresentation";
@@ -39,48 +40,11 @@ export function ReleasesList({ className }: ReleasesListProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const [apiRes, manualRes] = await Promise.all([
-          fetch("/api/releases", { cache: "no-store" }),
-          fetch("/api/releases-manual", { cache: "no-store" }),
-        ]);
 
-        const apiJson = await apiRes.json().catch(() => ({}));
-        const apiList = Array.isArray(apiJson?.releases) ? (apiJson.releases as ReleaseCard[]) : [];
-
-        const manualJson = await manualRes.json().catch(() => []);
-        const manualListRaw = Array.isArray(manualJson) ? (manualJson as unknown[]) : [];
-        const manualList: ReleaseCard[] = [];
-        for (const row of manualListRaw) {
-          const r = (row ?? null) as Record<string, unknown> | null;
-          if (!r) continue;
-          const slug = typeof r.slug === "string" ? r.slug : "";
-          if (!slug) continue;
-          const title = typeof r.name === "string" ? r.name : typeof r.title === "string" ? r.title : slug;
-          const summary =
-            typeof r.observations === "string"
-              ? r.observations
-              : typeof r.summary === "string"
-                ? r.summary
-                : "Run manual";
-          const app = typeof r.app === "string" ? r.app : undefined;
-          const createdAt = typeof r.createdAt === "string" ? r.createdAt : undefined;
-          const source = typeof r.source === "string" ? r.source : "MANUAL";
-          manualList.push({ slug, title, summary, app, createdAt, source });
-        }
-
-        const merged = [...manualList, ...apiList];
-        const unique = new Map<string, ReleaseCard>();
-        for (const rel of merged) unique.set(rel.slug, rel);
-        setList(Array.from(unique.values()));
-      } catch {
-        setList([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+  const { releases, loading, error, refetch } = useSWRReleases();
+  useEffect(() => {
+    setList(releases);
+  }, [releases]);
   }, []);
 
   const filtered = useMemo(() => {

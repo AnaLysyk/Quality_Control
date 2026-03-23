@@ -138,9 +138,17 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
   // otherwise preserve current legacy value when neither field was provided.
   let nextLegacyProjectCode: string | null;
   if (hasProjectCodesField || hasLegacyProjectField) {
-    nextLegacyProjectCode = nextProjectCodes && nextProjectCodes.length ? nextProjectCodes[0] : null;
+    nextLegacyProjectCode =
+      nextProjectCodes && Array.isArray(nextProjectCodes) && typeof nextProjectCodes[0] === "string" && nextProjectCodes[0].trim()
+        ? nextProjectCodes[0]
+        : null;
   } else {
-    nextLegacyProjectCode = current.qase_project_code ?? (nextProjectCodes && nextProjectCodes.length ? nextProjectCodes[0] : null) ?? null;
+    nextLegacyProjectCode =
+      typeof current.qase_project_code === "string" && current.qase_project_code.trim()
+        ? current.qase_project_code
+        : nextProjectCodes && Array.isArray(nextProjectCodes) && typeof nextProjectCodes[0] === "string" && nextProjectCodes[0].trim()
+        ? nextProjectCodes[0]
+        : null;
   }
 
   const duplicateByName = companies.find(

@@ -24,7 +24,7 @@ export function SectionCard({ children, className, ...rest }: CardProps) {
   return (
     <Card
       className={clsx(
-        "rounded-[24px] p-5 sm:p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]",
+        "rounded-3xl p-5 sm:p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]",
         className
       )}
       {...rest}

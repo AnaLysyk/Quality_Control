@@ -1,55 +1,19 @@
 import React, { useEffect, useState } from "react";
-
-// Lightweight local replacement for missing `useCompanyIntegration` hook.
-function useCompanyIntegration(companyId: string) {
-  const [data, setData] = useState<Record<string, unknown> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    setLoading(true);
-    setError(null);
-    fetch(`/api/clients/${companyId}`)
-      .then((res) => res.json().catch(() => null))
-      .then((json) => {
-        if (!mounted) return;
-        if (!json) {
-          setData(null);
-          setError("Resposta invalida");
-          return;
-        }
-        setData(typeof json === "object" && json ? (json as Record<string, unknown>) : null);
-      })
-      .catch((err) => {
-        if (!mounted) return;
-        setError(err instanceof Error ? err.message : String(err));
-        setData(null);
-      })
-      .finally(() => mounted && setLoading(false));
-
-    return () => {
-      mounted = false;
-    };
-  }, [companyId]);
-
-  return { data, loading, error, setData } as const;
-}
+import { useSWRCompanyData } from "./useSWRCompanyData";
+import { useSWRQaseProjects } from "./useSWRQaseProjects";
 
 interface CompanyIntegrationFormProps {
   companyId: string;
   variant?: "admin" | "company-profile";
 }
 
-export function CompanyIntegrationForm({ companyId, variant = "admin" }: CompanyIntegrationFormProps) {
-  const { data, loading, error, setData } = useCompanyIntegration(companyId);
+  const { companyData: data, loading, error, refetch: refetchCompanyData } = useSWRCompanyData(companyId);
   const [form, setForm] = useState<{ qase_token?: string }>({ qase_token: undefined });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [tokenSaved, setTokenSaved] = useState(false);
-  const [projects, setProjects] = useState<Array<{ code: string; title: string }>>([]);
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
-  const [loadingProjects, setLoadingProjects] = useState(false);
+  const { fetchProjects, projects, loading: loadingProjects, error: projectsError } = useSWRQaseProjects();
 
   React.useEffect(() => {
     if (!data) {
@@ -81,23 +45,12 @@ export function CompanyIntegrationForm({ companyId, variant = "admin" }: Company
       setMessage("Informe o token Qase antes de buscar projetos.");
       return;
     }
-    setLoadingProjects(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/admin/qase/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: form.qase_token }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Erro ao buscar projetos");
-      setProjects(Array.isArray(data.items) ? data.items : []);
+      await fetchProjects({ token: form.qase_token });
       setMessage("Projetos carregados.");
     } catch (err: any) {
       setMessage(typeof err === "string" ? err : err?.message || "Erro ao buscar projetos");
-      setProjects([]);
-    } finally {
-      setLoadingProjects(false);
     }
   }
 
@@ -126,14 +79,14 @@ export function CompanyIntegrationForm({ companyId, variant = "admin" }: Company
       const updated = await res.json().catch(() => null);
       setMessage("Dados salvos com sucesso.");
       if (updated && typeof updated === "object") {
-        setData((prev: any) => ({ ...prev, ...updated }));
+        await refetchCompanyData();
         // ensure local selectedProjects reflects persisted value (normalize)
         const persistedRaw = (updated as any).qase_project_codes ?? ((updated as any).qase_project_code ? (Array.isArray((updated as any).qase_project_codes) ? (updated as any).qase_project_codes : [(updated as any).qase_project_code]) : undefined);
         if (Array.isArray(persistedRaw)) {
           setSelectedProjects(persistedRaw.map((c: any) => (typeof c === "string" ? c.trim().toUpperCase() : String(c).trim().toUpperCase())));
         }
       } else {
-        setData((prev: any) => ({ ...prev, ...payload }));
+        await refetchCompanyData();
         if (Array.isArray(payload.qase_project_codes)) {
           setSelectedProjects((payload.qase_project_codes as any[]).map((c: any) => (typeof c === "string" ? c.trim().toUpperCase() : String(c).trim().toUpperCase())));
         }

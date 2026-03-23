@@ -175,6 +175,12 @@ export function CompanyIntegrationForm({ companyId, variant = "admin" }: Company
             ))}
           </select>
           <small className="text-xs text-gray-500">Segure Ctrl/Cmd para selecionar múltiplos</small>
+          {selectedProjects.length > 1 && (
+            <div className="mt-2 text-sm text-amber-700">Aviso: algumas areas do sistema ainda usam apenas o primeiro projeto selecionado como valor principal. Garanta que o primeiro na lista seja o projeto principal.</div>
+          )}
+          {selectedProjects.length === 0 && (
+            <div className="mt-2 text-sm text-red-600">Nenhum projeto selecionado — isto removera projetos associados e pode afetar sincronizacoes.</div>
+          )}
         </div>
       )}
       <button type="submit" disabled={saving} className="mt-2 px-4 py-2 rounded bg-blue-600 text-white">

@@ -1,2 +1,17 @@
+/* Extracted debug admin styles previously inline in debug-admin-home.html */
+:root{
+  --tc-logo-filter: none;
+}
+.debug-toaster-container{
+  position: fixed;
+  z-index: 9999;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  pointer-events: none;
+}
+.logo-spin-slower{animation:spin 12s linear infinite}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 .logo-img { color: transparent; }
 .rht-toaster { position: fixed; z-index: 9999; top: 16px; left: 16px; right: 16px; bottom: 16px; pointer-events: none; }

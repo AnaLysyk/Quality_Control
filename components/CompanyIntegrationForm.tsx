@@ -106,10 +106,17 @@ export function CompanyIntegrationForm({ companyId, variant = "admin" }: Company
     setSaving(true);
     setMessage(null);
     try {
+      const normalizedSelected = (selectedProjects || [])
+        .map((c) => (typeof c === "string" ? c.trim().toUpperCase() : String(c).trim().toUpperCase()))
+        .filter(Boolean);
+
       const payload: Record<string, unknown> = {
         qase_token: form.qase_token || undefined,
+        // always include the array field so backend can distinguish between omitted vs explicit clear
+        qase_project_codes: normalizedSelected,
+        // legacy single-field derived from selection (or null when empty)
+        qase_project_code: normalizedSelected[0] ?? null,
       };
-      if (selectedProjects.length) payload.qase_project_codes = selectedProjects;
       const res = await fetch("/api/clients/" + companyId, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -120,15 +127,15 @@ export function CompanyIntegrationForm({ companyId, variant = "admin" }: Company
       setMessage("Dados salvos com sucesso.");
       if (updated && typeof updated === "object") {
         setData((prev: any) => ({ ...prev, ...updated }));
-        // ensure local selectedProjects reflects persisted value
-        const persisted = (updated as any).qase_project_codes ?? (updated as any).qase_project_code ? (Array.isArray((updated as any).qase_project_codes) ? (updated as any).qase_project_codes : [(updated as any).qase_project_code]) : undefined;
-        if (Array.isArray(persisted)) {
-          setSelectedProjects(persisted.map((c: any) => (typeof c === "string" ? c.trim().toUpperCase() : String(c).trim().toUpperCase())));
+        // ensure local selectedProjects reflects persisted value (normalize)
+        const persistedRaw = (updated as any).qase_project_codes ?? ((updated as any).qase_project_code ? (Array.isArray((updated as any).qase_project_codes) ? (updated as any).qase_project_codes : [(updated as any).qase_project_code]) : undefined);
+        if (Array.isArray(persistedRaw)) {
+          setSelectedProjects(persistedRaw.map((c: any) => (typeof c === "string" ? c.trim().toUpperCase() : String(c).trim().toUpperCase())));
         }
       } else {
         setData((prev: any) => ({ ...prev, ...payload }));
-        if (payload.qase_project_codes && Array.isArray(payload.qase_project_codes)) {
-          setSelectedProjects(payload.qase_project_codes.map((c: any) => (typeof c === "string" ? c.trim().toUpperCase() : String(c).trim().toUpperCase())));
+        if (Array.isArray(payload.qase_project_codes)) {
+          setSelectedProjects((payload.qase_project_codes as any[]).map((c: any) => (typeof c === "string" ? c.trim().toUpperCase() : String(c).trim().toUpperCase())));
         }
       }
       setTokenSaved(Boolean(form.qase_token && form.qase_token.length > 0));

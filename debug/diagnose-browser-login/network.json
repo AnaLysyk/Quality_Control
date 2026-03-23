@@ -1,0 +1,890 @@
+[
+  {
+    "type": "request",
+    "url": "http://localhost:3002/login",
+    "method": "GET",
+    "headers": {
+      "upgrade-insecure-requests": "1",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "postData": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/login",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/image?url=%2Fimages%2Ftc.png&w=64&q=75",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155454825",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/css/app/login/page.css?v=1774155454825",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/webpack.js?v=1774155454825",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/main-app.js?v=1774155454825",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/app-pages-internals.js",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/app/layout.js",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/app/not-found.js",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/app/login/page.js",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155454825",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/css/app/login/page.css?v=1774155454825",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/images/tc.png",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155454825",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/media/b957ea75a84b6ea7-s.p.woff2",
+    "method": "GET",
+    "headers": {
+      "origin": "http://localhost:3002",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155454825",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/media/8888a3826f4a3af4-s.p.woff2",
+    "method": "GET",
+    "headers": {
+      "origin": "http://localhost:3002",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155454825",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/media/eafabf029ad39a43-s.p.woff2",
+    "method": "GET",
+    "headers": {
+      "origin": "http://localhost:3002",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155454825",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/media/0484562807a97172-s.p.woff2",
+    "method": "GET",
+    "headers": {
+      "origin": "http://localhost:3002",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155454825",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/login?user=admin%40griaule.test&password=Griaule%40123",
+    "method": "GET",
+    "headers": {
+      "referer": "http://localhost:3002/login",
+      "upgrade-insecure-requests": "1",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "postData": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/image?url=%2Fimages%2Ftc.png&w=64&q=75",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/chunks/webpack.js?v=1774155454825",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/media/b957ea75a84b6ea7-s.p.woff2",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/chunks/app-pages-internals.js",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/chunks/app/not-found.js",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/media/8888a3826f4a3af4-s.p.woff2",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/media/eafabf029ad39a43-s.p.woff2",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/media/0484562807a97172-s.p.woff2",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/images/tc.png",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/login?user=admin%40griaule.test&password=Griaule%40123",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "requestfailed",
+    "url": "http://localhost:3002/_next/static/chunks/app/layout.js",
+    "failure": "net::ERR_ABORTED"
+  },
+  {
+    "type": "requestfailed",
+    "url": "http://localhost:3002/_next/static/chunks/main-app.js?v=1774155454825",
+    "failure": "net::ERR_ABORTED"
+  },
+  {
+    "type": "requestfailed",
+    "url": "http://localhost:3002/_next/static/chunks/app/login/page.js",
+    "failure": "net::ERR_ABORTED"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/image?url=%2Fimages%2Ftc.png&w=64&q=75",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "if-none-match": "5KDxteEsgKONHKHRdHiTZ21jvcpGDFZ5jIzkfpsrhCg",
+      "referer": "http://localhost:3002/login?user=admin%40griaule.test&password=Griaule%40123",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155461330",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login?user=admin%40griaule.test&password=Griaule%40123",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/css/app/login/page.css?v=1774155461330",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login?user=admin%40griaule.test&password=Griaule%40123",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/webpack.js?v=1774155461330",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login?user=admin%40griaule.test&password=Griaule%40123",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/main-app.js?v=1774155461330",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login?user=admin%40griaule.test&password=Griaule%40123",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/app-pages-internals.js",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login?user=admin%40griaule.test&password=Griaule%40123",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/app/layout.js",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login?user=admin%40griaule.test&password=Griaule%40123",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/app/not-found.js",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login?user=admin%40griaule.test&password=Griaule%40123",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/app/login/page.js",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login?user=admin%40griaule.test&password=Griaule%40123",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155461330",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/css/app/login/page.css?v=1774155461330",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/image?url=%2Fimages%2Ftc.png&w=64&q=75",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/media/eafabf029ad39a43-s.p.woff2",
+    "method": "GET",
+    "headers": {
+      "origin": "http://localhost:3002",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155461330",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/media/eafabf029ad39a43-s.p.woff2",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/admin/home",
+    "method": "GET",
+    "headers": {
+      "upgrade-insecure-requests": "1",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/media/8888a3826f4a3af4-s.p.woff2",
+    "method": "GET",
+    "headers": {
+      "origin": "http://localhost:3002",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155461330",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/media/8888a3826f4a3af4-s.p.woff2",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/media/0484562807a97172-s.p.woff2",
+    "method": "GET",
+    "headers": {
+      "origin": "http://localhost:3002",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155461330",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/media/0484562807a97172-s.p.woff2",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/media/b957ea75a84b6ea7-s.p.woff2",
+    "method": "GET",
+    "headers": {
+      "origin": "http://localhost:3002",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155461330",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/media/b957ea75a84b6ea7-s.p.woff2",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/images/tc.png",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "if-none-match": "W/\"880a-19b7e6d7c85\"",
+      "referer": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155461330",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "if-modified-since": "Fri, 02 Jan 2026 11:17:43 GMT",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/chunks/webpack.js?v=1774155461330",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/admin/home",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/login",
+    "method": "GET",
+    "headers": {
+      "upgrade-insecure-requests": "1",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "postData": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/chunks/app-pages-internals.js",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/chunks/app/not-found.js",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/images/tc.png",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/login",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "requestfailed",
+    "url": "http://localhost:3002/_next/static/chunks/main-app.js?v=1774155461330",
+    "failure": "net::ERR_ABORTED"
+  },
+  {
+    "type": "requestfailed",
+    "url": "http://localhost:3002/_next/static/chunks/app/login/page.js",
+    "failure": "net::ERR_ABORTED"
+  },
+  {
+    "type": "requestfailed",
+    "url": "http://localhost:3002/_next/static/chunks/app/layout.js",
+    "failure": "net::ERR_ABORTED"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/image?url=%2Fimages%2Ftc.png&w=64&q=75",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "if-none-match": "5KDxteEsgKONHKHRdHiTZ21jvcpGDFZ5jIzkfpsrhCg",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155462764",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/css/app/login/page.css?v=1774155462764",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/webpack.js?v=1774155462764",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/main-app.js?v=1774155462764",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/app-pages-internals.js",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/app/layout.js",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/app/not-found.js",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/chunks/app/login/page.js",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/css/app/login/page.css?v=1774155462764",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/image?url=%2Fimages%2Ftc.png&w=64&q=75",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155462764",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/media/eafabf029ad39a43-s.p.woff2",
+    "method": "GET",
+    "headers": {
+      "origin": "http://localhost:3002",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155462764",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/media/eafabf029ad39a43-s.p.woff2",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/media/8888a3826f4a3af4-s.p.woff2",
+    "method": "GET",
+    "headers": {
+      "origin": "http://localhost:3002",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155462764",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/media/8888a3826f4a3af4-s.p.woff2",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/media/0484562807a97172-s.p.woff2",
+    "method": "GET",
+    "headers": {
+      "origin": "http://localhost:3002",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155462764",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/media/0484562807a97172-s.p.woff2",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/_next/static/media/b957ea75a84b6ea7-s.p.woff2",
+    "method": "GET",
+    "headers": {
+      "origin": "http://localhost:3002",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155462764",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/media/b957ea75a84b6ea7-s.p.woff2",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/images/tc.png",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "if-none-match": "W/\"880a-19b7e6d7c85\"",
+      "referer": "http://localhost:3002/_next/static/css/app/layout.css?v=1774155462764",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "if-modified-since": "Fri, 02 Jan 2026 11:17:43 GMT",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/chunks/webpack.js?v=1774155462764",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/chunks/app-pages-internals.js",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/chunks/app/not-found.js",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/images/tc.png",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/chunks/app/login/page.js",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/chunks/app/layout.js",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3002/_next/static/chunks/main-app.js?v=1774155462764",
+    "error": "TypeError: res.fromCache is not a function"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/api/me",
+    "method": "GET",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/__nextjs_font/geist-latin.woff2",
+    "method": "GET",
+    "headers": {
+      "origin": "http://localhost:3002",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3002/__nextjs_original-stack-frames",
+    "method": "POST",
+    "headers": {
+      "sec-ch-ua-platform": "\"Windows\"",
+      "referer": "http://localhost:3002/login",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+      "content-type": "text/plain;charset=UTF-8",
+      "sec-ch-ua-mobile": "?0"
+    },
+    "postData": "{\"frames\":[{\"file\":\"https://react.dev/link/hydration-mismatch\",\"line1\":null,\"column1\":null,\"methodName\":\"<unknown>\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/next-devtools/shared/console-error.js\",\"line1\":23,\"column1\":71,\"methodName\":\"createConsoleError\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/next-devtools/userspace/app/errors/use-error-handler.js\",\"line1\":45,\"column1\":54,\"methodName\":\"handleConsoleError\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js\",\"line1\":47,\"column1\":57,\"methodName\":\"console.error\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js\",\"line1\":5732,\"column1\":19,\"methodName\":\"eval\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js\",\"line1\":987,\"column1\":30,\"methodName\":\"runWithFiberInDEV\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js\",\"line1\":5731,\"column1\":9,\"methodName\":\"emitPendingHydrationWarnings\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js\",\"line1\":13256,\"column1\":17,\"methodName\":\"completeWork\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js\",\"line1\":987,\"column1\":30,\"methodName\":\"runWithFiberInDEV\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js\",\"line1\":19134,\"column1\":19,\"methodName\":\"completeUnitOfWork\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js\",\"line1\":19015,\"column1\":11,\"methodName\":\"performUnitOfWork\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js\",\"line1\":18826,\"column1\":41,\"methodName\":\"workLoopSync\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js\",\"line1\":18807,\"column1\":11,\"methodName\":\"renderRootSync\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js\",\"line1\":17836,\"column1\":11,\"methodName\":\"performWorkOnRoot\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js\",\"line1\":20400,\"column1\":7,\"methodName\":\"performSyncWorkOnRoot\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js\",\"line1\":20242,\"column1\":21,\"methodName\":\"flushSyncWorkAcrossRoots_impl\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js\",\"line1\":20281,\"column1\":9,\"methodName\":\"processRootScheduleInMicrotask\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js\",\"line1\":20419,\"column1\":13,\"methodName\":\"eval\",\"arguments\":[]},{\"file\":\"<anonymous>\",\"line1\":null,\"column1\":null,\"methodName\":\"input\",\"arguments\":[]},{\"file\":\"webpack-internal:///(app-pages-browser)/./app/login/LoginClient.tsx\",\"line1\":306,\"column1\":120,\"methodName\":\"LoginClient\",\"arguments\":[]},{\"file\":\"about://React/Server/webpack-internal:///(rsc)/./app/login/page.tsx?9\",\"line1\":20,\"column1\":94,\"methodName\":\"LoginPage\",\"arguments\":[]}],\"isServer\":false,\"isEdgeServer\":false,\"isAppDirectory\":true}"
+  }
+]

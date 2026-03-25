@@ -372,8 +372,8 @@ export async function pgCreateLocalCompany(
       linkedin_url: (input.linkedin_url as string | null | undefined) ?? null,
       // Persistência apenas do array canônico
       qase_project_codes: Array.isArray(input.qase_project_codes)
-        ? input.qase_project_codes.filter((v) => typeof v === "string" && v.trim()).map((v) => v.trim())
-        : (typeof input.qase_project_codes === "string" && input.qase_project_codes.trim() ? [input.qase_project_codes.trim()] : []),
+        ? input.qase_project_codes.filter((v): v is string => typeof v === "string" && v.trim().length > 0).map((v) => v.trim().toUpperCase())
+        : [],
       jira_base_url: (input.jira_base_url as string | null | undefined) ?? null,
       jira_email: (input.jira_email as string | null | undefined) ?? null,
       jira_api_token: (input.jira_api_token as string | null | undefined) ?? null,

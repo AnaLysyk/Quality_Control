@@ -28,8 +28,8 @@ type Props = {
 const ROLE_OPTIONS = [
   { value: "client_admin", label: "Empresa" },
   { value: "client_user", label: "Usuario" },
-  { value: "leader_tc", label: "Líder TC" },
-  { value: "technical_support", label: "Suporte Técnico" },
+  { value: "leader_tc", label: "Lider TC" },
+  { value: "technical_support", label: "Suporte Tecnico" },
 ];
 const EMPTY_JOB_TITLE = "__empty_job_title__";
 

@@ -1,7 +1,7 @@
 name: Sync Jira
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
   schedule:
     - cron: '0 * * * *'
 
@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      SITE_BASE_URL: ${{ vars.SITE_BASE_URL }}
-      JIRA_SYNC_BEARER: ${{ secrets.JIRA_SYNC_BEARER }}
-      JIRA_SYNC_COMPANIES: ${{ vars.JIRA_SYNC_COMPANIES }}
+      SITE_BASE_URL: ${{ vars.SITE_BASE_URL || '' }}
+      JIRA_SYNC_BEARER: ${{ secrets.JIRA_SYNC_BEARER || '' }}
+      JIRA_SYNC_COMPANIES: ${{ vars.JIRA_SYNC_COMPANIES || '' }}
 
     steps:
       - name: Checkout

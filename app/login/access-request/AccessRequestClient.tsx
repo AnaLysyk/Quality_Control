@@ -17,22 +17,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const ACCESS_OPTIONS = [
   {
     value: "testing_company_user",
-    label: "Usuário Testing Company",
+    label: "Usuarios Testing Company",
     hint: "Usuário da plataforma com empresa vinculada.",
   },
   {
     value: "company_user",
-    label: "Usuário da Empresa",
+    label: "Usuarios da empresa",
     hint: "Conta institucional da própria empresa.",
   },
   {
     value: "testing_company_lead",
-    label: "Usuário Líder TC",
+    label: "Lider TC",
     hint: "Perfil administrativo do sistema.",
   },
   {
     value: "technical_support",
-    label: "Suporte Técnico",
+    label: "Suporte Tecnico",
     hint: "Perfil técnico global com acesso total.",
   },
 ];
@@ -319,7 +319,7 @@ export default function AccessRequestClient() {
       return;
     }
     if (accessType === "technical_support" && !normalizedRequestedUser) {
-      setError("Informe o usuario/login para o perfil Suporte tecnico.");
+      setError("Informe o usuario/login para o perfil Suporte Tecnico.");
       return;
     }
 
@@ -1054,7 +1054,7 @@ export default function AccessRequestClient() {
                         placeholder="login.global"
                       />
                       <p className="text-xs font-medium text-[#64748b]">
-                        Obrigatorio para o perfil Suporte tecnico.
+                        Obrigatorio para o perfil Suporte Tecnico.
                       </p>
                     </label>
                   ) : null}

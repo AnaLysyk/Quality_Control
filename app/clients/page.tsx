@@ -125,7 +125,11 @@ function ClientsPage() {
                   ? "Admin"
                   : role === "it_dev"
                     ? "Dev / IT"
-                    : "Usuario",
+                    : role === "leader_tc"
+                      ? "Lider TC"
+                      : role === "technical_support"
+                        ? "Suporte Tecnico"
+                        : "Usuario",
             avatarUrl: typeof item.avatar_url === "string" ? item.avatar_url : null,
           };
         });

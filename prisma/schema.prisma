@@ -14,31 +14,31 @@ datasource db {
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 model User {
-  id                 String    @id @default(cuid())
-  name               String
-  full_name          String?
-  email              String    @unique
-  user               String?   @unique
-  password_hash      String
-  globalRole         String?
-  role               Role?     @default(user)
-  status             String    @default("active")
-  active             Boolean   @default(true)
-  is_global_admin    Boolean   @default(false)
-  avatar_key         String?
-  avatar_url         String?
-  job_title          String?
-  linkedin_url       String?
-  phone              String?
+  id                   String    @id @default(cuid())
+  name                 String
+  full_name            String?
+  email                String    @unique
+  user                 String?   @unique
+  password_hash        String
+  globalRole           String?
+  role                 Role?     @default(user)
+  status               String    @default("active")
+  active               Boolean   @default(true)
+  is_global_admin      Boolean   @default(false)
+  avatar_key           String?
+  avatar_url           String?
+  job_title            String?
+  linkedin_url         String?
+  phone                String?
   default_company_slug String?
-  lastLoginAt        DateTime?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  lastLoginAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   memberships        Membership[]
   links              UserCompanyLink[]
-  tickets            Ticket[]         @relation("TicketCreatedBy")
-  assignedTickets    Ticket[]         @relation("TicketAssignedTo")
+  tickets            Ticket[]                @relation("TicketCreatedBy")
+  assignedTickets    Ticket[]                @relation("TicketAssignedTo")
   ticketComments     TicketComment[]
   notifications      UserNotification[]
   notes              UserNote[]
@@ -50,33 +50,34 @@ model User {
 }
 
 model Company {
-  id           String   @id @default(cuid())
-  name         String
-  company_name String?
-  slug         String   @unique
-  status       String   @default("active")
-  active       Boolean  @default(true)
-  tax_id       String?
-  address      String?
-  phone        String?
-  website      String?
-  logo_url     String?
-  docs_link    String?
-  notes        String?
-  cep          String?
-  linkedin_url String?
-  qase_token   String?
+  id                 String               @id @default(cuid())
+  name               String
+  company_name       String?
+  slug               String               @unique
+  status             String               @default("active")
+  active             Boolean              @default(true)
+  tax_id             String?
+  address            String?
+  phone              String?
+  website            String?
+  logo_url           String?
+  docs_link          String?
+  notes              String?
+  cep                String?
+  linkedin_url       String?
+  qase_token         String?
   qase_project_code  String?
+  qase_project_codes String[]             @default([])
   jira_base_url      String?
   jira_email         String?
   jira_api_token     String?
-  integration_mode   String?  @default("none")
+  integration_mode   String?              @default("none")
   integrations       CompanyIntegration[]
   short_description  String?
   internal_notes     String?
-  created_by   String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  created_by         String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
 
   memberships  Membership[]
   links        UserCompanyLink[]
@@ -92,7 +93,6 @@ enum IntegrationType {
   JIRA
   MANUAL
   OTHER
-
 }
 
 // Enum for application roles — values match existing string roles in DB
@@ -110,25 +110,25 @@ enum Role {
 }
 
 model CompanyIntegration {
-  id         String          @id @default(cuid())
-  companyId  String
-  type       IntegrationType
+  id        String          @id @default(cuid())
+  companyId String
+  type      IntegrationType
   // store credentials/config per integration as JSON (encrypted at rest recommended)
-  config     Json?
-  createdAt  DateTime        @default(now())
+  config    Json?
+  createdAt DateTime        @default(now())
 
-  company    Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@map("company_integrations")
 }
 
 model Membership {
-  id        String   @id @default(cuid())
-  userId    String
-  companyId String
-  role      Role?    @default(user)
+  id           String   @id @default(cuid())
+  userId       String
+  companyId    String
+  role         Role?    @default(user)
   capabilities String[] @default([])
-  createdAt DateTime @default(now())
+  createdAt    DateTime @default(now())
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -155,15 +155,15 @@ model UserCompanyLink {
 // ─── Releases ────────────────────────────────────────────────────────────────
 
 model Release {
-  id           String   @id @default(cuid())
-  slug         String   @unique
+  id           String    @id @default(cuid())
+  slug         String    @unique
   title        String
   summary      String?
   app          String?
   project      String?
   qaseProject  String?
   category     String?
-  kind         String?  @default("run")
+  kind         String?   @default("run")
   runSlug      String?
   runName      String?
   companySlug  String?
@@ -171,21 +171,21 @@ model Release {
   clientId     String?
   clientName   String?
   radis        String?
-  environments String[] @default([])
-  source       String   @default("MANUAL")
-  status       String   @default("DRAFT")
+  environments String[]  @default([])
+  source       String    @default("MANUAL")
+  status       String    @default("DRAFT")
   runId        Int?
-  statsPass    Int      @default(0)
-  statsFail    Int      @default(0)
-  statsBlocked Int      @default(0)
-  statsNotRun  Int      @default(0)
+  statsPass    Int       @default(0)
+  statsFail    Int       @default(0)
+  statsBlocked Int       @default(0)
+  statsNotRun  Int       @default(0)
   observations String?
   closedAt     DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  company      Company? @relation(fields: [companyId], references: [id])
-  cases        ReleaseCase[]
+  company Company?      @relation(fields: [companyId], references: [id])
+  cases   ReleaseCase[]
 
   @@map("releases")
 }
@@ -199,7 +199,7 @@ model ReleaseCase {
   bug       String?
   fromApi   Boolean @default(false)
 
-  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  release Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
 
   @@map("release_cases")
 }
@@ -207,30 +207,30 @@ model ReleaseCase {
 // ─── Tickets / Suporte ───────────────────────────────────────────────────────
 
 model Ticket {
-  id              String   @id @default(cuid())
-  code            String
-  title           String
-  description     String
-  status          String   @default("backlog")
-  type            String   @default("tarefa")
-  priority        String   @default("medium")
-  tags            String[] @default([])
-  companySlug     String?
-  companyId       String?
-  createdBy       String
-  createdByName   String?
-  createdByEmail  String?
+  id               String   @id @default(cuid())
+  code             String
+  title            String
+  description      String
+  status           String   @default("backlog")
+  type             String   @default("tarefa")
+  priority         String   @default("medium")
+  tags             String[] @default([])
+  companySlug      String?
+  companyId        String?
+  createdBy        String
+  createdByName    String?
+  createdByEmail   String?
   assignedToUserId String?
-  updatedBy       String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  updatedBy        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  company         Company? @relation(fields: [companyId], references: [id])
-  creator         User     @relation("TicketCreatedBy", fields: [createdBy], references: [id])
-  assignee        User?    @relation("TicketAssignedTo", fields: [assignedToUserId], references: [id])
-  comments        TicketComment[]
-  events          TicketEvent[]
-  reactions       TicketReaction[]
+  company   Company?         @relation(fields: [companyId], references: [id])
+  creator   User             @relation("TicketCreatedBy", fields: [createdBy], references: [id])
+  assignee  User?            @relation("TicketAssignedTo", fields: [assignedToUserId], references: [id])
+  comments  TicketComment[]
+  events    TicketEvent[]
+  reactions TicketReaction[]
 
   @@map("tickets")
 }
@@ -244,8 +244,8 @@ model TicketComment {
   deletedAt    DateTime?
   createdAt    DateTime  @default(now())
 
-  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  author   User   @relation(fields: [authorUserId], references: [id])
+  ticket    Ticket           @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    User             @relation(fields: [authorUserId], references: [id])
   reactions TicketReaction[]
 
   @@map("ticket_comments")
@@ -334,29 +334,29 @@ model SupportRequest {
 // ─── Access Requests ─────────────────────────────────────────────────────────
 
 model AccessRequest {
-  id           String    @id @default(cuid())
-  email        String
-  name         String?
-  fullName     String?
-  username     String?
-  phone        String?
-  jobRole      String?
-  company      String?
-  clientId     String?
-  accessType   String    @default("testing_company_user")
-  profileType  String?
-  title        String?
-  description  String?
-  notes        String?
-  status       String    @default("open")
-  adminNotes   String?
-  userId       String?
-  ip_address   String?
-  user_agent   String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id          String   @id @default(cuid())
+  email       String
+  name        String?
+  fullName    String?
+  username    String?
+  phone       String?
+  jobRole     String?
+  company     String?
+  clientId    String?
+  accessType  String   @default("testing_company_user")
+  profileType String?
+  title       String?
+  description String?
+  notes       String?
+  status      String   @default("open")
+  adminNotes  String?
+  userId      String?
+  ip_address  String?
+  user_agent  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  requestedBy  User?     @relation(fields: [userId], references: [id])
+  requestedBy User? @relation(fields: [userId], references: [id])
 
   @@map("access_requests")
 }
@@ -377,19 +377,19 @@ model AccessRequestComment {
 // ─── Admin Requests ──────────────────────────────────────────────────────────
 
 model Request {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   userName    String
   userEmail   String
   companyId   String
   companyName String
   type        String
-  payload     Json     @default("{}")
-  status      String   @default("PENDING")
+  payload     Json      @default("{}")
+  status      String    @default("PENDING")
   reviewedBy  String?
   reviewNote  String?
   reviewedAt  DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id])
 
@@ -399,18 +399,18 @@ model Request {
 // ─── Applications ────────────────────────────────────────────────────────────
 
 model Application {
-  id               String   @id @default(cuid())
-  companyId        String?
-  companySlug      String?
-  name             String
-  slug             String
-  description      String?
-  imageUrl         String?
-  qaseProjectCode  String?
-  source           String?
-  active           Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id              String   @id @default(cuid())
+  companyId       String?
+  companySlug     String?
+  name            String
+  slug            String
+  description     String?
+  imageUrl        String?
+  qaseProjectCode String?
+  source          String?
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   company Company? @relation(fields: [companyId], references: [id])
 
@@ -462,8 +462,8 @@ model UserNote {
 // ─── Audit Logs ──────────────────────────────────────────────────────────────
 
 model AuditLog {
-  id           String   @id @default(cuid())
-  created_at   DateTime @default(now())
+  id            String   @id @default(cuid())
+  created_at    DateTime @default(now())
   actor_user_id String?
   actor_email   String?
   action        String
@@ -528,18 +528,18 @@ model DefectHistoryEvent {
 // ─── Company Documents ────────────────────────────────────────────────────────
 
 model CompanyDocument {
-  id           String   @id @default(cuid())
-  companySlug  String
-  kind         String   @default("link")
-  title        String
-  description  String?
-  url          String?
-  fileName     String?
-  mimeType     String?
-  sizeBytes    Int?
-  storagePath  String?
-  createdAt    DateTime @default(now())
-  createdBy    String?
+  id            String   @id @default(cuid())
+  companySlug   String
+  kind          String   @default("link")
+  title         String
+  description   String?
+  url           String?
+  fileName      String?
+  mimeType      String?
+  sizeBytes     Int?
+  storagePath   String?
+  createdAt     DateTime @default(now())
+  createdBy     String?
   createdByName String?
 
   history DocumentHistoryEvent[]

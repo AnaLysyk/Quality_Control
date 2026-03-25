@@ -48,6 +48,7 @@ type PrismaCompany = {
   cep: string | null;
   linkedin_url: string | null;
   qase_token: string | null;
+  qase_project_codes?: string[] | null;
   qase_project_code: string | null;
   jira_base_url: string | null;
   jira_email: string | null;
@@ -111,6 +112,7 @@ function toLocalCompany(c: PrismaCompany): LocalAuthCompany {
     linkedin_url: c.linkedin_url,
     qase_token: c.qase_token ?? undefined,
     qase_project_code: c.qase_project_code,
+    qase_project_codes: Array.isArray((c as any).qase_project_codes) && (c as any).qase_project_codes.length ? (c as any).qase_project_codes : undefined,
     jira_base_url: c.jira_base_url,
     jira_email: c.jira_email,
     jira_api_token: c.jira_api_token,
@@ -374,6 +376,8 @@ export async function pgCreateLocalCompany(
       jira_api_token: (input.jira_api_token as string | null | undefined) ?? null,
       qase_token: (input.qase_token as string | null | undefined) ?? null,
       integration_mode: (input.integration_mode as string | null | undefined) ?? "none",
+      qase_project_codes: (input.qase_project_codes as string[] | undefined) ?? [],
+      qase_project_code: (input.qase_project_code as string | null | undefined) ?? (Array.isArray((input as any).qase_project_codes) && (input as any).qase_project_codes.length ? (input as any).qase_project_codes[0] : null),
       short_description: (input.short_description as string | null | undefined) ?? null,
       internal_notes: (input.internal_notes as string | null | undefined) ?? null,
     },
@@ -427,6 +431,9 @@ export async function pgUpdateLocalCompany(
       ...(patch.linkedin_url !== undefined ? { linkedin_url: (patch.linkedin_url as string | null) ?? null } : {}),
       ...(patch.qase_project_code !== undefined
         ? { qase_project_code: (patch.qase_project_code as string | null) ?? null }
+        : {}),
+      ...(patch.qase_project_codes !== undefined
+        ? { qase_project_codes: (patch.qase_project_codes as string[] | null) ?? [] }
         : {}),
       ...(patch.qase_token !== undefined ? { qase_token: (patch.qase_token as string | null) ?? null } : {}),
       ...(patch.jira_base_url !== undefined

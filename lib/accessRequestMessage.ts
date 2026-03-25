@@ -8,10 +8,10 @@ import {
 
 export type AccessType = "user" | "admin" | "company" | "global";
 export type AccessTypeLabel =
-  | "Usuario Testing Company"
-  | "Usuario Empresa"
-  | "Usuario Lider TC"
-  | "Suporte tecnico";
+  | "Usuarios Testing Company"
+  | "Usuarios da empresa"
+  | "Lider TC"
+  | "Suporte Tecnico";
 
 export type AccessRequestAdjustmentField =
   | "profileType"
@@ -232,10 +232,10 @@ function normalizeAdjustmentHistory(input: unknown): AccessRequestAdjustmentRoun
 }
 
 export function toAccessTypeLabel(accessType: AccessType): AccessTypeLabel {
-  if (accessType === "admin") return "Usuario Lider TC";
-  if (accessType === "company") return "Usuario Empresa";
-  if (accessType === "global") return "Suporte tecnico";
-  return "Usuario Testing Company";
+  if (accessType === "admin") return "Lider TC";
+  if (accessType === "company") return "Usuarios da empresa";
+  if (accessType === "global") return "Suporte Tecnico";
+  return "Usuarios Testing Company";
 }
 
 export function normalizeAccessType(value: string | null | undefined): AccessType | null {

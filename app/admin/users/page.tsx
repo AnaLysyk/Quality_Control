@@ -73,10 +73,10 @@ function getInitials(name?: string | null) {
 }
 
 function roleLabel(permissionRole?: string | null) {
-  if (permissionRole === "admin") return "Admin Global";
+  if (permissionRole === "admin") return "Lider TC";
   if (permissionRole === "dev") return "Suporte Tecnico";
-  if (permissionRole === "company") return "Empresa";
-  return "Testing Company";
+  if (permissionRole === "company") return "Usuarios da empresa";
+  return "Usuarios Testing Company";
 }
 
 function roleTone(permissionRole?: string | null) {
@@ -414,9 +414,9 @@ export default function AdminUsersPage() {
 
     if (activeTab === "admin") {
       return {
-        title: "Criar Admin Global",
-        subtitle: "Cadastre perfis de Suporte Tecnico Global com acesso total ao sistema.",
-        submitLabel: "Criar Admin Global",
+        title: "Criar Lider TC",
+        subtitle: "Cadastre perfis de Lider TC com acesso total ao sistema.",
+        submitLabel: "Criar Lider TC",
         initialRole: "global_admin",
         lockRole: true,
         showCompanyField: false,
@@ -485,13 +485,13 @@ export default function AdminUsersPage() {
                 <FiUsers className="h-4 w-4" /> {totalUsersCount} contas visiveis
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiHome className="h-4 w-4" /> {companyUsersCount} usuarios por empresa
+                <FiHome className="h-4 w-4" /> {companyUsersCount} Usuarios da empresa
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiUser className="h-4 w-4" /> {testingUsersCount} usuarios Testing Company
+                <FiUser className="h-4 w-4" /> {testingUsersCount} Usuarios Testing Company
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiShield className="h-4 w-4" /> {adminUsersCount} admins globais
+                <FiShield className="h-4 w-4" /> {adminUsersCount} Lider TC
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
                 <FiTool className="h-4 w-4" /> {supportUsersCount} suporte tecnico
@@ -507,13 +507,13 @@ export default function AdminUsersPage() {
               <div className="mt-4">
                 <TabsList className="grid w-full grid-cols-1 gap-2 rounded-[22px] bg-(--tc-surface-alt,#f8fafc) p-1.5 sm:grid-cols-2 xl:grid-cols-4">
                   <TabsTrigger value="company" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Usuarios por empresa
+                    Usuarios da empresa
                   </TabsTrigger>
                   <TabsTrigger value="testing" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
                     Usuarios Testing Company
                   </TabsTrigger>
                   <TabsTrigger value="admin" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Admin Global
+                    Lider TC
                   </TabsTrigger>
                   <TabsTrigger value="support" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
                     Suporte Tecnico
@@ -658,8 +658,8 @@ export default function AdminUsersPage() {
                     <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
                       <FiShield className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
                       <div>
-                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum Admin Global encontrado</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual nao encontrou admins globais com esse status.</p>
+                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum Lider TC encontrado</h3>
+                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual nao encontrou Lider TC com esse status.</p>
                       </div>
                     </div>
                   ) : (
@@ -669,13 +669,13 @@ export default function AdminUsersPage() {
                           id: "active",
                           title: "Ativos",
                           users: adminActiveUsers,
-                          emptyMessage: "Nenhum Admin Global ativo neste recorte.",
+                          emptyMessage: "Nenhum Lider TC ativo neste recorte.",
                         },
                         {
                           id: "inactive",
                           title: "Inativos",
                           users: adminInactiveUsers,
-                          emptyMessage: "Nenhum Admin Global inativo neste recorte.",
+                          emptyMessage: "Nenhum Lider TC inativo neste recorte.",
                         },
                       ].map((group) => (
                         <UserStatusSection

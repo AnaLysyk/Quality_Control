@@ -15,6 +15,7 @@ type AuthUserShape = {
   companySlug?: string | null;
 };
 
+export default function LoginClient() {
   const { refreshUser } = useAuthUser();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [user, setUser] = useState("");

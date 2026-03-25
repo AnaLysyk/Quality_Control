@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import styles from "./LoginClient.module.css";
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuthUser } from "../hooks/useAuthUser";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 type AuthUserShape = {
@@ -14,15 +15,15 @@ type AuthUserShape = {
   companySlug?: string | null;
 };
 
-export default function LoginClient() {
   const { refreshUser } = useAuthUser();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [user, setUser] = useState("");
-
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
     const html = document.documentElement;

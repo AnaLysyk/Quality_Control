@@ -438,7 +438,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
         active,
         integrationMode: selectedCodes.length || qaseToken.trim() ? "qase" : "manual",
         qaseToken: qaseToken.trim() || undefined,
-        qaseProjectCode: selectedCodes.length ? (selectedCodes[0] || "").trim().toUpperCase() : null,
+        qaseProjectCode: selectedCodes.length ? (selectedCodes[0] || "").trim().toUpperCase() : undefined,
         qaseProjectCodes: Array.isArray(selectedCodes) ? selectedCodes : [],
         qase_projects: qaseProjectsPayload.length ? qaseProjectsPayload : undefined,
         jiraBaseUrl: jiraUrl || undefined,

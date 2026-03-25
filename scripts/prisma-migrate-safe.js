@@ -6,7 +6,10 @@ function runPrisma(cmd, desc) {
     cp.execSync(cmd, { stdio: 'inherit' });
     console.log(`[prisma-migrate-safe] ${desc} concluído.`);
   } catch (e) {
-    const out = (e.stdout && e.stdout.toString()) || e.message || '';
+    const out =
+      (e.stdout && e.stdout.toString()) ||
+      (e.stderr && e.stderr.toString()) ||
+      e.message || '';
     if (out.includes('P3012')) {
       console.log('[prisma-migrate-safe] Aviso P3012 ignorado: nenhuma migration pendente de rollback.');
     } else {

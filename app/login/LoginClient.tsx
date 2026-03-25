@@ -146,24 +146,26 @@ export default function LoginClient() {
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user, password }),
       });
 
       if (res.ok) {
-        const meRes = await fetch("/api/me", { credentials: "include" });
+        const meRes = await fetch("/api/me", { cache: "no-store", credentials: "include" });
         const meJson = await meRes.json().catch(() => null);
         const authUser = meJson?.user ?? null;
         await refreshUser();
         const nextParam = searchParams?.get("next") ?? null;
         const redirectTo = resolvePostLoginRedirect(nextParam, authUser);
         router.push(redirectTo);
+        router.refresh();
       } else {
         const data = await res.json().catch(() => null);
-        setError((data?.error as string) || "Erro ao autenticar");
+        setError((data?.error as string) || (data?.message as string) || "NÃ£o foi possÃ­vel autenticar");
       }
-    } catch {
-      setError("Erro de rede");
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : "Erro inesperado ao tentar autenticar");
     } finally {
       setLoading(false);
     }
@@ -215,7 +217,7 @@ export default function LoginClient() {
           <div className="space-y-4">
             <div>
               <label htmlFor="user" className="block text-sm font-medium text-[#011848] mb-1">
-                Usuario
+                UsuÃ¡rio
               </label>
               <input
                 id="user"
@@ -223,7 +225,7 @@ export default function LoginClient() {
                 type="text"
                 required
                 className="form-control-user w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
-                placeholder="usuario"
+                placeholder="usuÃ¡rio"
                 autoComplete="username"
                 value={user}
                 onChange={(e) => setUser(e.target.value)}
@@ -239,6 +241,7 @@ export default function LoginClient() {
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
                   required
                   className="form-control-user w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white pr-11 text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
                   placeholder="********"

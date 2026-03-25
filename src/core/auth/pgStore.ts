@@ -435,11 +435,7 @@ export async function pgUpdateLocalCompany(
         ? {
             qase_project_codes:
               Array.isArray(patch.qase_project_codes)
-                ? patch.qase_project_codes.filter((v) => typeof v === "string" && v.trim()).map((v) => v.trim())
-                : typeof patch.qase_project_codes === "string"
-                ? patch.qase_project_codes.trim()
-                  ? [patch.qase_project_codes.trim()]
-                  : []
+                ? patch.qase_project_codes.filter((v): v is string => typeof v === "string" && v.trim().length > 0).map((v) => v.trim().toUpperCase())
                 : [],
           }
         : {}),

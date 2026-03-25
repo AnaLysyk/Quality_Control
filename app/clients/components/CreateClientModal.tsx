@@ -633,7 +633,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
             </div>
 
             <div className="mt-4 space-y-4">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] items-center">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
                 <label className="block text-sm sm:col-span-2">
                   Token da Qase
                   <div className="relative mt-2">
@@ -663,7 +663,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
 
                 <button
                   type="button"
-                  className="inline-flex items-center gap-2 h-10 rounded-lg bg-linear-to-b from-(--tc-accent,#ff4b4b) to-(--tc-accent-dark,#c30000) px-4 text-sm font-semibold text-white shadow-lg transition duration-150 hover:opacity-95 disabled:opacity-60"
+                  className="inline-flex items-center gap-2 h-10 rounded-lg bg-linear-to-b from-(--tc-accent,#ff4b4b) to-(--tc-accent-dark,#c30000) px-4 text-sm font-semibold text-white shadow-lg transition duration-150 hover:opacity-95 disabled:opacity-60 sm:self-end"
                   onClick={() => void handleFetchQaseProjects()}
                   disabled={loadingQaseProjects || !qaseToken}
                 >

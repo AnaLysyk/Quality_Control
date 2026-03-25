@@ -111,9 +111,8 @@ function toLocalCompany(c: PrismaCompany): LocalAuthCompany {
     cep: c.cep,
     linkedin_url: c.linkedin_url,
     qase_token: c.qase_token ?? undefined,
-    // Always prefer qase_project_codes; fallback to legacy qase_project_code for backward compatibility
-    qase_project_codes: Array.isArray(c.qase_project_codes) ? c.qase_project_codes : (c.qase_project_code ? [c.qase_project_code] : []),
-    qase_project_code: c.qase_project_code ?? (Array.isArray(c.qase_project_codes) && c.qase_project_codes.length ? c.qase_project_codes[0] : null),
+    // Persistência e leitura apenas do array canônico
+    qase_project_codes: Array.isArray(c.qase_project_codes) ? c.qase_project_codes : [],
     jira_base_url: c.jira_base_url,
     jira_email: c.jira_email,
     jira_api_token: c.jira_api_token,
@@ -371,12 +370,10 @@ export async function pgCreateLocalCompany(
       notes: (input.notes as string | null | undefined) ?? null,
       cep: (input.cep as string | null | undefined) ?? null,
       linkedin_url: (input.linkedin_url as string | null | undefined) ?? null,
-      // Always persist qase_project_codes as array; legacy qase_project_code is filled for backward compatibility
+      // Persistência apenas do array canônico
       qase_project_codes: Array.isArray(input.qase_project_codes)
         ? input.qase_project_codes.filter((v) => typeof v === "string" && v.trim()).map((v) => v.trim())
         : (typeof input.qase_project_codes === "string" && input.qase_project_codes.trim() ? [input.qase_project_codes.trim()] : []),
-      qase_project_code: (input.qase_project_code as string | null | undefined)
-        ?? (Array.isArray(input.qase_project_codes) && input.qase_project_codes.length ? input.qase_project_codes[0] : null),
       jira_base_url: (input.jira_base_url as string | null | undefined) ?? null,
       jira_email: (input.jira_email as string | null | undefined) ?? null,
       jira_api_token: (input.jira_api_token as string | null | undefined) ?? null,
@@ -434,9 +431,6 @@ export async function pgUpdateLocalCompany(
       ...(patch.phone !== undefined ? { phone: (patch.phone as string | null) ?? null } : {}),
       ...(patch.cep !== undefined ? { cep: (patch.cep as string | null) ?? null } : {}),
       ...(patch.linkedin_url !== undefined ? { linkedin_url: (patch.linkedin_url as string | null) ?? null } : {}),
-      ...(patch.qase_project_code !== undefined
-        ? { qase_project_code: (patch.qase_project_code as string | null) ?? null }
-        : {}),
       ...(patch.qase_project_codes !== undefined
         ? {
             qase_project_codes:

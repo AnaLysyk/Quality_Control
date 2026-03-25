@@ -77,7 +77,8 @@
     ".next/dev-runtime/types/**/*.ts",
     ".next/dev-runtime/dev/types/**/*.ts",
     ".next/build-runtime/types/**/*.ts",
-    ".next/build-runtime/dev/types/**/*.ts"
+    ".next/build-runtime/dev/types/**/*.ts",
+    ".next/dev/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

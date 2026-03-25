@@ -4,10 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import styles from "./LoginClient.module.css";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useAuthUser } from "@/hooks/useAuthUser";
+import { useAuthUser } from "../hooks/useAuthUser";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-
 type AuthUserShape = {
   role?: string | null;
   globalRole?: string | null;
@@ -17,12 +15,10 @@ type AuthUserShape = {
 };
 
 export default function LoginClient() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const { refreshUser } = useAuthUser();
   const rootRef = useRef<HTMLDivElement | null>(null);
-
   const [user, setUser] = useState("");
+
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -142,14 +138,12 @@ export default function LoginClient() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user, password }),
       });
-
       if (res.ok) {
         const meRes = await fetch("/api/me", { credentials: 'include' });
         const meJson = await meRes.json().catch(() => null);
@@ -162,35 +156,17 @@ export default function LoginClient() {
         const data = await res.json().catch(() => null);
         setError((data?.error as string) || "Erro ao autenticar");
       }
-    } catch {
-      setError("Erro de rede");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao fazer login");
     } finally {
       setLoading(false);
     }
   }
 
-  return (
-    <div
-      ref={rootRef}
-      className={
-        styles.loginContainer +
-        " " +
-        styles.loginFixedTheme +
-        " min-h-svh flex items-center justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative isolate z-2147483647 overflow-x-hidden overflow-y-auto px-4 py-6 pointer-events-auto sm:px-6 sm:py-10 md:px-10"
-      }
-    >
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-6 left-6 w-32 h-32 bg-[#011848] rounded-full opacity-20 blur-2xl animate-ping"></div>
-        <div className="absolute bottom-6 right-6 w-28 h-28 bg-[#ef0001] rounded-full opacity-20 blur-2xl animate-pulse"></div>
-        <div className="absolute top-1/6 right-1/5 w-20 h-20 bg-[#ef0001] rounded-full opacity-10 blur-lg animate-bounce delay-1000"></div>
-        <div className="absolute bottom-1/6 left-1/5 w-24 h-24 bg-[#011848] rounded-full opacity-10 blur-lg animate-pulse delay-700"></div>
-        <div className="absolute top-10 left-44 w-16 h-16 bg-[#ef0001] rounded-full opacity-10 blur animate-pulse delay-500"></div>
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-20 bg-[#011848] rounded-full opacity-10 blur animate-bounce delay-200"></div>
-        <div className="absolute top-1/2 left-2 w-14 h-14 bg-[#ef0001] rounded-full opacity-10 blur animate-pulse delay-800"></div>
-        <div className="absolute top-1/2 right-2 w-14 h-14 bg-[#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
-      </div>
+  // Corrigido fechamento de bloco JSX inválido
 
-      <div className="relative z-10 w-full max-w-lg space-y-5 sm:max-w-xl sm:space-y-8 md:max-w-2xl">
+  return (
+    <div className="relative z-10 w-full max-w-lg space-y-5 sm:max-w-xl sm:space-y-8 md:max-w-2xl">
         <div className="text-center">
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-r from-[#011848] to-[#ef0001] shadow-lg sm:h-24 sm:w-24">
             <Image
@@ -244,6 +220,7 @@ export default function LoginClient() {
                   placeholder="********"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
@@ -302,6 +279,5 @@ export default function LoginClient() {
           </div>
         </form>
       </div>
-    </div>
-  );
-}
+    );
+  }

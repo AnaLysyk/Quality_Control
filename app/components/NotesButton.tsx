@@ -156,7 +156,7 @@ const NOTES_WIDGET_Z_INDEX = 13050;
 function loadWidgetPos(): { x: number; y: number } | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(WIDGET_POS_KEY);
+    const raw = window.sessionStorage.getItem(WIDGET_POS_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -166,7 +166,7 @@ function loadWidgetPos(): { x: number; y: number } | null {
 function saveWidgetPos(pos: { x: number; y: number }) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(WIDGET_POS_KEY, JSON.stringify(pos));
+    window.sessionStorage.setItem(WIDGET_POS_KEY, JSON.stringify(pos));
   } catch {
     // noop
   }
@@ -175,7 +175,7 @@ function saveWidgetPos(pos: { x: number; y: number }) {
 function loadWidgetState(): { minimized: boolean; pinned: boolean } {
   if (typeof window === "undefined") return { minimized: false, pinned: false };
   try {
-    const raw = window.localStorage.getItem(WIDGET_STATE_KEY);
+    const raw = window.sessionStorage.getItem(WIDGET_STATE_KEY);
     return raw ? JSON.parse(raw) : { minimized: false, pinned: false };
   } catch {
     return { minimized: false, pinned: false };
@@ -185,7 +185,7 @@ function loadWidgetState(): { minimized: boolean; pinned: boolean } {
 function saveWidgetState(state: { minimized: boolean; pinned: boolean }) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(WIDGET_STATE_KEY, JSON.stringify(state));
+    window.sessionStorage.setItem(WIDGET_STATE_KEY, JSON.stringify(state));
   } catch {
     // noop
   }
@@ -194,7 +194,7 @@ function saveWidgetState(state: { minimized: boolean; pinned: boolean }) {
 function loadWidgetSize(): PanelSizeKey {
   if (typeof window === "undefined") return "large";
   try {
-    const raw = window.localStorage.getItem(WIDGET_SIZE_KEY);
+    const raw = window.sessionStorage.getItem(WIDGET_SIZE_KEY);
     if (raw && PANEL_SIZE_OPTIONS.some((option) => option.key === raw)) {
       return raw as PanelSizeKey;
     }
@@ -207,7 +207,7 @@ function loadWidgetSize(): PanelSizeKey {
 function saveWidgetSize(size: PanelSizeKey) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(WIDGET_SIZE_KEY, size);
+    window.sessionStorage.setItem(WIDGET_SIZE_KEY, size);
   } catch {
     // noop
   }
@@ -1113,7 +1113,7 @@ export default function NotesButton() {
   const readLocalNotes = useCallback((): NoteItem[] => {
     if (!storageKey || typeof window === "undefined") return [];
     try {
-      const raw = window.localStorage.getItem(storageKey);
+      const raw = window.sessionStorage.getItem(storageKey);
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed.filter(Boolean).map((item) => normalizeNoteItem(item)) : [];
@@ -1126,7 +1126,7 @@ export default function NotesButton() {
     (items: NoteItem[]) => {
       if (!storageKey || typeof window === "undefined") return;
       try {
-        window.localStorage.setItem(storageKey, JSON.stringify(items));
+        window.sessionStorage.setItem(storageKey, JSON.stringify(items));
       } catch {
         // noop
       }

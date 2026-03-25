@@ -83,15 +83,16 @@ function resolveLogoCandidates(source: LogoSource): string[] {
     addCandidate(`/images/${slug}.jpeg`);
   }
 
-  const website = typeof source.website === "string" ? source.website.trim() : "";
-  if (website) {
-    try {
-      const hostname = new URL(website).hostname;
-      if (hostname) addCandidate(`https://logo.clearbit.com/${hostname}`);
-    } catch {
-      /* ignore invalid URL */
-    }
-  }
+  // Removido: não buscar logo externo (Clearbit) para evitar imagens externas
+  // const website = typeof source.website === "string" ? source.website.trim() : "";
+  // if (website) {
+  //   try {
+  //     const hostname = new URL(website).hostname;
+  //     if (hostname) addCandidate(`https://logo.clearbit.com/${hostname}`);
+  //   } catch {
+  //     /* ignore invalid URL */
+  //   }
+  // }
 
   return candidates;
 }

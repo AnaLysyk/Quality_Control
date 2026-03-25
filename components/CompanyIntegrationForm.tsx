@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useSWRCompanyData } from "./useSWRCompanyData";
 import { useSWRQaseProjects } from "./useSWRQaseProjects";
@@ -7,6 +8,7 @@ interface CompanyIntegrationFormProps {
   variant?: "admin" | "company-profile";
 }
 
+export function CompanyIntegrationForm({ companyId, variant }: CompanyIntegrationFormProps) {
   const { companyData: data, loading, error, refetch: refetchCompanyData } = useSWRCompanyData(companyId);
   const [form, setForm] = useState<{ qase_token?: string }>({ qase_token: undefined });
   const [saving, setSaving] = useState(false);
@@ -15,20 +17,18 @@ interface CompanyIntegrationFormProps {
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const { fetchProjects, projects, loading: loadingProjects, error: projectsError } = useSWRQaseProjects();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!data) {
       setForm({ qase_token: undefined });
       return;
     }
     const maybeToken = (data as Record<string, unknown>)?.qase_token;
     setForm({ qase_token: typeof maybeToken === "string" ? maybeToken : undefined });
-    // initialize selected projects from loaded company (supports legacy single code)
     const existingCodes = (data as any)?.qase_project_codes;
-    const legacyCode = (data as any)?.qase_project_code;
     if (Array.isArray(existingCodes) && existingCodes.length) {
       setSelectedProjects(existingCodes.map((c: any) => (typeof c === "string" ? c.trim().toUpperCase() : String(c).trim().toUpperCase())));
-    } else if (typeof legacyCode === "string" && legacyCode.trim()) {
-      setSelectedProjects([legacyCode.trim().toUpperCase()]);
+    } else {
+      setSelectedProjects([]);
     }
   }, [data]);
 
@@ -55,6 +55,7 @@ interface CompanyIntegrationFormProps {
   }
 
   async function handleSave(e: React.FormEvent) {
+      console.log('handleSave chamado', selectedProjects);
     e.preventDefault();
     setSaving(true);
     setMessage(null);
@@ -65,10 +66,7 @@ interface CompanyIntegrationFormProps {
 
       const payload: Record<string, unknown> = {
         qase_token: form.qase_token || undefined,
-        // always include the array field so backend can distinguish between omitted vs explicit clear
         qase_project_codes: normalizedSelected,
-        // legacy single-field derived from selection (or null when empty)
-        qase_project_code: normalizedSelected[0] ?? null,
       };
       const res = await fetch("/api/clients/" + companyId, {
         method: "PATCH",
@@ -77,11 +75,15 @@ interface CompanyIntegrationFormProps {
         credentials: "include",
       });
       const updated = await res.json().catch(() => null);
+      if (!res.ok) {
+        setMessage("Erro ao salvar dados.");
+        setSaving(false);
+        return;
+      }
       setMessage("Dados salvos com sucesso.");
       if (updated && typeof updated === "object") {
         await refetchCompanyData();
-        // ensure local selectedProjects reflects persisted value (normalize)
-        const persistedRaw = (updated as any).qase_project_codes ?? ((updated as any).qase_project_code ? (Array.isArray((updated as any).qase_project_codes) ? (updated as any).qase_project_codes : [(updated as any).qase_project_code]) : undefined);
+        const persistedRaw = (updated as any).qase_project_codes;
         if (Array.isArray(persistedRaw)) {
           setSelectedProjects(persistedRaw.map((c: any) => (typeof c === "string" ? c.trim().toUpperCase() : String(c).trim().toUpperCase())));
         }
@@ -92,8 +94,8 @@ interface CompanyIntegrationFormProps {
         }
       }
       setTokenSaved(Boolean(form.qase_token && form.qase_token.length > 0));
-    } catch {
-      setMessage("Erro ao salvar dados.");
+    } catch (err: any) {
+      setMessage(`Erro ao salvar dados: ${err?.message || err}`);
     } finally {
       setSaving(false);
     }
@@ -121,7 +123,7 @@ interface CompanyIntegrationFormProps {
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1" htmlFor="qase_projects_select">Projetos Qase</label>
           <select id="qase_projects_select" title="Projetos Qase" aria-label="Projetos Qase" multiple value={selectedProjects} onChange={(e) => setSelectedProjects(Array.from(e.target.selectedOptions, (o) => o.value))} className="w-full border rounded px-2 py-1 h-36">
-            {projects.map((p) => (
+            {projects.map((p: { code: string; title: string }) => (
               <option key={p.code} value={p.code}>
                 {p.code} — {p.title}
               </option>
@@ -143,4 +145,6 @@ interface CompanyIntegrationFormProps {
     </form>
   );
 }
+
+export default CompanyIntegrationForm;
 

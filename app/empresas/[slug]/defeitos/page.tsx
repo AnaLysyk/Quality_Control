@@ -144,7 +144,7 @@ export default function CompanyDefectsPage() {
   const readLocalLinks = () => {
     if (typeof window === "undefined") return {};
     try {
-      const raw = window.localStorage.getItem(LOCAL_LINKS_KEY);
+      const raw = window.sessionStorage.getItem(LOCAL_LINKS_KEY);
       return raw ? (JSON.parse(raw) as Record<string, Record<string, string>>) : {};
     } catch {
       return {};
@@ -154,7 +154,7 @@ export default function CompanyDefectsPage() {
   const writeLocalLinks = (payload: Record<string, Record<string, string>>) => {
     if (typeof window === "undefined") return;
     try {
-      window.localStorage.setItem(LOCAL_LINKS_KEY, JSON.stringify(payload));
+      window.sessionStorage.setItem(LOCAL_LINKS_KEY, JSON.stringify(payload));
     } catch {
       // ignore
     }

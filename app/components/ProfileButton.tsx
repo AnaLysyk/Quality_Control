@@ -226,10 +226,10 @@ export default function ProfileButton() {
     setOpen(false);
     try {
       const prefix = "chat_history_v1:";
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
         if (key && key.startsWith(prefix)) {
-          localStorage.removeItem(key);
+          sessionStorage.removeItem(key);
           i = -1;
         }
       }

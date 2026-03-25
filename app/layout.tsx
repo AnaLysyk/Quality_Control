@@ -45,9 +45,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       try {
         const root = document.documentElement;
         const isValid = (v) => v === "light" || v === "dark" || v === "system";
-        const lastUserId = localStorage.getItem("tc-settings:last-user-id");
+        const lastUserId = sessionStorage.getItem("tc-settings:last-user-id");
         const key = lastUserId ? ("tc-settings:" + lastUserId) : "tc-settings:guest";
-        const raw = localStorage.getItem(key) || localStorage.getItem("tc-settings:guest");
+        const raw = sessionStorage.getItem(key) || sessionStorage.getItem("tc-settings:guest");
         const parsed = raw ? JSON.parse(raw) : null;
         // Standard theme: light by default (avoids dark->light flash on first paint).
         const storedTheme = parsed && isValid(parsed.theme) ? parsed.theme : "light";

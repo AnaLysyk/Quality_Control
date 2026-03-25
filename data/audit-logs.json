@@ -1,6 +1,160 @@
 {
   "items": [
     {
+      "id": "1b77749e-d269-4863-bf13-3e640da0c29c",
+      "created_at": "2026-03-25T00:57:34.978Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "cmn5c3h3700081si8brmysa2f",
+      "entity_label": "Legacy Co ps1k",
+      "metadata": {
+        "active": true,
+        "integrationMode": "manual"
+      }
+    },
+    {
+      "id": "7da68b46-6087-46fe-b4e0-60e02d6e0f2e",
+      "created_at": "2026-03-25T00:57:33.095Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn5c3h3700081si8brmysa2f",
+      "entity_label": "Legacy Co ps1k",
+      "metadata": {
+        "slug": "legacyco-1774400251752-6g18",
+        "active": true
+      }
+    },
+    {
+      "id": "dd804362-1ca5-46f3-af97-6cb88486c709",
+      "created_at": "2026-03-25T00:57:31.728Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "cmn5c39q000031si8pvtyljqq",
+      "entity_label": "Patch Co 0ddn",
+      "metadata": {
+        "active": true,
+        "integrationMode": "manual"
+      }
+    },
+    {
+      "id": "841a45e0-6b7a-4af2-969f-ef9e7faa37e6",
+      "created_at": "2026-03-25T00:57:24.582Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn5c39q000031si8pvtyljqq",
+      "entity_label": "Patch Co 0ddn",
+      "metadata": {
+        "slug": "patchco-1774400219789-o9sd",
+        "active": true
+      }
+    },
+    {
+      "id": "717bab0a-076c-435d-8337-ee806aff76fe",
+      "created_at": "2026-03-25T00:57:23.073Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn5c38oa00001si8ivrkz8y5",
+      "entity_label": "Test Co 53sb",
+      "metadata": {
+        "slug": "testco-1774400220720-py14",
+        "active": true
+      }
+    },
+    {
+      "id": "64662bec-414e-42d0-aaf5-c6ac910df00e",
+      "created_at": "2026-03-24T16:17:00.120Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "6f0f3219-c5a9-409e-8b69-848080bef8ba",
+      "created_at": "2026-03-24T16:05:05.298Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "6db7b7ac-4548-473a-8458-187cc7adb0c3",
+      "created_at": "2026-03-24T16:00:27.946Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "25ab6735-f86f-461d-b5a2-4ca4ec933f90",
+      "created_at": "2026-03-24T16:00:16.312Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "f2c2b793-2ff7-45ff-b5b4-37b064975999",
+      "created_at": "2026-03-24T15:55:02.095Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "2aba39a5-90cc-42f2-82f4-bac639ab1be7",
+      "created_at": "2026-03-24T15:48:59.618Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
       "id": "f7ec8b25-7975-4357-b0a7-9d9c8a3de4ef",
       "created_at": "2026-03-23T11:17:24.363Z",
       "actor_user_id": "usr_dev",

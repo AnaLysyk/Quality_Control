@@ -9,7 +9,7 @@ test.describe("kanban - movimentação", () => {
       clientSlug: "griaule",
     });
 
-    await page.addInitScript(() => localStorage.clear());
+    await page.addInitScript(() => sessionStorage.clear());
     await page.goto("/empresas/griaule/defeitos/kanban", { waitUntil: "networkidle" });
 
     const card = page.getByTestId("kanban-card-k2");

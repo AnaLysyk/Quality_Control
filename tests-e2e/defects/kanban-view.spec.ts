@@ -9,7 +9,7 @@ test.describe("kanban - visualização", () => {
       clientSlug: "griaule",
     });
 
-    await page.addInitScript(() => localStorage.clear());
+    await page.addInitScript(() => sessionStorage.clear());
     await page.goto("/empresas/griaule/defeitos/kanban", { waitUntil: "networkidle" });
 
     await expect(page.getByTestId("kanban-page")).toBeVisible();

@@ -49,9 +49,9 @@ async function setThemeStorage(page: import("@playwright/test").Page, theme: The
     ({ theme, userId }) => {
       const key = userId ? `tc-settings:${userId}` : "tc-settings:guest";
       const payload = JSON.stringify({ theme, language: "pt-BR" });
-      localStorage.setItem(key, payload);
+      sessionStorage.setItem(key, payload);
       if (userId) {
-        localStorage.setItem("tc-settings:last-user-id", userId);
+        sessionStorage.setItem("tc-settings:last-user-id", userId);
       }
     },
     { theme, userId }

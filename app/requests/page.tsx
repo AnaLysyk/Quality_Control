@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import Breadcrumb from "@/components/Breadcrumb";
@@ -35,8 +35,8 @@ const STATUS_LABEL: Record<RequestRecord["status"], string> = {
 
 export default function RequestsPage() {
   const router = useRouter();
-  const [items, setItems] = useState<RequestRecord[]>([]);
-  const [loading, setLoading] = useState(false);
+    const [items, setItems] = useState<RequestRecord[]>([]);
+    const [requestsLoading, setRequestsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [message, setMessage] = useState<string | null>(null);

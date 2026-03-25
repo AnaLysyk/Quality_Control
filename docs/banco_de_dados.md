@@ -25,8 +25,8 @@ Tabelas principais:
 ## Empresa ativa (frontend)
 
 - O frontend mantém a empresa ativa no `ClientContext`.
-- A seleção é persistida em `localStorage` com a chave `activeClient:<userId>`.
-- Ao trocar a empresa ativa, o identificador é salvo localmente e usado para filtrar telas e chamadas de API.
+- A seleção é persistida em `sessionStorage` com a chave `activeClient:<userId>`.
+- Ao trocar a empresa ativa, o identificador é salvo na sessão e usado para filtrar telas e chamadas de API.
 
 ## Papéis (roles)
 

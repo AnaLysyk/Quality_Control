@@ -19,5 +19,10 @@
       "bug": null,
       "fromApi": false
     }
-  ]
+  ],
+  "pdf_export": [],
+  "bloqueada": [],
+  "gate_e2e": [],
+  "e2e_negocio": [],
+  "falha": []
 }

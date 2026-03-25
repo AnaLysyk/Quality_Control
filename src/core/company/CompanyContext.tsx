@@ -83,7 +83,7 @@ type ClientContextValue = {
 const ClientContext = createContext<ClientContextValue | undefined>(undefined);
 
 const storageKey = (userId: string) => `activeClient:${userId}`;
-const getLocalStorage = () => (typeof window === "undefined" ? null : window.localStorage);
+const getSessionStorage = () => (typeof window === "undefined" ? null : window.sessionStorage);
 
 export function ClientProvider({ children }: { children: ReactNode }) {
   const { user, companies, loading: authLoading, refreshUser } = useAuth();
@@ -127,13 +127,13 @@ export function ClientProvider({ children }: { children: ReactNode }) {
     setClients(normalizedClients);
     if (normalizedClients.length === 0) {
       setActiveClientSlugState(null);
-      getLocalStorage()?.removeItem(storageKey(user.id));
+      getSessionStorage()?.removeItem(storageKey(user.id));
       setLoading(false);
       setError(null);
       return;
     }
 
-    const storage = getLocalStorage();
+    const storage = getSessionStorage();
     const stored = storage?.getItem(storageKey(user.id)) ?? null;
     const storedSlug = stored
       ? normalizedClients.find((client) => client.slug === stored || client.id === stored)?.slug ?? null
@@ -196,7 +196,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const storage = getLocalStorage();
+      const storage = getSessionStorage();
 
       if (!slug) {
         setActiveClientSlugState(null);

@@ -16,6 +16,7 @@ interface AppShellProps {
   children: ReactNode;
 }
 
+
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname() || "";
   const isLoginRoute = pathname.startsWith("/login");
@@ -23,6 +24,24 @@ export default function AppShell({ children }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const prevPathRef = useRef(pathname);
+
+  // Swipe/touch logic (deve estar dentro do componente)
+  const touchStartX = useRef<number | null>(null);
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+  }
+  function handleTouchMove(e: React.TouchEvent) {
+    if (touchStartX.current !== null) {
+      const deltaX = e.touches[0].clientX - touchStartX.current;
+      if (deltaX > 40) {
+        setMobileOpen(true);
+        touchStartX.current = null;
+      }
+    }
+  }
+  function handleTouchEnd() {
+    touchStartX.current = null;
+  }
 
   useEffect(() => {
     // Close mobile menu only when the route actually changes.
@@ -42,14 +61,27 @@ export default function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="min-h-screen w-full bg-(--page-bg) text-(--page-text) app-shell">
+
+      {/* Detector de hover na lateral esquerda para telas pequenas */}
+      <div
+        className={`fixed top-0 left-0 h-full w-16 z-40 menu-hover-area${mobileOpen ? ' menu-hover-area--disabled' : ''}`}
+        onMouseEnter={() => setMobileOpen(true)}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      />
+
       <SidebarVisibility mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
       <button
         type="button"
         className="fixed top-3 left-3 z-50 rounded-lg border border-(--tc-border) bg-(--tc-surface) p-2 text-(--tc-text) shadow-sm transition-colors hover:bg-(--tc-surface-2) sm:top-4 sm:left-4 lg:hidden"
-        onClick={() => setMobileOpen(true)}
+        onClick={() => { console.log('Menu mobile: onClick'); setMobileOpen(true); }}
+        onMouseEnter={() => { console.log('Menu mobile: onMouseEnter'); setMobileOpen(true); }}
+        onTouchStart={() => { console.log('Menu mobile: onTouchStart'); setMobileOpen(true); }}
         aria-label="Abrir menu"
         aria-expanded={mobileOpen}
+        onMouseLeave={() => setMobileOpen(false)}
       >
         <FiMenu size={20} />
       </button>

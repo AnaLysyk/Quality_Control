@@ -9,7 +9,7 @@ test.describe("kanban - permissão", () => {
       clientSlug: "griaule",
     });
 
-    await page.addInitScript(() => localStorage.clear());
+    await page.addInitScript(() => sessionStorage.clear());
     await page.goto("/empresas/griaule/defeitos/kanban", { waitUntil: "networkidle" });
 
     // Controles de move só existem para admin (editable=true)

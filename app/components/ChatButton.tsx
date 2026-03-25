@@ -53,6 +53,7 @@ function TCLogoSpinner({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
             src="/images/tc.png"
             alt="Testing Company"
             fill
+            sizes="48px"
             className="select-none pointer-events-none object-contain animate-spin-slower"
           />
         </div>
@@ -148,7 +149,7 @@ export default function ChatButton() {
   useEffect(() => {
     try {
       const key = `${HISTORY_KEY_PREFIX}:${user?.id ?? "anon"}`;
-      const raw = localStorage.getItem(key);
+      const raw = sessionStorage.getItem(key);
       if (!raw) {
         setMessages([]);
         return;
@@ -165,7 +166,7 @@ export default function ChatButton() {
   useEffect(() => {
     try {
       const key = `${HISTORY_KEY_PREFIX}:${user?.id ?? "anon"}`;
-      localStorage.setItem(key, JSON.stringify(messages.slice(-120)));
+      sessionStorage.setItem(key, JSON.stringify(messages.slice(-120)));
     } catch {
       // ignore storage errors
     }
@@ -321,15 +322,15 @@ export default function ChatButton() {
     try {
       if (kind === "clear") {
         const key = `${HISTORY_KEY_PREFIX}:${user?.id ?? "anon"}`;
-        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
         setMessages([]);
         return;
       }
       const prefix = `${HISTORY_KEY_PREFIX}:`;
-      for (let i = 0; i < localStorage.length; i += 1) {
-        const key = localStorage.key(i);
+      for (let i = 0; i < sessionStorage.length; i += 1) {
+        const key = sessionStorage.key(i);
         if (key && key.startsWith(prefix)) {
-          localStorage.removeItem(key);
+          sessionStorage.removeItem(key);
           i = -1;
         }
       }
@@ -583,6 +584,7 @@ export default function ChatButton() {
                   src="/images/tc.png"
                   alt="Assistente Testing Company"
                   fill
+                  sizes="56px"
                   className="select-none pointer-events-none object-contain animate-spin-slower"
                 />
               </div>

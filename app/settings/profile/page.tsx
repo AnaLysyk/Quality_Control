@@ -434,18 +434,18 @@ export default function SettingsProfilePage() {
       ? "--"
       : String(profileSummary?.linkedCompaniesCount ?? uniqueCompanies.length);
 
-  const { companies, loading: companiesLoading, error: companiesError, refetch: refetchCompanies } = useSWRCompanies(hasCompanyContext);
+  const { companies: swrCompanies, loading: swrCompaniesLoading, error: swrCompaniesError, refetch: refetchCompanies } = useSWRCompanies(hasCompanyContext);
   useEffect(() => {
-    if (companies) setCompanies(normalizeCompanies(companies));
-    if (companiesError) setCompaniesError(companiesError.message || String(companiesError));
-  }, [companies, companiesError]);
+    if (swrCompanies) setCompanies(normalizeCompanies(swrCompanies));
+    if (swrCompaniesError) setCompaniesError(swrCompaniesError.message || String(swrCompaniesError));
+  }, [swrCompanies, swrCompaniesError]);
 
-  const { profileSummary, loading: profileSummaryLoading, error: profileSummaryError, refetch: refetchProfileSummary } = useSWRProfileSummary(user?.id);
+  const { profileSummary: swrProfileSummary, loading: swrProfileSummaryLoading, error: swrProfileSummaryError, refetch: refetchProfileSummary } = useSWRProfileSummary(user?.id);
   useEffect(() => {
-    if (profileSummary) setProfileSummary(normalizeProfileSummary(profileSummary));
-    if (profileSummaryError) setProfileSummary(null);
-    setProfileSummaryLoading(profileSummaryLoading);
-  }, [profileSummary, profileSummaryError, profileSummaryLoading]);
+    if (swrProfileSummary) setProfileSummary(normalizeProfileSummary(swrProfileSummary));
+    if (swrProfileSummaryError) setProfileSummary(null);
+    setProfileSummaryLoading(swrProfileSummaryLoading);
+  }, [swrProfileSummary, swrProfileSummaryError, swrProfileSummaryLoading]);
 
   useEffect(() => {
     setProfileFullName(fullName || "");

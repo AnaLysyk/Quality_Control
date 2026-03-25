@@ -110,12 +110,12 @@ export default function Kanban({
   const totalCount = totals.pass + totals.fail + totals.blocked + totals.notRun;
   const passRate = totalCount ? Math.round((totals.pass / totalCount) * 100) : 0;
 
-  // Sincroniza dados externos (ex.: localStorage ou troca de slug) com o estado interno do Kanban.
+  // Sincroniza dados externos (ex.: sessionStorage ou troca de slug) com o estado interno do Kanban.
   useEffect(() => {
     setLocalData((prev) => (prev === data ? prev : data));
   }, [data]);
 
-  // Expõe mudanças para quem consome o componente (ex.: persistir em localStorage).
+  // Expõe mudanças para quem consome o componente (ex.: persistir em sessionStorage).
   useEffect(() => {
     onChange?.(localData);
   }, [localData, onChange]);

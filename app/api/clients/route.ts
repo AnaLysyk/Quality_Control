@@ -67,7 +67,6 @@ function mapCompany(company: LocalAuthCompany) {
     cep: asString(company.cep),
     address_detail: asString(company.address_detail),
     linkedin_url: asString(company.linkedin_url),
-    qase_project_code: asString(company.qase_project_code),
     qase_project_codes: asStringArray(company.qase_project_codes),
     qase_token: asString(company.qase_token),
     jira_base_url: asString(company.jira_base_url),

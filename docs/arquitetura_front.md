@@ -33,7 +33,7 @@ O projeto usa **Tailwind v4** com tokens acessados por **CSS Variables**.
 O tema é controlado com classe (`.dark`) e variáveis CSS.
 
 - O `app/layout.tsx` aplica uma inicialização antes da hidratação para evitar flash de tema.
-- As preferências ficam em `localStorage` com chave por usuário (ex.: `tc-settings:<userId>`) e há uma chave auxiliar para lembrar o último usuário logado.
+- As preferências ficam em `sessionStorage` com chave por usuário (ex.: `tc-settings:<userId>`) e há uma chave auxiliar para lembrar o último usuário logado.
 
 ## Autenticação (resumo)
 - O login gera `session_id` e, quando configurado, `auth_token`.

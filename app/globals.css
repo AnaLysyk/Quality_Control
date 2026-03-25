@@ -1,3 +1,10 @@
+/* Área de hover para menu mobile */
+.menu-hover-area {
+  cursor: pointer;
+}
+.menu-hover-area--disabled {
+  pointer-events: none;
+}
 /* Animação spin mais lenta para o logo da Testing Company */
 .animate-spin-slower {
   animation: spin 18s linear infinite;

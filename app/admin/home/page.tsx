@@ -452,10 +452,10 @@ export default function AdminHomePage() {
 
   useEffect(() => {
     try {
-      const stored = window.localStorage.getItem("admin-quality:last-company");
+      const stored = window.sessionStorage.getItem("admin-quality:last-company");
       if (stored) setLastViewedCompanySlug(stored);
     } catch {
-      // Ignore local storage issues on locked browsers.
+      // Ignore session storage issues on locked browsers.
     }
   }, []);
 
@@ -481,9 +481,9 @@ export default function AdminHomePage() {
     if (!selectedCompanySlug) return;
     setLastViewedCompanySlug(selectedCompanySlug);
     try {
-      window.localStorage.setItem("admin-quality:last-company", selectedCompanySlug);
+      window.sessionStorage.setItem("admin-quality:last-company", selectedCompanySlug);
     } catch {
-      // Ignore local storage issues on locked browsers.
+      // Ignore session storage issues on locked browsers.
     }
   }, [selectedCompanySlug]);
 

@@ -46,7 +46,7 @@ function resolveUserId(user: { id?: string | null; userId?: string | null } | nu
 function readLastUserId(): string | null {
   if (typeof window === "undefined") return null;
   try {
-    const id = window.localStorage.getItem(LAST_USER_ID_KEY);
+    const id = window.sessionStorage.getItem(LAST_USER_ID_KEY);
     return id && id.trim() ? id : null;
   } catch {
     return null;
@@ -56,7 +56,7 @@ function readLastUserId(): string | null {
 function rememberLastUserId(userId: string) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(LAST_USER_ID_KEY, userId);
+    window.sessionStorage.setItem(LAST_USER_ID_KEY, userId);
   } catch {
     /* ignore */
   }
@@ -77,7 +77,7 @@ function normalizeSettings(input?: Partial<AppSettings> | null): AppSettings {
 function readStoredSettings(key: string): AppSettings | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(key);
+    const raw = window.sessionStorage.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<AppSettings>;
     return normalizeSettings(parsed);
@@ -89,7 +89,7 @@ function readStoredSettings(key: string): AppSettings | null {
 function writeStoredSettings(key: string, settings: AppSettings) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(key, JSON.stringify(settings));
+    window.sessionStorage.setItem(key, JSON.stringify(settings));
   } catch {
     /* ignore */
   }

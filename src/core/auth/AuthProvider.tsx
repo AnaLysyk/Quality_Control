@@ -161,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      localStorage.removeItem("auth_ok");
+      sessionStorage.removeItem("auth_ok");
     } catch {
       /* ignore */
     }

@@ -55,9 +55,9 @@ export default function RequestsPage() {
   }, [requests]);
 
   const summary = useMemo(() => {
-    const pending = requests.filter((item) => item.status === "PENDING").length;
-    const approved = requests.filter((item) => item.status === "APPROVED").length;
-    const rejected = requests.filter((item) => item.status === "REJECTED").length;
+    const pending = requests.filter((item: RequestRecord) => item.status === "PENDING").length;
+    const approved = requests.filter((item: RequestRecord) => item.status === "APPROVED").length;
+    const rejected = requests.filter((item: RequestRecord) => item.status === "REJECTED").length;
     return { pending, approved, rejected };
   }, [requests]);
 

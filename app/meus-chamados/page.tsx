@@ -1,4 +1,6 @@
-﻿"use client";
+﻿
+import React from "react";
+"use client";
 
 function getSuporteCode(code: string | null | undefined, id: string): string {
   const raw = typeof code === "string" ? code.trim().toUpperCase() : "";
@@ -84,10 +86,10 @@ export default function MeusSuportesPage() {
   const [error, setError] = useState<string | null>(null);
   const { supports, loading: loadingSuportes, error: swrError, refetch } = useSWRSupports();
   // Sincroniza estado local com SWR
-  React.useEffect(() => {
+  useEffect(() => {
     setSuportes(supports);
   }, [supports]);
-  React.useEffect(() => {
+  useEffect(() => {
     setError(swrError ? (swrError.message || String(swrError)) : null);
   }, [swrError]);
   const [selectedSuporte, setSelectedSuporte] = useState<SuporteItem | null>(null);

@@ -66,6 +66,7 @@ export type ClientAccess = {
   role: "ADMIN" | "USER";
   linkActive: boolean;
   createdAt?: string | null;
+  logoUrl?: string | null;
 };
 
 type ClientContextValue = {

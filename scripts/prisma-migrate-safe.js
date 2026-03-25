@@ -6,16 +6,22 @@ function runPrisma(cmd, desc) {
     cp.execSync(cmd, { stdio: 'inherit' });
     console.log(`[prisma-migrate-safe] ${desc} concluído.`);
   } catch (e) {
-    const out =
-      (e.stdout && e.stdout.toString()) ||
-      (e.stderr && e.stderr.toString()) ||
-      e.message || '';
+    // Coleta todas as possíveis mensagens de erro
+    let out = '';
+    if (e.stdout) out += e.stdout.toString();
+    if (e.stderr) out += e.stderr.toString();
+    if (e.message) out += e.message;
+    if (typeof e === 'string') out += e;
+    // Fallback: tenta serializar o erro
+    try { out += JSON.stringify(e); } catch {}
     if (out.includes('P3012')) {
       console.log('[prisma-migrate-safe] Aviso P3012 ignorado: nenhuma migration pendente de rollback.');
-    } else {
-      console.error(`[prisma-migrate-safe] Erro ao executar: ${cmd}`);
-      throw e;
+      return;
     }
+    console.error(`[prisma-migrate-safe] Erro ao executar: ${cmd}`);
+    console.error(out);
+    // Só lança se não for P3012
+    throw e;
   }
 }
 

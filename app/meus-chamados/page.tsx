@@ -13,7 +13,7 @@ function getSuporteCode(code: string | null | undefined, id: string): string {
   return `SP-${id.slice(0, 6).toUpperCase()}`;
 }
 
-import { useCallback, useMemo, useState } from "react";
+// ...existing code...
 import { useSWRSupports } from "./useSWRSupports";
 import { FiLifeBuoy, FiPlus, FiRefreshCw, FiX } from "react-icons/fi";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";

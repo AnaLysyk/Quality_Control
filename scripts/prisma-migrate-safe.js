@@ -28,8 +28,5 @@ function runPrisma(cmd, desc) {
 // Gera o Prisma Client
 runPrisma('npx prisma generate', 'Gerando Prisma Client');
 
-// Resolve migrations com possível rollback
-runPrisma('npx prisma migrate resolve --rolled-back 20250601000000_init_postgres', 'Resolvendo migrations (rollback)');
-
-// Aplica migrations
+// Aplica migrations (deploy)
 runPrisma('npx prisma migrate deploy', 'Aplicando migrations');

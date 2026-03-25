@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { useSWRProfileSummary } from "./useSWRProfileSummary";
+import { useSWRCompanies } from "./useSWRCompanies";
 import Link from "next/link";
 import { FiAlertCircle, FiCheckCircle, FiChevronDown, FiSearch, FiTrash2 } from "react-icons/fi";
 import Breadcrumb from "@/components/Breadcrumb";
@@ -432,82 +434,18 @@ export default function SettingsProfilePage() {
       ? "--"
       : String(profileSummary?.linkedCompaniesCount ?? uniqueCompanies.length);
 
+  const { companies, loading: companiesLoading, error: companiesError, refetch: refetchCompanies } = useSWRCompanies(hasCompanyContext);
   useEffect(() => {
-    let cancelled = false;
+    if (companies) setCompanies(normalizeCompanies(companies));
+    if (companiesError) setCompaniesError(companiesError.message || String(companiesError));
+  }, [companies, companiesError]);
 
-    if (!hasCompanyContext) {
-      setCompanies([]);
-      setCompaniesError(null);
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    async function loadCompanies() {
-      setCompaniesError(null);
-      try {
-        const response = await fetch("/api/me/clients", { credentials: "include", cache: "no-store" });
-        if (!response.ok) {
-          const payload = await response.json().catch(() => ({}));
-          const message = typeof payload?.message === "string" ? payload.message : "Nao foi possivel carregar empresas vinculadas.";
-          if (!cancelled) setCompaniesError(message);
-          return;
-        }
-
-        const payload = await response.json().catch(() => ({}));
-        if (!cancelled) setCompanies(normalizeCompanies(payload));
-      } catch (error) {
-        if (!cancelled) {
-          setCompaniesError(error instanceof Error ? error.message : "Nao foi possivel carregar empresas vinculadas.");
-        }
-      }
-    }
-
-    void loadCompanies();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [hasCompanyContext]);
-
+  const { profileSummary, loading: profileSummaryLoading, error: profileSummaryError, refetch: refetchProfileSummary } = useSWRProfileSummary(user?.id);
   useEffect(() => {
-    let cancelled = false;
-
-    if (!user?.id) {
-      setProfileSummary(null);
-      setProfileSummaryLoading(false);
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    async function loadProfileSummary() {
-      setProfileSummaryLoading(true);
-      try {
-        const response = await fetchApi("/api/me/profile-summary", {
-          cache: "no-store",
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          if (!cancelled) setProfileSummary(null);
-          return;
-        }
-        if (!cancelled) {
-          setProfileSummary(normalizeProfileSummary(payload));
-        }
-      } catch {
-        if (!cancelled) setProfileSummary(null);
-      } finally {
-        if (!cancelled) setProfileSummaryLoading(false);
-      }
-    }
-
-    void loadProfileSummary();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id]);
+    if (profileSummary) setProfileSummary(normalizeProfileSummary(profileSummary));
+    if (profileSummaryError) setProfileSummary(null);
+    setProfileSummaryLoading(profileSummaryLoading);
+  }, [profileSummary, profileSummaryError, profileSummaryLoading]);
 
   useEffect(() => {
     setProfileFullName(fullName || "");

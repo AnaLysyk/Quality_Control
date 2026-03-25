@@ -66,8 +66,8 @@ model Company {
   cep                String?
   linkedin_url       String?
   qase_token         String?
-  qase_project_code  String?
-  qase_project_codes String[]             @default([])
+  qase_project_code  String? // legacy, use qase_project_codes for multi-project support
+  qase_project_codes String[]             @default([]) // canonical: always use this for new code
   jira_base_url      String?
   jira_email         String?
   jira_api_token     String?

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import Breadcrumb from "@/components/Breadcrumb";
@@ -48,39 +48,17 @@ export default function RequestsPage() {
     router.push("/login");
   }, [router]);
 
-  const loadRequests = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetch("/api/requests/me", {
-        credentials: "include",
-        cache: "no-store",
-      });
-
-      if (response.status === 401) {
-        setItems([]);
-        handleUnauthorized();
-        return;
-      }
-
-      const payload = await response.json().catch(() => ({}));
-      setItems(Array.isArray(payload?.items) ? (payload.items as RequestRecord[]) : []);
-    } catch {
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [handleUnauthorized]);
-
-  useEffect(() => {
-    void loadRequests();
-  }, [loadRequests]);
+  const { requests, loading, error, refetch } = useSWRRequests();
+  React.useEffect(() => {
+    setItems(requests);
+  }, [requests]);
 
   const summary = useMemo(() => {
-    const pending = items.filter((item) => item.status === "PENDING").length;
-    const approved = items.filter((item) => item.status === "APPROVED").length;
-    const rejected = items.filter((item) => item.status === "REJECTED").length;
+    const pending = requests.filter((item) => item.status === "PENDING").length;
+    const approved = requests.filter((item) => item.status === "APPROVED").length;
+    const rejected = requests.filter((item) => item.status === "REJECTED").length;
     return { pending, approved, rejected };
-  }, [items]);
+  }, [requests]);
 
   async function submitEmail() {
     setMessage(null);

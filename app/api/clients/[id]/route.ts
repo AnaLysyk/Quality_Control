@@ -119,12 +119,37 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
   const input = parsed.data;
   const nextName = (input.company_name ?? input.name ?? current.name ?? current.company_name ?? "").trim();
   if (!nextName) return jsonError("Nome da empresa obrigatorio", 400);
-  const nextProjectCodes =
-    normalizeProjectCodes(input.qase_project_codes) ??
-    normalizeProjectCodes(input.qase_project_code) ??
-    normalizeProjectCodes(current.qase_project_codes) ??
-    normalizeProjectCodes(current.qase_project_code);
-  const nextLegacyProjectCode = input.qase_project_code ?? nextProjectCodes?.[0] ?? current.qase_project_code ?? null;
+  const hasProjectCodesField = Object.prototype.hasOwnProperty.call(input, "qase_project_codes");
+  const hasLegacyProjectField = Object.prototype.hasOwnProperty.call(input, "qase_project_code");
+
+  let nextProjectCodes: string[] | null;
+  if (hasProjectCodesField) {
+    // Respect the explicit array field from the client (even if empty/null -> clear)
+    nextProjectCodes = normalizeProjectCodes(input.qase_project_codes) ?? [];
+  } else if (hasLegacyProjectField) {
+    // Legacy single-field provided: accept it and convert to array (even if empty/null -> clear)
+    nextProjectCodes = normalizeProjectCodes(input.qase_project_code) ?? [];
+  } else {
+    // No project info in request: preserve existing stored value
+    nextProjectCodes = normalizeProjectCodes(current.qase_project_codes) ?? normalizeProjectCodes(current.qase_project_code);
+  }
+
+  // Derive legacy single project code from the resolved array when the request contained project fields,
+  // otherwise preserve current legacy value when neither field was provided.
+  let nextLegacyProjectCode: string | null;
+  if (hasProjectCodesField || hasLegacyProjectField) {
+    nextLegacyProjectCode =
+      nextProjectCodes && Array.isArray(nextProjectCodes) && typeof nextProjectCodes[0] === "string" && nextProjectCodes[0].trim()
+        ? nextProjectCodes[0]
+        : null;
+  } else {
+    nextLegacyProjectCode =
+      typeof current.qase_project_code === "string" && current.qase_project_code.trim()
+        ? current.qase_project_code
+        : nextProjectCodes && Array.isArray(nextProjectCodes) && typeof nextProjectCodes[0] === "string" && nextProjectCodes[0].trim()
+        ? nextProjectCodes[0]
+        : null;
+  }
 
   const duplicateByName = companies.find(
     (company) =>

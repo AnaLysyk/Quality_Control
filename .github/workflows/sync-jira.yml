@@ -1,25 +1,42 @@
-name: Sync Jira
+name: Sync with Jira
 
 on:
-  workflow_dispatch: {}
-  schedule:
-    - cron: '0 * * * *'
+  issues:
+    types: [opened, edited, closed, reopened]
+  pull_request:
+    types: [opened, edited, closed, reopened]
 
 jobs:
   sync-jira:
     runs-on: ubuntu-latest
 
-    env:
-      SITE_BASE_URL: ${{ vars.SITE_BASE_URL || '' }}
-      JIRA_SYNC_BEARER: ${{ secrets.JIRA_SYNC_BEARER || '' }}
-      JIRA_SYNC_COMPANIES: ${{ vars.JIRA_SYNC_COMPANIES || '' }}
-
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Executar sync Jira
-        run: |
-          echo "Iniciando sync Jira"
-          echo "SITE_BASE_URL=$SITE_BASE_URL"
-          echo "JIRA_SYNC_COMPANIES=$JIRA_SYNC_COMPANIES"
+      - name: Login Jira
+        uses: atlassian/gajira-login@v3
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+
+      - name: Find issue key
+        id: find
+        uses: atlassian/gajira-find-issue-key@v3
+        with:
+          string: ${{ github.event.issue.title || github.head_ref || github.ref_name }}
+
+      - name: Transition to In Progress
+        if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' }}
+        uses: atlassian/gajira-transition@v3
+        with:
+          issue: ${{ steps.find.outputs.issue }}
+          transition: "In Progress"
+
+      - name: Transition to Done on merged PR
+        if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true }}
+        uses: atlassian/gajira-transition@v3
+        with:
+          issue: ${{ steps.find.outputs.issue }}
+          transition: "Done"

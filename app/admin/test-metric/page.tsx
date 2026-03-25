@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CompanyMetricsCard, type DefectsSummary } from "@/components/CompanyMetricsCard";
+import dynamic from "next/dynamic";
+const CompanyMetricsCard = dynamic(() => import("@/components/CompanyMetricsCard"), { ssr: false, loading: () => <div>Carregando métricas...</div> });
+import type { DefectsSummary } from "@/components/CompanyMetricsCard";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 
 type Stats = { pass: number; fail: number; blocked: number; notRun: number };
@@ -263,7 +265,7 @@ function GlobalTrendSparkline({ points }: { points: TrendPoint[] }) {
       </svg>
       <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-white/78">
         <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-white" />Pass rate</span>
-        <span className="inline-flex items-center gap-2"><span className="h-[2px] w-4 bg-white/80 [background-image:repeating-linear-gradient(to_right,currentColor_0,currentColor_4px,transparent_4px,transparent_8px)]" />Meta 85%</span>
+        <span className="inline-flex items-center gap-2"><span className="h-0.5 w-4 bg-white/80 bg-[repeating-linear-gradient(to_right,currentColor_0,currentColor_4px,transparent_4px,transparent_8px)]" />Meta 85%</span>
         <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />Saudável</span>
         <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-amber-300/80" />Atenção</span>
         <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-red-400/80" />Risco</span>
@@ -577,7 +579,7 @@ export default function TestMetricPage() {
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-4">
-              <div className="rounded-[24px] border border-white/12 bg-white/10 p-5 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
+              <div className="rounded-3xl border border-white/12 bg-white/10 p-5 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
                 <div className="text-[11px] uppercase tracking-[0.24em] text-white/70">Empresas monitoradas</div>
                 <div className="mt-1 text-3xl font-extrabold text-white">{companyCounts.total}</div>
                 <div className="mt-2 flex flex-wrap gap-2 text-xs">
@@ -588,7 +590,7 @@ export default function TestMetricPage() {
                 </div>
               </div>
 
-              <div className="rounded-[24px] border border-white/12 bg-white/10 p-5 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
+              <div className="rounded-3xl border border-white/12 bg-white/10 p-5 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
                 <div className="text-[11px] uppercase tracking-[0.24em] text-white/70">Pass rate global</div>
                 <div className="mt-1 text-3xl font-extrabold text-white">
                   {overview?.globalPassRate == null ? "—" : `${overview.globalPassRate}%`}
@@ -598,13 +600,13 @@ export default function TestMetricPage() {
                 </div>
               </div>
 
-              <div className="rounded-[24px] border border-white/12 bg-white/10 p-5 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
+              <div className="rounded-3xl border border-white/12 bg-white/10 p-5 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
                 <div className="text-[11px] uppercase tracking-[0.24em] text-white/70">Releases em risco</div>
                 <div className="mt-1 text-3xl font-extrabold text-white">{releaseRiskCount}</div>
                 <div className="mt-2 text-xs font-medium text-white/78">no período ({period}d)</div>
               </div>
 
-              <div className="rounded-[24px] border border-white/12 bg-white/10 p-5 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
+              <div className="rounded-3xl border border-white/12 bg-white/10 p-5 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
                 <div className="text-[11px] uppercase tracking-[0.24em] text-white/72">Defeitos críticos abertos</div>
                 <div className="mt-1 text-3xl font-extrabold text-white">
                   {!globalDefects.loaded ? "…" : globalDefects.criticalOpen == null ? "—" : globalDefects.criticalOpen}
@@ -621,7 +623,7 @@ export default function TestMetricPage() {
               </div>
             </div>
 
-            <div className="mt-4 rounded-[24px] border border-white/12 bg-white/10 p-5 space-y-2 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
+            <div className="mt-4 rounded-3xl border border-white/12 bg-white/10 p-5 space-y-2 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
               <div className="flex items-center justify-between">
                 <div className="text-[11px] uppercase tracking-[0.24em] text-white/72">Qualidade por janela</div>
                 <div className="text-xs font-medium text-white/78">
@@ -731,7 +733,7 @@ export default function TestMetricPage() {
                       <div
                         key={company.id}
                         data-carousel-index={index}
-                        className="flex h-full flex-none w-full snap-center md:w-[50rem] lg:w-[54rem] xl:w-[58rem]"
+                        className="flex h-full flex-none w-full snap-center md:w-200 lg:w-216 xl:w-232"
                         onFocus={() => setActiveIndex(index)}
                       >
                         <CompanyMetricsCard

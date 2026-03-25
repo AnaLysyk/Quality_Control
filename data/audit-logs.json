@@ -1,6 +1,272 @@
 {
   "items": [
     {
+      "id": "f7ec8b25-7975-4357-b0a7-9d9c8a3de4ef",
+      "created_at": "2026-03-23T11:17:24.363Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "ec6f09e5-3428-4dc2-8ad9-ebbc7347fba1",
+      "created_at": "2026-03-23T11:17:02.138Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "fdc0b30d-d3ee-490a-8bc5-472bc9559feb",
+      "created_at": "2026-03-23T10:56:56.659Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "84e2a41c-0f5e-4cdc-a064-d56fdd7c23e6",
+      "created_at": "2026-03-23T03:59:44.959Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "3cd298b7-718c-44bb-ab2a-5dff9fd0e197",
+      "created_at": "2026-03-23T03:51:12.787Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "217850f8-6e7c-49b7-8f7b-03f3a436ecab",
+      "created_at": "2026-03-23T03:28:13.272Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "74cd20ef-201a-4fff-b0b2-11f1d9471ff5",
+      "created_at": "2026-03-23T03:27:41.020Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "41bd5fd7-5242-41f8-90fd-59fcc9d0ff61",
+      "created_at": "2026-03-23T01:37:57.635Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn2inpw5000i1s3s7597m2nm",
+      "entity_label": "Test Co st9m",
+      "metadata": {
+        "slug": "testco-1774229873675-6ory",
+        "active": true
+      }
+    },
+    {
+      "id": "ee995ab8-8750-4d3c-adf0-956a501b84a2",
+      "created_at": "2026-03-23T01:36:44.845Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "cmn2im4e7000f1s3sy8xv2hph",
+      "entity_label": "Legacy Co 1kja",
+      "metadata": {
+        "active": true,
+        "integrationMode": "manual"
+      }
+    },
+    {
+      "id": "de5504f7-6eae-4952-b793-1ea5774a216d",
+      "created_at": "2026-03-23T01:36:42.804Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn2im4e7000f1s3sy8xv2hph",
+      "entity_label": "Legacy Co 1kja",
+      "metadata": {
+        "slug": "legacyco-1774229800210-c6gu",
+        "active": true
+      }
+    },
+    {
+      "id": "da2da884-6937-4a00-8fc0-18d455249df5",
+      "created_at": "2026-03-23T01:36:39.631Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "cmn2ilrj9000c1s3sfrqp0qwr",
+      "entity_label": "Patch Co nwvi",
+      "metadata": {
+        "active": true,
+        "integrationMode": "manual"
+      }
+    },
+    {
+      "id": "dcb2397e-557e-4666-a9e7-3e46400b7200",
+      "created_at": "2026-03-23T01:36:26.693Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn2ilrj9000c1s3sfrqp0qwr",
+      "entity_label": "Patch Co nwvi",
+      "metadata": {
+        "slug": "patchco-1774229782861-ii6x",
+        "active": true
+      }
+    },
+    {
+      "id": "c04b86d2-fe2b-4a44-b785-151a0a235dee",
+      "created_at": "2026-03-23T01:32:50.552Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn2ih5d800091s3sttwff20r",
+      "entity_label": "Test Co 1jah",
+      "metadata": {
+        "slug": "testco-1774229562424-u351",
+        "active": true
+      }
+    },
+    {
+      "id": "17dffa58-545d-41f1-97dd-619240a192cd",
+      "created_at": "2026-03-23T01:28:06.473Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn2ib1q800061s3s3afa584h",
+      "entity_label": "Test Co 4tvs",
+      "metadata": {
+        "slug": "testco-1774229279519-idij",
+        "active": true
+      }
+    },
+    {
+      "id": "0dd6fecd-42f8-4044-8f76-9da6c2782ca2",
+      "created_at": "2026-03-23T01:26:16.973Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "cbf4e1c8-6691-4690-a3c5-9c94f6ae20a2",
+      "created_at": "2026-03-23T01:25:09.647Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn2i796c00031s3ssedwporm",
+      "entity_label": "Test Co vbhy",
+      "metadata": {
+        "slug": "testco-1774229103036-6tvc",
+        "active": true
+      }
+    },
+    {
+      "id": "55d50cbb-17f3-4c3d-969c-2e3eb47c1077",
+      "created_at": "2026-03-23T01:21:20.201Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn2i2c3a00001s3s9zujnqcn",
+      "entity_label": "Test Co mc4j",
+      "metadata": {
+        "slug": "testco-1774228861913-aca9",
+        "active": true
+      }
+    },
+    {
+      "id": "0b0f523d-5997-41d9-a29a-d830c29ed90e",
+      "created_at": "2026-03-23T01:02:28.297Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "67128220-6f95-4a57-ad0d-e76cb6d0750a",
+      "created_at": "2026-03-22T03:05:59.953Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
       "id": "58ebd9d7-ed93-44c4-bdb8-d97458add200",
       "created_at": "2026-03-22T02:10:30.682Z",
       "actor_user_id": "test-admin",

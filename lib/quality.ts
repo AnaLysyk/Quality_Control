@@ -426,9 +426,16 @@ export function buildCompanyRows(clients: ClientItem[], releases: ReleaseWithSta
   );
   const byName = new Map(clients.map((client) => [client.name.toLowerCase(), client.id]));
   const byQaseProjectCode = new Map(
-    clients
-      .filter((client) => client.qase_project_code)
-      .map((client) => [(client.qase_project_code ?? "").toLowerCase(), client.id])
+    clients.flatMap((client) => {
+      const codes: string[] = [];
+      // prefer explicit array when present
+      if ((client as any).qase_project_codes && Array.isArray((client as any).qase_project_codes)) {
+        codes.push(...((client as any).qase_project_codes).filter(Boolean).map(String));
+      }
+      // legacy single code
+      if (client.qase_project_code) codes.push(client.qase_project_code);
+      return codes.map((c) => [(c ?? "").toLowerCase(), client.id] as [string, string]);
+    })
   );
 
   const releasesByCompany = new Map<string, ReleaseWithStats[]>();

@@ -476,8 +476,12 @@ function AdminClientsPage() {
     setSaving(true);
     setMessage(null);
     try {
-      const normalizedQaseProjectCodes =
-        Array.isArray(form.qaseProjectCodes) && form.qaseProjectCodes.length > 0 ? form.qaseProjectCodes : undefined;
+      const normalizedQaseProjectCodes = Array.isArray(form.qaseProjectCodes)
+        ? form.qaseProjectCodes.map((c) => (typeof c === "string" ? c.trim().toUpperCase() : String(c).trim().toUpperCase())).filter(Boolean)
+        : typeof form.qaseProjectCode === "string"
+        ? [form.qaseProjectCode.trim().toUpperCase()]
+        : [];
+
       const payload = {
         name: form.name || undefined,
         tax_id: form.taxId || undefined,
@@ -491,8 +495,9 @@ function AdminClientsPage() {
         notes: form.notes || undefined,
         active: typeof form.active === "boolean" ? form.active : undefined,
         integration_mode: form.integrationMode || undefined,
-        qase_project_code: form.qaseProjectCode || undefined,
+        // always include the explicit array so backend can detect an intentional clear vs omission
         qase_project_codes: normalizedQaseProjectCodes,
+        qase_project_code: normalizedQaseProjectCodes.length ? normalizedQaseProjectCodes[0] : null,
         qase_token: form.qaseToken && form.qaseToken.trim() ? form.qaseToken : undefined,
         jira_base_url: form.jiraBaseUrl || undefined,
         jira_email: form.jiraEmail || undefined,
@@ -536,11 +541,12 @@ function AdminClientsPage() {
 
   async function handleCreateClient(data: ClientFormValues) {
     try {
-      const normalizedCodes = Array.isArray(data.qaseProjectCodes) && data.qaseProjectCodes.length ? data.qaseProjectCodes : undefined;
-      const legacyProjectCode =
-        data.integrationMode === "qase"
-          ? (data.qaseProjectCode || normalizedCodes?.[0])
-          : undefined;
+      const normalizedCodes = Array.isArray(data.qaseProjectCodes)
+        ? data.qaseProjectCodes.map((c) => (typeof c === "string" ? c.trim().toUpperCase() : String(c).trim().toUpperCase())).filter(Boolean)
+        : typeof data.qaseProjectCode === "string"
+        ? [data.qaseProjectCode.trim().toUpperCase()]
+        : [];
+      const legacyProjectCode = data.integrationMode === "qase" ? (normalizedCodes.length ? normalizedCodes[0] : null) : undefined;
       const address = [data.zip, data.address ?? data.description].filter(Boolean).join(" | ");
       const payload = {
         name: data.name,
@@ -556,8 +562,9 @@ function AdminClientsPage() {
         description: data.description,
         integration_mode: data.integrationMode,
         qase_token: data.qaseToken || undefined,
-        qase_project_code: legacyProjectCode,
+        // send explicit array (can be empty) and derive legacy code from it
         qase_project_codes: normalizedCodes,
+        qase_project_code: legacyProjectCode ?? null,
         jira_base_url: data.jiraBaseUrl,
         jira_email: data.jiraEmail,
         jira_api_token: data.jiraApiToken,

@@ -30,7 +30,21 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run test
-      - run: npm run build
+      - name: Install Node deps
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build
+      - name: Start server and wait
+        run: |
+          nohup npm run start > server.log 2>&1 &
+          echo "Waiting for server at http://localhost:3000/"
+          for i in {1..60}; do
+            if curl --silent --head --fail http://localhost:3000/ >/dev/null 2>&1; then
+              echo "Server ready"; break
+            fi
+            sleep 2
+          done
+      - name: Run Node tests
+        run: npm run test

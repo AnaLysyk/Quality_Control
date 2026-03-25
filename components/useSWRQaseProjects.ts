@@ -13,7 +13,6 @@ export function useSWRQaseProjects() {
   const { trigger, data, error, isMutating } = useSWRMutation("/api/admin/qase/projects", fetcher, {
     populateCache: true,
     revalidate: false,
-    keepPreviousData: true,
   });
   return {
     fetchProjects: trigger,

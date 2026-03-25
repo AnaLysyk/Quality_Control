@@ -544,7 +544,7 @@ export function CompanyMetricsCard(props: {
 
   return (
     <div
-      className={`flex h-full min-h-[39rem] flex-col rounded-[28px] border bg-white shadow-sm transition ${
+      className={`flex h-full min-h-156 flex-col rounded-[28px] border bg-white shadow-sm transition ${
         focused ? "border-(--tc-accent)/50 shadow-[0_18px_40px_rgba(239,0,1,0.12)]" : "border-(--tc-border)/60"
       }`}
     >
@@ -611,7 +611,7 @@ export function CompanyMetricsCard(props: {
         ) : null}
 
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_17rem]">
-          <div className="rounded-[24px] border border-(--tc-border)/60 bg-linear-to-b from-white to-slate-50 p-4">
+          <div className="rounded-3xl border border-(--tc-border)/60 bg-linear-to-b from-white to-slate-50 p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Distribuicao real de execucao</h3>
@@ -641,7 +641,7 @@ export function CompanyMetricsCard(props: {
           </div>
         </div>
 
-        <div className="rounded-[24px] border border-(--tc-border)/60 bg-linear-to-b from-white to-slate-50 p-4">
+        <div className="rounded-3xl border border-(--tc-border)/60 bg-linear-to-b from-white to-slate-50 p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Qualidade das ultimas execucoes</h3>

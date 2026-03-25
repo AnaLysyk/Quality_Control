@@ -144,6 +144,7 @@ export async function syncCompanyApplications(input: {
   companyId?: string | null;
   companySlug?: string | null;
   projects: Array<{ code: string; title?: string | null }>;
+  source?: string | null;
 }): Promise<AppRecord[]> {
   const companySlug = input.companySlug?.trim() || input.companyId?.trim() || undefined;
   const companyId = input.companyId?.trim() || input.companySlug?.trim() || undefined;
@@ -157,7 +158,8 @@ export async function syncCompanyApplications(input: {
       if (!code) continue;
       const slug = normalizeSlug(code);
       const name = (project.title ?? code).trim() || code;
-      const r = await prisma.application.upsert({ where: { slug_companySlug: { slug, companySlug } }, create: { id: `app_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`, companyId: companyId ?? null, companySlug, name, slug, qaseProjectCode: code, source: "qase", active: true }, update: { companyId: companyId ?? null, name, slug, qaseProjectCode: code, source: "qase", active: true } });
+      const src = input.source ?? "qase";
+      const r = await prisma.application.upsert({ where: { slug_companySlug: { slug, companySlug } }, create: { id: `app_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`, companyId: companyId ?? null, companySlug, name, slug, qaseProjectCode: code, source: src, active: true }, update: { companyId: companyId ?? null, name, slug, qaseProjectCode: code, source: src, active: true } });
       synced.push(pgToRecord(r));
     }
     return synced;
@@ -179,6 +181,7 @@ export async function syncCompanyApplications(input: {
       const sameSlug = normalizeSlug(item.slug ?? "") === slug;
       return sameCode || sameSlug;
     });
+    const src = input.source ?? "qase";
 
     if (idx >= 0) {
       const current = db.items[idx];
@@ -189,7 +192,7 @@ export async function syncCompanyApplications(input: {
         name,
         slug,
         qaseProjectCode: code,
-        source: current.source ?? "qase",
+        source: current.source ?? src,
         active: true,
         updatedAt: now,
       };
@@ -206,7 +209,7 @@ export async function syncCompanyApplications(input: {
       slug,
       description: null,
       qaseProjectCode: code,
-      source: "qase",
+      source: input.source ?? "qase",
       active: true,
       createdAt: now,
       updatedAt: now,

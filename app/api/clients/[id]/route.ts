@@ -77,6 +77,9 @@ function mapCompany(company: LocalAuthCompany) {
     jira_api_token: asString(company.jira_api_token),
     integration_mode: asString(company.integration_mode),
     integration_type: asString((company as { integration_type?: unknown }).integration_type),
+    integrations: Array.isArray((company as any).integrations)
+      ? (company as any).integrations.map((i: any) => ({ id: i.id ?? undefined, type: i.type, config: i.config ?? undefined, createdAt: i.createdAt ?? undefined }))
+      : undefined,
     short_description: asString(company.short_description),
     internal_notes: asString(company.internal_notes),
     extra_notes: asString(company.extra_notes),
@@ -164,6 +167,8 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
     jira_api_token: input.jira_api_token ?? current.jira_api_token ?? null,
     integration_mode: input.integration_mode ?? current.integration_mode ?? "manual",
     integration_type: input.integration_mode ?? current.integration_type ?? current.integration_mode ?? "manual",
+    // build integrations array when provided (prefer explicit integrations in payload)
+    ...(Array.isArray((input as any).integrations) ? { integrations: (input as any).integrations } : {}),
     status: input.status ?? (input.active === false ? "inactive" : input.active === true ? "active" : current.status ?? "active"),
     active: typeof input.active === "boolean" ? input.active : current.active ?? true,
     updated_at: new Date().toISOString(),
@@ -176,13 +181,14 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
       .filter((p: unknown): p is Record<string, unknown> => typeof p === "object" && p !== null)
       .map((p: Record<string, unknown>) => ({ code: typeof p.code === "string" ? p.code.trim().toUpperCase() : "", title: typeof p.title === "string" ? p.title.trim() : undefined, imageUrl: typeof p.imageUrl === "string" ? p.imageUrl.trim() : null }));
     if (projects.length) {
-      await syncCompanyApplications({ companyId: updated.id, companySlug: updated.slug, projects });
+      await syncCompanyApplications({ companyId: updated.id, companySlug: updated.slug, projects, source: "qase" });
     }
   } else if (nextProjectCodes?.length) {
     await syncCompanyApplications({
       companyId: updated.id,
       companySlug: updated.slug,
       projects: nextProjectCodes.map((code) => ({ code })),
+      source: "qase",
     });
   }
 

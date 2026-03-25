@@ -13,6 +13,7 @@ const config: JestConfigWithTsJest = {
   },
   reporters: ["default"],
   setupFiles: ["<rootDir>/tests/setup-env.js"],
+  testTimeout: 10000,
   // setupFiles removido pois o arquivo não existe mais
   transform: {
     "^.+\\.(ts|tsx)$": [

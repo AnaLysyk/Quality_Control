@@ -1134,7 +1134,7 @@ export default function AccessRequestClient() {
                     required
                     minLength={8}
                     className={inputBase}
-                    placeholder="Minimo de 8 caracteres"
+                    placeholder="Minimo 8 caracteres"
                   />
                 </label>
               </div>

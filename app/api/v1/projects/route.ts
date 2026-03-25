@@ -3,6 +3,7 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { isCompanyUser } from "@/lib/rbac/companyAccess";
 import { withCompanyValidation } from "@/lib/middleware/withCompanyValidation";
 import { ProjectsStore, type ProjectRecord } from "@/lib/projects/projectsStore";
+import { getQaseIntegrationSettings } from "@/lib/integrations";
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
@@ -19,12 +20,22 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: { message: "Sem permissao" } }, { status: 403 });
   }
 
-  if (!QASE_TOKEN) {
+  const companySlug = auth.companySlug ?? null;
+  const qaseSettings = companySlug ? await getQaseIntegrationSettings(companySlug) : null;
+  const tokenToUse = (qaseSettings && qaseSettings.token) ? qaseSettings.token : QASE_TOKEN;
+
+  if (!tokenToUse) {
     return NextResponse.json({ data: [], warning: "QASE_API_TOKEN ausente" }, { status: 200 });
   }
 
+  // If company explicitly configured a list of projects, return them directly (codes only)
+  if (qaseSettings?.projects && Array.isArray(qaseSettings.projects) && qaseSettings.projects.length > 0) {
+    const data = qaseSettings.projects.map((code: string) => ({ code, title: code }));
+    return NextResponse.json({ data }, { status: 200 });
+  }
+
   const res = await fetch(`${QASE_BASE_URL}/v1/project`, {
-    headers: { Token: QASE_TOKEN, Accept: "application/json" },
+    headers: { Token: tokenToUse, Accept: "application/json" },
     cache: "no-store",
   });
 

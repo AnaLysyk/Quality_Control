@@ -28,6 +28,8 @@ function normalizeRole(input?: string | null) {
   if (value === "client_admin" || value === "admin" || value === "global_admin" || value === "company_admin") return "company_admin";
   if (value === "it_dev" || value === "itdev" || value === "developer" || value === "dev") return "it_dev";
   if (value === "viewer" || value === "client_viewer") return "viewer";
+  if (value === "leader_tc" || value === "tc_leader" || value === "lider_tc") return "leader_tc";
+  if (value === "technical_support" || value === "tech_support" || value === "support_tech") return "technical_support";
   return "user";
 }
 
@@ -68,7 +70,7 @@ function buildUniqueLogin(
 
 function roleNeedsCompany(role: string, wantsGlobalAdmin: boolean) {
   if (wantsGlobalAdmin) return false;
-  return role === "viewer";
+  return role === "viewer" || role === "leader_tc" || role === "technical_support";
 }
 
 function isGlobalDeveloperAccess(access: Awaited<ReturnType<typeof getAccessContext>> | null) {

@@ -1,4 +1,4 @@
-export type Role = 'admin' | 'dev' | 'company' | 'user' | 'support';
+export type Role = 'admin' | 'dev' | 'company' | 'user' | 'support' | 'leader_tc' | 'technical_support';
 
 export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
   admin: {
@@ -70,6 +70,33 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     ai: ['view', 'use'],
   },
   support: {
+    dashboard: ['view'],
+    tickets: ['view', 'create', 'edit', 'assign', 'status', 'comment', 'view_company'],
+    support: ['view', 'create', 'assign', 'status', 'comment', 'modal', 'floating'],
+    users: ['view', 'view_company'],
+    permissions: [],
+    access_requests: [],
+    notifications: ['view'],
+    ai: ['view', 'use'],
+  },
+  leader_tc: {
+    dashboard: ['view'],
+    applications: ['view', 'create', 'edit'],
+    releases: ['view'],
+    runs: ['view'],
+    defects: ['view'],
+    tickets: ['view', 'create', 'comment', 'view_own'],
+    support: ['view', 'create', 'comment', 'modal', 'floating'],
+    users: ['view', 'create', 'edit'],
+    permissions: [],
+    access_requests: [],
+    notes: ['view', 'create'],
+    notifications: ['view'],
+    audit: [],
+    settings: ['view'],
+    ai: ['view', 'use'],
+  },
+  technical_support: {
     dashboard: ['view'],
     tickets: ['view', 'create', 'edit', 'assign', 'status', 'comment', 'view_company'],
     support: ['view', 'create', 'assign', 'status', 'comment', 'modal', 'floating'],

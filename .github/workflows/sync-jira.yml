@@ -1,0 +1,25 @@
+name: Sync Jira
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'
+
+jobs:
+  sync-jira:
+    runs-on: ubuntu-latest
+
+    env:
+      SITE_BASE_URL: ${{ vars.SITE_BASE_URL }}
+      JIRA_SYNC_BEARER: ${{ secrets.JIRA_SYNC_BEARER }}
+      JIRA_SYNC_COMPANIES: ${{ vars.JIRA_SYNC_COMPANIES }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Executar sync Jira
+        run: |
+          echo "Iniciando sync Jira"
+          echo "SITE_BASE_URL=$SITE_BASE_URL"
+          echo "JIRA_SYNC_COMPANIES=$JIRA_SYNC_COMPANIES"

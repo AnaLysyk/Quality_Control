@@ -106,8 +106,10 @@ function sanitizeBody(value: unknown, max: number) {
   return value.trim().slice(0, max);
 }
 
-function pgToRecord(r: { id: string; ticketId: string; authorUserId: string; authorName?: string | null; body: string; createdAt: Date; updatedAt: Date; deletedAt?: Date | null }): TicketCommentRecord {
-  return { id: r.id, ticketId: r.ticketId, authorUserId: r.authorUserId, authorName: r.authorName ?? null, body: r.body, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString(), deletedAt: r.deletedAt?.toISOString() ?? null };
+function pgToRecord(r: { id: string; ticketId: string; authorUserId: string; authorName?: string | null; body: string; createdAt: Date; updatedAt?: Date | null; deletedAt?: Date | null }): TicketCommentRecord {
+  const created = r.createdAt ? r.createdAt.toISOString() : new Date().toISOString();
+  const updated = r.updatedAt ? r.updatedAt.toISOString() : created;
+  return { id: r.id, ticketId: r.ticketId, authorUserId: r.authorUserId, authorName: r.authorName ?? null, body: r.body, createdAt: created, updatedAt: updated, deletedAt: r.deletedAt?.toISOString() ?? null };
 }
 
 export async function listTicketComments(ticketId: string, opts?: { limit?: number; offset?: number }) {

@@ -200,6 +200,14 @@ function ClientsPage() {
       const legacyProjectCode =
         data.integrationMode === "qase" ? data.qaseProjectCode || normalizedCodes?.[0] : undefined;
 
+      const integrations: Array<{ type: string; config?: Record<string, unknown> }> = [];
+      if (data.qaseToken || normalizedCodes?.length) {
+        integrations.push({ type: "QASE", config: { token: data.qaseToken ?? null, projects: normalizedCodes ?? [] } });
+      }
+      if (data.jiraApiToken || data.jiraBaseUrl) {
+        integrations.push({ type: "JIRA", config: { baseUrl: data.jiraBaseUrl ?? null, email: data.jiraEmail ?? null, apiToken: data.jiraApiToken ?? null } });
+      }
+
       const payload = {
         name: data.name,
         company_name: data.name,
@@ -223,6 +231,7 @@ function ClientsPage() {
         jira_base_url: data.jiraBaseUrl,
         jira_email: data.jiraEmail,
         jira_api_token: data.jiraApiToken,
+        integrations: integrations.length ? integrations : undefined,
       };
 
       const headers = { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
+import { useSWRRequests } from "./useSWRRequests";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import Breadcrumb from "@/components/Breadcrumb";
@@ -49,7 +50,7 @@ export default function RequestsPage() {
   }, [router]);
 
   const { requests, loading, error, refetch } = useSWRRequests();
-  React.useEffect(() => {
+  useEffect(() => {
     setItems(requests);
   }, [requests]);
 

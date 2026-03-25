@@ -23,7 +23,7 @@ export default function ResetPasswordClient() {
 
   useEffect(() => {
     if (!token) {
-      setError("Token de redefinição inválido ou ausente.");
+      setError("Token de redefinicao invalido ou ausente.");
     }
   }, [token]);
 
@@ -31,7 +31,7 @@ export default function ResetPasswordClient() {
     e.preventDefault();
 
     if (!token) {
-      setError("Token de redefinição inválido.");
+      setError("Token de redefinicao invalido.");
       return;
     }
 
@@ -41,12 +41,12 @@ export default function ResetPasswordClient() {
     }
 
     if (newPassword.length > MAX_PASSWORD_LENGTH) {
-      setError(`A senha deve ter no máximo ${MAX_PASSWORD_LENGTH} caracteres.`);
+      setError(`A senha deve ter no maximo ${MAX_PASSWORD_LENGTH} caracteres.`);
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("As senhas não coincidem.");
+      setError("As senhas nao coincidem.");
       return;
     }
 
@@ -71,13 +71,11 @@ export default function ResetPasswordClient() {
         throw new Error(data.error || "Erro ao redefinir senha.");
       }
 
-      setSuccess("Senha redefinida com sucesso! Você será redirecionado para o login.");
+      setSuccess("Senha redefinida com sucesso! Voce sera redirecionado para o login.");
 
-      // Redirecionar após 3 segundos
       setTimeout(() => {
         router.push("/login");
       }, 3000);
-
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro desconhecido.");
     } finally {
@@ -95,9 +93,9 @@ export default function ResetPasswordClient() {
       <div className={containerClass}>
         <div className="relative z-10 w-full max-w-sm">
           <div className="rounded-2xl border border-[#011848]/10 bg-white/90 p-6 shadow-2xl backdrop-blur-sm sm:p-8">
-            <h2 className="mb-2 text-2xl font-bold text-[#011848]">Link inválido</h2>
+            <h2 className="mb-2 text-2xl font-bold text-[#011848]">Link invalido</h2>
             <p className="mb-6 text-sm text-[#4b5563]">
-              Este link de redefinição de senha é inválido ou expirou.
+              Este link de redefinicao de senha e invalido ou expirou.
             </p>
             <Link
               href="/login/forgot-password"
@@ -157,7 +155,7 @@ export default function ResetPasswordClient() {
                 autoComplete="new-password"
                 required
                 className="form-control-user w-full rounded-lg border border-[#011848]/20 bg-white px-4 py-3 text-[#011848] caret-[#ef0001] placeholder:text-[#9aa3b2] focus:border-transparent focus:ring-2 focus:ring-[#ef0001] transition-all duration-200"
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Minimo 8 caracteres"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
               />

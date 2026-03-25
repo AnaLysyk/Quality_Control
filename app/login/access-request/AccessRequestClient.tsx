@@ -714,8 +714,7 @@ export default function AccessRequestClient() {
   return (
     <div
       className={
-        `${loginStyles.loginContainer} ${loginStyles.loginFixedTheme} relative flex min-h-svh items-center ` +
-        "justify-center overflow-hidden bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] px-4 py-4 sm:px-6 sm:py-6 md:px-8"
+        `${loginStyles.loginContainer} ${loginStyles.loginFixedTheme} min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative isolate z-2147483647 overflow-x-hidden overflow-y-auto px-4 py-10 pointer-events-auto sm:px-6 md:px-10`
       }
     >
       <div className="absolute inset-0 pointer-events-none">
@@ -729,7 +728,7 @@ export default function AccessRequestClient() {
         <div className="absolute top-1/2 right-2 w-14 h-14 bg-[#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
       </div>
 
-      <div className="relative z-10 max-h-[calc(100svh-1rem)] w-full max-w-3xl space-y-5 overflow-y-auto pr-1 [scrollbar-width:none] sm:max-h-[calc(100svh-2rem)] sm:space-y-6 [&::-webkit-scrollbar]:hidden">
+      <div className="relative z-10 w-full max-w-3xl space-y-8 sm:space-y-10 md:max-w-4xl">
         <div className={`text-center ${styles.introBase} ${styles.introDelay1}`}>
           <h2 className="text-3xl font-bold leading-tight text-[#011848] drop-shadow-sm sm:text-4xl">
             Solicitações de acesso

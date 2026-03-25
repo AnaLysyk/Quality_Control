@@ -73,18 +73,21 @@ export default function ForgotPasswordClient() {
   return (
     <div
       className={
-        `${loginStyles.loginContainer} ${loginStyles.loginFixedTheme} relative flex min-h-svh items-center ` +
-        "justify-center overflow-hidden bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] px-4 py-4 sm:px-6 sm:py-6 md:px-8"
+        `${loginStyles.loginContainer} ${loginStyles.loginFixedTheme} min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative isolate z-2147483647 overflow-x-hidden overflow-y-auto px-4 py-10 pointer-events-auto sm:px-6 md:px-10`
       }
     >
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-6 left-6 h-32 w-32 rounded-full bg-[#011848] opacity-20 blur-2xl animate-ping"></div>
-        <div className="absolute bottom-6 right-6 h-28 w-28 rounded-full bg-[#ef0001] opacity-20 blur-2xl animate-pulse"></div>
-        <div className="absolute top-1/6 right-1/5 h-20 w-20 rounded-full bg-[#ef0001] opacity-10 blur-lg animate-bounce delay-1000"></div>
-        <div className="absolute bottom-1/6 left-1/5 h-24 w-24 rounded-full bg-[#011848] opacity-10 blur-lg animate-pulse delay-700"></div>
+        <div className="absolute top-6 left-6 w-32 h-32 bg-[#011848] rounded-full opacity-20 blur-2xl animate-ping"></div>
+        <div className="absolute bottom-6 right-6 w-28 h-28 bg-[#ef0001] rounded-full opacity-20 blur-2xl animate-pulse"></div>
+        <div className="absolute top-1/6 right-1/5 w-20 h-20 bg-[#ef0001] rounded-full opacity-10 blur-lg animate-bounce delay-1000"></div>
+        <div className="absolute bottom-1/6 left-1/5 w-24 h-24 bg-[#011848] rounded-full opacity-10 blur-lg animate-pulse delay-700"></div>
+        <div className="absolute top-10 left-44 w-16 h-16 bg-[#ef0001] rounded-full opacity-10 blur animate-pulse delay-500"></div>
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-20 bg-[#011848] rounded-full opacity-10 blur animate-bounce delay-200"></div>
+        <div className="absolute top-1/2 left-2 w-14 h-14 bg-[#ef0001] rounded-full opacity-10 blur animate-pulse delay-800"></div>
+        <div className="absolute top-1/2 right-2 w-14 h-14 bg-[#011848] rounded-full opacity-10 blur animate-ping delay-600"></div>
       </div>
 
-      <div className="relative z-10 max-h-[calc(100svh-1rem)] w-full max-w-lg space-y-5 overflow-y-auto pr-1 [scrollbar-width:none] sm:max-h-[calc(100svh-2rem)] sm:max-w-xl sm:space-y-6 md:max-w-2xl [&::-webkit-scrollbar]:hidden">
+      <div className="relative z-10 w-full max-w-lg space-y-8 sm:max-w-xl md:max-w-2xl">
         <div className={`text-center ${styles.introBase} ${styles.introDelay1}`}>
           <h2 className="mb-2 text-3xl font-bold leading-tight text-[#011848] drop-shadow-sm sm:text-4xl">
             Esqueceu sua senha?

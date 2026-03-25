@@ -1,6 +1,8 @@
 ﻿
-import React from "react";
+
 "use client";
+
+import { useCallback, useMemo, useState, useEffect } from "react";
 
 function getSuporteCode(code: string | null | undefined, id: string): string {
   const raw = typeof code === "string" ? code.trim().toUpperCase() : "";

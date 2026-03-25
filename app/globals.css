@@ -259,7 +259,8 @@ body::before {
     url("/images/tc.png");
   background-repeat: no-repeat, no-repeat, no-repeat;
   /* responsive background sizes to adapt on zoom and smaller viewports */
-  background-size: min(50vw, 900px) min(50vw, 900px), min(50vw, 900px) min(50vw, 900px), min(820px, 85vw);
+  /* NOTE: cap the watermark/logo size to avoid it filling the viewport unexpectedly */
+  background-size: min(50vw, 900px) min(50vw, 900px), min(50vw, 900px) min(50vw, 900px), min(360px, 40vw);
   /* use vw/vh offsets instead of fixed px so positions scale with zoom */
   background-position: calc(-15vw) calc(-15vh), calc(100% + 15vw) calc(100% + 15vh), 50% 52%;
   opacity: var(--tc-watermark-opacity);
@@ -287,6 +288,32 @@ body::after {
   opacity: 0.5;
   filter: blur(1px);
   animation: bubble-drift 18s ease-in-out infinite alternate;
+}
+
+/* Defensive constraints: prevent decorative logos/SVGs from growing beyond intended sizes */
+.sidebar-shell .sidebar-logo-icon,
+.sidebar-logo-icon,
+.sidebar-logo-image,
+.sidebar-logo-full,
+.sidebar-logo-mark img,
+.sidebar-logo-mark svg {
+  max-width: 64px !important;
+  max-height: 64px !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Constrain large decorative svgs/images on admin pages (safe fallback) */
+.sidebar-shell img,
+.sidebar-shell svg,
+.admin-shell img,
+.admin-shell svg,
+.app-admin img,
+.app-admin svg {
+  max-width: 320px !important;
+  max-height: 320px !important;
+  width: auto !important;
+  height: auto !important;
 }
 
 :root.dark .card-tc {

@@ -240,7 +240,7 @@ export default function ProfileButton() {
     router.replace("/login");
   }
 
-  const effectiveAvatarUrl = user?.avatarUrl ?? null;
+  const effectiveAvatarUrl = user?.avatarUrl ?? activeClient?.logoUrl ?? null;
 
   return (
     <div className="relative" ref={containerRef}>

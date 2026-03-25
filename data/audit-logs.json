@@ -1,6 +1,76 @@
 {
   "items": [
     {
+      "id": "58ebd9d7-ed93-44c4-bdb8-d97458add200",
+      "created_at": "2026-03-22T02:10:30.682Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn14dq5900061s2w2knh6cxb",
+      "entity_label": "Test Co e0sv",
+      "metadata": {
+        "slug": "testco-1774145422472-byfc",
+        "active": true
+      }
+    },
+    {
+      "id": "722c56be-6f47-4de9-a407-18abcaa4605b",
+      "created_at": "2026-03-22T02:03:35.304Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "fe5bc52e-ee68-4136-b2b4-decea19a0104",
+      "created_at": "2026-03-22T01:55:39.369Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn13ulct00031s2wbqxtbp83",
+      "entity_label": "Test Co 6mwc",
+      "metadata": {
+        "slug": "testco-1774144530320-4cle",
+        "active": true
+      }
+    },
+    {
+      "id": "428e4cd1-d07c-4efa-838a-1a71202e7ec0",
+      "created_at": "2026-03-22T01:51:37.372Z",
+      "actor_user_id": "usr_dev",
+      "actor_email": "paulalysyk1234@gmail.com",
+      "action": "client.updated",
+      "entity_type": "client",
+      "entity_id": "griaule",
+      "entity_label": "Griaule",
+      "metadata": {
+        "active": true,
+        "integrationMode": "qase"
+      }
+    },
+    {
+      "id": "651ce44c-1bff-45e0-8bd7-297c3ce02049",
+      "created_at": "2026-03-22T01:37:06.010Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmn136ra400001s2w0t2a56w9",
+      "entity_label": "Test Co jfhf",
+      "metadata": {
+        "slug": "testco-1774143414884-beu6",
+        "active": true
+      }
+    },
+    {
       "id": "8844f521-bd3b-4879-8561-726ad2187bad",
       "created_at": "2026-03-21T23:39:52.578Z",
       "actor_user_id": "usr_dev",

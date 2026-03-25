@@ -436,6 +436,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
         notes: notes.trim() || undefined,
         description: description.trim() || undefined,
         active,
+        integrationMode: selectedCodes.length || qaseToken.trim() ? "qase" : "manual",
         qaseToken: qaseToken.trim() || undefined,
         qaseProjectCode: selectedCodes.length ? qaseProjectCode.trim().toUpperCase() || undefined : undefined,
         qaseProjectCodes: selectedCodes.length ? selectedCodes : undefined,

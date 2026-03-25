@@ -4,7 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-const CompanyMetricsCard = dynamic(() => import("@/components/CompanyMetricsCard"), { ssr: false, loading: () => <div>Carregando métricas...</div> });
+const CompanyMetricsCard = dynamic(
+  () => import("@/components/CompanyMetricsCard").then((mod) => mod.CompanyMetricsCard),
+  { ssr: false, loading: () => <div>Carregando métricas...</div> }
+);
 import type { DefectsSummary } from "@/components/CompanyMetricsCard";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 

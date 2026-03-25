@@ -87,7 +87,7 @@ export default function RequestsPage() {
     setEmail("");
     setMessage("Solicitacao de e-mail enviada.");
     toast.success("Solicitacao de e-mail enviada.");
-    void loadRequests();
+    void refetch();
   }
 
   async function submitCompany() {
@@ -116,7 +116,7 @@ export default function RequestsPage() {
     setCompany("");
     setMessage("Solicitacao de empresa enviada.");
     toast.success("Solicitacao de empresa enviada.");
-    void loadRequests();
+    void refetch();
   }
 
   return (

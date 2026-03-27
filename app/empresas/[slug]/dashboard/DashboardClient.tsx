@@ -118,8 +118,8 @@ export default function DashboardClient({
         : "health-score-critical";
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#f5f6fa) text-(--page-text,#0b1a3c) px-4 py-8 sm:px-6 lg:px-10">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8">
+    <div className="min-h-screen bg-(--page-bg,#f5f6fa) px-4 py-8 text-(--page-text,#0b1a3c) sm:px-5 lg:px-6 xl:px-8 2xl:px-10">
+      <div className="flex w-full max-w-none flex-col gap-8">
         <header className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">Dashboard</p>
@@ -169,7 +169,7 @@ export default function DashboardClient({
           </div>
         </header>
 
-        <section className="grid gap-4 md:grid-cols-4">
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-3xl bg-white p-5 shadow-sm">
             <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">Quality Score</p>
             <div className="mt-2 text-4xl font-extrabold text-(--tc-accent,#ef0001)" data-testid="quality-score">
@@ -211,7 +211,7 @@ export default function DashboardClient({
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.34fr)_minmax(0,0.66fr)]">
           <div className="rounded-3xl bg-white p-6 shadow-sm" data-testid="runs-quality-table">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Qualidade por run</h2>
@@ -294,7 +294,7 @@ export default function DashboardClient({
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.34fr)_minmax(0,0.66fr)]">
           <div className="rounded-3xl bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold">Releases em destaque</h2>
             <div className="mt-4 grid gap-3 md:grid-cols-2">

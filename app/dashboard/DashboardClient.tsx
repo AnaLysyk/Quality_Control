@@ -8,9 +8,12 @@ import { useAuthUser, type AuthUser } from "@/hooks/useAuthUser";
 import { hasCapability, type Capability } from "@/lib/permissions";
 import { useSystemMetrics } from "@/hooks/useSystemMetrics";
 import Breadcrumb from "@/components/Breadcrumb";
+import { useClientContext } from "@/context/ClientContext";
+import { resolveActiveIdentity } from "@/lib/activeIdentity";
 
 export default function DashboardClient() {
   const { user, loading: userLoading } = useAuthUser();
+  const { activeClient } = useClientContext();
   const router = useRouter();
   const { metrics, loading: metricsLoading, error: metricsError } = useSystemMetrics();
 
@@ -50,9 +53,14 @@ export default function DashboardClient() {
   const isGlobalAdmin = safeUser.isGlobalAdmin === true || safeUser.globalRole === "global_admin";
   const companySlug = typeof safeUser.companySlug === "string" ? safeUser.companySlug : null;
   const roleLabel = typeof safeUser.role === "string" && safeUser.role.trim() ? safeUser.role : "usuario";
-  const displayName = safeUser.fullName?.trim() || safeUser.name || "Usuario";
-  const displayUsername = safeUser.username || safeUser.user || null;
-  const displayAvatarUrl = typeof safeUser.avatarUrl === "string" ? safeUser.avatarUrl : null;
+  const activeIdentity = resolveActiveIdentity({ user: user ?? null, activeCompany: activeClient });
+  const isCompanyIdentity = activeIdentity.kind === "company";
+  const displayName = activeIdentity.displayName || safeUser.fullName?.trim() || safeUser.name || "Usuario";
+  const displayUsername = activeIdentity.username || safeUser.username || safeUser.user || null;
+  const displayAvatarUrl = activeIdentity.avatarUrl;
+  const companyDisplayValue = isCompanyIdentity
+    ? activeIdentity.companyName ?? companySlug ?? "Sem empresa"
+    : companySlug ?? activeIdentity.companyName ?? "Sem empresa";
   const avatarFallback = (() => {
     const value = displayName.trim();
     const parts = value.split(/\s+/).filter(Boolean);
@@ -64,10 +72,12 @@ export default function DashboardClient() {
 
   const quickLinks = [
     {
-      title: "Minha conta",
-      description: "Atualize dados, senha e preferencias do usuario.",
+      title: isCompanyIdentity ? "Perfil da empresa" : "Minha conta",
+      description: isCompanyIdentity
+        ? "Atualize os dados institucionais, login de acesso e integracao da empresa."
+        : "Atualize dados, senha e preferencias do usuario.",
       href: "/settings/profile",
-      kicker: "Conta",
+      kicker: isCompanyIdentity ? "Empresa" : "Conta",
     },
     {
       title: "Solicitacoes",
@@ -122,7 +132,7 @@ export default function DashboardClient() {
     },
     {
       label: "Empresa",
-      value: companySlug ?? "Sem empresa",
+      value: companyDisplayValue,
       note: companySlug ? "Contexto principal carregado na sessao." : "Sem vinculo ativo na sessao.",
     },
     {
@@ -167,9 +177,11 @@ export default function DashboardClient() {
 
                 <div className="tc-hero-copy">
                   <p className="tc-hero-kicker">Painel inicial</p>
-                  <h1 className="tc-hero-title">Visao geral do usuario</h1>
+                  <h1 className="tc-hero-title">{isCompanyIdentity ? "Visao geral institucional" : "Visao geral do usuario"}</h1>
                   <p className="tc-hero-description">
-                    Base inicial para navegar pela plataforma com o mesmo padrao visual das telas principais de administracao.
+                    {isCompanyIdentity
+                      ? "Acesso institucional da empresa ativa, com foco no contexto da organizacao e nao em um usuario individual."
+                      : "Base inicial para navegar pela plataforma com o mesmo padrao visual das telas principais de administracao."}
                   </p>
                 </div>
               </div>
@@ -180,7 +192,7 @@ export default function DashboardClient() {
                 </span>
                 {displayUsername ? (
                   <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-white/92">
-                    @{displayUsername}
+                    {isCompanyIdentity ? `Login @${displayUsername}` : `@${displayUsername}`}
                   </span>
                 ) : null}
                 <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-white/92">

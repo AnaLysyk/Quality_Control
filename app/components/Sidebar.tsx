@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo } from "react";
-import { usePathname } from "next/navigation";
+import { useMemo, useRef } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   FiAlertTriangle,
   FiBarChart2,
@@ -42,6 +42,8 @@ type SidebarProps = {
 };
 
 export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
+  const router = useRouter();
+  const prefetchedRoutesRef = useRef<Set<string>>(new Set());
   const logoSrc = useMemo(() => (menuLogoEnv ? menuLogoEnv : "/images/tc.png"), []);
   const pathname = usePathname() || "";
   const { user, loading, visibility } = usePermissionAccess();
@@ -64,7 +66,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     const role = (user.role ?? "").toLowerCase();
     if (["it_dev", "itdev", "developer", "dev"].includes(role)) return "it_dev";
     if (isGlobalAdmin) return "admin";
-    if (["client_owner", "client_manager", "client_admin"].includes(role)) return "client";
+    if (["client_owner", "client_manager", "client_admin", "company", "company_admin"].includes(role)) return "client";
     if (["client_member", "client_user", "user"].includes(role)) return "user";
     return "user";
   }, [user, isGlobalAdmin]);
@@ -124,7 +126,6 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
         { label: t("nav.apps"), icon: FiBriefcase, href: `${companyTarget}/aplicacoes` },
         { label: t("nav.runs"), icon: FiList, href: `${companyTarget}/runs` },
         { label: t("nav.defects"), icon: FiAlertTriangle, href: `${companyTarget}/defeitos` },
-        { label: "Runs", icon: FiGrid, href: `${companyTarget}/releases` },
       );
     }
 
@@ -152,7 +153,6 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             { label: t("nav.apps"), icon: FiBriefcase, href: `/empresas/${companySlug}/aplicacoes` },
             { label: t("nav.testPlans"), icon: FiClipboard, href: `/empresas/${companySlug}/planos-de-teste` },
             { label: t("nav.runs"), icon: FiList, href: `/empresas/${companySlug}/runs` },
-            { label: "Runs", icon: FiGrid, href: `/empresas/${companySlug}/releases` },
             { label: t("nav.defects"), icon: FiAlertTriangle, href: `/empresas/${companySlug}/defeitos` },
             { label: "Chamados", icon: FiColumns, href: "/meus-chamados", roles: ["client", "user", "admin", "it_dev"] },
           ]
@@ -190,15 +190,34 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     return null;
   }
 
+  const visibleNavigation = useMemo(
+    () =>
+      navigation
+        .filter((item) => !item.roles || (appRole ? item.roles.includes(appRole) : false))
+        .filter((item) => {
+          const moduleId = resolveModuleFromHref(item.href);
+          if (!moduleId) return true;
+          const isCompanyScopedLink = /^\/empresas\/[^/]+\//.test(item.href);
+          if (isCompanyScopedLink && ["runs", "releases", "defects"].includes(moduleId)) {
+            return true;
+          }
+          return Boolean(visibility[moduleId]);
+        }),
+    [navigation, appRole, visibility],
+  );
+
+  function prefetchHref(href: string) {
+    if (!href || href === pathname || prefetchedRoutesRef.current.has(href)) return;
+    prefetchedRoutesRef.current.add(href);
+    try {
+      router.prefetch(href);
+    } catch {
+      prefetchedRoutesRef.current.delete(href);
+    }
+  }
+
   const renderNavLinks = (isMobile = false) =>
-    navigation
-      .filter((item) => !item.roles || (appRole ? item.roles.includes(appRole) : false))
-      .filter(item => {
-        const moduleId = resolveModuleFromHref(item.href);
-        if (!moduleId) return true; // unknown mapping -> keep
-        return Boolean(visibility[moduleId]);
-      })
-      .map((item) => {
+    visibleNavigation.map((item) => {
         const isActive =
           item.href === "/"
             ? pathname === "/"
@@ -206,7 +225,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
         return (
           <Link
-            key={item.label}
+            key={item.href}
             href={item.href}
             prefetch={false}
             className={`group/link relative flex items-center h-11 w-full rounded-xl text-sm font-semibold transition-all duration-200 overflow-hidden min-w-0 sidebar-link ${
@@ -218,6 +237,8 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                 ? "bg-slate-100 ring-1 ring-[#4e8df5]/40 shadow-[0_10px_24px_rgba(78,141,245,0.18)] text-slate-900 dark:bg-white/10 dark:ring-[#4e8df5]/50 dark:shadow-[0_12px_30px_rgba(78,141,245,0.35)] dark:text-white"
                 : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-white/80 dark:hover:bg-white/7 dark:hover:text-white"
             }`}
+            onMouseEnter={() => prefetchHref(item.href)}
+            onFocus={() => prefetchHref(item.href)}
             onClick={isMobile && onClose ? onClose : undefined}
           >
             <span
@@ -252,7 +273,6 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
       <div className="flex items-center px-2 py-3 border-b border-slate-200/70 dark:border-white/5 relative">
         <Link
           href={logoHref}
-          prefetch={false}
           className="flex items-center gap-3 transition-all duration-200 justify-start w-full px-2 sidebar-logo"
         >
           <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 backdrop-blur dark:border-white/10 dark:bg-white/5 sidebar-logo-mark">
@@ -318,7 +338,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center gap-3 p-4 border-b border-slate-200 dark:border-white/10 relative">
-            <Link href={logoHref} prefetch={false} className="flex items-center gap-3" onClick={onClose}>
+            <Link href={logoHref} className="flex items-center gap-3" onClick={onClose}>
               <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-white/5">
                 <Image
                   src={logoSrc}

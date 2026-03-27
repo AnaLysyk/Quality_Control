@@ -321,6 +321,7 @@ function toCreateUserError(error: unknown) {
   if (code === "MISSING_PASSWORD") return { status: 400, error: "A solicitacao precisa ter uma senha definida para ser aprovada" };
   if (code === "DUPLICATE_EMAIL") return { status: 409, error: "E-mail ja cadastrado" };
   if (code === "DUPLICATE_USER") return { status: 409, error: "Usuario ja cadastrado" };
+  if (code === "USER_SCOPE_LOCKED") return { status: 409, error: "Usuario com escopo fechado nao pode ser vinculado a outra empresa." };
   if (code === "DUPLICATE_COMPANY_NAME") return { status: 409, error: "Empresa ja cadastrada com esse nome" };
   if (code === "DUPLICATE_COMPANY_TAX_ID") return { status: 409, error: "CNPJ ja cadastrado para outra empresa" };
   return null;

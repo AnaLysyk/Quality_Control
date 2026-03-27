@@ -31,6 +31,11 @@ model User {
   linkedin_url         String?
   phone                String?
   default_company_slug String?
+  created_by_company_id String?
+  home_company_id       String?
+  user_origin           String    @default("testing_company")
+  user_scope            String    @default("shared")
+  allow_multi_company_link Boolean @default(true)
   lastLoginAt          DateTime?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt

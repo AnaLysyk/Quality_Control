@@ -24,7 +24,6 @@ export default function Breadcrumb({ items, className }: Props) {
     const content = !isLast && item.href ? (
       <Link
         href={item.href}
-        prefetch={false}
         className={`${baseClass} hover:underline hover:text-(--tc-accent,#ef0001)`}
         title={item.title}
       >

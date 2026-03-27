@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAdminUserItem } from "@/lib/adminUsers";
 import { findLocalCompanyById, upsertLocalLink } from "@/lib/auth/localStore";
+import { isUserScopeLockedError } from "@/lib/companyUserScope";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -37,12 +38,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Esse usuario ja esta vinculado a esta empresa" }, { status: 409 });
   }
 
-  await upsertLocalLink({
-    userId,
-    companyId,
-    role: user.permission_role === "admin" ? "admin" : user.permission_role === "company" ? "company_admin" : "user",
-    capabilities: [],
-  });
+  try {
+    await upsertLocalLink({
+      userId,
+      companyId,
+      role: user.permission_role === "admin" ? "admin" : user.permission_role === "company" ? "company_admin" : "user",
+      capabilities: [],
+    });
+  } catch (error) {
+    if (isUserScopeLockedError(error)) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+    throw error;
+  }
 
   const updated = await getAdminUserItem(userId);
 

@@ -6,6 +6,7 @@ import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAccessContext } from "@/lib/auth/session";
 import { getAdminUserItem, listAdminUserItems } from "@/lib/adminUsers";
+import { isUserScopeLockedError } from "@/lib/companyUserScope";
 import {
   createLocalUser,
   findLocalCompanyById,
@@ -214,7 +215,14 @@ export async function POST(req: NextRequest) {
   }
 
   if (clientId && !wantsGlobalAdmin) {
-    await upsertLocalLink({ userId: user.id, companyId: clientId, role, capabilities });
+    try {
+      await upsertLocalLink({ userId: user.id, companyId: clientId, role, capabilities });
+    } catch (error) {
+      if (isUserScopeLockedError(error)) {
+        return NextResponse.json({ error: error.message }, { status: 409 });
+      }
+      throw error;
+    }
   }
 
   await addAuditLogSafe({
@@ -343,7 +351,14 @@ export async function PATCH(req: NextRequest) {
       await removeLocalLink(userId, link.companyId);
     }
   } else if (rawRole && roleNeedsCompany(role, wantsGlobalAdmin) && clientId) {
-    await upsertLocalLink({ userId, companyId: clientId, role, capabilities });
+    try {
+      await upsertLocalLink({ userId, companyId: clientId, role, capabilities });
+    } catch (error) {
+      if (isUserScopeLockedError(error)) {
+        return NextResponse.json({ error: error.message }, { status: 409 });
+      }
+      throw error;
+    }
   }
 
   await addAuditLogSafe({

@@ -11,6 +11,7 @@ import {
   upsertLocalLink,
 } from "@/lib/auth/localStore";
 import { getAccessContext } from "@/lib/auth/session";
+import { isUserScopeLockedError } from "@/lib/companyUserScope";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
@@ -124,7 +125,14 @@ export async function POST(
     throw err;
   }
 
-  await upsertLocalLink({ userId: created.id, companyId, role });
+  try {
+    await upsertLocalLink({ userId: created.id, companyId, role });
+  } catch (error) {
+    if (isUserScopeLockedError(error)) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+    throw error;
+  }
 
   const item = await getAdminUserItem(created.id);
   return NextResponse.json(item ?? created, { status: 201 });
@@ -181,11 +189,18 @@ export async function PATCH(
   }
 
   if (typeof updates.role === "string") {
-    await upsertLocalLink({
-      userId,
-      companyId,
-      role: normalizeMembershipRole(updates.role),
-    });
+    try {
+      await upsertLocalLink({
+        userId,
+        companyId,
+        role: normalizeMembershipRole(updates.role),
+      });
+    } catch (error) {
+      if (isUserScopeLockedError(error)) {
+        return NextResponse.json({ error: error.message }, { status: 409 });
+      }
+      throw error;
+    }
   }
 
   const item = await getAdminUserItem(userId);

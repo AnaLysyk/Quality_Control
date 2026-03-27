@@ -221,7 +221,7 @@ function ClientsPage() {
         phone: data.phone,
         website: data.website,
         logo_url: data.logoUrl,
-        docs_link: data.linkedin,
+        docs_link: data.docsLink,
         linkedin_url: data.linkedin,
         description: data.description,
         short_description: data.description,

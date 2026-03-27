@@ -1756,7 +1756,7 @@ export default function NotesButton() {
   const priorityFilterTone = priorityFilter === "all" ? "neutral" : getPriorityOption(priorityFilter).tone;
 
   return (
-    <div className="relative" ref={boxRef}>
+    <div className="relative h-11 w-11 shrink-0 overflow-visible" ref={boxRef}>
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}

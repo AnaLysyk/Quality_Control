@@ -81,6 +81,7 @@ export const AuthCompanySchema = z
     role: z.string().min(1),
     active: z.boolean().optional(),
     createdAt: z.string().optional().nullable(),
+    logoUrl: z.string().optional().nullable(),
     companyRole: z.string().optional().nullable(),
     capabilities: z.array(z.string().min(1)).optional(),
   })

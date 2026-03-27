@@ -7,6 +7,7 @@ const pidFile = path.join(root, ".dev.pid");
 const outFile = path.join(root, "dev.out.log");
 const errFile = path.join(root, "dev.err.log");
 const devDistDir = ".next/dev-runtime";
+const bundler = (process.env.NEXT_DEV_BUNDLER || "turbo").trim().toLowerCase() === "webpack" ? "webpack" : "turbo";
 
 function isRunning(pid) {
   try {
@@ -76,7 +77,9 @@ const outFd = fs.openSync(outFile, "a");
 const errFd = fs.openSync(errFile, "a");
 
 const command = isWin ? process.execPath : nextBin;
-const args = isWin ? [nextJsBin, "dev", "--webpack"] : ["dev", "--webpack"];
+const host = process.env.HOST || "0.0.0.0";
+const bundlerFlag = bundler === "webpack" ? "--webpack" : "--turbo";
+const args = isWin ? [nextJsBin, "dev", "--hostname", host, bundlerFlag] : ["dev", "--hostname", host, bundlerFlag];
 
 const child = spawn(command, args, {
   cwd: root,
@@ -90,4 +93,4 @@ fs.writeFileSync(pidFile, String(child.pid), "utf8");
 
 console.log(`Dev server started (pid ${child.pid}).`);
 console.log(`Logs: ${path.basename(outFile)} / ${path.basename(errFile)}`);
-console.log("Open: http://localhost:3000");
+console.log(`Open: http://localhost:3000 (host ${host}, bundler ${bundler})`);

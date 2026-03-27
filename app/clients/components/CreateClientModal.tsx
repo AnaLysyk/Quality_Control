@@ -15,6 +15,7 @@ export type ClientFormValues = {
   phone?: string;
   website?: string;
   logoUrl?: string;
+  docsLink?: string;
   linkedin?: string;
   notes?: string;
   description?: string;
@@ -65,6 +66,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
   const [website, setWebsite] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [logoFileName, setLogoFileName] = useState("");
+  const [docsLink, setDocsLink] = useState("");
   const [linkedin, setLinkedin] = useState("");
   const [notes, setNotes] = useState("");
   const [description, setDescription] = useState("");
@@ -123,6 +125,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
         setPhone((data.phone as string) ?? "");
         setWebsite((data.website as string) ?? "");
         setLogoUrl((data.logo_url as string) ?? "");
+        setDocsLink((data.docs_link as string) ?? "");
         setLinkedin((data.linkedin_url as string) ?? "");
         setNotes((data.notes as string) ?? "");
         setDescription((data.short_description as string) ?? "");
@@ -432,6 +435,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
         phone: phone.trim() || undefined,
         website: website.trim() || undefined,
         logoUrl: logoUrl.trim() || undefined,
+        docsLink: docsLink.trim() || undefined,
         linkedin: linkedin.trim() || undefined,
         notes: notes.trim() || undefined,
         description: description.trim() || undefined,
@@ -606,6 +610,16 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
               }}
             />
             {logoFileName ? <p className="mt-1 text-xs text-(--tc-text-muted)">Selecionado: {logoFileName}</p> : null}
+          </label>
+
+          <label className="block text-sm">
+            Link de documentos
+            <input
+              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              value={docsLink}
+              onChange={(e) => setDocsLink(e.target.value)}
+              placeholder="https://empresa.com.br/documentacao"
+            />
           </label>
 
           <label className="block text-sm">

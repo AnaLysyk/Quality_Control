@@ -9,6 +9,12 @@ import {
   type LocalAuthMembership,
   type LocalAuthUser,
 } from "@/lib/auth/localStore";
+import {
+  normalizeUserOrigin,
+  normalizeUserScope,
+  resolveAllowMultiCompanyLink,
+  resolveUserOriginLabel,
+} from "@/lib/companyUserScope";
 import { syncLegacyCompanyUsersToLocalStore } from "@/lib/legacyCompanyUsersSync";
 
 export type AdminUserCompanyItem = {
@@ -17,6 +23,13 @@ export type AdminUserCompanyItem = {
   slug: string | null;
   role: string;
 };
+
+export type AdminUserProfileKind =
+  | "empresa"
+  | "company_user"
+  | "testing_company_user"
+  | "leader_tc"
+  | "technical_support";
 
 export type AdminUserItem = {
   id: string;
@@ -40,6 +53,13 @@ export type AdminUserItem = {
   job_title?: string | null;
   linkedin_url?: string | null;
   avatar_url?: string | null;
+  created_by_company_id?: string | null;
+  home_company_id?: string | null;
+  user_origin?: "testing_company" | "client_company";
+  user_scope?: "shared" | "company_only";
+  allow_multi_company_link?: boolean;
+  origin_label?: string;
+  profile_kind?: AdminUserProfileKind;
 };
 
 const ROLE_WEIGHT: Record<string, number> = {
@@ -47,7 +67,33 @@ const ROLE_WEIGHT: Record<string, number> = {
   user: 1,
   company_admin: 2,
   it_dev: 3,
+  technical_support: 3,
+  leader_tc: 4,
 };
+
+function readTrimmedString(...values: Array<string | null | undefined>) {
+  for (const value of values) {
+    const trimmed = typeof value === "string" ? value.trim() : "";
+    if (trimmed) return trimmed;
+  }
+  return null;
+}
+
+function normalizeIdentitySeed(value?: string | null) {
+  return (value ?? "")
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function matchesIdentitySeed(reference?: string | null, ...candidates: Array<string | null | undefined>) {
+  const normalizedReference = normalizeIdentitySeed(reference);
+  if (!normalizedReference) return false;
+  return candidates.some((candidate) => normalizeIdentitySeed(candidate) === normalizedReference);
+}
 
 function normalizeCompanyName(company: LocalAuthCompany | null | undefined, companyId: string) {
   const candidate =
@@ -93,10 +139,86 @@ export function resolvePermissionRoleForUser(
     (ROLE_WEIGHT[userRole] ?? ROLE_WEIGHT.user) > (ROLE_WEIGHT[strongestFromLinks] ?? ROLE_WEIGHT.user)
       ? userRole
       : strongestFromLinks;
+  if (strongest === "leader_tc") return "leader_tc" as const;
+  if (strongest === "technical_support") return "technical_support" as const;
   if (strongest === "it_dev") return "dev" as const;
   if (user?.globalRole === "global_admin" || user?.is_global_admin === true) return "admin" as const;
   if (strongest === "company_admin") return "company" as const;
   return "user" as const;
+}
+
+function isInstitutionalCompanyProfile(
+  user: LocalAuthUser,
+  primaryCompany: AdminUserCompanyItem | null,
+) {
+  const companySlug = readTrimmedString(
+    primaryCompany?.slug,
+    user.default_company_slug,
+  );
+  const companyName = readTrimmedString(primaryCompany?.name);
+  const accountName = readTrimmedString(user.full_name, user.name);
+  const login = readTrimmedString(user.user, user.email);
+  const email = readTrimmedString(user.email);
+  const origin = normalizeUserOrigin(user.user_origin);
+  const scope = normalizeUserScope(user.user_scope);
+  const companyRole = normalizeLocalRole(user.role ?? null);
+
+  const hasCompanyScopedSignal =
+    scope === "company_only" ||
+    origin === "client_company" ||
+    Boolean(companySlug) ||
+    Boolean(companyName) ||
+    companyRole === "company_admin";
+
+  if (!hasCompanyScopedSignal) return false;
+
+  const matchesCompanySlug = matchesIdentitySeed(companySlug, login, email, accountName);
+  const matchesCompanyName = matchesIdentitySeed(companyName, accountName, login);
+
+  return matchesCompanySlug || matchesCompanyName;
+}
+
+export function resolveAdminUserProfileKind(
+  user: LocalAuthUser,
+  links: Array<Pick<LocalAuthMembership, "role">>,
+  primaryCompany: AdminUserCompanyItem | null,
+): AdminUserProfileKind {
+  const normalizedUserRole = normalizeLocalRole(user.role ?? null);
+  const normalizedLinkRoles = links.map((link) => normalizeLocalRole(link.role ?? null));
+  const origin = normalizeUserOrigin(user.user_origin);
+  const scope = normalizeUserScope(user.user_scope);
+  const allowMultiCompanyLink = resolveAllowMultiCompanyLink(
+    user.allow_multi_company_link,
+    user.user_scope,
+  );
+
+  if (
+    user.globalRole === "global_admin" ||
+    user.is_global_admin === true ||
+    normalizedUserRole === "leader_tc" ||
+    normalizedLinkRoles.includes("leader_tc")
+  ) {
+    return "leader_tc";
+  }
+
+  if (
+    normalizedUserRole === "it_dev" ||
+    normalizedUserRole === "technical_support" ||
+    normalizedLinkRoles.includes("it_dev") ||
+    normalizedLinkRoles.includes("technical_support")
+  ) {
+    return "technical_support";
+  }
+
+  if (isInstitutionalCompanyProfile(user, primaryCompany)) {
+    return "empresa";
+  }
+
+  if (origin === "client_company" || scope === "company_only" || allowMultiCompanyLink === false) {
+    return "company_user";
+  }
+
+  return "testing_company_user";
 }
 
 export function buildAdminUserItem(
@@ -151,6 +273,7 @@ export function buildAdminUserItem(
       ? userRole
       : strongestFromLinks;
   const permissionRole = resolvePermissionRoleForUser(user, Array.from(uniqueLinks.values()));
+  const profileKind = resolveAdminUserProfileKind(user, Array.from(uniqueLinks.values()), primaryCompany);
   const mappedRole =
     permissionRole === "admin"
       ? "global_admin"
@@ -182,6 +305,16 @@ export function buildAdminUserItem(
     job_title: user.job_title ?? null,
     linkedin_url: user.linkedin_url ?? null,
     avatar_url: user.avatar_url ?? null,
+    created_by_company_id: user.created_by_company_id ?? null,
+    home_company_id: user.home_company_id ?? null,
+    user_origin: normalizeUserOrigin(user.user_origin),
+    user_scope: normalizeUserScope(user.user_scope),
+    allow_multi_company_link: resolveAllowMultiCompanyLink(
+      user.allow_multi_company_link,
+      user.user_scope,
+    ),
+    origin_label: resolveUserOriginLabel(user.user_origin),
+    profile_kind: profileKind,
   };
 }
 

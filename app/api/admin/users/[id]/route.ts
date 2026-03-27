@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { canDeleteUserByProfile, isGlobalDeveloperAccess } from "@/lib/adminUserDeleteAccess";
 import { getAdminUserItem } from "@/lib/adminUsers";
+import { isUserScopeLockedError } from "@/lib/companyUserScope";
 import {
   findLocalCompanyById,
   listLocalLinksForUser,
@@ -189,16 +190,30 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
   } else if (permissionRole && permissionRoleNeedsCompany(permissionRole) && targetCompanyIds.length > 0) {
     const nextCapabilities = capabilities ?? [];
-    for (const companyId of targetCompanyIds) {
-      await upsertLocalLink({
-        userId: id,
-        companyId,
-        role,
-        capabilities: nextCapabilities,
-      });
+    try {
+      for (const companyId of targetCompanyIds) {
+        await upsertLocalLink({
+          userId: id,
+          companyId,
+          role,
+          capabilities: nextCapabilities,
+        });
+      }
+    } catch (error) {
+      if (isUserScopeLockedError(error)) {
+        return NextResponse.json({ error: error.message }, { status: 409 });
+      }
+      throw error;
     }
   } else if (clientId) {
-    await upsertLocalLink({ userId: id, companyId: clientId, role, capabilities });
+    try {
+      await upsertLocalLink({ userId: id, companyId: clientId, role, capabilities });
+    } catch (error) {
+      if (isUserScopeLockedError(error)) {
+        return NextResponse.json({ error: error.message }, { status: 409 });
+      }
+      throw error;
+    }
   }
 
   await addAuditLogSafe({

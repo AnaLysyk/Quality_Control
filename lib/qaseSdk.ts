@@ -27,7 +27,7 @@ export class QaseClient {
 
   constructor(options: QaseClientOptions) {
     this.token = options.token;
-    this.baseUrl = (options.baseUrl || process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/$/, "");
+    this.baseUrl = (options.baseUrl || process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
     this.defaultFetchOptions = options.defaultFetchOptions;
   }
 

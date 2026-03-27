@@ -29,7 +29,7 @@ export async function GET() {
     clientName: r.clientName ?? null,
     assigneeNames: r.assigneeNames ?? null,
     manualSummary: r.manualSummary ?? null,
-    metrics: null, // métrica é carregada na tela pelo Qase; placeholder para contrato
+    metrics: r.metrics ?? null,
   }));
   return NextResponse.json({ releases: normalized });
 }

@@ -15,6 +15,7 @@ import UserAvatar from "@/components/UserAvatar";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useAppSettings } from "@/context/AppSettingsContext";
 import { useClientContext } from "@/context/ClientContext";
+import { resolveActiveIdentity } from "@/lib/activeIdentity";
 
 type ToastState =
   | { kind: "idle" }
@@ -111,33 +112,23 @@ export default function ProfileButton() {
 
   const isGlobalProfile = normalizedRuntimeRole === "dev" || normalizedRuntimeRole === "it_dev";
   const isAdmin = Boolean(user?.isGlobalAdmin || legacyUser?.isGlobalAdmin || legacyUser?.roleGlobal === "ADMIN");
-  const displayName = user?.fullName?.trim() || user?.name || "Usuario";
-  const displayEmail = user?.email || "";
-  const displayUser = user?.username || user?.user || "";
-  const avatarLoadingPlaceholder = loading && !user?.avatarUrl;
-  const companyName = (() => {
-    if (isGlobalProfile) return "Global";
-    if (activeClient?.name) return activeClient.name;
-    if (isAdmin) return "Admin do sistema";
-
-    const legacyCompany = legacyUser?.company;
-    if (legacyCompany && typeof legacyCompany === "object" && legacyCompany !== null) {
-      const name = (legacyCompany as { name?: unknown }).name;
-      if (typeof name === "string" && name.trim()) return name;
-    }
-
-    const userCompany =
-      (user ?? null) && typeof (user as Record<string, unknown>) === "object"
-        ? ((user as Record<string, unknown> & { company?: unknown }).company ?? null)
-        : null;
-
-    if (userCompany && typeof userCompany === "object") {
-      const name = (userCompany as { name?: unknown }).name;
-      if (typeof name === "string" && name.trim()) return name;
-    }
-
-    return "Empresa";
-  })();
+  const activeIdentity = resolveActiveIdentity({ user, activeCompany: activeClient });
+  const displayName = activeIdentity.displayName;
+  const displayEmail = activeIdentity.email ?? "";
+  const displayUser = activeIdentity.username ?? "";
+  const profileCardValue = activeIdentity.kind === "company" ? displayName : displayEmail;
+  const profileCardFallback = activeIdentity.kind === "company" ? "Sem nome da empresa" : "Sem e-mail";
+  const copyActionLabel = activeIdentity.kind === "company" ? "nome da empresa" : "e-mail";
+  const avatarLoadingPlaceholder = loading && !activeIdentity.avatarUrl;
+  const contextBadgeLabel = activeIdentity.kind === "company"
+    ? null
+    : isGlobalProfile
+      ? "Global"
+      : isAdmin
+        ? "Admin do sistema"
+        : activeIdentity.showCompanyTag
+          ? activeIdentity.companyTagLabel
+          : null;
 
   const companySlug = (() => {
     if (activeClient?.slug) return activeClient.slug;
@@ -210,13 +201,13 @@ export default function ProfileButton() {
     window.setTimeout(() => setToast({ kind: "idle" }), 2200);
   }
 
-  async function copyEmail() {
-    if (!displayEmail) return;
+  async function copyProfileCardValue() {
+    if (!profileCardValue) return;
     try {
-      await navigator.clipboard.writeText(displayEmail);
+      await navigator.clipboard.writeText(profileCardValue);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1200);
-      showToast("success", "E-mail copiado");
+      showToast("success", `${activeIdentity.kind === "company" ? "Nome da empresa" : "E-mail"} copiado`);
     } catch {
       showToast("error", "Nao foi possivel copiar");
     }
@@ -240,14 +231,18 @@ export default function ProfileButton() {
     router.replace("/login");
   }
 
-  const effectiveAvatarUrl = user?.avatarUrl ?? activeClient?.logoUrl ?? null;
+  const effectiveAvatarUrl = activeIdentity.avatarUrl;
+  const effectiveAvatarName = activeIdentity.displayName;
+  const profileAvatarFrameClass = effectiveAvatarUrl
+    ? "border border-slate-300 bg-[#f7f9fc] ring-1 ring-white/70 shadow-[0_18px_40px_rgba(15,23,42,0.16)] dark:border-slate-500 dark:bg-[#13213a] dark:ring-white/10"
+    : "border-0 bg-linear-to-br from-(--tc-primary) to-[#7a1026] ring-0 shadow-none";
 
   return (
     <div className="relative" ref={containerRef}>
       <button
         ref={buttonRef}
         type="button"
-        aria-label={`Abrir menu do usuario: ${displayName}`}
+        aria-label={`Abrir menu de perfil: ${displayName}`}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? "profile-menu" : undefined}
@@ -260,11 +255,11 @@ export default function ProfileButton() {
       >
         <UserAvatar
           src={effectiveAvatarUrl}
-          name={displayName}
+          name={effectiveAvatarName}
           showFallback={!avatarLoadingPlaceholder}
           size="sm"
           className="h-full w-full"
-          frameClassName={effectiveAvatarUrl ? "border-0 bg-transparent ring-0 shadow-none" : "border-0 bg-linear-to-br from-(--tc-primary) to-[#7a1026] ring-0 shadow-none"}
+          frameClassName={profileAvatarFrameClass}
           fallbackClassName="text-sm font-semibold tracking-[0.18em] text-white"
         />
       </button>
@@ -301,15 +296,13 @@ export default function ProfileButton() {
               <div className="flex min-w-0 items-start gap-3">
                 <UserAvatar
                   src={effectiveAvatarUrl}
-                  name={displayName}
+                  name={effectiveAvatarName}
                   showFallback={!avatarLoadingPlaceholder}
                   size="md"
                   className="h-14 w-14 shrink-0"
                   frameClassName={
                     effectiveAvatarUrl
-                      ? isDarkTheme
-                        ? "border-2 border-[#d2def8]/40 shadow-[0_14px_34px_rgba(15,23,42,0.18)]"
-                        : "border-2 border-white/85 shadow-[0_14px_34px_rgba(15,23,42,0.18)]"
+                      ? "border border-slate-300 bg-[#f7f9fc] ring-1 ring-white/70 shadow-[0_18px_40px_rgba(15,23,42,0.16)] dark:border-slate-500 dark:bg-[#13213a] dark:ring-white/10"
                       : "shadow-[0_14px_34px_rgba(15,23,42,0.18)]"
                   }
                   fallbackClassName="text-sm font-semibold tracking-[0.18em] text-white"
@@ -317,14 +310,19 @@ export default function ProfileButton() {
 
                 <div className="min-w-0 pt-0.5">
                   <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDarkTheme ? "text-[#ff8a9c]" : "text-(--tc-accent)"}`}>
-                    Conta
+                    {activeIdentity.kind === "company" ? "Empresa" : "Conta"}
                   </p>
                   <div className={`wrap-break-word text-[1.05rem] font-extrabold leading-tight ${isDarkTheme ? "text-white" : "text-[#081f4d]"}`}>
                     {displayName}
                   </div>
+                  {activeIdentity.kind === "company" && activeIdentity.accountName !== displayName ? (
+                    <div className={`wrap-break-word pt-0.5 text-[12px] font-semibold ${isDarkTheme ? "text-[#d2def8]" : "text-[#22457f]"}`}>
+                      Conta: {activeIdentity.accountName}
+                    </div>
+                  ) : null}
                   {displayUser ? (
                     <div className={`break-all pt-0.5 text-[13px] font-semibold ${isDarkTheme ? "text-[#d2def8]" : "text-[#22457f]"}`}>
-                      @{displayUser}
+                      {activeIdentity.kind === "company" ? `Login @${displayUser}` : `@${displayUser}`}
                     </div>
                   ) : null}
                 </div>
@@ -355,31 +353,33 @@ export default function ProfileButton() {
                     : "border-[#d7ddea] bg-[linear-gradient(135deg,#fff8fa_0%,#ffffff_58%,#f5f8ff_100%)]"
                 }`}
               >
-                <div className="flex flex-wrap gap-2">
-                  <span className={`tc-status-pill ${isGlobalProfile ? "" : ""} shadow-[0_10px_18px_rgba(0,0,0,0.12)]`} data-tone={isGlobalProfile ? "danger" : "neutral"}>
-                    {companyName}
-                  </span>
-                </div>
+                {contextBadgeLabel ? (
+                  <div className="flex flex-wrap gap-2">
+                    <span className={`tc-status-pill shadow-[0_10px_18px_rgba(0,0,0,0.12)]`} data-tone={isGlobalProfile ? "danger" : "neutral"}>
+                      {contextBadgeLabel}
+                    </span>
+                  </div>
+                ) : null}
 
                 <div
-                  className={`mt-2.5 flex items-start gap-2 rounded-[14px] border px-3 py-2 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] ${
+                  className={`${contextBadgeLabel ? "mt-2.5 " : ""}flex items-start gap-2 rounded-[14px] border px-3 py-2 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] ${
                     isDarkTheme ? "border-[#355483] bg-[#0c1831]" : "border-[#d7ddea] bg-white"
                   }`}
                 >
                   <span className={`min-w-0 flex-1 break-all font-semibold ${isDarkTheme ? "text-white" : "text-[#081f4d]"}`}>
-                    {displayEmail || "Sem e-mail"}
+                    {profileCardValue || profileCardFallback}
                   </span>
                   <button
                     type="button"
-                    aria-label="Copiar e-mail"
+                    aria-label={`Copiar ${copyActionLabel}`}
                     className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border text-white shadow-[0_10px_22px_rgba(15,23,42,0.12)] transition hover:bg-(--tc-accent) disabled:opacity-50 ${
                       isDarkTheme
                         ? "border-[#355483] bg-[#16315f] hover:border-[#ff8a9c] hover:text-white"
                         : "border-[#ccd8ee] bg-[#102755] hover:border-(--tc-accent)"
                     }`}
-                    onClick={() => void copyEmail()}
-                    disabled={!displayEmail}
-                    title={copied ? "Copiado" : "Copiar e-mail"}
+                    onClick={() => void copyProfileCardValue()}
+                    disabled={!profileCardValue}
+                    title={copied ? "Copiado" : `Copiar ${copyActionLabel}`}
                   >
                     {copied ? <FiCheck aria-hidden /> : <FiCopy aria-hidden />}
                   </button>

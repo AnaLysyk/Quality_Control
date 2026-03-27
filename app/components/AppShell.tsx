@@ -45,11 +45,11 @@ export default function AppShell({ children }: AppShellProps) {
 
   useEffect(() => {
     // Close mobile menu only when the route actually changes.
-    if (prevPathRef.current !== pathname) {
-      setMobileOpen(false);
-      prevPathRef.current = pathname;
-    }
-  }, [pathname, mobileOpen]);
+    if (prevPathRef.current === pathname) return;
+    prevPathRef.current = pathname;
+    const frameId = window.requestAnimationFrame(() => setMobileOpen(false));
+    return () => window.cancelAnimationFrame(frameId);
+  }, [pathname]);
 
   if (useMinimalShell) {
     return (
@@ -75,10 +75,12 @@ export default function AppShell({ children }: AppShellProps) {
 
       <button
         type="button"
-        className="fixed top-3 left-3 z-50 rounded-lg border border-(--tc-border) bg-(--tc-surface) p-2 text-(--tc-text) shadow-sm transition-colors hover:bg-(--tc-surface-2) sm:top-4 sm:left-4 lg:hidden"
-        onClick={() => { console.log('Menu mobile: onClick'); setMobileOpen(true); }}
-        onMouseEnter={() => { console.log('Menu mobile: onMouseEnter'); setMobileOpen(true); }}
-        onTouchStart={() => { console.log('Menu mobile: onTouchStart'); setMobileOpen(true); }}
+        className={`fixed top-3 left-3 z-50 rounded-lg border border-(--tc-border) bg-(--tc-surface) p-2 text-(--tc-text) shadow-sm transition-colors hover:bg-(--tc-surface-2) sm:top-4 sm:left-4 lg:hidden ${
+          mobileOpen ? "pointer-events-none opacity-0" : ""
+        }`}
+        onClick={() => setMobileOpen(true)}
+        onMouseEnter={() => setMobileOpen(true)}
+        onTouchStart={() => setMobileOpen(true)}
         aria-label="Abrir menu"
         aria-expanded={mobileOpen}
         onMouseLeave={() => setMobileOpen(false)}
@@ -89,7 +91,7 @@ export default function AppShell({ children }: AppShellProps) {
       <div className="fixed top-3 right-3 z-40 flex items-center gap-1 sm:top-4 sm:right-4 sm:gap-2">
         <NotificationsButton />
         <TicketsButton />
-        <span className="hidden sm:inline-flex"><NotesButton /></span>
+        <span className="hidden shrink-0 sm:inline-flex"><NotesButton /></span>
         <ProfileButton />
       </div>
 

@@ -31,6 +31,7 @@ type UserItem = {
   email: string;
   user?: string;
   permission_role?: string | null;
+  profile_kind?: string | null;
   company_ids?: string[];
   company_names?: string[];
   active?: boolean;
@@ -72,23 +73,41 @@ function getInitials(name?: string | null) {
   return `${parts[0].slice(0, 1)}${parts[parts.length - 1].slice(0, 1)}`.toUpperCase();
 }
 
-function roleLabel(permissionRole?: string | null) {
-  if (permissionRole === "admin") return "Lider TC";
-  if (permissionRole === "dev") return "Suporte Tecnico";
-  if (permissionRole === "company") return "Usuarios da empresa";
-  return "Usuarios Testing Company";
+function normalizeProfileKind(user?: Pick<UserItem, "profile_kind" | "permission_role"> | null) {
+  const profileKind = (user?.profile_kind ?? "").trim().toLowerCase();
+  if (profileKind === "empresa") return "empresa" as const;
+  if (profileKind === "company_user") return "company_user" as const;
+  if (profileKind === "testing_company_user") return "testing_company_user" as const;
+  if (profileKind === "leader_tc") return "leader_tc" as const;
+  if (profileKind === "technical_support") return "technical_support" as const;
+
+  const permissionRole = (user?.permission_role ?? "").trim().toLowerCase();
+  if (permissionRole === "company") return "empresa" as const;
+  if (permissionRole === "admin") return "leader_tc" as const;
+  if (permissionRole === "dev") return "technical_support" as const;
+  return "testing_company_user" as const;
 }
 
-function roleTone(permissionRole?: string | null) {
-  if (permissionRole === "admin") return "border-indigo-200 bg-indigo-50 text-indigo-700";
-  if (permissionRole === "dev") return "border-cyan-200 bg-cyan-50 text-cyan-700";
-  if (permissionRole === "company") return "border-rose-200 bg-rose-50 text-rose-700";
+function profileLabel(user?: Pick<UserItem, "profile_kind" | "permission_role"> | null) {
+  const profileKind = normalizeProfileKind(user);
+  if (profileKind === "empresa") return "Empresa";
+  if (profileKind === "company_user") return "Usuario da empresa";
+  if (profileKind === "leader_tc") return "Lider TC";
+  if (profileKind === "technical_support") return "Suporte Tecnico";
+  return "Usuario Testing Company";
+}
+
+function roleTone(user?: Pick<UserItem, "profile_kind" | "permission_role"> | null) {
+  const profileKind = normalizeProfileKind(user);
+  if (profileKind === "leader_tc") return "border-indigo-200 bg-indigo-50 text-indigo-700";
+  if (profileKind === "technical_support") return "border-cyan-200 bg-cyan-50 text-cyan-700";
+  if (profileKind === "empresa") return "border-rose-200 bg-rose-50 text-rose-700";
+  if (profileKind === "company_user") return "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700";
   return "border-sky-200 bg-sky-50 text-sky-700";
 }
 
-function contextBadgeLabel(user: UserItem, companyLabel?: string | null) {
-  if (companyLabel?.trim()) return companyLabel.trim();
-  return roleLabel(user.permission_role);
+function contextBadgeLabel(user: UserItem) {
+  return profileLabel(user);
 }
 
 function getUserHandle(user?: Pick<UserItem, "user"> | null) {
@@ -170,10 +189,10 @@ function UserCard({
 
         <div className="flex flex-wrap gap-2 md:max-w-55 md:justify-end">
           <span
-            className={`inline-flex max-w-full rounded-full border px-3 py-1.5 text-sm font-semibold ${roleTone(user.permission_role)}`}
-            title={contextBadgeLabel(user, companyLabel)}
+            className={`inline-flex max-w-full rounded-full border px-3 py-1.5 text-sm font-semibold ${roleTone(user)}`}
+            title={contextBadgeLabel(user)}
           >
-            <span className="truncate">{contextBadgeLabel(user, companyLabel)}</span>
+            <span className="truncate">{contextBadgeLabel(user)}</span>
           </span>
           <span className={`inline-flex rounded-full px-3 py-1.5 text-sm font-semibold ${statusTone(user)}`}>
             {statusLabel(user)}
@@ -312,29 +331,33 @@ export default function AdminUsersPage() {
     const term = normalize(search);
     if (!term) return users;
     return users.filter((user) => {
-      const haystack = [user.name, user.user, user.email, ...(user.company_names ?? []), roleLabel(user.permission_role)]
+      const haystack = [user.name, user.user, user.email, ...(user.company_names ?? []), profileLabel(user)]
         .map(normalize)
         .join(" ");
       return haystack.includes(term);
     });
   }, [search, users]);
 
+  const companyAccounts = useMemo(
+    () => sortUsers(searchedUsers.filter((user) => normalizeProfileKind(user) === "empresa")),
+    [searchedUsers, sortUsers],
+  );
   const companyProfileUsers = useMemo(
-    () => sortUsers(searchedUsers.filter((user) => user.permission_role === "company")),
+    () => sortUsers(searchedUsers.filter((user) => normalizeProfileKind(user) === "company_user")),
     [searchedUsers, sortUsers],
   );
 
   const testingCompanyUsers = useMemo(
-    () => sortUsers(searchedUsers.filter((user) => user.permission_role === "user")),
+    () => sortUsers(searchedUsers.filter((user) => normalizeProfileKind(user) === "testing_company_user")),
     [searchedUsers, sortUsers],
   );
 
   const adminUsers = useMemo(
-    () => sortUsers(searchedUsers.filter((user) => user.permission_role === "admin")),
+    () => sortUsers(searchedUsers.filter((user) => normalizeProfileKind(user) === "leader_tc")),
     [searchedUsers, sortUsers],
   );
   const supportUsers = useMemo(
-    () => sortUsers(searchedUsers.filter((user) => user.permission_role === "dev")),
+    () => sortUsers(searchedUsers.filter((user) => normalizeProfileKind(user) === "technical_support")),
     [searchedUsers, sortUsers],
   );
 
@@ -345,6 +368,17 @@ export default function AdminUsersPage() {
   const supportActiveUsers = useMemo(() => supportUsers.filter((user) => !isInactiveUser(user)), [supportUsers]);
   const supportInactiveUsers = useMemo(() => supportUsers.filter((user) => isInactiveUser(user)), [supportUsers]);
 
+  const companyAccountSections = useMemo<CompanySection[]>(
+    () =>
+      companies
+        .map((company) => ({
+          id: company.id,
+          name: company.name,
+          users: sortUsers(companyAccounts.filter((user) => (user.company_ids ?? []).includes(company.id))),
+        }))
+        .filter((company) => company.users.length > 0),
+    [companies, companyAccounts, sortUsers],
+  );
   const companySections = useMemo<CompanySection[]>(
     () =>
       companies
@@ -355,6 +389,26 @@ export default function AdminUsersPage() {
         }))
         .filter((company) => company.users.length > 0),
     [companies, companyProfileUsers, sortUsers],
+  );
+  const companyActiveAccountSections = useMemo(
+    () =>
+      companyAccountSections
+        .map((company) => ({
+          ...company,
+          users: company.users.filter((user) => !isInactiveUser(user)),
+        }))
+        .filter((company) => company.users.length > 0),
+    [companyAccountSections],
+  );
+  const companyInactiveAccountSections = useMemo(
+    () =>
+      companyAccountSections
+        .map((company) => ({
+          ...company,
+          users: company.users.filter((user) => isInactiveUser(user)),
+        }))
+        .filter((company) => company.users.length > 0),
+    [companyAccountSections],
   );
   const companyActiveSections = useMemo(
     () =>
@@ -378,10 +432,11 @@ export default function AdminUsersPage() {
   );
 
   const totalUsersCount = users.length;
-  const companyUsersCount = useMemo(() => users.filter((user) => user.permission_role === "company").length, [users]);
-  const testingUsersCount = useMemo(() => users.filter((user) => user.permission_role === "user").length, [users]);
-  const adminUsersCount = useMemo(() => users.filter((user) => user.permission_role === "admin").length, [users]);
-  const supportUsersCount = useMemo(() => users.filter((user) => user.permission_role === "dev").length, [users]);
+  const companyAccountsCount = useMemo(() => users.filter((user) => normalizeProfileKind(user) === "empresa").length, [users]);
+  const companyUsersCount = useMemo(() => users.filter((user) => normalizeProfileKind(user) === "company_user").length, [users]);
+  const testingUsersCount = useMemo(() => users.filter((user) => normalizeProfileKind(user) === "testing_company_user").length, [users]);
+  const adminUsersCount = useMemo(() => users.filter((user) => normalizeProfileKind(user) === "leader_tc").length, [users]);
+  const supportUsersCount = useMemo(() => users.filter((user) => normalizeProfileKind(user) === "technical_support").length, [users]);
 
   const selectedModalUser = useMemo(
     () =>
@@ -452,7 +507,7 @@ export default function AdminUsersPage() {
 
   const currentTabTotal =
     activeTab === "company"
-      ? companyProfileUsers.length
+      ? companyAccounts.length + companyProfileUsers.length
       : activeTab === "testing"
         ? testingCompanyUsers.length
         : activeTab === "support"
@@ -485,7 +540,10 @@ export default function AdminUsersPage() {
                 <FiUsers className="h-4 w-4" /> {totalUsersCount} contas visiveis
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiHome className="h-4 w-4" /> {companyUsersCount} Usuarios da empresa
+                <FiHome className="h-4 w-4" /> {companyAccountsCount} Empresa
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
+                <FiUsers className="h-4 w-4" /> {companyUsersCount} Usuario da empresa
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
                 <FiUser className="h-4 w-4" /> {testingUsersCount} Usuarios Testing Company
@@ -507,7 +565,7 @@ export default function AdminUsersPage() {
               <div className="mt-4">
                 <TabsList className="grid w-full grid-cols-1 gap-2 rounded-[22px] bg-(--tc-surface-alt,#f8fafc) p-1.5 sm:grid-cols-2 xl:grid-cols-4">
                   <TabsTrigger value="company" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Usuarios da empresa
+                    Empresa e usuarios da empresa
                   </TabsTrigger>
                   <TabsTrigger value="testing" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
                     Usuarios Testing Company
@@ -565,12 +623,12 @@ export default function AdminUsersPage() {
                 ) : null}
 
                 <TabsContent value="company" className="mt-0">
-                  {companySections.length === 0 ? (
+                  {companySections.length === 0 && companyAccountSections.length === 0 ? (
                     <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
                       <FiUsers className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
                       <div>
-                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhuma empresa com usuarios</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual nao encontrou usuarios vinculados a empresas.</p>
+                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum perfil da empresa encontrado</h3>
+                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual nao encontrou empresa institucional nem usuarios da empresa.</p>
                       </div>
                     </div>
                   ) : (
@@ -579,26 +637,62 @@ export default function AdminUsersPage() {
                         {
                           id: "active",
                           title: "Ativos",
+                          accountSections: companyActiveAccountSections,
                           sections: companyActiveSections,
-                          emptyMessage: "Nenhum usuario ativo encontrado nas empresas.",
+                          emptyMessage: "Nenhum perfil ativo encontrado nas empresas.",
                         },
                         {
                           id: "inactive",
                           title: "Inativos",
+                          accountSections: companyInactiveAccountSections,
                           sections: companyInactiveSections,
-                          emptyMessage: "Nenhum usuario inativo encontrado nas empresas.",
+                          emptyMessage: "Nenhum perfil inativo encontrado nas empresas.",
                         },
                       ].map((group) => (
                         <UserStatusSection
                           key={group.id}
                           title={group.title}
-                          count={group.sections.reduce((total, section) => total + section.users.length, 0)}
+                          count={
+                            group.accountSections.reduce((total, section) => total + section.users.length, 0) +
+                            group.sections.reduce((total, section) => total + section.users.length, 0)
+                          }
                           emptyMessage={group.emptyMessage}
                         >
                           <div className="space-y-4">
-                            {group.sections.map((company) => (
-                              <CompanyUsersSection key={`${group.id}-${company.id}`} company={company} onSelect={setSelectedUser} />
-                            ))}
+                            <section className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-base font-bold text-(--tc-text-primary,#0b1a3c)">Empresa</h4>
+                                <span className="rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text-primary,#0b1a3c)">
+                                  {group.accountSections.reduce((total, section) => total + section.users.length, 0)}
+                                </span>
+                              </div>
+                              {group.accountSections.length === 0 ? (
+                                <div className="rounded-[18px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-6 text-sm text-(--tc-text-secondary,#4b5563)">
+                                  Nenhuma empresa {group.id === "active" ? "ativa" : "inativa"} neste recorte.
+                                </div>
+                              ) : (
+                                group.accountSections.map((company) => (
+                                  <CompanyUsersSection key={`company-account-${group.id}-${company.id}`} company={company} onSelect={setSelectedUser} />
+                                ))
+                              )}
+                            </section>
+                            <section className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-base font-bold text-(--tc-text-primary,#0b1a3c)">Usuarios da empresa</h4>
+                                <span className="rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text-primary,#0b1a3c)">
+                                  {group.sections.reduce((total, section) => total + section.users.length, 0)}
+                                </span>
+                              </div>
+                              {group.sections.length === 0 ? (
+                                <div className="rounded-[18px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-6 text-sm text-(--tc-text-secondary,#4b5563)">
+                                  Nenhum usuario da empresa {group.id === "active" ? "ativo" : "inativo"} neste recorte.
+                                </div>
+                              ) : (
+                                group.sections.map((company) => (
+                                  <CompanyUsersSection key={`${group.id}-${company.id}`} company={company} onSelect={setSelectedUser} />
+                                ))
+                              )}
+                            </section>
                           </div>
                         </UserStatusSection>
                       ))}

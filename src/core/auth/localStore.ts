@@ -4,6 +4,12 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { randomUUID } from "crypto";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
+import {
+  assertUserCanLinkToCompany,
+  normalizeUserOrigin,
+  normalizeUserScope,
+  resolveAllowMultiCompanyLink,
+} from "@/lib/companyUserScope";
 
 export type LocalAuthUser = {
   id: string;
@@ -23,6 +29,11 @@ export type LocalAuthUser = {
   linkedin_url?: string | null;
   phone?: string | null;
   default_company_slug?: string | null;
+  created_by_company_id?: string | null;
+  home_company_id?: string | null;
+  user_origin?: "testing_company" | "client_company";
+  user_scope?: "shared" | "company_only";
+  allow_multi_company_link?: boolean;
   createdAt?: string | null;
   lastLoginAt?: string | null;
 };
@@ -76,19 +87,44 @@ const USE_MEMORY_STORE =
   (!USE_REDIS && process.env.VERCEL === "1");
 let warnedFsFailure = false;
 
+function normalizeDatabaseUrl(value?: string | null) {
+  return (value ?? "").trim().replace(/^['"]|['"]$/g, "");
+}
+
+function hasSupportedDatabaseUrl(value?: string | null) {
+  const normalized = normalizeDatabaseUrl(value);
+  return (
+    normalized.startsWith("postgresql://") ||
+    normalized.startsWith("prisma://") ||
+    normalized.startsWith("prisma+postgres://")
+  );
+}
+
+function isRecoverablePrismaDatasourceError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return (
+    message.includes("Error validating datasource `db`") ||
+    message.includes("Environment variable not found: DATABASE_URL") ||
+    message.includes("the URL must start with the protocol `prisma://` or `postgresql://`") ||
+    message.includes("the URL must start with the protocol `prisma://` or `prisma+postgres://`")
+  );
+}
+
 // ── PostgreSQL mode ──────────────────────────────────────────────────────────
 // Set AUTH_STORE=postgres (e.g. in Render env vars) to persist all auth data
 // in PostgreSQL instead of the local JSON file. The JSON/Redis path is kept as
-// the fallback for local development.
-// Also auto-detect: if DATABASE_URL is present and AUTH_STORE is not explicitly
-// set to something else, default to postgres.
-export const USE_POSTGRES =
-  process.env.AUTH_STORE === "postgres" ||
-  (!!process.env.DATABASE_URL && process.env.AUTH_STORE !== "json" && process.env.AUTH_STORE !== "redis" && process.env.AUTH_STORE !== "memory");
+// the fallback for local development. Only enable PostgreSQL auth
+// explicitly when AUTH_STORE=postgres.
+export const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
 
 if (typeof process !== "undefined") {
   const backend = USE_POSTGRES ? "PostgreSQL" : process.env.LOCAL_AUTH_STORE === "redis" ? "Redis" : "JSON/Memory";
-  console.log(`[AUTH-STORE] Backend: ${backend} (AUTH_STORE=${process.env.AUTH_STORE ?? "<unset>"}, DATABASE_URL=${process.env.DATABASE_URL ? "set" : "unset"})`);
+  const databaseUrlStatus = process.env.DATABASE_URL
+    ? hasSupportedDatabaseUrl(process.env.DATABASE_URL)
+      ? "valid"
+      : "invalid"
+    : "unset";
+  console.log(`[AUTH-STORE] Backend: ${backend} (AUTH_STORE=${process.env.AUTH_STORE ?? "<unset>"}, DATABASE_URL=${databaseUrlStatus})`);
 }
 
 let _pgStore: typeof import("./pgStore") | null = null;
@@ -207,6 +243,12 @@ function normalizeMembershipRole(role?: string | null) {
   const normalized = (role ?? "").toLowerCase();
   if (normalized === "company_admin" || normalized === "user" || normalized === "viewer") return normalized;
   if (normalized === "it_dev" || normalized === "itdev" || normalized === "developer" || normalized === "dev") return "it_dev";
+  if (normalized === "technical_support" || normalized === "tech_support" || normalized === "support_tech") {
+    return "technical_support";
+  }
+  if (normalized === "leader_tc" || normalized === "tc_leader" || normalized === "lider_tc") {
+    return "leader_tc";
+  }
   if (normalized === "admin" || normalized === "client_admin" || normalized === "company") return "company_admin";
   if (normalized === "read_only") return "viewer";
   return "user";
@@ -273,6 +315,20 @@ async function readJson(filePath: string): Promise<LocalAuthStore | null> {
         ...user,
         user: rawUser || fallback,
         email: rawEmail || fallback,
+        created_by_company_id:
+          typeof user.created_by_company_id === "string" && user.created_by_company_id.trim()
+            ? user.created_by_company_id.trim()
+            : null,
+        home_company_id:
+          typeof user.home_company_id === "string" && user.home_company_id.trim()
+            ? user.home_company_id.trim()
+            : null,
+        user_origin: normalizeUserOrigin(user.user_origin),
+        user_scope: normalizeUserScope(user.user_scope),
+        allow_multi_company_link: resolveAllowMultiCompanyLink(
+          user.allow_multi_company_link,
+          user.user_scope,
+        ),
       } as LocalAuthUser;
     });
     const store: LocalAuthStore = {
@@ -357,7 +413,18 @@ async function storeExists() {
 }
 
 export async function readLocalAuthStore(): Promise<LocalAuthStore> {
-  if (USE_POSTGRES) return (await pg()).pgReadLocalAuthStore();
+  if (USE_POSTGRES) {
+    try {
+      return await (await pg()).pgReadLocalAuthStore();
+    } catch (error) {
+      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+        const message = error instanceof Error ? error.message : String(error ?? "");
+        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em readLocalAuthStore: ${message}`);
+      } else {
+        throw error;
+      }
+    }
+  }
   if (USE_REDIS) {
     const redisStore = await readStoreFromRedis();
     if (redisStore) return cloneStore(redisStore);
@@ -421,19 +488,52 @@ async function loadStoreForWrite(): Promise<LocalAuthStore> {
 }
 
 export async function listLocalUsers(): Promise<LocalAuthUser[]> {
-  if (USE_POSTGRES) return (await pg()).pgListLocalUsers();
+  if (USE_POSTGRES) {
+    try {
+      return await (await pg()).pgListLocalUsers();
+    } catch (error) {
+      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+        const message = error instanceof Error ? error.message : String(error ?? "");
+        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em listLocalUsers: ${message}`);
+      } else {
+        throw error;
+      }
+    }
+  }
   const store = await readLocalAuthStore();
   return [...store.users];
 }
 
 export async function listLocalCompanies(): Promise<LocalAuthCompany[]> {
-  if (USE_POSTGRES) return (await pg()).pgListLocalCompanies();
+  if (USE_POSTGRES) {
+    try {
+      return await (await pg()).pgListLocalCompanies();
+    } catch (error) {
+      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+        const message = error instanceof Error ? error.message : String(error ?? "");
+        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em listLocalCompanies: ${message}`);
+      } else {
+        throw error;
+      }
+    }
+  }
   const store = await readLocalAuthStore();
   return [...store.companies].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 }
 
 export async function listLocalMemberships(): Promise<LocalAuthMembership[]> {
-  if (USE_POSTGRES) return (await pg()).pgListLocalMemberships();
+  if (USE_POSTGRES) {
+    try {
+      return await (await pg()).pgListLocalMemberships();
+    } catch (error) {
+      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+        const message = error instanceof Error ? error.message : String(error ?? "");
+        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em listLocalMemberships: ${message}`);
+      } else {
+        throw error;
+      }
+    }
+  }
   const store = await readLocalAuthStore();
   return [...(store.memberships ?? [])];
 }
@@ -443,7 +543,18 @@ export async function listLocalLinks(): Promise<LocalAuthMembership[]> {
 }
 
 export async function findLocalUserByEmailOrId(identifier: string): Promise<LocalAuthUser | null> {
-  if (USE_POSTGRES) return (await pg()).pgFindLocalUserByEmailOrId(identifier);
+  if (USE_POSTGRES) {
+    try {
+      return await (await pg()).pgFindLocalUserByEmailOrId(identifier);
+    } catch (error) {
+      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+        const message = error instanceof Error ? error.message : String(error ?? "");
+        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em findLocalUserByEmailOrId: ${message}`);
+      } else {
+        throw error;
+      }
+    }
+  }
   const normalized = normalizeLogin(identifier);
   const store = await readLocalAuthStore();
   const byLogin = store.users.find((user) => normalizeLogin(user.user ?? user.email ?? "") === normalized);
@@ -455,21 +566,54 @@ export async function findLocalUserByEmailOrId(identifier: string): Promise<Loca
 }
 
 export async function getLocalUserById(id: string): Promise<LocalAuthUser | null> {
-  if (USE_POSTGRES) return (await pg()).pgGetLocalUserById(id);
+  if (USE_POSTGRES) {
+    try {
+      return await (await pg()).pgGetLocalUserById(id);
+    } catch (error) {
+      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+        const message = error instanceof Error ? error.message : String(error ?? "");
+        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em getLocalUserById: ${message}`);
+      } else {
+        throw error;
+      }
+    }
+  }
   const store = await readLocalAuthStore();
   const user = store.users.find((item) => item.id === id);
   return user ? { ...user } : null;
 }
 
 export async function findLocalCompanyById(id: string): Promise<LocalAuthCompany | null> {
-  if (USE_POSTGRES) return (await pg()).pgFindLocalCompanyById(id);
+  if (USE_POSTGRES) {
+    try {
+      return await (await pg()).pgFindLocalCompanyById(id);
+    } catch (error) {
+      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+        const message = error instanceof Error ? error.message : String(error ?? "");
+        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em findLocalCompanyById: ${message}`);
+      } else {
+        throw error;
+      }
+    }
+  }
   const store = await readLocalAuthStore();
   const company = store.companies.find((item) => item.id === id);
   return company ? { ...company } : null;
 }
 
 export async function findLocalCompanyBySlug(slug: string): Promise<LocalAuthCompany | null> {
-  if (USE_POSTGRES) return (await pg()).pgFindLocalCompanyBySlug(slug);
+  if (USE_POSTGRES) {
+    try {
+      return await (await pg()).pgFindLocalCompanyBySlug(slug);
+    } catch (error) {
+      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+        const message = error instanceof Error ? error.message : String(error ?? "");
+        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em findLocalCompanyBySlug: ${message}`);
+      } else {
+        throw error;
+      }
+    }
+  }
   const normalized = normalizeSlug(slug);
   const store = await readLocalAuthStore();
   const company = store.companies.find((item) => normalizeSlug(item.slug ?? "") === normalized);
@@ -477,13 +621,35 @@ export async function findLocalCompanyBySlug(slug: string): Promise<LocalAuthCom
 }
 
 export async function listLocalLinksForUser(userId: string): Promise<LocalAuthMembership[]> {
-  if (USE_POSTGRES) return (await pg()).pgListLocalLinksForUser(userId);
+  if (USE_POSTGRES) {
+    try {
+      return await (await pg()).pgListLocalLinksForUser(userId);
+    } catch (error) {
+      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+        const message = error instanceof Error ? error.message : String(error ?? "");
+        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em listLocalLinksForUser: ${message}`);
+      } else {
+        throw error;
+      }
+    }
+  }
   const store = await readLocalAuthStore();
   return (store.memberships ?? []).filter((m) => m.userId === userId).map((m) => ({ ...m }));
 }
 
 export async function listLocalLinksForCompany(companyId: string): Promise<LocalAuthMembership[]> {
-  if (USE_POSTGRES) return (await pg()).pgListLocalLinksForCompany(companyId);
+  if (USE_POSTGRES) {
+    try {
+      return await (await pg()).pgListLocalLinksForCompany(companyId);
+    } catch (error) {
+      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+        const message = error instanceof Error ? error.message : String(error ?? "");
+        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em listLocalLinksForCompany: ${message}`);
+      } else {
+        throw error;
+      }
+    }
+  }
   const store = await readLocalAuthStore();
   return (store.memberships ?? []).filter((m) => m.companyId === companyId).map((m) => ({ ...m }));
 }
@@ -504,6 +670,12 @@ export async function createLocalUser(input: {
   job_title?: string | null;
   linkedin_url?: string | null;
   phone?: string | null;
+  default_company_slug?: string | null;
+  created_by_company_id?: string | null;
+  home_company_id?: string | null;
+  user_origin?: "testing_company" | "client_company";
+  user_scope?: "shared" | "company_only";
+  allow_multi_company_link?: boolean;
 }): Promise<LocalAuthUser> {
   if (USE_POSTGRES) return (await pg()).pgCreateLocalUser(input);
   const store = await loadStoreForWrite();
@@ -535,6 +707,15 @@ export async function createLocalUser(input: {
     job_title: input.job_title ?? null,
     linkedin_url: input.linkedin_url ?? null,
     phone: input.phone ?? null,
+    default_company_slug: input.default_company_slug ?? null,
+    created_by_company_id: input.created_by_company_id ?? null,
+    home_company_id: input.home_company_id ?? null,
+    user_origin: normalizeUserOrigin(input.user_origin),
+    user_scope: normalizeUserScope(input.user_scope),
+    allow_multi_company_link: resolveAllowMultiCompanyLink(
+      input.allow_multi_company_link,
+      input.user_scope,
+    ),
     createdAt: new Date().toISOString(),
   };
   store.users.push(user);
@@ -584,6 +765,20 @@ export async function updateLocalUser(
     ...(patch.linkedin_url !== undefined ? { linkedin_url: patch.linkedin_url ?? null } : {}),
     ...(patch.phone !== undefined ? { phone: patch.phone ?? null } : {}),
     ...(patch.default_company_slug !== undefined ? { default_company_slug: patch.default_company_slug ?? null } : {}),
+    ...(patch.created_by_company_id !== undefined
+      ? { created_by_company_id: patch.created_by_company_id ?? null }
+      : {}),
+    ...(patch.home_company_id !== undefined ? { home_company_id: patch.home_company_id ?? null } : {}),
+    ...(patch.user_origin !== undefined ? { user_origin: normalizeUserOrigin(patch.user_origin) } : {}),
+    ...(patch.user_scope !== undefined ? { user_scope: normalizeUserScope(patch.user_scope) } : {}),
+    ...(patch.allow_multi_company_link !== undefined
+      ? {
+          allow_multi_company_link: resolveAllowMultiCompanyLink(
+            patch.allow_multi_company_link,
+            patch.user_scope ?? current.user_scope,
+          ),
+        }
+      : {}),
     ...(patch.password_hash ? { password_hash: patch.password_hash } : {}),
   };
   store.users[idx] = next;
@@ -679,6 +874,8 @@ export async function upsertLocalLink(input: {
 }) {
   if (USE_POSTGRES) return (await pg()).pgUpsertLocalLink(input);
   const store = await loadStoreForWrite();
+  const user = store.users.find((candidate) => candidate.id === input.userId) ?? null;
+  assertUserCanLinkToCompany(user, input.companyId);
   const memberships = store.memberships ?? [];
   const idx = memberships.findIndex(
     (link) => link.userId === input.userId && link.companyId === input.companyId,

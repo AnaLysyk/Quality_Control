@@ -102,6 +102,10 @@ export function ClientProvider({ children }: { children: ReactNode }) {
         name: company.name,
         slug: company.slug,
         active: company.active ?? true,
+        logoUrl:
+          typeof (company as { logoUrl?: string | null }).logoUrl === "string"
+            ? (company as { logoUrl?: string | null }).logoUrl
+            : null,
         role: ((company.role ?? "").toUpperCase() === "ADMIN" ? "ADMIN" : "USER") as ClientAccess["role"],
         linkActive: true,
         createdAt: typeof (company as { createdAt?: string | null }).createdAt === "string"

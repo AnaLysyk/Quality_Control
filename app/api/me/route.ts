@@ -81,6 +81,10 @@ export async function GET(req: Request) {
       role,
       active: company.active ?? true,
       createdAt,
+      logoUrl:
+        typeof (company as { logo_url?: string | null }).logo_url === "string"
+          ? (company as { logo_url?: string | null }).logo_url
+          : null,
       companyRole: rawRole ?? null,
       capabilities: link?.capabilities ?? undefined,
     };

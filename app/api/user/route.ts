@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { createLocalUser, listLocalUsers, upsertLocalLink } from "@/lib/auth/localStore";
+import { isUserScopeLockedError } from "@/lib/companyUserScope";
 
 // POST: Cria um novo usuario e vincula a uma empresa
 export async function POST(req: NextRequest) {
@@ -45,6 +46,13 @@ export async function POST(req: NextRequest) {
     }
     throw err;
   }
-  await upsertLocalLink({ userId: user.id, companyId, role: "user" });
+  try {
+    await upsertLocalLink({ userId: user.id, companyId, role: "user" });
+  } catch (error) {
+    if (isUserScopeLockedError(error)) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+    throw error;
+  }
   return NextResponse.json(user, { status: 201 });
 }

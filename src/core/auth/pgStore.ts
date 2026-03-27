@@ -1,6 +1,12 @@
 import "server-only";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prismaClient";
+import {
+  assertUserCanLinkToCompany,
+  normalizeUserOrigin,
+  normalizeUserScope,
+  resolveAllowMultiCompanyLink,
+} from "@/lib/companyUserScope";
 import type {
   LocalAuthUser,
   LocalAuthCompany,
@@ -28,6 +34,11 @@ type PrismaUser = {
   linkedin_url: string | null;
   phone: string | null;
   default_company_slug: string | null;
+  created_by_company_id: string | null;
+  home_company_id: string | null;
+  user_origin: string;
+  user_scope: string;
+  allow_multi_company_link: boolean;
   createdAt: Date;
 };
 
@@ -89,6 +100,14 @@ function toLocalUser(u: PrismaUser): LocalAuthUser {
     linkedin_url: u.linkedin_url,
     phone: u.phone,
     default_company_slug: u.default_company_slug,
+    created_by_company_id: u.created_by_company_id,
+    home_company_id: u.home_company_id,
+    user_origin: normalizeUserOrigin(u.user_origin),
+    user_scope: normalizeUserScope(u.user_scope),
+    allow_multi_company_link: resolveAllowMultiCompanyLink(
+      u.allow_multi_company_link,
+      u.user_scope,
+    ),
     createdAt: u.createdAt.toISOString(),
   };
 }
@@ -225,6 +244,12 @@ export async function pgCreateLocalUser(input: {
   job_title?: string | null;
   linkedin_url?: string | null;
   phone?: string | null;
+  default_company_slug?: string | null;
+  created_by_company_id?: string | null;
+  home_company_id?: string | null;
+  user_origin?: "testing_company" | "client_company";
+  user_scope?: "shared" | "company_only";
+  allow_multi_company_link?: boolean;
 }): Promise<LocalAuthUser> {
   const email = nl(input.email);
   const loginRaw = nl(input.user ?? "");
@@ -257,6 +282,15 @@ export async function pgCreateLocalUser(input: {
         job_title: input.job_title ?? null,
         linkedin_url: input.linkedin_url ?? null,
         phone: input.phone ?? null,
+        default_company_slug: input.default_company_slug ?? null,
+        created_by_company_id: input.created_by_company_id ?? null,
+        home_company_id: input.home_company_id ?? null,
+        user_origin: normalizeUserOrigin(input.user_origin),
+        user_scope: normalizeUserScope(input.user_scope),
+        allow_multi_company_link: resolveAllowMultiCompanyLink(
+          input.allow_multi_company_link,
+          input.user_scope,
+        ),
       },
     });
     console.log(`[PG-STORE] User created OK: id=${user.id} email=${user.email}`);
@@ -302,6 +336,20 @@ export async function pgUpdateLocalUser(
         ...(patch.phone !== undefined ? { phone: patch.phone ?? null } : {}),
         ...(patch.default_company_slug !== undefined
           ? { default_company_slug: patch.default_company_slug ?? null }
+          : {}),
+        ...(patch.created_by_company_id !== undefined
+          ? { created_by_company_id: patch.created_by_company_id ?? null }
+          : {}),
+        ...(patch.home_company_id !== undefined ? { home_company_id: patch.home_company_id ?? null } : {}),
+        ...(patch.user_origin !== undefined ? { user_origin: normalizeUserOrigin(patch.user_origin) } : {}),
+        ...(patch.user_scope !== undefined ? { user_scope: normalizeUserScope(patch.user_scope) } : {}),
+        ...(patch.allow_multi_company_link !== undefined
+          ? {
+              allow_multi_company_link: resolveAllowMultiCompanyLink(
+                patch.allow_multi_company_link,
+                patch.user_scope ?? existing.user_scope,
+              ),
+            }
           : {}),
         ...(patch.password_hash ? { password_hash: patch.password_hash } : {}),
       },
@@ -499,6 +547,18 @@ export async function pgUpsertLocalLink(input: {
   role?: string | null;
   capabilities?: string[] | null;
 }): Promise<string> {
+  const user = await prisma.user.findUnique({
+    where: { id: input.userId },
+    select: {
+      id: true,
+      created_by_company_id: true,
+      home_company_id: true,
+      user_origin: true,
+      user_scope: true,
+      allow_multi_company_link: true,
+    },
+  });
+  assertUserCanLinkToCompany(user, input.companyId);
   const role = pgNormalizeMembershipRole(input.role ?? "user");
   await prisma.membership.upsert({
     where: { userId_companyId: { userId: input.userId, companyId: input.companyId } },

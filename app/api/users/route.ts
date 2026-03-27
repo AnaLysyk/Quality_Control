@@ -11,6 +11,7 @@ import {
   upsertLocalLink,
 } from "@/lib/auth/localStore";
 import { getAccessContext } from "@/lib/auth/session";
+import { isUserScopeLockedError } from "@/lib/companyUserScope";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
@@ -112,7 +113,14 @@ export async function POST(req: Request) {
     throw err;
   }
 
-  await upsertLocalLink({ userId: created.id, companyId, role, capabilities });
+  try {
+    await upsertLocalLink({ userId: created.id, companyId, role, capabilities });
+  } catch (error) {
+    if (isUserScopeLockedError(error)) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+    throw error;
+  }
 
   const item = await getAdminUserItem(created.id);
   return NextResponse.json(item ?? created, { status: 201 });
@@ -170,14 +178,21 @@ export async function PATCH(req: Request) {
   }
 
   if (typeof updates.role === "string" || Array.isArray(updates.capabilities)) {
-    await upsertLocalLink({
-      userId,
-      companyId,
-      role: typeof updates.role === "string" ? normalizeMembershipRole(updates.role) : undefined,
-      capabilities: Array.isArray(updates.capabilities)
-        ? updates.capabilities.filter((item: unknown) => typeof item === "string")
-        : undefined,
-    });
+    try {
+      await upsertLocalLink({
+        userId,
+        companyId,
+        role: typeof updates.role === "string" ? normalizeMembershipRole(updates.role) : undefined,
+        capabilities: Array.isArray(updates.capabilities)
+          ? updates.capabilities.filter((item: unknown) => typeof item === "string")
+          : undefined,
+      });
+    } catch (error) {
+      if (isUserScopeLockedError(error)) {
+        return NextResponse.json({ error: error.message }, { status: 409 });
+      }
+      throw error;
+    }
   }
 
   const item = await getAdminUserItem(userId);

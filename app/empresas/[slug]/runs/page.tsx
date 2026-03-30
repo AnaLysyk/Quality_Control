@@ -248,6 +248,8 @@ export default function CompanyRunsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     const currentCompanySlug = companySlug ?? "";
@@ -314,6 +316,18 @@ export default function CompanyRunsPage() {
     );
   }, [runs, search]);
 
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(filteredRuns.length / pageSize)), [filteredRuns.length, pageSize]);
+
+  useEffect(() => {
+    // Reset to first page when filtering or page size changes
+    setPage(1);
+  }, [search, pageSize]);
+
+  const pagedRuns = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredRuns.slice(start, start + pageSize);
+  }, [filteredRuns, page, pageSize]);
+
   const totals = useMemo(
     () => ({
       total: runs.length,
@@ -363,13 +377,49 @@ export default function CompanyRunsPage() {
             />
           </div>
 
+          <div className="mt-5 flex items-center justify-between gap-3" data-testid="runs-controls">
+            <div className="flex items-center gap-3">
+              <label className="text-sm text-(--tc-text-secondary,#4b5563)">Mostrar</label>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value) || 10)}
+                className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-1 text-sm outline-none"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+              <span className="text-sm text-(--tc-text-muted,#6b7280)">itens por página</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="rounded-full border px-3 py-1 text-sm disabled:opacity-50"
+              >
+                Anterior
+              </button>
+              <div className="text-sm text-(--tc-text-muted,#6b7280)">
+                Página {page} / {totalPages}
+              </div>
+              <button
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="rounded-full border px-3 py-1 text-sm disabled:opacity-50"
+              >
+                Próxima
+              </button>
+            </div>
+          </div>
+
           <div className="mt-5 grid gap-3" data-testid="runs-list">
             {loading ? (
               <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando runs...</p>
             ) : filteredRuns.length === 0 ? (
               <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma run encontrada.</p>
             ) : (
-              filteredRuns.map((run) => (
+              pagedRuns.map((run) => (
                 <div
                   key={run.key}
                   className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-4 shadow-sm"

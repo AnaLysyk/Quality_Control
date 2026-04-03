@@ -42,8 +42,7 @@ function findIntegrationConfig(company: LocalAuthCompany, type: "QASE" | "JIRA")
 
 function asStringArray(value: unknown): string[] | null {
   if (!Array.isArray(value)) return null;
-  const items = value.filter((item): item is string => typeof item === "string" && item.length > 0);
-  return items.length ? items : null;
+  return value.filter((item): item is string => typeof item === "string" && item.length > 0);
 }
 
 export function normalizeProjectCodes(value: unknown): string[] | null {
@@ -210,11 +209,15 @@ export function buildCompanyUpdatePatch(
   const currentJiraEmail = asString(current.jira_email) ?? asString(currentJiraConfig?.email);
   const currentJiraApiToken = asString(current.jira_api_token) ?? asString(currentJiraConfig?.apiToken);
   const hasQaseProjectCodesInput = Object.prototype.hasOwnProperty.call(input, "qase_project_codes");
+  const hasLegacyQaseProjectCodeInput = Object.prototype.hasOwnProperty.call(input, "qase_project_code");
   const parsedNextProjectCodes = normalizeProjectCodes(input.qase_project_codes);
+  const parsedLegacyProjectCodes = normalizeProjectCodes(input.qase_project_code);
   const nextProjectCodes = options?.clearAllIntegrations
     ? []
     : hasQaseProjectCodesInput
       ? parsedNextProjectCodes ?? []
+      : hasLegacyQaseProjectCodeInput
+        ? parsedLegacyProjectCodes ?? []
       : currentProjectCodes;
   const nextQaseToken = options?.clearAllIntegrations
     ? null

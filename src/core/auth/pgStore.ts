@@ -113,6 +113,8 @@ function toLocalUser(u: PrismaUser): LocalAuthUser {
 }
 
 function toLocalCompany(c: PrismaCompany): LocalAuthCompany {
+  const normalizedProjectCodes = Array.isArray(c.qase_project_codes) ? c.qase_project_codes : [];
+  const legacyProjectCode = normalizedProjectCodes[0] ?? c.qase_project_code ?? null;
   return {
     id: c.id,
     name: c.name,
@@ -131,7 +133,8 @@ function toLocalCompany(c: PrismaCompany): LocalAuthCompany {
     linkedin_url: c.linkedin_url,
     qase_token: c.qase_token ?? undefined,
     // Persistência e leitura apenas do array canônico
-    qase_project_codes: Array.isArray(c.qase_project_codes) ? c.qase_project_codes : [],
+    qase_project_code: legacyProjectCode,
+    qase_project_codes: normalizedProjectCodes,
     jira_base_url: c.jira_base_url,
     jira_email: c.jira_email,
     jira_api_token: c.jira_api_token,
@@ -383,6 +386,13 @@ export async function pgListLocalCompanies(): Promise<LocalAuthCompany[]> {
 export async function pgCreateLocalCompany(
   input: Partial<LocalAuthCompany> & { name: string; slug?: string | null },
 ): Promise<LocalAuthCompany> {
+  const normalizedProjectCodes = Array.isArray(input.qase_project_codes)
+    ? input.qase_project_codes
+        .filter((v): v is string => typeof v === "string" && v.trim().length > 0)
+        .map((v) => v.trim().toUpperCase())
+    : typeof input.qase_project_code === "string" && input.qase_project_code.trim().length > 0
+      ? [input.qase_project_code.trim().toUpperCase()]
+      : [];
   const nameNorm = (input.name ?? "").trim().toLowerCase().replace(/\s+/g, " ");
   if (nameNorm) {
     const dup = await prisma.company.findFirst({
@@ -419,9 +429,7 @@ export async function pgCreateLocalCompany(
       cep: (input.cep as string | null | undefined) ?? null,
       linkedin_url: (input.linkedin_url as string | null | undefined) ?? null,
       // Persistência apenas do array canônico
-      qase_project_codes: Array.isArray(input.qase_project_codes)
-        ? input.qase_project_codes.filter((v): v is string => typeof v === "string" && v.trim().length > 0).map((v) => v.trim().toUpperCase())
-        : [],
+      qase_project_codes: normalizedProjectCodes,
       jira_base_url: (input.jira_base_url as string | null | undefined) ?? null,
       jira_email: (input.jira_email as string | null | undefined) ?? null,
       jira_api_token: (input.jira_api_token as string | null | undefined) ?? null,
@@ -458,6 +466,18 @@ export async function pgUpdateLocalCompany(
 ): Promise<LocalAuthCompany | null> {
   const existing = await prisma.company.findUnique({ where: { id } });
   if (!existing) return null;
+  const normalizedPatchProjectCodes =
+    patch.qase_project_codes !== undefined
+      ? Array.isArray(patch.qase_project_codes)
+        ? patch.qase_project_codes
+            .filter((v): v is string => typeof v === "string" && v.trim().length > 0)
+            .map((v) => v.trim().toUpperCase())
+        : []
+      : typeof patch.qase_project_code === "string"
+        ? patch.qase_project_code.trim().length > 0
+          ? [patch.qase_project_code.trim().toUpperCase()]
+          : []
+        : undefined;
 
   const company = await prisma.company.update({
     where: { id },
@@ -479,12 +499,9 @@ export async function pgUpdateLocalCompany(
       ...(patch.phone !== undefined ? { phone: (patch.phone as string | null) ?? null } : {}),
       ...(patch.cep !== undefined ? { cep: (patch.cep as string | null) ?? null } : {}),
       ...(patch.linkedin_url !== undefined ? { linkedin_url: (patch.linkedin_url as string | null) ?? null } : {}),
-      ...(patch.qase_project_codes !== undefined
+      ...(normalizedPatchProjectCodes !== undefined
         ? {
-            qase_project_codes:
-              Array.isArray(patch.qase_project_codes)
-                ? patch.qase_project_codes.filter((v): v is string => typeof v === "string" && v.trim().length > 0).map((v) => v.trim().toUpperCase())
-                : [],
+            qase_project_codes: normalizedPatchProjectCodes,
           }
         : {}),
       ...(patch.qase_token !== undefined ? { qase_token: (patch.qase_token as string | null) ?? null } : {}),

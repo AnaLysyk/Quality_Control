@@ -52,6 +52,12 @@ function normalizeProjectCodes(value: unknown): string[] | null {
 }
 
 function mapCompany(company: LocalAuthCompany) {
+  const normalizedProjectCodes = asStringArray(company.qase_project_codes);
+  const legacyProjectCode =
+    normalizedProjectCodes?.[0] ??
+    (typeof (company as { qase_project_code?: unknown }).qase_project_code === "string"
+      ? ((company as { qase_project_code?: string | null }).qase_project_code ?? null)
+      : null);
   return {
     id: company.id,
     name: (company.name ?? company.company_name ?? "").toString(),
@@ -67,7 +73,8 @@ function mapCompany(company: LocalAuthCompany) {
     cep: asString(company.cep),
     address_detail: asString(company.address_detail),
     linkedin_url: asString(company.linkedin_url),
-    qase_project_codes: asStringArray(company.qase_project_codes),
+    qase_project_code: legacyProjectCode,
+    qase_project_codes: normalizedProjectCodes,
     qase_token: asString(company.qase_token),
     jira_base_url: asString(company.jira_base_url),
     jira_email: asString(company.jira_email),

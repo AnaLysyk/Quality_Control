@@ -3,6 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { canDeleteUserByProfile, isGlobalDeveloperAccess } from "@/lib/adminUserDeleteAccess";
 import { getAdminUserItem } from "@/lib/adminUsers";
+import {
+  isGlobalPrivilegeProfileRole,
+  resolveEditableProfileRole,
+  toStoredEditableUserRole,
+  type EditableProfileRole,
+} from "@/lib/editableProfileRoles";
 import { isUserScopeLockedError } from "@/lib/companyUserScope";
 import {
   findLocalCompanyById,
@@ -17,18 +23,15 @@ import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export const revalidate = 0;
 
-type PermissionRole = "admin" | "dev" | "company" | "user";
+type PermissionRole = EditableProfileRole;
 
 function hasOwn(obj: Record<string, unknown> | null, key: string) {
   return !!obj && Object.prototype.hasOwnProperty.call(obj, key);
 }
 
 function normalizeRole(input?: string | null) {
-  const value = (input ?? "").toLowerCase();
-  if (value === "client_admin" || value === "admin" || value === "global_admin" || value === "company_admin") return "company_admin";
-  if (value === "it_dev" || value === "itdev" || value === "developer" || value === "dev") return "it_dev";
-  if (value === "viewer" || value === "client_viewer") return "viewer";
-  return "user";
+  const normalized = resolveEditableProfileRole(input);
+  return normalized ? toStoredEditableUserRole(normalized) : "user";
 }
 
 function normalizeLogin(value?: string | null) {
@@ -36,22 +39,15 @@ function normalizeLogin(value?: string | null) {
 }
 
 function normalizePermissionRole(input?: string | null): PermissionRole | null {
-  const value = (input ?? "").toLowerCase().trim();
-  if (value === "admin" || value === "global_admin") return "admin";
-  if (value === "dev" || value === "it_dev" || value === "itdev" || value === "developer") return "dev";
-  if (value === "company" || value === "company_admin" || value === "client_admin") return "company";
-  if (value === "user" || value === "viewer" || value === "client_user") return "user";
-  return null;
+  return resolveEditableProfileRole(input);
 }
 
 function membershipRoleFromPermissionRole(role: PermissionRole) {
-  if (role === "dev") return "it_dev";
-  if (role === "company") return "company_admin";
-  return "user";
+  return toStoredEditableUserRole(role);
 }
 
 function permissionRoleNeedsCompany(role: PermissionRole) {
-  return role === "user";
+  return role === "user" || role === "leader_tc" || role === "technical_support";
 }
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -103,10 +99,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       : null
     : undefined;
   const rawRole = typeof body?.role === "string" ? body.role : "";
-  const wantsGlobalAdmin = permissionRole
-    ? permissionRole === "admin" || permissionRole === "dev"
-    : ["global_admin", "it_dev", "itdev", "developer", "dev"].includes(rawRole.trim().toLowerCase());
-  const role = permissionRole ? membershipRoleFromPermissionRole(permissionRole) : normalizeRole(rawRole);
+  const rawProfileRole = resolveEditableProfileRole(rawRole);
+  const effectiveProfileRole = permissionRole ?? rawProfileRole;
+  const wantsGlobalAdmin = effectiveProfileRole ? isGlobalPrivilegeProfileRole(effectiveProfileRole) : false;
+  const role = effectiveProfileRole ? membershipRoleFromPermissionRole(effectiveProfileRole) : normalizeRole(rawRole);
   const capabilities = Array.isArray(body?.capabilities)
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
@@ -162,7 +158,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(rawRole || permissionRole
         ? { globalRole: wantsGlobalAdmin ? "global_admin" : null, is_global_admin: wantsGlobalAdmin }
         : {}),
-      ...(permissionRole ? { role: permissionRole === "admin" ? "user" : role } : {}),
+      ...(rawRole || permissionRole ? { role: wantsGlobalAdmin && role !== "it_dev" ? "user" : role } : {}),
       ...(permissionRole && !permissionRoleNeedsCompany(permissionRole)
         ? { default_company_slug: null }
         : selectedCompany

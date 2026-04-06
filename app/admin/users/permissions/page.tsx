@@ -17,6 +17,7 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { resolveAvatarEmoji } from "@/lib/avatarCatalog";
+import { normalizeEditableProfileRole, type EditableProfileRole } from "@/lib/editableProfileRoles";
 import { PERMISSION_MODULES, getActionLabel, getPermissionModule } from "@/lib/permissionCatalog";
 import { ROLE_DEFAULTS } from "@/lib/roleDefaults";
 import {
@@ -61,7 +62,6 @@ type CompanyOption = {
   status?: string | null;
 };
 
-type EditableProfileRole = "admin" | "dev" | "company" | "user";
 type RoleFilter = "all" | EditableProfileRole;
 type GlobalCreateDraft = {
   fullName: string;
@@ -80,15 +80,19 @@ type ModuleSummaryItem = {
 
 const ROLE_FILTERS: Array<{ value: RoleFilter; label: string; hint: string }> = [
   { value: "all", label: "Todos", hint: "Todos os tipos de perfil" },
-  { value: "admin", label: "Lider TC", hint: "Perfil administrativo" },
-  { value: "dev", label: "Suporte Tecnico", hint: "Perfil Global" },
-  { value: "company", label: "Usuario Empresa", hint: "Conta institucional da empresa" },
-  { value: "user", label: "Usuario Testing Company", hint: "Usuario vinculado" },
+  { value: "admin", label: "Admin", hint: "Gestao administrativa global" },
+  { value: "dev", label: "Global", hint: "Visao tecnica total do sistema" },
+  { value: "leader_tc", label: "Lider TC", hint: "Perfil institucional da Testing Company" },
+  { value: "technical_support", label: "Suporte Tecnico", hint: "Perfil tecnico com atuacao operacional" },
+  { value: "company", label: "Empresa", hint: "Conta institucional da empresa" },
+  { value: "user", label: "Usuario", hint: "Perfil individual vinculado" },
 ];
 
 const PROFILE_OPTIONS: Array<{ value: EditableProfileRole; label: string; hint: string }> = [
   { value: "admin", label: "Admin", hint: "Gestao administrativa" },
   { value: "dev", label: "Global", hint: "Visao tecnica total" },
+  { value: "leader_tc", label: "Lider TC", hint: "Perfil institucional da Testing Company" },
+  { value: "technical_support", label: "Suporte Tecnico", hint: "Atuacao tecnica e operacional" },
   { value: "company", label: "Empresa", hint: "Escopo da empresa" },
   { value: "user", label: "Usuario", hint: "Acesso individual" },
 ];
@@ -108,17 +112,15 @@ function emptyGlobalCreateDraft(): GlobalCreateDraft {
 }
 
 function normalizeRole(value?: string | null): EditableProfileRole {
-  const normalized = (value ?? "").toLowerCase();
-  if (normalized === "admin" || normalized === "global_admin") return "admin";
-  if (normalized === "dev" || normalized === "it_dev") return "dev";
-  if (normalized === "company" || normalized === "client_admin") return "company";
-  return "user";
+  return normalizeEditableProfileRole(value);
 }
 
 function roleLabel(value?: string | null) {
   const normalized = normalizeRole(value);
   if (normalized === "admin") return "Admin";
   if (normalized === "dev") return "Global";
+  if (normalized === "leader_tc") return "Lider TC";
+  if (normalized === "technical_support") return "Suporte Tecnico";
   if (normalized === "company") return "Empresa";
   return "Usuário";
 }
@@ -126,12 +128,14 @@ function roleLabel(value?: string | null) {
 function roleHint(role: EditableProfileRole) {
   if (role === "admin") return "Acesso amplo aos módulos administrativos, sem o fluxo técnico exclusivo do perfil Global.";
   if (role === "dev") return "Visão técnica total do sistema, incluindo suporte e manutenção global.";
+  if (role === "leader_tc") return "Perfil institucional da Testing Company com escopo administrativo vinculado.";
+  if (role === "technical_support") return "Perfil técnico-operacional voltado ao atendimento e suporte.";
   if (role === "company") return "Escopo da própria empresa, sem gestão global de usuários.";
   return "Escopo individual vinculado à empresa, sem gestão administrativa global.";
 }
 
 function roleNeedsCompany(role: EditableProfileRole) {
-  return role === "user";
+  return role === "user" || role === "leader_tc" || role === "technical_support";
 }
 
 function statusLabel(value?: string | null) {
@@ -166,6 +170,12 @@ function roleTone(value?: string | null, selected = false) {
   }
   if (normalized === "dev" || normalized === "it_dev") {
     return "border border-[rgba(59,130,246,0.18)] bg-[rgba(59,130,246,0.12)] text-[#2563eb]";
+  }
+  if (normalized === "leader_tc") {
+    return "border border-[rgba(79,70,229,0.18)] bg-[rgba(79,70,229,0.1)] text-[#4338ca]";
+  }
+  if (normalized === "technical_support" || normalized === "support") {
+    return "border border-[rgba(6,182,212,0.18)] bg-[rgba(6,182,212,0.1)] text-[#0f766e]";
   }
   if (normalized === "company" || normalized === "client_admin") {
     return "border border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.1)] text-(--tc-accent)";
@@ -595,6 +605,8 @@ export default function PermissionsPage() {
       all: users.length,
       admin: 0,
       dev: 0,
+      leader_tc: 0,
+      technical_support: 0,
       company: 0,
       user: 0,
     };
@@ -609,7 +621,13 @@ export default function PermissionsPage() {
 
   const availableProfileOptions = useMemo(() => {
     if (canManagePrivilegedProfiles) return PROFILE_OPTIONS;
-    return PROFILE_OPTIONS.filter((option) => option.value !== "admin" && option.value !== "dev");
+    return PROFILE_OPTIONS.filter(
+      (option) =>
+        option.value !== "admin" &&
+        option.value !== "dev" &&
+        option.value !== "leader_tc" &&
+        option.value !== "technical_support",
+    );
   }, [canManagePrivilegedProfiles]);
 
   const testingCompanyUsersCount = useMemo(
@@ -747,7 +765,12 @@ export default function PermissionsPage() {
   );
   const canEditProfileBase = useMemo(() => {
     if (canManagePrivilegedProfiles) return true;
-    return profileDraft !== "admin" && profileDraft !== "dev";
+    return (
+      profileDraft !== "admin" &&
+      profileDraft !== "dev" &&
+      profileDraft !== "leader_tc" &&
+      profileDraft !== "technical_support"
+    );
   }, [canManagePrivilegedProfiles, profileDraft]);
 
   const hasDraftChanges = hasPermissionChanges || profileMetaChanged;
@@ -760,8 +783,8 @@ export default function PermissionsPage() {
       ]),
     );
     if (customModules.length) return customModules[0] ?? "";
-    if (profileDraft === "admin") return "users";
-    if (profileDraft === "dev") return "support";
+    if (profileDraft === "admin" || profileDraft === "leader_tc") return "users";
+    if (profileDraft === "dev" || profileDraft === "technical_support") return "support";
     if (profileDraft === "company") return "tickets";
     return "settings";
   }, [permissionData?.override?.allow, permissionData?.override?.deny, profileDraft]);
@@ -2139,8 +2162,6 @@ export default function PermissionsPage() {
     </div>
   );
 }
-
-
 
 
 

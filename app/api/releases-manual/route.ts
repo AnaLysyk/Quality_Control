@@ -6,6 +6,7 @@ import { canCreateManualDefect, getMockRole, resolveDefectRole } from "@/lib/rba
 import type { Release, Stats } from "@/types/release";
 import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalization";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
+import { resolveLocalUserDisplayName } from "@/lib/manualReleaseResponsible";
 import { readManualReleases, readManualReleaseCases, writeManualReleases, writeManualReleaseCases } from "@/lib/manualReleaseStore";
 import { notifyManualRunCreated } from "@/lib/notificationService";
 import { appendDefectHistory } from "@/lib/manualDefectHistoryStore";
@@ -16,7 +17,7 @@ async function resolveActor(authUser: AuthUser | null) {
   const local = await getLocalUserById(authUser.id);
   return {
     actorId: authUser.id,
-    actorName: local?.name ?? authUser.email ?? null,
+    actorName: resolveLocalUserDisplayName(local, authUser.email),
   };
 }
 
@@ -67,6 +68,7 @@ export async function GET(req: Request) {
     ...r,
     kind: resolveManualReleaseKind(r),
     id: r.slug ?? r.id,
+    responsibleLabel: r.assignedToName ?? r.createdByName ?? null,
     metrics: {
       pass: r.stats.pass,
       fail: r.stats.fail,
@@ -103,6 +105,7 @@ export async function POST(req: Request) {
     const kind = body.kind === "defect" ? "defect" : "run";
     const stats = (body.stats ?? {}) as Partial<Stats>;
     const now = new Date().toISOString();
+    const actor = await resolveActor(effectiveAuthUser);
     const requestedClosedAt = typeof body.closedAt === "string" ? body.closedAt : null;
     let status = normalizeDefectStatus(body.status);
     if (!body.status && shouldCloseFromStats(stats)) {
@@ -135,6 +138,10 @@ export async function POST(req: Request) {
         notRun: Math.max(0, Number(stats.notRun ?? 0)),
       },
       observations: body.observations ? String(body.observations) : undefined,
+      createdByUserId: actor.actorId,
+      createdByName: actor.actorName,
+      assignedToUserId: actor.actorId,
+      assignedToName: actor.actorName,
       closedAt,
       createdAt: now,
       updatedAt: now,
@@ -179,6 +186,7 @@ export async function POST(req: Request) {
     const payload = {
       ...release,
       id: release.slug ?? release.id,
+      responsibleLabel: release.assignedToName ?? release.createdByName ?? null,
       metrics: {
         pass: release.stats.pass,
         fail: release.stats.fail,

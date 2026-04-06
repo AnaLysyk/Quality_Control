@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useSWRRequests } from "./useSWRRequests";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
@@ -36,8 +36,6 @@ const STATUS_LABEL: Record<RequestRecord["status"], string> = {
 
 export default function RequestsPage() {
   const router = useRouter();
-    const [items, setItems] = useState<RequestRecord[]>([]);
-    const [requestsLoading, setRequestsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -50,9 +48,6 @@ export default function RequestsPage() {
   }, [router]);
 
   const { requests, loading, error, refetch } = useSWRRequests();
-  useEffect(() => {
-    setItems(requests);
-  }, [requests]);
 
   const summary = useMemo(() => {
     const pending = requests.filter((item: RequestRecord) => item.status === "PENDING").length;
@@ -139,7 +134,7 @@ export default function RequestsPage() {
             <div className="tc-hero-stat-grid">
               <div className="tc-hero-stat">
                 <div className="tc-hero-stat-label">Solicitacoes</div>
-                <div className="tc-hero-stat-value">{items.length}</div>
+                <div className="tc-hero-stat-value">{requests.length}</div>
                 <div className="tc-hero-stat-note">Total de pedidos registrados.</div>
               </div>
               <div className="tc-hero-stat">
@@ -235,10 +230,12 @@ export default function RequestsPage() {
           </div>
 
           <div className="mt-5 space-y-3">
-            {items.length === 0 ? (
+            {error ? (
+              <div className="tc-empty-state">Nao foi possivel carregar o historico agora.</div>
+            ) : requests.length === 0 ? (
               <div className="tc-empty-state">Nenhuma solicitacao registrada ate o momento.</div>
             ) : (
-              items.map((request) => (
+              requests.map((request) => (
                 <article key={request.id} className="tc-panel-muted">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>

@@ -1,14 +1,14 @@
 "use client";
 
 import { ReactNode } from "react";
-import { usePathname } from "next/navigation";
 
 interface MainWrapperProps {
+  pathname: string;
+  beforeContent?: ReactNode;
   children: ReactNode;
 }
 
-export default function MainWrapper({ children }: MainWrapperProps) {
-  const pathname = usePathname() || "";
+export default function MainWrapper({ pathname, beforeContent, children }: MainWrapperProps) {
   const isAdminClientsRoute = pathname.startsWith("/admin/clients");
   const isAccessRequestsRoute = pathname.startsWith("/admin/access-requests");
   const isUsersManagementRoute = pathname.startsWith("/admin/users");
@@ -32,8 +32,9 @@ export default function MainWrapper({ children }: MainWrapperProps) {
 
   return (
     <main
-      className={`flex-1 w-full min-h-full min-w-0 overflow-x-hidden pt-(--topbar-h) pr-(--content-pr) ${leftPx} ${bottomPb}`}
+      className={`flex-1 w-full max-w-[1760px] mx-auto min-h-full min-w-0 overflow-x-hidden pt-(--topbar-h) pr-(--content-pr) ${leftPx} ${bottomPb}`}
     >
+      {beforeContent ? <div className="mb-6 sm:mb-7 lg:mb-8">{beforeContent}</div> : null}
       {children}
     </main>
   );

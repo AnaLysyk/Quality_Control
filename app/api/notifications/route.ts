@@ -12,6 +12,7 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const unreadOnly = url.searchParams.get("unread") === "true";
+  const summary = url.searchParams.get("summary");
 
   const pendingResets = await listUserRequests(user.id, { status: "PENDING", type: "PASSWORD_RESET" });
   for (const request of pendingResets) {
@@ -42,6 +43,12 @@ export async function GET(req: Request) {
   let items = await listUserNotifications(user.id);
   if (unreadOnly) {
     items = items.filter((item) => item.status !== "closed");
+  }
+  if (summary === "count") {
+    return NextResponse.json(
+      { unreadCount: items.filter((item) => item.status !== "closed").length },
+      { status: 200 },
+    );
   }
   return NextResponse.json({ items }, { status: 200 });
 }

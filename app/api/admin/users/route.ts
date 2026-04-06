@@ -6,6 +6,11 @@ import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAccessContext } from "@/lib/auth/session";
 import { getAdminUserItem, listAdminUserItems } from "@/lib/adminUsers";
+import {
+  isGlobalPrivilegeProfileRole,
+  resolveEditableProfileRole,
+  toStoredEditableUserRole,
+} from "@/lib/editableProfileRoles";
 import { isUserScopeLockedError } from "@/lib/companyUserScope";
 import {
   createLocalUser,
@@ -22,16 +27,6 @@ export const revalidate = 0;
 
 function hasOwn(obj: Record<string, unknown> | null, key: string) {
   return !!obj && Object.prototype.hasOwnProperty.call(obj, key);
-}
-
-function normalizeRole(input?: string | null) {
-  const value = (input ?? "").toLowerCase();
-  if (value === "client_admin" || value === "admin" || value === "global_admin" || value === "company_admin") return "company_admin";
-  if (value === "it_dev" || value === "itdev" || value === "developer" || value === "dev") return "it_dev";
-  if (value === "viewer" || value === "client_viewer") return "viewer";
-  if (value === "leader_tc" || value === "tc_leader" || value === "lider_tc") return "leader_tc";
-  if (value === "technical_support" || value === "tech_support" || value === "support_tech") return "technical_support";
-  return "user";
 }
 
 function normalizeLogin(value?: string | null) {
@@ -136,10 +131,9 @@ export async function POST(req: NextRequest) {
   const linkedinUrl = typeof body?.linkedin_url === "string" ? body.linkedin_url.trim() || null : null;
   const avatarUrl = typeof body?.avatar_url === "string" ? body.avatar_url.trim() || null : null;
   const rawRole = typeof body?.role === "string" ? body.role : "";
-  const wantsGlobalAdmin = ["admin", "global_admin", "it_dev", "itdev", "developer", "dev"].includes(
-    rawRole.trim().toLowerCase(),
-  );
-  const role = normalizeRole(rawRole);
+  const profileRole = resolveEditableProfileRole(rawRole) ?? "user";
+  const wantsGlobalAdmin = isGlobalPrivilegeProfileRole(profileRole);
+  const role = toStoredEditableUserRole(profileRole);
   const capabilities = Array.isArray(body?.capabilities)
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
@@ -194,7 +188,7 @@ export async function POST(req: NextRequest) {
       user: login,
       password_hash: passwordHash,
       active: true,
-      role: role === "it_dev" ? "it_dev" : "user",
+      role: wantsGlobalAdmin && role !== "it_dev" ? "user" : role,
       globalRole: wantsGlobalAdmin ? "global_admin" : null,
       is_global_admin: wantsGlobalAdmin,
       job_title: jobTitle || null,
@@ -269,10 +263,9 @@ export async function PATCH(req: NextRequest) {
       : null
     : undefined;
   const rawRole = typeof body?.role === "string" ? body.role : "";
-  const wantsGlobalAdmin = ["admin", "global_admin", "it_dev", "itdev", "developer", "dev"].includes(
-    rawRole.trim().toLowerCase(),
-  );
-  const role = normalizeRole(rawRole);
+  const profileRole = resolveEditableProfileRole(rawRole) ?? "user";
+  const wantsGlobalAdmin = isGlobalPrivilegeProfileRole(profileRole);
+  const role = toStoredEditableUserRole(profileRole);
   const fullName =
     typeof body?.full_name === "string"
       ? body.full_name.trim() || null
@@ -320,7 +313,7 @@ export async function PATCH(req: NextRequest) {
       ...(phone !== undefined ? { phone } : {}),
       ...(rawRole
         ? {
-            role: role === "it_dev" ? "it_dev" : "user",
+            role: wantsGlobalAdmin && role !== "it_dev" ? "user" : role,
             globalRole: wantsGlobalAdmin ? "global_admin" : null,
             is_global_admin: wantsGlobalAdmin,
             ...(wantsGlobalAdmin

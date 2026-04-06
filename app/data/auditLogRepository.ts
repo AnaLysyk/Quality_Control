@@ -4,7 +4,9 @@ import { randomUUID } from "crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
+
+const USE_POSTGRES = shouldUsePostgresPersistence();
 async function getPrisma() {
   const { prisma } = await import("@/lib/prismaClient");
   return prisma;

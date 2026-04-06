@@ -1,9 +1,21 @@
 const cp = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const dotenv = require('dotenv');
+
+const repoRoot = path.resolve(__dirname, '..');
+const prismaEnv = { ...process.env };
+
+for (const envFile of ['.env.local', '.env']) {
+  const envPath = path.join(repoRoot, envFile);
+  if (!fs.existsSync(envPath)) continue;
+  dotenv.config({ path: envPath, processEnv: prismaEnv });
+}
 
 function runPrisma(cmd, desc) {
   try {
     console.log(`\n[prisma-migrate-safe] ${desc}...`);
-    cp.execSync(cmd, { stdio: 'inherit' });
+    cp.execSync(cmd, { stdio: 'inherit', env: prismaEnv });
     console.log(`[prisma-migrate-safe] ${desc} concluído.`);
   } catch (e) {
     // Coleta todas as possíveis mensagens de erro

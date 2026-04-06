@@ -27,6 +27,7 @@ export type HomeRunItem = {
   applicationKey: string;
   applicationName: string;
   projectCode: string | null;
+  environments: string[];
   sourceType: RunSourceType;
   integrationProvider: RunIntegrationProvider;
   statusRaw: string | null;

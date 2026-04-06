@@ -1,6 +1,5 @@
-import path from "path";
-import fs from "fs/promises";
 import { readManualReleaseStore } from "@/data/manualData";
+import { readQualityGateHistory } from "@/lib/qualityGateHistory";
 import { getReleaseBySlug } from "@/release/data";
 
 export type TimelineType =
@@ -44,28 +43,6 @@ type GateEntry = {
   reasons?: unknown;
 };
 
-const GATE_STORE = path.join(process.cwd(), "data", "quality_gate_history.json");
-
-async function ensureGateStore() {
-  await fs.mkdir(path.dirname(GATE_STORE), { recursive: true });
-  try {
-    await fs.access(GATE_STORE);
-  } catch {
-    await fs.writeFile(GATE_STORE, "[]", "utf8");
-  }
-}
-
-async function readGateHistory(): Promise<GateEntry[]> {
-  await ensureGateStore();
-  const raw = await fs.readFile(GATE_STORE, "utf8");
-  try {
-    const parsed = JSON.parse(raw) as GateEntry[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
 function statusIsFail(value?: string | null) {
   const v = (value ?? "").toString().toLowerCase();
   return v === "fail" || v === "failed" || v === "falha";
@@ -78,17 +55,9 @@ export async function getReleaseTimeline(companySlug: string, releaseSlug: strin
   const apiRelease = manual ? null : (await getReleaseBySlug(releaseSlug).catch(() => null));
   const releaseData = manual || apiRelease;
   const releaseRecord = releaseData as ReleaseData | null;
-  const releaseTitle =
-    releaseRecord?.title ||
-    releaseRecord?.name ||
-    releaseRecord?.slug ||
-    releaseSlug;
+  const releaseTitle = releaseRecord?.title || releaseRecord?.name || releaseRecord?.slug || releaseSlug;
 
-  // Release created
-  const createdAt =
-    releaseRecord?.createdAt ||
-    releaseRecord?.created_at ||
-    null;
+  const createdAt = releaseRecord?.createdAt || releaseRecord?.created_at || null;
   if (createdAt) {
     events.push({
       id: `release_created:${releaseSlug}`,
@@ -98,7 +67,6 @@ export async function getReleaseTimeline(companySlug: string, releaseSlug: strin
     });
   }
 
-  // Run created / failed
   if (releaseData) {
     const runCreatedAt = createdAt || releaseRecord?.updatedAt || new Date().toISOString();
     events.push({
@@ -117,39 +85,32 @@ export async function getReleaseTimeline(companySlug: string, releaseSlug: strin
     }
   }
 
-  // Gate history
-  const gateHistory = await readGateHistory();
-  gateHistory
-    .filter(
-      (entry) =>
-        entry.company_slug === companySlug &&
-        entry.release_slug === releaseSlug
-    )
-    .forEach((entry) => {
-      const isOverride = entry.decision === "approved_with_override";
-      const occurredAt = isOverride && entry.override?.at ? entry.override.at : entry.evaluated_at;
-      const label = isOverride
-        ? `Override aplicado: ${entry.override?.reason || "liberação manual"}`
-        : `Quality Gate: ${entry.gate_status}`;
-      const type: TimelineType = isOverride ? "gate_override" : "gate_evaluated";
-      const meta: Record<string, unknown> = {
-        gate_status: entry.gate_status,
-        mttr_hours: entry.mttr_hours,
-        open_defects: entry.open_defects,
-        fail_rate: entry.fail_rate,
-        reasons: entry.reasons,
-      };
-      if (entry.override) {
-        meta.override = entry.override;
-      }
-      events.push({
-        id: entry.id || `${type}:${releaseSlug}:${occurredAt}`,
-        type,
-        label,
-        occurred_at: occurredAt || new Date().toISOString(),
-        meta,
-      });
+  const gateHistory = (await readQualityGateHistory(companySlug, releaseSlug)) as GateEntry[];
+  gateHistory.forEach((entry) => {
+    const isOverride = entry.decision === "approved_with_override";
+    const occurredAt = isOverride && entry.override?.at ? entry.override.at : entry.evaluated_at;
+    const label = isOverride
+      ? `Override aplicado: ${entry.override?.reason || "liberacao manual"}`
+      : `Quality Gate: ${entry.gate_status}`;
+    const type: TimelineType = isOverride ? "gate_override" : "gate_evaluated";
+    const meta: Record<string, unknown> = {
+      gate_status: entry.gate_status,
+      mttr_hours: entry.mttr_hours,
+      open_defects: entry.open_defects,
+      fail_rate: entry.fail_rate,
+      reasons: entry.reasons,
+    };
+    if (entry.override) {
+      meta.override = entry.override;
+    }
+    events.push({
+      id: entry.id || `${type}:${releaseSlug}:${occurredAt}`,
+      type,
+      label,
+      occurred_at: occurredAt || new Date().toISOString(),
+      meta,
     });
+  });
 
   events.sort((a, b) => String(b.occurred_at).localeCompare(String(a.occurred_at)));
   return events;

@@ -2,7 +2,7 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 import { canCreateRun, getRunMockRole, resolveRunRole } from "@/lib/rbac/runs";
 import { isCompanyUser } from "@/lib/rbac/companyAccess";
-import { getQaseIntegrationSettings } from "@/lib/integrations";
+import { getClientQaseSettings } from "@/lib/qaseConfig";
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
@@ -23,8 +23,56 @@ function normalizeString(value: unknown): string | null {
   return trimmed.length ? trimmed : null;
 }
 
+function normalizeProjectCode(value: unknown): string | null {
+  const normalized = normalizeString(value);
+  return normalized ? normalized.toUpperCase() : null;
+}
+
+function normalizeProjectList(values: unknown[]): string[] {
+  return Array.from(
+    new Set(
+      values
+        .map((value) => normalizeProjectCode(value))
+        .filter((value): value is string => Boolean(value)),
+    ),
+  );
+}
+
+function normalizeRunEntity(entity: unknown, projectCode: string, companySlug: string | null) {
+  const record = asRecord(entity) ?? {};
+  const rawId = record.id;
+  const parsedId = typeof rawId === "number" ? rawId : Number(String(rawId ?? "").trim());
+  const runId = Number.isFinite(parsedId) && parsedId > 0 ? parsedId : null;
+  const rawSlug = normalizeString(record.slug);
+  const title =
+    normalizeString(record.title) ||
+    normalizeString(record.name) ||
+    (runId ? `Run ${runId}` : rawSlug) ||
+    `Run ${projectCode}`;
+  const createdAt = normalizeString(record.created_at) || normalizeString(record.createdAt);
+  const slug = runId ? `qase-${projectCode.toLowerCase()}-${runId}` : rawSlug || `${projectCode.toLowerCase()}-${title.toLowerCase()}`;
+
+  return {
+    ...record,
+    id: runId ?? rawSlug ?? title,
+    runId,
+    slug,
+    title,
+    name: title,
+    createdAt,
+    created_at: createdAt,
+    source: "QASE",
+    app: projectCode,
+    project: projectCode,
+    qaseProject: projectCode,
+    clientId: companySlug,
+    clientName: companySlug,
+  };
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
+  const requestedCompanySlug = normalizeString(url.searchParams.get("companySlug")) || null;
 
   const auth = await authenticateRequest(request);
   const mockRole = await getRunMockRole();
@@ -35,7 +83,7 @@ export async function GET(request: Request) {
       extra: { error: { message: "Nao autorizado" } },
     });
   }
-  if (auth && !isCompanyUser(auth)) {
+  if (auth && !auth.isGlobalAdmin && !isCompanyUser(auth)) {
     return apiFail(request, "Acesso proibido", {
       status: 403,
       code: "FORBIDDEN",
@@ -51,12 +99,25 @@ export async function GET(request: Request) {
   }
 
   const project = normalizeString(url.searchParams.get("project")) || null;
-  const companySlug = auth?.companySlug ?? null;
-  const qaseSettings = companySlug ? await getQaseIntegrationSettings(companySlug) : null;
+  const allParam = String(url.searchParams.get("all") ?? "").toLowerCase();
+  const all = allParam === "1" || allParam === "true";
+  const limitParam = Number(url.searchParams.get("limit") ?? 50) || 50;
+  const diag = String(url.searchParams.get("diag") ?? "").toLowerCase() === "true";
+  const companySlug =
+    auth?.isGlobalAdmin && requestedCompanySlug
+      ? requestedCompanySlug
+      : auth?.companySlug ?? null;
+  const qaseSettings = companySlug ? await getClientQaseSettings(companySlug) : null;
   const tokenToUse = (qaseSettings && qaseSettings.token) ? qaseSettings.token : QASE_TOKEN;
-  const effectiveProject = project || (qaseSettings?.projects && qaseSettings.projects[0]) || DEFAULT_PROJECT;
+  const baseUrl = (qaseSettings?.baseUrl || QASE_BASE_URL).replace(/\/+$/, "");
+  const configuredProjects = normalizeProjectList([
+    ...(Array.isArray(qaseSettings?.projectCodes) ? qaseSettings.projectCodes : []),
+    qaseSettings?.projectCode,
+    DEFAULT_PROJECT,
+  ]);
+  const effectiveProject = normalizeProjectCode(project) || configuredProjects[0] || null;
 
-  if (!effectiveProject) {
+  if (!effectiveProject && !all) {
     return apiFail(request, "Missing project", {
       status: 400,
       code: "VALIDATION_ERROR",
@@ -69,7 +130,62 @@ export async function GET(request: Request) {
     return apiOk(request, out, "OK", { extra: out });
   }
 
-  const res = await fetch(`${QASE_BASE_URL}/v1/run/${encodeURIComponent(effectiveProject)}?limit=50`, {
+  // If requested, aggregate runs across all configured projects for this company
+  if (all && configuredProjects.length > 0) {
+    const projects = configuredProjects;
+    const fetches = projects.map(async (proj) => {
+      try {
+        const r = await fetch(`${baseUrl}/v1/run/${encodeURIComponent(proj)}?limit=${encodeURIComponent(String(limitParam))}`, {
+          headers: { Token: tokenToUse, Accept: "application/json" },
+          cache: "no-store",
+        });
+        const j = (await r.json().catch(() => null)) as unknown;
+        if (!r.ok) {
+          return { project: proj, ok: false, status: r.status, details: j, entities: [] as unknown[] };
+        }
+        const ents = (asRecord(asRecord(j)?.result)?.entities as unknown[]) || [];
+        const normalized = ents.map((entity) => normalizeRunEntity(entity, proj, companySlug));
+        return { project: proj, ok: true, status: 200, details: j, entities: normalized };
+      } catch (e) {
+        return { project: proj, ok: false, status: 500, details: e, entities: [] as unknown[] };
+      }
+    });
+
+    const results = await Promise.all(fetches);
+    const combined: unknown[] = [];
+    const seen = new Set<string>();
+    for (const r of results) {
+      for (const e of (r.entities as unknown[])) {
+        const entityRecord = asRecord(e);
+        const id = String(
+          entityRecord?.runId ??
+            entityRecord?.id ??
+            entityRecord?.slug ??
+            entityRecord?.uid ??
+            JSON.stringify(e),
+        );
+        if (!id) continue;
+        const dedupeKey = `${r.project}:${id}`;
+        if (seen.has(dedupeKey)) continue;
+        seen.add(dedupeKey);
+        combined.push(e);
+      }
+    }
+
+    const out: Record<string, unknown> = { data: combined };
+    if (diag) {
+      out.projects = results.map((r) => ({ project: r.project, ok: r.ok, status: r.status, count: (r.entities || []).length }));
+    }
+    return apiOk(request, out, "OK", { extra: out });
+  }
+
+  if (!effectiveProject) {
+    const out = { data: [], warning: "Nenhum projeto Qase configurado" };
+    return apiOk(request, out, "OK", { extra: out });
+  }
+
+  // Default: single-project fetch
+  const res = await fetch(`${baseUrl}/v1/run/${encodeURIComponent(effectiveProject)}?limit=${encodeURIComponent(String(limitParam))}`, {
     headers: { Token: tokenToUse, Accept: "application/json" },
     cache: "no-store",
   });
@@ -87,7 +203,7 @@ export async function GET(request: Request) {
   }
 
   const entities = (asRecord(asRecord(json)?.result)?.entities as unknown[]) || [];
-  const out = { data: entities };
+  const out = { data: entities.map((entity) => normalizeRunEntity(entity, effectiveProject, companySlug)) };
   return apiOk(request, out, "OK", { extra: out });
 }
 
@@ -106,7 +222,7 @@ export async function POST(request: Request) {
       extra: { error: { message: "Nao autorizado" } },
     });
   }
-  if (auth && !isCompanyUser(auth)) {
+  if (auth && !auth.isGlobalAdmin && !isCompanyUser(auth)) {
     return apiFail(request, "Acesso proibido", {
       status: 403,
       code: "FORBIDDEN",
@@ -144,9 +260,13 @@ export async function POST(request: Request) {
   }
 
   const companySlug = auth?.companySlug ?? null;
-  const qaseSettings = companySlug ? await getQaseIntegrationSettings(companySlug) : null;
+  const qaseSettings = companySlug ? await getClientQaseSettings(companySlug) : null;
   const tokenToUse = (qaseSettings && qaseSettings.token) ? qaseSettings.token : QASE_TOKEN;
-  const effectiveProject = project || (qaseSettings?.projects && qaseSettings.projects[0]) || DEFAULT_PROJECT;
+  const baseUrl = (qaseSettings?.baseUrl || QASE_BASE_URL).replace(/\/+$/, "");
+  const effectiveProject =
+    normalizeProjectCode(project) ||
+    normalizeProjectCode(qaseSettings?.projectCode) ||
+    normalizeProjectCode(DEFAULT_PROJECT);
 
   if (!effectiveProject || !title) {
     return apiFail(request, "Missing project or title", {
@@ -172,7 +292,7 @@ export async function POST(request: Request) {
     payload.custom_fields = { custom_type: customType };
   }
 
-  const res = await fetch(`${QASE_BASE_URL}/v1/run/${encodeURIComponent(effectiveProject)}`, {
+  const res = await fetch(`${baseUrl}/v1/run/${encodeURIComponent(effectiveProject)}`, {
     method: "POST",
     headers: { Token: tokenToUse, Accept: "application/json", "Content-Type": "application/json" },
     body: JSON.stringify(payload),

@@ -1,4 +1,5 @@
 import type { AuthUser } from "@/contracts/auth";
+import { resolveEntityImage } from "@/lib/resolveEntityImage";
 
 type ActiveCompanyLike = {
   name?: string | null;
@@ -168,12 +169,12 @@ export function resolveActiveIdentity({
   );
 
   if (roleKind === "empresa") {
+    const companyLogo = readTrimmedString(activeCompany?.logoUrl, legacyCompany?.logoUrl, legacyCompany?.logo_url) ?? null;
     return {
       kind: "company",
       roleKind,
       displayName: companyName ?? accountName,
-      avatarUrl:
-        readTrimmedString(activeCompany?.logoUrl, legacyCompany?.logoUrl, legacyCompany?.logo_url) ?? null,
+      avatarUrl: resolveEntityImage({ isCompanyContext: true, companyLogoUrl: companyLogo, userAvatarUrl: null }),
       showCompanyTag: false,
       companyTagLabel: null,
       accountName,
@@ -185,11 +186,14 @@ export function resolveActiveIdentity({
 
   const showCompanyTag = roleKind === "usuario" && Boolean(companyName);
 
+  const userAvatar = readTrimmedString(user?.avatarUrl, (user as Record<string, unknown> | null)?.avatar_url) ?? null;
+  const companyLogo = readTrimmedString(activeCompany?.logoUrl, legacyCompany?.logoUrl, legacyCompany?.logo_url) ?? null;
+
   return {
     kind: "user",
     roleKind,
     displayName: accountName,
-    avatarUrl: readTrimmedString(user?.avatarUrl, (user as Record<string, unknown> | null)?.avatar_url) ?? null,
+    avatarUrl: resolveEntityImage({ isCompanyContext: showCompanyTag, companyLogoUrl: companyLogo, userAvatarUrl: userAvatar }),
     showCompanyTag,
     companyTagLabel: showCompanyTag ? companyName : null,
     accountName,

@@ -75,7 +75,11 @@ function MenuItem(props: {
   );
 }
 
-export default function ProfileButton() {
+type ProfileButtonProps = {
+  defaultOpen?: boolean;
+};
+
+export default function ProfileButton({ defaultOpen = false }: ProfileButtonProps) {
   const router = useRouter();
   const { user, loading, logout } = useAuthUser();
   const { theme } = useAppSettings();
@@ -90,7 +94,7 @@ export default function ProfileButton() {
       }
     | null;
 
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [toast, setToast] = useState<ToastState>({ kind: "idle" });
   const [copied, setCopied] = useState(false);
   const isDarkTheme = theme === "dark";
@@ -169,8 +173,9 @@ export default function ProfileButton() {
     : "Central de documentos";
 
   useEffect(() => {
+    if (!open) return undefined;
+
     function onMouseDown(e: MouseEvent) {
-      if (!open) return;
       const root = containerRef.current;
       if (!root) return;
       if (!root.contains(e.target as Node)) {
@@ -180,7 +185,6 @@ export default function ProfileButton() {
     }
 
     function onKeyDown(e: KeyboardEvent) {
-      if (!open) return;
       if (e.key === "Escape") {
         e.preventDefault();
         setOpen(false);

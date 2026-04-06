@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CreateClientModal, type ClientFormValues } from "@/clients/components/CreateClientModal";
 import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
+import { useAuth } from "@/context/AuthContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { fetchApi } from "@/lib/api";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, readApiError, unwrapEnvelopeData } from "@/lib/apiEnvelope";
@@ -194,6 +195,7 @@ function mapClient(row: Record<string, unknown>): Client {
 
 function AdminClientsPage() {
   const router = useRouter();
+  const { refreshUser } = useAuth();
   const { user } = useAuthUser();
   const isGlobalAdmin = !!user?.isGlobalAdmin || (user as { is_global_admin?: boolean } | null)?.is_global_admin === true;
 
@@ -246,6 +248,7 @@ function AdminClientsPage() {
       const logoUrl = (payload as { logoUrl?: string }).logoUrl ?? "";
       setForm((f) => ({ ...f, logoUrl }));
       setItems((prev) => prev.map((c) => (c.id === selectedId ? { ...c, logoUrl } : c)));
+      await refreshUser();
       toast.success("Logo atualizado");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao enviar logo");
@@ -337,6 +340,7 @@ function AdminClientsPage() {
         setForm(next);
       }
 
+      await refreshUser();
       toast.success(nextActive ? "Empresa ativada" : "Empresa inativada");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao atualizar status";
@@ -372,6 +376,7 @@ function AdminClientsPage() {
       }
 
       setItems((prev) => prev.filter((company) => company.id !== selectedId));
+      await refreshUser();
       toast.success("Empresa excluida");
       closeModal();
     } catch (err) {
@@ -530,6 +535,7 @@ function AdminClientsPage() {
         setForm(next);
       }
       setIsEditing(false);
+      await refreshUser();
       toast.success("Empresa atualizada");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao salvar cliente";
@@ -599,6 +605,7 @@ function AdminClientsPage() {
       const created = await res.json().catch(() => null);
       if (created) {
         setItems((prev) => [mapClient(created), ...prev]);
+        await refreshUser();
         if (data.integrationMode === "manual") {
           setMessage(
             "Empresa criada sem integraÃ§Ã£o. VocÃª pode configurar Qase depois (token + project code) ou seguir em modo manual.",

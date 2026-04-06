@@ -4,10 +4,11 @@ import crypto from "node:crypto";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
+import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { prisma } from "@/lib/prismaClient";
 
-const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+const USE_POSTGRES = shouldUsePostgresPersistence();
 
 export type DefectHistoryAction =
   | "created"

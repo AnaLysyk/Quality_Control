@@ -6,6 +6,7 @@ import type { Release, Stats, ReleaseStatus } from "@/types/release";
 import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalization";
 import { evaluateQualityGate } from "@/lib/quality";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
+import { listManualReleaseResponsibleOptions, resolveLocalUserDisplayName } from "@/lib/manualReleaseResponsible";
 import { readManualReleases, writeManualReleases } from "@/lib/manualReleaseStore";
 import { notifyManualRunFailure } from "@/lib/notificationService";
 import { appendDefectHistory } from "@/lib/manualDefectHistoryStore";
@@ -16,7 +17,18 @@ async function resolveActor(authUser: AuthUser | null) {
   const local = await getLocalUserById(authUser.id);
   return {
     actorId: authUser.id,
-    actorName: local?.name ?? authUser.email ?? null,
+    actorName: resolveLocalUserDisplayName(local, authUser.email),
+  };
+}
+
+async function buildResponsiblePayload(release: Release) {
+  const availableResponsibles = await listManualReleaseResponsibleOptions(release.clientSlug ?? null, [
+    release.createdByUserId,
+    release.assignedToUserId,
+  ]);
+  return {
+    responsibleLabel: release.assignedToName ?? release.createdByName ?? null,
+    availableResponsibles,
   };
 }
 
@@ -63,7 +75,11 @@ export async function GET(_req: Request, context: { params: Promise<{ slug: stri
     }
   }
 
-  return NextResponse.json({ ...release, kind: resolveManualReleaseKind(release) });
+  return NextResponse.json({
+    ...release,
+    kind: resolveManualReleaseKind(release),
+    ...(await buildResponsiblePayload(release)),
+  });
 }
 
 export async function PATCH(req: Request, context: { params: Promise<{ slug: string }> }) {
@@ -97,6 +113,36 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return NextResponse.json({ message: "JSON invalido" }, { status: 400 });
+  const actor = await resolveActor(effectiveAuthUser as AuthUser);
+  const creatorUserId = current.createdByUserId ?? current.assignedToUserId ?? actor.actorId ?? null;
+  const creatorName = current.createdByName ?? current.assignedToName ?? actor.actorName ?? null;
+  const availableResponsibles = await listManualReleaseResponsibleOptions(current.clientSlug ?? null, [
+    creatorUserId,
+    current.assignedToUserId,
+  ]);
+  const availableResponsiblesById = new Map(availableResponsibles.map((item) => [item.userId, item]));
+  const requestedAssignedToUserId =
+    body.assignedToUserId === undefined
+      ? undefined
+      : typeof body.assignedToUserId === "string"
+        ? body.assignedToUserId.trim() || null
+        : body.assignedToUserId == null
+          ? null
+          : "__invalid__";
+  if (requestedAssignedToUserId === "__invalid__") {
+    return NextResponse.json({ message: "Responsavel invalido" }, { status: 400 });
+  }
+  const fallbackAssignedToUserId = current.assignedToUserId ?? creatorUserId ?? null;
+  const resolvedAssignedToUserId =
+    requestedAssignedToUserId === undefined
+      ? fallbackAssignedToUserId
+      : requestedAssignedToUserId || creatorUserId || null;
+  if (resolvedAssignedToUserId && !availableResponsiblesById.has(resolvedAssignedToUserId)) {
+    return NextResponse.json({ message: "Responsavel precisa estar vinculado a empresa." }, { status: 400 });
+  }
+  const resolvedAssignedToName = resolvedAssignedToUserId
+    ? availableResponsiblesById.get(resolvedAssignedToUserId)?.name ?? current.assignedToName ?? creatorName
+    : creatorName;
 
   const nextKind = body.kind === "defect" ? "defect" : body.kind === "run" ? "run" : resolveManualReleaseKind(current);
   const nextStatusRaw = typeof body.status === "string" ? body.status : null;
@@ -139,6 +185,10 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
     runName: typeof body.runName === "string" ? body.runName : current.runName,
     stats: statsPatch,
     kind: nextKind,
+    createdByUserId: creatorUserId,
+    createdByName: creatorName,
+    assignedToUserId: resolvedAssignedToUserId,
+    assignedToName: resolvedAssignedToName,
     closedAt,
     updatedAt: now,
   };
@@ -189,7 +239,11 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
       console.warn("Falha ao registrar historico do defeito:", err);
     }
   }
-  return NextResponse.json({ ...updated, kind: resolveManualReleaseKind(updated) });
+  return NextResponse.json({
+    ...updated,
+    kind: resolveManualReleaseKind(updated),
+    ...(await buildResponsiblePayload(updated)),
+  });
 }
 
 export async function DELETE(req: Request, context: { params: Promise<{ slug: string }> }) {

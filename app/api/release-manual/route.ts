@@ -5,6 +5,7 @@ import path from "node:path";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { hasCapability, type Capability } from "@/lib/permissions";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
+import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
 
 type ManualRelease = {
   id: string;
@@ -16,6 +17,8 @@ type ManualRelease = {
 };
 
 const STORE_PATH = path.join(getJsonStoreDir(), "release-manual-store.json");
+const STORE_KEY = "qc:release_manual_store:v1";
+const USE_PERSISTENT_STORE = canUsePersistentJsonStore();
 
 function normalizeRole(role?: string | null) {
   return (role ?? "").trim().toLowerCase();
@@ -58,6 +61,11 @@ async function ensureStore() {
 }
 
 async function readStore(): Promise<ManualRelease[]> {
+  if (USE_PERSISTENT_STORE) {
+    const persisted = await readPersistentJson<ManualRelease[]>(STORE_KEY, []);
+    return Array.isArray(persisted) ? persisted : [];
+  }
+
   await ensureStore();
   try {
     const raw = await fs.readFile(STORE_PATH, "utf8");
@@ -69,11 +77,15 @@ async function readStore(): Promise<ManualRelease[]> {
 }
 
 async function writeStore(items: ManualRelease[]) {
+  if (USE_PERSISTENT_STORE) {
+    const ok = await writePersistentJson(STORE_KEY, items);
+    if (ok) return;
+  }
+
   await ensureStore();
   await fs.writeFile(STORE_PATH, JSON.stringify(items, null, 2), "utf8");
 }
 
-// POST: Cria um novo release manual para uma empresa
 export async function POST(req: NextRequest) {
   const user = await authenticateRequest(req);
   if (!user) {
@@ -111,7 +123,6 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(release, { status: 201 });
 }
 
-// GET: Lista todos os releases manuais de uma empresa
 export async function GET(req: NextRequest) {
   const user = await authenticateRequest(req);
   if (!user) {

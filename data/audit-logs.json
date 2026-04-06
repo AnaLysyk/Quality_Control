@@ -1,1528 +1,226 @@
 {
   "items": [
     {
-      "id": "1b77749e-d269-4863-bf13-3e640da0c29c",
-      "created_at": "2026-03-25T00:57:34.978Z",
+      "id": "fc21d0c2-8f01-4129-b0d8-0f965addcf26",
+      "created_at": "2026-04-03T13:19:02.433Z",
       "actor_user_id": "test-admin",
       "actor_email": "admin@teste.com",
       "action": "client.updated",
       "entity_type": "client",
-      "entity_id": "cmn5c3h3700081si8brmysa2f",
-      "entity_label": "Legacy Co ps1k",
+      "entity_id": "cmp_98d68819",
+      "entity_label": "Legacy Co nfn7",
       "metadata": {
         "active": true,
         "integrationMode": "manual"
       }
     },
     {
-      "id": "7da68b46-6087-46fe-b4e0-60e02d6e0f2e",
-      "created_at": "2026-03-25T00:57:33.095Z",
+      "id": "f99a3c38-ad28-4ac3-a03d-59f348c4e0a8",
+      "created_at": "2026-04-03T13:19:02.299Z",
       "actor_user_id": "test-admin",
       "actor_email": "admin@teste.com",
       "action": "client.created",
       "entity_type": "client",
-      "entity_id": "cmn5c3h3700081si8brmysa2f",
-      "entity_label": "Legacy Co ps1k",
+      "entity_id": "cmp_98d68819",
+      "entity_label": "Legacy Co nfn7",
       "metadata": {
-        "slug": "legacyco-1774400251752-6g18",
+        "slug": "legacyco-1775222342215-riqs",
         "active": true
       }
     },
     {
-      "id": "dd804362-1ca5-46f3-af97-6cb88486c709",
-      "created_at": "2026-03-25T00:57:31.728Z",
+      "id": "94036f56-7a0c-4174-a759-9c618aac10b6",
+      "created_at": "2026-04-03T13:19:02.187Z",
       "actor_user_id": "test-admin",
       "actor_email": "admin@teste.com",
       "action": "client.updated",
       "entity_type": "client",
-      "entity_id": "cmn5c39q000031si8pvtyljqq",
-      "entity_label": "Patch Co 0ddn",
+      "entity_id": "cmp_685fe174",
+      "entity_label": "Patch Co mohu",
       "metadata": {
         "active": true,
         "integrationMode": "manual"
       }
     },
     {
-      "id": "841a45e0-6b7a-4af2-969f-ef9e7faa37e6",
-      "created_at": "2026-03-25T00:57:24.582Z",
+      "id": "7d6dff87-2f42-486a-8565-4fc128ebf258",
+      "created_at": "2026-04-03T13:19:01.489Z",
       "actor_user_id": "test-admin",
       "actor_email": "admin@teste.com",
       "action": "client.created",
       "entity_type": "client",
-      "entity_id": "cmn5c39q000031si8pvtyljqq",
-      "entity_label": "Patch Co 0ddn",
+      "entity_id": "cmp_685fe174",
+      "entity_label": "Patch Co mohu",
       "metadata": {
-        "slug": "patchco-1774400219789-o9sd",
+        "slug": "patchco-1775222341382-l7t6",
         "active": true
       }
     },
     {
-      "id": "717bab0a-076c-435d-8337-ee806aff76fe",
-      "created_at": "2026-03-25T00:57:23.073Z",
+      "id": "8dafa4dc-44d5-4574-a8d4-c353eafc1e86",
+      "created_at": "2026-04-03T13:12:26.201Z",
       "actor_user_id": "test-admin",
       "actor_email": "admin@teste.com",
       "action": "client.created",
       "entity_type": "client",
-      "entity_id": "cmn5c38oa00001si8ivrkz8y5",
-      "entity_label": "Test Co 53sb",
+      "entity_id": "cmp_2c55a952",
+      "entity_label": "Test Co ik99",
       "metadata": {
-        "slug": "testco-1774400220720-py14",
+        "slug": "testco-1775221946125-o0i3",
         "active": true
       }
     },
     {
-      "id": "64662bec-414e-42d0-aaf5-c6ac910df00e",
-      "created_at": "2026-03-24T16:17:00.120Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "6f0f3219-c5a9-409e-8b69-848080bef8ba",
-      "created_at": "2026-03-24T16:05:05.298Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "6db7b7ac-4548-473a-8458-187cc7adb0c3",
-      "created_at": "2026-03-24T16:00:27.946Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "25ab6735-f86f-461d-b5a2-4ca4ec933f90",
-      "created_at": "2026-03-24T16:00:16.312Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "f2c2b793-2ff7-45ff-b5b4-37b064975999",
-      "created_at": "2026-03-24T15:55:02.095Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "2aba39a5-90cc-42f2-82f4-bac639ab1be7",
-      "created_at": "2026-03-24T15:48:59.618Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "f7ec8b25-7975-4357-b0a7-9d9c8a3de4ef",
-      "created_at": "2026-03-23T11:17:24.363Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "ec6f09e5-3428-4dc2-8ad9-ebbc7347fba1",
-      "created_at": "2026-03-23T11:17:02.138Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "fdc0b30d-d3ee-490a-8bc5-472bc9559feb",
-      "created_at": "2026-03-23T10:56:56.659Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "84e2a41c-0f5e-4cdc-a064-d56fdd7c23e6",
-      "created_at": "2026-03-23T03:59:44.959Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "3cd298b7-718c-44bb-ab2a-5dff9fd0e197",
-      "created_at": "2026-03-23T03:51:12.787Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "217850f8-6e7c-49b7-8f7b-03f3a436ecab",
-      "created_at": "2026-03-23T03:28:13.272Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "74cd20ef-201a-4fff-b0b2-11f1d9471ff5",
-      "created_at": "2026-03-23T03:27:41.020Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "41bd5fd7-5242-41f8-90fd-59fcc9d0ff61",
-      "created_at": "2026-03-23T01:37:57.635Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmn2inpw5000i1s3s7597m2nm",
-      "entity_label": "Test Co st9m",
-      "metadata": {
-        "slug": "testco-1774229873675-6ory",
-        "active": true
-      }
-    },
-    {
-      "id": "ee995ab8-8750-4d3c-adf0-956a501b84a2",
-      "created_at": "2026-03-23T01:36:44.845Z",
+      "id": "f5a8b58e-c3c3-4708-8633-9172029f7026",
+      "created_at": "2026-04-03T13:10:34.273Z",
       "actor_user_id": "test-admin",
       "actor_email": "admin@teste.com",
       "action": "client.updated",
       "entity_type": "client",
-      "entity_id": "cmn2im4e7000f1s3sy8xv2hph",
-      "entity_label": "Legacy Co 1kja",
+      "entity_id": "cmp_661ba356",
+      "entity_label": "Legacy Co 81lw",
       "metadata": {
         "active": true,
         "integrationMode": "manual"
       }
     },
     {
-      "id": "de5504f7-6eae-4952-b793-1ea5774a216d",
-      "created_at": "2026-03-23T01:36:42.804Z",
+      "id": "1789dbe4-f832-4ae2-87b4-85747927b213",
+      "created_at": "2026-04-03T13:10:33.418Z",
       "actor_user_id": "test-admin",
       "actor_email": "admin@teste.com",
       "action": "client.created",
       "entity_type": "client",
-      "entity_id": "cmn2im4e7000f1s3sy8xv2hph",
-      "entity_label": "Legacy Co 1kja",
+      "entity_id": "cmp_661ba356",
+      "entity_label": "Legacy Co 81lw",
       "metadata": {
-        "slug": "legacyco-1774229800210-c6gu",
+        "slug": "legacyco-1775221832988-d7xe",
         "active": true
       }
     },
     {
-      "id": "da2da884-6937-4a00-8fc0-18d455249df5",
-      "created_at": "2026-03-23T01:36:39.631Z",
+      "id": "24ada5ab-3e51-4b2a-96d4-ced2a42fb672",
+      "created_at": "2026-04-03T13:10:32.784Z",
       "actor_user_id": "test-admin",
       "actor_email": "admin@teste.com",
       "action": "client.updated",
       "entity_type": "client",
-      "entity_id": "cmn2ilrj9000c1s3sfrqp0qwr",
-      "entity_label": "Patch Co nwvi",
+      "entity_id": "cmp_f2b46021",
+      "entity_label": "Patch Co yapa",
       "metadata": {
         "active": true,
         "integrationMode": "manual"
       }
     },
     {
-      "id": "dcb2397e-557e-4666-a9e7-3e46400b7200",
-      "created_at": "2026-03-23T01:36:26.693Z",
+      "id": "cb8c9a08-5e07-40e9-9f8c-3e5e9e126890",
+      "created_at": "2026-04-03T13:10:31.989Z",
       "actor_user_id": "test-admin",
       "actor_email": "admin@teste.com",
       "action": "client.created",
       "entity_type": "client",
-      "entity_id": "cmn2ilrj9000c1s3sfrqp0qwr",
-      "entity_label": "Patch Co nwvi",
+      "entity_id": "cmp_f2b46021",
+      "entity_label": "Patch Co yapa",
       "metadata": {
-        "slug": "patchco-1774229782861-ii6x",
+        "slug": "patchco-1775221831648-01it",
         "active": true
       }
     },
     {
-      "id": "c04b86d2-fe2b-4a44-b785-151a0a235dee",
-      "created_at": "2026-03-23T01:32:50.552Z",
+      "id": "8c963a2b-01d7-4915-a45f-ac3aa9f1e53d",
+      "created_at": "2026-04-03T13:08:28.826Z",
       "actor_user_id": "test-admin",
       "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmn2ih5d800091s3sttwff20r",
-      "entity_label": "Test Co 1jah",
-      "metadata": {
-        "slug": "testco-1774229562424-u351",
-        "active": true
-      }
-    },
-    {
-      "id": "17dffa58-545d-41f1-97dd-619240a192cd",
-      "created_at": "2026-03-23T01:28:06.473Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmn2ib1q800061s3s3afa584h",
-      "entity_label": "Test Co 4tvs",
-      "metadata": {
-        "slug": "testco-1774229279519-idij",
-        "active": true
-      }
-    },
-    {
-      "id": "0dd6fecd-42f8-4044-8f76-9da6c2782ca2",
-      "created_at": "2026-03-23T01:26:16.973Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
       "action": "client.updated",
       "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
+      "entity_id": "cmp_5ac6ed81",
+      "entity_label": "Legacy Co txkc",
       "metadata": {
         "active": true,
-        "integrationMode": "qase"
+        "integrationMode": "manual"
       }
     },
     {
-      "id": "cbf4e1c8-6691-4690-a3c5-9c94f6ae20a2",
-      "created_at": "2026-03-23T01:25:09.647Z",
+      "id": "8af648b7-5819-4ff6-85e4-ffd9ab7aa54c",
+      "created_at": "2026-04-03T13:08:28.390Z",
       "actor_user_id": "test-admin",
       "actor_email": "admin@teste.com",
       "action": "client.created",
       "entity_type": "client",
-      "entity_id": "cmn2i796c00031s3ssedwporm",
-      "entity_label": "Test Co vbhy",
+      "entity_id": "cmp_5ac6ed81",
+      "entity_label": "Legacy Co txkc",
       "metadata": {
-        "slug": "testco-1774229103036-6tvc",
+        "slug": "legacyco-1775221707955-1xuu",
         "active": true
       }
     },
     {
-      "id": "55d50cbb-17f3-4c3d-969c-2e3eb47c1077",
-      "created_at": "2026-03-23T01:21:20.201Z",
+      "id": "713cc3e4-08b5-490d-b429-9856385cd852",
+      "created_at": "2026-04-03T13:08:27.845Z",
       "actor_user_id": "test-admin",
       "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmn2i2c3a00001s3s9zujnqcn",
-      "entity_label": "Test Co mc4j",
-      "metadata": {
-        "slug": "testco-1774228861913-aca9",
-        "active": true
-      }
-    },
-    {
-      "id": "0b0f523d-5997-41d9-a29a-d830c29ed90e",
-      "created_at": "2026-03-23T01:02:28.297Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
       "action": "client.updated",
       "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
+      "entity_id": "cmp_381747ef",
+      "entity_label": "Patch Co 1dvf",
       "metadata": {
         "active": true,
-        "integrationMode": "qase"
+        "integrationMode": "manual"
       }
     },
     {
-      "id": "67128220-6f95-4a57-ad0d-e76cb6d0750a",
-      "created_at": "2026-03-22T03:05:59.953Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
+      "id": "21ddb69f-b2b6-46ed-8d6c-e82d29e4aa08",
+      "created_at": "2026-04-03T13:08:25.815Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
+      "action": "client.created",
+      "entity_type": "client",
+      "entity_id": "cmp_381747ef",
+      "entity_label": "Patch Co 1dvf",
+      "metadata": {
+        "slug": "patchco-1775221704106-anaw",
+        "active": true
+      }
+    },
+    {
+      "id": "95722acb-9172-4de0-836a-6777d7c645b7",
+      "created_at": "2026-04-03T13:02:01.147Z",
+      "actor_user_id": "test-admin",
+      "actor_email": "admin@teste.com",
       "action": "client.updated",
       "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
+      "entity_id": "cmp_aa384596",
+      "entity_label": "Legacy Co oer3",
       "metadata": {
         "active": true,
-        "integrationMode": "qase"
+        "integrationMode": "manual"
       }
     },
     {
-      "id": "58ebd9d7-ed93-44c4-bdb8-d97458add200",
-      "created_at": "2026-03-22T02:10:30.682Z",
+      "id": "d9c04b9e-590a-4018-93e4-c0079573200a",
+      "created_at": "2026-04-03T13:02:00.965Z",
       "actor_user_id": "test-admin",
       "actor_email": "admin@teste.com",
       "action": "client.created",
       "entity_type": "client",
-      "entity_id": "cmn14dq5900061s2w2knh6cxb",
-      "entity_label": "Test Co e0sv",
+      "entity_id": "cmp_aa384596",
+      "entity_label": "Legacy Co oer3",
       "metadata": {
-        "slug": "testco-1774145422472-byfc",
+        "slug": "legacyco-1775221320561-s6ia",
         "active": true
       }
     },
     {
-      "id": "722c56be-6f47-4de9-a407-18abcaa4605b",
-      "created_at": "2026-03-22T02:03:35.304Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "fe5bc52e-ee68-4136-b2b4-decea19a0104",
-      "created_at": "2026-03-22T01:55:39.369Z",
+      "id": "1b74bc86-eea3-46f5-a5a5-1804fd8d3665",
+      "created_at": "2026-04-03T13:01:47.595Z",
       "actor_user_id": "test-admin",
       "actor_email": "admin@teste.com",
       "action": "client.created",
       "entity_type": "client",
-      "entity_id": "cmn13ulct00031s2wbqxtbp83",
-      "entity_label": "Test Co 6mwc",
+      "entity_id": "cmp_989deaaf",
+      "entity_label": "Test Co rf8w",
       "metadata": {
-        "slug": "testco-1774144530320-4cle",
-        "active": true
-      }
-    },
-    {
-      "id": "428e4cd1-d07c-4efa-838a-1a71202e7ec0",
-      "created_at": "2026-03-22T01:51:37.372Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "651ce44c-1bff-45e0-8bd7-297c3ce02049",
-      "created_at": "2026-03-22T01:37:06.010Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmn136ra400001s2w0t2a56w9",
-      "entity_label": "Test Co jfhf",
-      "metadata": {
-        "slug": "testco-1774143414884-beu6",
-        "active": true
-      }
-    },
-    {
-      "id": "8844f521-bd3b-4879-8561-726ad2187bad",
-      "created_at": "2026-03-21T23:39:52.578Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "c162e8d7-4355-4bff-b987-2921927bd742",
-      "created_at": "2026-03-21T23:38:14.487Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "ca20130f-44e9-489a-b643-2af1f9196202",
-      "created_at": "2026-03-21T23:37:07.883Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "3dab7018-9067-40ed-a159-4fb102995a7b",
-      "created_at": "2026-03-21T23:35:46.385Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "0a4067db-dd20-4993-9d2a-4e44c6b96d42",
-      "created_at": "2026-03-21T23:34:06.266Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "37eba963-c883-4514-9032-40d7f2cc7292",
-      "created_at": "2026-03-21T23:34:02.511Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "0d6778d0-53dd-4248-8d09-8d8c5f1871fa",
-      "created_at": "2026-03-21T23:21:55.901Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmn0ycxf800031sz8kvg0a3c9",
-      "entity_label": "Test Co pst9",
-      "metadata": {
-        "slug": "testco-1774135300252-ol01",
-        "active": true
-      }
-    },
-    {
-      "id": "50e02161-80df-460b-b3fd-fbedff639602",
-      "created_at": "2026-03-21T23:14:38.659Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmn0y3k6n00001sz8858p7fsz",
-      "entity_label": "Test Co utlp",
-      "metadata": {
-        "slug": "testco-1774134872955-e1it",
-        "active": true
-      }
-    },
-    {
-      "id": "2e9a517f-a453-4c71-9bc3-67c51db36443",
-      "created_at": "2026-03-21T20:48:23.273Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmn0svgzk000r1sys8m2rvqsv",
-      "entity_label": "Test Co p0rg",
-      "metadata": {
-        "slug": "testco-1774126098531-e8hg",
-        "active": true
-      }
-    },
-    {
-      "id": "a3e9b2e1-8c15-4770-9fa1-ca111f5537fc",
-      "created_at": "2026-03-21T20:43:03.555Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmn0somdv000o1sys5xqt7dtz",
-      "entity_label": "Test Co 96ov",
-      "metadata": {
-        "slug": "testco-1774125777111-szed",
-        "active": true
-      }
-    },
-    {
-      "id": "26a40a11-f9ad-4113-b58d-b203bfdaa7ea",
-      "created_at": "2026-03-21T20:34:46.389Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmn0sdzd9000l1sysfjwjgkin",
-      "entity_label": "Test Co 55vo",
-      "metadata": {
-        "slug": "testco-1774125282377-g035",
-        "active": true
-      }
-    },
-    {
-      "id": "e21e8781-9919-48d8-b9d7-50a4b30f6f77",
-      "created_at": "2026-03-21T20:31:01.923Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmn0s95ci000i1sysyekykt8o",
-      "entity_label": "Test Co ueh0",
-      "metadata": {
-        "slug": "testco-1774125049645-trct",
-        "active": true
-      }
-    },
-    {
-      "id": "23f51acf-162f-4f97-bead-97b11d3fb004",
-      "created_at": "2026-03-21T20:24:49.586Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmn0s169f000f1sysim4nb230",
-      "entity_label": "Test Co lapa",
-      "metadata": {
-        "slug": "testco-1774124679740-bnwz",
-        "active": true
-      }
-    },
-    {
-      "id": "b0537586-0c15-4174-8237-56eed57fdb21",
-      "created_at": "2026-03-20T22:14:54.742Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmmzgiw3k000c1sys8vsyd5jc",
-      "entity_label": "Test Co 5cej",
-      "metadata": {
-        "slug": "testco-1774044890520-z0kh",
-        "active": true
-      }
-    },
-    {
-      "id": "9cdada52-4efd-49af-b596-62ae50224bca",
-      "created_at": "2026-03-20T22:03:47.864Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmmzg4m9r00091sysp8bpoz5v",
-      "entity_label": "Test Co ppd1",
-      "metadata": {
-        "slug": "testco-1774044226305-ivy4",
-        "active": true
-      }
-    },
-    {
-      "id": "839e1b5b-ab29-45b0-a5c2-187c71e044bc",
-      "created_at": "2026-03-20T21:59:17.756Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmmzfyt6w00061sys0lcbqbli",
-      "entity_label": "Test Co ucx1",
-      "metadata": {
-        "slug": "testco-1774043953841-z6g2",
-        "active": true
-      }
-    },
-    {
-      "id": "0bce432e-5860-470d-986f-ab2b8535f949",
-      "created_at": "2026-03-20T21:51:43.218Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmmzfp33i00031syspmoi2gvt",
-      "entity_label": "Test Co 9t6u",
-      "metadata": {
-        "slug": "testco-1774043501451-bhi7",
-        "active": true
-      }
-    },
-    {
-      "id": "5230209d-fcb5-4261-89d7-a70069f22439",
-      "created_at": "2026-03-20T21:48:28.726Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmmzfkwcq00001syshgayqjfy",
-      "entity_label": "Test Co y3vz",
-      "metadata": {
-        "slug": "testco-1774043299238-y9bu",
-        "active": true
-      }
-    },
-    {
-      "id": "3f9c3473-963e-4ff6-a4d1-b0313bbf081e",
-      "created_at": "2026-03-17T06:53:28.411Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmmu9adxj00001spwuulwssfp",
-      "entity_label": "Test Co nlfu",
-      "metadata": {
-        "slug": "testco-1773730402552-rnpb",
-        "active": true
-      }
-    },
-    {
-      "id": "093bb888-7076-4d26-9233-5be87795dd71",
-      "created_at": "2026-03-17T06:42:13.107Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "6acdfb3d-0681-4f5d-b111-a77c33caf695",
-      "created_at": "2026-03-17T06:40:11.133Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmmu8taxh00081s4098wf984y",
-      "entity_label": "Test Co repy",
-      "metadata": {
-        "slug": "testco-1773729607587-qivy",
-        "active": true
-      }
-    },
-    {
-      "id": "0b2f88a0-83e8-407f-963e-b69bf6bc9eb5",
-      "created_at": "2026-03-17T06:37:02.425Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmmu8p95000071s40oiljr28s",
-      "entity_label": "Test Co ywyb",
-      "metadata": {
-        "slug": "testco-1773729421006-eox1",
-        "active": true
-      }
-    },
-    {
-      "id": "b16ba2bd-055d-4130-99f7-6141cf05abde",
-      "created_at": "2026-03-17T06:35:14.699Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "0391cfe9-8f55-46d0-9329-062c51460564",
-      "created_at": "2026-03-17T06:34:52.694Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmmu8mgz100061s40veudjw7b",
-      "entity_label": "Test Co j77v",
-      "metadata": {
-        "slug": "testco-1773729290915-kwqz",
-        "active": true
-      }
-    },
-    {
-      "id": "37eca181-3d16-4532-9af9-7625f13c4b20",
-      "created_at": "2026-03-17T06:34:06.946Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmmu8lhql00051s4034sidduy",
-      "entity_label": "Test Co 3pkx",
-      "metadata": {
-        "slug": "testco-1773729237575-1zc4",
-        "active": true
-      }
-    },
-    {
-      "id": "cce9c111-8aa4-436c-94bb-366c5c79abe6",
-      "created_at": "2026-03-17T06:33:55.247Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "bad37074-6074-45d1-9d5c-18d195c24861",
-      "created_at": "2026-03-17T06:29:35.021Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "514f1edb-3dd1-43d0-8a95-d87b3e57223f",
-      "created_at": "2026-03-17T06:29:00.977Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmmu8exne00041s407gxuctgl",
-      "entity_label": "Test Co jozj",
-      "metadata": {
-        "slug": "testco-1773728939312-jqmv",
-        "active": true
-      }
-    },
-    {
-      "id": "15f22fa6-9518-44e8-9dfa-d2f473e66912",
-      "created_at": "2026-03-17T06:28:58.162Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "9f7164d2-9f6f-42e4-aa1f-05d4e8115281",
-      "created_at": "2026-03-17T06:27:40.899Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "77bdd5ed-464f-49ef-9af8-4e39c0ecfd58",
-      "created_at": "2026-03-17T06:27:19.656Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "49873eab-119d-4104-aff1-c7ed26216290",
-      "created_at": "2026-03-17T06:27:08.463Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "29213dc3-2fe0-41d0-9524-45d880359785",
-      "created_at": "2026-03-17T06:26:58.201Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "8339258b-0d81-49f2-a295-52c7cbf3515f",
-      "created_at": "2026-03-17T06:25:45.182Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "1d96b4be-8cef-4fcb-8ab0-f4ac0a4a5ae0",
-      "created_at": "2026-03-17T06:25:17.820Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "431ce425-ab7b-4a75-a334-b56b7f835477",
-      "created_at": "2026-03-17T06:21:26.947Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmmu857ic00031s4061r1m257",
-      "entity_label": "Test Co ndgq",
-      "metadata": {
-        "slug": "testco-1773728483954-l69r",
-        "active": true
-      }
-    },
-    {
-      "id": "0fac07a0-feda-405f-b46e-1aa618be9e50",
-      "created_at": "2026-03-17T06:19:58.636Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmmu83aur00021s40o6qatfys",
-      "entity_label": "Test Co et3b",
-      "metadata": {
-        "slug": "testco-1773728384940-lfgo",
-        "active": true
-      }
-    },
-    {
-      "id": "ccc8c79d-1b12-40a8-bb08-3364fcea5b33",
-      "created_at": "2026-03-17T06:18:20.190Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmmu8178k00011s40afw8skyg",
-      "entity_label": "Test Co xnax",
-      "metadata": {
-        "slug": "testco-1773728297162-1ph3",
-        "active": true
-      }
-    },
-    {
-      "id": "8fe73a05-f9e7-47fc-b9d9-9f448befd41c",
-      "created_at": "2026-03-17T06:14:07.603Z",
-      "actor_user_id": "test-admin",
-      "actor_email": "admin@teste.com",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmmu7vs1p00001s40tt1ogg4q",
-      "entity_label": "Test Co 7rsy",
-      "metadata": {
-        "slug": "testco-1773728008939-y6mg",
-        "active": true
-      }
-    },
-    {
-      "id": "a40aded2-7464-48a7-85ec-7f5235de5016",
-      "created_at": "2026-03-17T06:09:58.163Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "8d986d95-e48a-43fb-b37b-a10053b0fbf8",
-      "created_at": "2026-03-17T06:04:57.522Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "9c88c3d7-0b87-4c63-9273-2d9c1341b311",
-      "created_at": "2026-03-17T06:02:42.636Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "7d25e648-6b0b-41f4-9279-7c61c7e2e136",
-      "created_at": "2026-03-17T04:08:07.285Z",
-      "actor_user_id": "usr_dev",
-      "actor_email": "paulalysyk1234@gmail.com",
-      "action": "client.updated",
-      "entity_type": "client",
-      "entity_id": "griaule",
-      "entity_label": "Griaule",
-      "metadata": {
-        "active": true,
-        "integrationMode": "qase"
-      }
-    },
-    {
-      "id": "252da015-5f9b-4945-aac9-79ae89e343e5",
-      "created_at": "2026-02-13T11:16:56.408Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "user.created",
-      "entity_type": "user",
-      "entity_id": "usr_6f4b2e23",
-      "entity_label": "e2e.user.356994@griaule.test",
-      "metadata": {
-        "companyId": "cmp_573f607e",
-        "role": "user"
-      }
-    },
-    {
-      "id": "0013ce32-4e8e-4f32-a1b8-13313e1e47cb",
-      "created_at": "2026-02-13T11:16:46.149Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_573f607e",
-      "entity_label": "Empresa E2E 356994",
-      "metadata": {
-        "slug": "empresa-e2e-356994",
-        "active": true
-      }
-    },
-    {
-      "id": "a500e359-369b-495e-8a2e-b9ec860f68f0",
-      "created_at": "2026-02-13T11:04:16.239Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "user.created",
-      "entity_type": "user",
-      "entity_id": "usr_4eb9736d",
-      "entity_label": "e2e.user.594690@griaule.test",
-      "metadata": {
-        "companyId": "cmp_67a726a5",
-        "role": "user"
-      }
-    },
-    {
-      "id": "fd97919b-55b1-4fe9-9186-1b8575013886",
-      "created_at": "2026-02-13T11:04:07.317Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_67a726a5",
-      "entity_label": "Empresa E2E 594690",
-      "metadata": {
-        "slug": "empresa-e2e-594690",
-        "active": true
-      }
-    },
-    {
-      "id": "9dd8d38e-6978-4198-b9cd-197cbf0a0871",
-      "created_at": "2026-02-13T10:39:38.883Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "user.created",
-      "entity_type": "user",
-      "entity_id": "usr_1f8b7d7e",
-      "entity_label": "e2e.user.169523@griaule.test",
-      "metadata": {
-        "companyId": "cmp_55374564",
-        "role": "user"
-      }
-    },
-    {
-      "id": "63a532d7-ab6c-4e21-9ff0-66a8bb0a5b77",
-      "created_at": "2026-02-13T10:39:33.430Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_55374564",
-      "entity_label": "Empresa E2E 169523",
-      "metadata": {
-        "slug": "empresa-e2e-169523",
-        "active": true
-      }
-    },
-    {
-      "id": "ae6566de-9d6a-4861-8a77-6690d27d9e6d",
-      "created_at": "2026-02-13T02:37:30.414Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "user.created",
-      "entity_type": "user",
-      "entity_id": "usr_8de0b884",
-      "entity_label": "e2e.user.239488@griaule.test",
-      "metadata": {
-        "companyId": "cmp_32c12918",
-        "role": "user"
-      }
-    },
-    {
-      "id": "1f0fbfba-009c-45f2-b2d5-94c2c5c37243",
-      "created_at": "2026-02-13T02:37:23.690Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_32c12918",
-      "entity_label": "Empresa E2E 239488",
-      "metadata": {
-        "slug": "empresa-e2e-239488",
-        "active": true
-      }
-    },
-    {
-      "id": "d7b3b07c-d408-49c3-8bb6-febc83c1f96a",
-      "created_at": "2026-02-13T01:28:53.119Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "user.created",
-      "entity_type": "user",
-      "entity_id": "usr_f683914d",
-      "entity_label": "e2e.user.124262@griaule.test",
-      "metadata": {
-        "companyId": "cmp_510d5b1c",
-        "role": "user"
-      }
-    },
-    {
-      "id": "90ba7499-803b-42f7-b3ac-c6e4a762f90b",
-      "created_at": "2026-02-13T01:28:47.967Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_510d5b1c",
-      "entity_label": "Empresa E2E 124262",
-      "metadata": {
-        "slug": "empresa-e2e-124262",
-        "active": true
-      }
-    },
-    {
-      "id": "dbbaf733-414b-4ee3-a116-2e401d506fc0",
-      "created_at": "2026-02-13T00:20:53.998Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "user.created",
-      "entity_type": "user",
-      "entity_id": "usr_c3cd76ec",
-      "entity_label": "e2e.user.044066@griaule.test",
-      "metadata": {
-        "companyId": "cmp_041c54a7",
-        "role": "user"
-      }
-    },
-    {
-      "id": "2e7415aa-fc7a-4f00-947a-bdd83f8bffe4",
-      "created_at": "2026-02-13T00:20:48.698Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_041c54a7",
-      "entity_label": "Empresa E2E 044066",
-      "metadata": {
-        "slug": "empresa-e2e-044066",
-        "active": true
-      }
-    },
-    {
-      "id": "cb97e20a-a533-4240-b3c6-ce1b69d82153",
-      "created_at": "2026-02-13T00:03:09.751Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "user.created",
-      "entity_type": "user",
-      "entity_id": "usr_1e0a1ed3",
-      "entity_label": "e2e.user.981106@griaule.test",
-      "metadata": {
-        "companyId": "cmp_7b859dfb",
-        "role": "user"
-      }
-    },
-    {
-      "id": "5f8c7b21-9c5c-473d-a944-320a5aecda20",
-      "created_at": "2026-02-13T00:03:04.847Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_7b859dfb",
-      "entity_label": "Empresa E2E 981106",
-      "metadata": {
-        "slug": "empresa-e2e-981106",
-        "active": true
-      }
-    },
-    {
-      "id": "d17ae387-d9d8-43ec-ac30-1f18b9698e99",
-      "created_at": "2026-02-13T00:01:18.453Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "user.created",
-      "entity_type": "user",
-      "entity_id": "usr_e18ad87e",
-      "entity_label": "e2e.user.869884@griaule.test",
-      "metadata": {
-        "companyId": "cmp_a53bfe5c",
-        "role": "user"
-      }
-    },
-    {
-      "id": "d6c7cdf3-15cd-4917-81fb-d30f11effa34",
-      "created_at": "2026-02-13T00:01:14.578Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_7e7e109f",
-      "entity_label": "Empresa E2E 869884",
-      "metadata": {
-        "slug": "empresa-e2e-869884",
-        "active": true
-      }
-    },
-    {
-      "id": "16a20ce9-10da-4592-a6a4-40e50a598375",
-      "created_at": "2026-02-13T00:00:08.122Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_64e4c80b",
-      "entity_label": "Empresa E2E 798472",
-      "metadata": {
-        "slug": "empresa-e2e-798472",
-        "active": true
-      }
-    },
-    {
-      "id": "c37a4f3c-956f-45dd-b155-2c6cae60f223",
-      "created_at": "2026-02-12T23:58:44.754Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_e53b16d7",
-      "entity_label": "Empresa E2E 720132",
-      "metadata": {
-        "slug": "empresa-e2e-720132",
-        "active": true
-      }
-    },
-    {
-      "id": "13155108-367c-4398-bdfd-6ef582f57329",
-      "created_at": "2026-02-12T23:45:51.548Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_f60ea298",
-      "entity_label": "Empresa E2E 947636",
-      "metadata": {
-        "slug": "empresa-e2e-947636",
-        "active": true
-      }
-    },
-    {
-      "id": "660ce0a3-9f94-4e6e-9df6-43aa42be6bbd",
-      "created_at": "2026-02-12T23:42:41.193Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_9ab8a1ea",
-      "entity_label": "Empresa E2E 756822",
-      "metadata": {
-        "slug": "empresa-e2e-756822",
-        "active": true
-      }
-    },
-    {
-      "id": "157fbd95-f69f-4fc3-93cc-a6465de35adf",
-      "created_at": "2026-02-12T23:40:06.452Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_e6ce2c78",
-      "entity_label": "Empresa E2E 594343",
-      "metadata": {
-        "slug": "empresa-e2e-594343",
-        "active": true
-      }
-    },
-    {
-      "id": "d0ca9311-8f34-4136-a9ee-635cc055852a",
-      "created_at": "2026-02-12T23:37:55.288Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_5af5145c",
-      "entity_label": "Empresa E2E 470219",
-      "metadata": {
-        "slug": "empresa-e2e-470219",
-        "active": true
-      }
-    },
-    {
-      "id": "e9dc9a83-9e69-4515-a022-b4a951cc905a",
-      "created_at": "2026-02-12T23:35:56.021Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_8271b57a",
-      "entity_label": "Empresa E2E 351186",
-      "metadata": {
-        "slug": "empresa-e2e-351186",
-        "active": true
-      }
-    },
-    {
-      "id": "6cda6d19-9989-49b4-8a21-50dad4d737bf",
-      "created_at": "2026-02-12T23:03:16.205Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_c2eb3d75",
-      "entity_label": "Empresa E2E 392492",
-      "metadata": {
-        "slug": "empresa-e2e-392492",
-        "active": true
-      }
-    },
-    {
-      "id": "5077ab1d-1844-448a-8f2b-70d5fcb4edc5",
-      "created_at": "2026-02-12T17:44:51.826Z",
-      "actor_user_id": "usr_user_griaule_test",
-      "actor_email": "user@griaule.test",
-      "action": "run.created",
-      "entity_type": "run",
-      "entity_id": "run_proibida",
-      "entity_label": "Run Proibida",
-      "metadata": {
-        "runId": 9999,
-        "app": "sfq"
-      }
-    },
-    {
-      "id": "acc0e5ee-e0c4-48cc-b024-dbb696b4767d",
-      "created_at": "2026-02-12T17:28:15.388Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_7de9516e",
-      "entity_label": "Empresa E2E 291911",
-      "metadata": {
-        "slug": "empresa-e2e-291911",
-        "active": true
-      }
-    },
-    {
-      "id": "64ded63e-816a-4446-9e00-f3589b8f33b8",
-      "created_at": "2026-02-12T16:37:36.905Z",
-      "actor_user_id": "usr_user_griaule_test",
-      "actor_email": "user@griaule.test",
-      "action": "run.created",
-      "entity_type": "run",
-      "entity_id": "run_proibida",
-      "entity_label": "Run Proibida",
-      "metadata": {
-        "runId": 9999,
-        "app": "sfq"
-      }
-    },
-    {
-      "id": "76255462-2e62-4fb8-8104-1905fac07168",
-      "created_at": "2026-02-12T16:22:53.933Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_94182fbe",
-      "entity_label": "Empresa E2E 371318",
-      "metadata": {
-        "slug": "empresa-e2e-371318",
-        "active": true
-      }
-    },
-    {
-      "id": "dab46a66-2e81-4e2f-9a97-86d3001d420e",
-      "created_at": "2026-02-12T16:13:59.065Z",
-      "actor_user_id": "usr_user_griaule_test",
-      "actor_email": "user@griaule.test",
-      "action": "run.created",
-      "entity_type": "run",
-      "entity_id": "run_proibida",
-      "entity_label": "Run Proibida",
-      "metadata": {
-        "runId": 9999,
-        "app": "sfq"
-      }
-    },
-    {
-      "id": "fabd228c-c75d-40ca-8a18-bb3b1ff8c12f",
-      "created_at": "2026-02-12T15:56:16.692Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_bfa4542c",
-      "entity_label": "Empresa E2E 771134",
-      "metadata": {
-        "slug": "empresa-e2e-771134",
-        "active": true
-      }
-    },
-    {
-      "id": "96d796a1-783c-49c5-83d2-c9d137abd62a",
-      "created_at": "2026-02-12T15:54:06.426Z",
-      "actor_user_id": "usr_admin_griaule_test",
-      "actor_email": "admin@griaule.test",
-      "action": "client.created",
-      "entity_type": "client",
-      "entity_id": "cmp_cd50d0b8",
-      "entity_label": "Empresa E2E 635741",
-      "metadata": {
-        "slug": "empresa-e2e-635741",
+        "slug": "testco-1775221271425-hzyg",
         "active": true
       }
     }

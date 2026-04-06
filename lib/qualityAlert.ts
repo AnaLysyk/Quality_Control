@@ -1,13 +1,21 @@
+import "server-only";
+
 import fs from "fs";
 import path from "path";
+import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
+
 const USE_MEMORY_ALERTS =
   process.env.QUALITY_ALERTS_IN_MEMORY === "true" ||
   process.env.NODE_ENV === "test" ||
-  process.env.VERCEL === "1";
+  (process.env.VERCEL === "1" && !canUsePersistentJsonStore());
 
 const ALERTS_STORE = path.join(process.cwd(), "data", "quality_alerts.json");
+const ALERTS_KEY = "qc:quality_alerts:v1";
+const USE_PERSISTENT_STORE = !USE_MEMORY_ALERTS && canUsePersistentJsonStore();
+
 let memoryAlerts: QualityAlert[] = [];
 let warnedFsFailure = false;
+
 const ALERT_TYPES = [
   "quality_score",
   "sla",
@@ -48,6 +56,7 @@ type ReleaseAlertInput = {
 };
 
 async function ensureAlertsStore(): Promise<boolean> {
+  if (USE_PERSISTENT_STORE) return true;
   try {
     await fs.promises.mkdir(path.dirname(ALERTS_STORE), { recursive: true });
     await fs.promises.access(ALERTS_STORE);
@@ -87,12 +96,18 @@ function isFailedStatus(value?: string | null) {
 }
 
 export async function readAlertsStore(): Promise<QualityAlert[]> {
-  // Impede execução em edge/build/ambiente sem fs
   if (typeof process !== "object" || process.env.NEXT_RUNTIME === "edge") {
     if (USE_MEMORY_ALERTS) return memoryAlerts;
     throw new Error("File system access not supported in this environment");
   }
+
   if (USE_MEMORY_ALERTS) return memoryAlerts;
+
+  if (USE_PERSISTENT_STORE) {
+    const persisted = await readPersistentJson<QualityAlert[]>(ALERTS_KEY, []);
+    return Array.isArray(persisted) ? persisted : [];
+  }
+
   const ok = await ensureAlertsStore();
   if (!ok) return memoryAlerts;
   try {
@@ -109,6 +124,13 @@ export async function writeAlertsStore(alerts: QualityAlert[]): Promise<void> {
     memoryAlerts = alerts as QualityAlert[];
     return;
   }
+
+  if (USE_PERSISTENT_STORE) {
+    const ok = await writePersistentJson(ALERTS_KEY, alerts);
+    if (!ok) memoryAlerts = alerts as QualityAlert[];
+    return;
+  }
+
   const ok = await ensureAlertsStore();
   if (!ok) {
     memoryAlerts = alerts as QualityAlert[];
@@ -128,22 +150,32 @@ async function safeFetch(input: RequestInfo, init?: RequestInit) {
   return fetch(input, init);
 }
 
-export async function sendQualityAlert({ companySlug, type, severity, message, metadata, timestamp }: QualityAlertInput): Promise<boolean> {
+export async function sendQualityAlert({
+  companySlug,
+  type,
+  severity,
+  message,
+  metadata,
+  timestamp,
+}: QualityAlertInput): Promise<boolean> {
   const now = timestamp ?? new Date().toISOString();
   if (!ALERT_TYPES.includes(type)) {
     throw new Error(`Tipo de alerta invalido: ${type}`);
   }
   const alerts = await readAlertsStore();
   const last = findLatestAlert(alerts, companySlug, type);
-  // Anti-spam: 24h
-  if (last && new Date(now).getTime() - new Date(last.timestamp).getTime() < 24 * 60 * 60 * 1000 && last.severity === severity) {
+  if (
+    last &&
+    new Date(now).getTime() - new Date(last.timestamp).getTime() < 24 * 60 * 60 * 1000 &&
+    last.severity === severity
+  ) {
     return false;
   }
-  // Registrar
+
   const alert: QualityAlert = { companySlug, type, severity, message, metadata, timestamp: now };
   alerts.push(alert);
   await writeAlertsStore(alerts);
-  // Webhook (mock) — only attempt if a URL is provided and fetch is available
+
   const webhookUrl = metadata && typeof metadata.webhookUrl === "string" ? metadata.webhookUrl : null;
   if (webhookUrl) {
     try {
@@ -153,9 +185,10 @@ export async function sendQualityAlert({ companySlug, type, severity, message, m
         body: JSON.stringify(alert),
       });
     } catch {
-      // Best-effort: do not fail the alert if webhook cannot be called in this environment
+      // Best-effort only.
     }
   }
+
   return true;
 }
 

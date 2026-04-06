@@ -61,7 +61,7 @@ input[type="password"]::-ms-clear {
   --tc-text-secondary: #ef0001;
   --tc-text-muted: #4b5563;
   --tc-text-inverse: #ffffff;
-  --page-bg: #eef2f7;
+  --page-bg: #ffffff;
   --page-text: #0b1a3c;
   --page-grad-1: #f7f9ff;
   --page-grad-2: #eef3ff;
@@ -78,7 +78,8 @@ input[type="password"]::-ms-clear {
   --tc-accent-soft: rgba(239, 0, 1, 0.12);
 
   /* Watermark */
-  --tc-watermark-opacity: 0.04;
+  --tc-watermark-opacity: 0.03;
+  --tc-watermark-image: url("/images/tc.png");
 
   /* STATUS / MÉTRICAS */
   --stat-pass: #7cd343;
@@ -151,7 +152,7 @@ input[type="password"]::-ms-clear {
   --surface-primary: #0f1725;
   --surface-secondary: #131d2d;
   --surface-border: rgba(148, 163, 184, 0.16);
-  --tc-watermark-opacity: 0.028;
+  --tc-watermark-opacity: 0.022;
   --tc-accent-soft: rgba(239, 0, 1, 0.18);
 }
 
@@ -229,11 +230,7 @@ body {
   width: 100%;
   max-width: 100%;
   margin: 0;
-  background:
-    radial-gradient(circle at 15% 12%, rgba(78, 141, 245, 0.18), transparent 42%),
-    radial-gradient(circle at 85% 20%, rgba(239, 0, 1, 0.12), transparent 38%),
-    radial-gradient(circle at 30% 85%, rgba(124, 211, 67, 0.12), transparent 40%),
-    linear-gradient(140deg, var(--page-grad-1) 0%, var(--page-grad-2) 45%, var(--page-grad-3) 100%);
+  background: #ffffff;
   color: var(--page-text);
   font-family: var(--font-sans);
   overflow-x: hidden;
@@ -241,11 +238,7 @@ body {
 }
 
 :root.dark body {
-  background:
-    radial-gradient(circle at 16% 14%, rgba(37, 99, 235, 0.12), transparent 42%),
-    radial-gradient(circle at 82% 18%, rgba(239, 0, 1, 0.08), transparent 36%),
-    radial-gradient(circle at 22% 82%, rgba(14, 165, 233, 0.06), transparent 38%),
-    linear-gradient(150deg, var(--page-grad-1) 0%, var(--page-grad-2) 48%, var(--page-grad-3) 100%);
+  background: #ffffff;
 }
 
 #__next {
@@ -260,41 +253,20 @@ body::before {
   inset: 0;
   pointer-events: none;
   z-index: -1;
-  background-image:
-    radial-gradient(circle at 18% 22%, rgba(239, 0, 1, 0.07), transparent 38%),
-    radial-gradient(circle at 78% 68%, rgba(1, 24, 72, 0.06), transparent 42%),
-    url("/images/tc.png");
-  background-repeat: no-repeat, no-repeat, no-repeat;
-  /* responsive background sizes to adapt on zoom and smaller viewports */
-  /* NOTE: cap the watermark/logo size to avoid it filling the viewport unexpectedly */
-  background-size: min(50vw, 900px) min(50vw, 900px), min(50vw, 900px) min(50vw, 900px), min(360px, 40vw);
-  /* use vw/vh offsets instead of fixed px so positions scale with zoom */
-  background-position: calc(-15vw) calc(-15vh), calc(100% + 15vw) calc(100% + 15vh), 50% 52%;
+  background-image: var(--tc-watermark-image);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position: center center;
   opacity: var(--tc-watermark-opacity);
-  filter: grayscale(100%);
+  filter: grayscale(100%) contrast(0.92);
 }
 
 :root.dark body::before {
-  background-image:
-    radial-gradient(circle at 18% 22%, rgba(239, 0, 1, 0.04), transparent 38%),
-    radial-gradient(circle at 78% 68%, rgba(59, 130, 246, 0.05), transparent 42%),
-    url("/images/tc.png");
+  background-image: var(--tc-watermark-image);
 }
 
 body::after {
-  content: "";
-  position: fixed;
-  inset: -10%;
-  pointer-events: none;
-  z-index: -2;
-  background-image:
-    radial-gradient(circle at 12% 25%, var(--page-bubble-1), transparent 26%),
-    radial-gradient(circle at 85% 30%, var(--page-bubble-2), transparent 24%),
-    radial-gradient(circle at 20% 78%, var(--page-bubble-3), transparent 28%),
-    radial-gradient(circle at 70% 85%, var(--page-bubble-4), transparent 30%);
-  opacity: 0.5;
-  filter: blur(1px);
-  animation: bubble-drift 18s ease-in-out infinite alternate;
+  content: none;
 }
 
 /* Defensive constraints: prevent decorative logos/SVGs from growing beyond intended sizes */
@@ -369,11 +341,10 @@ video {
 }
 
 .theme-light {
-  --background: #f4f6fb;
+  --background: #ffffff;
   --foreground: #0b1220;
-  --wall-gradient: linear-gradient(135deg, #e6ecf7 0%, #dde5f3 45%, #d1dbee 100%);
-  --wall-overlay: radial-gradient(circle at 25% 20%, rgba(78, 141, 245, 0.08), transparent 30%),
-    radial-gradient(circle at 70% 60%, rgba(124, 211, 67, 0.06), transparent 38%);
+  --wall-gradient: #ffffff;
+  --wall-overlay: none;
   --surface-primary: #f7f9fd;
   --surface-secondary: #e7ecf6;
   --surface-border: rgba(11, 18, 32, 0.08);
@@ -388,7 +359,7 @@ video {
   --tc-border: rgba(15, 23, 42, 0.12);
   --tc-input-bg: #ffffff;
   --tc-text-inverse: #0b1220;
-  --page-bg: #edf2ff;
+  --page-bg: #ffffff;
   --tc-watermark-opacity: 0.03;
 }
 
@@ -3821,6 +3792,19 @@ video {
   gap: 16px;
 }
 
+.tc-page-watermark {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: var(--tc-watermark-image);
+  background-repeat: no-repeat;
+  background-size: clamp(22rem, 50vw, 48rem) auto;
+  background-position: center clamp(16rem, 24vw, 22rem);
+  opacity: calc(var(--tc-watermark-opacity) + 0.02);
+  filter: grayscale(100%) contrast(0.92);
+}
+
 .tc-page-heading {
   display: flex;
   flex-direction: column;
@@ -4320,8 +4304,10 @@ video {
 
 /* ─── Sidebar hover expand ──────────────────────────────────── */
 .app-shell {
-  --sidebar-collapsed: 76px;
-  --sidebar-expanded: 260px;
+  --sidebar-collapsed: 88px;
+  --sidebar-expanded: 272px;
+  position: relative;
+  isolation: isolate;
 }
 
 /* ─── Zoom-responsive sidebar ────────────────────────────────
@@ -4331,8 +4317,8 @@ video {
    ──────────────────────────────────────────────────────────── */
 @media (min-width: 1024px) and (max-width: 1200px) {
   .app-shell {
-    --sidebar-collapsed: 60px;
-    --sidebar-expanded: 220px;
+    --sidebar-collapsed: 78px;
+    --sidebar-expanded: 232px;
   }
 }
 
@@ -6986,3 +6972,176 @@ video {
 .w-pct-98 { width: 98%; }
 .w-pct-99 { width: 99%; }
 .w-pct-100 { width: 100%; }
+
+/* Shared shell overrides to restore brand identity across all screens */
+:root {
+  --topbar-h: 3.35rem;
+  --content-pr: 1rem;
+}
+
+@media (min-width: 640px)  { :root { --topbar-h: 3.8rem; --content-pr: 1.25rem; } }
+@media (min-width: 1024px) { :root { --topbar-h: 4.15rem; --content-pr: 1.5rem; } }
+@media (min-width: 1280px) { :root { --content-pr: 1.75rem; } }
+@media (min-width: 1536px) { :root { --content-pr: 2rem; } }
+
+.app-shell .app-main,
+.app-shell .app-stage {
+  position: relative;
+  min-height: 100vh;
+  background: var(--page-bg);
+}
+
+.app-shell .app-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: var(--tc-watermark-image);
+  background-repeat: no-repeat;
+  background-size: clamp(24rem, 54vw, 58rem) auto;
+  background-position: center 6rem;
+  opacity: calc(var(--tc-watermark-opacity) + 0.018);
+  filter: grayscale(100%) contrast(0.92);
+}
+
+.app-shell .app-stage > * {
+  position: relative;
+  z-index: 1;
+}
+
+.app-page-cover {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 1.15rem 1.15rem 1.2rem;
+  color: #ffffff;
+  background: var(--tc-brand-gradient-strong);
+  box-shadow: 0 26px 70px rgba(1, 24, 72, 0.2);
+}
+
+.app-page-cover--leader-tc {
+  background: linear-gradient(135deg, #071746 0%, #173a8d 48%, #d3132d 100%);
+}
+
+.app-page-cover--technical-support {
+  background: linear-gradient(135deg, #071846 0%, #0b3d88 46%, #0ea5b7 100%);
+}
+
+.app-page-cover--empresa {
+  background: linear-gradient(135deg, #10204f 0%, #245295 46%, #e1483f 100%);
+}
+
+.app-page-cover--company-user {
+  background: linear-gradient(135deg, #16234d 0%, #3a55a8 46%, #7c3aed 100%);
+}
+
+.app-page-cover--testing-company-user {
+  background: linear-gradient(135deg, #122149 0%, #27457d 46%, #4b607d 100%);
+}
+
+.app-page-cover::before,
+.app-page-cover::after {
+  content: none;
+}
+
+.app-page-cover-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.app-page-cover-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.app-page-cover-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.app-page-cover-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 36px rgba(1, 24, 72, 0.24);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.app-page-cover-logo :where(img) {
+  border-radius: 9999px;
+}
+
+.app-page-cover-brand-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  min-width: 0;
+  justify-content: center;
+}
+
+.app-page-cover-kicker {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.app-page-cover-title {
+  margin: 0;
+  font-size: clamp(1.55rem, 2.25vw, 2.5rem);
+  line-height: 1.02;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  color: #ffffff;
+}
+
+.sidebar-shell::before,
+.sidebar-shell::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.sidebar-shell::before {
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.14), transparent 28%),
+    radial-gradient(circle at 86% 84%, rgba(239, 0, 1, 0.18), transparent 32%),
+    var(--tc-brand-overlay);
+  opacity: 0.72;
+}
+
+.sidebar-shell::after {
+  left: 1rem;
+  right: 1rem;
+  bottom: 0;
+  height: 1px;
+  background: var(--tc-brand-divider);
+  opacity: 0.4;
+}
+
+.sidebar-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 1024px) {
+  .app-page-cover {
+    padding: 1.4rem 1.45rem 1.5rem;
+  }
+}

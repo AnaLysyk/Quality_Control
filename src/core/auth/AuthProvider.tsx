@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 import { AuthMeResponseSchema, type AuthUser, type AuthCompany } from "@/contracts/auth";
 import { getAccessToken } from "@/lib/api";
 import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -146,9 +146,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     bootstrapAttempts.clear();
     try {
       await fetch("/api/auth/logout", {
@@ -169,11 +169,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setCompanies([]);
     publishAuthUser(null);
-  };
+  }, []);
 
   useEffect(() => {
     void refreshUser();
-  }, []);
+  }, [refreshUser]);
 
   useEffect(() => {
     return subscribeAuthUserSync((nextUser) => {
@@ -183,8 +183,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const value = useMemo(
+    () => ({ user, companies, loading, error, refreshUser, logout }),
+    [user, companies, loading, error, refreshUser, logout],
+  );
+
   return (
-    <AuthContext.Provider value={{ user, companies, loading, error, refreshUser, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

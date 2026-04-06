@@ -7,7 +7,11 @@ import {
 
 export function canManageInstitutionalCompanyAccess(access: AccessContext | null | undefined) {
   if (!access) return false;
-  return access.companyRole === "company_admin" || access.role === "company";
+  return (
+    access.companyRole === "company_admin" ||
+    access.role === "company" ||
+    Boolean(access.companyId || access.companySlug)
+  );
 }
 
 export async function resolveCurrentCompanyFromAccess(access: AccessContext | null | undefined): Promise<{

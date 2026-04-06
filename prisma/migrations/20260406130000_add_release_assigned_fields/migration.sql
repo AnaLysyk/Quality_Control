@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "releases" ADD COLUMN IF NOT EXISTS "assignedToUserId" VARCHAR;
+ALTER TABLE "releases" ADD COLUMN IF NOT EXISTS "assignedToName" VARCHAR;
+ALTER TABLE "releases" ADD COLUMN IF NOT EXISTS "closedAt" TIMESTAMP(3);

@@ -76,12 +76,9 @@ function resolveLogoCandidates(source: LogoSource): string[] {
   }
 
   const slug = typeof source.slug === "string" ? source.slug.trim().toLowerCase() : "";
-  if (slug) {
+  if (slug && candidates.length === 0) {
     addCandidate(FALLBACK_LOGOS[slug]);
     addCandidate(`/images/${slug}.png`);
-    addCandidate(`/images/${slug}.svg`);
-    addCandidate(`/images/${slug}.jpg`);
-    addCandidate(`/images/${slug}.jpeg`);
   }
 
   // Removido: não buscar logo externo (Clearbit) para evitar imagens externas

@@ -61,9 +61,35 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     })();
   `;
 
+  const migrateStorageScript = `
+    (() => {
+      try {
+        // Migrate legacy keys from localStorage to sessionStorage for session-scoped data
+        if (!window.sessionStorage || !window.localStorage) return;
+        const prefixes = ["tc-settings:", "activeClient:", "assistant_history", "qcnotes", "tcnotes", "qcnotes_widget", "qcnotes_widget_state"];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (!key) continue;
+          const shouldMigrate = prefixes.some(p => key.indexOf(p) === 0);
+          if (!shouldMigrate) continue;
+          // If sessionStorage already has a value, prefer it; otherwise copy from localStorage
+          if (!sessionStorage.getItem(key)) {
+            const v = localStorage.getItem(key);
+            if (v !== null) sessionStorage.setItem(key, v);
+          }
+          // remove legacy localStorage entry
+          localStorage.removeItem(key);
+        }
+      } catch (e) {
+        // best-effort migration; ignore errors
+      }
+    })();
+  `;
+
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
+        <Script id="migrate-storage" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: migrateStorageScript }} />
         <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body

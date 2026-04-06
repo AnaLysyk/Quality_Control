@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { FiCheckCircle, FiLayers, FiLink2, FiPlus, FiTrendingUp, FiX } from "react-icons/fi";
 import { getAppMeta } from "@/lib/appMeta";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
@@ -18,6 +19,31 @@ type NewManualRelease = {
   observations?: string;
 };
 
+type CaseStatus = "pass" | "fail" | "blocked" | "notRun";
+
+type ManualCaseDraft = {
+  id: string;
+  title: string;
+  link: string;
+  status: CaseStatus;
+};
+
+type ApplicationOption = {
+  id: string;
+  name: string;
+  slug: string;
+  companySlug?: string | null;
+  qaseProjectCode?: string | null;
+};
+
+type CaseColumn = {
+  key: CaseStatus;
+  label: string;
+  ringClass: string;
+  chipClass: string;
+  toneClass: string;
+};
+
 const initialState: NewManualRelease = {
   name: "",
   app: "SMART",
@@ -29,62 +55,20 @@ const initialState: NewManualRelease = {
   observations: "",
 };
 
-type CaseStatus = "pass" | "fail" | "blocked" | "notRun";
-
-type ManualCaseDraft = {
-  id: string;
-  title: string;
-  link: string;
-  status: CaseStatus;
+const initialCaseDraft: ManualCaseDraft = {
+  id: "",
+  title: "",
+  link: "",
+  status: "notRun",
 };
 
-type CaseColumn = {
-  key: CaseStatus;
-  label: string;
-  containerBg: string;
-  borderClass: string;
-  cardBorder: string;
-  cardBg: string;
-  accentText: string;
-};
+const fallbackApps = ["SMART", "PRINT", "BOOKING", "CDS", "TRUST", "CIDADAO SMART", "GMT"];
 
 const CASE_COLUMNS: CaseColumn[] = [
-  {
-    key: "pass",
-    label: "Aprovado",
-    containerBg: "bg-[rgba(124,211,67,0.08)] dark:bg-[rgba(124,211,67,0.15)]",
-    borderClass: "border-[rgba(124,211,67,0.45)]",
-    cardBorder: "border-[rgba(124,211,67,0.35)]",
-    cardBg: "bg-white dark:bg-white/5",
-    accentText: "text-[rgba(124,211,67,1)]",
-  },
-  {
-    key: "fail",
-    label: "Falha",
-    containerBg: "bg-[rgba(239,0,1,0.08)] dark:bg-[rgba(239,0,1,0.15)]",
-    borderClass: "border-[rgba(239,0,1,0.45)]",
-    cardBorder: "border-[rgba(239,0,1,0.35)]",
-    cardBg: "bg-white dark:bg-white/5",
-    accentText: "text-[rgba(239,0,1,1)]",
-  },
-  {
-    key: "blocked",
-    label: "Bloqueado",
-    containerBg: "bg-[rgba(255,167,58,0.12)] dark:bg-[rgba(255,167,58,0.2)]",
-    borderClass: "border-[rgba(255,167,58,0.45)]",
-    cardBorder: "border-[rgba(255,167,58,0.35)]",
-    cardBg: "bg-white dark:bg-white/5",
-    accentText: "text-[rgba(255,167,58,1)]",
-  },
-  {
-    key: "notRun",
-    label: "Não Executado",
-    containerBg: "bg-[rgba(15,22,38,0.08)] dark:bg-[rgba(15,22,38,0.4)]",
-    borderClass: "border-[rgba(15,22,38,0.35)]",
-    cardBorder: "border-[rgba(15,22,38,0.30)]",
-    cardBg: "bg-white dark:bg-white/5",
-    accentText: "text-(--tc-text-primary,#0b1a3c)",
-  },
+  { key: "pass", label: "Aprovado", ringClass: "border-emerald-200", chipClass: "bg-emerald-50 text-emerald-700 border-emerald-200", toneClass: "from-emerald-50 to-white" },
+  { key: "fail", label: "Falha", ringClass: "border-rose-200", chipClass: "bg-rose-50 text-rose-700 border-rose-200", toneClass: "from-rose-50 to-white" },
+  { key: "blocked", label: "Bloqueado", ringClass: "border-amber-200", chipClass: "bg-amber-50 text-amber-700 border-amber-200", toneClass: "from-amber-50 to-white" },
+  { key: "notRun", label: "Nao executado", ringClass: "border-slate-200", chipClass: "bg-slate-100 text-slate-700 border-slate-200", toneClass: "from-slate-50 to-white" },
 ];
 
 const CASE_STATUS_VALUES: Record<CaseStatus, "APROVADO" | "FALHA" | "BLOQUEADO" | "NAO_EXECUTADO"> = {
@@ -94,12 +78,9 @@ const CASE_STATUS_VALUES: Record<CaseStatus, "APROVADO" | "FALHA" | "BLOQUEADO" 
   notRun: "NAO_EXECUTADO",
 };
 
-const initialCaseDraft: ManualCaseDraft = {
-  id: "",
-  title: "",
-  link: "",
-  status: "notRun",
-};
+function coercePositiveInteger(value: string) {
+  return Math.max(0, Number(value) || 0);
+}
 
 export function CreateManualReleaseButton({
   companySlug,
@@ -112,145 +93,181 @@ export function CreateManualReleaseButton({
 }) {
   useAuthUser();
   const router = useRouter();
+  const { activeClientSlug } = useClientContext();
+  const resolvedCompanySlug = companySlug ?? activeClientSlug ?? undefined;
+
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [form, setForm] = useState<NewManualRelease>(initialState);
   const [cases, setCases] = useState<ManualCaseDraft[]>([]);
   const [caseDraft, setCaseDraft] = useState<ManualCaseDraft>({ ...initialCaseDraft });
-
-  // Sempre exibe o botão, ignorando loading/user
-
-  const apps = [
-    "SMART",
-    "PRINT",
-    "BOOKING",
-    "CDS",
-    "TRUST",
-    "CIDADAO SMART",
-    "GMT",
-  ];
-
-  const { activeClientSlug } = useClientContext();
-  const [applications, setApplications] = useState<
-    Array<{ id: string; name: string; slug: string; companySlug?: string | null; qaseProjectCode?: string | null }>
-  >([]);
+  const [applications, setApplications] = useState<ApplicationOption[]>([]);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
-    const slug = companySlug ?? activeClientSlug ?? undefined;
-    (async () => {
+    let active = true;
+
+    async function loadApplications() {
       try {
-        const q = slug ? `?companySlug=${encodeURIComponent(slug)}` : "";
-        const res = await fetch(`/api/applications${q}`, { cache: "no-store" });
-        const data = await res.json().catch(() => null);
-        const items = Array.isArray(data?.items) ? (data.items as Array<Record<string, unknown>>) : [];
-        const mapped = items.map((it) => ({
-          id: typeof it.id === "string" ? it.id : "",
-          name: typeof it.name === "string" ? it.name : "",
-          slug: typeof it.slug === "string" ? it.slug : "",
-          companySlug: typeof it.companySlug === "string" ? it.companySlug : null,
-          qaseProjectCode: typeof it.qaseProjectCode === "string" ? it.qaseProjectCode : null,
-        }));
+        const query = resolvedCompanySlug ? `?companySlug=${encodeURIComponent(resolvedCompanySlug)}` : "";
+        const response = await fetch(`/api/applications${query}`, {
+          cache: "no-store",
+          credentials: "include",
+        });
+        const payload = await response.json().catch(() => null);
+        const items = Array.isArray(payload?.items) ? payload.items : [];
+        const mapped = items
+          .map((item: unknown): ApplicationOption => {
+            const record = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+            return {
+              id: typeof record.id === "string" ? record.id : "",
+              name: typeof record.name === "string" ? record.name : "",
+              slug: typeof record.slug === "string" ? record.slug : "",
+              companySlug: typeof record.companySlug === "string" ? record.companySlug : null,
+              qaseProjectCode: typeof record.qaseProjectCode === "string" ? record.qaseProjectCode : null,
+            };
+          })
+          .filter((item: ApplicationOption) => item.id && (item.slug || item.name));
+
+        if (!active) return;
         setApplications(mapped);
-        if (mapped.length > 0) {
-          setSelectedApplicationId(mapped[0].id);
-          setForm((prev) => ({ ...prev, app: mapped[0].slug || mapped[0].name }));
+        const initialApplication = mapped[0] ?? null;
+        if (initialApplication) {
+          setSelectedApplicationId(initialApplication.id);
+          setForm((current) => ({ ...current, app: initialApplication.slug || initialApplication.name }));
+        } else {
+          setSelectedApplicationId(null);
         }
       } catch {
+        if (!active) return;
         setApplications([]);
+        setSelectedApplicationId(null);
       }
-    })();
-  }, [open, companySlug, activeClientSlug]);
-
-  const total = form.pass + form.fail + form.blocked + form.notRun;
-  const selectedApplication = applications.find((application) => application.id === selectedApplicationId) ?? null;
-  const appMeta = getAppMeta((selectedApplication?.slug || form.app).toLowerCase(), selectedApplication?.name || form.app);
-
-  const handleFailClick = () => {
-    if (form.fail === 0) {
-      setForm((prev) => ({ ...prev, fail: 1 }));
     }
-  };
 
-  const handleNumber = (key: keyof NewManualRelease, value: string) => {
-    const n = Math.max(0, Number(value) || 0);
-    setForm((prev) => ({ ...prev, [key]: n }));
-  };
+    void loadApplications();
 
-  const handleCaseDraftChange = <K extends keyof ManualCaseDraft>(field: K, value: ManualCaseDraft[K]) => {
-    setCaseDraft((prev) => ({ ...prev, [field]: value }));
-  };
+    return () => {
+      active = false;
+    };
+  }, [open, resolvedCompanySlug]);
 
-  const handleAddCase = () => {
+  const selectedApplication = applications.find((application) => application.id === selectedApplicationId) ?? null;
+  const effectiveAppKey = (selectedApplication?.slug || form.app || "SMART").toLowerCase();
+  const appMeta = getAppMeta(effectiveAppKey, selectedApplication?.name || form.app || "Run");
+  const total = form.pass + form.fail + form.blocked + form.notRun;
+  const passRate = total > 0 ? Math.round((form.pass / total) * 100) : 0;
+
+  const groupedCases = useMemo(
+    () =>
+      CASE_COLUMNS.reduce<Record<CaseStatus, ManualCaseDraft[]>>(
+        (accumulator, column) => {
+          accumulator[column.key] = cases.filter((item) => item.status === column.key);
+          return accumulator;
+        },
+        { pass: [], fail: [], blocked: [], notRun: [] },
+      ),
+    [cases],
+  );
+
+  const resetState = useCallback(() => {
+    setSubmitError(null);
+    setForm(initialState);
+    setCases([]);
+    setCaseDraft({ ...initialCaseDraft });
+    setApplications([]);
+    setSelectedApplicationId(null);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setOpen(false);
+    setSaving(false);
+    resetState();
+  }, [resetState]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeModal();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, closeModal]);
+
+  function handleOpen() {
+    setSubmitError(null);
+    setOpen(true);
+  }
+
+  function handleNumber(field: keyof Pick<NewManualRelease, "pass" | "fail" | "blocked" | "notRun">, value: string) {
+    setForm((current) => ({ ...current, [field]: coercePositiveInteger(value) }));
+  }
+
+  function handleCaseDraftChange<K extends keyof ManualCaseDraft>(field: K, value: ManualCaseDraft[K]) {
+    setCaseDraft((current) => ({ ...current, [field]: value }));
+  }
+
+  function handleAddCase() {
     const trimmedId = caseDraft.id.trim();
     const trimmedTitle = caseDraft.title.trim();
     if (!trimmedId || !trimmedTitle) return;
 
-    setCases((prev) => [
-      ...prev,
-      {
-        id: trimmedId,
-        title: trimmedTitle,
-        link: caseDraft.link.trim(),
-        status: caseDraft.status,
-      },
-    ]);
+    setCases((current) => {
+      const next = current.filter((item) => item.id !== trimmedId);
+      next.push({ id: trimmedId, title: trimmedTitle, link: caseDraft.link.trim(), status: caseDraft.status });
+      return next;
+    });
     setCaseDraft({ ...initialCaseDraft, status: caseDraft.status });
-  };
+  }
 
-  const handleRemoveCase = (id: string) => {
-    setCases((prev) => prev.filter((c) => c.id !== id));
-  };
+  function handleRemoveCase(id: string) {
+    setCases((current) => current.filter((item) => item.id !== id));
+  }
 
-  const groupedCases = CASE_COLUMNS.reduce<Record<CaseStatus, ManualCaseDraft[]>>((acc, column) => {
-    acc[column.key] = cases.filter((item) => item.status === column.key);
-    return acc;
-  }, {
-    pass: [],
-    fail: [],
-    blocked: [],
-    notRun: [],
-  });
-
-  const handleSubmit = async () => {
+  async function handleSubmit() {
     const cleanedName = stripRunPrefix(form.name);
     if (!cleanedName) return;
+
     setSaving(true);
     setSubmitError(null);
+
     try {
-      const res = await fetch("/api/releases-manual", {
+      const response = await fetch("/api/releases-manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-          body: JSON.stringify({
-            kind: "run",
-            name: cleanedName,
-            app: selectedApplication?.slug || form.app,
-            qaseProject: selectedApplication?.qaseProjectCode || form.app.toUpperCase(),
-            slug: form.slug,
-            ...(companySlug ? { clientSlug: companySlug } : {}),
-            stats: {
-              pass: form.pass,
-              fail: form.fail,
-              blocked: form.blocked,
-              notRun: form.notRun,
-            },
-            observations: form.observations,
-          }),
+        body: JSON.stringify({
+          kind: "run",
+          name: cleanedName,
+          app: selectedApplication?.slug || form.app,
+          qaseProject: selectedApplication?.qaseProjectCode || form.app.toUpperCase(),
+          slug: form.slug,
+          ...(resolvedCompanySlug ? { clientSlug: resolvedCompanySlug } : {}),
+          stats: {
+            pass: form.pass,
+            fail: form.fail,
+            blocked: form.blocked,
+            notRun: form.notRun,
+          },
+          observations: form.observations,
+        }),
       });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as Record<string, unknown>;
         const message =
-          (typeof data.message === "string" && data.message) ||
-          (typeof data.error === "string" && data.error) ||
+          (typeof payload.message === "string" && payload.message) ||
+          (typeof payload.error === "string" && payload.error) ||
           "Erro ao criar run";
         throw new Error(message);
       }
-      const created = await res.json();
-      if (cases.length) {
-        const casesRes = await fetch(`/api/releases-manual/${created.slug}/cases`, {
+
+      const created = (await response.json()) as { slug?: string; name?: string; title?: string };
+
+      if (cases.length && created.slug) {
+        const casesResponse = await fetch(`/api/releases-manual/${created.slug}/cases`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -264,375 +281,494 @@ export function CreateManualReleaseButton({
             })),
           ),
         });
-        if (!casesRes.ok) {
-          console.error("Erro ao vincular casos", await casesRes.text());
+
+        if (!casesResponse.ok) {
+          console.error("Erro ao vincular casos", await casesResponse.text());
         }
       }
-      setOpen(false);
-      setForm(initialState);
-      setCases([]);
-      setCaseDraft({ ...initialCaseDraft });
-      setSaving(false);
-      onCreated?.(created as { slug?: string; name?: string; title?: string });
-      if (redirectToRun) {
-        const target = companySlug
-          ? `/empresas/${encodeURIComponent(companySlug)}/runs/${created.slug}`
-          : `/release/${created.slug}`;
-        if (typeof window !== "undefined") {
-          const expectedPath = new URL(target, window.location.origin).pathname;
-          const isE2E = typeof navigator !== "undefined" && navigator.webdriver === true;
-          if (isE2E) {
-            window.location.assign(target);
-            return;
-          }
-          router.push(target);
-          setTimeout(() => {
-            if (window.location.pathname !== expectedPath) {
-              window.location.assign(target);
-            }
-          }, 50);
-        } else {
-          router.push(target);
-        }
-      } else {
+
+      closeModal();
+      onCreated?.(created);
+
+      if (!redirectToRun || !created.slug) {
         router.refresh();
+        return;
       }
-    } catch (e) {
-      console.error(e);
-      setSubmitError(e instanceof Error ? e.message : "Erro ao criar run");
+
+      const target = resolvedCompanySlug
+        ? `/${encodeURIComponent(resolvedCompanySlug)}/runs/${encodeURIComponent(created.slug)}`
+        : `/release/${encodeURIComponent(created.slug)}`;
+
+      if (typeof window !== "undefined") {
+        const expectedPath = new URL(target, window.location.origin).pathname;
+        const isE2E = typeof navigator !== "undefined" && navigator.webdriver === true;
+        if (isE2E) {
+          window.location.assign(target);
+          return;
+        }
+        router.push(target);
+        setTimeout(() => {
+          if (window.location.pathname !== expectedPath) {
+            window.location.assign(target);
+          }
+        }, 60);
+        return;
+      }
+
+      router.push(target);
+    } catch (error) {
+      console.error(error);
+      setSubmitError(error instanceof Error ? error.message : "Erro ao criar run");
       setSaving(false);
+      return;
     }
-  };
+
+    setSaving(false);
+  }
 
   return (
     <div className="relative">
       <button
         data-testid="create-run"
         type="button"
-        onClick={() => {
-          setSubmitError(null);
-          setOpen(true);
-        }}
-        className="rounded-xl bg-(--tc-accent) px-4 py-2 text-sm font-semibold text-white shadow hover:brightness-110"
+        onClick={handleOpen}
+        className="rounded-2xl bg-(--tc-accent) px-4 py-2.5 text-sm font-semibold text-white shadow hover:brightness-110"
       >
         <span data-testid="run-create">Criar run manual</span>
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-6 backdrop-blur-sm" role="dialog" aria-modal="true">
-          <div className="my-auto w-full max-w-5xl max-h-[calc(100dvh-2rem)] overflow-y-auto space-y-6 rounded-3xl border border-(--tc-border)/30 bg-white text-(--tc-text,#0f172a) shadow-[0_25px_80px_rgba(15,23,42,0.4)] dark:border-white/10 dark:bg-(--tc-surface-dark,#0f1828) dark:text-(--tc-text-inverse,#fff) p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-(--tc-text-primary,#0b1a3c) dark:text-(--tc-text-inverse,#fff)">Nova run manual</h2>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="text-sm font-semibold text-(--tc-text-muted) transition hover:text-(--tc-text-primary,#0b1a3c) dark:hover:text-white"
-              >
-                fechar
-              </button>
+      {open ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-3 py-4 backdrop-blur-sm sm:px-5"
+          role="dialog"
+          aria-modal="true"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              closeModal();
+            }
+          }}
+        >
+          <div className="flex max-h-[calc(100dvh-1rem)] w-full max-w-[1320px] flex-col overflow-hidden rounded-[32px] border border-white/20 bg-white shadow-[0_30px_120px_rgba(15,23,42,0.42)]">
+            <div className="bg-[linear-gradient(135deg,#011848_0%,#0a2f7a_52%,#ef0001_100%)] px-5 py-5 text-white sm:px-7 sm:py-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-white/70">Run manual</p>
+                  <h2 className="mt-2 text-3xl font-black tracking-[-0.04em]">Criar nova run</h2>
+                  <p className="mt-2 max-w-3xl text-sm text-white/82">
+                    Registre a execucao manual, distribua os casos no quadro de status e salve tudo em uma unica superficie.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/8 text-white transition hover:bg-white/16"
+                  aria-label="Fechar modal"
+                >
+                  <FiX className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="rounded-full border border-white/18 bg-white/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/88">
+                  {resolvedCompanySlug ? `Empresa ${resolvedCompanySlug}` : "Contexto institucional"}
+                </span>
+                <span className="rounded-full border border-white/18 bg-white/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/88">
+                  {selectedApplication?.name || appMeta.label}
+                </span>
+                {selectedApplication?.qaseProjectCode ? (
+                  <span className="rounded-full border border-emerald-200/40 bg-emerald-400/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-50">
+                    Qase {selectedApplication.qaseProjectCode}
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-[22px] border border-white/18 bg-white/12 p-4 backdrop-blur">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/68">Aplicacao</p>
+                  <div className="mt-2 text-xl font-extrabold text-white">{selectedApplication?.name || appMeta.label}</div>
+                  <p className="mt-2 text-sm text-white/76">Projeto visual e contexto da run manual.</p>
+                </div>
+                <div className="rounded-[22px] border border-white/18 bg-white/12 p-4 backdrop-blur">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/68">Total executado</p>
+                  <div className="mt-2 text-xl font-extrabold text-white">{total} caso(s)</div>
+                  <p className="mt-2 text-sm text-white/76">Soma de aprovado, falha, bloqueado e nao executado.</p>
+                </div>
+                <div className="rounded-[22px] border border-white/18 bg-white/12 p-4 backdrop-blur">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/68">Pass rate</p>
+                  <div className="mt-2 text-xl font-extrabold text-white">{passRate}%</div>
+                  <p className="mt-2 text-sm text-white/76">Leitura rapida da saude da execucao.</p>
+                </div>
+                <div className="rounded-[22px] border border-white/18 bg-white/12 p-4 backdrop-blur">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/68">Casos no quadro</p>
+                  <div className="mt-2 text-xl font-extrabold text-white">{cases.length}</div>
+                  <p className="mt-2 text-sm text-white/76">Cartoes prontos para salvar junto da run.</p>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="grid gap-6">
-                <div className="min-w-0 space-y-6">
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="space-y-1">
-                      <label className="text-sm font-semibold text-(--tc-text-muted)">Título</label>
-                      <input
-                        className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
-                        data-testid="run-title"
-                        value={form.name}
-                        onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                        placeholder="Ex: Run 1.9.0 - Aceitação"
-                      />
-                      <input
-                        aria-hidden="true"
-                        tabIndex={-1}
-                        data-testid="run-name"
-                        value={form.name}
-                        onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                        className="sr-only"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-sm font-semibold text-(--tc-text-muted)">Aplicação</label>
-                      {applications.length > 0 ? (
-                        <select
-                          aria-label="Selecionar aplicação"
-                          className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
-                          value={selectedApplicationId ?? ""}
-                          onChange={(e) => {
-                            const nextId = e.target.value;
-                            setSelectedApplicationId(nextId);
-                            const nextApplication = applications.find((app) => app.id === nextId) ?? null;
-                            if (nextApplication) {
-                              setForm((prev) => ({ ...prev, app: nextApplication.slug || nextApplication.name }));
-                            }
-                          }}
-                        >
-                          {applications.map((app) => (
-                            <option key={app.id} value={app.id}>
-                              {app.name}
-                              {app.qaseProjectCode ? ` (${app.qaseProjectCode})` : ""}
-                              {app.companySlug ? ` - ${app.companySlug}` : ""}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <select
-                          aria-label="Selecionar aplicação"
-                          className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
-                          value={form.app}
-                          onChange={(e) => setForm((prev) => ({ ...prev, app: e.target.value }))}
-                        >
-                          {apps.map((app) => (
-                            <option key={app} value={app}>
-                              {app}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                      <div className="text-xs text-(--tc-text-muted)">
-                        {selectedApplication?.qaseProjectCode
-                          ? `Projeto Qase: ${selectedApplication.qaseProjectCode}`
-                          : `${appMeta.label} • cor aplicada automaticamente`}
+            <div className="flex-1 overflow-y-auto bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] px-5 py-5 sm:px-7 sm:py-6">
+              <div className="grid gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+                <section className="space-y-6">
+                  <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700">
+                        <FiLayers className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Contexto da run</p>
+                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Base da execucao</h3>
                       </div>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-sm font-semibold text-(--tc-text-muted)">Run (slug)</label>
-                      <input
-                        className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
-                        data-testid="run-slug"
-                        value={form.slug}
-                        onChange={(e) => setForm((prev) => ({ ...prev, slug: e.target.value }))}
-                        placeholder="Ex: v1_8_0_reg"
-                      />
-                      <div className="text-xs text-(--tc-text-muted)">Slug da run. A rota atual continua em /release/{`<slug>`}.</div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                    {(["pass", "fail", "blocked", "notRun"] as const).map((key) => (
-                      <div key={key} className="space-y-1">
-                        <label className="text-xs uppercase tracking-wide text-(--tc-text-muted)">{key}</label>
+                    <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                      <label className="space-y-2">
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Titulo</span>
                         <input
-                          type="number"
-                          min={0}
-                          aria-label={`Total ${key}`}
-                          className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
-                          data-testid={
-                            key === "pass"
-                              ? "run-stat-pass"
-                              : key === "fail"
-                                ? "run-stat-fail"
-                                : key === "blocked"
-                                  ? "run-stat-blocked"
-                                  : "run-stat-not-run"
-                          }
-                          value={form[key]}
-                          onChange={(e) => handleNumber(key, e.target.value)}
-                          onClick={key === "fail" ? handleFailClick : undefined}
+                          className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                          data-testid="run-title"
+                          value={form.name}
+                          onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                          placeholder="Ex: Run 1.9.0 - Regressao"
                         />
-                        {key === "fail" && (
-                          <button
-                            type="button"
-                            data-testid="run-status-fail"
-                            onClick={handleFailClick}
-                            className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-accent,#ef0001)"
+                        <input
+                          aria-hidden="true"
+                          tabIndex={-1}
+                          data-testid="run-name"
+                          value={form.name}
+                          onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                          className="sr-only"
+                        />
+                      </label>
+
+                      <label className="space-y-2">
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Aplicacao</span>
+                        {applications.length > 0 ? (
+                          <select
+                            aria-label="Selecionar aplicacao"
+                            className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                            value={selectedApplicationId ?? ""}
+                            onChange={(event) => {
+                              const nextId = event.target.value;
+                              setSelectedApplicationId(nextId);
+                              const nextApplication = applications.find((application) => application.id === nextId) ?? null;
+                              if (nextApplication) {
+                                setForm((current) => ({ ...current, app: nextApplication.slug || nextApplication.name }));
+                              }
+                            }}
                           >
-                            Marcar falha
-                          </button>
+                            {applications.map((application) => (
+                              <option key={application.id} value={application.id}>
+                                {application.name}
+                                {application.qaseProjectCode ? ` (${application.qaseProjectCode})` : ""}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <select
+                            aria-label="Selecionar aplicacao"
+                            className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                            value={form.app}
+                            onChange={(event) => setForm((current) => ({ ...current, app: event.target.value }))}
+                          >
+                            {fallbackApps.map((application) => (
+                              <option key={application} value={application}>
+                                {application}
+                              </option>
+                            ))}
+                          </select>
                         )}
+                        <span className="text-xs text-(--tc-text-muted,#6b7280)">
+                          {selectedApplication?.qaseProjectCode
+                            ? `Projeto Qase ${selectedApplication.qaseProjectCode}`
+                            : `${appMeta.label} sera usado como contexto desta run.`}
+                        </span>
+                      </label>
+
+                      <label className="space-y-2 lg:col-span-2">
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Slug da run</span>
+                        <input
+                          className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                          data-testid="run-slug"
+                          value={form.slug}
+                          onChange={(event) => setForm((current) => ({ ...current, slug: event.target.value }))}
+                          placeholder="Ex: v1_9_0_reg"
+                        />
+                        <span className="text-xs text-(--tc-text-muted,#6b7280)">
+                          Se vazio, o slug sera derivado automaticamente do titulo.
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Totais da execucao</p>
+                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Distribuicao de status</h3>
                       </div>
-                    ))}
+                      <button
+                        type="button"
+                        data-testid="run-status-fail"
+                        onClick={() => {
+                          if (form.fail === 0) {
+                            setForm((current) => ({ ...current, fail: 1 }));
+                          }
+                        }}
+                        className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-700"
+                      >
+                        Marcar falha
+                      </button>
+                    </div>
+
+                    <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                      {([
+                        { key: "pass", label: "Aprovado", testId: "run-stat-pass", chipClass: "border-emerald-200 bg-emerald-50 text-emerald-700" },
+                        { key: "fail", label: "Falha", testId: "run-stat-fail", chipClass: "border-rose-200 bg-rose-50 text-rose-700" },
+                        { key: "blocked", label: "Bloqueado", testId: "run-stat-blocked", chipClass: "border-amber-200 bg-amber-50 text-amber-700" },
+                        { key: "notRun", label: "Nao executado", testId: "run-stat-not-run", chipClass: "border-slate-200 bg-slate-100 text-slate-700" },
+                      ] as const).map((item) => (
+                        <div key={item.key} className={`rounded-[24px] border p-4 shadow-sm ${item.chipClass}`}>
+                          <div className="text-[11px] font-semibold uppercase tracking-[0.24em]">{item.label}</div>
+                          <input
+                            type="number"
+                            min={0}
+                            aria-label={`Total ${item.label}`}
+                            data-testid={item.testId}
+                            className="mt-3 w-full border-0 bg-transparent p-0 text-3xl font-black text-(--tc-text,#0b1a3c) outline-none"
+                            value={form[item.key]}
+                            onChange={(event) => handleNumber(item.key, event.target.value)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                      <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Total consolidado</div>
+                        <div className="mt-2 text-2xl font-black text-(--tc-text,#0b1a3c)">{total}</div>
+                      </div>
+                      <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Pass rate</div>
+                        <div className="mt-2 text-2xl font-black text-(--tc-text,#0b1a3c)">{passRate}%</div>
+                      </div>
+                      <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Casos ligados</div>
+                        <div className="mt-2 text-2xl font-black text-(--tc-text,#0b1a3c)">{cases.length}</div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between text-xs text-(--tc-text-muted)">
-                    <span>Total: {total}</span>
-                    <span>
-                      Pass%: {total > 0 ? Math.round((form.pass / total) * 100) : 0}%
-                    </span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-sm font-semibold text-(--tc-text-muted)">Observações</label>
+                  <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700">
+                        <FiTrendingUp className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Observacoes</p>
+                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Notas da execucao</h3>
+                      </div>
+                    </div>
                     <textarea
-                      className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
-                      rows={3}
+                      className="mt-5 min-h-[170px] w-full rounded-[24px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                      rows={6}
                       value={form.observations}
-                      onChange={(e) => setForm((prev) => ({ ...prev, observations: e.target.value }))}
-                      placeholder="Notas sobre a run..."
+                      onChange={(event) => setForm((current) => ({ ...current, observations: event.target.value }))}
+                      placeholder="Contexto da execucao, riscos encontrados, links uteis e proximos passos."
                     />
                   </div>
-                </div>
+                </section>
 
-                <div className="min-w-0 space-y-4 pt-2">
-                  <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="text-sm font-semibold uppercase tracking-wide text-(--tc-text-muted)">Casos vinculados</p>
-                      <p className="text-xs text-(--tc-text-muted)">{cases.length} caso(s) adicionados</p>
+                <section className="space-y-6">
+                  <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700">
+                        <FiPlus className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Casos executados</p>
+                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Adicionar ao quadro</h3>
+                      </div>
                     </div>
-                    <div className="text-xs text-(--tc-text-muted)">Inclua ID, título e link antes de salvar</div>
-                  </div>
 
-                  <div className="rounded-2xl border border-(--tc-border)/60 bg-(--tc-surface,#f8fafc) p-5 shadow-sm dark:border-white/10 dark:bg-(--tc-surface-darker,#0c1120)">
-                    <div className="grid gap-4 lg:grid-cols-4">
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted)">ID do caso</label>
+                    <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                      <label className="space-y-2">
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">ID do caso</span>
                         <input
                           type="text"
                           autoFocus
                           value={caseDraft.id}
-                          onChange={(e) => handleCaseDraftChange("id", e.target.value)}
-                          className="w-full rounded-[18px] border border-(--tc-border) bg-white px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface,#0f1728) dark:text-(--tc-text-inverse,#fff)"
+                          onChange={(event) => handleCaseDraftChange("id", event.target.value)}
+                          className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                           placeholder="Ex: 12345"
                         />
-                      </div>
-                      <div className="space-y-1 lg:col-span-2">
-                        <label className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted)">Título</label>
-                        <input
-                          type="text"
-                          value={caseDraft.title}
-                          onChange={(e) => handleCaseDraftChange("title", e.target.value)}
-                          className="w-full rounded-[18px] border border-(--tc-border) bg-white px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface,#0f1728) dark:text-(--tc-text-inverse,#fff)"
-                          placeholder="Nome do caso"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted)">Link (opcional)</label>
-                        <input
-                          type="url"
-                          value={caseDraft.link}
-                          onChange={(e) => handleCaseDraftChange("link", e.target.value)}
-                          className="w-full rounded-[18px] border border-(--tc-border) bg-white px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface,#0f1728) dark:text-(--tc-text-inverse,#fff)"
-                          placeholder="https://app.qase.io/case/..."
-                        />
-                      </div>
-                      <div className="space-y-1">
-                      <label htmlFor="case-status-select" className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted)">Status</label>
-                      <select
-                        id="case-status-select"
-                        aria-label="Status do caso"
-                        value={caseDraft.status}
-                        onChange={(e) => handleCaseDraftChange("status", e.target.value as CaseStatus)}
-                        className="w-full rounded-[18px] border border-(--tc-border) bg-white px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface,#0f1728) dark:text-(--tc-text-inverse,#fff)"
-                      >
+                      </label>
+                      <label className="space-y-2">
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Status</span>
+                        <select
+                          aria-label="Status do caso"
+                          value={caseDraft.status}
+                          onChange={(event) => handleCaseDraftChange("status", event.target.value as CaseStatus)}
+                          className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                        >
                           {CASE_COLUMNS.map((column) => (
                             <option key={column.key} value={column.key}>
                               {column.label}
                             </option>
                           ))}
                         </select>
-                      </div>
+                      </label>
+                      <label className="space-y-2 lg:col-span-2">
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Titulo</span>
+                        <input
+                          type="text"
+                          value={caseDraft.title}
+                          onChange={(event) => handleCaseDraftChange("title", event.target.value)}
+                          className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                          placeholder="Nome do caso executado"
+                        />
+                      </label>
+                      <label className="space-y-2 lg:col-span-2">
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Link opcional</span>
+                        <div className="relative">
+                          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                            <FiLink2 className="h-4 w-4" />
+                          </span>
+                          <input
+                            type="url"
+                            value={caseDraft.link}
+                            onChange={(event) => handleCaseDraftChange("link", event.target.value)}
+                            className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) py-3 pr-4 pl-11 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                            placeholder="https://app.qase.io/run/..."
+                          />
+                        </div>
+                      </label>
                     </div>
-                    <div className="mt-4 flex flex-wrap items-center gap-3">
+
+                    <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3">
+                      <div className="text-sm text-(--tc-text-secondary,#4b5563)">
+                        ID e titulo sao obrigatorios. O cartao entra direto na coluna selecionada.
+                      </div>
                       <button
                         type="button"
                         onClick={handleAddCase}
-                        className="rounded-[26px] bg-(--tc-accent) px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.25em] text-white shadow transition hover:brightness-110 disabled:opacity-60"
+                        className="rounded-full bg-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white shadow transition hover:brightness-110 disabled:opacity-60"
                         disabled={!caseDraft.id.trim() || !caseDraft.title.trim()}
                       >
-                        Adicionar ao Kanban
+                        Adicionar caso
                       </button>
-                      <span className="text-xs text-(--tc-text-muted)">Os campos ID e título são obrigatórios.</span>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              <div className="space-y-3">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between text-xs text-(--tc-text-muted)">
-                  <div>
-                    <p className="text-sm font-semibold uppercase tracking-wide text-(--tc-text-muted)">Kanban</p>
-                    <p className="text-xs text-(--tc-text-muted)">{cases.length} caso(s)</p>
-                  </div>
-                  <div className="text-xs text-(--tc-text-muted)">Role para ver todos os cartões</div>
-                </div>
-                <div className="rounded-2xl border border-(--tc-border)/60 bg-white/90 p-4 shadow-sm dark:bg-(--tc-surface-dark,#0f1828) dark:border-white/10">
-                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 max-h-80 overflow-y-auto pr-2">
-                    {CASE_COLUMNS.map((column) => {
-                      const batch = groupedCases[column.key];
-                      return (
-                        <div
-                          key={column.key}
-                          className={`flex flex-col rounded-2xl border ${column.borderClass} ${column.containerBg} p-4 shadow-sm backdrop-blur`}
-                        >
-                          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-(--tc-text-muted)">
-                            <span>{column.label}</span>
-                            <span className={`text-xs ${column.accentText}`}>{batch.length}</span>
-                          </div>
-                          <div className="mt-3 space-y-3">
-                            {batch.length === 0 ? (
-                              <p className="text-xs italic text-(--tc-text-muted)">Nenhum caso nesta coluna</p>
-                            ) : (
-                              batch.map((item) => (
-                                <div
-                                  key={`case-${column.key}-${item.id}`}
-                                  className={`relative rounded-2xl border ${column.cardBorder} ${column.cardBg} px-3 py-3 text-sm text-(--tc-text,#0f172a) shadow-[0_10px_25px_rgba(15,23,42,0.12)] transition hover:-translate-y-0.5`}
-                                >
-                                  <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.3em] text-(--tc-text-muted)">
-                                    <span>ID</span>
-                                    <strong className={`dark:text-white ${column.accentText}`}>{item.id}</strong>
-                                  </div>
-                                  <p className="mt-2 text-sm font-semibold leading-snug">{item.title}</p>
-                                  {item.link ? (
-                                    <a
-                                      href={item.link}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-(--tc-accent,#ef0001)"
-                                    >
-                                      Ver link
-                                    </a>
-                                  ) : (
-                                    <p className="mt-2 text-[11px] text-(--tc-text-muted)">Sem link</p>
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveCase(item.id)}
-                                    className="absolute top-2 right-2 text-xs font-semibold uppercase tracking-wide text-rose-600 transition hover:text-rose-400"
-                                  >
-                                    Remover
-                                  </button>
+                  <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Quadro da run</p>
+                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Kanban dos casos executados</h3>
+                      </div>
+                      <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">
+                        <FiCheckCircle className="h-3.5 w-3.5" />
+                        {cases.length} caso(s)
+                      </div>
+                    </div>
+
+                    <div className="mt-5 grid gap-4 xl:grid-cols-4">
+                      {CASE_COLUMNS.map((column) => {
+                        const columnCases = groupedCases[column.key];
+                        return (
+                          <div
+                            key={column.key}
+                            className={`rounded-[24px] border bg-linear-to-b ${column.toneClass} p-4 shadow-sm ${column.ringClass}`}
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <div className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] ${column.chipClass}`}>
+                                {column.label}
+                              </div>
+                              <span className="text-sm font-extrabold text-(--tc-text,#0b1a3c)">{columnCases.length}</span>
+                            </div>
+
+                            <div className="mt-4 max-h-[340px] space-y-3 overflow-y-auto pr-1">
+                              {columnCases.length === 0 ? (
+                                <div className="rounded-[20px] border border-dashed border-slate-200 bg-white/80 px-4 py-5 text-sm text-slate-500">
+                                  Nenhum caso nesta coluna.
                                 </div>
-                              ))
-                            )}
+                              ) : (
+                                columnCases.map((item) => (
+                                  <article
+                                    key={`${column.key}-${item.id}`}
+                                    className="relative rounded-[22px] border border-white/80 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
+                                  >
+                                    <div className="pr-10">
+                                      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                                        Caso {item.id}
+                                      </p>
+                                      <p className="mt-2 text-sm font-semibold leading-6 text-(--tc-text,#0b1a3c)">{item.title}</p>
+                                      {item.link ? (
+                                        <a
+                                          href={item.link}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-(--tc-accent,#ef0001)"
+                                        >
+                                          <FiLink2 className="h-3.5 w-3.5" />
+                                          Abrir link
+                                        </a>
+                                      ) : (
+                                        <p className="mt-3 text-xs text-slate-500">Sem link informado.</p>
+                                      )}
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveCase(item.id)}
+                                      className="absolute top-3 right-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                                      aria-label={`Remover caso ${item.id}`}
+                                    >
+                                      <FiX className="h-3.5 w-3.5" />
+                                    </button>
+                                  </article>
+                                ))
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                </section>
               </div>
             </div>
 
-            {submitError && <p className="text-sm text-rose-600">{submitError}</p>}
-
-            <div className="flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setSubmitError(null);
-                  setOpen(false);
-                }}
-                className="rounded-2xl border border-(--tc-border)/60 px-4 py-2 text-sm font-semibold text-(--tc-text,#0f172a) transition hover:border-(--tc-text-primary,#0b1a3c) hover:text-(--tc-text-primary,#0b1a3c) dark:border-white/20 dark:text-(--tc-text-inverse,#fff)"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={saving || !form.name.trim()}
-                data-testid="run-submit"
-                className="rounded-2xl bg-(--tc-accent) px-4 py-2 text-sm font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
-              >
-                {saving ? "Salvando..." : <span data-testid="run-save">Salvar e abrir</span>}
-              </button>
+            <div className="sticky bottom-0 z-10 border-t border-slate-200 bg-white/96 px-5 py-4 backdrop-blur sm:px-7">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="min-h-[20px] text-sm">
+                  {submitError ? (
+                    <span className="font-medium text-rose-600">{submitError}</span>
+                  ) : (
+                    <span className="text-slate-500">Voce pode salvar sem casos e complementar depois.</span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="rounded-2xl border border-(--tc-border,#dfe5f1) px-5 py-2.5 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:border-slate-400 hover:text-slate-900"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={saving || !form.name.trim()}
+                    data-testid="run-submit"
+                    className="rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-2.5 text-sm font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
+                  >
+                    {saving ? "Salvando..." : <span data-testid="run-save">{redirectToRun ? "Salvar e abrir" : "Salvar run"}</span>}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

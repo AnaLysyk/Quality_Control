@@ -1,14 +1,10 @@
 import type { AccessContext } from "@/core/session/session.store";
+import { resolveEditableProfileRole, type EditableProfileRole } from "@/lib/editableProfileRoles";
 
-export type DeletablePermissionRole = "admin" | "dev" | "company" | "user";
+export type DeletablePermissionRole = EditableProfileRole;
 
 function normalizePermissionRole(input?: string | null): DeletablePermissionRole | null {
-  const value = (input ?? "").trim().toLowerCase();
-  if (value === "admin") return "admin";
-  if (value === "dev") return "dev";
-  if (value === "company") return "company";
-  if (value === "user") return "user";
-  return null;
+  return resolveEditableProfileRole(input);
 }
 
 export function isGlobalDeveloperAccess(access: Pick<AccessContext, "role" | "companyRole"> | null | undefined) {
@@ -30,7 +26,7 @@ export function canDeleteUserByProfile(
 
   const actorRole = (access?.role ?? "").toLowerCase();
   if (actorRole === "admin") {
-    return targetRole === "admin" || targetRole === "company" || targetRole === "user";
+    return targetRole === "admin" || targetRole === "leader_tc" || targetRole === "company" || targetRole === "user";
   }
 
   return false;

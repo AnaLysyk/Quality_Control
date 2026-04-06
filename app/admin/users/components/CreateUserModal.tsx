@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { readApiError } from "@/lib/apiEnvelope";
+import { normalizeEditableProfileRole } from "@/lib/editableProfileRoles";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -65,10 +66,16 @@ export function CreateUserModal({
     return null;
   });
 
-  const requiresClient = showCompanyField && requireCompanySelection;
+  const normalizedRole = useMemo(() => normalizeEditableProfileRole(role), [role]);
+  const requiresClient = useMemo(
+    () =>
+      showCompanyField &&
+      (requireCompanySelection || normalizedRole === "leader_tc" || normalizedRole === "technical_support"),
+    [showCompanyField, requireCompanySelection, normalizedRole],
+  );
   const requiresPassword = useMemo(
-    () => ["admin", "global_admin", "it_dev", "itdev", "developer", "dev"].includes(role.trim().toLowerCase()),
-    [role],
+    () => normalizedRole === "admin" || normalizedRole === "dev",
+    [normalizedRole],
   );
   const canSubmit = useMemo(
     () =>

@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { mutate } from "swr";
 import { useSWRProfileSummary } from "./useSWRProfileSummary";
 import { useSWRCompanies } from "./useSWRCompanies";
 import { useSWRCompanyProfile } from "./useSWRCompanyProfile";
@@ -534,7 +536,7 @@ function HeroMetric({
   );
 }
 
-const pageShellClass = "tc-page-shell px-2 py-4 sm:px-4 lg:px-6 xl:px-8 2xl:px-10";
+const pageShellClass = "tc-page-shell relative z-10 px-2 py-4 sm:px-4 lg:px-6 xl:px-8 2xl:px-10";
 const heroClass = "tc-hero-panel";
 const surfaceClass = "tc-panel";
 const primaryButtonClass = "tc-button-primary";
@@ -703,6 +705,7 @@ export default function SettingsProfilePage() {
   const companyLogoInputRef = useRef<HTMLInputElement | null>(null);
   const jobTitleFieldRef = useRef<HTMLDivElement | null>(null);
   const [jobTitleMenuOpen, setJobTitleMenuOpen] = useState(false);
+  const router = useRouter();
 
   const userRecord = asRecord(user);
   const fullName =
@@ -1893,6 +1896,17 @@ export default function SettingsProfilePage() {
       }
 
       await Promise.all([refetchCompanyProfile(), refetchCompanies(), refreshUser()]);
+      // Invalidate related caches so the new logo propagates across the UI.
+      try {
+        mutate("/api/me");
+        mutate("/api/me/company-profile");
+        mutate("/api/me/profile-summary");
+        if (companyProfile?.slug) mutate(`/api/empresas/${companyProfile.slug}/dashboard`);
+        // router.refresh will revalidate server components / app-router data
+        router.refresh();
+      } catch {
+        // ignore errors in cache invalidation
+      }
       if (scope === "details") {
         if (companyLogoPreviewObjectUrl) {
           URL.revokeObjectURL(companyLogoPreviewObjectUrl);
@@ -1967,7 +1981,7 @@ export default function SettingsProfilePage() {
 
   if (hasCompanyContext) {
     return (
-      <div className="min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
+      <div className="relative isolate min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
         <div className={pageShellClass}>
           <Breadcrumb
             items={[
@@ -2842,7 +2856,7 @@ export default function SettingsProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
+    <div className="relative isolate min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
       <div className={pageShellClass}>
         <Breadcrumb items={[{ label: "Usuario" }, { label: userProfileBreadcrumbName }]} />
 

@@ -1,6 +1,7 @@
 import "server-only";
 import fs from "fs";
 import path from "path";
+import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import type { ReleaseStatus } from "@/types/release";
 
@@ -148,8 +149,11 @@ export const releaseOrder = staticReleaseOrder;
 export const releasesData: Record<ReleaseId, Omit<ReleaseEntry, "slug">> = staticReleasesMap;
 
 const STORE_PATH = path.join(process.cwd(), "data", "releases-store.json");
+const STORE_KEY = "qc:releases_store:v1";
+const USE_PERSISTENT_STORE = canUsePersistentJsonStore();
 
 async function ensureStoreFile() {
+  if (USE_PERSISTENT_STORE) return;
   await fs.promises.mkdir(path.dirname(STORE_PATH), { recursive: true });
   try {
     await fs.promises.access(STORE_PATH, fs.constants.F_OK);
@@ -159,6 +163,10 @@ async function ensureStoreFile() {
 }
 
 export async function readReleaseStore(): Promise<ReleaseEntry[]> {
+  if (USE_PERSISTENT_STORE) {
+    const persisted = await readPersistentJson<ReleaseEntry[]>(STORE_KEY, []);
+    return Array.isArray(persisted) ? persisted.filter(Boolean) : [];
+  }
   try {
     await ensureStoreFile();
     const raw = await fs.promises.readFile(STORE_PATH, "utf8");
@@ -171,6 +179,10 @@ export async function readReleaseStore(): Promise<ReleaseEntry[]> {
 }
 
 export async function writeReleaseStore(entries: ReleaseEntry[]) {
+  if (USE_PERSISTENT_STORE) {
+    const ok = await writePersistentJson(STORE_KEY, entries);
+    if (ok) return;
+  }
   await ensureStoreFile();
   await fs.promises.writeFile(STORE_PATH, JSON.stringify(entries, null, 2), "utf8");
 }

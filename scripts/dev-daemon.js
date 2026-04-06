@@ -7,7 +7,7 @@ const pidFile = path.join(root, ".dev.pid");
 const outFile = path.join(root, "dev.out.log");
 const errFile = path.join(root, "dev.err.log");
 const devDistDir = ".next/dev-runtime";
-const bundler = (process.env.NEXT_DEV_BUNDLER || "turbo").trim().toLowerCase() === "webpack" ? "webpack" : "turbo";
+const bundler = (process.env.NEXT_DEV_BUNDLER || "webpack").trim().toLowerCase() === "turbo" ? "turbo" : "webpack";
 
 function isRunning(pid) {
   try {

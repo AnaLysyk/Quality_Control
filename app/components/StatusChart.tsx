@@ -1,6 +1,7 @@
 "use client";
 
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, PieLabelRenderProps } from "recharts";
+import { useEffect, useRef, useState } from "react";
+import { PieChart, Pie, Cell, Tooltip, PieLabelRenderProps } from "recharts";
 import { STATUS_COLORS } from "@/utils/statusColors";
 
 interface StatusChartProps {
@@ -15,10 +16,11 @@ interface StatusChartProps {
   showLegend?: boolean;
 }
 
-
 const COLORS = STATUS_COLORS;
 
 export default function StatusChart({ stats, hasData, emptyLabel, showLegend = false }: StatusChartProps) {
+  const chartContainerRef = useRef<HTMLDivElement | null>(null);
+  const [chartSize, setChartSize] = useState(0);
   const total = stats.pass + stats.fail + stats.blocked + stats.notRun;
   const hasValidData = hasData ?? total > 0;
 
@@ -37,6 +39,39 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
   const passPct = total > 0 ? Math.round((stats.pass / total) * 100) : 0;
   const ariaLabel = `Grafico de status: Pass ${stats.pass}, Fail ${stats.fail}, Blocked ${stats.blocked}, Not Run ${stats.notRun}, Total ${total}.`;
 
+  useEffect(() => {
+    const node = chartContainerRef.current;
+    if (!node) return;
+
+    let frameId = 0;
+
+    const updateSize = () => {
+      const nextSize = Math.max(0, Math.floor(node.getBoundingClientRect().width));
+      setChartSize((current) => (current === nextSize ? current : nextSize));
+    };
+
+    updateSize();
+
+    if (typeof ResizeObserver === "undefined") {
+      frameId = window.requestAnimationFrame(updateSize);
+      return () => {
+        if (frameId) window.cancelAnimationFrame(frameId);
+      };
+    }
+
+    const observer = new ResizeObserver(() => {
+      if (frameId) window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(updateSize);
+    });
+
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+      if (frameId) window.cancelAnimationFrame(frameId);
+    };
+  }, []);
+
   const renderLabel = (props: PieLabelRenderProps) => {
     const { cx, cy, midAngle, outerRadius, value, fill } = props;
     if (
@@ -47,10 +82,10 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
     ) {
       return null;
     }
-    const RADIAN = Math.PI / 180;
+    const radian = Math.PI / 180;
     const radius = outerRadius * 0.78;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    const x = cx + radius * Math.cos(-midAngle * radian);
+    const y = cy + radius * Math.sin(-midAngle * radian);
     const percent = pct(value);
     if (!percent) return null;
     return (
@@ -71,9 +106,12 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
   return (
     <div className="w-full flex flex-col items-center gap-3" role="img" aria-label={ariaLabel}>
       <div className="relative w-full flex items-center justify-center">
-        <div className="w-full max-w-96 aspect-square sm:max-w-110 md:max-w-124">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 16, right: 16, bottom: 16, left: 16 }}>
+        <div
+          ref={chartContainerRef}
+          className="w-full max-w-96 aspect-square min-h-72 sm:max-w-110 md:max-w-124"
+        >
+          {chartSize > 0 ? (
+            <PieChart width={chartSize} height={chartSize} margin={{ top: 16, right: 16, bottom: 16, left: 16 }}>
               <Pie
                 data={data}
                 cx="50%"
@@ -104,7 +142,7 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
                   contentStyle={{
                     backgroundColor: "var(--tc-primary-dark)",
                     borderRadius: "10px",
-                    border: `1px solid var(--tc-border)`,
+                    border: "1px solid var(--tc-border)",
                     color: "var(--tc-text-inverse)",
                     fontSize: "14px",
                     padding: "10px 14px",
@@ -115,12 +153,14 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
                 />
               )}
             </PieChart>
-          </ResponsiveContainer>
+          ) : (
+            <div className="h-full w-full" aria-hidden="true" />
+          )}
         </div>
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="flex flex-col items-center justify-center rounded-full bg-white px-5 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.18)] border border-(--tc-border,#e5e7eb) min-w-30 text-(--tc-chart-center,#0b1a3c)">
             <span className="text-3xl font-extrabold leading-none">
-              {hasValidData ? `${passPct}%` : "–"}
+              {hasValidData ? `${passPct}%` : "-"}
             </span>
             <span className="text-[11px] uppercase tracking-[0.22em] text-[#475569] mt-1">
               {hasValidData ? "Pass" : emptyLabel ?? "Sem execucoes"}

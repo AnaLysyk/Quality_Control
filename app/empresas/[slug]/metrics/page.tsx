@@ -1,21 +1,32 @@
+import { notFound } from "next/navigation";
+import CompanyRunsHomeClient from "../home/CompanyRunsHomeClient";
+import { loadCompanyDashboardData } from "../dashboard/companyDashboardData";
+
+export const dynamic = "force-dynamic";
+
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
 export default async function CompanyMetricsPage({ params }: PageProps) {
   const { slug } = await params;
+  const data = await loadCompanyDashboardData(slug);
+
+  if (!data) {
+    notFound();
+  }
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#f5f6fa) text-(--page-text,#0b1a3c) px-4 py-8 sm:px-6 lg:px-10">
-      <div className="mx-auto max-w-4xl space-y-6">
-        <header className="rounded-3xl bg-white p-6 shadow-sm">
-          <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">Metricas</p>
-          <h1 className="mt-2 text-3xl font-extrabold">Metricas da empresa {slug}</h1>
-          <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
-            Painel resumido de indicadores e metas de qualidade.
-          </p>
-        </header>
-      </div>
-    </div>
+    <CompanyRunsHomeClient
+      companySlug={data.companySlug}
+      companyName={data.companyName}
+      companyInitials={data.companyInitials}
+      subtitle={data.subtitle}
+      companyStatus={data.companyStatus}
+      integrationStatus={data.integrationStatus}
+      heroStats={data.heroStats}
+      runs={data.runs}
+      variant="metrics"
+    />
   );
 }

@@ -33,6 +33,10 @@ export type Release = {
   runId?: number;
   stats: Stats;
   observations?: string;
+  createdByUserId?: string | null;
+  createdByName?: string | null;
+  assignedToUserId?: string | null;
+  assignedToName?: string | null;
   createdAt: string;
   updatedAt: string;
   closedAt?: string | null;

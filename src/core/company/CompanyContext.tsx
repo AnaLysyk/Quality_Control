@@ -88,7 +88,6 @@ const getSessionStorage = () => (typeof window === "undefined" ? null : window.s
 
 export function ClientProvider({ children }: { children: ReactNode }) {
   const { user, companies, loading: authLoading, refreshUser } = useAuth();
-  const [clients, setClients] = useState<ClientAccess[]>([]);
   const [activeClientSlug, setActiveClientSlugState] = useState<string | null>(null);
   const [loading, setLoading] = useState(authLoading);
   const [error, setError] = useState<string | null>(null);
@@ -114,6 +113,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
       })),
     [companies]
   );
+  const clients = normalizedClients;
 
   useEffect(() => {
     if (authLoading) {
@@ -122,14 +122,12 @@ export function ClientProvider({ children }: { children: ReactNode }) {
     }
 
     if (!user) {
-      setClients([]);
       setActiveClientSlugState(null);
       setLoading(false);
       setError(null);
       return;
     }
 
-    setClients(normalizedClients);
     if (normalizedClients.length === 0) {
       setActiveClientSlugState(null);
       getSessionStorage()?.removeItem(storageKey(user.id));
@@ -248,20 +246,32 @@ export function ClientProvider({ children }: { children: ReactNode }) {
     }
   }, [activeClientSlug]);
 
+  const value = useMemo(
+    () => ({
+      clients,
+      activeClientId,
+      activeClientSlug,
+      activeClient,
+      loading,
+      error,
+      setActiveClientSlug,
+      setActiveClientId: setActiveClientSlug,
+      refreshClients,
+    }),
+    [
+      clients,
+      activeClientId,
+      activeClientSlug,
+      activeClient,
+      loading,
+      error,
+      setActiveClientSlug,
+      refreshClients,
+    ],
+  );
+
   return (
-    <ClientContext.Provider
-      value={{
-        clients,
-        activeClientId,
-        activeClientSlug,
-        activeClient,
-        loading,
-        error,
-        setActiveClientSlug,
-        setActiveClientId: setActiveClientSlug,
-        refreshClients,
-      }}
-    >
+    <ClientContext.Provider value={value}>
       {children}
     </ClientContext.Provider>
   );

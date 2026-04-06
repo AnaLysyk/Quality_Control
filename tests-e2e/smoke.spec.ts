@@ -8,7 +8,7 @@ test("@smoke login and load clientes", async ({ page }) => {
   await login(page, "admin@griaule.test", "Griaule@123");
 
   await expect(page).toHaveURL(/\/admin\/clients/);
-  await expect(page.getByRole("heading", { name: /Empresas/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Empresas da plataforma/i })).toBeVisible();
 
   const apiResponse = await page.request.get("/api/clients");
   expect(apiResponse.ok()).toBeTruthy();

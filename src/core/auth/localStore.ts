@@ -3,6 +3,7 @@ import "server-only";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { randomUUID } from "crypto";
+import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import {
   assertUserCanLinkToCompany,
@@ -111,11 +112,9 @@ function isRecoverablePrismaDatasourceError(error: unknown) {
 }
 
 // ── PostgreSQL mode ──────────────────────────────────────────────────────────
-// Set AUTH_STORE=postgres (e.g. in Render env vars) to persist all auth data
-// in PostgreSQL instead of the local JSON file. The JSON/Redis path is kept as
-// the fallback for local development. Only enable PostgreSQL auth
-// explicitly when AUTH_STORE=postgres.
-export const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+// Prefer PostgreSQL whenever DATABASE_URL is configured, unless AUTH_STORE
+// explicitly opts into a non-Postgres backend.
+export const USE_POSTGRES = shouldUsePostgresPersistence();
 
 if (typeof process !== "undefined") {
   const backend = USE_POSTGRES ? "PostgreSQL" : process.env.LOCAL_AUTH_STORE === "redis" ? "Redis" : "JSON/Memory";
@@ -417,7 +416,7 @@ export async function readLocalAuthStore(): Promise<LocalAuthStore> {
     try {
       return await (await pg()).pgReadLocalAuthStore();
     } catch (error) {
-      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
         console.warn(`[AUTH-STORE] Fallback para JSON/Memory em readLocalAuthStore: ${message}`);
       } else {
@@ -492,7 +491,7 @@ export async function listLocalUsers(): Promise<LocalAuthUser[]> {
     try {
       return await (await pg()).pgListLocalUsers();
     } catch (error) {
-      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
         console.warn(`[AUTH-STORE] Fallback para JSON/Memory em listLocalUsers: ${message}`);
       } else {
@@ -509,7 +508,7 @@ export async function listLocalCompanies(): Promise<LocalAuthCompany[]> {
     try {
       return await (await pg()).pgListLocalCompanies();
     } catch (error) {
-      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
         console.warn(`[AUTH-STORE] Fallback para JSON/Memory em listLocalCompanies: ${message}`);
       } else {
@@ -526,7 +525,7 @@ export async function listLocalMemberships(): Promise<LocalAuthMembership[]> {
     try {
       return await (await pg()).pgListLocalMemberships();
     } catch (error) {
-      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
         console.warn(`[AUTH-STORE] Fallback para JSON/Memory em listLocalMemberships: ${message}`);
       } else {
@@ -547,7 +546,7 @@ export async function findLocalUserByEmailOrId(identifier: string): Promise<Loca
     try {
       return await (await pg()).pgFindLocalUserByEmailOrId(identifier);
     } catch (error) {
-      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
         console.warn(`[AUTH-STORE] Fallback para JSON/Memory em findLocalUserByEmailOrId: ${message}`);
       } else {
@@ -570,7 +569,7 @@ export async function getLocalUserById(id: string): Promise<LocalAuthUser | null
     try {
       return await (await pg()).pgGetLocalUserById(id);
     } catch (error) {
-      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
         console.warn(`[AUTH-STORE] Fallback para JSON/Memory em getLocalUserById: ${message}`);
       } else {
@@ -588,7 +587,7 @@ export async function findLocalCompanyById(id: string): Promise<LocalAuthCompany
     try {
       return await (await pg()).pgFindLocalCompanyById(id);
     } catch (error) {
-      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
         console.warn(`[AUTH-STORE] Fallback para JSON/Memory em findLocalCompanyById: ${message}`);
       } else {
@@ -606,7 +605,7 @@ export async function findLocalCompanyBySlug(slug: string): Promise<LocalAuthCom
     try {
       return await (await pg()).pgFindLocalCompanyBySlug(slug);
     } catch (error) {
-      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
         console.warn(`[AUTH-STORE] Fallback para JSON/Memory em findLocalCompanyBySlug: ${message}`);
       } else {
@@ -625,7 +624,7 @@ export async function listLocalLinksForUser(userId: string): Promise<LocalAuthMe
     try {
       return await (await pg()).pgListLocalLinksForUser(userId);
     } catch (error) {
-      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
         console.warn(`[AUTH-STORE] Fallback para JSON/Memory em listLocalLinksForUser: ${message}`);
       } else {
@@ -642,7 +641,7 @@ export async function listLocalLinksForCompany(companyId: string): Promise<Local
     try {
       return await (await pg()).pgListLocalLinksForCompany(companyId);
     } catch (error) {
-      if (process.env.AUTH_STORE !== "postgres" && isRecoverablePrismaDatasourceError(error)) {
+      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
         console.warn(`[AUTH-STORE] Fallback para JSON/Memory em listLocalLinksForCompany: ${message}`);
       } else {

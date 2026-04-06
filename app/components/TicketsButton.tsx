@@ -47,6 +47,10 @@ const TICKET_PRIORITY_OPTIONS: { value: TicketPriority; label: string }[] = [
 type TicketFilterStatus = "all" | "open" | TicketStatus;
 type TicketFilterPriority = "all" | TicketPriority;
 
+type TicketsButtonProps = {
+  defaultOpen?: boolean;
+};
+
 function statusTone(status: TicketStatus) {
   if (status === "done") return "positive";
   if (status === "review") return "progress";
@@ -93,9 +97,9 @@ function hasTicketEnteredSupportFlow(ticket: TicketItem) {
   return ticket.status !== "backlog" || Boolean(ticket.assignedToUserId);
 }
 
-export default function TicketsButton() {
+export default function TicketsButton({ defaultOpen = false }: TicketsButtonProps) {
   const { user, can } = usePermissionAccess();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [items, setItems] = useState<TicketItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,6 +135,8 @@ export default function TicketsButton() {
   }, []);
 
   useEffect(() => {
+    if (!open) return undefined;
+
     function close(e: MouseEvent) {
       if (!boxRef.current?.contains(e.target as Node)) setOpen(false);
     }
@@ -143,7 +149,7 @@ export default function TicketsButton() {
       document.removeEventListener("mousedown", close);
       document.removeEventListener("keydown", esc);
     };
-  }, []);
+  }, [open]);
 
   const loadTickets = useCallback(async (options?: { silent?: boolean }) => {
     if (!user) return;

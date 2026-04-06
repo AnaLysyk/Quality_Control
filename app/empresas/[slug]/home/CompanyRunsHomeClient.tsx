@@ -34,6 +34,7 @@ type CompanyRunsHomeClientProps = {
   integrationStatus: HomeStatusBadge;
   heroStats: CompanyRunsHeroStats;
   runs: HomeRunItem[];
+  variant?: "dashboard" | "metrics";
 };
 
 type AttentionItem = {
@@ -299,7 +300,9 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
     integrationStatus,
     heroStats,
     runs,
+    variant = "dashboard",
   } = props;
+  const isMetricsView = variant === "metrics";
   const [selectedRunSlug, setSelectedRunSlug] = useState<string | null>(runs[0]?.slug ?? null);
 
   const selectedRun = useMemo(
@@ -313,8 +316,8 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
   const runEvents = useMemo(() => buildRunEvents(selectedRun), [selectedRun]);
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#f5f6fa) px-4 py-8 text-(--page-text,#0b1a3c) sm:px-6 lg:px-10">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6">
+    <div className="relative isolate min-h-screen bg-(--page-bg,#f5f6fa) px-4 py-8 text-(--page-text,#0b1a3c) sm:px-6 lg:px-10">
+      <div className="relative z-10 mx-auto flex max-w-7xl flex-col gap-6">
         <section className="overflow-hidden rounded-[36px] border border-(--tc-border,#dfe5f1) bg-[linear-gradient(135deg,#031843_0%,#0b2d72_48%,#57153f_76%,#b01a33_100%)] p-6 text-white shadow-[0_32px_80px_rgba(15,23,42,0.18)] sm:p-8">
           <div className="flex flex-col gap-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -325,7 +328,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                 <div className="max-w-3xl">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-white/80">
-                      Dashboard de runs
+                      {isMetricsView ? "Metricas operacionais" : "Dashboard de runs"}
                     </span>
                     <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] ${toneClasses(companyStatus.tone)}`}>
                       {companyStatus.title}
@@ -350,7 +353,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                   href={`/empresas/${encodeURIComponent(companySlug)}/runs`}
                   className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-(--tc-text,#0b1a3c) shadow-sm transition hover:bg-slate-100"
                 >
-                  Ver lista completa
+                  {isMetricsView ? "Abrir runs" : "Ver lista completa"}
                 </Link>
               </div>
             </div>
@@ -369,8 +372,8 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
         <section className="rounded-[32px] border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm sm:p-7">
           <SectionHeader
             eyebrow="Selecao rapida"
-            title="Runs mais recentes da empresa"
-            description="Cards ordenados da execucao mais recente para a mais antiga, combinando fontes manuais e integradas."
+            title={isMetricsView ? "Base operacional das runs da empresa" : "Runs mais recentes da empresa"}
+            description={isMetricsView ? "Leitura operacional detalhada, organizada por execucao, projeto, status e origem." : "Cards ordenados da execucao mais recente para a mais antiga, combinando fontes manuais e integradas."}
           />
 
           {runs.length === 0 ? (

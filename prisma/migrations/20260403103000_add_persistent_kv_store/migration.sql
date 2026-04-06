@@ -1,0 +1,9 @@
+CREATE TABLE "persistent_kv" (
+  "key" TEXT NOT NULL,
+  "value" TEXT NOT NULL,
+  "expiresAt" TIMESTAMP(3),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT "persistent_kv_pkey" PRIMARY KEY ("key")
+);

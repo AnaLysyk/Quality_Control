@@ -3,10 +3,11 @@ import "server-only";
 import { randomUUID } from "crypto";
 import path from "node:path";
 import fs from "node:fs/promises";
+import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 
-const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+const USE_POSTGRES = shouldUsePostgresPersistence();
 async function getPrisma() {
   const { prisma } = await import("@/lib/prismaClient");
   return prisma;

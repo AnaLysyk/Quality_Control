@@ -33,11 +33,20 @@ type TicketItem = {
   companySlug?: string | null;
 };
 
-export default function NotificationsButton() {
+type NotificationsButtonProps = {
+  defaultOpen?: boolean;
+  initialUnreadCount?: number;
+};
+
+export default function NotificationsButton({
+  defaultOpen = false,
+  initialUnreadCount = 0,
+}: NotificationsButtonProps) {
   const router = useRouter();
   const { user } = useAuthUser();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [items, setItems] = useState<NotificationItem[]>([]);
+  const [fallbackUnreadCount, setFallbackUnreadCount] = useState(initialUnreadCount);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -50,6 +59,8 @@ export default function NotificationsButton() {
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!open && !detailsOpen) return undefined;
+
     function close(e: MouseEvent) {
       if (containerRef.current?.contains(e.target as Node)) return;
       if (detailsOpen) {
@@ -72,7 +83,7 @@ export default function NotificationsButton() {
       document.removeEventListener("mousedown", close);
       document.removeEventListener("keydown", esc);
     };
-  }, [detailsOpen]);
+  }, [detailsOpen, open]);
 
   useEffect(() => {
     if (!open) {
@@ -97,7 +108,9 @@ export default function NotificationsButton() {
         setError(json?.error || "Erro ao carregar notificacoes");
         return;
       }
-      setItems(Array.isArray(json.items) ? json.items : []);
+      const nextItems = Array.isArray(json.items) ? json.items : [];
+      setItems(nextItems);
+      setFallbackUnreadCount(nextItems.filter((item) => item.status !== "closed").length);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao carregar notificacoes";
       setItems([]);
@@ -108,21 +121,20 @@ export default function NotificationsButton() {
   }, [user]);
 
   useEffect(() => {
-    if (user) {
-      loadNotifications();
-    }
-  }, [user, loadNotifications]);
+    if (!open || !user) return;
+    void loadNotifications();
+  }, [open, user, loadNotifications]);
 
   useEffect(() => {
-    if (open) {
-      loadNotifications();
-    }
-  }, [open, loadNotifications]);
+    setFallbackUnreadCount(initialUnreadCount);
+  }, [initialUnreadCount]);
 
-  const unreadCount = useMemo(
-    () => items.filter((item) => item.status !== "closed").length,
-    [items],
-  );
+  const unreadCount = useMemo(() => {
+    if (items.length > 0 || open) {
+      return items.filter((item) => item.status !== "closed").length;
+    }
+    return fallbackUnreadCount;
+  }, [fallbackUnreadCount, items, open]);
 
   const [canManageTickets, setCanManageTickets] = useState(false);
 

@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useSWRReleases } from "./useSWRReleases";
 
+import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
 import { getAppMeta } from "@/lib/appMeta";
 import { formatRunText, formatRunTitle } from "@/lib/runPresentation";
-import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
 
 type ReleaseCard = {
   slug: string;
@@ -36,28 +36,21 @@ const APP_COLOR_CLASS: Record<string, string> = {
 
 export function ReleasesList({ className }: ReleasesListProps) {
   const [query, setQuery] = useState("");
-  const [list, setList] = useState<ReleaseCard[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-
-  const { releases, loading, error, refetch } = useSWRReleases();
-  useEffect(() => {
-    setList(releases);
-  }, [releases]);
-  }, []);
+  const { releases, loading, error } = useSWRReleases();
 
   const filtered = useMemo(() => {
     const target = query.trim().toLowerCase();
-    if (!target) return list;
-    return list.filter((release) => {
+    const source = releases as ReleaseCard[];
+    if (!target) return source;
+
+    return source.filter((release) => {
       return (
         release.slug.toLowerCase().includes(target) ||
         release.title.toLowerCase().includes(target) ||
         (release.summary ?? "").toLowerCase().includes(target)
       );
     });
-  }, [list, query]);
+  }, [releases, query]);
 
   const grouped = useMemo(() => {
     return filtered.reduce((acc, release) => {
@@ -73,29 +66,34 @@ export function ReleasesList({ className }: ReleasesListProps) {
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-(--tc-text-inverse)">Runs monitoradas</h2>
-          <p className="text-(--tc-text-secondary)">Selecione a aplicação para acessar a run desejada.</p>
+          <p className="text-(--tc-text-secondary)">
+            Selecione a aplicacao para acessar a run desejada.
+          </p>
         </div>
-        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto md:items-center">
+        <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
           <CreateManualReleaseButton />
           <input
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Buscar runs"
-            className="w-full md:w-90 rounded-xl border border-(--tc-border) bg-(--tc-surface-dark) px-4 py-3 text-sm text-(--tc-text-inverse) placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/40"
+            className="w-full rounded-xl border border-(--tc-border) bg-(--tc-surface-dark) px-4 py-3 text-sm text-(--tc-text-inverse) placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/40 md:w-90"
           />
         </div>
       </div>
 
       {loading && <p className="mt-4 text-sm text-(--tc-text-muted)">Carregando runs...</p>}
-      {!loading && !filtered.length && (
+      {!loading && error && (
+        <p className="mt-4 text-sm text-red-500">Nao foi possivel carregar as runs agora.</p>
+      )}
+      {!loading && !error && !filtered.length && (
         <p className="mt-4 text-sm text-(--tc-text-muted)">
-          Nenhum resultado encontrado. Ajuste a busca ou clique em uma aplicação.
+          Nenhum resultado encontrado. Ajuste a busca ou clique em uma aplicacao.
         </p>
       )}
 
-      <div className="space-y-6 mt-6">
-        {Object.entries(grouped).map(([appKey, releases]) => {
+      <div className="mt-6 space-y-6">
+        {Object.entries(grouped).map(([appKey, appReleases]) => {
           const meta = getAppMeta(appKey, appKey.toUpperCase());
           const appColorClass = APP_COLOR_CLASS[appKey] ?? "app-color-default";
 
@@ -103,53 +101,56 @@ export function ReleasesList({ className }: ReleasesListProps) {
             <section key={appKey} className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span
-                  className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-white border border-(--app-tag-color) bg-(--app-tag-color) ${appColorClass}`}
+                  className={`inline-flex items-center justify-center rounded-full border border-(--app-tag-color) bg-(--app-tag-color) px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-white ${appColorClass}`}
                 >
                   {meta.label.toUpperCase()}
                 </span>
                 <Link
                   href={`/applications-hub/${appKey}`}
-                  className="cursor-pointer text-sm font-semibold text-(--tc-accent) hover:brightness-110 transition"
+                  className="cursor-pointer text-sm font-semibold text-(--tc-accent) transition hover:brightness-110"
                 >
-                  Ver todas as runs desta aplicacao →
+                  {"Ver todas as runs desta aplicacao ->"}
                 </Link>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                {releases.map((rel, idx) => (
+                {appReleases.map((release, index) => (
                   <Link
-                    key={`${rel.slug ?? 'rel'}-${rel.createdAt ?? idx}`}
-                    href={`/release/${rel.slug}`}
-                    aria-label={`Abrir run ${formatRunTitle(rel.title, rel.slug)}`}
-                    className={`cursor-pointer group card-tc bg-white text-[#0b1a3c] border border-(--tc-border)/40 p-4 min-h-40 rounded-xl transition hover:bg-(--tc-surface-hover) hover:border-(--tc-accent)/60 hover:shadow-[0_10px_30px_var(--tc-accent-soft)] ${appColorClass}`}
+                    key={`${release.slug ?? "release"}-${release.createdAt ?? index}`}
+                    href={`/release/${release.slug}`}
+                    aria-label={`Abrir run ${formatRunTitle(release.title, release.slug)}`}
+                    className={`group card-tc min-h-40 cursor-pointer rounded-xl border border-(--tc-border)/40 bg-white p-4 text-[#0b1a3c] transition hover:border-(--tc-accent)/60 hover:bg-(--tc-surface-hover) hover:shadow-[0_10px_30px_var(--tc-accent-soft)] ${appColorClass}`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <span className="text-[12px] uppercase tracking-[0.14em] leading-tight text-(--tc-text-muted) wrap-break-word">
-                        {rel.slug.replace(/_/g, " ")}
+                      <span className="wrap-break-word text-[12px] leading-tight tracking-[0.14em] text-(--tc-text-muted) uppercase">
+                        {release.slug.replace(/_/g, " ")}
                       </span>
                     </div>
 
                     <div className="mt-2 space-y-1">
                       <h3 className="text-base font-semibold text-(--tc-text-inverse)">
-                        {formatRunTitle(rel.title, rel.slug)}
+                        {formatRunTitle(release.title, release.slug)}
                       </h3>
-                      <p className="text-sm text-(--tc-text-secondary) leading-relaxed line-clamp-2">
-                        {formatRunText(rel.summary, "Sem resumo informado.")}
+                      <p className="line-clamp-2 text-sm leading-relaxed text-(--tc-text-secondary)">
+                        {formatRunText(release.summary, "Sem resumo informado.")}
                       </p>
                     </div>
 
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-(--tc-text-muted)">
                       <span className="inline-flex items-center gap-2">
-                        <span className="inline-flex items-center justify-center rounded-full px-2 py-1 bg-(--tc-surface-dark) text-white">
-                          {rel.source === "MANUAL" ? "Manual" : "Integrado Qase"}
+                        <span className="inline-flex items-center justify-center rounded-full bg-(--tc-surface-dark) px-2 py-1 text-white">
+                          {release.source === "MANUAL" ? "Manual" : "Integrado Qase"}
                         </span>
                         <span>
-                          Criado: {rel.createdAt ? new Date(rel.createdAt).toLocaleDateString("pt-BR") : "-"}
+                          Criado:{" "}
+                          {release.createdAt
+                            ? new Date(release.createdAt).toLocaleDateString("pt-BR")
+                            : "-"}
                         </span>
                       </span>
 
                       <span className="inline-flex items-center gap-2 text-sm font-semibold text-(--tc-accent)">
-                        Abrir run →
+                        {"Abrir run ->"}
                       </span>
                     </div>
                   </Link>

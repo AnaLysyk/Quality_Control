@@ -3,6 +3,7 @@ import "server-only";
 import { randomUUID } from "crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
 
 type AssistantAuditEntry = {
   id: string;
@@ -23,7 +24,12 @@ type AssistantAuditStore = {
 };
 
 const STORE_PATH = path.join(process.cwd(), "data", "assistant-audit-log.json");
-const USE_MEMORY = process.env.ASSISTANT_AUDIT_IN_MEMORY === "true" || process.env.VERCEL === "1";
+const STORE_KEY = "qc:assistant_audit_log:v1";
+const USE_MEMORY =
+  process.env.ASSISTANT_AUDIT_IN_MEMORY === "true" ||
+  (process.env.VERCEL === "1" && !canUsePersistentJsonStore());
+const USE_PERSISTENT_STORE = !USE_MEMORY && canUsePersistentJsonStore();
+
 let memoryStore: AssistantAuditStore = { items: [] };
 
 async function ensureStore() {
@@ -43,6 +49,12 @@ async function ensureStore() {
 
 async function readStore(): Promise<AssistantAuditStore> {
   if (USE_MEMORY) return memoryStore;
+
+  if (USE_PERSISTENT_STORE) {
+    const persisted = await readPersistentJson<AssistantAuditStore>(STORE_KEY, { items: [] });
+    return Array.isArray(persisted?.items) ? persisted : { items: [] };
+  }
+
   const ok = await ensureStore();
   if (!ok) return memoryStore;
   try {
@@ -59,6 +71,13 @@ async function writeStore(next: AssistantAuditStore) {
     memoryStore = next;
     return;
   }
+
+  if (USE_PERSISTENT_STORE) {
+    const ok = await writePersistentJson(STORE_KEY, next);
+    if (!ok) memoryStore = next;
+    return;
+  }
+
   const ok = await ensureStore();
   if (!ok) {
     memoryStore = next;

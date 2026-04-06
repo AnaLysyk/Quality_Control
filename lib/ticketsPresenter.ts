@@ -1,6 +1,6 @@
 import "server-only";
 
-import { listLocalUsers } from "@/lib/auth/localStore";
+import { listLocalUsers, listLocalCompanies } from "@/lib/auth/localStore";
 import type { TicketRecord } from "@/lib/ticketsStore";
 
 export type TicketWithAssignee = TicketRecord & {
@@ -12,11 +12,24 @@ export type TicketWithAssignee = TicketRecord & {
 
 export async function attachAssigneeInfo(items: TicketRecord[]): Promise<TicketWithAssignee[]> {
   if (!Array.isArray(items) || items.length === 0) return [];
-  const users = await listLocalUsers();
+  const [users, companies] = await Promise.all([listLocalUsers(), listLocalCompanies()]);
   const byId = new Map(users.map((user) => [user.id, user]));
+  const companiesById = new Map(companies.map((company) => [company.id, company]));
   return items.map((item) => {
     const assignee = item.assignedToUserId ? byId.get(item.assignedToUserId) : null;
     const creator = item.createdBy ? byId.get(item.createdBy) : null;
+    // Prefer company logo when the creator is associated to a company (created_by_company_id or home_company_id)
+    let creatorCompanyLogo: string | null = null;
+    try {
+      const companyId = (creator as any)?.created_by_company_id ?? (creator as any)?.home_company_id ?? null;
+      if (companyId) {
+        const found = companiesById.get(companyId) ?? null;
+        creatorCompanyLogo = found && typeof (found as any).logo_url === "string" ? (found as any).logo_url : null;
+      }
+    } catch {
+      creatorCompanyLogo = null;
+    }
+
     return {
       ...item,
       createdByName: item.createdByName ?? creator?.name ?? null,
@@ -24,7 +37,7 @@ export async function attachAssigneeInfo(items: TicketRecord[]): Promise<TicketW
       assignedToName: assignee?.name ?? null,
       assignedToEmail: assignee?.email ?? null,
       createdByLogin: creator?.user ?? null,
-      createdByAvatarUrl: creator?.avatar_url ?? null,
+      createdByAvatarUrl: creatorCompanyLogo ?? creator?.avatar_url ?? null,
     };
   });
 }

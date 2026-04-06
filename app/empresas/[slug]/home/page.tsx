@@ -9,7 +9,6 @@ import {
   FiGrid,
   FiShield,
 } from "react-icons/fi";
-import Breadcrumb from "@/components/Breadcrumb";
 import { readManualReleaseStore } from "@/data/manualData";
 import { findLocalCompanyBySlug } from "@/lib/auth/localStore";
 import { listApplications } from "@/lib/applicationsStore";
@@ -63,23 +62,6 @@ function formatDate(value: unknown) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(time);
-}
-
-function companyInitials(name: string) {
-  const words = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2);
-  if (words.length === 0) return "EM";
-  return words.map((word) => word[0]?.toUpperCase() ?? "").join("") || "EM";
-}
-
-function badgeClasses(tone: Tone) {
-  if (tone === "positive") return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (tone === "warning") return "border-amber-200 bg-amber-50 text-amber-700";
-  if (tone === "critical") return "border-rose-200 bg-rose-50 text-rose-700";
-  return "border-slate-200 bg-slate-100 text-slate-700";
 }
 
 function resolveCompanyStatus(company: ReturnType<typeof mapCompanyRecord>): StatusBadge {
@@ -200,9 +182,16 @@ export default async function CompanyHomePage({ params }: PageProps) {
   const quickLinks = [
     {
       title: "Dashboard",
-      detail: "Painel operacional de runs, riscos e leitura de execucao.",
+      detail: "Visao estrategica da qualidade, tendencia, regressao e risco da empresa.",
       href: `/empresas/${encodeURIComponent(company.slug ?? slug)}/dashboard`,
       icon: FiGrid,
+      note: "Leitura executiva",
+    },
+    {
+      title: "Metricas",
+      detail: "Painel operacional por run, origem, status e leitura detalhada da execucao.",
+      href: `/empresas/${encodeURIComponent(company.slug ?? slug)}/metrics`,
+      icon: FiActivity,
       note: `${totalRuns} runs no contexto`,
     },
     {
@@ -243,103 +232,15 @@ export default async function CompanyHomePage({ params }: PageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#f5f6fa) px-4 py-8 text-(--page-text,#0b1a3c) sm:px-5 lg:px-6 xl:px-8 2xl:px-10">
-      <div className="flex w-full max-w-none flex-col gap-6">
-        <Breadcrumb
-          items={[
-            { label: "Home", href: `/empresas/${encodeURIComponent(company.slug ?? slug)}/home` },
-            { label: company.company_name || company.name || slug },
-          ]}
-        />
-
-        <section className="overflow-hidden rounded-[34px] border border-(--tc-border,#dfe5f1) bg-[linear-gradient(135deg,#011848_0%,#0a2f7a_52%,#ef0001_100%)] p-6 text-white shadow-[0_28px_70px_rgba(15,23,42,0.16)] sm:p-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-[28px] border border-white/20 bg-white/10 text-3xl font-extrabold tracking-[0.2em] text-white">
-                {companyInitials(company.company_name || company.name || slug)}
-              </div>
-              <div className="max-w-3xl">
-                <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/80">
-                    Home da empresa
-                  </span>
-                  <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${badgeClasses(companyStatus.tone)}`}>
-                    {companyStatus.title}
-                  </span>
-                  <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${badgeClasses(integrationStatus.tone)}`}>
-                    {integrationStatus.title}
-                  </span>
-                </div>
-
-                <h1 className="mt-4 text-4xl font-black tracking-[-0.05em] text-white [font-family:var(--font-poppins),Poppins,sans-serif] sm:text-5xl">
-                  {company.company_name || company.name || slug}
-                </h1>
-                <p className="mt-4 max-w-3xl text-sm leading-6 text-white/82 sm:text-base">
-                  Entrada institucional da empresa. Aqui fica o contexto principal, os atalhos e o estado geral do cadastro.
-                  O dashboard operacional de runs continua separado.
-                </p>
-                <p className="mt-3 text-sm font-semibold text-white/90">
-                  Slug: {company.slug ?? slug} | Ultima movimentacao: {formatDate(latestExecutionAt)}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-3 lg:max-w-sm lg:justify-end">
-              <Link
-                href={`/empresas/${encodeURIComponent(company.slug ?? slug)}/dashboard`}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-(--tc-text,#0b1a3c) shadow-sm transition hover:bg-slate-100"
-              >
-                Abrir dashboard
-                <FiArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/settings/profile"
-                className="inline-flex items-center justify-center rounded-full border border-white/24 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/14"
-              >
-                Ver perfil
-              </Link>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-[24px] border border-white/20 bg-white/12 p-4 backdrop-blur">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/68">Dashboard</p>
-              <div className="mt-3 text-3xl font-extrabold text-white">Operacional</div>
-              <p className="mt-2 text-sm text-white/78">Painel de runs e sinais de risco separado desta home.</p>
-            </div>
-            <div className="rounded-[24px] border border-white/20 bg-white/12 p-4 backdrop-blur">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/68">Runs no contexto</p>
-              <div className="mt-3 text-3xl font-extrabold text-white">{totalRuns}</div>
-              <p className="mt-2 text-sm text-white/78">{manualRuns.length} manuais e {integratedRuns.length} integradas.</p>
-            </div>
-            <div className="rounded-[24px] border border-white/20 bg-white/12 p-4 backdrop-blur">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/68">Aplicacoes</p>
-              <div className="mt-3 text-3xl font-extrabold text-white">{applications.length}</div>
-              <p className="mt-2 text-sm text-white/78">{projectCodes.size} projeto(s) vinculados na integracao/cadastro.</p>
-            </div>
-            <div className="rounded-[24px] border border-white/20 bg-white/12 p-4 backdrop-blur">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/68">Defeitos abertos</p>
-              <div className="mt-3 text-3xl font-extrabold text-white">{openDefects}</div>
-              <p className="mt-2 text-sm text-white/78">Indicador rapido para leitura institucional da empresa.</p>
-            </div>
-          </div>
-        </section>
-
+    <div className="relative isolate min-h-screen bg-(--page-bg,#f5f6fa) px-4 py-8 text-(--page-text,#0b1a3c) sm:px-5 lg:px-6 xl:px-8 2xl:px-10">
+      <div className="relative z-10 flex w-full max-w-none flex-col gap-6">
         <section className="rounded-[30px] border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm sm:p-7">
-          <div className="flex flex-col gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-(--tc-accent,#ef0001)">Acesso rapido</p>
-            <h2 className="text-2xl font-extrabold text-(--tc-text,#0b1a3c)">Home e dashboard agora tem papeis diferentes</h2>
-            <p className="text-sm text-(--tc-text-secondary,#4b5563)">
-              Use esta home como entrada da empresa. Use o dashboard para operar runs, risco e leitura de execucao.
-            </p>
-          </div>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
             {quickLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="group rounded-[24px] border border-(--tc-border,#e5e7eb) bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(15,23,42,0.08)]"
+                className="group rounded-3xl border border-(--tc-border,#e5e7eb) bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(15,23,42,0.08)]"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) text-(--tc-primary,#0b1a3c)">
@@ -368,7 +269,7 @@ export default async function CompanyHomePage({ params }: PageProps) {
               Bloco institucional da home. Aqui ficam os vinculos salvos que contextualizam a empresa, sem misturar com o painel operacional.
             </p>
 
-            <div className="mt-5 rounded-[24px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-5">
+            <div className="mt-5 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-5">
               <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Projetos vinculados</div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {Array.from(projectCodes).length > 0 ? (
@@ -383,7 +284,7 @@ export default async function CompanyHomePage({ params }: PageProps) {
               </div>
             </div>
 
-            <div className="mt-4 rounded-[24px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-5">
+            <div className="mt-4 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-5">
               <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Aplicacoes cadastradas</div>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 {applications.length > 0 ? (
@@ -406,28 +307,28 @@ export default async function CompanyHomePage({ params }: PageProps) {
             <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-(--tc-accent,#ef0001)">Leitura rapida</p>
             <h2 className="mt-2 text-2xl font-extrabold text-(--tc-text,#0b1a3c)">Estado atual da empresa</h2>
             <div className="mt-5 grid gap-4">
-              <div className="rounded-[24px] border border-(--tc-border,#e5e7eb) bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5">
+              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Empresa</div>
                 <div className="mt-3 text-lg font-extrabold text-(--tc-text,#0b1a3c)">{companyStatus.title}</div>
                 <div className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">{companyStatus.detail}</div>
               </div>
-              <div className="rounded-[24px] border border-(--tc-border,#e5e7eb) bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5">
+              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Integracao</div>
                 <div className="mt-3 text-lg font-extrabold text-(--tc-text,#0b1a3c)">{integrationStatus.title}</div>
                 <div className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">{integrationStatus.detail}</div>
               </div>
-              <div className="rounded-[24px] border border-(--tc-border,#e5e7eb) bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5">
+              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Proximo passo recomendado</div>
                 <div className="mt-3 text-lg font-extrabold text-(--tc-text,#0b1a3c)">
-                  {totalRuns > 0 ? "Abrir dashboard" : "Configurar primeira operacao"}
+                  {totalRuns > 0 ? "Abrir dashboard inteligente" : "Configurar primeira operacao"}
                 </div>
                 <div className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
                   {totalRuns > 0
-                    ? "Use o dashboard para ler runs, risco e contexto operacional sem misturar com a home."
+                    ? "Use o dashboard para leitura estrategica e as metricas para o acompanhamento operacional das runs."
                     : "Comece por perfil, integracoes ou criacao da primeira run manual."}
                 </div>
               </div>
-              <div className="rounded-[24px] border border-(--tc-border,#e5e7eb) bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5">
+              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Ultima execucao</div>
                 <div className="mt-3 text-lg font-extrabold text-(--tc-text,#0b1a3c)">{formatDate(latestExecutionAt)}</div>
                 <div className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
@@ -444,7 +345,7 @@ export default async function CompanyHomePage({ params }: PageProps) {
               <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-(--tc-accent,#ef0001)">Fechamento da home</p>
               <h2 className="mt-2 text-2xl font-extrabold text-(--tc-text,#0b1a3c)">Home institucional separada do dashboard</h2>
               <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
-                A home volta a ser entrada de contexto e navegacao. O dashboard permanece como painel operacional de runs.
+                A home volta a ser entrada de contexto e navegacao. O dashboard fica estrategico e a area de metricas concentra a leitura operacional.
               </p>
             </div>
             <Link

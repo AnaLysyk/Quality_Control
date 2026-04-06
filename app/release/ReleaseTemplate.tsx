@@ -18,7 +18,7 @@ import { readQualityGateHistory } from "@/lib/qualityGateHistory";
 import { calculateQualityScore } from "@/lib/qualityScore";
 import { getReleaseTimeline } from "@/lib/releaseTimeline";
 import { formatRunText, formatRunTitle } from "@/lib/runPresentation";
-import { cookies, headers } from "next/headers";
+import { readManualReleaseStore } from "./manualData";
 
 type AnyRelease = (Release & { name?: string }) | (ReleaseEntry & { name?: string });
 
@@ -68,25 +68,8 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
   let apiRelease: ReleaseEntry | null = null;
 
   try {
-    const headerStore = await headers();
-    const host = headerStore.get("host");
-    const proto = headerStore.get("x-forwarded-proto") ?? "http";
-    const baseUrl =
-      (host ? `${proto}://${host}` : null) ??
-      process.env.NEXT_PUBLIC_SITE_URL ??
-      "http://localhost:3000";
-    const cookieStore = await cookies();
-    const cookieHeader = cookieStore
-      .getAll()
-      .map((item) => `${item.name}=${item.value}`)
-      .join("; ");
-    const res = await fetch(`${baseUrl}/api/releases-manual/${normalizedSlug}`, {
-      cache: "no-store",
-      headers: cookieHeader ? { cookie: cookieHeader } : undefined,
-    });
-    if (res.ok) {
-      manualRelease = (await res.json()) as Release;
-    }
+    const manualReleases = await readManualReleaseStore();
+    manualRelease = manualReleases.find((release) => release.slug === normalizedSlug) ?? null;
   } catch {
     manualRelease = null;
   }

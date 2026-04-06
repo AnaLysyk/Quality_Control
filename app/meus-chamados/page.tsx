@@ -89,7 +89,7 @@ export default function MeusSuportesPage() {
   const { supports, loading: loadingSuportes, error: swrError, refetch } = useSWRSupports();
   // Sincroniza estado local com SWR
   useEffect(() => {
-    setSuportes(supports);
+    setSuportes((current) => (current === supports ? current : supports));
   }, [supports]);
   useEffect(() => {
     setError(swrError ? (swrError.message || String(swrError)) : null);

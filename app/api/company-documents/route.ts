@@ -4,13 +4,14 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import jwt from "jsonwebtoken";
 
+import { listLocalCompanies, listLocalLinksForUser, listLocalUsers } from "@/lib/auth/localStore";
+import { getJsonStoreDir } from "@/data/jsonStorePath";
+import { getJwtSecret } from "@/lib/auth/jwtSecret";
 import { prisma } from "@/lib/prismaClient";
+import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis } from "@/lib/redis";
 
-const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
-import { listLocalCompanies, listLocalLinksForUser, listLocalUsers } from "@/lib/auth/localStore";
-import { getJwtSecret } from "@/lib/auth/jwtSecret";
-import { getJsonStoreDir } from "@/data/jsonStorePath";
+const USE_POSTGRES = shouldUsePostgresPersistence();
 
 type CompanyDocumentKind = "file" | "link";
 type DocumentHistoryAction = "created" | "deleted";

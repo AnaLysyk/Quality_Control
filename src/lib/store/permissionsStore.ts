@@ -3,12 +3,13 @@ import "server-only";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { isRedisConfigured } from "@/lib/redis";
 import { normalizePermissionMatrix } from "@/lib/permissionMatrix";
 import { getJson, setJson, deleteKey } from "./redisClient";
 import { ROLE_DEFAULTS } from "../permissions/roleDefaults";
 
-const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+const USE_POSTGRES = shouldUsePostgresPersistence();
 
 // Lazy-load prisma so tests without DB still work
 async function getPrisma() {

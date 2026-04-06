@@ -153,6 +153,10 @@ const PANEL_SIZE_OPTIONS: Array<{ key: PanelSizeKey; label: string; width: numbe
 
 const NOTES_WIDGET_Z_INDEX = 13050;
 
+type NotesButtonProps = {
+  defaultOpen?: boolean;
+};
+
 function loadWidgetPos(): { x: number; y: number } | null {
   if (typeof window === "undefined") return null;
   try {
@@ -1030,9 +1034,9 @@ function NoteEditor({
   );
 }
 
-export default function NotesButton() {
+export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
   const { user } = useAuthUser();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [notes, setNotes] = useState<NoteItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1082,9 +1086,9 @@ export default function NotesButton() {
     }
 
     const savedState = loadWidgetState();
-    setMinimized(savedState.minimized);
+    setMinimized(defaultOpen ? false : savedState.minimized);
     setPinned(savedState.pinned);
-  }, []);
+  }, [defaultOpen]);
 
   useEffect(() => {
     saveWidgetState({ minimized, pinned });
@@ -1178,15 +1182,13 @@ export default function NotesButton() {
   }, [storageKey]);
 
   useEffect(() => {
-    if (pinned) return;
+    if (pinned || !open) return;
 
     function closeOnOutsideClick(event: MouseEvent) {
-      if (!open) return;
       if (!boxRef.current?.contains(event.target as Node)) setOpen(false);
     }
 
     function closeOnEscape(event: KeyboardEvent) {
-      if (!open) return;
       if (event.key === "Escape") setOpen(false);
     }
 

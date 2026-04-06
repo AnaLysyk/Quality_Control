@@ -25,6 +25,10 @@ type ConfirmState =
   | { open: true; kind: "clear" | "clearAll" }
   | { open: true; kind: "tool"; action: AssistantToolAction; label: string };
 
+type ChatButtonProps = {
+  defaultOpen?: boolean;
+};
+
 const HISTORY_KEY_PREFIX = "assistant_history_v2";
 
 function formatTime(ts: number) {
@@ -89,12 +93,12 @@ function formatToolLabel(tool?: string | null) {
   }
 }
 
-export default function ChatButton() {
+export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const pathname = usePathname() || "/";
   const screenContext = useMemo(() => resolveAssistantScreenContext(pathname), [pathname]);
   const { user, can } = usePermissionAccess();
   const assistantEnabled = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -124,6 +128,8 @@ export default function ChatButton() {
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    if (!open) return undefined;
+
     function close(e: MouseEvent) {
       if (!boxRef.current?.contains(e.target as Node)) setOpen(false);
     }
@@ -136,7 +142,7 @@ export default function ChatButton() {
       document.removeEventListener("mousedown", close);
       document.removeEventListener("keydown", esc);
     };
-  }, []);
+  }, [open]);
 
   useEffect(() => {
     try {

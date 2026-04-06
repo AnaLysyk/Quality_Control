@@ -2,11 +2,14 @@
 "use client";
 import useSWR from "swr";
 
+const EMPTY_SUPPORTS: unknown[] = [];
+const fetchSupports = (url: string) =>
+  fetch(url, { credentials: "include", cache: "no-store" }).then((res) => res.json());
+
 export function useSWRSupports() {
-  const fetcher = (url: string) => fetch(url, { credentials: "include", cache: "no-store" }).then((res) => res.json());
-  const { data, error, isLoading, mutate } = useSWR("/api/suportes", fetcher);
+  const { data, error, isLoading, mutate } = useSWR("/api/suportes", fetchSupports);
   return {
-    supports: data?.items || [],
+    supports: Array.isArray(data?.items) ? data.items : EMPTY_SUPPORTS,
     loading: isLoading,
     error,
     refetch: mutate,

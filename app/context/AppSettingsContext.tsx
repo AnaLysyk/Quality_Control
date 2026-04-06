@@ -100,6 +100,14 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(() => readInitialSettings());
   const [loading, setLoading] = useState(true);
 
+  const setTheme = useCallback((theme: Theme) => {
+    setSettings((prev) => ({ ...prev, theme }));
+  }, []);
+
+  const setLanguage = useCallback((language: Language) => {
+    setSettings((prev) => ({ ...prev, language }));
+  }, []);
+
   const refreshSettings = useCallback(async () => {
     const userId = resolveUserId(user);
     const key = storageKey(userId);
@@ -210,12 +218,12 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
       theme: settings.theme,
       language: settings.language,
       loading,
-      setTheme: (theme: Theme) => setSettings((prev) => ({ ...prev, theme })),
-      setLanguage: (language: Language) => setSettings((prev) => ({ ...prev, language })),
+      setTheme,
+      setLanguage,
       saveSettings,
       refreshSettings,
     }),
-    [settings.theme, settings.language, loading, saveSettings, refreshSettings]
+    [settings.theme, settings.language, loading, setTheme, setLanguage, saveSettings, refreshSettings]
   );
 
   return <AppSettingsContext.Provider value={value}>{children}</AppSettingsContext.Provider>;

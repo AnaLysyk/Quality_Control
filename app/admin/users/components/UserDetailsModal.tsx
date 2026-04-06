@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import UserAvatar from "@/components/UserAvatar";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { normalizeEditableProfileRole } from "@/lib/editableProfileRoles";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -46,9 +47,12 @@ const EMPTY_JOB_TITLE = "__empty_job_title__";
 type RoleValue = (typeof ROLE_OPTIONS)[number]["value"];
 
 const normalizeRole = (value?: string | null): RoleValue => {
-  if (value === "global_admin") return "global_admin";
-  if (value === "it_dev" || value === "developer" || value === "dev") return "it_dev";
-  if (value === "client_admin" || value === "client_owner" || value === "client_manager") return "client_admin";
+  const normalized = normalizeEditableProfileRole(value);
+  if (normalized === "admin") return "global_admin";
+  if (normalized === "dev") return "it_dev";
+  if (normalized === "leader_tc") return "leader_tc";
+  if (normalized === "technical_support") return "technical_support";
+  if (normalized === "company") return "client_admin";
   return "client_user";
 };
 
@@ -150,11 +154,21 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
   const canManagePrivilegedProfiles = useMemo(() => isGlobalDeveloperUser(authUser), [authUser]);
   const availableRoleOptions = useMemo(() => {
     if (canManagePrivilegedProfiles) return ROLE_OPTIONS;
-    return ROLE_OPTIONS.filter((option) => option.value !== "it_dev" && option.value !== "global_admin");
+    return ROLE_OPTIONS.filter(
+      (option) =>
+        option.value !== "it_dev" &&
+        option.value !== "global_admin" &&
+        option.value !== "leader_tc" &&
+        option.value !== "technical_support",
+    );
   }, [canManagePrivilegedProfiles]);
-  const canEditRole = canManagePrivilegedProfiles || (role !== "it_dev" && role !== "global_admin");
-
-  const requiresClient = false;
+  const canEditRole =
+    canManagePrivilegedProfiles ||
+    (role !== "it_dev" && role !== "global_admin" && role !== "leader_tc" && role !== "technical_support");
+  const requiresClient = useMemo(() => {
+    const normalized = normalizeEditableProfileRole(role);
+    return normalized === "leader_tc" || normalized === "technical_support";
+  }, [role]);
   const canSave =
     !!user?.id &&
     dirty &&

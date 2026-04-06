@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useRef } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   FiAlertTriangle,
   FiBarChart2,
@@ -37,15 +37,15 @@ type NavItem = {
 };
 
 type SidebarProps = {
+  pathname: string;
   mobileOpen?: boolean;
   onClose?: () => void;
 };
 
-export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
+export default function Sidebar({ pathname, mobileOpen = false, onClose }: SidebarProps) {
   const router = useRouter();
   const prefetchedRoutesRef = useRef<Set<string>>(new Set());
   const logoSrc = useMemo(() => (menuLogoEnv ? menuLogoEnv : "/images/tc.png"), []);
-  const pathname = usePathname() || "";
   const { user, loading, visibility } = usePermissionAccess();
   const { activeClientSlug } = useClientContext();
   const { t } = useI18n();
@@ -234,8 +234,8 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                 : "px-3 justify-start gap-3"
             } ${
               isActive
-                ? "bg-slate-100 ring-1 ring-[#4e8df5]/40 shadow-[0_10px_24px_rgba(78,141,245,0.18)] text-slate-900 dark:bg-white/10 dark:ring-[#4e8df5]/50 dark:shadow-[0_12px_30px_rgba(78,141,245,0.35)] dark:text-white"
-                : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-white/80 dark:hover:bg-white/7 dark:hover:text-white"
+                ? "bg-white/12 ring-1 ring-white/16 shadow-[0_14px_30px_rgba(1,24,72,0.3)] text-white"
+                : "text-white/74 hover:bg-white/8 hover:text-white"
             }`}
             onMouseEnter={() => prefetchHref(item.href)}
             onFocus={() => prefetchHref(item.href)}
@@ -243,15 +243,15 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
           >
             <span
               aria-hidden
-              className={`absolute left-1 top-2 bottom-2 w-0.75 rounded-full bg-[#4e8df5] transition-all ${
+              className={`absolute left-1 top-2 bottom-2 w-0.75 rounded-full bg-(--tc-accent,#ef0001) transition-all ${
                 isActive ? "opacity-100" : "opacity-0 group-hover/link:opacity-60"
               }`}
             />
             <div
               className={`flex items-center justify-center w-11 h-11 rounded-[14px] border transition-all duration-200 shrink-0 backdrop-blur-sm sidebar-icon ${
                 isActive
-                  ? "border-[#4e8df5]/50 bg-[#4e8df5]/10 text-[#2563eb] shadow-[0_10px_22px_rgba(78,141,245,0.2)] dark:border-[#4e8df5]/60 dark:bg-[#4e8df5]/12 dark:text-[#4e8df5] dark:shadow-[0_12px_28px_rgba(78,141,245,0.25)]"
-                  : "border-slate-200 bg-white text-[#2563eb] group-hover/link:border-[#4e8df5]/35 group-hover/link:bg-slate-100 dark:border-white/12 dark:bg-white/6 dark:text-[#4e8df5] dark:group-hover/link:bg-white/10"
+                  ? "border-white/16 bg-white/14 text-white shadow-[0_12px_26px_rgba(1,24,72,0.28)]"
+                  : "border-white/10 bg-white/6 text-white/84 group-hover/link:border-white/18 group-hover/link:bg-white/10 group-hover/link:text-white"
               }`}
             >
               <item.icon size={20} />
@@ -265,19 +265,19 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
   const DesktopNav = (
     <aside
-      className="hidden lg:flex fixed left-0 top-0 z-40 h-screen overflow-hidden border-r border-slate-200 text-slate-900 flex-col bg-white/70 backdrop-blur-2xl shadow-[0_12px_30px_rgba(15,23,42,0.12)] dark:border-white/10 dark:text-white dark:bg-[linear-gradient(180deg,#03123b_0%,#051a52_60%,#03123b_100%)] dark:shadow-[0_18px_40px_rgba(0,0,0,0.45)] sidebar-shell"
+      className="hidden lg:flex fixed left-0 top-0 z-40 h-screen overflow-hidden border-r border-white/10 text-white flex-col bg-[linear-gradient(180deg,rgba(1,24,72,0.98)_0%,rgba(6,27,82,0.97)_52%,rgba(87,8,25,0.95)_100%)] shadow-[0_28px_80px_rgba(1,24,72,0.34)] backdrop-blur-2xl sidebar-shell"
       data-app-role={appRole ?? ""}
       data-active-client={activeClientSlug ?? ""}
       data-is-global-admin={isGlobalAdmin ? "1" : "0"}
     >
-      <div className="flex items-center px-2 py-3 border-b border-slate-200/70 dark:border-white/5 relative">
+      <div className="flex items-center px-3 py-4 border-b border-white/8 relative">
         <Link
           href={logoHref}
           className="flex items-center gap-3 transition-all duration-200 justify-start w-full px-2 sidebar-logo"
         >
-          <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 backdrop-blur dark:border-white/10 dark:bg-white/5 sidebar-logo-mark">
+          <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-white/14 bg-white/10 backdrop-blur sidebar-logo-mark">
             <span
-              className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(78,141,245,0.15),transparent_55%)]"
+              className="absolute inset-0 bg-[radial-gradient(circle_at_28%_26%,rgba(255,255,255,0.18),transparent_56%)]"
               aria-hidden
             />
             <Image
@@ -290,7 +290,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             <svg
               viewBox="0 0 64 64"
               aria-hidden="true"
-              className="absolute inset-0 m-auto h-7 w-7 text-slate-900 dark:text-white sidebar-logo-icon"
+              className="absolute inset-0 m-auto h-7 w-7 text-white sidebar-logo-icon"
               fill="none"
               stroke="currentColor"
               strokeWidth="4"
@@ -303,8 +303,8 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             </svg>
           </div>
           <div className="flex flex-col leading-tight transition duration-200 whitespace-nowrap sidebar-brand">
-            <span className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-white/55">Plataforma</span>
-            <span className="text-base font-semibold tracking-wide text-slate-900 dark:text-white">Quality Control</span>
+            <span className="text-[11px] uppercase tracking-[0.24em] text-white/58">Testing Company</span>
+            <span className="text-base font-semibold tracking-[0.02em] text-white">Quality Control</span>
           </div>
         </Link>
       </div>
@@ -313,10 +313,10 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
         <div className="flex-1 px-3 py-6 space-y-6">
           <div className="space-y-3">
             <div className="flex items-center px-1">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-white/55 transition duration-150 sidebar-divider">
+              <p className="text-xs uppercase tracking-[0.18em] text-white/55 transition duration-150 sidebar-divider">
                 Navegacao
               </p>
-              <span className="h-px flex-1 ml-3 bg-slate-200 dark:bg-white/15 sidebar-divider-line" aria-hidden />
+              <span className="h-px flex-1 ml-3 bg-white/12 sidebar-divider-line" aria-hidden />
             </div>
             <div className="space-y-3">{renderNavLinks()}</div>
           </div>
@@ -334,12 +334,12 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
           data-app-role={appRole ?? ""}
           data-active-client={activeClientSlug ?? ""}
           data-is-global-admin={isGlobalAdmin ? "1" : "0"}
-          className="flex h-full w-72 bg-white text-slate-900 flex-col border-r border-slate-200 shadow-[0_12px_28px_rgba(15,23,42,0.16)] dark:bg-linear-to-b dark:from-[#0b1021]/95 dark:via-[#0f1830]/92 dark:to-[#0b1021]/95 dark:text-white dark:border-white/10 dark:shadow-2xl"
+          className="flex h-full w-72 text-white flex-col border-r border-white/10 bg-[linear-gradient(180deg,rgba(1,24,72,0.98)_0%,rgba(6,27,82,0.97)_52%,rgba(87,8,25,0.95)_100%)] shadow-[0_24px_60px_rgba(1,24,72,0.34)] backdrop-blur-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center gap-3 p-4 border-b border-slate-200 dark:border-white/10 relative">
+          <div className="flex items-center gap-3 p-4 border-b border-white/10 relative">
             <Link href={logoHref} className="flex items-center gap-3" onClick={onClose}>
-              <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-white/5">
+              <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-white/14 bg-white/10">
                 <Image
                   src={logoSrc}
                   alt="Logo"
@@ -350,7 +350,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                 <svg
                   viewBox="0 0 64 64"
                   aria-hidden="true"
-                  className="absolute inset-0 m-auto h-7 w-7 text-slate-900 dark:text-white sidebar-logo-icon"
+                  className="absolute inset-0 m-auto h-7 w-7 text-white sidebar-logo-icon"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="4"
@@ -363,8 +363,8 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                 </svg>
               </div>
               <div className="flex flex-col">
-                <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/55">Plataforma</span>
-                <span className="text-sm font-semibold tracking-wide text-[#2563eb] dark:text-[#4e8df5]">Quality Control</span>
+                <span className="text-[11px] uppercase tracking-[0.22em] text-white/58">Testing Company</span>
+                <span className="text-sm font-semibold tracking-wide text-white">Quality Control</span>
               </div>
             </Link>
           </div>
@@ -372,14 +372,14 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
           <nav className="flex-1 min-h-0 flex flex-col overflow-y-auto custom-scroll">
             <div className="flex-1 px-3 py-4 space-y-6">
               <div className="space-y-2">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-white/45 px-1">Navegacao</p>
+                <p className="px-1 text-xs uppercase tracking-[0.18em] text-white/52">Navegacao</p>
                 <div className="space-y-2">{renderNavLinks(true)}</div>
               </div>
             </div>
           </nav>
 
-          <div className="p-4 border-t border-slate-200 dark:border-white/10">
-            <div className="text-sm text-slate-500 dark:text-white/50">...</div>
+          <div className="p-4 border-t border-white/10">
+            <div className="text-sm text-white/46">Testing Company Platform</div>
           </div>
         </aside>
       </div>

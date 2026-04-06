@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 
 import { getAccessContext } from "@/lib/auth/session";
 import {
@@ -36,6 +37,13 @@ export async function POST(req: NextRequest) {
     }
 
     const { logoUrl } = await uploadAndPersistCompanyLogo(company.id, file);
+    try {
+      // Revalidate common server paths that might render company identity
+      revalidatePath("/api/me");
+      revalidatePath("/api/me/company-profile");
+    } catch {
+      // ignore revalidation errors
+    }
     return NextResponse.json({ ok: true, logoUrl }, { status: 200 });
   } catch (error) {
     const message =

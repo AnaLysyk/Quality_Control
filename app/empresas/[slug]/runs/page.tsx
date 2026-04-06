@@ -263,13 +263,28 @@ export default function CompanyRunsPage() {
       try {
         const [manualResponse, integratedResponse, applicationsResponse] = await Promise.all([
           fetchApi(`/api/releases-manual?clientSlug=${encodeURIComponent(currentCompanySlug)}&kind=run`),
-          fetchApi("/api/releases"),
+          // Use aggregated runs endpoint (all projects for company when available)
+          fetchApi(
+            `/api/v1/runs?all=true&limit=${encodeURIComponent(String(200))}&companySlug=${encodeURIComponent(currentCompanySlug)}`,
+          ),
           fetchApi(`/api/applications?companySlug=${encodeURIComponent(currentCompanySlug)}`),
         ]);
 
         const manualData = await manualResponse.json().catch(() => []);
         const integratedData = await integratedResponse.json().catch(() => ({}));
         const applicationsData = await applicationsResponse.json().catch(() => ({}));
+
+        // Normalize possible shapes from the runs endpoint:
+        // - { data: [...] } (new /api/v1/runs)
+        // - { releases: [...] } (legacy)
+        // - { result: { entities: [...] } } (qase raw)
+        const integratedEntities: unknown[] = Array.isArray(integratedData?.data)
+          ? integratedData.data
+          : Array.isArray(integratedData?.releases)
+          ? integratedData.releases
+          : Array.isArray(integratedData?.result?.entities)
+          ? integratedData.result.entities
+          : [];
 
         const applications = Array.isArray(applicationsData?.items)
           ? (applicationsData.items as ApplicationItem[])
@@ -278,7 +293,7 @@ export default function CompanyRunsPage() {
 
         const manualRuns = normalizeManualRuns(Array.isArray(manualData) ? manualData : []);
         const integratedRuns = toUnifiedIntegratedRuns(
-          normalizeIntegratedRuns(Array.isArray(integratedData?.releases) ? integratedData.releases : []),
+          normalizeIntegratedRuns(integratedEntities),
           currentCompanySlug,
           applicationKeys,
         );
@@ -339,7 +354,7 @@ export default function CompanyRunsPage() {
 
   return (
     <div className="min-h-screen bg-(--page-bg,#f5f6fa) px-4 py-8 text-(--page-text,#0b1a3c) sm:px-6 lg:px-10" data-testid="runs-page">
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className="mx-auto w-full max-w-none space-y-6">
         <header className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">Runs</p>
@@ -379,8 +394,10 @@ export default function CompanyRunsPage() {
 
           <div className="mt-5 flex items-center justify-between gap-3" data-testid="runs-controls">
             <div className="flex items-center gap-3">
-              <label className="text-sm text-(--tc-text-secondary,#4b5563)">Mostrar</label>
+              <label htmlFor="runs-page-size" className="text-sm text-(--tc-text-secondary,#4b5563)">Mostrar</label>
               <select
+                id="runs-page-size"
+                aria-label="Selecionar quantidade de itens por página"
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value) || 10)}
                 className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-1 text-sm outline-none"
@@ -428,7 +445,11 @@ export default function CompanyRunsPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <Link
-                          href={`/empresas/${encodeURIComponent(companySlug ?? "")}/runs/${encodeURIComponent(run.slug)}`}
+                          href={
+                            companySlug
+                              ? `/empresas/${encodeURIComponent(companySlug)}/runs/${encodeURIComponent(run.slug)}`
+                              : `/release/${encodeURIComponent(run.slug)}`
+                          }
                           className="text-base font-semibold text-(--tc-accent,#ef0001)"
                         >
                           {run.name}

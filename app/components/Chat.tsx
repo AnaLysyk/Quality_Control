@@ -3,6 +3,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSWRChat } from "./useSWRChat";
 
+type LegacyChatMessage = {
+  id: string;
+  user: string;
+  text: string;
+  timestamp: string | number;
+};
+
 export default function Chat() {
   const { messages, error, mutate, isLoading } = useSWRChat();
   const [input, setInput] = useState("");
@@ -41,13 +48,22 @@ export default function Chat() {
       <div className="h-64 overflow-y-auto border p-2 mb-2 bg-gray-50 rounded">
         {isLoading && <div>Carregando mensagens...</div>}
         {error && <div className="text-red-600">Erro ao carregar mensagens</div>}
-        {messages.map((msg: any) => (
+        {(messages as LegacyChatMessage[]).map((msg) => (
           <div key={msg.id} className="mb-1">
             <span className="font-semibold">{msg.user}:</span> {msg.text}
             <span className="text-xs text-gray-400 ml-2">{new Date(msg.timestamp).toLocaleTimeString()}</span>
           </div>
         ))}
         <div ref={messagesEndRef} />
+      </div>
+      <div className="mb-2 flex justify-end">
+        <button
+          type="button"
+          onClick={() => void mutate()}
+          className="rounded border px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+        >
+          Atualizar
+        </button>
       </div>
       <form onSubmit={sendMessage} className="flex gap-2">
         <input

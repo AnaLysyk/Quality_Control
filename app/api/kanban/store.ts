@@ -3,9 +3,10 @@ import "server-only";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { prisma } from "@/lib/prismaClient";
+import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { type Card } from "./types";
 
-const USE_POSTGRES = process.env.AUTH_STORE === "postgres";
+const USE_POSTGRES = shouldUsePostgresPersistence();
 
 type KanbanStore = {
   lastId: number;

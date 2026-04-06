@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { createQaseClient, QaseError } from "@/lib/qaseSdk";
 import { getAccessContext } from "@/lib/auth/session";
-import { canManageInstitutionalCompanyAccess } from "@/lib/companyProfileAccess";
 
 export const runtime = "nodejs";
 
@@ -19,9 +18,6 @@ export async function POST(req: NextRequest) {
   }
   if (!access.companyId && !access.companySlug) {
     return NextResponse.json({ error: "Sem empresa vinculada" }, { status: 403 });
-  }
-  if (!canManageInstitutionalCompanyAccess(access)) {
-    return NextResponse.json({ error: "Sem permissao para consultar a integracao da empresa" }, { status: 403 });
   }
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;

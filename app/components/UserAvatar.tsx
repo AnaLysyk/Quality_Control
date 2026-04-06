@@ -58,7 +58,8 @@ export default function UserAvatar({
 
   const initials = useMemo(() => getUserInitials(name), [name]);
   const normalizedSrc = typeof src === "string" ? src.trim() : "";
-  const showImage = Boolean(normalizedSrc) && failedSrc !== normalizedSrc;
+  const looksLikeUrl = /^(https?:\/\/|\/|blob:|data:)/i.test(normalizedSrc);
+  const showImage = looksLikeUrl && failedSrc !== normalizedSrc;
 
   return (
     <div className={`relative ${sizeClassMap[size]} ${className}`}>

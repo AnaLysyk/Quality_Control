@@ -154,7 +154,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
             { label: t("nav.testPlans"), icon: FiClipboard, href: `/empresas/${companySlug}/planos-de-teste` },
             { label: t("nav.runs"), icon: FiList, href: `/empresas/${companySlug}/runs` },
             { label: t("nav.defects"), icon: FiAlertTriangle, href: `/empresas/${companySlug}/defeitos` },
-            { label: "Chamados", icon: FiColumns, href: "/meus-chamados" },
+            { label: "Chamados", icon: FiColumns, href: `/empresas/${companySlug}/chamados` },
           ]
         : [],
     [companySlug, t]
@@ -187,6 +187,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
     if (/^\/empresas\/[^/]+\/runs$/.test(href)) return "runs";
     if (/^\/empresas\/[^/]+\/defeitos$/.test(href)) return "defects";
     if (/^\/empresas\/[^/]+\/releases$/.test(href)) return "releases";
+    if (/^\/empresas\/[^/]+\/chamados$/.test(href)) return "support";
     return null;
   }
 
@@ -198,15 +199,12 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
           const moduleId = resolveModuleFromHref(item.href);
           if (!moduleId) return true;
           const isCompanyScopedLink = /^\/empresas\/[^/]+\//.test(item.href);
-          if (isCompanyScopedLink && ["runs", "releases", "defects"].includes(moduleId)) {
-            return true;
-          }
-          if (moduleId === "support" && pathname.startsWith("/empresas/")) {
+          if (isCompanyScopedLink && ["runs", "releases", "defects", "support"].includes(moduleId)) {
             return true;
           }
           return Boolean(visibility[moduleId]);
         }),
-    [navigation, appRole, visibility, pathname],
+    [navigation, appRole, visibility],
   );
 
   function prefetchHref(href: string) {

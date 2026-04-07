@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { findLocalUserByEmailOrId, updateLocalUser } from "@/lib/auth/localStore";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 128;
@@ -40,6 +41,15 @@ export async function POST(req: Request) {
   try {
     const hashedPassword = hashPasswordSha256(newPassword);
     await updateLocalUser(user.id, { password_hash: hashedPassword });
+    addAuditLogSafe({
+      action: "auth.password.reset",
+      entityType: "user",
+      entityId: user.id,
+      entityLabel: user.email ?? null,
+      actorUserId: user.id,
+      actorEmail: user.email ?? null,
+      metadata: { method: "direct" },
+    });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Error resetting password via direct flow:", error);

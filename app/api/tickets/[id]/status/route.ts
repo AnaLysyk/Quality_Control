@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getTicketById, updateTicketStatus } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { getTicketStatusLabel } from "@/lib/ticketsStatus";
@@ -47,6 +48,20 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       reason: reason || null,
     },
   }).catch((err) => console.error("Falha ao registrar status:", err));
+
+  addAuditLogSafe({
+    action: updated.status === "closed" || updated.status === "done" ? "ticket.closed" : "ticket.status.changed",
+    entityType: "ticket",
+    entityId: updated.id,
+    entityLabel: updated.title ?? null,
+    actorUserId: user.id,
+    actorEmail: user.email ?? null,
+    metadata: {
+      _before: { status: current.status },
+      status: updated.status,
+      reason: reason || null,
+    },
+  });
 
   notifyTicketStatusChanged({
     ticket: updated,

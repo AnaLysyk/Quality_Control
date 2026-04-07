@@ -18,14 +18,26 @@ type AuditLog = {
 /* ── Translation layer ──────────────────────────────────── */
 
 const ACTION_TITLES: Record<string, string> = {
+  // Users
   "user.created": "Usuário criado",
   "user.updated": "Usuário atualizado",
   "user.deleted": "Usuário removido",
   "user.permissions.updated": "Permissões atualizadas",
   "user.permissions.reset": "Permissões restauradas",
+  "user.activated": "Usuário ativado",
+  "user.deactivated": "Usuário inativado",
+  "user.role.changed": "Papel alterado",
+  "user.email.changed": "E-mail alterado",
+  "user.avatar.changed": "Avatar atualizado",
+  "user.profile.updated": "Perfil atualizado",
+  // Companies
   "client.created": "Empresa criada",
   "client.updated": "Empresa atualizada",
   "client.deleted": "Empresa removida",
+  "client.logo.changed": "Logo da empresa alterado",
+  "client.user.linked": "Usuário vinculado à empresa",
+  "client.user.unlinked": "Usuário desvinculado da empresa",
+  // Runs
   "run.created": "Execução criada",
   "run.deleted": "Execução removida",
   // Auth
@@ -33,18 +45,38 @@ const ACTION_TITLES: Record<string, string> = {
   "auth.login.failure": "Tentativa de login falhou",
   "auth.logout": "Logout realizado",
   "auth.password.changed": "Senha alterada",
-  "auth.password.reset": "Senha redefinida via token",
-  // Tickets
+  "auth.password.reset": "Senha redefinida",
+  "auth.password.reset_requested": "Reset de senha solicitado",
+  "auth.access.denied": "Acesso negado",
+  // Tickets / Chamados
   "ticket.created": "Chamado aberto",
   "ticket.updated": "Chamado atualizado",
-  // Access requests
+  "ticket.deleted": "Chamado removido",
+  "ticket.assigned": "Chamado atribuído",
+  "ticket.status.changed": "Status do chamado alterado",
+  "ticket.closed": "Chamado fechado",
+  "ticket.commented": "Comentário no chamado",
+  // Access requests / Solicitações
   "access_request.created": "Solicitação de acesso criada",
+  "access_request.accepted": "Solicitação aprovada",
+  "access_request.rejected": "Solicitação recusada",
+  "access_request.updated": "Solicitação ajustada",
+  "access_request.commented": "Comentário na solicitação",
+  // Self-service requests
+  "request.email_change": "Solicitação de alteração de e-mail",
+  "request.profile_deletion": "Solicitação de exclusão de perfil",
+  "request.company_change": "Solicitação de mudança de empresa",
   // Defects
   "defect.created": "Defeito registrado",
   // Integrations
   "integration.updated": "Integração atualizada",
+  "integration.activated": "Integração ativada",
+  "integration.deactivated": "Integração desativada",
+  "integration.failed": "Falha de integração",
   // Exports
   "export.executed": "Exportação de dados",
+  // System
+  "system.error": "Erro de sistema",
   // legacy uppercase keys
   CREATE: "Registro criado",
   USER_CREATED: "Usuário criado",
@@ -65,10 +97,12 @@ const ENTITY_LABELS: Record<string, string> = {
   permission: "Permissão",
   run: "Execução",
   ticket: "Chamado",
-  access_request: "Solicitação de acesso",
+  access_request: "Solicitação",
   defect: "Defeito",
   integration: "Integração",
   export: "Exportação",
+  request: "Solicitação",
+  system: "Sistema",
 };
 
 const METADATA_KEY_LABELS: Record<string, string> = {
@@ -91,6 +125,7 @@ const METADATA_KEY_LABELS: Record<string, string> = {
   actorRole: "Papel do ator",
   userEmail: "Email do usuário",
   userId: "ID do usuário",
+  username: "Usuário (login)",
   // Auth
   reason: "Motivo",
   ip: "Endereço IP",
@@ -99,10 +134,14 @@ const METADATA_KEY_LABELS: Record<string, string> = {
   // Tickets
   type: "Tipo",
   priority: "Prioridade",
+  status: "Status",
+  from: "De",
+  to: "Para",
   // Access requests
   profileType: "Tipo de perfil",
   accessType: "Tipo de acesso",
   company: "Empresa",
+  comment: "Comentário",
   // Defects
   releaseManualId: "ID do release manual",
   // Integrations
@@ -114,6 +153,9 @@ const METADATA_KEY_LABELS: Record<string, string> = {
   runId: "ID da execução",
   rows: "Registros exportados",
   scope: "Escopo",
+  // Requests
+  newEmail: "Novo e-mail",
+  newCompanyName: "Nova empresa",
 };
 
 /** Keys that belong in the "summary" tier (not the operation details). */
@@ -125,21 +167,23 @@ type ActionCategory = "create" | "update" | "delete" | "permission" | "link" | "
 
 function getCategory(action: string): ActionCategory {
   const a = action.toLowerCase();
-  if (a.includes("failure") || a.includes("fail")) return "error";
+  if (a.includes("failure") || a.includes("fail") || a.includes("system.error") || a.includes("denied")) return "error";
   if (a.includes("error")) return "error";
   if (a.includes("login") || a.includes("logout") || a.includes("auth") || a.includes("password")) return "auth";
   if (a.includes("export")) return "export";
-  if (a.includes("link") || a.includes("unlink") || a.includes("membership") || a.includes("access_request")) return "link";
+  if (a.includes("request.") || a.includes("access_request")) return "link";
+  if (a.includes("link") || a.includes("unlink") || a.includes("membership")) return "link";
   if (a.includes("integration") || a.includes("sync")) return "integration";
-  if (a.includes("permission") || a.includes("reset")) return "permission";
+  if (a.includes("permission") || a.includes("role") || a.includes("activated") || a.includes("deactivated")) return "permission";
   if (a.includes("ticket") || a.includes("defect")) {
     if (a.includes("create")) return "create";
-    if (a.includes("update")) return "update";
     if (a.includes("delete")) return "delete";
+    if (a.includes("closed")) return "delete";
+    return "update";
   }
   if (a.includes("create")) return "create";
-  if (a.includes("update")) return "update";
-  if (a.includes("delete")) return "delete";
+  if (a.includes("update") || a.includes("changed") || a.includes("logo") || a.includes("avatar") || a.includes("profile")) return "update";
+  if (a.includes("delete") || a.includes("removed")) return "delete";
   return "default";
 }
 

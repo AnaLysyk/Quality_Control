@@ -17,14 +17,26 @@ export function isAuditLogStorageConfigured() {
 }
 
 export type AuditAction =
+  // Users
   | "user.created"
   | "user.updated"
   | "user.deleted"
   | "user.permissions.updated"
   | "user.permissions.reset"
+  | "user.activated"
+  | "user.deactivated"
+  | "user.role.changed"
+  | "user.email.changed"
+  | "user.avatar.changed"
+  | "user.profile.updated"
+  // Companies / Clients
   | "client.created"
   | "client.updated"
   | "client.deleted"
+  | "client.logo.changed"
+  | "client.user.linked"
+  | "client.user.unlinked"
+  // Runs
   | "run.created"
   | "run.deleted"
   // Auth
@@ -33,19 +45,39 @@ export type AuditAction =
   | "auth.logout"
   | "auth.password.changed"
   | "auth.password.reset"
+  | "auth.password.reset_requested"
+  | "auth.access.denied"
   // Tickets / Chamados
   | "ticket.created"
   | "ticket.updated"
-  // Access requests
+  | "ticket.deleted"
+  | "ticket.assigned"
+  | "ticket.status.changed"
+  | "ticket.closed"
+  | "ticket.commented"
+  // Access requests / Solicitações
   | "access_request.created"
+  | "access_request.accepted"
+  | "access_request.rejected"
+  | "access_request.updated"
+  | "access_request.commented"
+  // Self-service requests
+  | "request.email_change"
+  | "request.profile_deletion"
+  | "request.company_change"
   // Defects
   | "defect.created"
   // Integrations
   | "integration.updated"
+  | "integration.activated"
+  | "integration.deactivated"
+  | "integration.failed"
   // Data exports
-  | "export.executed";
+  | "export.executed"
+  // System errors
+  | "system.error";
 
-export type AuditEntityType = "user" | "client" | "run" | "ticket" | "access_request" | "defect" | "integration" | "export";
+export type AuditEntityType = "user" | "client" | "run" | "ticket" | "access_request" | "defect" | "integration" | "export" | "request" | "system";
 
 export type AuditLogRow = {
   id: string;

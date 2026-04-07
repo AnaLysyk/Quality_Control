@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
 import { getAccessRequestById, listAccessRequests, updateAccessRequest } from "@/data/accessRequestsStore";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { findLocalCompanyById } from "@/lib/auth/localStore";
 import {
   type AccessRequestAdjustmentEntry,
@@ -447,6 +448,16 @@ export async function PATCH(req: Request) {
     authorName: fullName || displayName,
     authorEmail: email,
     body: buildAdjustmentComment(adjustmentDiff),
+  });
+
+  addAuditLogSafe({
+    action: "access_request.updated",
+    entityType: "access_request",
+    entityId: request.id,
+    entityLabel: email ?? request.email ?? null,
+    actorUserId: null,
+    actorEmail: email ?? request.email ?? null,
+    metadata: { fieldsUpdated: adjustmentDiff.map((e) => e.field) },
   });
 
   if (shouldUseJsonStore()) {

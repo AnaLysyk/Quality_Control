@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
 import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { createLocalCompany, createLocalUser, findLocalCompanyById, listLocalCompanies, listLocalUsers, upsertLocalLink } from "@/lib/auth/localStore";
 import {
   composeAccessRequestMessage,
@@ -387,6 +388,16 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         reviewQueue: resolveReviewQueue(parsedNotif.profileType),
       }).catch(() => null);
 
+      addAuditLogSafe({
+        action: "access_request.accepted",
+        entityType: "access_request",
+        entityId: id,
+        entityLabel: existing.email ?? null,
+        actorUserId: admin.id ?? null,
+        actorEmail: admin.email ?? null,
+        metadata: { username: prepared.generatedUsername, comment: comment || null },
+      });
+
       return NextResponse.json({
         ok: true,
         item: {
@@ -436,6 +447,16 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         reviewQueue: resolveReviewQueue(parsedNotif2.profileType),
       }).catch(() => null);
 
+      addAuditLogSafe({
+        action: "access_request.accepted",
+        entityType: "access_request",
+        entityId: id,
+        entityLabel: existing.email ?? null,
+        actorUserId: admin.id ?? null,
+        actorEmail: admin.email ?? null,
+        metadata: { username: prepared.generatedUsername, comment: comment || null },
+      });
+
       return NextResponse.json({
         ok: true,
         item: {
@@ -479,6 +500,16 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         profileType: parsedNotif3.profileType,
         reviewQueue: resolveReviewQueue(parsedNotif3.profileType),
       }).catch(() => null);
+
+      addAuditLogSafe({
+        action: "access_request.accepted",
+        entityType: "access_request",
+        entityId: id,
+        entityLabel: existing.email ?? null,
+        actorUserId: admin.id ?? null,
+        actorEmail: admin.email ?? null,
+        metadata: { username: prepared.generatedUsername, comment: comment || null },
+      });
 
       return NextResponse.json({
         ok: true,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
 import { getAccessContext } from "@/lib/auth/session";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import {
   canManageInstitutionalCompanyAccess,
   resolveCurrentCompanyFromAccess,
@@ -37,6 +38,17 @@ export async function POST(req: NextRequest) {
     }
 
     const { logoUrl } = await uploadAndPersistCompanyLogo(company.id, file);
+
+    addAuditLogSafe({
+      action: "client.logo.changed",
+      entityType: "client",
+      entityId: company.id,
+      entityLabel: company.name ?? company.slug ?? null,
+      actorUserId: access.userId ?? null,
+      actorEmail: access.email ?? null,
+      metadata: {},
+    });
+
     try {
       // Revalidate common server paths that might render company identity
       revalidatePath("/api/me");

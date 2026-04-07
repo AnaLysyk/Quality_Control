@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { addRequest } from "@/data/requestsStore";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { notifyProfileDeletionRequest } from "@/lib/notificationService";
@@ -44,6 +45,16 @@ export async function POST(request: Request) {
         reviewQueue: "admin_and_global",
       },
     );
+
+    addAuditLogSafe({
+      action: "request.profile_deletion",
+      entityType: "request",
+      entityId: record.id,
+      entityLabel: authUser.email ?? null,
+      actorUserId: authUser.id,
+      actorEmail: authUser.email ?? null,
+      metadata: { reason },
+    });
 
     await notifyProfileDeletionRequest(record).catch(() => undefined);
     return NextResponse.json(record, { status: 201 });

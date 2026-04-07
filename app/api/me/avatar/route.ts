@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAccessContext } from "@/lib/auth/session";
 import { getLocalUserById, updateLocalUser } from "@/lib/auth/localStore";
 
@@ -101,6 +102,16 @@ export async function POST(req: Request) {
     if (!updated) {
       return NextResponse.json({ error: "Nao foi possivel atualizar o avatar" }, { status: 500 });
     }
+
+    addAuditLogSafe({
+      action: "user.avatar.changed",
+      entityType: "user",
+      entityId: user.id,
+      entityLabel: updated.email ?? null,
+      actorUserId: user.id,
+      actorEmail: updated.email ?? null,
+      metadata: {},
+    });
 
     const displayName =
       (typeof updated.full_name === "string" ? updated.full_name.trim() : "") ||

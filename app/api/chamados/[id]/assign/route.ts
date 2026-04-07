@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getTicketById, updateTicket } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketAssigned } from "@/lib/notificationService";
@@ -47,6 +48,19 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       to: updated.assignedToUserId ?? null,
     },
   }).catch((err) => console.error("Falha ao registrar atribuicao:", err));
+
+  addAuditLogSafe({
+    action: "ticket.assigned",
+    entityType: "ticket",
+    entityId: updated.id,
+    entityLabel: updated.title ?? null,
+    actorUserId: user.id,
+    actorEmail: user.email ?? null,
+    metadata: {
+      from: current.assignedToUserId ?? null,
+      to: updated.assignedToUserId ?? null,
+    },
+  });
 
   if (updated.assignedToUserId) {
     notifyTicketAssigned({

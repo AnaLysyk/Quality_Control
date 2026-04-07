@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import type { AuthCompany } from "@/../packages/contracts/src/auth";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAccessContext } from "@/lib/auth/session";
 import {
   findLocalUserByEmailOrId,
@@ -296,6 +297,27 @@ export async function PATCH(req: Request) {
     if (!updated) {
       return NextResponse.json({ error: "Nao foi possivel atualizar" }, { status: 500 });
     }
+
+    addAuditLogSafe({
+      action: "user.profile.updated",
+      entityType: "user",
+      entityId: user.id,
+      entityLabel: updated.email ?? null,
+      actorUserId: user.id,
+      actorEmail: updated.email ?? null,
+      metadata: {
+        fieldsUpdated: [
+          ...(hasFullName ? ["full_name"] : []),
+          ...(hasName || hasFullName ? ["name"] : []),
+          ...(email ? ["email"] : []),
+          ...(hasUser ? ["user"] : []),
+          ...(hasPhone ? ["phone"] : []),
+          ...(hasJobTitle ? ["job_title"] : []),
+          ...(hasLinkedinUrl ? ["linkedin_url"] : []),
+          ...(hasAvatarKey || hasAvatarUrl ? ["avatar"] : []),
+        ],
+      },
+    });
 
     const nextAvatarKey = extractObjectKey(updated.avatar_url);
     if (previousAvatarKey && previousAvatarKey !== nextAvatarKey) {

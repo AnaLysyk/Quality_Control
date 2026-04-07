@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { addRequest } from "@/data/requestsStore";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { authenticateRequest } from "@/lib/jwtAuth";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -29,6 +30,15 @@ export async function POST(request: Request) {
       "EMAIL_CHANGE",
       { newEmail }
     );
+    addAuditLogSafe({
+      action: "request.email_change",
+      entityType: "request",
+      entityId: record.id,
+      entityLabel: authUser.email ?? null,
+      actorUserId: authUser.id,
+      actorEmail: authUser.email ?? null,
+      metadata: { newEmail },
+    });
     return NextResponse.json(record, { status: 201 });
   } catch (err: unknown) {
     const code = asRecord(err)?.code;

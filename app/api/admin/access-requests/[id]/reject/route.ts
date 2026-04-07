@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { requireGlobalDeveloperWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import { parseAccessRequestMessage } from "@/lib/accessRequestMessage";
@@ -59,6 +60,16 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       reason: reason || comment || null,
     }).catch(() => null);
 
+    addAuditLogSafe({
+      action: "access_request.rejected",
+      entityType: "access_request",
+      entityId: id,
+      entityLabel: existing.email ?? null,
+      actorUserId: admin.id ?? null,
+      actorEmail: admin.email ?? null,
+      metadata: { reason: reason || comment || null },
+    });
+
     return NextResponse.json({
       ok: true,
       item: {
@@ -107,6 +118,16 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       reason: reason || comment || null,
     }).catch(() => null);
 
+    addAuditLogSafe({
+      action: "access_request.rejected",
+      entityType: "access_request",
+      entityId: id,
+      entityLabel: existing.email ?? null,
+      actorUserId: admin.id ?? null,
+      actorEmail: admin.email ?? null,
+      metadata: { reason: reason || comment || null },
+    });
+
     return NextResponse.json({
       ok: true,
       item: {
@@ -144,6 +165,16 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       reviewQueue: resolveReviewQueue(parsedNotif3.profileType),
       reason: reason || comment || null,
     }).catch(() => null);
+
+    addAuditLogSafe({
+      action: "access_request.rejected",
+      entityType: "access_request",
+      entityId: id,
+      entityLabel: existing.email ?? null,
+      actorUserId: admin.id ?? null,
+      actorEmail: admin.email ?? null,
+      metadata: { reason: reason || comment || null },
+    });
 
     return NextResponse.json({
       ok: true,

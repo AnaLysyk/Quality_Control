@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { addRequest } from "@/data/requestsStore";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { findLocalUserByEmailOrId, listLocalCompanies, listLocalLinksForUser } from "@/lib/auth/localStore";
 import { notifyPasswordResetRequest } from "@/lib/notificationService";
 import {
@@ -80,6 +81,16 @@ export async function POST(req: Request) {
       console.error("Falha ao notificar reset de senha", err);
     }
   }
+
+  addAuditLogSafe({
+    action: "auth.password.reset_requested",
+    entityType: "user",
+    entityId: user.id,
+    entityLabel: user.email ?? null,
+    actorUserId: user.id,
+    actorEmail: user.email ?? null,
+    metadata: { method: "forgot_password", companyLabel: preferredCompanyName ?? null },
+  });
 
   return NextResponse.json({ ok: true, message: resolveRequestQueueMessage(reviewQueue) });
 }

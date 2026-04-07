@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { exportTickets, type TicketRecord } from "@/lib/ticketsStore";
 import { isItDev } from "@/lib/rbac/tickets";
-import { addAuditLogSafe } from "@/app/data/auditLogRepository";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);

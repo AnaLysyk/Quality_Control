@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 // Importa o cliente Prisma para acesso ao banco de dados
 import { prisma } from "../../../lib/prismaClient";
-import { addAuditLogSafe } from "@/app/data/auditLogRepository";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 // POST: Cria um novo defeito para uma empresa e release manual
 // Espera receber no corpo: title, description, companyId, releaseManualId

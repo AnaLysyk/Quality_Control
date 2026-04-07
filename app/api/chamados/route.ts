@@ -8,7 +8,7 @@ import { getLocalUserById } from "@/lib/auth/localStore";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
 import { canAccessGlobalTicketWorkspace } from "@/lib/rbac/tickets";
-import { addAuditLogSafe } from "@/app/data/auditLogRepository";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;

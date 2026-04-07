@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getRedis } from "@/lib/redis";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { updateLocalUser } from "@/lib/auth/localStore";
-import { addAuditLogSafe } from "@/app/data/auditLogRepository";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);

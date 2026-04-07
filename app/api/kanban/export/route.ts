@@ -4,7 +4,7 @@ import { rateLimit } from "@/lib/rateLimit";
 import { readKanbanStore } from "../store";
 import type { Status } from "../types";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
-import { addAuditLogSafe } from "@/app/data/auditLogRepository";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 type ExportRow = {
   id: number;

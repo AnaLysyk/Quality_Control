@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getAccessContext } from "@/lib/auth/session";
 import { getLocalUserById, updateLocalUser } from "@/lib/auth/localStore";
 import { hashPasswordSha256, safeEqualHex } from "@/lib/passwordHash";
-import { addAuditLogSafe } from "@/app/data/auditLogRepository";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 128;

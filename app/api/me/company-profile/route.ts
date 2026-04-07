@@ -21,7 +21,7 @@ import {
   resolveCurrentCompanyFromAccess,
 } from "@/lib/companyProfileAccess";
 import { validateJiraCloudCredentials } from "@/lib/jiraCloud";
-import { addAuditLogSafe } from "@/app/data/auditLogRepository";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

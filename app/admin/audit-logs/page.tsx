@@ -567,10 +567,10 @@ export default function AdminAuditLogsPage() {
                               {result.label}
                             </span>
                           </div>
-                          {meta.companyLabel && (
+                          {typeof meta.companyLabel === "string" && meta.companyLabel && (
                             <div className={styles.kvRow}>
                               <span className={styles.kvLabel}>Empresa</span>
-                              <span className={styles.kvValue}>{String(meta.companyLabel)}</span>
+                              <span className={styles.kvValue}>{meta.companyLabel}</span>
                             </div>
                           )}
                         </div>

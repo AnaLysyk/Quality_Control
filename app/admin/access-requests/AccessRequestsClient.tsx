@@ -509,7 +509,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                       title="Tipo de perfil"
                     >
                       <option value="Usuario Testing Company">Usuario Testing Company</option>
-                      <option value="Usuarios da empresa">Usuarios da empresa</option>
+                      <option value="Usuario da empresa">Usuario da empresa</option>
                       <option value="Lider TC">Lider TC</option>
                       <option value="Suporte Tecnico">Suporte Tecnico</option>
                     </select>

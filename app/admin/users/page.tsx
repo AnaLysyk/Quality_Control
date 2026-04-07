@@ -18,6 +18,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchApi } from "@/lib/api";
 import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 import { UserDetailsModal } from "@/admin/users/components/UserDetailsModal";
+import {
+  getFixedProfileLabel,
+  getFixedProfileTone,
+  resolveFixedProfileKind,
+} from "@/lib/fixedProfilePresentation";
 
 type CompanyOption = {
   id: string;
@@ -74,36 +79,18 @@ function getInitials(name?: string | null) {
 }
 
 function normalizeProfileKind(user?: Pick<UserItem, "profile_kind" | "permission_role"> | null) {
-  const profileKind = (user?.profile_kind ?? "").trim().toLowerCase();
-  if (profileKind === "empresa") return "empresa" as const;
-  if (profileKind === "company_user") return "company_user" as const;
-  if (profileKind === "testing_company_user") return "testing_company_user" as const;
-  if (profileKind === "leader_tc") return "leader_tc" as const;
-  if (profileKind === "technical_support") return "technical_support" as const;
-
-  const permissionRole = (user?.permission_role ?? "").trim().toLowerCase();
-  if (permissionRole === "company") return "empresa" as const;
-  if (permissionRole === "admin") return "leader_tc" as const;
-  if (permissionRole === "dev") return "technical_support" as const;
-  return "testing_company_user" as const;
+  return resolveFixedProfileKind({
+    profileKind: user?.profile_kind,
+    permissionRole: user?.permission_role,
+  });
 }
 
 function profileLabel(user?: Pick<UserItem, "profile_kind" | "permission_role"> | null) {
-  const profileKind = normalizeProfileKind(user);
-  if (profileKind === "empresa") return "Empresa";
-  if (profileKind === "company_user") return "Usuario da empresa";
-  if (profileKind === "leader_tc") return "Lider TC";
-  if (profileKind === "technical_support") return "Suporte Tecnico";
-  return "Usuario Testing Company";
+  return getFixedProfileLabel(normalizeProfileKind(user), { short: true });
 }
 
 function roleTone(user?: Pick<UserItem, "profile_kind" | "permission_role"> | null) {
-  const profileKind = normalizeProfileKind(user);
-  if (profileKind === "leader_tc") return "border-indigo-200 bg-indigo-50 text-indigo-700";
-  if (profileKind === "technical_support") return "border-cyan-200 bg-cyan-50 text-cyan-700";
-  if (profileKind === "empresa") return "border-rose-200 bg-rose-50 text-rose-700";
-  if (profileKind === "company_user") return "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700";
-  return "border-sky-200 bg-sky-50 text-sky-700";
+  return getFixedProfileTone(normalizeProfileKind(user));
 }
 
 function contextBadgeLabel(user: UserItem) {
@@ -494,9 +481,9 @@ export default function AdminUsersPage() {
     }
 
     return {
-      title: "Criar usuario Testing Company",
-      subtitle: "Cadastre a pessoa da Testing Company e vincule a uma empresa ja existente.",
-      submitLabel: "Criar usuario Testing Company",
+        title: "Criar usuario TC",
+        subtitle: "Cadastre a pessoa da Testing Company e vincule a uma empresa quando necessario.",
+        submitLabel: "Criar usuario TC",
       initialRole: "client_user",
       lockRole: true,
       showCompanyField: true,
@@ -532,7 +519,7 @@ export default function AdminUsersPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Gestao de usuarios</p>
               <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Usuarios da plataforma</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/82">
-                Gerencie usuarios por contexto: empresa, Testing Company, lideranca e suporte tecnico.
+                Gerencie usuarios por contexto: empresa, usuarios TC, lideranca e suporte tecnico.
               </p>
             </div>
             <div className="flex flex-wrap gap-3 text-sm">
@@ -546,7 +533,7 @@ export default function AdminUsersPage() {
                 <FiUsers className="h-4 w-4" /> {companyUsersCount} Usuario da empresa
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiUser className="h-4 w-4" /> {testingUsersCount} Usuarios Testing Company
+                <FiUser className="h-4 w-4" /> {testingUsersCount} Usuario TC
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
                 <FiShield className="h-4 w-4" /> {adminUsersCount} Lider TC
@@ -568,7 +555,7 @@ export default function AdminUsersPage() {
                     Empresa e usuarios da empresa
                   </TabsTrigger>
                   <TabsTrigger value="testing" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Usuarios Testing Company
+                    Usuarios TC
                   </TabsTrigger>
                   <TabsTrigger value="admin" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
                     Lider TC
@@ -705,8 +692,8 @@ export default function AdminUsersPage() {
                     <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
                       <FiUsers className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
                       <div>
-                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum usuario Testing Company</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">Nao ha usuarios da Testing Company com os filtros atuais.</p>
+                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum usuario TC</h3>
+                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">Nao ha usuarios TC com os filtros atuais.</p>
                       </div>
                     </div>
                   ) : (

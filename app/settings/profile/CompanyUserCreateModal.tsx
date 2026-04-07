@@ -32,9 +32,8 @@ function suggestUsername(value?: string | null) {
 }
 
 const ROLE_OPTIONS = [
-  { value: "user", label: "Usuario" },
+  { value: "user", label: "Usuario da empresa" },
   { value: "company_admin", label: "Admin da empresa" },
-  { value: "viewer", label: "Visualizador" },
 ];
 
 export function CompanyUserCreateModal({

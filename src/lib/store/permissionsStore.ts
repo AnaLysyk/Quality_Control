@@ -14,9 +14,22 @@ const USE_POSTGRES = shouldUsePostgresPersistence();
 // Lazy-load prisma so tests without DB still work
 async function getPrisma() {
   const { PrismaClient } = await import("@prisma/client");
+  const PrismaClientUnsafe = PrismaClient as unknown as new (
+    options?: ConstructorParameters<typeof PrismaClient>[0] & {
+      __internal?: {
+        configOverride?: (config: Record<string, unknown>) => Record<string, unknown>;
+      };
+    },
+  ) => InstanceType<typeof PrismaClient>;
   // Re-use a global instance to avoid too many connections
   const g = global as unknown as { _permPrisma?: InstanceType<typeof PrismaClient> };
-  if (!g._permPrisma) g._permPrisma = new PrismaClient();
+  if (!g._permPrisma) {
+    g._permPrisma = new PrismaClientUnsafe({
+      __internal: {
+        configOverride: (config: Record<string, unknown>) => ({ ...config, copyEngine: true }),
+      },
+    });
+  }
   return g._permPrisma;
 }
 

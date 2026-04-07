@@ -27,7 +27,7 @@ type Props = {
 };
 
 const ROLE_OPTIONS = [
-  { value: "client_admin", label: "Empresa" },
+  { value: "client_admin", label: "Admin da empresa" },
   { value: "client_user", label: "Usuario" },
   { value: "leader_tc", label: "Lider TC" },
   { value: "technical_support", label: "Suporte Tecnico" },
@@ -67,6 +67,17 @@ export function CreateUserModal({
   });
 
   const normalizedRole = useMemo(() => normalizeEditableProfileRole(role), [role]);
+  const roleOptions = useMemo(
+    () =>
+      ROLE_OPTIONS.map((option) => {
+        if (option.value !== "client_user") return option;
+        return {
+          ...option,
+          label: showCompanyField || !!localClientId ? "Usuario da empresa" : "Usuario TC",
+        };
+      }),
+    [localClientId, showCompanyField],
+  );
   const requiresClient = useMemo(
     () =>
       showCompanyField &&
@@ -314,7 +325,7 @@ export function CreateUserModal({
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
                   >
-                    {ROLE_OPTIONS.map((opt) => (
+                    {roleOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
                         {opt.label}
                       </option>

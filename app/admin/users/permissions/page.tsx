@@ -18,6 +18,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { resolveAvatarEmoji } from "@/lib/avatarCatalog";
 import { normalizeEditableProfileRole, type EditableProfileRole } from "@/lib/editableProfileRoles";
+import {
+  getFixedProfileHint,
+  getFixedProfileLabel,
+  getFixedProfileTone,
+  resolveFixedProfileKind,
+  type FixedProfileKind,
+} from "@/lib/fixedProfilePresentation";
 import { PERMISSION_MODULES, getActionLabel, getPermissionModule } from "@/lib/permissionCatalog";
 import { ROLE_DEFAULTS } from "@/lib/roleDefaults";
 import {
@@ -44,6 +51,8 @@ type AdminUserItem = {
   companies?: Array<{ id: string; name: string; slug: string | null; role: string }>;
   active?: boolean;
   status?: string | null;
+  profile_kind?: string | null;
+  user_origin?: string | null;
 };
 
 type PermissionResponse = {
@@ -62,7 +71,7 @@ type CompanyOption = {
   status?: string | null;
 };
 
-type RoleFilter = "all" | EditableProfileRole;
+type RoleFilter = "all" | FixedProfileKind;
 type GlobalCreateDraft = {
   fullName: string;
   user: string;
@@ -80,21 +89,20 @@ type ModuleSummaryItem = {
 
 const ROLE_FILTERS: Array<{ value: RoleFilter; label: string; hint: string }> = [
   { value: "all", label: "Todos", hint: "Todos os tipos de perfil" },
-  { value: "admin", label: "Admin", hint: "Gestao administrativa global" },
-  { value: "dev", label: "Global", hint: "Visao tecnica total do sistema" },
-  { value: "leader_tc", label: "Lider TC", hint: "Perfil institucional da Testing Company" },
-  { value: "technical_support", label: "Suporte Tecnico", hint: "Perfil tecnico com atuacao operacional" },
-  { value: "company", label: "Empresa", hint: "Conta institucional da empresa" },
-  { value: "user", label: "Usuario", hint: "Perfil individual vinculado" },
+  { value: "leader_tc", label: getFixedProfileLabel("leader_tc"), hint: getFixedProfileHint("leader_tc") },
+  { value: "technical_support", label: getFixedProfileLabel("technical_support"), hint: getFixedProfileHint("technical_support") },
+  { value: "empresa", label: getFixedProfileLabel("empresa", { short: true }), hint: getFixedProfileHint("empresa") },
+  { value: "company_user", label: getFixedProfileLabel("company_user"), hint: getFixedProfileHint("company_user") },
+  { value: "testing_company_user", label: getFixedProfileLabel("testing_company_user"), hint: getFixedProfileHint("testing_company_user") },
 ];
 
 const PROFILE_OPTIONS: Array<{ value: EditableProfileRole; label: string; hint: string }> = [
-  { value: "admin", label: "Admin", hint: "Gestao administrativa" },
-  { value: "dev", label: "Global", hint: "Visao tecnica total" },
-  { value: "leader_tc", label: "Lider TC", hint: "Perfil institucional da Testing Company" },
-  { value: "technical_support", label: "Suporte Tecnico", hint: "Atuacao tecnica e operacional" },
-  { value: "company", label: "Empresa", hint: "Escopo da empresa" },
-  { value: "user", label: "Usuario", hint: "Acesso individual" },
+  { value: "admin", label: getFixedProfileLabel("leader_tc"), hint: getFixedProfileHint("leader_tc") },
+  { value: "dev", label: getFixedProfileLabel("technical_support"), hint: getFixedProfileHint("technical_support") },
+  { value: "leader_tc", label: getFixedProfileLabel("leader_tc"), hint: getFixedProfileHint("leader_tc") },
+  { value: "technical_support", label: getFixedProfileLabel("technical_support"), hint: getFixedProfileHint("technical_support") },
+  { value: "company", label: getFixedProfileLabel("empresa"), hint: getFixedProfileHint("empresa") },
+  { value: "user", label: "Usuario", hint: "Base individual. O contexto final define se vira Usuario TC ou Usuario da empresa." },
 ];
 
 function emptyOverride(): PermissionOverride {
@@ -117,21 +125,17 @@ function normalizeRole(value?: string | null): EditableProfileRole {
 
 function roleLabel(value?: string | null) {
   const normalized = normalizeRole(value);
-  if (normalized === "admin") return "Admin";
-  if (normalized === "dev") return "Global";
-  if (normalized === "leader_tc") return "Lider TC";
-  if (normalized === "technical_support") return "Suporte Tecnico";
-  if (normalized === "company") return "Empresa";
-  return "Usuário";
+  if (normalized === "admin" || normalized === "leader_tc") return getFixedProfileLabel("leader_tc");
+  if (normalized === "dev" || normalized === "technical_support") return getFixedProfileLabel("technical_support");
+  if (normalized === "company") return getFixedProfileLabel("empresa");
+  return "Usuario";
 }
 
 function roleHint(role: EditableProfileRole) {
-  if (role === "admin") return "Acesso amplo aos módulos administrativos, sem o fluxo técnico exclusivo do perfil Global.";
-  if (role === "dev") return "Visão técnica total do sistema, incluindo suporte e manutenção global.";
-  if (role === "leader_tc") return "Perfil institucional da Testing Company com escopo administrativo vinculado.";
-  if (role === "technical_support") return "Perfil técnico-operacional voltado ao atendimento e suporte.";
-  if (role === "company") return "Escopo da própria empresa, sem gestão global de usuários.";
-  return "Escopo individual vinculado à empresa, sem gestão administrativa global.";
+  if (role === "admin" || role === "leader_tc") return getFixedProfileHint("leader_tc");
+  if (role === "dev" || role === "technical_support") return getFixedProfileHint("technical_support");
+  if (role === "company") return getFixedProfileHint("empresa");
+  return "Base individual. O contexto final define se o usuario opera como Usuario TC ou Usuario da empresa.";
 }
 
 function roleNeedsCompany(role: EditableProfileRole) {
@@ -162,25 +166,32 @@ function badgeLabel(state: "allow" | "deny" | "default") {
 }
 
 function roleTone(value?: string | null, selected = false) {
-  if (selected) return "border border-white/20 bg-white/10 text-white";
+  const normalized = normalizeRole(value);
+  if (normalized === "admin" || normalized === "leader_tc") return getFixedProfileTone("leader_tc", { selected });
+  if (normalized === "dev" || normalized === "technical_support") return getFixedProfileTone("technical_support", { selected });
+  if (normalized === "company") return getFixedProfileTone("empresa", { selected });
+  return selected ? "border border-white/20 bg-white/10 text-white" : "border border-(--tc-border) bg-(--tc-surface-2) text-(--tc-text-muted)";
+}
 
-  const normalized = (value ?? "").toLowerCase();
-  if (normalized === "admin" || normalized === "global_admin") {
-    return "border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.08)] text-(--tc-primary)";
-  }
-  if (normalized === "dev" || normalized === "it_dev") {
-    return "border border-[rgba(59,130,246,0.18)] bg-[rgba(59,130,246,0.12)] text-[#2563eb]";
-  }
-  if (normalized === "leader_tc") {
-    return "border border-[rgba(79,70,229,0.18)] bg-[rgba(79,70,229,0.1)] text-[#4338ca]";
-  }
-  if (normalized === "technical_support" || normalized === "support") {
-    return "border border-[rgba(6,182,212,0.18)] bg-[rgba(6,182,212,0.1)] text-[#0f766e]";
-  }
-  if (normalized === "company" || normalized === "client_admin") {
-    return "border border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.1)] text-(--tc-accent)";
-  }
-  return "border border-(--tc-border) bg-(--tc-surface-2) text-(--tc-text-muted)";
+function profileKindForUser(user?: Pick<AdminUserItem, "profile_kind" | "permission_role" | "role" | "user_origin" | "company_count"> | null) {
+  return resolveFixedProfileKind({
+    profileKind: user?.profile_kind,
+    permissionRole: user?.permission_role,
+    role: user?.role,
+    userOrigin: user?.user_origin,
+    companyCount: user?.company_count,
+  });
+}
+
+function profileLabelForUser(user?: Pick<AdminUserItem, "profile_kind" | "permission_role" | "role" | "user_origin" | "company_count"> | null) {
+  return getFixedProfileLabel(profileKindForUser(user), { short: true });
+}
+
+function profileToneForUser(
+  user?: Pick<AdminUserItem, "profile_kind" | "permission_role" | "role" | "user_origin" | "company_count"> | null,
+  selected = false,
+) {
+  return getFixedProfileTone(profileKindForUser(user), { selected });
 }
 
 function statusTone(value?: string | null, selected = false) {
@@ -582,8 +593,8 @@ export default function PermissionsPage() {
   const filteredUsers = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return users.filter((user) => {
-      const normalizedRole = normalizeRole(user.permission_role ?? user.role);
-      const matchesRole = roleFilter === "all" ? true : normalizedRole === roleFilter;
+      const profileKind = profileKindForUser(user);
+      const matchesRole = roleFilter === "all" ? true : profileKind === roleFilter;
       if (!matchesRole) return false;
 
       if (!normalizedQuery) return true;
@@ -591,6 +602,7 @@ export default function PermissionsPage() {
         user.name,
         user.email,
         user.company_name,
+        profileLabelForUser(user),
         ...(Array.isArray(user.company_names) ? user.company_names : []),
         user.role,
         user.permission_role,
@@ -603,16 +615,15 @@ export default function PermissionsPage() {
   const roleCounts = useMemo(() => {
     const counts: Record<string, number> = {
       all: users.length,
-      admin: 0,
-      dev: 0,
       leader_tc: 0,
       technical_support: 0,
-      company: 0,
-      user: 0,
+      empresa: 0,
+      company_user: 0,
+      testing_company_user: 0,
     };
 
     for (const user of users) {
-      const role = normalizeRole(user.permission_role ?? user.role);
+      const role = profileKindForUser(user);
       counts[role] = (counts[role] ?? 0) + 1;
     }
 
@@ -631,7 +642,7 @@ export default function PermissionsPage() {
   }, [canManagePrivilegedProfiles]);
 
   const testingCompanyUsersCount = useMemo(
-    () => users.filter((user) => normalizeRole(user.permission_role ?? user.role) === "user").length,
+    () => users.filter((user) => profileKindForUser(user) === "testing_company_user").length,
     [users],
   );
 
@@ -997,7 +1008,7 @@ export default function PermissionsPage() {
         setCreateGlobalError(
           friendlyUiError(
             json.error,
-            res.status === 401 ? "Sessao expirada. Entre novamente para continuar." : "Nao foi possivel criar o perfil Global agora.",
+            res.status === 401 ? "Sessao expirada. Entre novamente para continuar." : "Nao foi possivel criar o perfil de Suporte Tecnico agora.",
           ),
         );
         return;
@@ -1012,9 +1023,9 @@ export default function PermissionsPage() {
         setSelectedUserId(json.item.id);
       }
       setPanelError(null);
-      setMessage(`Perfil Global criado para ${fullName}. Revise as permissoes e os ajustes de perfil, se necessario.`);
+      setMessage(`Perfil de Suporte Tecnico criado para ${fullName}. Revise as permissoes e os ajustes de perfil, se necessario.`);
     } catch (error) {
-      setCreateGlobalError(error instanceof Error ? error.message : "Nao foi possivel criar o perfil Global agora.");
+      setCreateGlobalError(error instanceof Error ? error.message : "Nao foi possivel criar o perfil de Suporte Tecnico agora.");
     } finally {
       setCreateGlobalLoading(false);
     }
@@ -1141,7 +1152,7 @@ export default function PermissionsPage() {
                 className="inline-flex items-center justify-center gap-2 rounded-[18px] border border-white/18 bg-white/12 px-4 py-3 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(1,24,72,0.18)] backdrop-blur-sm transition hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
               >
                 <FiPlus size={16} />
-                Criar Global
+                Criar Suporte Tecnico
               </button>
             ) : null}
           </div>
@@ -1260,8 +1271,8 @@ export default function PermissionsPage() {
                               </p>
                             ) : null}
                           </div>
-                          <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${roleTone(user.permission_role ?? user.role, selected)}`}>
-                            {roleLabel(user.permission_role ?? user.role)}
+                          <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${profileToneForUser(user, selected)}`}>
+                            {profileLabelForUser(user)}
                           </span>
                         </div>
 
@@ -1376,7 +1387,7 @@ export default function PermissionsPage() {
                     ) : (
                       <div
                         className="inline-flex min-w-52.5 items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/88"
-                        title="Somente o perfil Global pode alterar ou criar perfis privilegiados."
+                        title="Somente perfis tecnicos privilegiados podem alterar ou criar perfis privilegiados."
                       >
                         Perfil de origem: {roleLabel(profileDraft)}
                       </div>
@@ -1579,7 +1590,7 @@ export default function PermissionsPage() {
 
       <SurfaceModal
         open={createGlobalOpen}
-        title="Criar Global"
+        title="Criar Suporte Tecnico"
         onClose={() => {
           setCreateGlobalOpen(false);
           resetCreateGlobalForm();
@@ -1602,7 +1613,7 @@ export default function PermissionsPage() {
               disabled={createGlobalLoading}
               className="inline-flex items-center justify-center rounded-2xl bg-(--tc-accent) px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
             >
-              {createGlobalLoading ? "Criando..." : "Criar Global"}
+              {createGlobalLoading ? "Criando..." : "Criar Suporte Tecnico"}
             </button>
           </>
         }
@@ -2162,7 +2173,3 @@ export default function PermissionsPage() {
     </div>
   );
 }
-
-
-
-

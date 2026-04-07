@@ -38,12 +38,95 @@ function normalizeProjectList(values: unknown[]): string[] {
   );
 }
 
-function normalizeRunEntity(entity: unknown, projectCode: string, companySlug: string | null) {
+type QaseRunResponsible = {
+  id: number;
+  name: string | null;
+  email: string | null;
+};
+
+function normalizeNumericId(value: unknown): number | null {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value.trim())
+        : Number.NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function extractRunResponsibleIds(entities: unknown[]) {
+  return Array.from(
+    new Set(
+      entities
+        .map((entity) => {
+          const record = asRecord(entity);
+          return normalizeNumericId(record?.user_id ?? record?.userId);
+        })
+        .filter((value): value is number => value !== null),
+    ),
+  );
+}
+
+function parseQaseRunResponsible(value: unknown, fallbackId: number): QaseRunResponsible | null {
+  const record = asRecord(value);
+  if (!record) return null;
+
+  return {
+    id: normalizeNumericId(record.id) ?? fallbackId,
+    name: normalizeString(record.name),
+    email: normalizeString(record.email),
+  };
+}
+
+async function fetchQaseRunResponsibles(baseUrl: string, token: string, userIds: number[]) {
+  const uniqueIds = Array.from(new Set(userIds.filter((value) => Number.isFinite(value) && value > 0)));
+  if (!uniqueIds.length) return new Map<number, QaseRunResponsible>();
+
+  const entries = await Promise.all(
+    uniqueIds.map(async (userId) => {
+      try {
+        const response = await fetch(`${baseUrl}/v1/user/${encodeURIComponent(String(userId))}`, {
+          headers: { Token: token, Accept: "application/json" },
+          cache: "no-store",
+        });
+        if (!response.ok) return null;
+
+        const payload = (await response.json().catch(() => null)) as unknown;
+        const responsible = parseQaseRunResponsible(asRecord(payload)?.result, userId);
+        return responsible ? ([userId, responsible] as const) : null;
+      } catch {
+        return null;
+      }
+    }),
+  );
+
+  return new Map<number, QaseRunResponsible>(
+    entries.filter((entry): entry is readonly [number, QaseRunResponsible] => entry !== null),
+  );
+}
+
+function normalizeRunEntity(
+  entity: unknown,
+  projectCode: string,
+  companySlug: string | null,
+  responsiblesById: Map<number, QaseRunResponsible> = new Map(),
+) {
   const record = asRecord(entity) ?? {};
   const rawId = record.id;
   const parsedId = typeof rawId === "number" ? rawId : Number(String(rawId ?? "").trim());
   const runId = Number.isFinite(parsedId) && parsedId > 0 ? parsedId : null;
   const rawSlug = normalizeString(record.slug);
+  const responsibleUserId = normalizeNumericId(record.user_id ?? record.userId);
+  const responsible = responsibleUserId ? responsiblesById.get(responsibleUserId) ?? null : null;
+  const responsibleName =
+    responsible?.name ??
+    normalizeString(record.responsibleName) ??
+    normalizeString(record.createdByName);
+  const responsibleEmail =
+    responsible?.email ??
+    normalizeString(record.responsibleEmail) ??
+    normalizeString(record.createdByEmail);
+  const responsibleLabel = responsibleName || responsibleEmail || null;
   const title =
     normalizeString(record.title) ||
     normalizeString(record.name) ||
@@ -67,6 +150,12 @@ function normalizeRunEntity(entity: unknown, projectCode: string, companySlug: s
     qaseProject: projectCode,
     clientId: companySlug,
     clientName: companySlug,
+    responsibleUserId,
+    responsibleName,
+    responsibleEmail,
+    responsibleLabel,
+    createdByName: responsibleName,
+    createdByEmail: responsibleEmail,
   };
 }
 
@@ -143,19 +232,23 @@ export async function GET(request: Request) {
         if (!r.ok) {
           return { project: proj, ok: false, status: r.status, details: j, entities: [] as unknown[] };
         }
-        const ents = (asRecord(asRecord(j)?.result)?.entities as unknown[]) || [];
-        const normalized = ents.map((entity) => normalizeRunEntity(entity, proj, companySlug));
-        return { project: proj, ok: true, status: 200, details: j, entities: normalized };
+        const entities = (asRecord(asRecord(j)?.result)?.entities as unknown[]) || [];
+        return { project: proj, ok: true, status: 200, details: j, entities };
       } catch (e) {
         return { project: proj, ok: false, status: 500, details: e, entities: [] as unknown[] };
       }
     });
 
     const results = await Promise.all(fetches);
+    const responsiblesById = await fetchQaseRunResponsibles(
+      baseUrl,
+      tokenToUse,
+      results.flatMap((result) => extractRunResponsibleIds(result.entities)),
+    );
     const combined: unknown[] = [];
     const seen = new Set<string>();
     for (const r of results) {
-      for (const e of (r.entities as unknown[])) {
+      for (const e of r.entities.map((entity) => normalizeRunEntity(entity, r.project, companySlug, responsiblesById))) {
         const entityRecord = asRecord(e);
         const id = String(
           entityRecord?.runId ??
@@ -203,7 +296,12 @@ export async function GET(request: Request) {
   }
 
   const entities = (asRecord(asRecord(json)?.result)?.entities as unknown[]) || [];
-  const out = { data: entities.map((entity) => normalizeRunEntity(entity, effectiveProject, companySlug)) };
+  const responsiblesById = await fetchQaseRunResponsibles(
+    baseUrl,
+    tokenToUse,
+    extractRunResponsibleIds(entities),
+  );
+  const out = { data: entities.map((entity) => normalizeRunEntity(entity, effectiveProject, companySlug, responsiblesById)) };
   return apiOk(request, out, "OK", { extra: out });
 }
 

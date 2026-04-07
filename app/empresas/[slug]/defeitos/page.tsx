@@ -7,7 +7,7 @@ import { slugifyRelease } from "@/lib/slugifyRelease";
 import { calcMTTR } from "@/lib/mttr";
 import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
 
-type ManualDefect = {
+type CompanyDefect = {
   id: string;
   slug: string;
   name: string;
@@ -16,12 +16,21 @@ type ManualDefect = {
   updatedAt?: string | null;
   closedAt?: string | null;
   runSlug?: string | null;
+  runName?: string | null;
+  runId?: number | null;
   stats?: { pass: number; fail: number; blocked: number; notRun: number };
+  sourceType: "manual" | "qase";
+  projectCode?: string | null;
+  description?: string | null;
+  severity?: string | number | null;
+  externalUrl?: string | null;
 };
 
-type ManualRun = {
+type RunOption = {
   slug: string;
   name: string;
+  sourceType?: "manual" | "qase" | null;
+  projectCode?: string | null;
 };
 
 type DefectHistoryEvent = {
@@ -39,7 +48,7 @@ type DefectHistoryEvent = {
 
 const LOCAL_LINKS_KEY = "qc_defect_run_links";
 
-function normalizeDefects(data: unknown[]): ManualDefect[] {
+function normalizeManualDefects(data: unknown[]): CompanyDefect[] {
   return data
     .map((item) => {
       const rec = (item ?? {}) as Record<string, unknown>;
@@ -53,20 +62,92 @@ function normalizeDefects(data: unknown[]): ManualDefect[] {
         updatedAt: typeof rec.updatedAt === "string" ? rec.updatedAt : null,
         closedAt: typeof rec.closedAt === "string" ? rec.closedAt : null,
         runSlug: typeof rec.runSlug === "string" ? rec.runSlug : null,
-        stats: typeof rec.stats === "object" && rec.stats ? (rec.stats as ManualDefect["stats"]) : undefined,
-      } satisfies ManualDefect;
+        runName: typeof rec.runName === "string" ? rec.runName : null,
+        runId: typeof rec.runId === "number" ? rec.runId : null,
+        stats: typeof rec.stats === "object" && rec.stats ? (rec.stats as CompanyDefect["stats"]) : undefined,
+        sourceType: "manual",
+        projectCode:
+          typeof rec.qaseProject === "string"
+            ? rec.qaseProject
+            : typeof rec.app === "string"
+              ? rec.app
+              : null,
+        description: typeof rec.observations === "string" ? rec.observations : null,
+        severity: null,
+        externalUrl: null,
+      } satisfies CompanyDefect;
     })
     .filter((defect) => defect.slug.length > 0);
 }
 
-function normalizeRuns(data: unknown[]): ManualRun[] {
+function normalizeQaseDefects(data: unknown[]): CompanyDefect[] {
+  return data
+    .map((item) => {
+      const rec = (item ?? {}) as Record<string, unknown>;
+      const projectCode =
+        typeof rec.project_code === "string"
+          ? rec.project_code
+          : typeof rec.project === "string"
+            ? rec.project
+            : null;
+      const slugBase = String(rec.slug ?? rec.id ?? "");
+      const slug = slugBase || `qase-${String(projectCode ?? "defect").toLowerCase()}-${String(rec.id ?? "item")}`;
+      const createdAt =
+        typeof rec.createdAt === "string"
+          ? rec.createdAt
+          : typeof rec.created_at === "string"
+            ? rec.created_at
+            : new Date().toISOString();
+      return {
+        id: String(rec.id ?? slug),
+        slug,
+        name: String(rec.name ?? rec.title ?? slug),
+        status: String(rec.status ?? "open"),
+        createdAt,
+        updatedAt:
+          typeof rec.updatedAt === "string"
+            ? rec.updatedAt
+            : typeof rec.updated_at === "string"
+              ? rec.updated_at
+              : null,
+        closedAt: typeof rec.closedAt === "string" ? rec.closedAt : null,
+        runSlug: typeof rec.runSlug === "string" ? rec.runSlug : null,
+        runName: typeof rec.runName === "string" ? rec.runName : null,
+        runId: typeof rec.runId === "number" ? rec.runId : typeof rec.run_id === "number" ? rec.run_id : null,
+        stats: undefined,
+        sourceType: "qase",
+        projectCode,
+        description: typeof rec.description === "string" ? rec.description : null,
+        severity:
+          typeof rec.severity === "string" || typeof rec.severity === "number"
+            ? rec.severity
+            : null,
+        externalUrl:
+          typeof rec.externalUrl === "string"
+            ? rec.externalUrl
+            : typeof rec.url === "string"
+              ? rec.url
+              : null,
+      } satisfies CompanyDefect;
+    })
+    .filter((defect) => defect.slug.length > 0);
+}
+
+function normalizeRuns(data: unknown[]): RunOption[] {
   return data
     .map((item) => {
       const rec = (item ?? {}) as Record<string, unknown>;
       return {
         slug: String(rec.slug ?? rec.id ?? ""),
         name: String(rec.name ?? rec.title ?? rec.slug ?? "Run manual"),
-      } satisfies ManualRun;
+        sourceType: "manual",
+        projectCode:
+          typeof rec.qaseProject === "string"
+            ? rec.qaseProject
+            : typeof rec.app === "string"
+              ? rec.app
+              : null,
+      } satisfies RunOption;
     })
     .filter((run) => run.slug.length > 0);
 }
@@ -97,10 +178,10 @@ function formatHistoryLabel(item: DefectHistoryEvent) {
   }
 }
 
-function sortDefects(items: ManualDefect[]) {
+function sortDefects(items: CompanyDefect[]) {
   return [...items].sort((a, b) => {
-    const timeA = Date.parse(a.createdAt ?? "") || 0;
-    const timeB = Date.parse(b.createdAt ?? "") || 0;
+    const timeA = Math.max(Date.parse(a.updatedAt ?? "") || 0, Date.parse(a.createdAt ?? "") || 0);
+    const timeB = Math.max(Date.parse(b.updatedAt ?? "") || 0, Date.parse(b.createdAt ?? "") || 0);
     return timeB - timeA;
   });
 }
@@ -114,19 +195,20 @@ export default function CompanyDefectsPage() {
   const slugParam = params?.slug;
   const companySlug = Array.isArray(slugParam) ? slugParam[0] : slugParam;
 
-  const [defects, setDefects] = useState<ManualDefect[]>([]);
-  const [runs, setRuns] = useState<ManualRun[]>([]);
+  const [defects, setDefects] = useState<CompanyDefect[]>([]);
+  const [runs, setRuns] = useState<RunOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState("");
   const [runSlugInput, setRunSlugInput] = useState("");
-  const [activeDefect, setActiveDefect] = useState<ManualDefect | null>(null);
+  const [activeDefect, setActiveDefect] = useState<CompanyDefect | null>(null);
   const [editStatus, setEditStatus] = useState("open");
   const [linkingDefectId, setLinkingDefectId] = useState<string | null>(null);
   const [linkInput, setLinkInput] = useState("");
   const [historyItems, setHistoryItems] = useState<DefectHistoryEvent[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const [integrationWarning, setIntegrationWarning] = useState<string | null>(null);
 
   const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
   const isAdmin = Boolean(user?.isGlobalAdmin || role === "admin");
@@ -136,10 +218,14 @@ export default function CompanyDefectsPage() {
   const canCreate = Boolean(isAdmin || role === "company" || role === "user");
 
   const runFilter = searchParams?.get("run") ?? "";
-  const runFilterLabel =
-    runFilter && runs.length > 0
-      ? runs.find((run) => run.slug === runFilter)?.name ?? runFilter
-      : runFilter;
+  const runFilterLabel = useMemo(() => {
+    if (!runFilter) return "";
+    return (
+      runs.find((run) => run.slug === runFilter)?.name ??
+      defects.find((defect) => defect.runSlug === runFilter)?.runName ??
+      runFilter
+    );
+  }, [defects, runFilter, runs]);
 
   const readLocalLinks = () => {
     if (typeof window === "undefined") return {};
@@ -160,12 +246,12 @@ export default function CompanyDefectsPage() {
     }
   };
 
-  const mergeLocalLinks = useCallback((items: ManualDefect[]) => {
+  const mergeLocalLinks = useCallback((items: CompanyDefect[]) => {
     if (!companySlug) return items;
     const map = readLocalLinks();
     const companyLinks = map[companySlug] ?? {};
     return items.map((item) => {
-      if (item.runSlug) return item;
+      if (item.sourceType !== "manual" || item.runSlug) return item;
       const localRun = companyLinks[item.slug];
       return localRun ? { ...item, runSlug: localRun } : item;
     });
@@ -175,25 +261,79 @@ export default function CompanyDefectsPage() {
     if (!companySlug) return;
     let active = true;
     setLoading(true);
-    Promise.all([
-      fetch(`/api/releases-manual?clientSlug=${encodeURIComponent(companySlug)}&kind=defect`, { cache: "no-store" })
-        .then((res) => res.json())
-        .then((data) => {
-          if (!active) return;
-          const normalized = normalizeDefects(Array.isArray(data) ? data : []);
-          setDefects(sortDefects(mergeLocalLinks(normalized)));
+    setIntegrationWarning(null);
+
+    const load = async () => {
+      const [manualDefectsResult, manualRunsResult, qaseDefectsResult] = await Promise.allSettled([
+        fetch(`/api/releases-manual?clientSlug=${encodeURIComponent(companySlug)}&kind=defect`, { cache: "no-store" }).then((res) => res.json()),
+        fetch(`/api/releases-manual?clientSlug=${encodeURIComponent(companySlug)}&kind=run`, { cache: "no-store" }).then((res) => res.json()),
+        fetch(`/api/v1/defects?companySlug=${encodeURIComponent(companySlug)}`, {
+          cache: "no-store",
+          credentials: "include",
+        }).then(async (res) => {
+          const payload = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+          return { ok: res.ok, payload };
         }),
-      fetch(`/api/releases-manual?clientSlug=${encodeURIComponent(companySlug)}&kind=run`, { cache: "no-store" })
-        .then((res) => res.json())
-        .then((data) => {
-          if (!active) return;
-          setRuns(normalizeRuns(Array.isArray(data) ? data : []));
-        }),
-    ])
+      ]);
+
+      if (!active) return;
+
+      const manualDefects =
+        manualDefectsResult.status === "fulfilled"
+          ? mergeLocalLinks(normalizeManualDefects(Array.isArray(manualDefectsResult.value) ? manualDefectsResult.value : []))
+          : [];
+
+      const manualRuns =
+        manualRunsResult.status === "fulfilled"
+          ? normalizeRuns(Array.isArray(manualRunsResult.value) ? manualRunsResult.value : [])
+          : [];
+
+      let qaseDefects: CompanyDefect[] = [];
+      if (qaseDefectsResult.status === "fulfilled") {
+        const payload = qaseDefectsResult.value.payload;
+        const data = Array.isArray(payload?.data) ? payload.data : [];
+        qaseDefects = normalizeQaseDefects(data);
+        if (!qaseDefectsResult.value.ok) {
+          setIntegrationWarning(
+            typeof payload?.error === "object" && payload?.error && typeof (payload.error as { message?: unknown }).message === "string"
+              ? String((payload.error as { message?: string }).message)
+              : typeof payload?.message === "string"
+                ? payload.message
+                : "Nao foi possivel carregar os defeitos da Qase.",
+          );
+        } else if (typeof payload?.warning === "string") {
+          setIntegrationWarning(payload.warning);
+        }
+      } else {
+        setIntegrationWarning("Nao foi possivel carregar os defeitos da Qase.");
+      }
+
+      const mergedDefects = sortDefects([...manualDefects, ...qaseDefects]);
+      const runOptionsMap = new Map<string, RunOption>();
+      for (const run of manualRuns) {
+        if (!run.slug) continue;
+        runOptionsMap.set(run.slug, run);
+      }
+      for (const defect of mergedDefects) {
+        if (!defect.runSlug) continue;
+        runOptionsMap.set(defect.runSlug, {
+          slug: defect.runSlug,
+          name: defect.runName ?? defect.runSlug,
+          sourceType: defect.sourceType,
+          projectCode: defect.projectCode ?? null,
+        });
+      }
+
+      setDefects(mergedDefects);
+      setRuns(Array.from(runOptionsMap.values()));
+    };
+
+    load()
       .catch(() => {
         if (!active) return;
         setDefects([]);
         setRuns([]);
+        setIntegrationWarning("Nao foi possivel carregar os defeitos da empresa.");
       })
       .finally(() => {
         if (!active) return;
@@ -229,7 +369,7 @@ export default function CompanyDefectsPage() {
     };
   }, [defects]);
 
-  const getDefectMttrHours = (defect: ManualDefect) => {
+  const getDefectMttrHours = (defect: CompanyDefect) => {
     const status = normalizeDefectStatus(defect.status);
     const openedAt = resolveOpenedAt(defect.createdAt);
     const closedAt = resolveClosedAt(status, defect.closedAt ?? null, defect.updatedAt ?? null);
@@ -243,6 +383,11 @@ export default function CompanyDefectsPage() {
     }
     return null;
   }, [filteredDefects]);
+
+  const firstManualSlug = useMemo(
+    () => filteredDefects.find((defect) => defect.sourceType === "manual")?.slug ?? null,
+    [filteredDefects],
+  );
 
   const loadHistory = async (defectSlug: string) => {
     if (!defectSlug) return;
@@ -275,7 +420,7 @@ export default function CompanyDefectsPage() {
     setSaving(true);
     const slug = slugifyRelease(title);
     const now = new Date().toISOString();
-    const optimistic: ManualDefect = {
+    const optimistic: CompanyDefect = {
       id: slug,
       slug,
       name: title.trim(),
@@ -283,7 +428,14 @@ export default function CompanyDefectsPage() {
       createdAt: now,
       updatedAt: now,
       runSlug: runSlugInput.trim() || null,
+      runName: null,
+      runId: null,
       stats: { pass: 0, fail: 1, blocked: 0, notRun: 0 },
+      sourceType: "manual",
+      projectCode: null,
+      description: null,
+      severity: null,
+      externalUrl: null,
     };
     setDefects((prev) => sortDefects([optimistic, ...prev.filter((item) => item.slug !== slug)]));
     try {
@@ -304,7 +456,7 @@ export default function CompanyDefectsPage() {
       if (!res.ok) throw new Error("Erro ao criar defeito");
       const created = (await res.json()) as Record<string, unknown>;
       setDefects((prev) => {
-        const normalized = normalizeDefects([created])[0];
+        const normalized = normalizeManualDefects([created])[0];
         if (!normalized) return prev;
         const withLocal = mergeLocalLinks([normalized])[0] ?? normalized;
         const filtered = prev.filter((item) => item.slug !== normalized.slug);
@@ -319,7 +471,8 @@ export default function CompanyDefectsPage() {
     }
   };
 
-  const handleOpenModal = (defect: ManualDefect) => {
+  const handleOpenModal = (defect: CompanyDefect) => {
+    if (defect.sourceType !== "manual") return;
     setActiveDefect(defect);
     setEditStatus(normalizeDefectStatus(defect.status));
     setHistoryItems([]);
@@ -328,7 +481,7 @@ export default function CompanyDefectsPage() {
   };
 
   const handleSaveModal = async () => {
-    if (!activeDefect) return;
+    if (!activeDefect || activeDefect.sourceType !== "manual") return;
     setSaving(true);
     try {
       const res = await fetch(`/api/releases-manual/${encodeURIComponent(activeDefect.slug)}`, {
@@ -341,7 +494,7 @@ export default function CompanyDefectsPage() {
         const updated = (await res.json()) as Record<string, unknown>;
         setDefects((prev) =>
           sortDefects(
-            prev.map((item) => (item.slug === activeDefect.slug ? normalizeDefects([updated])[0] : item)),
+            prev.map((item) => (item.slug === activeDefect.slug ? normalizeManualDefects([updated])[0] : item)),
           ),
         );
         await loadHistory(activeDefect.slug);
@@ -356,7 +509,7 @@ export default function CompanyDefectsPage() {
     if (!linkingDefectId || !linkInput.trim()) return;
     setSaving(true);
     const nextRunSlug = linkInput.trim();
-    const current = defects.find((item) => item.slug === linkingDefectId) ?? null;
+    const current = defects.find((item) => item.slug === linkingDefectId && item.sourceType === "manual") ?? null;
     try {
       const res = await fetch(`/api/releases-manual/${encodeURIComponent(linkingDefectId)}`, {
         method: "PATCH",
@@ -366,7 +519,7 @@ export default function CompanyDefectsPage() {
       });
       if (res.ok) {
         const updated = (await res.json()) as Record<string, unknown>;
-        const normalized = normalizeDefects([updated])[0];
+        const normalized = normalizeManualDefects([updated])[0];
         if (normalized) {
           setDefects((prev) =>
             sortDefects(prev.map((item) => (item.slug === linkingDefectId ? normalized : item))),
@@ -397,6 +550,8 @@ export default function CompanyDefectsPage() {
 
   const handleDelete = async (slug: string) => {
     if (!canDelete) return;
+    const current = defects.find((item) => item.slug === slug) ?? null;
+    if (!current || current.sourceType !== "manual") return;
     setSaving(true);
     try {
       const res = await fetch(`/api/releases-manual/${encodeURIComponent(slug)}`, {
@@ -413,7 +568,7 @@ export default function CompanyDefectsPage() {
 
   const runOptions = useMemo(() => {
     const trimmed = linkInput.trim();
-    const list = runs.map((run) => run.slug);
+    const list = Array.from(new Set(runs.map((run) => run.slug)));
     if (!trimmed) return list;
     return [trimmed, ...list.filter((slug) => slug !== trimmed)];
   }, [runs, linkInput]);
@@ -423,11 +578,17 @@ export default function CompanyDefectsPage() {
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="rounded-3xl bg-white p-6 shadow-sm">
           <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">Defeitos</p>
-          <h1 className="mt-2 text-3xl font-extrabold">Defeitos manuais</h1>
+          <h1 className="mt-2 text-3xl font-extrabold">Defeitos da empresa</h1>
           <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
-            Crie, edite e vincule defeitos as runs da empresa.
+            Visao consolidada de defeitos manuais e integrados da Qase. Edicao e vinculo seguem disponiveis apenas para os itens manuais.
           </p>
         </header>
+
+        {integrationWarning && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {integrationWarning}
+          </div>
+        )}
 
         {runFilter && (
           <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white px-4 py-3 text-sm">
@@ -497,31 +658,60 @@ export default function CompanyDefectsPage() {
             <p className="text-sm text-(--tc-text-muted)">Nenhum defeito encontrado.</p>
           )}
           <div className="grid gap-4 md:grid-cols-2">
-            {filteredDefects.map((defect, index) => {
-              const status = normalizeDefectStatus(defect.status);
+            {filteredDefects.map((defect) => {
+              const statusLabel = formatDefectStatus(defect.status);
+              const isManual = defect.sourceType === "manual";
               const mttrHours = getDefectMttrHours(defect);
-              const testId = defect.runSlug ? `defect-item-manual-${defect.runSlug}` : `defect-item-${defect.slug}`;
-              const isPrimary = index === 0;
+              const testId = isManual
+                ? defect.runSlug
+                  ? `defect-item-manual-${defect.runSlug}`
+                  : `defect-item-${defect.slug}`
+                : defect.runSlug
+                  ? `defect-item-qase-${defect.runSlug}`
+                  : `defect-item-qase-${defect.slug}`;
+              const isPrimaryManual = isManual && defect.slug === firstManualSlug;
               const isMttrTarget = mttrTestSlug != null && defect.slug === mttrTestSlug;
-              const isLinking = linkingDefectId === defect.slug;
+              const isLinking = isManual && linkingDefectId === defect.slug;
               return (
                 <div
                   key={defect.slug}
                   data-testid={testId}
                   className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-4"
                 >
-                  <button
-                    type="button"
-                    onClick={() => handleOpenModal(defect)}
-                    className="text-left text-base font-semibold text-(--tc-text-primary,#0b1a3c)"
-                  >
-                    {defect.name}
-                  </button>
+                  {isManual ? (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenModal(defect)}
+                      className="text-left text-base font-semibold text-(--tc-text-primary,#0b1a3c)"
+                    >
+                      {defect.name}
+                    </button>
+                  ) : defect.externalUrl ? (
+                    <a
+                      href={defect.externalUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-left text-base font-semibold text-(--tc-text-primary,#0b1a3c) underline decoration-transparent underline-offset-2 transition hover:decoration-current"
+                    >
+                      {defect.name}
+                    </a>
+                  ) : (
+                    <div className="text-left text-base font-semibold text-(--tc-text-primary,#0b1a3c)">{defect.name}</div>
+                  )}
                   <div className="mt-2 text-xs text-(--tc-text-muted)">
-                    Status: {status}
+                    Status: {statusLabel}
                   </div>
+                  <div className="mt-1 text-xs text-(--tc-text-muted)">
+                    Origem: {isManual ? "Manual" : "Qase"}
+                  </div>
+                  {defect.projectCode && (
+                    <div className="mt-1 text-xs text-(--tc-text-muted)">Projeto: {defect.projectCode}</div>
+                  )}
                   {defect.runSlug && (
-                    <div className="mt-1 text-xs text-(--tc-text-muted)">Run: {defect.runSlug}</div>
+                    <div className="mt-1 text-xs text-(--tc-text-muted)">Run: {defect.runName ?? defect.runSlug}</div>
+                  )}
+                  {defect.description && (
+                    <div className="mt-2 text-xs text-(--tc-text-muted)">{defect.description}</div>
                   )}
                   {mttrHours != null && (
                     <div
@@ -532,20 +722,25 @@ export default function CompanyDefectsPage() {
                     </div>
                   )}
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {canEdit && (
+                    {defect.severity != null && (
+                      <span className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-1 text-xs font-semibold">
+                        Severidade: {defect.severity}
+                      </span>
+                    )}
+                    {isManual && canEdit && (
                       <button
                         type="button"
-                        {...(isPrimary ? { "data-testid": "defect-edit" } : {})}
+                        {...(isPrimaryManual ? { "data-testid": "defect-edit" } : {})}
                         onClick={() => handleOpenModal(defect)}
                         className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-1 text-xs font-semibold"
                       >
                         Editar
                       </button>
                     )}
-                    {canLink && (
+                    {isManual && canLink && (
                       <button
                         type="button"
-                        {...(isPrimary ? { "data-testid": "defect-link-run" } : {})}
+                        {...(isPrimaryManual ? { "data-testid": "defect-link-run" } : {})}
                         onClick={() => {
                           setLinkingDefectId(defect.slug);
                           setLinkInput(defect.runSlug ?? "");
@@ -555,19 +750,29 @@ export default function CompanyDefectsPage() {
                         Vincular run
                       </button>
                     )}
-                    {canDelete && (
+                    {isManual && canDelete && (
                       <button
                         type="button"
-                        {...(isPrimary ? { "data-testid": "defect-delete" } : {})}
+                        {...(isPrimaryManual ? { "data-testid": "defect-delete" } : {})}
                         onClick={() => handleDelete(defect.slug)}
                         className="rounded-full border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-600"
                       >
                         Deletar
                       </button>
                     )}
+                    {!isManual && defect.externalUrl && (
+                      <a
+                        href={defect.externalUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-full border border-(--tc-border,#e5e7eb) px-3 py-1 text-xs font-semibold"
+                      >
+                        Abrir no Qase
+                      </a>
+                    )}
                   </div>
 
-                  {linkingDefectId === defect.slug && (
+                  {isManual && linkingDefectId === defect.slug && (
                     <div className="mt-3 space-y-2 rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-3">
                       <input
                         {...(isLinking ? { "data-testid": "defect-run-input" } : {})}

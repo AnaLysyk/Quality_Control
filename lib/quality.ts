@@ -1,3 +1,4 @@
+import { getCompanyDefects as getCompanyDefectsDataset } from "@/lib/companyDefects";
 import { readManualReleaseStore } from "@/data/manualData";
 import { calcMTTR } from "@/lib/mttr";
 import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
@@ -21,41 +22,21 @@ type ManualReleaseRecord = {
 // Resumo de qualidade para exportacao executiva
 export async function getCompanyQualitySummary(slug: string, _period: string = "30d") {
   void _period;
-  // Apenas defeitos manuais disponiveis (Qase removido)
-  const manualReleases = await readManualReleaseStore();
-  const manualDefects = manualReleases.map((r) => {
-    const rec = r as ManualReleaseRecord;
-    const kind = resolveManualReleaseKind(r);
-    if (kind !== "defect") return null;
-    const companySlug = typeof (r as { clientSlug?: string | null }).clientSlug === "string" ? (r as { clientSlug?: string | null }).clientSlug : null;
-    if (slug && companySlug && companySlug !== slug) return null;
-    const status = normalizeDefectStatus(rec.status);
-    const openedAt = resolveOpenedAt(rec.openedAt ?? rec.createdAt);
-    const closedAt = resolveClosedAt(status, rec.closedAt ?? null, rec.updatedAt ?? null);
-    return {
-      id: rec.slug ?? rec.id ?? "",
-      title: rec.name ?? rec.title ?? "Defeito manual",
-      status,
-      openedAt,
-      closedAt,
-      mttrMs: calcMTTR(openedAt, closedAt),
-      origin: "manual",
-      runSlug: rec.runSlug ?? (rec.runId ? String(rec.runId) : undefined),
-      severity: rec.severity ?? null,
-    };
-  });
-
-  const all = manualDefects.filter((d): d is NonNullable<typeof d> => Boolean(d && d.openedAt));
-  const openDefects = all.filter((d) => d.status !== "done");
-  const closedDefects = all.filter((d) => d.status === "done");
+  const defectsPayload = await getCompanyDefectsDataset(slug);
+  const all = defectsPayload.items.filter((defect) => Boolean(defect.openedAt));
+  const openDefects = all.filter((defect) => defect.normalizedStatus !== "done");
+  const closedDefects = all.filter((defect) => defect.normalizedStatus === "done");
   const totalDefects = all.length;
-  const mttrClosed = closedDefects.filter((d) => d.mttrMs != null);
-  const mttrAvg = mttrClosed.length ? Math.round((mttrClosed.reduce((acc, d) => acc + (d.mttrMs || 0), 0) / mttrClosed.length) / 360000) / 10 : null;
+  const mttrClosed = closedDefects.filter((defect) => defect.mttrMs != null);
+  const mttrAvg =
+    mttrClosed.length > 0
+      ? Math.round((mttrClosed.reduce((acc, defect) => acc + (defect.mttrMs || 0), 0) / mttrClosed.length) / 360000) / 10
+      : null;
   // SLA: abertos ha mais de 48h
   const SLA_MS = 172800000;
   const now = Date.now();
-  const slaOverdue = openDefects.filter((d) => {
-    const opened = new Date(d.openedAt).getTime();
+  const slaOverdue = openDefects.filter((defect) => {
+    const opened = new Date(defect.openedAt as string).getTime();
     return Number.isFinite(opened) && now - opened > SLA_MS;
   }).length;
 

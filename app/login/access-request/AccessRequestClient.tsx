@@ -17,23 +17,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const ACCESS_OPTIONS = [
   {
     value: "testing_company_user",
-    label: "Usuarios Testing Company",
-    hint: "Usuário da plataforma com empresa vinculada.",
+    label: "Usuario TC",
+    hint: "Usuario interno da Testing Company.",
   },
   {
     value: "company_user",
-    label: "Usuarios da empresa",
-    hint: "Conta institucional da própria empresa.",
+    label: "Usuario da empresa",
+    hint: "Usuario vinculado ao contexto da empresa.",
   },
   {
     value: "testing_company_lead",
     label: "Lider TC",
-    hint: "Perfil administrativo do sistema.",
+    hint: "Perfil institucional da Testing Company.",
   },
   {
     value: "technical_support",
     label: "Suporte Tecnico",
-    hint: "Perfil técnico global com acesso total.",
+    hint: "Atuacao tecnica e operacional da Testing Company.",
   },
 ];
 const EMPTY_JOB_TITLE = "__empty_job_title__";

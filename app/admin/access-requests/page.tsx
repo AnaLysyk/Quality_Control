@@ -165,7 +165,7 @@ function statusBadgeClass(status: string) {
 function accessTypeBadgeClass(accessType: AccessTypeLabel) {
   if (accessType === "Suporte Tecnico") return "border border-violet-300 bg-violet-100 text-violet-800";
   if (accessType === "Lider TC") return "border border-rose-300 bg-rose-100 text-rose-800";
-  if (accessType === "Usuarios da empresa") return "border border-amber-300 bg-amber-100 text-amber-800";
+  if (accessType === "Usuario da empresa") return "border border-amber-300 bg-amber-100 text-amber-800";
   return "border border-slate-300 bg-slate-100 text-slate-800";
 }
 
@@ -1239,7 +1239,7 @@ function AccessRequestsPage() {
                           title="Tipo de perfil"
                         >
                           <option value="Usuario Testing Company">Usuario Testing Company</option>
-                          <option value="Usuarios da empresa">Usuarios da empresa</option>
+                          <option value="Usuario da empresa">Usuario da empresa</option>
                           <option value="Lider TC">Lider TC</option>
                           <option value="Suporte Tecnico">Suporte Tecnico</option>
                         </select>

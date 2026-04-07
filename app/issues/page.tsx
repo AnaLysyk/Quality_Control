@@ -40,7 +40,8 @@ export default function DefectsPage() {
     setLoading(true);
     setError(null);
     try {
-      const query = project ? `?project=${encodeURIComponent(project)}` : "?project=ALL";
+      const selectedProject = normalizeProject(project);
+      const query = selectedProject && selectedProject !== "ALL" ? `?project=${encodeURIComponent(selectedProject)}` : "";
       const res = await fetchApi(`/api/v1/defects${query}`);
       const json = await res.json();
       if (!res.ok || json?.success === false) {

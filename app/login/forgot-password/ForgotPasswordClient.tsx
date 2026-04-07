@@ -6,8 +6,8 @@ import loginStyles from "../LoginClient.module.css";
 import styles from "./ForgotPasswordClient.module.css";
 
 const PROFILE_OPTIONS = [
-  { value: "testing_company_user", label: "Usuário Testing Company" },
-  { value: "company_user", label: "Usuário da Empresa" },
+  { value: "testing_company_user", label: "Usuario TC" },
+  { value: "company_user", label: "Usuario da empresa" },
   { value: "testing_company_lead", label: "Lider TC" },
   { value: "technical_support", label: "Suporte Tecnico" },
 ] as const;

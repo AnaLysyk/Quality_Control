@@ -35,12 +35,12 @@ type Props = {
 };
 
 const ROLE_OPTIONS = [
-  { value: "client_admin", label: "Empresa" },
+  { value: "client_admin", label: "Admin da empresa" },
   { value: "client_user", label: "Usuario" },
   { value: "leader_tc", label: "Lider TC" },
   { value: "technical_support", label: "Suporte Tecnico" },
-  { value: "it_dev", label: "Global" },
-  { value: "global_admin", label: "Admin" },
+  { value: "it_dev", label: "Suporte Tecnico" },
+  { value: "global_admin", label: "Lider TC" },
 ] as const;
 const EMPTY_JOB_TITLE = "__empty_job_title__";
 
@@ -175,7 +175,12 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
     (!requiresClient || !!clientId) &&
     !!name.trim() &&
     !!email.trim();
-  const roleLabel = ROLE_OPTIONS.find((option) => option.value === role)?.label ?? role;
+  const roleLabel =
+    role === "client_user"
+      ? clientId
+        ? "Usuario da empresa"
+        : "Usuario TC"
+      : ROLE_OPTIONS.find((option) => option.value === role)?.label ?? role;
   const linkedCompanyName =
     clients?.find((client) => client.id === clientId)?.name ?? (clientId ? "Empresa vinculada" : "Sem empresa");
   const displayName = name.trim() || user?.name || "Usuario";
@@ -483,7 +488,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                       ))}
                     </select>
                   ) : (
-                    <div className={`${fieldClass} flex items-center bg-[#f7faff] text-[#4f658d]`} title="Somente Global pode alterar perfis privilegiados.">
+                    <div className={`${fieldClass} flex items-center bg-[#f7faff] text-[#4f658d]`} title="Somente perfis tecnicos privilegiados podem alterar este campo.">
                       {roleLabel}
                     </div>
                   )}

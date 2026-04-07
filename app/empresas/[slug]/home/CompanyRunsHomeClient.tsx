@@ -15,7 +15,7 @@ import {
   FiTarget,
 } from "react-icons/fi";
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
-import { getAppMeta } from "@/lib/appMeta";
+import { getAppColorClass, getAppMeta } from "@/lib/appMeta";
 import type {
   CompanyRunsHeroStats,
   HomeRunItem,
@@ -269,7 +269,7 @@ function SectionHeader(props: { eyebrow: string; title: string; description: str
 
 function HeroMetric(props: { label: string; value: string; note: string; tone: Tone }) {
   return (
-    <div className="rounded-[24px] border border-white/60 bg-white/70 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur">
+    <div className="rounded-3xl border border-white/60 bg-white/70 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur">
       <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
         {props.label}
       </p>
@@ -369,7 +369,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
           </div>
         </section>
 
-        <section className="rounded-[32px] border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm sm:p-7">
+        <section className="rounded-4xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm sm:p-7">
           <SectionHeader
             eyebrow="Selecao rapida"
             title={isMetricsView ? "Base operacional das runs da empresa" : "Runs mais recentes da empresa"}
@@ -398,11 +398,12 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                 {runs.map((run) => {
                   const selected = run.slug === selectedRun?.slug;
                   const appMeta = getAppMeta(run.applicationKey, run.applicationName);
+                  const appColorClass = getAppColorClass(run.applicationKey);
                   const provider = providerLabel(run.integrationProvider);
                   return (
                     <div
                       key={run.id}
-                      className={`relative flex w-[23rem] shrink-0 flex-col overflow-hidden rounded-[28px] border p-4 shadow-sm transition ${
+                      className={`relative flex w-92 shrink-0 flex-col overflow-hidden rounded-[28px] border p-4 shadow-sm transition ${
                         selected
                           ? "border-[rgba(239,0,1,0.28)] bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] shadow-[0_24px_44px_rgba(1,24,72,0.12)] ring-1 ring-[rgba(239,0,1,0.16)]"
                           : "border-(--tc-border,#e5e7eb) bg-white"
@@ -430,8 +431,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
 
                         <div className="flex flex-wrap gap-2">
                           <span
-                            className="inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]"
-                            style={{ color: appMeta.color, borderColor: `${appMeta.color}35`, backgroundColor: `${appMeta.color}14` }}
+                            className={`app-tag app-tag-soft px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${appColorClass}`}
                           >
                             {appMeta.label}
                           </span>
@@ -487,7 +487,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
         {selectedRun ? (
           <>
             <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-              <section className="rounded-[32px] border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm sm:p-7">
+              <section className="rounded-4xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm sm:p-7">
                 <SectionHeader
                   eyebrow="Run em foco"
                   title={selectedRun.title}
@@ -538,7 +538,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                 </div>
               </section>
 
-              <aside className="rounded-[32px] border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm sm:p-7">
+              <aside className="rounded-4xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm sm:p-7">
                 <SectionHeader
                   eyebrow="Prioridades"
                   title="Atencao da run"
@@ -548,7 +548,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                 <div className="mt-6 grid gap-4">
                   {attentionItems.map((item) => {
                     const content = (
-                      <div className={`rounded-[24px] border p-4 ${toneClasses(item.tone)}`}>
+                      <div className={`rounded-3xl border p-4 ${toneClasses(item.tone)}`}>
                         <div className="flex items-center justify-between gap-3">
                           <div className="text-sm font-semibold">{item.title}</div>
                           {item.href ? <FiArrowRight className="h-4 w-4 shrink-0" /> : null}
@@ -560,7 +560,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                   })}
                 </div>
 
-                <div className="mt-6 rounded-[24px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-5">
+                <div className="mt-6 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-5">
                   <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-accent,#ef0001)">
                     <FiShield className="h-4 w-4" />
                     Leitura da run
@@ -596,7 +596,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
               </aside>
             </div>
 
-            <section className="rounded-[32px] border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm sm:p-7">
+            <section className="rounded-4xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm sm:p-7">
               <SectionHeader
                 eyebrow="Eventos recentes"
                 title="Movimentos da run selecionada"
@@ -605,7 +605,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
 
               <div className="mt-6 grid gap-4">
                 {runEvents.map((event) => (
-                  <div key={event.id} className="flex items-start gap-4 rounded-[24px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 shadow-sm">
+                  <div key={event.id} className="flex items-start gap-4 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 shadow-sm">
                     <div className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${toneClasses(event.tone)}`}>
                       {event.tone === "critical" ? <FiAlertTriangle className="h-5 w-5" /> : event.tone === "positive" ? <FiCheckCircle className="h-5 w-5" /> : event.id === "source" ? <FiRefreshCw className="h-5 w-5" /> : event.id === "created" ? <FiPlayCircle className="h-5 w-5" /> : event.id === "release" ? <FiLayers className="h-5 w-5" /> : <FiActivity className="h-5 w-5" />}
                     </div>

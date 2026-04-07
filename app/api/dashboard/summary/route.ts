@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCompanyQualitySummary, getCompanyDefects } from "@/lib/quality";
+import { getCompanyQualitySummary, getCompanyDefectsExport } from "@/lib/companyQuality";
 import { getAllReleases } from "@/release/data";
 import { ensureSummaryAlerts, readAlertsStore } from "@/lib/qualityAlert";
 import { getRedis } from "@/lib/redis";
@@ -29,7 +29,7 @@ export async function GET(req: Request, context: { params: Promise<{ slug?: stri
 
   // --- Original logic ---
   const summary = await getCompanyQualitySummary(slug);
-  const defects = await getCompanyDefects(slug);
+  const defects = await getCompanyDefectsExport(slug);
   const defectItems = Array.isArray(defects)
     ? (defects as Array<{ status?: string; openedAt?: string }>)
     : [];

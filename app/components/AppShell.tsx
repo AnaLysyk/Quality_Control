@@ -6,6 +6,11 @@ import { usePathname } from "next/navigation";
 import { FiMenu } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
 import { useClientContext } from "@/context/ClientContext";
+import {
+  getFixedProfileLabel,
+  resolveFixedProfileKind,
+  type FixedProfileKind,
+} from "@/lib/fixedProfilePresentation";
 import MainWrapper from "./MainWrapper";
 import Sidebar from "./Sidebar";
 import {
@@ -32,12 +37,7 @@ type ShellIdentity = {
   logoFallbackText: string;
 };
 
-type ViewerProfileKind =
-  | "technical_support"
-  | "leader_tc"
-  | "empresa"
-  | "testing_company_user"
-  | "company_user";
+type ViewerProfileKind = FixedProfileKind;
 
 type CompanyBrand = {
   name: string;
@@ -204,29 +204,17 @@ function normalizeViewerProfileKind(input: {
   clientSlug?: string | null;
   companyCount?: number;
 }): ViewerProfileKind {
-  const permissionRole = (input.permissionRole ?? "").trim().toLowerCase();
-  if (permissionRole === "dev" || permissionRole === "technical_support" || permissionRole === "support") return "technical_support";
-  if (permissionRole === "admin" || permissionRole === "leader_tc" || permissionRole === "lider_tc") return "leader_tc";
-  if (permissionRole === "company") return "empresa";
-
-  const role = (input.role ?? "").trim().toLowerCase();
-  if (role === "it_dev" || role === "dev" || role === "developer") return "technical_support";
-  if (role === "admin" || role === "global_admin") return "leader_tc";
-  if (role === "company" || role === "company_admin" || role === "client_admin") return "empresa";
-
-  const companyRole = (input.companyRole ?? "").trim().toLowerCase();
-  if (companyRole === "company" || companyRole === "company_admin" || companyRole === "client_admin") return "empresa";
-
-  const hasCompanyContext = Boolean(companyRole || input.clientSlug || (input.companyCount ?? 0) > 0);
-  return hasCompanyContext ? "company_user" : "testing_company_user";
+  return resolveFixedProfileKind({
+    permissionRole: input.permissionRole,
+    role: input.role,
+    companyRole: input.companyRole,
+    clientSlug: input.clientSlug,
+    companyCount: input.companyCount,
+  });
 }
 
 function profileLabel(profileKind: ViewerProfileKind) {
-  if (profileKind === "empresa") return "Empresa";
-  if (profileKind === "company_user") return "Usuario da empresa";
-  if (profileKind === "leader_tc") return "Lider TC";
-  if (profileKind === "technical_support") return "Suporte Tecnico";
-  return "Usuario Testing Company";
+  return getFixedProfileLabel(profileKind, { short: true });
 }
 
 function profileCoverClassName(profileKind: ViewerProfileKind) {
@@ -242,7 +230,7 @@ function profileKicker(profileKind: ViewerProfileKind, company: CompanyBrand | n
   if (profileKind === "company_user") return company ? `Usuario da empresa • ${company.name}` : "Usuario da empresa";
   if (profileKind === "leader_tc") return "Lider TC • Testing Company";
   if (profileKind === "technical_support") return "Suporte Tecnico • Testing Company";
-  return "Usuario Testing Company";
+  return "Usuario TC â€¢ Testing Company";
 }
 
 function buildLogoFallbackText(label: string) {

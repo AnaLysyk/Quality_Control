@@ -445,6 +445,12 @@ video {
   gap: 8px;
 }
 
+.app-tag-soft {
+  color: var(--app-tag-color);
+  background: color-mix(in srgb, var(--app-tag-color) 10%, white);
+  border: 1px solid color-mix(in srgb, var(--app-tag-color) 20%, white);
+}
+
 .form-control-user {
   border: 1px solid var(--tc-border);
   background-color: var(--tc-input-bg);

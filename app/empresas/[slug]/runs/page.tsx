@@ -40,6 +40,11 @@ type IntegratedRun = {
   clientName: string | null;
   manualSummary: RunStatsInput | null;
   metrics: RunStatsInput | null;
+  responsibleLabel: string | null;
+  responsibleName: string | null;
+  responsibleEmail: string | null;
+  createdByName: string | null;
+  createdByEmail: string | null;
 };
 
 type UnifiedRun = {
@@ -53,6 +58,7 @@ type UnifiedRun = {
   applicationLabel: string;
   projectCode: string | null;
   summary: string;
+  responsibleLabel: string | null;
   passRate: number | null;
   stats: RunStats;
 };
@@ -155,6 +161,14 @@ function normalizeManualRuns(data: unknown[]): UnifiedRun[] {
       applicationLabel: String(rec.app ?? rec.qaseProject ?? "Aplicacao manual"),
       projectCode: normalizeProjectCode(rec.qaseProject ?? rec.app),
       summary: `${stats.pass} aprovados, ${stats.fail} falhas, ${stats.blocked} bloqueados e ${stats.notRun} nao executados.`,
+      responsibleLabel:
+        typeof rec.responsibleLabel === "string" && rec.responsibleLabel.trim()
+          ? rec.responsibleLabel.trim()
+          : typeof rec.assignedToName === "string" && rec.assignedToName.trim()
+            ? rec.assignedToName.trim()
+            : typeof rec.createdByName === "string" && rec.createdByName.trim()
+              ? rec.createdByName.trim()
+              : null,
       passRate: computePassRate(stats),
       stats,
     });
@@ -183,6 +197,11 @@ function normalizeIntegratedRuns(data: unknown[]): IntegratedRun[] {
       clientName: typeof rec.clientName === "string" ? rec.clientName : null,
       manualSummary: typeof rec.manualSummary === "object" && rec.manualSummary ? (rec.manualSummary as RunStatsInput) : null,
       metrics: typeof rec.metrics === "object" && rec.metrics ? (rec.metrics as RunStatsInput) : null,
+      responsibleLabel: typeof rec.responsibleLabel === "string" ? rec.responsibleLabel : null,
+      responsibleName: typeof rec.responsibleName === "string" ? rec.responsibleName : null,
+      responsibleEmail: typeof rec.responsibleEmail === "string" ? rec.responsibleEmail : null,
+      createdByName: typeof rec.createdByName === "string" ? rec.createdByName : null,
+      createdByEmail: typeof rec.createdByEmail === "string" ? rec.createdByEmail : null,
     });
 
     return accumulator;
@@ -218,6 +237,13 @@ function toUnifiedIntegratedRuns(data: IntegratedRun[], companySlug: string, app
       const providerLabel = resolveProvider(run);
       const applicationLabel =
         String(run.app ?? run.project ?? run.qaseProject ?? providerLabel ?? "Integracao").trim() || "Integracao";
+      const responsibleLabel =
+        run.responsibleLabel?.trim() ||
+        run.responsibleName?.trim() ||
+        run.createdByName?.trim() ||
+        run.responsibleEmail?.trim() ||
+        run.createdByEmail?.trim() ||
+        null;
 
       return {
         key: `integrated:${run.slug}`,
@@ -234,6 +260,7 @@ function toUnifiedIntegratedRuns(data: IntegratedRun[], companySlug: string, app
           (stats.total > 0
             ? `${stats.total} casos consolidados nesta sincronizacao.`
             : "Run integrada sincronizada sem telemetria detalhada no momento."),
+        responsibleLabel,
         passRate: computePassRate(stats),
         stats,
       };
@@ -325,7 +352,7 @@ export default function CompanyRunsPage() {
     if (!term) return runs;
 
     return runs.filter((run) =>
-      [run.name, run.slug, run.applicationLabel, run.projectCode, run.sourceLabel, run.providerLabel]
+      [run.name, run.slug, run.applicationLabel, run.projectCode, run.sourceLabel, run.providerLabel, run.responsibleLabel]
         .filter((value): value is string => typeof value === "string" && value.length > 0)
         .some((value) => value.toLowerCase().includes(term)),
     );
@@ -387,7 +414,7 @@ export default function CompanyRunsPage() {
               data-testid="runs-search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar por nome, slug, app ou projeto"
+              placeholder="Buscar por nome, slug, app, projeto ou responsavel"
               className="w-full rounded-full border border-(--tc-border,#e5e7eb) px-4 py-2 text-sm outline-none focus:border-(--tc-accent,#ef0001) md:w-80"
             />
           </div>
@@ -471,6 +498,11 @@ export default function CompanyRunsPage() {
                       <div className="mt-2 text-sm font-medium text-(--tc-text-primary,#0b1a3c)">
                         {run.applicationLabel}
                       </div>
+                      {run.responsibleLabel ? (
+                        <div className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+                          Responsavel: {run.responsibleLabel}
+                        </div>
+                      ) : null}
                       <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">{run.summary}</p>
                       <div className="mt-3 text-xs text-(--tc-text-muted,#6b7280)">
                         {formatDate(run.createdAt)} | Pass: {run.stats.pass} | Fail: {run.stats.fail} | Blocked: {run.stats.blocked} | Not run: {run.stats.notRun}

@@ -19,6 +19,7 @@ import { useAppSettings, type Language, type Theme } from "@/context/AppSettings
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { fetchApi } from "@/lib/api";
 import { isCompanyProfileContext, isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
+import { getFixedProfileLabel, resolveFixedProfileKind } from "@/lib/fixedProfilePresentation";
 import { hasPermissionAccess, normalizePermissionMatrix } from "@/lib/permissionMatrix";
 import {
   canCreateCompanyUsersByScope,
@@ -136,25 +137,22 @@ function normalizeUiRole(value?: string | null) {
 }
 
 function roleLabel(value?: string | null) {
-  const normalized = normalizeUiRole(value);
-  if (normalized === "global") return "Global";
-  if (normalized === "admin") return "Admin";
-  if (normalized === "empresa") return "Empresa";
-  return "Usuario";
+  return getFixedProfileLabel(
+    resolveFixedProfileKind({
+      permissionRole: value,
+      role: value,
+    }),
+  );
 }
 
 function companyUserProfileTypeLabel(user: Pick<CompanyUser, "permission_role" | "user_origin">) {
-  const normalizedRole = (user.permission_role ?? "").trim().toLowerCase();
-  const normalizedOrigin = (user.user_origin ?? "").trim().toLowerCase();
-
-  if (normalizedRole === "company" || normalizedRole === "company_admin" || normalizedRole === "client_admin") {
-    return "Admin da empresa";
-  }
-  if (normalizedRole === "viewer" || normalizedRole === "client_viewer") return "Visualizador";
-  if (normalizedRole === "admin" || normalizedRole === "global_admin") return "Admin TC";
-  if (normalizedRole === "it_dev" || normalizedRole === "dev" || normalizedRole === "developer") return "Dev TC";
-  if (normalizedOrigin === "client_company") return "Usuario da empresa";
-  return "Usuario TC";
+  return getFixedProfileLabel(
+    resolveFixedProfileKind({
+      permissionRole: user.permission_role,
+      role: user.permission_role,
+      userOrigin: user.user_origin,
+    }),
+  );
 }
 
 function statusLabel(active?: boolean, status?: string | null) {

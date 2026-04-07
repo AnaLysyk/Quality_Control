@@ -42,10 +42,10 @@ export function parseStructuredTicketDraft(message: string): StructuredTicketDra
     const matchers: Array<[keyof typeof buckets, RegExp]> = [
       ["title", /^(titulo|título)\s*:\s*(.*)$/i],
       ["description", /^(descricao|descrição)\s*:\s*(.*)$/i],
-      ["impact", /^impacto\s*:\s*(.*)$/i],
+      ["impact", /^(impacto)\s*:\s*(.*)$/i],
       ["expectedBehavior", /^(comportamento esperado|resultado esperado)\s*:\s*(.*)$/i],
       ["currentBehavior", /^(comportamento atual|resultado atual)\s*:\s*(.*)$/i],
-      ["type", /^tipo\s*:\s*(.*)$/i],
+      ["type", /^(tipo)\s*:\s*(.*)$/i],
       ["priority", /^(prioridade|severidade)\s*:\s*(.*)$/i],
     ];
 

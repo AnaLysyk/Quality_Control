@@ -421,16 +421,18 @@ video {
 }
 
 /* Cores dinamicas por aplicacao (releases list) */
-.app-color-default { --app-tag-color: #0b1a3c; }
-.app-color-smart { --app-tag-color: #2563eb; }
-.app-color-print { --app-tag-color: #9333ea; }
-.app-color-booking { --app-tag-color: #0ea5e9; }
-.app-color-cds { --app-tag-color: #22c55e; }
-.app-color-trust { --app-tag-color: #f59e0b; }
-.app-color-cidadao { --app-tag-color: #ef4444; }
-.app-color-gmt { --app-tag-color: #4f46e5; }
+.app-color-default { --app-tag-color: #0b1a3c; --app-tag-soft-bg: #e7e8ec; --app-tag-soft-border: #ced1d8; }
+.app-color-smart { --app-tag-color: #2563eb; --app-tag-soft-bg: #e9effd; --app-tag-soft-border: #d3e0fb; }
+.app-color-print { --app-tag-color: #9333ea; --app-tag-soft-bg: #f4ebfc; --app-tag-soft-border: #e9d6fa; }
+.app-color-booking { --app-tag-color: #0ea5e9; --app-tag-soft-bg: #e7f6fd; --app-tag-soft-border: #cfedfb; }
+.app-color-cds { --app-tag-color: #22c55e; --app-tag-soft-bg: #e9f9ef; --app-tag-soft-border: #d3f3df; }
+.app-color-trust { --app-tag-color: #f59e0b; --app-tag-soft-bg: #fef5e7; --app-tag-soft-border: #fdecce; }
+.app-color-cidadao { --app-tag-color: #ef4444; --app-tag-soft-bg: #fdecec; --app-tag-soft-border: #fcdada; }
+.app-color-gmt { --app-tag-color: #4f46e5; --app-tag-soft-bg: #edecfc; --app-tag-soft-border: #dcdafa; }
 .app-tag {
   --app-tag-color: #0b1a3c;
+  --app-tag-soft-bg: #e7e8ec;
+  --app-tag-soft-border: #ced1d8;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -447,8 +449,8 @@ video {
 
 .app-tag-soft {
   color: var(--app-tag-color);
-  background: color-mix(in srgb, var(--app-tag-color) 10%, white);
-  border: 1px solid color-mix(in srgb, var(--app-tag-color) 20%, white);
+  background: var(--app-tag-soft-bg);
+  border: 1px solid var(--app-tag-soft-border);
 }
 
 .form-control-user {

@@ -683,7 +683,7 @@ export default function AdminAuditLogsPage() {
           {/* Empty state */}
           {!showSkeleton && filteredItems.length === 0 && (
             <div className={styles.emptyState}>
-              <svg width="32" height="32" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" style={{ margin: "0 auto 0.75rem", opacity: 0.4 }}>
+              <svg className={styles.emptyStateIcon} width="32" height="32" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
                 <circle cx="8" cy="8" r="6" /><path d="M8 5v3.5" /><circle cx="8" cy="11" r="0.5" fill="currentColor" stroke="none" />
               </svg>
               Não há logs para o filtro selecionado.
@@ -691,6 +691,15 @@ export default function AdminAuditLogsPage() {
           )}
 
           {/* ── Event timeline ─────────────────────────────────── */}
+          {!showSkeleton && filteredItems.length > 0 && (
+            <div className={styles.listHeader}>
+              <span className={styles.listHeaderLabel}>
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M2 4h12M2 8h12M2 12h12" /></svg>
+                Eventos
+              </span>
+              <span className={styles.listHeaderCount}>{filteredItems.length} resultado{filteredItems.length !== 1 ? "s" : ""} · Página {currentPage} de {totalPages}</span>
+            </div>
+          )}
           <div className={styles.eventList}>
             {paginatedItems.map((item) => {
               const cat = getCategory(item.action);

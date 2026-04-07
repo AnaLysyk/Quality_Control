@@ -103,7 +103,7 @@ export async function GET(req: NextRequest) {
         const users = await prisma.user.findMany({ where: { id: { in: allUserIds } }, select: { id: true, avatar_url: true, name: true, full_name: true, user: true } });
         for (const u of users) {
           if (u.avatar_url) avatars[u.id] = u.avatar_url;
-          const displayName = u.user || u.full_name || u.name;
+          const displayName = u.full_name || u.name || u.user;
           if (displayName) actorNames[u.id] = displayName;
         }
       } catch { /* avatar/name lookup is best-effort */ }

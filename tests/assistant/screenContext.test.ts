@@ -136,4 +136,42 @@ describe("resolveAssistantScreenContext", () => {
     const ctx = resolveAssistantScreenContext("/empresas/acme/planos-de-teste");
     expect(ctx.module).toBe("test_plans");
   });
+
+  /* ── Screen summaries are action-oriented ── */
+
+  it("support summary mentions triagem", () => {
+    const ctx = resolveAssistantScreenContext("/admin/support");
+    expect(ctx.screenSummary).toContain("triagem");
+    expect(ctx.screenSummary).toContain("Use para");
+  });
+
+  it("meus-chamados summary mentions seus chamados", () => {
+    const ctx = resolveAssistantScreenContext("/meus-chamados");
+    expect(ctx.screenSummary).toContain("seus chamados");
+  });
+
+  it("permissions summary mentions análise de acesso", () => {
+    const ctx = resolveAssistantScreenContext("/admin/users/permissions");
+    expect(ctx.screenSummary).toContain("análise de acesso");
+  });
+
+  it("test_plans summary mentions casos de teste", () => {
+    const ctx = resolveAssistantScreenContext("/empresas/acme/planos-de-teste");
+    expect(ctx.screenSummary).toContain("casos de teste");
+  });
+
+  it("company summary mentions tenant", () => {
+    const ctx = resolveAssistantScreenContext("/empresas/acme");
+    expect(ctx.screenSummary).toContain("tenant");
+  });
+
+  it("dashboard summary mentions operação", () => {
+    const ctx = resolveAssistantScreenContext("/dashboard");
+    expect(ctx.screenSummary).toContain("operação");
+  });
+
+  it("general summary mentions navegar", () => {
+    const ctx = resolveAssistantScreenContext("/unknown");
+    expect(ctx.screenSummary).toContain("navegar");
+  });
 });

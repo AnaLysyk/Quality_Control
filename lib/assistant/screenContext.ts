@@ -28,7 +28,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     match: /^\/(?:admin\/support|kanban-it)/,
     module: "support",
     screenLabel: "Kanban global de suporte",
-    screenSummary: "Fluxo global de chamados, responsáveis, status e atendimento do suporte técnico.",
+    screenSummary: "Tela central de triagem do suporte. Use para localizar chamados, acompanhar responsáveis, revisar status e decidir a próxima ação.",
     entityType: "screen",
     suggestedPrompts: [
       "Buscar chamado por ID",
@@ -41,7 +41,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     match: /^\/meus-chamados/,
     module: "support",
     screenLabel: "Meus chamados",
-    screenSummary: "Acompanhamento dos chamados vinculados ao usuário autenticado.",
+    screenSummary: "Tela focada nos seus chamados. Use para acompanhar status, revisar histórico e preparar comentários ou novas ações.",
     entityType: "screen",
     suggestedPrompts: [
       "Buscar meu chamado por ID",
@@ -54,7 +54,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     match: /^\/admin\/users\/permissions/,
     module: "permissions",
     screenLabel: "Gestão de permissões por usuário",
-    screenSummary: "Análise de perfis, módulos, ações e visibilidade por usuário.",
+    screenSummary: "Tela de análise de acesso. Use para entender o que cada perfil pode ver, quais ações estão liberadas e por que uma tela pode estar bloqueada.",
     entityType: "permission_profile",
     suggestedPrompts: [
       "Explicar por que este perfil não vê uma tela",
@@ -67,7 +67,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     match: (r) => /^\/empresas\/[^/]+\/planos-de-teste/.test(r) || r.startsWith("/planos-de-teste"),
     module: "test_plans",
     screenLabel: "Planos e casos de teste",
-    screenSummary: "Estruturação de casos de teste, pré-condições, passos e resultado esperado.",
+    screenSummary: "Tela para estruturar e revisar casos de teste. Use para gerar passos, definir pré-condições e validar resultado esperado a partir de bugs ou relatos.",
     entityType: "test_plan",
     suggestedPrompts: [
       "Gerar caso de teste com base em um bug",
@@ -80,7 +80,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     match: (r) => /^\/empresas\/[^/]+/.test(r) || r.startsWith("/admin/clients") || r.startsWith("/empresas"),
     module: "company",
     screenLabel: "Empresas e contexto da conta",
-    screenSummary: "Visão de empresas, vínculos, contexto atual e registros relacionados.",
+    screenSummary: "Tela contextual da empresa atual. Use para navegar pelos dados vinculados ao tenant, revisar registros relacionados e acionar buscas ou chamados dentro desse escopo.",
     entityType: "company",
     entityId: (slug) => slug,
     suggestedPrompts: [
@@ -94,7 +94,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     match: /^\/(?:admin|dashboard)/,
     module: "dashboard",
     screenLabel: "Painel administrativo",
-    screenSummary: "Painel administrativo com módulos de operação, suporte e gestão.",
+    screenSummary: "Tela central para acompanhar operação, navegar entre módulos e iniciar ações de suporte, gestão e análise.",
     entityType: "screen",
     suggestedPrompts: [
       "Resumir esta tela",
@@ -108,7 +108,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
 const GENERAL_CONTEXT: Omit<ScreenContextRule, "match"> = {
   module: "general",
   screenLabel: "Plataforma Quality Control",
-  screenSummary: "Assistente nativo da plataforma com contexto da sessão atual.",
+  screenSummary: "Assistente nativo da plataforma. Use para navegar, buscar registros, criar chamados ou entender seu contexto atual.",
   entityType: "screen",
   suggestedPrompts: [
     "Resumir esta tela",

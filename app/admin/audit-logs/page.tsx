@@ -284,6 +284,14 @@ function getEventSubtitle(item: AuditLog): { actor: string; target: string; enti
   return { actor, target, entity };
 }
 
+function getActorInitials(email: string | null): string {
+  if (!email) return "S";
+  const local = email.split("@")[0];
+  const parts = local.split(/[._-]/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return local.slice(0, 2).toUpperCase();
+}
+
 function getCategoryLabel(cat: ActionCategory): string {
   return {
     create: "Criação", update: "Alteração", delete: "Exclusão",
@@ -707,9 +715,9 @@ export default function AdminAuditLogsPage() {
                     onClick={() => setExpandedId((prev) => (prev === item.id ? null : item.id))}
                     className={styles.eventButton}
                   >
-                    {/* Icon */}
-                    <div className={`${styles.eventIcon} ${iconClass(cat)}`}>
-                      <CategoryIcon category={cat} />
+                    {/* Avatar */}
+                    <div className={`${styles.eventAvatar} ${iconClass(cat)}`}>
+                      {getActorInitials(item.actor_email)}
                     </div>
 
                     {/* Content */}

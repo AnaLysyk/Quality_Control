@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useI18n } from "@/hooks/useI18n";
 import styles from "./AuditLogs.module.css";
 
 type AuditLog = {
@@ -368,6 +369,7 @@ const DATE_PRESETS: { value: DatePreset; label: string }[] = [
 const PAGE_SIZES = [25, 50, 100];
 
 export default function AdminAuditLogsPage() {
+  const { t } = useI18n();
   const [items, setItems] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -528,8 +530,7 @@ export default function AdminAuditLogsPage() {
           {/* Header */}
           <div className={styles.cardHeader}>
             <div className={styles.cardHeaderLeft}>
-              <h2>Central de Auditoria</h2>
-              <p>Rastreie logins, alterações, chamados, permissões, integrações e exportações. Investigue quem fez o quê, quando e em qual entidade.</p>
+              <h2>{t("nav.auditTitle")}</h2>
             </div>
             <div className={styles.cardHeaderRight}>
               <span className={styles.metaBadge}>

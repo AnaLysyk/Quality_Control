@@ -578,7 +578,7 @@ export default function CompanyDefectsPage() {
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="rounded-3xl bg-white p-6 shadow-sm">
           <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">Defeitos</p>
-          <h1 className="mt-2 text-3xl font-extrabold">Defeitos da empresa</h1>
+          <h1 className="mt-2 text-3xl font-extrabold">Defeitos da empresa {companySlug}</h1>
           <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
             Visao consolidada de defeitos manuais e integrados da Qase. Edicao e vinculo seguem disponiveis apenas para os itens manuais.
           </p>

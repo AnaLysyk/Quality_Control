@@ -302,16 +302,14 @@ function resolveRouteCompanySlug(pathname: string) {
 }
 
 function shouldHideShellCover(pathname: string) {
-  const hasCompanyHeroCover = /^\/empresas\/[^/]+\/(?:documentos)(?:\/.*)?$/.test(pathname);
-  const hasCompanyDashboardCover = /^\/empresas\/[^/]+\/dashboard(?:\/.*)?$/.test(pathname);
+  const isCompanySubPage = /^\/empresas\/[^/]+\/.+$/.test(pathname);
   const hasAdminHeroCover = /^\/admin\/(?:home|test-metric|users|clients)(?:\/.*)?$/.test(pathname);
   return (
     pathname.startsWith("/settings/profile") ||
     pathname.startsWith("/requests") ||
     pathname.startsWith("/dashboard") ||
     hasAdminHeroCover ||
-    hasCompanyHeroCover ||
-    hasCompanyDashboardCover
+    isCompanySubPage
   );
 }
 

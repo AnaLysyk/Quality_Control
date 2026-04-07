@@ -385,7 +385,7 @@ export default function CompanyRunsPage() {
         <header className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">Runs</p>
-            <h1 className="mt-2 text-3xl font-extrabold">Execucoes da empresa</h1>
+            <h1 className="mt-2 text-3xl font-extrabold">Execucoes da empresa {companySlug}</h1>
             <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
               Modulo unico com runs manuais e integradas, sem separar a leitura em duas telas.
             </p>

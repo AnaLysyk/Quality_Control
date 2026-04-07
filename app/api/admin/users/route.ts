@@ -225,8 +225,8 @@ export async function POST(req: NextRequest) {
     action: "user.created",
     entityType: "user",
     entityId: user.id,
-    entityLabel: user.email,
-    metadata: { companyId: clientId, role },
+    entityLabel: user.user ?? user.email,
+    metadata: { companyId: clientId, role, _payload: body },
   });
 
   console.error(`[ADMIN-USERS][POST] created admin=${admin?.email ?? "-"} user=${user?.email ?? user?.id}`);
@@ -360,8 +360,8 @@ export async function PATCH(req: NextRequest) {
     action: "user.updated",
     entityType: "user",
     entityId: updated.id,
-    entityLabel: updated.email,
-    metadata: { companyId: clientId, role, active },
+    entityLabel: updated.user ?? updated.email,
+    metadata: { companyId: clientId, role, active, _payload: body },
   });
 
   return NextResponse.json({ ok: true }, { status: 200 });

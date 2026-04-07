@@ -106,7 +106,7 @@ export async function POST(req: Request) {
       entityType: "ticket",
       entityId: suporte.id,
       entityLabel: suporte.title ?? null,
-      metadata: { type: suporte.type ?? null, priority: suporte.priority ?? null, companyId: targetCompanyId, role: user.role ?? null },
+      metadata: { type: suporte.type ?? null, priority: suporte.priority ?? null, companyId: targetCompanyId, role: user.role ?? null, _payload: body },
     });
 
     return NextResponse.json({ item: enriched }, { status: 201 });

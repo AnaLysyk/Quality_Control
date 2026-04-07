@@ -188,8 +188,8 @@ export async function addAuditLog(input: {
   };
   const items = Array.isArray(store.items) ? store.items : [];
   items.unshift(entry);
-  const filtered = items.filter((item) => isWithinRetention(item.created_at));
-  await writeStore({ items: filtered });
+  // Persist ALL entries — never auto-prune. Use manual purge (purgeAuditLogs) for cleanup.
+  await writeStore({ items });
 }
 
 export async function listAuditLogs(params?: {
@@ -237,7 +237,7 @@ export async function listAuditLogs(params?: {
   const endDate = params?.endDate ? Date.parse(params.endDate) : null;
 
   const items = (store.items ?? []).filter((log) => {
-    if (!isWithinRetention(log.created_at)) return false;
+    // Show all entries — no retention filter. Manual purge only.
     if (action && log.action !== action) return false;
     if (entityType && log.entity_type !== entityType) return false;
     if (actor) {

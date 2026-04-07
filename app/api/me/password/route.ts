@@ -57,7 +57,7 @@ export async function PATCH(req: Request) {
     action: "auth.password.changed",
     entityType: "user",
     entityId: user.id,
-    entityLabel: user.email ?? null,
+    entityLabel: user.user ?? user.email ?? null,
   });
 
   return NextResponse.json({ ok: true }, { status: 200 });

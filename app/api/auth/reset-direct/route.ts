@@ -45,7 +45,7 @@ export async function POST(req: Request) {
       action: "auth.password.reset",
       entityType: "user",
       entityId: user.id,
-      entityLabel: user.email ?? null,
+      entityLabel: user.user ?? user.email ?? null,
       actorUserId: user.id,
       actorEmail: user.email ?? null,
       metadata: { method: "direct" },

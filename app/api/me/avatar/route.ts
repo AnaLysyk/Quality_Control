@@ -107,7 +107,7 @@ export async function POST(req: Request) {
       action: "user.avatar.changed",
       entityType: "user",
       entityId: user.id,
-      entityLabel: updated.email ?? null,
+      entityLabel: updated.user ?? updated.email ?? null,
       actorUserId: user.id,
       actorEmail: updated.email ?? null,
       metadata: {},

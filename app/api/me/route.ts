@@ -302,7 +302,7 @@ export async function PATCH(req: Request) {
       action: "user.profile.updated",
       entityType: "user",
       entityId: user.id,
-      entityLabel: updated.email ?? null,
+      entityLabel: updated.user ?? updated.email ?? null,
       actorUserId: user.id,
       actorEmail: updated.email ?? null,
       metadata: {

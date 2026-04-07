@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       action: "request.profile_deletion",
       entityType: "request",
       entityId: record.id,
-      entityLabel: authUser.email ?? null,
+      entityLabel: authUser.user ?? authUser.email ?? null,
       actorUserId: authUser.id,
       actorEmail: authUser.email ?? null,
       metadata: { reason },

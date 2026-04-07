@@ -172,7 +172,7 @@ export async function POST(req: NextRequest) {
       action: "user.created",
       entityType: "user",
       entityId: user.id,
-      entityLabel: user.email,
+      entityLabel: user.user ?? user.email,
       metadata: {
         companyId: company.id,
         companySlug: access.companySlug,

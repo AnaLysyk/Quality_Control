@@ -29,6 +29,7 @@ export type SessionPayload = {
 export type AccessContext = {
   userId: string;
   email: string;
+  user?: string | null;
   isGlobalAdmin: boolean;
   role: string | null;
   globalRole?: string | null;
@@ -225,6 +226,7 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
   return {
     userId: user.id,
     email: user.email,
+    user: user.user ?? null,
     isGlobalAdmin,
     role: effectiveRole,
     globalRole: isGlobalAdmin ? "global_admin" : null,

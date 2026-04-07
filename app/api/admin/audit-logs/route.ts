@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { AUDIT_LOG_RETENTION_DAYS, isAuditLogStorageConfigured, listAuditLogs, purgeAuditLogs, addAuditLogSafe } from "@/data/auditLogRepository";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { apiFail, apiOk } from "@/lib/apiResponse";
+import { prisma } from "@/lib/prismaClient";
 
 export const revalidate = 0;
 
@@ -90,8 +91,26 @@ export async function GET(req: NextRequest) {
 
   try {
     const items = await listAuditLogs({ limit, offset, action, entityType, actor, query, startDate, endDate });
+
+    // Resolve actor avatars and names
+    const actorIds = [...new Set(items.map((i: { actor_user_id?: string | null }) => i.actor_user_id).filter(Boolean))] as string[];
+    let avatars: Record<string, string> = {};
+    let actorNames: Record<string, string> = {};
+    if (actorIds.length > 0) {
+      try {
+        const users = await prisma.user.findMany({ where: { id: { in: actorIds } }, select: { id: true, avatar_url: true, name: true, full_name: true, user: true } });
+        for (const u of users) {
+          if (u.avatar_url) avatars[u.id] = u.avatar_url;
+          const displayName = u.user || u.full_name || u.name;
+          if (displayName) actorNames[u.id] = displayName;
+        }
+      } catch { /* avatar/name lookup is best-effort */ }
+    }
+
     const payload = {
       items,
+      avatars,
+      actorNames,
       retentionDays: AUDIT_LOG_RETENTION_DAYS,
       warning: null,
     };

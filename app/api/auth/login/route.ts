@@ -71,7 +71,7 @@ export async function POST(req: Request) {
         action: "auth.login.failure",
         entityType: "user",
         entityId: user.id,
-        entityLabel: user.email ?? identifier,
+        entityLabel: user.user ?? user.email ?? identifier,
         metadata: { reason: "invalid_password", ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null },
       });
       return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
@@ -157,7 +157,7 @@ export async function POST(req: Request) {
       action: "auth.login.success",
       entityType: "user",
       entityId: user.id,
-      entityLabel: user.email ?? identifier,
+      entityLabel: user.user ?? user.email ?? identifier,
       metadata: { role: user.role ?? null, companySlug: built.requestedCompanySlug || null, ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null },
     });
 

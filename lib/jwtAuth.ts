@@ -10,6 +10,7 @@ import type { PermissionMatrix } from "@/lib/permissionMatrix";
 export type AuthUser = {
   id: string;
   email: string;
+  user?: string | null;
   isGlobalAdmin: boolean;
   role?: string | null;
   globalRole?: string | null;
@@ -29,6 +30,7 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
     return {
       id: access.userId,
       email: access.email,
+      user: access.user ?? null,
       isGlobalAdmin: access.isGlobalAdmin,
       role: access.role,
       globalRole: access.globalRole ?? null,

@@ -58,7 +58,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       action: "user.permissions.updated",
       entityType: "user",
       entityId: userId,
-      entityLabel: targetUser?.email ?? targetUser?.name ?? userId,
+      entityLabel: targetUser?.user ?? targetUser?.email ?? targetUser?.name ?? userId,
       metadata: {
         role: resolved.roleKey,
         allowCount,
@@ -105,7 +105,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       action: restored ? "user.permissions.reset" : "user.permissions.updated",
       entityType: "user",
       entityId: userId,
-      entityLabel: targetUser?.email ?? targetUser?.name ?? userId,
+      entityLabel: targetUser?.user ?? targetUser?.email ?? targetUser?.name ?? userId,
       metadata: {
         role: resolved.roleKey,
         effectiveCount,

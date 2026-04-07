@@ -481,6 +481,14 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  overflow: hidden;
+}
+
+.eventAvatarImg {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .iconCreate { background: #ecfdf5; color: #047857; }
@@ -506,18 +514,38 @@
   color: var(--tc-text, #0b1a3c);
   line-height: 1.4;
   margin: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem;
 }
 
-.eventSubtitle {
-  font-size: 0.75rem;
+.eventActor {
+  font-weight: 400;
+  font-size: 0.8125rem;
   color: var(--tc-text-muted, #6b7280);
-  line-height: 1.5;
-  margin: 0.1875rem 0 0;
 }
 
-.eventSubtitle strong {
-  font-weight: 500;
+.eventActor strong,
+.eventActor {
+  font-weight: 400;
+}
+
+.eventActionSep {
+  color: var(--tc-text-muted, #6b7280);
+  opacity: 0.5;
+  font-size: 0.75rem;
+}
+
+.eventAction {
+  font-weight: 600;
   color: var(--tc-text, #0b1a3c);
+}
+
+.eventTargetInline {
+  font-weight: 400;
+  font-size: 0.8125rem;
+  color: var(--tc-text-muted, #6b7280);
 }
 
 .eventBadges {

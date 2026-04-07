@@ -115,6 +115,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
         integrationMode: current.integration_mode ?? null,
         name: current.name ?? current.company_name ?? null,
       },
+      _payload: input,
     },
   });
 

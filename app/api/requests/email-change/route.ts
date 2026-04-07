@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       action: "request.email_change",
       entityType: "request",
       entityId: record.id,
-      entityLabel: authUser.email ?? null,
+      entityLabel: authUser.user ?? authUser.email ?? null,
       actorUserId: authUser.id,
       actorEmail: authUser.email ?? null,
       metadata: { newEmail },

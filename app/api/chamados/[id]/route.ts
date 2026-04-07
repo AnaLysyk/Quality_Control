@@ -91,7 +91,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
     entityType: "ticket",
     entityId: updated.id,
     entityLabel: updated.title ?? null,
-    metadata: { type: updated.type ?? null, priority: updated.priority, role: user.role ?? null },
+    metadata: { type: updated.type ?? null, priority: updated.priority, role: user.role ?? null, _payload: body },
   });
 
   return NextResponse.json({ item: enriched }, { status: 200 });

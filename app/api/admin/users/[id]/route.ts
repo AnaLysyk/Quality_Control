@@ -224,7 +224,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     action: "user.updated",
     entityType: "user",
     entityId: updated.id,
-    entityLabel: updated.email,
+    entityLabel: updated.user ?? updated.email,
     metadata: {
       companyId: clientId,
       role,
@@ -237,6 +237,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         email: beforeSnapshot.email ?? null,
         name: beforeSnapshot.name ?? null,
       },
+      _payload: body,
     },
   });
 
@@ -277,7 +278,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     action: "user.deleted",
     entityType: "user",
     entityId: updated.id,
-    entityLabel: updated.email,
+    entityLabel: updated.user ?? updated.email,
     metadata: {
       targetPermissionRole: target.permission_role ?? null,
       actorRole: access?.role ?? null,

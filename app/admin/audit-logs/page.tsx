@@ -174,7 +174,7 @@ const ROLE_META_KEYS = new Set(["role", "permissionRole", "targetPermissionRole"
 /** Keys that belong in the "summary" tier (not the operation details). */
 const SUMMARY_META_KEYS = new Set(["companyLabel", "companySlug", "companyId", "userEmail", "userId", "ip", "sessionId"]);
 /** Keys that are IDs / technical — go in tier 3. */
-const TECHNICAL_META_KEYS = new Set(["companyId", "userId", "ip", "sessionId"]);
+const TECHNICAL_META_KEYS = new Set(["companyId", "userId", "ip", "sessionId", "_payload"]);
 
 type ActionCategory = "create" | "update" | "delete" | "permission" | "link" | "auth" | "error" | "integration" | "export" | "default";
 
@@ -272,9 +272,9 @@ function getEventTitle(item: AuditLog): string {
   return ACTION_TITLES[item.action] ?? item.action.replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function getEventSubtitle(item: AuditLog): { actor: string; target: string; entity: string } {
+function getEventSubtitle(item: AuditLog, actorNames: Record<string, string>): { actor: string; target: string; entity: string } {
   const meta = (item.metadata && typeof item.metadata === "object" ? item.metadata : {}) as Record<string, unknown>;
-  const actor = item.actor_email || "sistema";
+  const actor = (item.actor_user_id && actorNames[item.actor_user_id]) || item.actor_email || "sistema";
   const entity = entityTypeLabel(item.entity_type);
   let target = item.entity_label || "";
   if (!target && meta.companyLabel) target = String(meta.companyLabel);
@@ -377,6 +377,8 @@ const PAGE_SIZES = [25, 50, 100];
 
 export default function AdminAuditLogsPage() {
   const [items, setItems] = useState<AuditLog[]>([]);
+  const [avatars, setAvatars] = useState<Record<string, string>>({});
+  const [actorNames, setActorNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
@@ -421,6 +423,8 @@ export default function AdminAuditLogsPage() {
       }
       const json = await res.json().catch(() => ({}));
       setItems(Array.isArray(json?.items) ? (json.items as AuditLog[]) : []);
+      setAvatars(json?.avatars && typeof json.avatars === "object" ? json.avatars as Record<string, string> : {});
+      setActorNames(json?.actorNames && typeof json.actorNames === "object" ? json.actorNames as Record<string, string> : {});
       setWarning(typeof json?.warning === "string" ? json.warning : null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Falha ao carregar histórico");
@@ -522,7 +526,7 @@ export default function AdminAuditLogsPage() {
 
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
-      <div className="mx-auto max-w-6xl px-4 py-4 space-y-3">
+      <div className="px-4 py-4 space-y-3">
 
         {error && (
           <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>
@@ -691,22 +695,50 @@ export default function AdminAuditLogsPage() {
               <span className={styles.listHeaderCount}>{filteredItems.length} resultado{filteredItems.length !== 1 ? "s" : ""} · Página {currentPage} de {totalPages}</span>
             </div>
           )}
+          {/* ── Pagination ─────────────────────────────────── */}
+          {filteredItems.length > 0 && (
+            <div className={styles.paginationBar}>
+              <div className={styles.paginationInfo}>
+                <span>{filteredItems.length} resultado{filteredItems.length !== 1 ? "s" : ""}</span>
+                <span className={styles.paginationSep}>·</span>
+                <span>Página {currentPage} de {totalPages}</span>
+              </div>
+              <div className={styles.paginationControls}>
+                <label className={styles.paginationLabel}>
+                  Por página
+                  <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} className={styles.paginationSelect}>
+                    {PAGE_SIZES.map((s) => (<option key={s} value={s}>{s}</option>))}
+                  </select>
+                </label>
+                <div className={styles.paginationButtons}>
+                  <button type="button" disabled={currentPage <= 1} onClick={() => setCurrentPage(1)} className={styles.paginationBtn} title="Primeira página">«</button>
+                  <button type="button" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)} className={styles.paginationBtn} title="Página anterior">‹</button>
+                  <button type="button" disabled={currentPage >= totalPages} onClick={() => setCurrentPage((p) => p + 1)} className={styles.paginationBtn} title="Próxima página">›</button>
+                  <button type="button" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(totalPages)} className={styles.paginationBtn} title="Última página">»</button>
+                </div>
+              </div>
+            </div>
+          )}
           <div className={styles.eventList}>
             {paginatedItems.map((item) => {
               const cat = getCategory(item.action);
               const title = getEventTitle(item);
-              const sub = getEventSubtitle(item);
+              const sub = getEventSubtitle(item, actorNames);
               const result = getResultLabel(cat);
               const isOpen = expandedId === item.id;
               const meta = (item.metadata && typeof item.metadata === "object" ? item.metadata : {}) as Record<string, unknown>;
               // Split metadata into contextual (summary enrichment) and operation details
               const beforeData = (meta._before && typeof meta._before === "object" && !Array.isArray(meta._before)) ? meta._before as Record<string, unknown> : null;
               const operationEntries = Object.entries(meta).filter(([k, v]) => v !== undefined && v !== null && k !== "_before" && !SUMMARY_META_KEYS.has(k) && !TECHNICAL_META_KEYS.has(k));
-              // For diff: entries present in _before show as before→after; others show as regular kv
-              const diffKeys = beforeData ? Object.keys(beforeData) : [];
-              const diffEntries = operationEntries.filter(([k]) => diffKeys.includes(k));
-              const regularEntries = operationEntries.filter(([k]) => !diffKeys.includes(k));
-              const technicalEntries = Object.entries(meta).filter(([k, v]) => v !== undefined && v !== null && TECHNICAL_META_KEYS.has(k));
+              // For diff: merge keys from _before and current operation entries for full before→after view
+              const allDiffKeys = beforeData ? [...new Set([...Object.keys(beforeData), ...operationEntries.map(([k]) => k)])] : [];
+              const diffEntries = allDiffKeys.map((k) => {
+                const after = meta[k] ?? null;
+                const before = beforeData ? beforeData[k] ?? null : null;
+                return [k, after, before] as [string, unknown, unknown];
+              });
+              const diffKeySet = new Set(allDiffKeys);
+              const regularEntries = operationEntries.filter(([k]) => !diffKeySet.has(k));              const technicalEntries = Object.entries(meta).filter(([k, v]) => v !== undefined && v !== null && TECHNICAL_META_KEYS.has(k));
 
               return (
                 <div key={item.id} className={`${styles.eventRow} ${isOpen ? styles.eventRowExpanded : ""}`}>
@@ -717,16 +749,22 @@ export default function AdminAuditLogsPage() {
                   >
                     {/* Avatar */}
                     <div className={`${styles.eventAvatar} ${iconClass(cat)}`}>
-                      {getActorInitials(item.actor_email)}
+                      {avatars[item.actor_user_id ?? ""] ? (
+                        <img
+                          src={avatars[item.actor_user_id!]}
+                          alt={item.actor_email ?? ""}
+                          className={styles.eventAvatarImg}
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling && ((e.target as HTMLImageElement).nextElementSibling as HTMLElement).style.removeProperty("display"); }}
+                        />
+                      ) : null}
+                      <span style={avatars[item.actor_user_id ?? ""] ? { display: "none" } : undefined}>
+                        {getActorInitials(item.actor_email)}
+                      </span>
                     </div>
 
                     {/* Content */}
                     <div className={styles.eventContent}>
-                      <p className={styles.eventTitle}>{title}</p>
-                      <p className={styles.eventSubtitle}>
-                        por <strong>{sub.actor}</strong>
-                        {sub.target ? <> · em <strong>{sub.target}</strong></> : null}
-                      </p>
+                      <p className={styles.eventTitle}>{title}{sub.target ? <span className={styles.eventTargetInline}> · {sub.target}</span> : null}</p>
                       <div className={styles.eventBadges}>
                         <span className={`${styles.badge} ${badgeClass(cat)}`}>{getCategoryLabel(cat)}</span>
                         <span className={`${styles.badge} ${styles.badgeEntity}`}>{sub.entity}</span>
@@ -782,12 +820,12 @@ export default function AdminAuditLogsPage() {
                       </div>
 
                       {/* ── Tier 2: Detalhes da alteração ────────── */}
-                      {operationEntries.length > 0 && (
+                      {(diffEntries.length > 0 || regularEntries.length > 0) && (
                         <div className={styles.tier}>
                           <p className={styles.tierTitle}>Alterações</p>
                           <div className={styles.tierContent}>
                             {/* Before → After diff table */}
-                            {diffEntries.length > 0 && beforeData && (
+                            {diffEntries.length > 0 && (
                               <table className={styles.diffTable}>
                                 <thead>
                                   <tr>
@@ -798,9 +836,9 @@ export default function AdminAuditLogsPage() {
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {diffEntries.map(([key, val]) => {
-                                    const before = formatMetaValue(beforeData[key], key);
-                                    const after = formatMetaValue(val, key);
+                                  {diffEntries.map(([key, afterVal, beforeVal]) => {
+                                    const before = formatMetaValue(beforeVal, key);
+                                    const after = formatMetaValue(afterVal, key);
                                     const changed = before !== after;
                                     return (
                                       <tr key={key} className={changed ? styles.diffRowChanged : styles.diffRow}>
@@ -888,30 +926,6 @@ export default function AdminAuditLogsPage() {
             })}
           </div>
 
-          {/* ── Pagination ─────────────────────────────────── */}
-          {filteredItems.length > 0 && (
-            <div className={styles.paginationBar}>
-              <div className={styles.paginationInfo}>
-                <span>{filteredItems.length} resultado{filteredItems.length !== 1 ? "s" : ""}</span>
-                <span className={styles.paginationSep}>·</span>
-                <span>Página {currentPage} de {totalPages}</span>
-              </div>
-              <div className={styles.paginationControls}>
-                <label className={styles.paginationLabel}>
-                  Por página
-                  <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} className={styles.paginationSelect}>
-                    {PAGE_SIZES.map((s) => (<option key={s} value={s}>{s}</option>))}
-                  </select>
-                </label>
-                <div className={styles.paginationButtons}>
-                  <button disabled={currentPage <= 1} onClick={() => setCurrentPage(1)} className={styles.paginationBtn} title="Primeira página">«</button>
-                  <button disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)} className={styles.paginationBtn} title="Página anterior">‹</button>
-                  <button disabled={currentPage >= totalPages} onClick={() => setCurrentPage((p) => p + 1)} className={styles.paginationBtn} title="Próxima página">›</button>
-                  <button disabled={currentPage >= totalPages} onClick={() => setCurrentPage(totalPages)} className={styles.paginationBtn} title="Última página">»</button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

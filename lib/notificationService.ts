@@ -217,6 +217,65 @@ export async function notifyManualRunFailure(
   });
 }
 
+export async function notifyIntegrationRunCreated(input: {
+  slug: string;
+  title: string;
+  clientId?: string | null;
+  clientName?: string | null;
+  qaseProject?: string | null;
+}) {
+  const runSlug = input.slug ?? "run";
+  const runName = input.title || runSlug;
+
+  const companySlug = await resolveCompanySlugForIntegration(input.clientId, input.clientName, input.qaseProject);
+  const recipients = await resolveCompanyUserIds(companySlug);
+  if (!recipients.length) return;
+
+  const link = companySlug
+    ? `/empresas/${encodeURIComponent(companySlug)}/runs/${encodeURIComponent(runSlug)}`
+    : null;
+
+  await createNotificationsForUsers(recipients, {
+    type: "RUN_CREATED",
+    title: "Nova run via integração",
+    description: `${runName} foi registrada via integração.`,
+    companySlug,
+    link,
+    dedupeKey: `run:${runSlug}:created`,
+  });
+}
+
+async function resolveCompanySlugForIntegration(
+  clientId?: string | null,
+  clientName?: string | null,
+  qaseProject?: string | null,
+) {
+  const companies = await listLocalCompanies();
+  if (clientId) {
+    const byId = companies.find((c) => c.id === clientId || c.slug === clientId);
+    if (byId) return byId.slug;
+  }
+  if (clientName) {
+    const normalized = clientName.trim().toLowerCase();
+    const byName = companies.find(
+      (c) =>
+        (c.name ?? "").trim().toLowerCase() === normalized ||
+        (c.company_name ?? "").trim().toLowerCase() === normalized ||
+        (c.slug ?? "").trim().toLowerCase() === normalized,
+    );
+    if (byName) return byName.slug;
+  }
+  if (qaseProject) {
+    const code = qaseProject.trim().toUpperCase();
+    const byProject = companies.find((c) => {
+      const codes = Array.isArray(c.qase_project_codes) ? c.qase_project_codes : [];
+      return codes.some((pc: unknown) => typeof pc === "string" && pc.trim().toUpperCase() === code);
+    });
+    if (byProject) return byProject.slug;
+  }
+  return null;
+}
+
 export async function notifySuporteCreated(suporte: SuporteRecord) {
   const recipients = Array.from(new Set([...(await resolveAdminUserIds()), ...(await resolveItDevUserIds())]));
   if (!recipients.length) return;

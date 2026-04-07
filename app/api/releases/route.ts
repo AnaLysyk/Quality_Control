@@ -4,6 +4,7 @@ import { slugifyRelease } from "@/lib/slugifyRelease";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { canCreateRun, canDeleteRun, getRunMockRole, resolveRunRole } from "@/lib/rbac/runs";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
+import { notifyIntegrationRunCreated } from "@/lib/notificationService";
 
 // Garantir ambiente Node para fs
 export const runtime = "nodejs";
@@ -89,6 +90,14 @@ export async function POST(request: Request) {
       entityLabel: release.title,
       metadata: { runId: release.runId, app: release.app ?? release.project },
     });
+
+    notifyIntegrationRunCreated({
+      slug: release.slug,
+      title: release.title,
+      clientId: release.clientId ?? null,
+      clientName: release.clientName ?? null,
+      qaseProject: release.qaseProject ?? null,
+    }).catch(() => {});
 
     const payload = {
       id: release.slug,

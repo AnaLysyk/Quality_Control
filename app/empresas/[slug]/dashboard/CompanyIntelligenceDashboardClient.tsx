@@ -1402,9 +1402,11 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
     const runs = enrichedRuns.map((run) => ({ key: run.slug, label: run.title }));
     const statuses = buildStatusOptions(enrichedRuns);
     const environments = Array.from(new Set(enrichedRuns.flatMap((run) => run.environments))).sort();
-    const responsibles = Array.from(new Set(enrichedRuns.flatMap((run) => parseCommaList(run.responsibleLabel)))).sort();
+    const runResponsibles = enrichedRuns.flatMap((run) => parseCommaList(run.responsibleLabel));
+    const memberNames = (props.companyMembers ?? []).map((m) => m.name);
+    const responsibles = Array.from(new Set([...runResponsibles, ...memberNames])).sort();
     return { applications, runs, statuses, environments, responsibles };
-  }, [enrichedRuns]);
+  }, [enrichedRuns, props.companyMembers]);
 
   const draftFilterOptions = useMemo(() => {
     const matchesDraftRun = (run: EnrichedRun, ignore?: ContextualFilterKey) => {
@@ -1483,10 +1485,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   }, [environmentFilter, draftFilterOptions.environments]);
 
   useEffect(() => {
-    if (
-      responsibleFilter !== "all" &&
-      (draftFilterOptions.responsibles.length <= 1 || !draftFilterOptions.responsibles.includes(responsibleFilter))
-    ) {
+    if (responsibleFilter !== "all" && !draftFilterOptions.responsibles.includes(responsibleFilter)) {
       setResponsibleFilter("all");
     }
   }, [responsibleFilter, draftFilterOptions.responsibles]);
@@ -2011,7 +2010,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   const hasFilterResults = filteredRuns.length > 0 || filteredDefects.length > 0;
   const showInsightPanel = insights.length > 0 || relevantAlerts.length > 0;
   const showEnvironmentFilter = draftFilterOptions.environments.length > 1;
-  const showResponsibleFilter = draftFilterOptions.responsibles.length > 1;
+  const showResponsibleFilter = filterOptions.responsibles.length > 0;
   const chartUsesGrouping = isTimeChartView(activeChartView);
   const activeChartLabel = CHART_VIEW_OPTIONS.find((option) => option.value === activeChartView)?.label ?? activeChartView;
   const chartPanelCopy = resolveChartPanelCopy(activeChartView);
@@ -2157,7 +2156,15 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                   onChange={setResponsibleFilter}
                   options={[{ value: "all", label: "Todos" }, ...draftFilterOptions.responsibles.map((option) => ({ value: option, label: option }))]}
                 />
-              ) : null}
+              ) : (
+                <SelectField
+                  label="Responsável"
+                  value="all"
+                  onChange={() => {}}
+                  options={[{ value: "all", label: "Nenhum usuário vinculado" }]}
+                  hint="Vincule usuários à empresa para filtrar por responsável."
+                />
+              )}
               <SelectField
                 label="Risco"
                 value={riskFilter}

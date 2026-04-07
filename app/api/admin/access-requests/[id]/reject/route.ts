@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { requireGlobalDeveloperWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
+import { parseAccessRequestMessage } from "@/lib/accessRequestMessage";
+import { notifyAccessRequestRejected } from "@/lib/notificationService";
+import { resolveReviewQueue } from "@/lib/requestRouting";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
 import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
@@ -45,6 +48,17 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         .filter(Boolean)
         .join("\n"),
     });
+
+    const parsedNotif = parseAccessRequestMessage(existing.message, existing.email);
+    await notifyAccessRequestRejected({
+      requestId: id,
+      requesterName: parsedNotif.fullName || parsedNotif.name || existing.email,
+      rejectorName: admin.email || "Admin",
+      profileType: parsedNotif.profileType,
+      reviewQueue: resolveReviewQueue(parsedNotif.profileType),
+      reason: reason || comment || null,
+    }).catch(() => null);
+
     return NextResponse.json({
       ok: true,
       item: {
@@ -83,6 +97,16 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         .join("\n"),
     });
 
+    const parsedNotif2 = parseAccessRequestMessage(existing.message, existing.email);
+    await notifyAccessRequestRejected({
+      requestId: id,
+      requesterName: parsedNotif2.fullName || parsedNotif2.name || existing.email,
+      rejectorName: admin.email || "Admin",
+      profileType: parsedNotif2.profileType,
+      reviewQueue: resolveReviewQueue(parsedNotif2.profileType),
+      reason: reason || comment || null,
+    }).catch(() => null);
+
     return NextResponse.json({
       ok: true,
       item: {
@@ -110,6 +134,17 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         .filter(Boolean)
         .join("\n"),
     });
+
+    const parsedNotif3 = parseAccessRequestMessage(existing.message, existing.email);
+    await notifyAccessRequestRejected({
+      requestId: id,
+      requesterName: parsedNotif3.fullName || parsedNotif3.name || existing.email,
+      rejectorName: admin.email || "Admin",
+      profileType: parsedNotif3.profileType,
+      reviewQueue: resolveReviewQueue(parsedNotif3.profileType),
+      reason: reason || comment || null,
+    }).catch(() => null);
+
     return NextResponse.json({
       ok: true,
       item: {

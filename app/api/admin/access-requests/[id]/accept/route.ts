@@ -16,6 +16,8 @@ import {
   requestProfileTypeNeedsCompany,
   toInternalAccessType,
 } from "@/lib/requestRouting";
+import { notifyAccessRequestAccepted } from "@/lib/notificationService";
+import { resolveReviewQueue } from "@/lib/requestRouting";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 
 type AcceptBody = {
@@ -376,6 +378,15 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         body: buildApprovalComment(prepared.generatedUsername, comment),
       });
 
+      const parsedNotif = parseAccessRequestMessage(prepared.message, existing.email);
+      await notifyAccessRequestAccepted({
+        requestId: id,
+        requesterName: parsedNotif.fullName || parsedNotif.name || existing.email,
+        approverName: admin.email || "Admin",
+        profileType: parsedNotif.profileType,
+        reviewQueue: resolveReviewQueue(parsedNotif.profileType),
+      }).catch(() => null);
+
       return NextResponse.json({
         ok: true,
         item: {
@@ -416,6 +427,15 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         body: buildApprovalComment(prepared.generatedUsername, comment),
       });
 
+      const parsedNotif2 = parseAccessRequestMessage(prepared.message, existing.email);
+      await notifyAccessRequestAccepted({
+        requestId: id,
+        requesterName: parsedNotif2.fullName || parsedNotif2.name || existing.email,
+        approverName: admin.email || "Admin",
+        profileType: parsedNotif2.profileType,
+        reviewQueue: resolveReviewQueue(parsedNotif2.profileType),
+      }).catch(() => null);
+
       return NextResponse.json({
         ok: true,
         item: {
@@ -450,6 +470,15 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         authorId: admin.id || null,
         body: buildApprovalComment(prepared.generatedUsername, comment),
       });
+
+      const parsedNotif3 = parseAccessRequestMessage(prepared.message, existing.email);
+      await notifyAccessRequestAccepted({
+        requestId: id,
+        requesterName: parsedNotif3.fullName || parsedNotif3.name || existing.email,
+        approverName: admin.email || "Admin",
+        profileType: parsedNotif3.profileType,
+        reviewQueue: resolveReviewQueue(parsedNotif3.profileType),
+      }).catch(() => null);
 
       return NextResponse.json({
         ok: true,

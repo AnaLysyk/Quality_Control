@@ -491,6 +491,46 @@ export async function notifyAccessRequestCreated(input: {
   });
 }
 
+export async function notifyAccessRequestAccepted(input: {
+  requestId: string;
+  requesterName: string;
+  approverName: string;
+  profileType: "testing_company_user" | "company_user" | "testing_company_lead" | "technical_support";
+  reviewQueue: ReviewQueue;
+}) {
+  const reviewerIds = await resolveRequestReviewerIds(input.reviewQueue);
+  if (!reviewerIds.length) return;
+  await createNotificationsForUsers(reviewerIds, {
+    type: "ACCESS_REQUEST_ACCEPTED",
+    title: "Solicitacao de acesso aprovada",
+    description: `${input.approverName} aprovou a solicitacao de ${input.requesterName} (${toRequestProfileTypeLabel(input.profileType)}).`,
+    requestId: input.requestId,
+    link: "/admin/access-requests",
+    dedupeKey: `access-request:${input.requestId}:accepted`,
+  });
+}
+
+export async function notifyAccessRequestRejected(input: {
+  requestId: string;
+  requesterName: string;
+  rejectorName: string;
+  profileType: "testing_company_user" | "company_user" | "testing_company_lead" | "technical_support";
+  reviewQueue: ReviewQueue;
+  reason?: string | null;
+}) {
+  const reviewerIds = await resolveRequestReviewerIds(input.reviewQueue);
+  if (!reviewerIds.length) return;
+  const reasonSuffix = input.reason ? ` Motivo: ${input.reason}` : "";
+  await createNotificationsForUsers(reviewerIds, {
+    type: "ACCESS_REQUEST_REJECTED",
+    title: "Solicitacao de acesso recusada",
+    description: `${input.rejectorName} recusou a solicitacao de ${input.requesterName} (${toRequestProfileTypeLabel(input.profileType)}).${reasonSuffix}`,
+    requestId: input.requestId,
+    link: "/admin/access-requests",
+    dedupeKey: `access-request:${input.requestId}:rejected`,
+  });
+}
+
 export async function notifyUserAccessUpdated(input: {
   targetUserId: string;
   actorEmail?: string | null;

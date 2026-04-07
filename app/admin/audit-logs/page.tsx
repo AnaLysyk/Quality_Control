@@ -754,10 +754,10 @@ export default function AdminAuditLogsPage() {
                           src={avatars[item.actor_user_id!]}
                           alt={item.actor_email ?? ""}
                           className={styles.eventAvatarImg}
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling && ((e.target as HTMLImageElement).nextElementSibling as HTMLElement).style.removeProperty("display"); }}
+                          onError={(e) => { (e.target as HTMLImageElement).classList.add(styles.hidden); const sibling = (e.target as HTMLImageElement).nextElementSibling as HTMLElement | null; if (sibling) sibling.classList.remove(styles.hidden); }}
                         />
                       ) : null}
-                      <span style={avatars[item.actor_user_id ?? ""] ? { display: "none" } : undefined}>
+                      <span className={avatars[item.actor_user_id ?? ""] ? styles.hidden : undefined}>
                         {getActorInitials(item.actor_email)}
                       </span>
                     </div>

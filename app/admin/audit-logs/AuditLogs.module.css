@@ -490,6 +490,7 @@
   border-radius: 50%;
   object-fit: cover;
 }
+.hidden { display: none; }
 
 .iconCreate { background: #ecfdf5; color: #047857; }
 .iconUpdate { background: #eff6ff; color: #2563eb; }

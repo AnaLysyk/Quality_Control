@@ -14,7 +14,6 @@
 - data/versions: 24 arquivos
 - app/admin: 20 arquivos
 - data/company-documents-files: 18 arquivos
-- ai_applying: 9 arquivos
 - app/empresas: 9 arquivos
 - lib/rbac: 8 arquivos
 

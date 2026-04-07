@@ -141,7 +141,6 @@ status-report.txt
 RENDER_OUTBOUND_IPS.md         → docs/ops/
 README-TESTING-METRIC.md       → docs/
 PRS_MIGRATION_INSTRUCTIONS.md  → docs/
-README_AI_APPYING.md           → ai_applying/README.md
 ```
 
 ### 3.4 Limpar `scripts/` diagnósticos descartáveis
@@ -213,7 +212,6 @@ painel-qa/
 ├── packages/contracts/     ← Zod schemas compartilhados
 ├── prisma/                 ← Schema + migrations
 ├── scripts/                ← Build, seed, ops scripts (limpo)
-├── ai_applying/            ← Python sub-project (independente)
 ├── tests/                  ← Jest unit tests
 ├── tests-e2e/              ← Playwright E2E tests
 ├── docs/                   ← Developer documentation

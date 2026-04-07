@@ -241,6 +241,7 @@ function formatMetaValue(val: unknown): string {
   if (val === true) return "Sim";
   if (val === false) return "Não";
   if (val === null || val === undefined) return "—";
+  if (Array.isArray(val)) return val.length ? val.join(", ") : "—";
   if (typeof val === "object") return JSON.stringify(val);
   return String(val);
 }
@@ -276,6 +277,7 @@ export default function AdminAuditLogsPage() {
   const [endDate, setEndDate] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showJson, setShowJson] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<ActionCategory | "">("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -316,6 +318,7 @@ export default function AdminAuditLogsPage() {
     return items.filter((log) => {
       if (action && log.action !== action) return false;
       if (entityType && log.entity_type !== entityType) return false;
+      if (categoryFilter && getCategory(log.action) !== categoryFilter) return false;
       if (actor && !(log.actor_email ?? "").toLowerCase().includes(actor.toLowerCase())) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -337,7 +340,17 @@ export default function AdminAuditLogsPage() {
       }
       return true;
     });
-  }, [items, action, actor, startDate, endDate, entityType, searchQuery]);
+  }, [items, action, actor, startDate, endDate, entityType, searchQuery, categoryFilter]);
+
+  /** Category breakdown for quick-filter chips. */
+  const categoryCounts = useMemo(() => {
+    const counts: Partial<Record<ActionCategory, number>> = {};
+    for (const item of items) {
+      const cat = getCategory(item.action);
+      counts[cat] = (counts[cat] ?? 0) + 1;
+    }
+    return counts;
+  }, [items]);
 
   const showSkeleton = loading && !items.length;
 
@@ -373,6 +386,29 @@ export default function AdminAuditLogsPage() {
                 60 dias
               </span>
             </div>
+          </div>
+
+          {/* Filtros rápidos por categoria */}
+          <div className={styles.categoryChips}>
+            <button
+              type="button"
+              className={`${styles.categoryChip} ${categoryFilter === "" ? styles.categoryChipActive : ""}`}
+              onClick={() => setCategoryFilter("")}
+            >Todos <span className={styles.chipCount}>{items.length}</span></button>
+            {(["auth", "create", "update", "delete", "permission", "link", "integration", "error"] as ActionCategory[]).map((cat) => {
+              const count = categoryCounts[cat] ?? 0;
+              if (!count) return null;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  className={`${styles.categoryChip} ${badgeClass(cat)} ${categoryFilter === cat ? styles.categoryChipActive : ""}`}
+                  onClick={() => setCategoryFilter((prev) => prev === cat ? "" : cat)}
+                >
+                  {getCategoryLabel(cat)} <span className={styles.chipCount}>{count}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Filtros */}
@@ -423,7 +459,7 @@ export default function AdminAuditLogsPage() {
                 {loading ? "Atualizando…" : "Atualizar"}
               </button>
               <button
-                onClick={() => { setAction(""); setEntityType(""); setActor(""); setSearchQuery(""); setStartDate(""); setEndDate(""); }}
+                onClick={() => { setAction(""); setEntityType(""); setActor(""); setSearchQuery(""); setStartDate(""); setEndDate(""); setCategoryFilter(""); }}
                 className={styles.btnGhost}
               >
                 Limpar filtros

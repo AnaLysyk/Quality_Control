@@ -69,6 +69,52 @@
 .metaBadge svg { opacity: 0.7; }
 
 /* ── Filtros ─────────────────────────────────────────────── */
+
+/* ── Category quick-filter chips ─────────────────────────── */
+.categoryChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  padding: 0 1.75rem;
+  padding-top: 0.25rem;
+}
+
+@media (min-width: 640px) {
+  .categoryChips { padding: 0 2rem; padding-top: 0.25rem; }
+}
+
+.categoryChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 0.5rem;
+  padding: 0.3125rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: var(--tc-surface-2, #f1f5f9);
+  color: var(--tc-text-muted, #6b7280);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.categoryChip:hover {
+  filter: brightness(0.96);
+}
+
+.categoryChipActive {
+  box-shadow: 0 0 0 2px rgba(1, 24, 72, 0.2);
+  font-weight: 700;
+}
+
+.chipCount {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  opacity: 0.6;
+}
+
 .filtersWrap {
   padding: 1.25rem 1.75rem 1.25rem;
   border-bottom: 1px solid rgba(229, 231, 235, 0.6);
@@ -382,6 +428,9 @@
   color: var(--tc-text-muted, #6b7280);
   margin: 0 0 0.625rem;
   letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
 }
 
 .tierContent {
@@ -395,8 +444,14 @@
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
-  padding: 0.25rem 0;
+  padding: 0.25rem 0.375rem;
   line-height: 1.45;
+  border-radius: 0.25rem;
+  transition: background 0.1s;
+}
+
+.kvRow:hover {
+  background: rgba(1, 24, 72, 0.02);
 }
 
 .kvLabel {

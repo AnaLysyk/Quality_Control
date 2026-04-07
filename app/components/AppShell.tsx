@@ -302,11 +302,12 @@ function resolveRouteCompanySlug(pathname: string) {
 }
 
 function shouldHideShellCover(pathname: string) {
-  const hasAdminHeroCover = /^\/admin\/(?:home|test-metric|users|clients)(?:\/.*)?$/.test(pathname);
+  const hasAdminHeroCover = /^\/admin\/(?:home|test-metric|users|clients|support)(?:\/.*)?$/.test(pathname);
   return (
     pathname.startsWith("/settings/profile") ||
     pathname.startsWith("/requests") ||
     pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/kanban-it") ||
     hasAdminHeroCover
   );
 }

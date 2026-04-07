@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent as ReactDragEvent, type PointerEvent as ReactPointerEvent, type WheelEvent } from "react";
 import { FiChevronLeft, FiChevronRight, FiEdit2, FiLifeBuoy, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiX } from "react-icons/fi";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
@@ -682,9 +683,15 @@ export default function KanbanItPage() {
   return (
     <div className="support-board-page">
       <section className="support-board-hero">
+        <div className="support-board-hero-brand">
+          <div className="support-board-hero-logo">
+            <Image src="/images/tc.png" alt="Logo Testing Company" width={72} height={72} className="h-14 w-14 object-contain sm:h-16 sm:w-16" priority />
+          </div>
+          <h1 className="support-board-title">Suporte</h1>
+        </div>
+
         <div className="support-board-hero-top">
           <div className="support-board-hero-copy">
-            <h1 className="support-board-title">Suporte</h1>
             <p className="support-board-subtitle">
               {isPrivilegedSupportUser(user)
                 ? "Acompanhe todos os chamados abertos que entram no atendimento global com a mesma hierarquia visual dos paineis administrativos."

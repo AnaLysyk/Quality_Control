@@ -26,6 +26,19 @@ function buildModulePurpose(context: AssistantScreenContext) {
   }
 }
 
+/* ──────────────────── Screen focus (quick-read line) ──────────────────── */
+
+function buildScreenFocus(context: AssistantScreenContext): string {
+  switch (context.module) {
+    case "support":     return "chamados";
+    case "permissions": return "permissões e acessos";
+    case "company":     return "empresa atual";
+    case "test_plans":  return "casos de teste";
+    case "dashboard":   return "operação e gestão";
+    default:            return "plataforma";
+  }
+}
+
 /* ──────────────────── Tool executor ──────────────────── */
 
 export async function toolGetScreenContext(user: AuthUser, context: AssistantScreenContext): Promise<AssistantExecutorResult> {
@@ -42,6 +55,7 @@ export async function toolGetScreenContext(user: AuthUser, context: AssistantScr
     actions: buildPromptActions(context),
     reply: compactMultiline([
       `${context.screenLabel}`,
+      `Foco desta tela: ${buildScreenFocus(context)}`,
       "",
       context.screenSummary,
       buildModulePurpose(context),

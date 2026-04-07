@@ -94,7 +94,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     match: /^\/(?:admin|dashboard)/,
     module: "dashboard",
     screenLabel: "Painel administrativo",
-    screenSummary: "Tela central para acompanhar operação, navegar entre módulos e iniciar ações de suporte, gestão e análise.",
+    screenSummary: "Tela central de operação e gestão. Use para navegar entre módulos, acompanhar indicadores e iniciar ações de suporte ou análise.",
     entityType: "screen",
     suggestedPrompts: [
       "Resumir esta tela",
@@ -108,7 +108,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
 const GENERAL_CONTEXT: Omit<ScreenContextRule, "match"> = {
   module: "general",
   screenLabel: "Plataforma Quality Control",
-  screenSummary: "Assistente nativo da plataforma. Use para navegar, buscar registros, criar chamados ou entender seu contexto atual.",
+  screenSummary: "Tela inicial da plataforma. Use para navegar, buscar registros, criar chamados ou entender seu contexto atual.",
   entityType: "screen",
   suggestedPrompts: [
     "Resumir esta tela",

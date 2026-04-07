@@ -1,10 +1,8 @@
-import os from "node:os";
 import path from "node:path";
 
 export function getJsonStoreDir() {
   const override = process.env.JSON_STORE_DIR?.trim();
   if (override) return override;
-  if (process.env.VERCEL) return path.join(os.tmpdir(), "painel-qa");
   // When running Playwright in parallel, use a per-worker subdir to avoid
   // cross-test interference when the app falls back to file-backed JSON.
   const base = path.join(process.cwd(), "data");

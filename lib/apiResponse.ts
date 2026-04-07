@@ -41,7 +41,6 @@ function shouldLog() {
 export function getRequestId(req: Request): string {
   return (
     req.headers.get("x-request-id")?.trim() ||
-    req.headers.get("x-vercel-id")?.trim() ||
     generateRequestId()
   );
 }

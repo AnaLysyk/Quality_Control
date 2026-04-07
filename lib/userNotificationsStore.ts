@@ -57,9 +57,7 @@ const STORE_PATH = path.join(process.cwd(), "data", "user-notifications.json");
 const STORE_KEY = "qc:user_notifications:v1";
 const USE_REDIS =
   process.env.NOTIFICATIONS_STORE === "redis" || isRedisConfigured();
-const USE_MEMORY =
-  process.env.NOTIFICATIONS_IN_MEMORY === "true" ||
-  (!USE_REDIS && process.env.VERCEL === "1");
+const USE_MEMORY = process.env.NOTIFICATIONS_IN_MEMORY === "true";
 let memoryStore: NotificationsStore = {};
 let warnedFsFailure = false;
 

@@ -97,7 +97,7 @@ export const AUDIT_LOG_RETENTION_DAYS = 60;
 type AuditLogStore = { items: AuditLogRow[] };
 
 const STORE_PATH = path.join(process.cwd(), "data", "audit-logs.json");
-const USE_MEMORY = process.env.AUDIT_LOGS_IN_MEMORY === "true" || process.env.VERCEL === "1";
+const USE_MEMORY = process.env.AUDIT_LOGS_IN_MEMORY === "true";
 let memoryStore: AuditLogStore = { items: [] };
 let warnedFsFailure = false;
 

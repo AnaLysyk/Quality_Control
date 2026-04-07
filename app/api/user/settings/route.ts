@@ -13,16 +13,11 @@ if (typeof process !== "undefined" && process.release?.name === "node") {
 }
 
 const DEFAULT_DATA_DIR = path && path.join(process.cwd(), "data");
-const DATA_DIR =
-  path &&
-  (process.env.USER_SETTINGS_DATA_DIR ||
-    (process.env.VERCEL === "1" ? path.join("/tmp", "qc-data") : DEFAULT_DATA_DIR));
+const DATA_DIR = path && (process.env.USER_SETTINGS_DATA_DIR || DEFAULT_DATA_DIR);
 const STORE_PATH = path && DATA_DIR ? path.join(DATA_DIR, "user-settings.json") : undefined;
 const STORE_KEY_PREFIX = "qc:user_settings:v1";
 const USE_REDIS = process.env.USER_SETTINGS_STORE === "redis" || isRedisConfigured();
-const USE_MEMORY =
-  process.env.USER_SETTINGS_IN_MEMORY === "true" ||
-  (!USE_REDIS && process.env.VERCEL === "1");
+const USE_MEMORY = process.env.USER_SETTINGS_IN_MEMORY === "true";
 let memoryStore: Record<string, StoredSettings> = {};
 let warnedFsFailure = false;
 

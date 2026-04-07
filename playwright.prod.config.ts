@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL || "https://qualitycontrol.vercel.app";
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || "https://quality-control-qwqs.onrender.com";
 
 export default defineConfig({
   testDir: "./tests-e2e",

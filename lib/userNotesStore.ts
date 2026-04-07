@@ -45,9 +45,7 @@ type NotesStore = Record<string, UserNote[]>;
 const STORE_PATH = path.join(process.cwd(), "data", "user-notes.json");
 const STORE_KEY_PREFIX = "qc:user_notes:v1";
 const USE_REDIS = process.env.NOTES_STORE === "redis" || isRedisConfigured();
-const USE_MEMORY =
-  process.env.NOTES_IN_MEMORY === "true" ||
-  (!USE_REDIS && process.env.VERCEL === "1");
+const USE_MEMORY = process.env.NOTES_IN_MEMORY === "true";
 
 // In-memory fallback store (non-persistent)
 let memoryStore: NotesStore = {};

@@ -1,0 +1,21 @@
+.seriesDot {
+  background-color: var(--dot-color);
+}
+
+.dynamicGrid {
+  grid-template-columns: repeat(var(--col-count, 1), minmax(0, 1fr));
+}
+
+.barHeight {
+  height: var(--bar-h);
+}
+
+.barWidth {
+  width: var(--bar-w);
+}
+
+.appPill {
+  color: var(--app-color);
+  border-color: var(--app-border);
+  background-color: var(--app-bg);
+}

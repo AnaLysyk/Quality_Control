@@ -19,6 +19,7 @@ import {
 } from "react-icons/fi";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getAppMeta } from "@/lib/appMeta";
+import css from "./CompanyIntelligenceDashboard.module.css";
 import type { CompanyDashboardData } from "./companyDashboardData";
 
 type PeriodPreset = "7d" | "30d" | "90d" | "180d" | "custom";
@@ -856,7 +857,7 @@ function MiniLineChart(props: { points: SeriesPoint[]; metric: Exclude<ChartMetr
           <div>
             <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-medium text-[rgba(8,32,77,0.58)]">
               <span className="inline-flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: meta.colors[1] }} />
+                <span className={`h-2.5 w-2.5 rounded-full ${css.seriesDot}`} {...{ style: { '--dot-color': meta.colors[1] } as React.CSSProperties }} />
                 Série: {meta.label}
               </span>
               {meta.targetValue != null ? (
@@ -981,8 +982,8 @@ function RunsBarChart(props: { points: SeriesPoint[] }) {
       </div>
 
       <div
-        className="grid h-64 items-end gap-3"
-        style={{ gridTemplateColumns: `repeat(${Math.max(props.points.length, 1)}, minmax(0, 1fr))` }}
+        className={`grid h-64 items-end gap-3 ${css.dynamicGrid}`}
+        {...{ style: { '--col-count': Math.max(props.points.length, 1) } as React.CSSProperties }}
       >
         {props.points.map((point) => {
           const height = Math.max((point.runs / peak) * 100, point.runs > 0 ? 12 : 0);
@@ -991,8 +992,8 @@ function RunsBarChart(props: { points: SeriesPoint[] }) {
               <div className="text-[11px] font-semibold text-[rgba(8,32,77,0.68)]">{formatCompactNumber(point.runs)}</div>
               <div className="relative flex h-48 w-full items-end justify-center rounded-[18px] bg-[linear-gradient(180deg,rgba(248,250,252,0.76)_0%,rgba(241,245,249,0.92)_100%)] px-2 pb-2">
                 <div
-                  className="w-full rounded-[14px] bg-[linear-gradient(180deg,rgba(36,82,149,0.92)_0%,rgba(1,24,72,0.98)_100%)] shadow-[0_10px_22px_rgba(1,24,72,0.14)]"
-                  style={{ height: `${height}%` }}
+                  className={`w-full rounded-[14px] bg-[linear-gradient(180deg,rgba(36,82,149,0.92)_0%,rgba(1,24,72,0.98)_100%)] shadow-[0_10px_22px_rgba(1,24,72,0.14)] ${css.barHeight}`}
+                  {...{ style: { '--bar-h': `${height}%` } as React.CSSProperties }}
                 />
               </div>
               <div className="truncate text-center text-[11px] font-medium text-[rgba(8,32,77,0.58)]">{point.label}</div>
@@ -1047,8 +1048,8 @@ function ApplicationHealthChart(props: { applications: ApplicationAggregate[] })
               </div>
               <div className="mt-2 h-2.5 rounded-full bg-slate-100">
                 <div
-                  className="h-full rounded-full shadow-[0_8px_16px_rgba(15,23,42,0.12)]"
-                  style={{ width: `${Math.max(application.passRate, application.runs > 0 ? 4 : 0)}%`, background: barTone }}
+                  className={`h-full rounded-full shadow-[0_8px_16px_rgba(15,23,42,0.12)] ${css.barWidth}`}
+                  {...{ style: { '--bar-w': `${Math.max(application.passRate, application.runs > 0 ? 4 : 0)}%`, background: barTone } as React.CSSProperties }}
                 />
               </div>
             </div>
@@ -1089,8 +1090,8 @@ function ApplicationDefectsChart(props: { applications: ApplicationAggregate[] }
               </div>
               <div className="mt-2 h-2.5 rounded-full bg-slate-100">
                 <div
-                  className="h-full rounded-full bg-[linear-gradient(90deg,rgba(1,24,72,0.92)_0%,rgba(239,0,1,0.95)_100%)] shadow-[0_8px_16px_rgba(239,0,1,0.12)]"
-                  style={{ width: `${width}%` }}
+                  className={`h-full rounded-full bg-[linear-gradient(90deg,rgba(1,24,72,0.92)_0%,rgba(239,0,1,0.95)_100%)] shadow-[0_8px_16px_rgba(239,0,1,0.12)] ${css.barWidth}`}
+                  {...{ style: { '--bar-w': `${width}%` } as React.CSSProperties }}
                 />
               </div>
             </div>
@@ -2430,7 +2431,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em]" style={{ color: appMeta.color, borderColor: `${appMeta.color}35`, backgroundColor: `${appMeta.color}12` }}>{appMeta.label}</span>
+                          <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${css.appPill}`} {...{ style: { '--app-color': appMeta.color, '--app-border': `${appMeta.color}35`, '--app-bg': `${appMeta.color}12` } as React.CSSProperties }}>{appMeta.label}</span>
                           <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${toneClasses(riskTone(aggregate.riskLevel))}`}>{aggregate.riskLevel === "critical" ? "Crítica" : aggregate.riskLevel === "warning" ? "Atenção" : "Estável"}</span>
                         </div>
                         <div className="mt-2 text-base font-bold text-(--tc-text,#0b1a3c)">{aggregate.label}</div>

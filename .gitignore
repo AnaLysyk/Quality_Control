@@ -9,74 +9,53 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+.npm-cache/
 
-# testing
 # Next.js build output
-/.next
-
-# Build and dist folders
-/build
-/dist
-
-/coverage
-
-# next.js
-# TypeScript build info
-*.tsbuildinfo
-
 /.next/
 /out/
 
-# production
+# build & dist
 /build
+/dist
 
-# misc
-.DS_Store
-*.pem
-# Logs
-*.log
-*.out.log
-*.err.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-.npm-cache/
+# coverage
+/coverage
 
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# allow env templates
-!.env.example
-!.env.local.example
-
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
 
+# Prisma generated
+/generated/prisma
 
-# Next.js build artifacts
-.next/
+# env files (allow templates)
+.env*
+!.env.example
+!.env.local.example
 
-# local tailwind scratch/debug files
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# OS / editor
+.DS_Store
+*.pem
+
+# local runtime artifacts
+.dev.pid
+__localstore_snapshot*
+.tmp/
 .tmp-tailwind*.css
+.pytest_cache/
 
-# playwright artifacts
+# Playwright artifacts
 test-results/
 playwright-report/
 blob-report/
-
-
-/generated/prisma
-
-.env*.local
 
 # internal docs not meant for public repo
 docs/security/

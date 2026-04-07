@@ -295,7 +295,7 @@ export default function AdminAuditLogsPage() {
           {/* Rows */}
           <div>
             {filteredItems.map((item, idx) => (
-              <div key={item.id} className={styles.rowDivider}>
+              <div key={item.id} className={`${styles.rowDivider} ${expandedId === item.id ? styles.rowExpanded : ""}`}>
                 <button
                   type="button"
                   onClick={() => setExpandedId((prev) => (prev === item.id ? null : item.id))}

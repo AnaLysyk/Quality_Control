@@ -29,7 +29,7 @@ import {
   resolveUserCompanies,
   createLocalUser,
   createLocalCompany,
-} from "../src/core/auth/localStore";
+} from "../lib/core/auth/localStore";
 
 const prisma = new PrismaClient();
 

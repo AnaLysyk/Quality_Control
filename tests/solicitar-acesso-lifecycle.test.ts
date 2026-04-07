@@ -34,7 +34,7 @@ import {
   pgCreateLocalUser,
   pgCreateLocalCompany,
   pgDeleteLocalCompany,
-} from "../src/core/auth/pgStore";
+} from "../lib/core/auth/pgStore";
 import { createLocalUser } from "../lib/auth/localStore";
 import { hashPasswordSha256 } from "../lib/passwordHash";
 import { getLocalUserById } from "../lib/auth/localStore";

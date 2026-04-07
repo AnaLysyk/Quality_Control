@@ -38,7 +38,7 @@ import {
 } from "../data/accessRequestsStore";
 import {
   pgCreateLocalUser,
-} from "../src/core/auth/pgStore";
+} from "../lib/core/auth/pgStore";
 import { hashPasswordSha256 } from "../lib/passwordHash";
 
 jest.setTimeout(30000);

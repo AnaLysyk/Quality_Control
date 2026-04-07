@@ -45,7 +45,7 @@ import {
   listAccessRequestComments,
   createAccessRequestComment,
 } from "../data/accessRequestCommentsStore";
-import { pgCreateLocalUser } from "../src/core/auth/pgStore";
+import { pgCreateLocalUser } from "../lib/core/auth/pgStore";
 import { hashPasswordSha256 } from "../lib/passwordHash";
 
 jest.setTimeout(30000);

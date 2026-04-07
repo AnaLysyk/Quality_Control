@@ -10,7 +10,7 @@
 
 import { randomUUID } from "crypto";
 import { prisma } from "../lib/prismaClient";
-import { pgCreateLocalCompany, pgFindLocalCompanyBySlug } from "../src/core/auth/pgStore";
+import { pgCreateLocalCompany, pgFindLocalCompanyBySlug } from "../lib/core/auth/pgStore";
 
 const uid = randomUUID().slice(0, 8);
 

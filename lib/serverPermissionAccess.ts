@@ -1,7 +1,7 @@
 import "server-only";
 
-import { getUserOverride, effectivePermissions, type UserPermissionsOverride } from "../src/lib/store/permissionsStore";
-import { ROLE_DEFAULTS, type Role } from "../src/lib/permissions/roleDefaults";
+import { getUserOverride, effectivePermissions, type UserPermissionsOverride } from "./store/permissionsStore";
+import { ROLE_DEFAULTS, type Role } from "./permissions/roleDefaults";
 import { listLocalLinksForUser, listLocalUsers } from "@/lib/auth/localStore";
 import { resolvePermissionRoleForUser } from "@/lib/adminUsers";
 import { normalizePermissionMatrix, type PermissionMatrix } from "@/lib/permissionMatrix";

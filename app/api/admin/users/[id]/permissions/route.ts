@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { deleteUserOverride, setUserOverride } from '../../../../../../src/lib/store/permissionsStore';
+import { deleteUserOverride, setUserOverride } from '@/lib/store/permissionsStore';
 import { addAuditLogSafe } from '@/data/auditLogRepository';
 import { getAdminUserItem } from '@/lib/adminUsers';
 import { notifyUserAccessUpdated } from '@/lib/notificationService';

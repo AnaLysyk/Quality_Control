@@ -12,7 +12,7 @@ import {
   pgCreateLocalUser,
   pgCreateLocalCompany,
   pgUpsertLocalLink,
-} from "../src/core/auth/pgStore";
+} from "../lib/core/auth/pgStore";
 import { hashPasswordSha256 } from "../lib/passwordHash";
 
 // IDs dos recursos criados pelo teste — limpos no afterAll

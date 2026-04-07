@@ -13,7 +13,7 @@ import {
   pgCreateLocalUser,
   pgCreateLocalCompany,
   pgUpsertLocalLink,
-} from "../src/core/auth/pgStore";
+} from "../lib/core/auth/pgStore";
 import { hashPasswordSha256 } from "../lib/passwordHash";
 
 const TEST_PASSWORD = hashPasswordSha256("TesteSenha@123");

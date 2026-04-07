@@ -27,8 +27,8 @@ jest.mock("../lib/redis", () => ({
 import { randomUUID } from "crypto";
 import { PrismaClient } from "@prisma/client";
 
-import { ROLE_DEFAULTS } from "../src/lib/permissions/roleDefaults";
-import { effectivePermissions } from "../src/lib/store/permissionsStore";
+import { ROLE_DEFAULTS } from "../lib/permissions/roleDefaults";
+import { effectivePermissions } from "../lib/store/permissionsStore";
 import {
   hasPermissionAccess,
   applyPermissionOverride,
@@ -41,7 +41,7 @@ import {
   createLocalUser,
   createLocalCompany,
   upsertLocalLink,
-} from "../src/core/auth/localStore";
+} from "../lib/core/auth/localStore";
 
 const prisma = new PrismaClient();
 

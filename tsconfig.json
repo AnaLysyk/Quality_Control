@@ -23,24 +23,17 @@
     "jsx": "react-jsx",
     "paths": {
       "@/core/*": [
-        "./src/core/*"
-      ],
-      "@/services/*": [
-        "./src/services/*"
-      ],
-      "@/stores/*": [
-        "./src/stores/*"
+        "./lib/core/*"
       ],
       "@/utils/*": [
-        "./src/utils/*"
+        "./app/utils/*"
       ],
       "@/data/*": [
         "./app/data/*",
         "./data/*"
       ],
       "@/hooks/*": [
-        "./app/hooks/*",
-        "./hooks/*"
+        "./app/hooks/*"
       ],
       "@/lib/*": [
         "./lib/*"
@@ -52,7 +45,7 @@
         "./packages/contracts/src/*"
       ],
       "@/types/*": [
-        "./src/types/*"
+        "./app/types/*"
       ],
       "@/*": [
         "./app/*"

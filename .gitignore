@@ -85,6 +85,10 @@ blob-report/
 docs/security/
 docs/adr/
 
+# dev artifacts
+demo/
+debug/
+
 # local auth data (keep sample file tracked)
 data/local-auth-store.json
 data/local-auth-store.backup-*.json

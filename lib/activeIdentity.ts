@@ -193,7 +193,7 @@ export function resolveActiveIdentity({
     kind: "user",
     roleKind,
     displayName: accountName,
-    avatarUrl: resolveEntityImage({ isCompanyContext: showCompanyTag, companyLogoUrl: companyLogo, userAvatarUrl: userAvatar }),
+    avatarUrl: resolveEntityImage({ isCompanyContext: showCompanyTag && !userAvatar, companyLogoUrl: companyLogo, userAvatarUrl: userAvatar }),
     showCompanyTag,
     companyTagLabel: showCompanyTag ? companyName : null,
     accountName,

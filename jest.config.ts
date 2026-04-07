@@ -6,7 +6,7 @@ const config: JestConfigWithTsJest = {
   moduleNameMapper: {
     "^@/contracts/(.*)$": "<rootDir>/packages/contracts/src/$1",
     "^@/lib/(.*)$": "<rootDir>/lib/$1",
-    "^@/core/(.*)$": "<rootDir>/src/core/$1",
+    "^@/core/(.*)$": "<rootDir>/lib/core/$1",
     "^@/data/(.*)$": ["<rootDir>/data/$1", "<rootDir>/app/data/$1"],
     "^@/(.*)$": "<rootDir>/app/$1",
     "^server-only$": "<rootDir>/tests/mocks/server-only.js",

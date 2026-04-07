@@ -92,13 +92,15 @@ export async function GET(req: NextRequest) {
   try {
     const items = await listAuditLogs({ limit, offset, action, entityType, actor, query, startDate, endDate });
 
-    // Resolve actor avatars and names
+    // Resolve actor avatars and names + entity usernames
     const actorIds = [...new Set(items.map((i: { actor_user_id?: string | null }) => i.actor_user_id).filter(Boolean))] as string[];
+    const entityUserIds = [...new Set(items.filter((i: { entity_type?: string; entity_id?: string | null }) => i.entity_type === "user" && i.entity_id).map((i: { entity_id?: string | null }) => i.entity_id))] as string[];
+    const allUserIds = [...new Set([...actorIds, ...entityUserIds])];
     let avatars: Record<string, string> = {};
     let actorNames: Record<string, string> = {};
-    if (actorIds.length > 0) {
+    if (allUserIds.length > 0) {
       try {
-        const users = await prisma.user.findMany({ where: { id: { in: actorIds } }, select: { id: true, avatar_url: true, name: true, full_name: true, user: true } });
+        const users = await prisma.user.findMany({ where: { id: { in: allUserIds } }, select: { id: true, avatar_url: true, name: true, full_name: true, user: true } });
         for (const u of users) {
           if (u.avatar_url) avatars[u.id] = u.avatar_url;
           const displayName = u.user || u.full_name || u.name;

@@ -276,7 +276,13 @@ function getEventSubtitle(item: AuditLog, actorNames: Record<string, string>): {
   const meta = (item.metadata && typeof item.metadata === "object" ? item.metadata : {}) as Record<string, unknown>;
   const actor = (item.actor_user_id && actorNames[item.actor_user_id]) || item.actor_email || "sistema";
   const entity = entityTypeLabel(item.entity_type);
-  let target = item.entity_label || "";
+  // Resolve target: prefer username from actorNames map (covers old records with email as entity_label)
+  let target = "";
+  if (item.entity_type === "user" && item.entity_id && actorNames[item.entity_id]) {
+    target = actorNames[item.entity_id];
+  } else {
+    target = item.entity_label || "";
+  }
   if (!target && meta.companyLabel) target = String(meta.companyLabel);
   if (!target && meta.companySlug) target = String(meta.companySlug);
   if (!target && meta.userEmail) target = String(meta.userEmail);
@@ -701,21 +707,48 @@ export default function AdminAuditLogsPage() {
               <div className={styles.paginationInfo}>
                 <span>{filteredItems.length} resultado{filteredItems.length !== 1 ? "s" : ""}</span>
                 <span className={styles.paginationSep}>·</span>
-                <span>Página {currentPage} de {totalPages}</span>
-              </div>
-              <div className={styles.paginationControls}>
                 <label className={styles.paginationLabel}>
                   Por página
                   <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} className={styles.paginationSelect}>
                     {PAGE_SIZES.map((s) => (<option key={s} value={s}>{s}</option>))}
                   </select>
                 </label>
-                <div className={styles.paginationButtons}>
-                  <button type="button" disabled={currentPage <= 1} onClick={() => setCurrentPage(1)} className={styles.paginationBtn} title="Primeira página">«</button>
-                  <button type="button" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)} className={styles.paginationBtn} title="Página anterior">‹</button>
-                  <button type="button" disabled={currentPage >= totalPages} onClick={() => setCurrentPage((p) => p + 1)} className={styles.paginationBtn} title="Próxima página">›</button>
-                  <button type="button" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(totalPages)} className={styles.paginationBtn} title="Última página">»</button>
+              </div>
+              <div className={styles.paginationControls}>
+                <button type="button" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)} className={styles.paginationBtn} title="Página anterior">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M10 3L5 8l5 5" /></svg>
+                </button>
+                <div className={styles.paginationPages}>
+                  {(() => {
+                    const pages: (number | "…")[] = [];
+                    if (totalPages <= 7) {
+                      for (let i = 1; i <= totalPages; i++) pages.push(i);
+                    } else {
+                      pages.push(1);
+                      if (currentPage > 3) pages.push("…");
+                      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) pages.push(i);
+                      if (currentPage < totalPages - 2) pages.push("…");
+                      pages.push(totalPages);
+                    }
+                    return pages.map((p, idx) =>
+                      p === "…" ? (
+                        <span key={`ellipsis-${idx}`} className={styles.paginationEllipsis}>…</span>
+                      ) : (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => setCurrentPage(p)}
+                          className={`${styles.paginationPageBtn} ${currentPage === p ? styles.paginationPageBtnActive : ""}`}
+                        >
+                          {p}
+                        </button>
+                      )
+                    );
+                  })()}
                 </div>
+                <button type="button" disabled={currentPage >= totalPages} onClick={() => setCurrentPage((p) => p + 1)} className={styles.paginationBtn} title="Próxima página">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 3l5 5-5 5" /></svg>
+                </button>
               </div>
             </div>
           )}

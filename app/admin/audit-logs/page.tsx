@@ -525,19 +525,6 @@ export default function AdminAuditLogsPage() {
 
         {/* ── Card principal ─────────────────────────────────── */}
         <div className={styles.card}>
-          {/* Header */}
-          <div className={styles.cardHeader}>
-            <div className={styles.cardHeaderRight}>
-              <span className={styles.metaBadge}>
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M2 4h12M2 8h12M2 12h12" strokeLinecap="round"/></svg>
-                {filteredItems.length} evento{filteredItems.length !== 1 ? "s" : ""}
-              </span>
-              <span className={styles.metaBadge}>
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l2.5 1.5" strokeLinecap="round"/></svg>
-                60 dias
-              </span>
-            </div>
-          </div>
 
           {/* Filtros rápidos por categoria */}
           <div className={styles.categoryChips}>

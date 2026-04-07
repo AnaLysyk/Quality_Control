@@ -154,7 +154,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
             { label: t("nav.testPlans"), icon: FiClipboard, href: `/empresas/${companySlug}/planos-de-teste` },
             { label: t("nav.runs"), icon: FiList, href: `/empresas/${companySlug}/runs` },
             { label: t("nav.defects"), icon: FiAlertTriangle, href: `/empresas/${companySlug}/defeitos` },
-            { label: "Chamados", icon: FiColumns, href: "/meus-chamados", roles: ["client", "user", "admin", "it_dev"] },
+            { label: "Chamados", icon: FiColumns, href: "/meus-chamados" },
           ]
         : [],
     [companySlug, t]
@@ -201,9 +201,12 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
           if (isCompanyScopedLink && ["runs", "releases", "defects"].includes(moduleId)) {
             return true;
           }
+          if (moduleId === "support" && pathname.startsWith("/empresas/")) {
+            return true;
+          }
           return Boolean(visibility[moduleId]);
         }),
-    [navigation, appRole, visibility],
+    [navigation, appRole, visibility, pathname],
   );
 
   function prefetchHref(href: string) {

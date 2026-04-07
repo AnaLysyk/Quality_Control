@@ -717,7 +717,7 @@ function Panel(props: {
       : "text-(--tc-text-muted,#6b7280)";
 
   return (
-    <section className={`rounded-[24px] border p-4 sm:p-[18px] ${surfaceClassName} ${props.className ?? ""}`}>
+    <section className={`rounded-3xl border p-4 sm:p-4.5 ${surfaceClassName} ${props.className ?? ""}`}>
       <div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1.5">
@@ -1115,15 +1115,15 @@ function SelectField(props: {
     <label className="flex flex-col gap-1.5">
       <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgba(8,32,77,0.58)]">{props.label}</span>
       <Select value={props.value} onValueChange={props.onChange} disabled={props.disabled}>
-        <SelectTrigger className={`h-[42px] rounded-[16px] border-[rgba(1,24,72,0.08)] bg-white/92 px-3.5 py-2 text-[15px] font-semibold text-[#08204d] shadow-none focus-visible:ring-[rgba(36,82,149,0.16)] data-[placeholder]:text-[rgba(8,32,77,0.56)] ${props.disabled ? "cursor-not-allowed opacity-55" : ""}`}>
+        <SelectTrigger className={`h-10.5 rounded-2xl border-[rgba(1,24,72,0.08)] bg-white/92 px-3.5 py-2 text-[15px] font-semibold text-[#08204d] shadow-none focus-visible:ring-[rgba(36,82,149,0.16)] data-placeholder:text-[rgba(8,32,77,0.56)] ${props.disabled ? "cursor-not-allowed opacity-55" : ""}`}>
           <SelectValue aria-label={selectedOption?.label}>{selectedOption?.label ?? "Selecionar"}</SelectValue>
         </SelectTrigger>
-        <SelectContent className="w-[var(--radix-select-trigger-width)] rounded-[18px] border-[rgba(1,24,72,0.08)] bg-white/98 shadow-[0_18px_38px_rgba(1,24,72,0.12)]">
+        <SelectContent className="w-(--radix-select-trigger-width) rounded-[18px] border-[rgba(1,24,72,0.08)] bg-white/98 shadow-[0_18px_38px_rgba(1,24,72,0.12)]">
           {props.options.map((option) => (
             <SelectItem
               key={option.value}
               value={option.value}
-              className="rounded-[12px] py-2.5 pl-9 pr-3 text-[14px] font-medium text-[#08204d] focus:bg-[rgba(36,82,149,0.08)] focus:text-[#08204d]"
+              className="rounded-xl py-2.5 pl-9 pr-3 text-[14px] font-medium text-[#08204d] focus:bg-[rgba(36,82,149,0.08)] focus:text-[#08204d]"
             >
               {option.label}
             </SelectItem>
@@ -2063,7 +2063,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
           <div className="flex shrink-0 flex-wrap items-start gap-2 lg:justify-end lg:self-start">
             <Link
               href={`/empresas/${encodeURIComponent(props.companySlug)}/metrics`}
-              className="inline-flex h-[42px] items-center gap-2 rounded-[16px] border border-[rgba(15,23,42,0.08)] bg-white px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c)"
+              className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-[rgba(15,23,42,0.08)] bg-white px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c)"
             >
               <FiLayers className="h-4 w-4" />
               Métricas
@@ -2072,7 +2072,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
               type="button"
               onClick={handleExportPdf}
               disabled={!analysisRequested || !hasFilterResults || exportingPdf}
-              className="inline-flex h-[42px] items-center gap-2 rounded-[16px] border border-[rgba(15,23,42,0.08)] bg-white px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-[rgba(15,23,42,0.08)] bg-white px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-60"
             >
               <FiDownload className="h-4 w-4" />
               {exportingPdf ? "Gerando PDF..." : "Exportar PDF"}
@@ -2081,7 +2081,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
               type="button"
               onClick={() => downloadCsv(filteredRuns)}
               disabled={!analysisRequested || !hasFilterResults}
-              className="inline-flex h-[42px] items-center gap-2 rounded-[16px] bg-(--tc-primary,#0b1a3c) px-3.5 text-[14px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-10.5 items-center gap-2 rounded-2xl bg-(--tc-primary,#0b1a3c) px-3.5 text-[14px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               <FiDownload className="h-4 w-4" />
               Exportar CSV
@@ -2203,7 +2203,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                     setDateFrom(event.target.value);
                     setPeriodPreset("custom");
                   }}
-                  className="rounded-[16px] border border-[rgba(1,24,72,0.08)] bg-white/92 px-3.5 py-2 text-[15px] font-semibold text-[#08204d] outline-none transition focus:border-[rgba(36,82,149,0.32)] focus:bg-white"
+                  className="rounded-2xl border border-[rgba(1,24,72,0.08)] bg-white/92 px-3.5 py-2 text-[15px] font-semibold text-[#08204d] outline-none transition focus:border-[rgba(36,82,149,0.32)] focus:bg-white"
                 />
               </label>
               <label className="flex flex-col gap-1.5">
@@ -2215,7 +2215,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                     setDateTo(event.target.value);
                     setPeriodPreset("custom");
                   }}
-                  className="rounded-[16px] border border-[rgba(1,24,72,0.08)] bg-white/92 px-3.5 py-2 text-[15px] font-semibold text-[#08204d] outline-none transition focus:border-[rgba(36,82,149,0.32)] focus:bg-white"
+                  className="rounded-2xl border border-[rgba(1,24,72,0.08)] bg-white/92 px-3.5 py-2 text-[15px] font-semibold text-[#08204d] outline-none transition focus:border-[rgba(36,82,149,0.32)] focus:bg-white"
                 />
               </label>
               <div className="flex flex-col gap-1.5">
@@ -2295,7 +2295,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
             title="Nenhum dado encontrado para esse recorte."
             description="Não faz sentido ocupar a tela com blocos vazios. Ajuste o período ou alivie os filtros para ampliar a leitura."
           >
-            <div className="rounded-[24px] border border-dashed border-(--tc-border,#d7deea) bg-slate-50/70 p-6">
+            <div className="rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-slate-50/70 p-6">
               <div className="flex flex-wrap gap-2">
                 {activeFilterChips.map((chip) => (
                   <span key={chip} className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-slate-700">
@@ -2447,13 +2447,13 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                     </div>
                   </div>
                 );
-              }) : <div className="rounded-[24px] border border-dashed border-(--tc-border,#d7deea) px-4 py-8 text-center text-sm text-(--tc-text-muted,#6b7280)">Sem aplicações suficientes no recorte atual.</div>}
+              }) : <div className="rounded-3xl border border-dashed border-(--tc-border,#d7deea) px-4 py-8 text-center text-sm text-(--tc-text-muted,#6b7280)">Sem aplicações suficientes no recorte atual.</div>}
             </div>
           </Panel>
         </div>
           ) : (
             <Panel eyebrow="Comparativo" title="Sem comparativos para exibir" description="Esse recorte não trouxe runs suficientes para comparação.">
-              <div className="rounded-[24px] border border-dashed border-(--tc-border,#d7deea) px-4 py-8 text-center text-sm text-(--tc-text-muted,#6b7280)">
+              <div className="rounded-3xl border border-dashed border-(--tc-border,#d7deea) px-4 py-8 text-center text-sm text-(--tc-text-muted,#6b7280)">
                 Ajuste o recorte para incluir runs consolidadas e liberar os comparativos.
               </div>
             </Panel>
@@ -2496,7 +2496,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
         </Panel>
           ) : (
             <Panel eyebrow="Drilldown" title="Sem linhas detalhadas" description="Não há runs suficientes para abrir a grade detalhada neste recorte.">
-              <div className="rounded-[24px] border border-dashed border-(--tc-border,#d7deea) px-4 py-8 text-center text-sm text-(--tc-text-muted,#6b7280)">
+              <div className="rounded-3xl border border-dashed border-(--tc-border,#d7deea) px-4 py-8 text-center text-sm text-(--tc-text-muted,#6b7280)">
                 Ajuste os filtros para incluir runs e habilitar o drilldown.
               </div>
             </Panel>

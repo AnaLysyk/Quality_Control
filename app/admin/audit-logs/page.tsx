@@ -321,7 +321,7 @@ export default function AdminAuditLogsPage() {
                   {/* Alvo */}
                   <div className={styles.cellMinW0}>
                     <span className={styles.mobileLabel}>Alvo</span>
-                    <div className={styles.targetPrimary}>
+                    <div className={styles.targetPrimary} title={`${entityTypeLabel(item.entity_type)}: ${item.entity_label || "—"}`}>
                       <span className={styles.targetEntityType}>{entityTypeLabel(item.entity_type)}: </span>
                       {item.entity_label || "—"}
                     </div>
@@ -331,7 +331,7 @@ export default function AdminAuditLogsPage() {
                   {/* Ator */}
                   <div className={styles.cellMinW0}>
                     <span className={styles.mobileLabel}>Ator</span>
-                    <div className={styles.actorEmail}>{item.actor_email || "desconhecido"}</div>
+                    <div className={styles.actorEmail} title={item.actor_email || undefined}>{item.actor_email || "desconhecido"}</div>
                     {item.actor_user_id && <div className={styles.actorUid}>uid: {item.actor_user_id}</div>}
                   </div>
                 </button>

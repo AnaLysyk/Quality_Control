@@ -28,79 +28,103 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     match: /^\/(?:admin\/support|kanban-it)/,
     module: "support",
     screenLabel: "Kanban global de suporte",
-    screenSummary: "Tela central de triagem do suporte. Use para localizar chamados, acompanhar responsáveis, revisar status e decidir a próxima ação.",
+    screenSummary: [
+      "Você está em: Kanban global de suporte.",
+      "Aqui você prioriza, atribui responsável e avança status dos chamados.",
+      "Dica: cite o código do chamado (SP-000123) para localizar rapidamente."
+    ].join(" "),
     entityType: "screen",
     suggestedPrompts: [
-      "Buscar chamado por ID",
-      "Resumir um chamado do suporte",
-      "Transformar relato em chamado",
-      "Explicar meu escopo de acesso",
+      "Buscar chamado por código (ex: SP-000123)",
+      "Atribuir responsável ao chamado",
+      "Avançar status de um chamado",
+      "Listar chamados pendentes"
     ],
   },
   {
     match: /^\/meus-chamados/,
     module: "support",
     screenLabel: "Meus chamados",
-    screenSummary: "Tela focada nos seus chamados. Use para acompanhar status, revisar histórico e preparar comentários ou novas ações.",
+    screenSummary: [
+      "Você está em: Meus chamados.",
+      "Aqui você acompanha status, comenta e pede ajustes nos seus chamados.",
+      "Dica: diga o objetivo e o impacto do problema para agilizar o atendimento."
+    ].join(" "),
     entityType: "screen",
     suggestedPrompts: [
-      "Buscar meu chamado por ID",
-      "Transformar nota em chamado",
-      "Resumir um chamado",
-      "Montar comentário para meu chamado",
+      "Buscar meu chamado por código",
+      "Comentar em chamado aberto",
+      "Pedir ajuste em chamado",
+      "Listar chamados em andamento"
     ],
   },
   {
     match: /^\/admin\/users\/permissions/,
     module: "permissions",
     screenLabel: "Gestão de permissões por usuário",
-    screenSummary: "Tela de análise de acesso. Use para entender o que cada perfil pode ver, quais ações estão liberadas e por que uma tela pode estar bloqueada.",
+    screenSummary: [
+      "Você está em: Gestão de permissões por usuário.",
+      "Aqui você gerencia permissões e acessos por perfil/usuário.",
+      "Dica: posso explicar o motivo de bloqueios e o que precisa mudar."
+    ].join(" "),
     entityType: "permission_profile",
     suggestedPrompts: [
       "Explicar por que este perfil não vê uma tela",
-      "Comparar permissões deste contexto",
-      "Resumir o perfil atual",
-      "Buscar usuários por permissão",
+      "Comparar permissões entre usuários",
+      "Listar usuários com acesso a este módulo",
+      "Resumir permissões do perfil atual"
     ],
   },
   {
     match: (r) => /^\/empresas\/[^/]+\/planos-de-teste/.test(r) || r.startsWith("/planos-de-teste"),
     module: "test_plans",
     screenLabel: "Planos e casos de teste",
-    screenSummary: "Tela para estruturar e revisar casos de teste. Use para gerar passos, definir pré-condições e validar resultado esperado a partir de bugs ou relatos.",
+    screenSummary: [
+      "Você está em: Planos e casos de teste.",
+      "Aqui você cria e organiza casos de teste: pré-condições, passos e resultado esperado.",
+      "Dica: cole o bug/ticket que eu rascunho o teste."
+    ].join(" "),
     entityType: "test_plan",
     suggestedPrompts: [
-      "Gerar caso de teste com base em um bug",
+      "Gerar caso de teste a partir de bug",
       "Montar passos e resultado esperado",
-      "Resumir um ticket para virar teste",
-      "Transformar nota em chamado",
+      "Resumir ticket para virar teste",
+      "Listar casos de teste pendentes"
     ],
   },
   {
     match: (r) => /^\/empresas\/[^/]+/.test(r) || r.startsWith("/admin/clients") || r.startsWith("/empresas"),
     module: "company",
     screenLabel: "Empresas e contexto da conta",
-    screenSummary: "Tela contextual da empresa atual. Use para navegar pelos dados vinculados ao tenant, revisar registros relacionados e acionar buscas ou chamados dentro desse escopo.",
+    screenSummary: [
+      "Você está em: Empresas e contexto da conta.",
+      "Aqui você troca contexto de empresa e consulta vínculos/registros.",
+      "Dica: diga o slug/empresa para contextualizar ações."
+    ].join(" "),
     entityType: "company",
     entityId: (slug) => slug,
     suggestedPrompts: [
       "Resumir esta empresa",
       "Buscar chamados desta empresa",
-      "Transformar texto em chamado",
-      "Explicar meu escopo de acesso",
+      "Listar registros vinculados",
+      "Trocar para outra empresa"
     ],
   },
   {
     match: /^\/(?:admin|dashboard)/,
     module: "dashboard",
     screenLabel: "Painel administrativo",
-    screenSummary: "Tela central de operação e gestão. Use para navegar entre módulos, acompanhar indicadores e iniciar ações de suporte ou análise.",
+    screenSummary: [
+      "Você está em: Painel administrativo.",
+      "Aqui você faz operação e gestão: visão macro e acesso rápido a módulos.",
+      "Dica: me diga o que quer destravar e eu aponto o caminho."
+    ].join(" "),
     entityType: "screen",
     suggestedPrompts: [
       "Resumir esta tela",
-      "Transformar texto ou nota em chamado",
-      "Explicar meu escopo de acesso",
-      "Resumir meu perfil atual",
+      "Acessar módulo de suporte",
+      "Buscar indicador de desempenho",
+      "Listar módulos disponíveis"
     ],
   },
 ];
@@ -108,13 +132,17 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
 const GENERAL_CONTEXT: Omit<ScreenContextRule, "match"> = {
   module: "general",
   screenLabel: "Plataforma Quality Control",
-  screenSummary: "Tela inicial da plataforma. Use para navegar, buscar registros, criar chamados ou entender seu contexto atual.",
+  screenSummary: [
+    "Você está em: Plataforma Quality Control.",
+    "Aqui você navega, busca registros, cria chamados ou entende seu contexto.",
+    "Dica: peça um resumo ou diga o que deseja fazer."
+  ].join(" "),
   entityType: "screen",
   suggestedPrompts: [
     "Resumir esta tela",
-    "Transformar texto ou nota em chamado",
-    "Explicar meu escopo de acesso",
-    "Resumir meu perfil atual",
+    "Buscar registro por palavra-chave",
+    "Criar novo chamado",
+    "Listar módulos disponíveis"
   ],
 };
 

@@ -181,5 +181,9 @@ export function chooseTool(
     }
   }
 
+  // Threshold real: só aceita tool se score >= 10
+  if (bestScore < 10) {
+    return "suggest_next_step";
+  }
   return bestTool;
 }

@@ -454,16 +454,22 @@ export default function AppShell({ children }: AppShellProps) {
 
       <Sidebar pathname={pathname} mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
+      {/* Botão de menu mobile/hamburguer */}
       <button
         type="button"
-        className={`fixed top-3 left-3 z-50 rounded-2xl border border-white/14 bg-[linear-gradient(135deg,rgba(1,24,72,0.96)_0%,rgba(10,47,122,0.94)_58%,rgba(239,0,1,0.88)_100%)] p-2.5 text-white shadow-[0_18px_40px_rgba(1,24,72,0.34)] backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_22px_48px_rgba(1,24,72,0.4)] sm:top-4 sm:left-4 lg:hidden ${
+        aria-label="Abrir menu"
+        aria-expanded={mobileOpen ? "true" : "false"}
+        className={[
+          "fixed top-3 left-3 z-50 rounded-2xl border border-white/14",
+          "bg-[linear-gradient(135deg,rgba(1,24,72,0.96)_0%,rgba(10,47,122,0.94)_58%,rgba(239,0,1,0.88)_100%)]",
+          "p-2.5 text-white shadow-[0_18px_40px_rgba(1,24,72,0.34)] backdrop-blur transition duration-200",
+          "hover:-translate-y-0.5 hover:shadow-[0_22px_48px_rgba(1,24,72,0.4)]",
+          "sm:top-4 sm:left-4 lg:hidden",
           mobileOpen ? "pointer-events-none opacity-0" : ""
-        }`}
+        ].join(" ")}
         onClick={() => setMobileOpen(true)}
         onMouseEnter={() => setMobileOpen(true)}
         onTouchStart={() => setMobileOpen(true)}
-        aria-label="Abrir menu"
-        aria-expanded={mobileOpen ? "true" : "false"}
         onMouseLeave={() => setMobileOpen(false)}
       >
         <FiMenu size={20} />

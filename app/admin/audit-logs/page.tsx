@@ -51,7 +51,7 @@ const ENTITY_LABELS: Record<string, string> = {
 
 const METADATA_KEY_LABELS: Record<string, string> = {
   slug: "Slug",
-  active: "Ativo",
+  active: "Status",
   role: "Papel",
   permissionRole: "Papel de permissão",
   companyId: "ID da empresa",
@@ -71,10 +71,19 @@ const METADATA_KEY_LABELS: Record<string, string> = {
   userId: "ID do usuário",
 };
 
-type ActionCategory = "create" | "update" | "delete" | "permission" | "default";
+/** Keys that belong in the "summary" tier (not the operation details). */
+const SUMMARY_META_KEYS = new Set(["companyLabel", "companySlug", "companyId", "userEmail", "userId"]);
+/** Keys that are IDs / technical — go in tier 3. */
+const TECHNICAL_META_KEYS = new Set(["companyId", "userId"]);
+
+type ActionCategory = "create" | "update" | "delete" | "permission" | "link" | "auth" | "error" | "integration" | "default";
 
 function getCategory(action: string): ActionCategory {
   const a = action.toLowerCase();
+  if (a.includes("error") || a.includes("fail")) return "error";
+  if (a.includes("login") || a.includes("logout") || a.includes("auth")) return "auth";
+  if (a.includes("link") || a.includes("unlink") || a.includes("membership")) return "link";
+  if (a.includes("integration") || a.includes("sync")) return "integration";
   if (a.includes("permission") || a.includes("reset")) return "permission";
   if (a.includes("create")) return "create";
   if (a.includes("update")) return "update";
@@ -83,23 +92,33 @@ function getCategory(action: string): ActionCategory {
 }
 
 function iconClass(cat: ActionCategory) {
-  return {
+  const map: Record<ActionCategory, string> = {
     create: styles.iconCreate,
     update: styles.iconUpdate,
     delete: styles.iconDelete,
     permission: styles.iconPermission,
+    link: styles.iconLink,
+    auth: styles.iconAuth,
+    error: styles.iconError,
+    integration: styles.iconIntegration,
     default: styles.iconDefault,
-  }[cat];
+  };
+  return map[cat];
 }
 
 function badgeClass(cat: ActionCategory) {
-  return {
+  const map: Record<ActionCategory, string> = {
     create: styles.badgeCreate,
     update: styles.badgeUpdate,
     delete: styles.badgeDelete,
     permission: styles.badgePermission,
+    link: styles.badgeLink,
+    auth: styles.badgeAuth,
+    error: styles.badgeError,
+    integration: styles.badgeIntegration,
     default: styles.badgeDefault,
-  }[cat];
+  };
+  return map[cat];
 }
 
 function CategoryIcon({ category }: { category: ActionCategory }) {
@@ -114,7 +133,19 @@ function CategoryIcon({ category }: { category: ActionCategory }) {
     return (<svg {...common}><path d="M3 4h10M5.5 4V3a1 1 0 011-1h3a1 1 0 011 1v1M6 7v4M10 7v4" /><path d="M4 4l.7 8.5a1.5 1.5 0 001.5 1.5h3.6a1.5 1.5 0 001.5-1.5L12 4" /></svg>);
   }
   if (category === "permission") {
-    return (<svg {...common}><path d="M8 1.5v3M12.6 3.4l-2.1 2.1M14.5 8h-3M12.6 12.6l-2.1-2.1M8 14.5v-3M3.4 12.6l2.1-2.1M1.5 8h3M3.4 3.4l2.1 2.1" /></svg>);
+    return (<svg {...common}><rect x="3" y="7" width="10" height="7" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 015 0v2" /><circle cx="8" cy="10.5" r="1" fill="currentColor" stroke="none" /></svg>);
+  }
+  if (category === "link") {
+    return (<svg {...common}><path d="M6.5 9.5l3-3" /><path d="M9 5h2a2 2 0 010 4h-1" /><path d="M7 11H5a2 2 0 010-4h1" /></svg>);
+  }
+  if (category === "auth") {
+    return (<svg {...common}><circle cx="8" cy="5.5" r="2.5" /><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5" /></svg>);
+  }
+  if (category === "error") {
+    return (<svg {...common}><circle cx="8" cy="8" r="6" /><path d="M8 5v3.5" /><circle cx="8" cy="11" r="0.5" fill="currentColor" stroke="none" /></svg>);
+  }
+  if (category === "integration") {
+    return (<svg {...common}><path d="M4 4l4 4-4 4" /><path d="M12 4l-4 4 4 4" /></svg>);
   }
   return (<svg {...common}><circle cx="8" cy="8" r="6" /><path d="M8 5v3l2 1.5" /></svg>);
 }
@@ -140,7 +171,17 @@ function getEventSubtitle(item: AuditLog): { actor: string; target: string; enti
 }
 
 function getCategoryLabel(cat: ActionCategory): string {
-  return { create: "Criação", update: "Alteração", delete: "Exclusão", permission: "Permissão", default: "Evento" }[cat];
+  return {
+    create: "Criação", update: "Alteração", delete: "Exclusão",
+    permission: "Permissão", link: "Vínculo", auth: "Autenticação",
+    error: "Erro", integration: "Integração", default: "Evento",
+  }[cat];
+}
+
+function getResultLabel(cat: ActionCategory): { label: string; cls: string } {
+  if (cat === "error") return { label: "Erro", cls: styles.resultError };
+  if (cat === "delete") return { label: "Executado", cls: styles.resultWarning };
+  return { label: "Sucesso", cls: styles.resultSuccess };
 }
 
 function formatMetaValue(val: unknown): string {
@@ -366,9 +407,12 @@ export default function AdminAuditLogsPage() {
               const cat = getCategory(item.action);
               const title = getEventTitle(item);
               const sub = getEventSubtitle(item);
+              const result = getResultLabel(cat);
               const isOpen = expandedId === item.id;
               const meta = (item.metadata && typeof item.metadata === "object" ? item.metadata : {}) as Record<string, unknown>;
-              const metaEntries = Object.entries(meta).filter(([, v]) => v !== undefined && v !== null);
+              // Split metadata into contextual (summary enrichment) and operation details
+              const operationEntries = Object.entries(meta).filter(([k, v]) => v !== undefined && v !== null && !SUMMARY_META_KEYS.has(k) && !TECHNICAL_META_KEYS.has(k));
+              const technicalEntries = Object.entries(meta).filter(([k, v]) => v !== undefined && v !== null && TECHNICAL_META_KEYS.has(k));
 
               return (
                 <div key={item.id} className={`${styles.eventRow} ${isOpen ? styles.eventRowExpanded : ""}`}>
@@ -392,6 +436,7 @@ export default function AdminAuditLogsPage() {
                       <div className={styles.eventBadges}>
                         <span className={`${styles.badge} ${badgeClass(cat)}`}>{getCategoryLabel(cat)}</span>
                         <span className={`${styles.badge} ${styles.badgeEntity}`}>{sub.entity}</span>
+                        <span className={`${styles.badge} ${result.cls}`}>{result.label}</span>
                       </div>
                     </div>
 
@@ -403,76 +448,107 @@ export default function AdminAuditLogsPage() {
                     </div>
                   </button>
 
-                  {/* ── Expanded detail ───────────────────────────── */}
+                  {/* ── Expanded detail — 3 tiers ────────────────── */}
                   {isOpen && (
                     <div className={styles.expandedPanel}>
-                      {/* Summary grid */}
-                      <div className={styles.summaryGrid}>
-                        <div className={styles.summaryItem}>
-                          <p className={styles.summaryLabel}>O que aconteceu</p>
-                          <p className={styles.summaryValue}>{title}</p>
-                        </div>
-                        <div className={styles.summaryItem}>
-                          <p className={styles.summaryLabel}>Executado por</p>
-                          <p className={styles.summaryValue}>{sub.actor}</p>
-                        </div>
-                        <div className={styles.summaryItem}>
-                          <p className={styles.summaryLabel}>Entidade</p>
-                          <p className={styles.summaryValue}>{sub.entity}{sub.target ? `: ${sub.target}` : ""}</p>
-                        </div>
-                        <div className={styles.summaryItem}>
-                          <p className={styles.summaryLabel}>Data e hora</p>
-                          <p className={styles.summaryValue}>{formatDate(item.created_at)}</p>
-                        </div>
-                        {item.entity_id && (
-                          <div className={styles.summaryItem}>
-                            <p className={styles.summaryLabel}>ID da entidade</p>
-                            <p className={`${styles.summaryValue} ${styles.summaryValueMono}`}>{item.entity_id}</p>
+                      {/* ── Tier 1: Resumo do evento ─────────────── */}
+                      <div className={styles.tier}>
+                        <p className={styles.tierTitle}>Resumo do evento</p>
+                        <div className={styles.tierContent}>
+                          <div className={styles.kvRow}>
+                            <span className={styles.kvLabel}>Evento</span>
+                            <span className={styles.kvValue}>{title}</span>
                           </div>
-                        )}
-                        {item.actor_user_id && (
-                          <div className={styles.summaryItem}>
-                            <p className={styles.summaryLabel}>ID do ator</p>
-                            <p className={`${styles.summaryValue} ${styles.summaryValueMono}`}>{item.actor_user_id}</p>
+                          <div className={styles.kvRow}>
+                            <span className={styles.kvLabel}>Data e hora</span>
+                            <span className={styles.kvValue}>{formatDate(item.created_at)}</span>
                           </div>
-                        )}
+                          <div className={styles.kvRow}>
+                            <span className={styles.kvLabel}>Executado por</span>
+                            <span className={styles.kvValue}>{sub.actor}</span>
+                          </div>
+                          <div className={styles.kvRow}>
+                            <span className={styles.kvLabel}>Entidade</span>
+                            <span className={styles.kvValue}>{sub.entity}{sub.target ? `: ${sub.target}` : ""}</span>
+                          </div>
+                          <div className={styles.kvRow}>
+                            <span className={styles.kvLabel}>Resultado</span>
+                            <span className={`${styles.kvValue}`}>
+                              <span className={`${styles.resultDot} ${result.cls}`} />
+                              {result.label}
+                            </span>
+                          </div>
+                          {meta.companyLabel && (
+                            <div className={styles.kvRow}>
+                              <span className={styles.kvLabel}>Empresa</span>
+                              <span className={styles.kvValue}>{String(meta.companyLabel)}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Metadata table */}
-                      {metaEntries.length > 0 && (
-                        <div className={styles.changesSection}>
-                          <p className={styles.changesSectionTitle}>Detalhes da operação</p>
-                          <table className={styles.changesTable}>
-                            <thead>
-                              <tr><th>Campo</th><th>Valor</th></tr>
-                            </thead>
-                            <tbody>
-                              {metaEntries.map(([key, val]) => (
-                                <tr key={key}>
-                                  <td className={styles.changesKey}>{METADATA_KEY_LABELS[key] ?? key}</td>
-                                  <td className={styles.changesVal}>{formatMetaValue(val)}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                      {/* ── Tier 2: Detalhes da alteração ────────── */}
+                      {operationEntries.length > 0 && (
+                        <div className={styles.tier}>
+                          <p className={styles.tierTitle}>Detalhes da alteração</p>
+                          <div className={styles.tierContent}>
+                            {operationEntries.map(([key, val]) => (
+                              <div key={key} className={styles.kvRow}>
+                                <span className={styles.kvLabel}>{METADATA_KEY_LABELS[key] ?? key}</span>
+                                <span className={styles.kvValue}>{formatMetaValue(val)}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
 
-                      {/* Collapsible raw JSON */}
-                      <hr className={styles.expandedDivider} />
-                      <button
-                        type="button"
-                        className={`${styles.technicalToggle} ${showJson === item.id ? styles.technicalToggleOpen : ""}`}
-                        onClick={() => setShowJson((prev) => (prev === item.id ? null : item.id))}
-                      >
-                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 4l4 4-4 4" /></svg>
-                        Payload técnico (JSON)
-                      </button>
-                      {showJson === item.id && (
-                        <pre className={styles.technicalPre}>
-                          {JSON.stringify({ id: item.id, action: item.action, entity_type: item.entity_type, entity_id: item.entity_id, entity_label: item.entity_label, actor_user_id: item.actor_user_id, actor_email: item.actor_email, created_at: item.created_at, metadata: item.metadata }, null, 2)}
-                        </pre>
-                      )}
+                      {/* ── Tier 3: Informações técnicas ─────────── */}
+                      <div className={styles.tier}>
+                        <p className={styles.tierTitle}>Informações técnicas</p>
+                        <div className={styles.tierContent}>
+                          {item.entity_id && (
+                            <div className={styles.kvRow}>
+                              <span className={styles.kvLabel}>ID da entidade</span>
+                              <span className={`${styles.kvValue} ${styles.kvValueMono}`}>{item.entity_id}</span>
+                            </div>
+                          )}
+                          {item.actor_user_id && (
+                            <div className={styles.kvRow}>
+                              <span className={styles.kvLabel}>ID do ator</span>
+                              <span className={`${styles.kvValue} ${styles.kvValueMono}`}>{item.actor_user_id}</span>
+                            </div>
+                          )}
+                          {technicalEntries.map(([key, val]) => (
+                            <div key={key} className={styles.kvRow}>
+                              <span className={styles.kvLabel}>{METADATA_KEY_LABELS[key] ?? key}</span>
+                              <span className={`${styles.kvValue} ${styles.kvValueMono}`}>{formatMetaValue(val)}</span>
+                            </div>
+                          ))}
+                          <div className={styles.kvRow}>
+                            <span className={styles.kvLabel}>ID do evento</span>
+                            <span className={`${styles.kvValue} ${styles.kvValueMono}`}>{item.id}</span>
+                          </div>
+                          <div className={styles.kvRow}>
+                            <span className={styles.kvLabel}>Ação (raw)</span>
+                            <span className={`${styles.kvValue} ${styles.kvValueMono}`}>{item.action}</span>
+                          </div>
+                        </div>
+
+                        {/* Collapsible raw JSON */}
+                        <button
+                          type="button"
+                          className={`${styles.technicalToggle} ${showJson === item.id ? styles.technicalToggleOpen : ""}`}
+                          onClick={() => setShowJson((prev) => (prev === item.id ? null : item.id))}
+                        >
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 4l4 4-4 4" /></svg>
+                          Payload completo (JSON)
+                        </button>
+                        {showJson === item.id && (
+                          <pre className={styles.technicalPre}>
+                            {JSON.stringify({ id: item.id, action: item.action, entity_type: item.entity_type, entity_id: item.entity_id, entity_label: item.entity_label, actor_user_id: item.actor_user_id, actor_email: item.actor_email, created_at: item.created_at, metadata: item.metadata }, null, 2)}
+                          </pre>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>

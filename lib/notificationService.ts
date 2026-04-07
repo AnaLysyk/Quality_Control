@@ -13,6 +13,7 @@ import {
   listLocalLinksForCompany,
   listLocalUsers,
   listLocalMemberships,
+  getLocalUserById,
 } from "@/lib/auth/localStore";
 import { canAdminReviewQueue, resolveReviewQueue, toRequestProfileTypeLabel, type ReviewQueue } from "@/lib/requestRouting";
 
@@ -23,6 +24,16 @@ function isAdminUser(user: { is_global_admin?: boolean; globalRole?: string | nu
 function isItDevUser(user: { role?: string | null }) {
   const role = (user.role ?? "").toLowerCase();
   return role === "it_dev" || role === "itdev" || role === "developer" || role === "dev";
+}
+
+function isLeaderTcUser(user: { role?: string | null }) {
+  const role = (user.role ?? "").toLowerCase();
+  return role === "leader_tc" || role === "tc_lead";
+}
+
+function isTechnicalSupportUser(user: { role?: string | null }) {
+  const role = (user.role ?? "").toLowerCase();
+  return role === "technical_support" || role === "support";
 }
 
 function describePermissionRole(role?: string | null) {
@@ -48,11 +59,38 @@ async function resolveItDevUserIds() {
   return Array.from(ids);
 }
 
+async function resolveLeaderTcUserIds() {
+  const [users, memberships] = await Promise.all([listLocalUsers(), listLocalMemberships()]);
+  const ids = new Set<string>();
+  users.filter(isLeaderTcUser).forEach((user) => ids.add(user.id));
+  memberships
+    .filter((membership) => isLeaderTcUser({ role: membership.role }))
+    .forEach((membership) => ids.add(membership.userId));
+  return Array.from(ids);
+}
+
+async function resolveTechnicalSupportUserIds() {
+  const [users, memberships] = await Promise.all([listLocalUsers(), listLocalMemberships()]);
+  const ids = new Set<string>();
+  users.filter(isTechnicalSupportUser).forEach((user) => ids.add(user.id));
+  memberships
+    .filter((membership) => isTechnicalSupportUser({ role: membership.role }))
+    .forEach((membership) => ids.add(membership.userId));
+  return Array.from(ids);
+}
+
 async function resolveRequestReviewerIds(queue: ReviewQueue) {
-  const globalIds = await resolveItDevUserIds();
-  if (!canAdminReviewQueue(queue)) return globalIds;
-  const adminIds = await resolveAdminUserIds();
-  return Array.from(new Set([...adminIds, ...globalIds]));
+  const [globalIds, leaderIds, supportIds] = await Promise.all([
+    resolveItDevUserIds(),
+    resolveLeaderTcUserIds(),
+    resolveTechnicalSupportUserIds(),
+  ]);
+  const all = new Set([...globalIds, ...leaderIds, ...supportIds]);
+  if (canAdminReviewQueue(queue)) {
+    const adminIds = await resolveAdminUserIds();
+    adminIds.forEach((id) => all.add(id));
+  }
+  return Array.from(all);
 }
 
 async function resolveCompanyUserIds(companySlug?: string | null) {
@@ -110,17 +148,45 @@ export async function notifyPasswordResetStatus(
   const approved = status === "APPROVED";
   const type = approved ? "PASSWORD_RESET_APPROVED" : "PASSWORD_RESET_REJECTED";
   const title = approved ? "Reset de senha aprovado" : "Reset de senha rejeitado";
-  const description = approved
-    ? "Seu reset foi aprovado. Verifique seu email para continuar."
-    : "Seu reset foi rejeitado. Entre em contato com o administrador.";
+
+  let reviewerName = "um revisor";
+  if (request.reviewedBy) {
+    const reviewer = await getLocalUserById(request.reviewedBy);
+    reviewerName = reviewer?.full_name?.trim() || reviewer?.name || reviewer?.email || request.reviewedBy;
+  }
+
+  const userLabel = request.userName || request.userEmail || "Usuario";
+  const userDescription = approved
+    ? `Seu reset foi aprovado por ${reviewerName}. Verifique seu email para continuar.`
+    : `Seu reset foi rejeitado por ${reviewerName}. Entre em contato com o administrador.`;
 
   await closeNotificationsByDedupeKey(request.userId, `reset:user:${request.id}`);
   await createNotificationsForUsers([request.userId], {
     type,
     title,
-    description,
+    description: userDescription,
     requestId: request.id,
   });
+
+  const reviewerDescription = approved
+    ? `Reset de senha de ${userLabel} foi aprovado por ${reviewerName}.`
+    : `Reset de senha de ${userLabel} foi rejeitado por ${reviewerName}.`;
+
+  const reviewQueue =
+    typeof request.payload?.reviewQueue === "string" &&
+    (request.payload.reviewQueue === "admin_and_global" || request.payload.reviewQueue === "global_only")
+      ? request.payload.reviewQueue
+      : "admin_and_global" as ReviewQueue;
+  const reviewerIds = (await resolveRequestReviewerIds(reviewQueue)).filter((id) => id !== request.userId);
+  if (reviewerIds.length > 0) {
+    await createNotificationsForUsers(reviewerIds, {
+      type,
+      title: `Reset de senha ${approved ? "aprovado" : "rejeitado"}`,
+      description: reviewerDescription,
+      requestId: request.id,
+      dedupeKey: `reset:status:${request.id}`,
+    });
+  }
 }
 
 export async function notifyProfileDeletionRequest(request: RequestRecord) {

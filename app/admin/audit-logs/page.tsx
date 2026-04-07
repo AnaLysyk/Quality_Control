@@ -121,14 +121,14 @@ const SUMMARY_META_KEYS = new Set(["companyLabel", "companySlug", "companyId", "
 /** Keys that are IDs / technical — go in tier 3. */
 const TECHNICAL_META_KEYS = new Set(["companyId", "userId", "ip", "sessionId"]);
 
-type ActionCategory = "create" | "update" | "delete" | "permission" | "link" | "auth" | "error" | "integration" | "default";
+type ActionCategory = "create" | "update" | "delete" | "permission" | "link" | "auth" | "error" | "integration" | "export" | "default";
 
 function getCategory(action: string): ActionCategory {
   const a = action.toLowerCase();
   if (a.includes("failure") || a.includes("fail")) return "error";
   if (a.includes("error")) return "error";
   if (a.includes("login") || a.includes("logout") || a.includes("auth") || a.includes("password")) return "auth";
-  if (a.includes("export")) return "integration";
+  if (a.includes("export")) return "export";
   if (a.includes("link") || a.includes("unlink") || a.includes("membership") || a.includes("access_request")) return "link";
   if (a.includes("integration") || a.includes("sync")) return "integration";
   if (a.includes("permission") || a.includes("reset")) return "permission";
@@ -153,6 +153,7 @@ function iconClass(cat: ActionCategory) {
     auth: styles.iconAuth,
     error: styles.iconError,
     integration: styles.iconIntegration,
+    export: styles.iconExport,
     default: styles.iconDefault,
   };
   return map[cat];
@@ -168,6 +169,7 @@ function badgeClass(cat: ActionCategory) {
     auth: styles.badgeAuth,
     error: styles.badgeError,
     integration: styles.badgeIntegration,
+    export: styles.badgeExport,
     default: styles.badgeDefault,
   };
   return map[cat];
@@ -199,6 +201,9 @@ function CategoryIcon({ category }: { category: ActionCategory }) {
   if (category === "integration") {
     return (<svg {...common}><path d="M4 4l4 4-4 4" /><path d="M12 4l-4 4 4 4" /></svg>);
   }
+  if (category === "export") {
+    return (<svg {...common}><path d="M8 3v7" /><path d="M5 7l3 3 3-3" /><path d="M3 13h10" /></svg>);
+  }
   return (<svg {...common}><circle cx="8" cy="8" r="6" /><path d="M8 5v3l2 1.5" /></svg>);
 }
 
@@ -226,7 +231,7 @@ function getCategoryLabel(cat: ActionCategory): string {
   return {
     create: "Criação", update: "Alteração", delete: "Exclusão",
     permission: "Permissão", link: "Vínculo", auth: "Autenticação",
-    error: "Erro", integration: "Integração", default: "Evento",
+    error: "Erro", integration: "Integração", export: "Exportação", default: "Evento",
   }[cat];
 }
 
@@ -234,6 +239,7 @@ function getResultLabel(cat: ActionCategory): { label: string; cls: string } {
   if (cat === "error") return { label: "Erro", cls: styles.resultError };
   if (cat === "delete") return { label: "Executado", cls: styles.resultWarning };
   if (cat === "auth") return { label: "Registrado", cls: styles.resultSuccess };
+  if (cat === "export") return { label: "Exportado", cls: styles.resultSuccess };
   return { label: "Sucesso", cls: styles.resultSuccess };
 }
 
@@ -277,6 +283,7 @@ export default function AdminAuditLogsPage() {
   const [endDate, setEndDate] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showJson, setShowJson] = useState<string | null>(null);
+  const [showTech, setShowTech] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<ActionCategory | "">("");
 
   const load = useCallback(async () => {
@@ -395,7 +402,7 @@ export default function AdminAuditLogsPage() {
               className={`${styles.categoryChip} ${categoryFilter === "" ? styles.categoryChipActive : ""}`}
               onClick={() => setCategoryFilter("")}
             >Todos <span className={styles.chipCount}>{items.length}</span></button>
-            {(["auth", "create", "update", "delete", "permission", "link", "integration", "error"] as ActionCategory[]).map((cat) => {
+            {(["auth", "create", "update", "delete", "permission", "link", "integration", "export", "error"] as ActionCategory[]).map((cat) => {
               const count = categoryCounts[cat] ?? 0;
               if (!count) return null;
               return (
@@ -554,6 +561,13 @@ export default function AdminAuditLogsPage() {
                             <span className={styles.kvValue}>{title}</span>
                           </div>
                           <div className={styles.kvRow}>
+                            <span className={styles.kvLabel}>Resultado</span>
+                            <span className={`${styles.kvValue}`}>
+                              <span className={`${styles.resultDot} ${result.cls}`} />
+                              {result.label}
+                            </span>
+                          </div>
+                          <div className={styles.kvRow}>
                             <span className={styles.kvLabel}>Data e hora</span>
                             <span className={styles.kvValue}>{formatDate(item.created_at)}</span>
                           </div>
@@ -564,13 +578,6 @@ export default function AdminAuditLogsPage() {
                           <div className={styles.kvRow}>
                             <span className={styles.kvLabel}>Entidade</span>
                             <span className={styles.kvValue}>{sub.entity}{sub.target ? `: ${sub.target}` : ""}</span>
-                          </div>
-                          <div className={styles.kvRow}>
-                            <span className={styles.kvLabel}>Resultado</span>
-                            <span className={`${styles.kvValue}`}>
-                              <span className={`${styles.resultDot} ${result.cls}`} />
-                              {result.label}
-                            </span>
                           </div>
                           {typeof meta.companyLabel === "string" && meta.companyLabel && (
                             <div className={styles.kvRow}>
@@ -584,7 +591,7 @@ export default function AdminAuditLogsPage() {
                       {/* ── Tier 2: Detalhes da alteração ────────── */}
                       {operationEntries.length > 0 && (
                         <div className={styles.tier}>
-                          <p className={styles.tierTitle}>Detalhes da alteração</p>
+                          <p className={styles.tierTitle}>Alterações</p>
                           <div className={styles.tierContent}>
                             {/* Before → After diff table */}
                             {diffEntries.length > 0 && beforeData && (
@@ -625,10 +632,18 @@ export default function AdminAuditLogsPage() {
                         </div>
                       )}
 
-                      {/* ── Tier 3: Informações técnicas ─────────── */}
+                      {/* ── Tier 3: Informações técnicas (collapsible) ── */}
                       <div className={styles.tier}>
-                        <p className={styles.tierTitle}>Informações técnicas</p>
-                        <div className={styles.tierContent}>
+                        <button
+                          type="button"
+                          className={`${styles.technicalToggle} ${showTech === item.id ? styles.technicalToggleOpen : ""}`}
+                          onClick={() => setShowTech((prev) => prev === item.id ? null : item.id)}
+                        >
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 4l4 4-4 4" /></svg>
+                          <span className={styles.tierTitleInline}>Informações técnicas</span>
+                        </button>
+                        {showTech === item.id && (
+                        <div className={styles.tierContentCollapsible}>
                           {item.entity_id && (
                             <div className={styles.kvRow}>
                               <span className={styles.kvLabel}>ID da entidade</span>
@@ -655,21 +670,22 @@ export default function AdminAuditLogsPage() {
                             <span className={styles.kvLabel}>Ação (raw)</span>
                             <span className={`${styles.kvValue} ${styles.kvValueMono}`}>{item.action}</span>
                           </div>
-                        </div>
 
-                        {/* Collapsible raw JSON */}
-                        <button
-                          type="button"
-                          className={`${styles.technicalToggle} ${showJson === item.id ? styles.technicalToggleOpen : ""}`}
-                          onClick={() => setShowJson((prev) => (prev === item.id ? null : item.id))}
-                        >
-                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 4l4 4-4 4" /></svg>
-                          Payload completo (JSON)
-                        </button>
-                        {showJson === item.id && (
-                          <pre className={styles.technicalPre}>
-                            {JSON.stringify({ id: item.id, action: item.action, entity_type: item.entity_type, entity_id: item.entity_id, entity_label: item.entity_label, actor_user_id: item.actor_user_id, actor_email: item.actor_email, created_at: item.created_at, metadata: item.metadata }, null, 2)}
-                          </pre>
+                          {/* Collapsible raw JSON */}
+                          <button
+                            type="button"
+                            className={`${styles.technicalToggle} ${showJson === item.id ? styles.technicalToggleOpen : ""}`}
+                            onClick={() => setShowJson((prev) => (prev === item.id ? null : item.id))}
+                          >
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 4l4 4-4 4" /></svg>
+                            Payload completo (JSON)
+                          </button>
+                          {showJson === item.id && (
+                            <pre className={styles.technicalPre}>
+                              {JSON.stringify({ id: item.id, action: item.action, entity_type: item.entity_type, entity_id: item.entity_id, entity_label: item.entity_label, actor_user_id: item.actor_user_id, actor_email: item.actor_email, created_at: item.created_at, metadata: item.metadata }, null, 2)}
+                            </pre>
+                          )}
+                        </div>
                         )}
                       </div>
                     </div>

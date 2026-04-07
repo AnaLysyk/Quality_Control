@@ -500,7 +500,12 @@ export default function AdminAuditLogsPage() {
               const isOpen = expandedId === item.id;
               const meta = (item.metadata && typeof item.metadata === "object" ? item.metadata : {}) as Record<string, unknown>;
               // Split metadata into contextual (summary enrichment) and operation details
-              const operationEntries = Object.entries(meta).filter(([k, v]) => v !== undefined && v !== null && !SUMMARY_META_KEYS.has(k) && !TECHNICAL_META_KEYS.has(k));
+              const beforeData = (meta._before && typeof meta._before === "object" && !Array.isArray(meta._before)) ? meta._before as Record<string, unknown> : null;
+              const operationEntries = Object.entries(meta).filter(([k, v]) => v !== undefined && v !== null && k !== "_before" && !SUMMARY_META_KEYS.has(k) && !TECHNICAL_META_KEYS.has(k));
+              // For diff: entries present in _before show as before→after; others show as regular kv
+              const diffKeys = beforeData ? Object.keys(beforeData) : [];
+              const diffEntries = operationEntries.filter(([k]) => diffKeys.includes(k));
+              const regularEntries = operationEntries.filter(([k]) => !diffKeys.includes(k));
               const technicalEntries = Object.entries(meta).filter(([k, v]) => v !== undefined && v !== null && TECHNICAL_META_KEYS.has(k));
 
               return (
@@ -543,7 +548,7 @@ export default function AdminAuditLogsPage() {
                       {/* ── Tier 1: Resumo do evento ─────────────── */}
                       <div className={styles.tier}>
                         <p className={styles.tierTitle}>Resumo do evento</p>
-                        <div className={styles.tierContent}>
+                        <div className={styles.tierContentGrid}>
                           <div className={styles.kvRow}>
                             <span className={styles.kvLabel}>Evento</span>
                             <span className={styles.kvValue}>{title}</span>
@@ -581,7 +586,36 @@ export default function AdminAuditLogsPage() {
                         <div className={styles.tier}>
                           <p className={styles.tierTitle}>Detalhes da alteração</p>
                           <div className={styles.tierContent}>
-                            {operationEntries.map(([key, val]) => (
+                            {/* Before → After diff table */}
+                            {diffEntries.length > 0 && beforeData && (
+                              <table className={styles.diffTable}>
+                                <thead>
+                                  <tr>
+                                    <th className={styles.diffHeader}>Campo</th>
+                                    <th className={styles.diffHeader}>Antes</th>
+                                    <th className={styles.diffHeaderArrow}></th>
+                                    <th className={styles.diffHeader}>Depois</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {diffEntries.map(([key, val]) => {
+                                    const before = formatMetaValue(beforeData[key]);
+                                    const after = formatMetaValue(val);
+                                    const changed = before !== after;
+                                    return (
+                                      <tr key={key} className={changed ? styles.diffRowChanged : styles.diffRow}>
+                                        <td className={styles.diffCellLabel}>{METADATA_KEY_LABELS[key] ?? key}</td>
+                                        <td className={styles.diffCellBefore}>{before}</td>
+                                        <td className={styles.diffCellArrow}>{changed ? "→" : "="}</td>
+                                        <td className={changed ? styles.diffCellAfter : styles.diffCellSame}>{after}</td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            )}
+                            {/* Regular (non-diff) entries */}
+                            {regularEntries.map(([key, val]) => (
                               <div key={key} className={styles.kvRow}>
                                 <span className={styles.kvLabel}>{METADATA_KEY_LABELS[key] ?? key}</span>
                                 <span className={styles.kvValue}>{formatMetaValue(val)}</span>

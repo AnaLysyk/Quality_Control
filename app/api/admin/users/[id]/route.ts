@@ -75,6 +75,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   const body = await req.json().catch(() => null);
 
+  // Snapshot before state for audit diff
+  const beforeSnapshot = await getAdminUserItem(id);
+  if (!beforeSnapshot) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+
   const name = typeof body?.name === "string" ? body.name.trim() : null;
   const fullName =
     typeof body?.full_name === "string"
@@ -219,7 +225,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     entityType: "user",
     entityId: updated.id,
     entityLabel: updated.email,
-    metadata: { companyId: clientId, role, permissionRole, active },
+    metadata: {
+      companyId: clientId,
+      role,
+      permissionRole,
+      active,
+      _before: {
+        active: beforeSnapshot.active ?? null,
+        role: beforeSnapshot.role ?? null,
+        permissionRole: beforeSnapshot.permission_role ?? null,
+        email: beforeSnapshot.email ?? null,
+        name: beforeSnapshot.name ?? null,
+      },
+    },
   });
 
   const item = await getAdminUserItem(id);

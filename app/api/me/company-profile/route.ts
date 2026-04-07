@@ -291,6 +291,10 @@ export async function PATCH(req: NextRequest) {
       companySlug: updated.slug ?? null,
       projectCodesChanged,
       fieldsUpdated: Object.keys(patch).filter((k) => k !== "password_hash"),
+      _before: {
+        integrationMode: current.integration_mode ?? null,
+        name: current.name ?? current.company_name ?? null,
+      },
     },
   });
 

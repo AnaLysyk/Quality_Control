@@ -234,6 +234,165 @@
   color: var(--tc-text, #0b1a3c);
 }
 
+/* ── Danger button ──────────────────────────────────────── */
+.btnDanger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3125rem;
+  border: 1px solid #dc2626;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #dc2626;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.4375rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+  margin-left: auto;
+}
+.btnDanger:hover { background: #dc2626; color: #fff; }
+.btnDanger:active { transform: scale(0.97); }
+.btnDanger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btnDangerFilled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3125rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.btnDangerFilled:hover { background: #b91c1c; }
+.btnDangerFilled:active { transform: scale(0.97); }
+.btnDangerFilled:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Purge modal ────────────────────────────────────────── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease-out;
+}
+.modalBox {
+  background: var(--tc-surface, #fff);
+  border: 1px solid var(--tc-border, #e5e7eb);
+  border-radius: 1rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  width: 100%;
+  max-width: 26rem;
+  padding: 1.75rem;
+  animation: slideUp 0.2s ease-out;
+}
+.modalHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 1rem;
+}
+.modalIconWrap {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: #fef2f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.modalIconWrap svg { color: #dc2626; }
+.modalTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--tc-text, #0b1a3c);
+}
+.modalBody {
+  font-size: 0.8125rem;
+  color: var(--tc-text-muted, #6b7280);
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+.modalDateRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.modalDateLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--tc-text, #0b1a3c);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.modalDateInput {
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid var(--tc-border, #e5e7eb);
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  background: var(--tc-surface, #fff);
+  color: var(--tc-text, #0b1a3c);
+}
+.modalWarning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  font-size: 0.75rem;
+  color: #991b1b;
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+}
+.modalWarning svg { flex-shrink: 0; margin-top: 0.125rem; }
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.625rem;
+}
+.modalCancel {
+  border: 1px solid var(--tc-border, #e5e7eb);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--tc-text-muted, #6b7280);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.modalCancel:hover { background: var(--tc-surface-2, #f9fafb); }
+.purgeResult {
+  font-size: 0.8125rem;
+  color: #15803d;
+  font-weight: 600;
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ── Timeline event list ─────────────────────────────────── */
 .eventList {
   padding: 0;

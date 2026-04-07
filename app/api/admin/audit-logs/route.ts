@@ -1,9 +1,60 @@
 import { NextRequest } from "next/server";
-import { AUDIT_LOG_RETENTION_DAYS, isAuditLogStorageConfigured, listAuditLogs } from "@/data/auditLogRepository";
+import { AUDIT_LOG_RETENTION_DAYS, isAuditLogStorageConfigured, listAuditLogs, purgeAuditLogs, addAuditLogSafe } from "@/data/auditLogRepository";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 
 export const revalidate = 0;
+
+export async function DELETE(req: NextRequest) {
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    const msg = status === 401 ? "Nao autenticado" : "Sem permissao";
+    return apiFail(req, msg, {
+      status,
+      code: status === 401 ? "AUTH_REQUIRED" : "FORBIDDEN",
+      extra: { error: msg },
+    });
+  }
+
+  let body: { startDate?: string; endDate?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return apiFail(req, "Body JSON invalido", { status: 400, code: "INVALID_BODY" });
+  }
+
+  const { startDate, endDate } = body;
+  if (!startDate || !endDate) {
+    return apiFail(req, "startDate e endDate sao obrigatorios", { status: 400, code: "MISSING_DATES" });
+  }
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    return apiFail(req, "Datas invalidas", { status: 400, code: "INVALID_DATES" });
+  }
+
+  // Adjust end date to end of day
+  end.setHours(23, 59, 59, 999);
+
+  try {
+    const deleted = await purgeAuditLogs(start, end);
+
+    addAuditLogSafe({
+      action: "audit.purged",
+      entityType: "system",
+      entityLabel: `Purge: ${deleted} logs removidos`,
+      actorUserId: admin.id ?? null,
+      actorEmail: admin.email ?? null,
+      metadata: { operation: "purge", startDate, endDate, deletedCount: deleted },
+    });
+
+    return apiOk(req, { deleted }, `${deleted} logs removidos com sucesso`);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Falha ao limpar logs";
+    return apiFail(req, message, { status: 500, code: "PURGE_FAILED" });
+  }
+}
 
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);

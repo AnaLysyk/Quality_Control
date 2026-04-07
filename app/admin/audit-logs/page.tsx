@@ -77,6 +77,7 @@ const ACTION_TITLES: Record<string, string> = {
   "export.executed": "Exportação de dados",
   // System
   "system.error": "Erro de sistema",
+  "audit.purged": "Logs de auditoria limpos",
   // legacy uppercase keys
   CREATE: "Registro criado",
   USER_CREATED: "Usuário criado",
@@ -330,6 +331,14 @@ export default function AdminAuditLogsPage() {
   const [showTech, setShowTech] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<ActionCategory | "">("");
 
+  // Purge state
+  const [purgeOpen, setPurgeOpen] = useState(false);
+  const [purgeStart, setPurgeStart] = useState("");
+  const [purgeEnd, setPurgeEnd] = useState("");
+  const [purging, setPurging] = useState(false);
+  const [purgeResult, setPurgeResult] = useState<string | null>(null);
+  const [purgeError, setPurgeError] = useState<string | null>(null);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -352,6 +361,29 @@ export default function AdminAuditLogsPage() {
       setLoading(false);
     }
   }, []);
+
+  const handlePurge = useCallback(async () => {
+    if (!purgeStart || !purgeEnd) return;
+    setPurging(true);
+    setPurgeError(null);
+    setPurgeResult(null);
+    try {
+      const res = await fetch("/api/admin/audit-logs", {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ startDate: purgeStart, endDate: purgeEnd }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error ?? "Falha ao limpar logs");
+      setPurgeResult(`${json?.deleted ?? 0} registros removidos com sucesso.`);
+      load();
+    } catch (err) {
+      setPurgeError(err instanceof Error ? err.message : "Erro ao limpar logs");
+    } finally {
+      setPurging(false);
+    }
+  }, [purgeStart, purgeEnd, load]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -514,6 +546,15 @@ export default function AdminAuditLogsPage() {
                 className={styles.btnGhost}
               >
                 Limpar filtros
+              </button>
+              <button
+                onClick={() => { setPurgeOpen(true); setPurgeResult(null); setPurgeError(null); }}
+                className={styles.btnDanger}
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                  <path d="M3 4h10M5.5 4V3a1 1 0 011-1h3a1 1 0 011 1v1M6 7v4M10 7v4" /><path d="M4 4l.7 8.5a1.5 1.5 0 001.5 1.5h3.6a1.5 1.5 0 001.5-1.5L12 4" />
+                </svg>
+                Limpar logs
               </button>
             </div>
           </div>
@@ -740,6 +781,78 @@ export default function AdminAuditLogsPage() {
           </div>
         </div>
       </div>
+
+      {/* Purge modal */}
+      {purgeOpen && (
+        <div className={styles.modalOverlay} onClick={() => !purging && setPurgeOpen(false)}>
+          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalIconWrap}>
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+                  <circle cx="8" cy="8" r="6" /><path d="M8 5.5v3" /><circle cx="8" cy="11" r="0.5" fill="currentColor" stroke="none" />
+                </svg>
+              </div>
+              <span className={styles.modalTitle}>Limpar registros de auditoria</span>
+            </div>
+
+            <p className={styles.modalBody}>
+              Selecione o período dos registros que deseja remover permanentemente do banco de dados.
+            </p>
+
+            <div className={styles.modalDateRow}>
+              <label className={styles.modalDateLabel}>
+                Data inicial
+                <input type="date" value={purgeStart} onChange={(e) => setPurgeStart(e.target.value)} className={styles.modalDateInput} />
+              </label>
+              <label className={styles.modalDateLabel}>
+                Data final
+                <input type="date" value={purgeEnd} onChange={(e) => setPurgeEnd(e.target.value)} className={styles.modalDateInput} />
+              </label>
+            </div>
+
+            {purgeStart && purgeEnd && !purgeResult && (
+              <div className={styles.modalWarning}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                  <path d="M8 1.5L1 14h14L8 1.5z" /><path d="M8 6.5v3" /><circle cx="8" cy="12" r="0.5" fill="currentColor" stroke="none" />
+                </svg>
+                <span>
+                  Todos os registros entre <strong>{new Date(purgeStart + "T00:00:00").toLocaleDateString("pt-BR")}</strong> e <strong>{new Date(purgeEnd + "T00:00:00").toLocaleDateString("pt-BR")}</strong> serão
+                  apagados <strong>permanentemente</strong>. Esta ação não pode ser desfeita.
+                </span>
+              </div>
+            )}
+
+            {purgeError && (
+              <div className={styles.modalWarning}>
+                <span>{purgeError}</span>
+              </div>
+            )}
+
+            {purgeResult && (
+              <div className={styles.purgeResult}>{purgeResult}</div>
+            )}
+
+            <div className={styles.modalActions}>
+              <button
+                onClick={() => { setPurgeOpen(false); setPurgeStart(""); setPurgeEnd(""); setPurgeResult(null); setPurgeError(null); }}
+                className={styles.modalCancel}
+                disabled={purging}
+              >
+                {purgeResult ? "Fechar" : "Cancelar"}
+              </button>
+              {!purgeResult && (
+                <button
+                  onClick={handlePurge}
+                  disabled={purging || !purgeStart || !purgeEnd}
+                  className={styles.btnDangerFilled}
+                >
+                  {purging ? "Removendo…" : "Confirmar exclusão"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

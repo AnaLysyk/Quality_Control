@@ -74,8 +74,9 @@ export type AuditAction =
   | "integration.failed"
   // Data exports
   | "export.executed"
-  // System errors
-  | "system.error";
+  // System / Admin
+  | "system.error"
+  | "audit.purged";
 
 export type AuditEntityType = "user" | "client" | "run" | "ticket" | "access_request" | "defect" | "integration" | "export" | "request" | "system";
 
@@ -258,6 +259,27 @@ export async function listAuditLogs(params?: {
   return items
     .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
     .slice(offset, offset + limit);
+}
+
+export async function purgeAuditLogs(startDate: Date, endDate: Date): Promise<number> {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const result = await prisma.auditLog.deleteMany({
+      where: { created_at: { gte: startDate, lte: endDate } },
+    });
+    return result.count;
+  }
+  const store = await readStore();
+  const items = Array.isArray(store.items) ? store.items : [];
+  const start = startDate.getTime();
+  const end = endDate.getTime();
+  const remaining = items.filter((item) => {
+    const ts = Date.parse(item.created_at);
+    return !Number.isFinite(ts) || ts < start || ts > end;
+  });
+  const deleted = items.length - remaining.length;
+  await writeStore({ items: remaining });
+  return deleted;
 }
 
 export async function addAuditLogSafe(input: Parameters<typeof addAuditLog>[0]) {

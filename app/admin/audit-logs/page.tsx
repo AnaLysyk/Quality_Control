@@ -315,6 +315,44 @@ function formatDateOnly(value: string) {
   return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+type ResultFilter = "" | "success" | "error" | "warning";
+type DatePreset = "" | "today" | "yesterday" | "7d" | "30d" | "thisMonth" | "lastMonth" | "custom";
+
+function applyDatePreset(preset: DatePreset): { start: string; end: string } {
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+  const now = new Date();
+  const today = fmt(now);
+  switch (preset) {
+    case "today": return { start: today, end: today };
+    case "yesterday": { const y = new Date(now); y.setDate(y.getDate() - 1); return { start: fmt(y), end: fmt(y) }; }
+    case "7d": { const d = new Date(now); d.setDate(d.getDate() - 7); return { start: fmt(d), end: today }; }
+    case "30d": { const d = new Date(now); d.setDate(d.getDate() - 30); return { start: fmt(d), end: today }; }
+    case "thisMonth": { const d = new Date(now.getFullYear(), now.getMonth(), 1); return { start: fmt(d), end: today }; }
+    case "lastMonth": { const s = new Date(now.getFullYear(), now.getMonth() - 1, 1); const e = new Date(now.getFullYear(), now.getMonth(), 0); return { start: fmt(s), end: fmt(e) }; }
+    default: return { start: "", end: "" };
+  }
+}
+
+const RESULT_CATEGORIES: Record<ResultFilter, ActionCategory[]> = {
+  "": [],
+  success: ["create", "update", "permission", "link", "auth", "export", "default"],
+  error: ["error"],
+  warning: ["delete"],
+};
+
+const DATE_PRESETS: { value: DatePreset; label: string }[] = [
+  { value: "", label: "Qualquer período" },
+  { value: "today", label: "Hoje" },
+  { value: "yesterday", label: "Ontem" },
+  { value: "7d", label: "Últimos 7 dias" },
+  { value: "30d", label: "Últimos 30 dias" },
+  { value: "thisMonth", label: "Este mês" },
+  { value: "lastMonth", label: "Mês passado" },
+  { value: "custom", label: "Personalizado" },
+];
+
+const PAGE_SIZES = [25, 50, 100];
+
 export default function AdminAuditLogsPage() {
   const [items, setItems] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(false);
@@ -330,6 +368,14 @@ export default function AdminAuditLogsPage() {
   const [showJson, setShowJson] = useState<string | null>(null);
   const [showTech, setShowTech] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<ActionCategory | "">("");
+
+  // Result & date preset filters
+  const [resultFilter, setResultFilter] = useState<ResultFilter>("");
+  const [datePreset, setDatePreset] = useState<DatePreset>("");
+
+  // Pagination
+  const [pageSize, setPageSize] = useState(50);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Purge state
   const [purgeOpen, setPurgeOpen] = useState(false);
@@ -402,6 +448,10 @@ export default function AdminAuditLogsPage() {
       if (action && log.action !== action) return false;
       if (entityType && log.entity_type !== entityType) return false;
       if (categoryFilter && getCategory(log.action) !== categoryFilter) return false;
+      if (resultFilter) {
+        const cats = RESULT_CATEGORIES[resultFilter];
+        if (!cats.includes(getCategory(log.action))) return false;
+      }
       if (actor && !(log.actor_email ?? "").toLowerCase().includes(actor.toLowerCase())) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -419,11 +469,22 @@ export default function AdminAuditLogsPage() {
       }
       if (endDate) {
         const date = new Date(log.created_at);
-        if (date > new Date(endDate)) return false;
+        const endD = new Date(endDate);
+        endD.setHours(23, 59, 59, 999);
+        if (date > endD) return false;
       }
       return true;
     });
-  }, [items, action, actor, startDate, endDate, entityType, searchQuery, categoryFilter]);
+  }, [items, action, actor, startDate, endDate, entityType, searchQuery, categoryFilter, resultFilter]);
+
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1); }, [action, entityType, categoryFilter, resultFilter, actor, searchQuery, startDate, endDate]);
+
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(filteredItems.length / pageSize)), [filteredItems.length, pageSize]);
+  const paginatedItems = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredItems.slice(start, start + pageSize);
+  }, [filteredItems, currentPage, pageSize]);
 
   /** Category breakdown for quick-filter chips. */
   const categoryCounts = useMemo(() => {
@@ -439,10 +500,7 @@ export default function AdminAuditLogsPage() {
 
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
-      <div className="mx-auto max-w-6xl px-4 py-10 space-y-5">
-        <p className={styles.contextLine}>
-          Consulte movimentações, alterações administrativas, vínculos, permissões e eventos do sistema.
-        </p>
+      <div className="mx-auto max-w-6xl px-4 py-4 space-y-3">
 
         {error && (
           <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>
@@ -520,19 +578,52 @@ export default function AdminAuditLogsPage() {
                 </select>
               </label>
               <label className={styles.filterLabel}>
-                Ator
-                <input type="text" value={actor} onChange={(e) => setActor(e.target.value)} placeholder="email do responsável" className={styles.filterInput} />
+                Resultado
+                <select value={resultFilter} onChange={(e) => setResultFilter(e.target.value as ResultFilter)} className={styles.filterSelect}>
+                  <option value="">Todos</option>
+                  <option value="success">Sucesso</option>
+                  <option value="error">Erro / Negado</option>
+                  <option value="warning">Exclusão / Alerta</option>
+                </select>
               </label>
             </div>
             <div className={styles.filtersRow2}>
               <label className={styles.filterLabel}>
-                Data inicial
-                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={styles.filterInput} />
+                Ator
+                <input type="text" value={actor} onChange={(e) => setActor(e.target.value)} placeholder="email do responsável" className={styles.filterInput} />
               </label>
               <label className={styles.filterLabel}>
-                Data final
-                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={styles.filterInput} />
+                Período
+                <select
+                  value={datePreset}
+                  onChange={(e) => {
+                    const preset = e.target.value as DatePreset;
+                    setDatePreset(preset);
+                    if (preset && preset !== "custom") {
+                      const { start, end } = applyDatePreset(preset);
+                      setStartDate(start);
+                      setEndDate(end);
+                    }
+                  }}
+                  className={styles.filterSelect}
+                >
+                  {DATE_PRESETS.map((p) => (
+                    <option key={p.value} value={p.value}>{p.label}</option>
+                  ))}
+                </select>
               </label>
+              {(datePreset === "custom" || datePreset === "") && (
+                <>
+                  <label className={styles.filterLabel}>
+                    Data inicial
+                    <input type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setDatePreset("custom"); }} className={styles.filterInput} />
+                  </label>
+                  <label className={styles.filterLabel}>
+                    Data final
+                    <input type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); setDatePreset("custom"); }} className={styles.filterInput} />
+                  </label>
+                </>
+              )}
             </div>
             <div className={styles.filtersActions}>
               <button onClick={load} disabled={loading} className={styles.btnPrimary}>
@@ -542,7 +633,7 @@ export default function AdminAuditLogsPage() {
                 {loading ? "Atualizando…" : "Atualizar"}
               </button>
               <button
-                onClick={() => { setAction(""); setEntityType(""); setActor(""); setSearchQuery(""); setStartDate(""); setEndDate(""); setCategoryFilter(""); }}
+                onClick={() => { setAction(""); setEntityType(""); setActor(""); setSearchQuery(""); setStartDate(""); setEndDate(""); setCategoryFilter(""); setResultFilter(""); setDatePreset(""); }}
                 className={styles.btnGhost}
               >
                 Limpar filtros
@@ -578,13 +669,16 @@ export default function AdminAuditLogsPage() {
           {/* Empty state */}
           {!showSkeleton && filteredItems.length === 0 && (
             <div className={styles.emptyState}>
-              Nenhum evento encontrado com os filtros atuais.
+              <svg width="32" height="32" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" style={{ margin: "0 auto 0.75rem", opacity: 0.4 }}>
+                <circle cx="8" cy="8" r="6" /><path d="M8 5v3.5" /><circle cx="8" cy="11" r="0.5" fill="currentColor" stroke="none" />
+              </svg>
+              Não há logs para o filtro selecionado.
             </div>
           )}
 
           {/* ── Event timeline ─────────────────────────────────── */}
           <div className={styles.eventList}>
-            {filteredItems.map((item) => {
+            {paginatedItems.map((item) => {
               const cat = getCategory(item.action);
               const title = getEventTitle(item);
               const sub = getEventSubtitle(item);
@@ -779,6 +873,31 @@ export default function AdminAuditLogsPage() {
               );
             })}
           </div>
+
+          {/* ── Pagination ─────────────────────────────────── */}
+          {filteredItems.length > 0 && (
+            <div className={styles.paginationBar}>
+              <div className={styles.paginationInfo}>
+                <span>{filteredItems.length} resultado{filteredItems.length !== 1 ? "s" : ""}</span>
+                <span className={styles.paginationSep}>·</span>
+                <span>Página {currentPage} de {totalPages}</span>
+              </div>
+              <div className={styles.paginationControls}>
+                <label className={styles.paginationLabel}>
+                  Por página
+                  <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} className={styles.paginationSelect}>
+                    {PAGE_SIZES.map((s) => (<option key={s} value={s}>{s}</option>))}
+                  </select>
+                </label>
+                <div className={styles.paginationButtons}>
+                  <button disabled={currentPage <= 1} onClick={() => setCurrentPage(1)} className={styles.paginationBtn} title="Primeira página">«</button>
+                  <button disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)} className={styles.paginationBtn} title="Página anterior">‹</button>
+                  <button disabled={currentPage >= totalPages} onClick={() => setCurrentPage((p) => p + 1)} className={styles.paginationBtn} title="Próxima página">›</button>
+                  <button disabled={currentPage >= totalPages} onClick={() => setCurrentPage(totalPages)} className={styles.paginationBtn} title="Última página">»</button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -797,6 +916,7 @@ export default function AdminAuditLogsPage() {
 
             <p className={styles.modalBody}>
               Selecione o período dos registros que deseja remover permanentemente do banco de dados.
+              Registros de limpeza de logs são preservados e não podem ser removidos por esta operação.
             </p>
 
             <div className={styles.modalDateRow}>

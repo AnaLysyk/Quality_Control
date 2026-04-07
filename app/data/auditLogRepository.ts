@@ -265,7 +265,10 @@ export async function purgeAuditLogs(startDate: Date, endDate: Date): Promise<nu
   if (USE_POSTGRES) {
     const prisma = await getPrisma();
     const result = await prisma.auditLog.deleteMany({
-      where: { created_at: { gte: startDate, lte: endDate } },
+      where: {
+        created_at: { gte: startDate, lte: endDate },
+        action: { not: "audit.purged" },
+      },
     });
     return result.count;
   }
@@ -274,6 +277,7 @@ export async function purgeAuditLogs(startDate: Date, endDate: Date): Promise<nu
   const start = startDate.getTime();
   const end = endDate.getTime();
   const remaining = items.filter((item) => {
+    if (item.action === "audit.purged") return true; // never delete purge records
     const ts = Date.parse(item.created_at);
     return !Number.isFinite(ts) || ts < start || ts > end;
   });

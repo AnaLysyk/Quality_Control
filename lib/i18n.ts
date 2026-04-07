@@ -19,7 +19,7 @@ const DICTIONARY: Record<Locale, Dictionary> = {
       companies: "Empresas",
       runsManagement: "Gestão de Runs",
       accessRequests: "Solicitações de acesso",
-      auditLogs: "Histórico",
+      auditLogs: "Audit Logs",
       defects: "Defeitos",
       profile: "Perfil",
       dashboard: "Dashboard",

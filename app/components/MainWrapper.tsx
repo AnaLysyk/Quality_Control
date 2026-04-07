@@ -32,7 +32,7 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
 
   return (
     <main
-      className={`flex-1 w-full max-w-440 mx-auto min-h-full min-w-0 overflow-x-hidden pt-(--topbar-h) pr-(--content-pr) ${leftPx} ${bottomPb}`}
+      className={`flex-1 w-full max-w-[1760px] mx-auto min-h-full min-w-0 overflow-x-hidden pt-(--topbar-h) pr-(--content-pr) ${leftPx} ${bottomPb}`}
     >
       {beforeContent ? <div className="mb-6 sm:mb-7 lg:mb-8">{beforeContent}</div> : null}
       {children}

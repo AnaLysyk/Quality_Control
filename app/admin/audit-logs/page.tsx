@@ -159,6 +159,18 @@ const METADATA_KEY_LABELS: Record<string, string> = {
   newCompanyName: "Nova empresa",
 };
 
+/** Standardized role labels for audit display. */
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Admin global", global_admin: "Admin global",
+  company: "Admin da empresa", company_admin: "Admin da empresa", client_admin: "Admin da empresa", client_owner: "Admin da empresa", client_manager: "Admin da empresa", empresa: "Admin da empresa",
+  user: "Usuário da empresa", viewer: "Usuário da empresa", client_user: "Usuário da empresa", client_viewer: "Usuário da empresa", company_user: "Usuário da empresa",
+  testing_company_user: "Usuário TC", dev: "Usuário TC", it_dev: "Usuário TC", developer: "Usuário TC", itdev: "Usuário TC",
+  leader_tc: "Líder TC", tc_leader: "Líder TC", lider_tc: "Líder TC",
+  support: "Suporte técnico", technical_support: "Suporte técnico", tech_support: "Suporte técnico", support_tech: "Suporte técnico",
+};
+/** Metadata keys that contain role values. */
+const ROLE_META_KEYS = new Set(["role", "permissionRole", "targetPermissionRole", "actorRole", "membershipRole", "profileType"]);
+
 /** Keys that belong in the "summary" tier (not the operation details). */
 const SUMMARY_META_KEYS = new Set(["companyLabel", "companySlug", "companyId", "userEmail", "userId", "ip", "sessionId"]);
 /** Keys that are IDs / technical — go in tier 3. */
@@ -288,13 +300,15 @@ function getResultLabel(cat: ActionCategory): { label: string; cls: string } {
   return { label: "Sucesso", cls: styles.resultSuccess };
 }
 
-function formatMetaValue(val: unknown): string {
+function formatMetaValue(val: unknown, key?: string): string {
   if (val === true) return "Sim";
   if (val === false) return "Não";
   if (val === null || val === undefined) return "—";
   if (Array.isArray(val)) return val.length ? val.join(", ") : "—";
   if (typeof val === "object") return JSON.stringify(val);
-  return String(val);
+  const str = String(val);
+  if (key && ROLE_META_KEYS.has(key)) return ROLE_LABELS[str.toLowerCase()] ?? str;
+  return str;
 }
 
 function formatDate(value: string) {
@@ -785,8 +799,8 @@ export default function AdminAuditLogsPage() {
                                 </thead>
                                 <tbody>
                                   {diffEntries.map(([key, val]) => {
-                                    const before = formatMetaValue(beforeData[key]);
-                                    const after = formatMetaValue(val);
+                                    const before = formatMetaValue(beforeData[key], key);
+                                    const after = formatMetaValue(val, key);
                                     const changed = before !== after;
                                     return (
                                       <tr key={key} className={changed ? styles.diffRowChanged : styles.diffRow}>
@@ -804,7 +818,7 @@ export default function AdminAuditLogsPage() {
                             {regularEntries.map(([key, val]) => (
                               <div key={key} className={styles.kvRow}>
                                 <span className={styles.kvLabel}>{METADATA_KEY_LABELS[key] ?? key}</span>
-                                <span className={styles.kvValue}>{formatMetaValue(val)}</span>
+                                <span className={styles.kvValue}>{formatMetaValue(val, key)}</span>
                               </div>
                             ))}
                           </div>
@@ -838,7 +852,7 @@ export default function AdminAuditLogsPage() {
                           {technicalEntries.map(([key, val]) => (
                             <div key={key} className={styles.kvRow}>
                               <span className={styles.kvLabel}>{METADATA_KEY_LABELS[key] ?? key}</span>
-                              <span className={`${styles.kvValue} ${styles.kvValueMono}`}>{formatMetaValue(val)}</span>
+                              <span className={`${styles.kvValue} ${styles.kvValueMono}`}>{formatMetaValue(val, key)}</span>
                             </div>
                           ))}
                           <div className={styles.kvRow}>

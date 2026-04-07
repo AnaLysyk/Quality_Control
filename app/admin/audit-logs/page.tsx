@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import styles from "./AuditLogs.module.css";
 
 type AuditLog = {
   id: string;
@@ -14,11 +15,70 @@ type AuditLog = {
   metadata: unknown;
 };
 
-const ACTION_BADGE: Record<string, string> = {
-  CREATE: "bg-emerald-50 text-emerald-700",
-  UPDATE: "bg-amber-50 text-amber-700",
-  DELETE: "bg-rose-50 text-rose-700",
+const ACTION_LABELS: Record<string, string> = {
+  CREATE: "Criado",
+  USER_CREATED: "Usuário criado",
+  CLIENT_CREATED: "Cliente criado",
+  UPDATE: "Atualizado",
+  USER_UPDATED: "Usuário atualizado",
+  CLIENT_UPDATED: "Cliente atualizado",
+  DELETE: "Removido",
+  USER_DELETED: "Usuário removido",
+  CLIENT_DELETED: "Cliente removido",
 };
+
+function badgeClass(action: string) {
+  const a = action.toUpperCase();
+  if (a.includes("CREATE")) return styles.badgeCreate;
+  if (a.includes("UPDATE")) return styles.badgeUpdate;
+  if (a.includes("DELETE")) return styles.badgeDelete;
+  return styles.badgeDefault;
+}
+
+function ActionIcon({ action }: { action: string }) {
+  const a = action.toUpperCase();
+  if (a.includes("CREATE")) {
+    return (
+      <svg className={styles.actionIcon} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+        <circle cx="8" cy="8" r="6" />
+        <path d="M8 5.5v5M5.5 8h5" />
+      </svg>
+    );
+  }
+  if (a.includes("UPDATE")) {
+    return (
+      <svg className={styles.actionIcon} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2.5 13.5l1.2-4.3L11 1.9a1.3 1.3 0 011.8 0l1.3 1.3a1.3 1.3 0 010 1.8L6.8 12.3z" />
+        <path d="M9.5 3.5l3 3" />
+      </svg>
+    );
+  }
+  if (a.includes("DELETE")) {
+    return (
+      <svg className={styles.actionIcon} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+        <path d="M3 4h10M5.5 4V3a1 1 0 011-1h3a1 1 0 011 1v1M6 7v4M10 7v4" />
+        <path d="M4 4l.7 8.5a1.5 1.5 0 001.5 1.5h3.6a1.5 1.5 0 001.5-1.5L12 4" />
+      </svg>
+    );
+  }
+  return (
+    <svg className={styles.actionIcon} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+      <circle cx="8" cy="8" r="6" />
+      <path d="M8 5v3l2 1.5" />
+    </svg>
+  );
+}
+
+function entityTypeLabel(type: string) {
+  const map: Record<string, string> = {
+    user: "Usuário",
+    client: "Empresa",
+    company: "Empresa",
+    membership: "Vínculo",
+    permission: "Permissão",
+  };
+  return map[type.toLowerCase()] ?? type;
+}
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -104,149 +164,194 @@ export default function AdminAuditLogsPage() {
 
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
-      <div className="mx-auto max-w-6xl space-y-6 px-4 py-10">
-        <header className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-6 shadow-lg shadow-black/10">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.4em] text-(--tc-text-muted)">Painel</p>
-              <h1 className="text-3xl font-bold text-(--tc-text)">Histórico de Ações</h1>
-              <p className="text-sm text-(--tc-text-secondary)">Registro imutável de ações administrativas no sistema</p>
-            </div>
-            <span className="rounded-full border border-(--tc-accent,#ef0001)/30 bg-(--tc-accent,#ef0001) px-3 py-1 text-xs font-semibold tracking-[0.3em] text-white">
-              ADMIN ONLY
-            </span>
-          </div>
-        </header>
-
-        <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 space-y-4 shadow shadow-black/5">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-            <FilterSelect label="Acao" value={action} onChange={setAction} options={actions} />
-            <FilterSelect label="Entidade" value={entityType} onChange={setEntityType} options={entityTypes} />
-            <FilterInput label="Ator" value={actor} onChange={setActor} placeholder="email ou uid" />
-            <FilterInput label="Alvo" value={targetQuery} onChange={setTargetQuery} placeholder="empresa, usuario, id" />
-            <FilterInput label="Data inicial" value={startDate} onChange={setStartDate} type="date" />
-            <FilterInput label="Data final" value={endDate} onChange={setEndDate} type="date" />
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={load}
-              disabled={loading}
-              className="inline-flex items-center justify-center rounded-full border border-(--tc-accent,#ef0001)/70 bg-(--tc-accent,#ef0001)/10 px-5 py-2 text-sm font-semibold text-(--tc-accent,#ef0001) shadow-sm transition hover:bg-(--tc-accent,#ef0001)/20 disabled:opacity-50"
-            >
-              {loading ? "Atualizando..." : "Atualizar"}
-            </button>
-            <button
-              onClick={() => {
-                setAction("");
-                setEntityType("");
-                setActor("");
-                setTargetQuery("");
-                setStartDate("");
-                setEndDate("");
-              }}
-              className="inline-flex items-center justify-center rounded-full border border-(--tc-border) bg-(--tc-surface) px-4 py-2 text-xs font-semibold text-(--tc-text) transition hover:bg-(--tc-surface-2)"
-            >
-              Limpar filtros
-            </button>
-            <span className="text-xs text-(--tc-text-muted,#6b7280)">Exibindo até 300 registros · retenção: 60 dias</span>
-          </div>
-        </section>
+      <div className="mx-auto max-w-6xl px-4 py-10 space-y-5">
+        {/* Context line below cover — no card */}
+        <p className={styles.contextLine}>
+          Registro imutável das movimentações administrativas do sistema.
+        </p>
 
         {error && (
-          <div className="rounded-2xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-700">
+          <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-700">
             {error}
           </div>
         )}
 
         {warning && !error && (
-          <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
+          <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
             {warning}
           </div>
         )}
 
-        <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow shadow-black/5">
-          <div className="hidden sm:grid grid-cols-[200px_140px_1fr_220px] gap-3 border-b border-(--tc-border,#e5e7eb) px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted)">
+        {/* ── Card principal ───────────────────────────────────── */}
+        <div className={styles.card}>
+          {/* Header */}
+          <div className={styles.cardHeader}>
+            <div className={styles.cardHeaderLeft}>
+              <h2>Movimentações de usuários</h2>
+              <p>Acompanhe criação, atualização e alterações relevantes no sistema.</p>
+            </div>
+            <div className={styles.cardHeaderRight}>
+              <span className={styles.metaBadge}>
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M2 4h12M2 8h12M2 12h12" strokeLinecap="round"/></svg>
+                {filteredItems.length} registro{filteredItems.length !== 1 ? "s" : ""}
+              </span>
+              <span className={styles.metaBadge}>
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l2.5 1.5" strokeLinecap="round"/></svg>
+                60 dias
+              </span>
+            </div>
+          </div>
+
+          {/* Filtros */}
+          <div className={styles.filtersWrap}>
+            <div className={styles.filtersGrid}>
+              <label className={styles.filterLabel}>
+                Ação
+                <select value={action} onChange={(e) => setAction(e.target.value)} className={styles.filterSelect}>
+                  <option value="">Todas</option>
+                  {actions.map((opt) => (
+                    <option key={opt} value={opt}>{ACTION_LABELS[opt] ?? opt}</option>
+                  ))}
+                </select>
+              </label>
+              <label className={styles.filterLabel}>
+                Entidade
+                <select value={entityType} onChange={(e) => setEntityType(e.target.value)} className={styles.filterSelect}>
+                  <option value="">Todas</option>
+                  {entityTypes.map((opt) => (
+                    <option key={opt} value={opt}>{entityTypeLabel(opt)}</option>
+                  ))}
+                </select>
+              </label>
+              <label className={styles.filterLabel}>
+                Ator
+                <input type="text" value={actor} onChange={(e) => setActor(e.target.value)} placeholder="email ou uid" className={styles.filterInput} />
+              </label>
+              <label className={styles.filterLabel}>
+                Alvo
+                <input type="text" value={targetQuery} onChange={(e) => setTargetQuery(e.target.value)} placeholder="empresa, usuário, id" className={styles.filterInput} />
+              </label>
+              <label className={styles.filterLabel}>
+                Data inicial
+                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={styles.filterInput} />
+              </label>
+              <label className={styles.filterLabel}>
+                Data final
+                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={styles.filterInput} />
+              </label>
+            </div>
+            <div className={styles.filtersActions}>
+              <button onClick={load} disabled={loading} className={styles.btnPrimary}>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                  <path d="M14 2v4h-4" /><path d="M13.5 10A6 6 0 113.3 4.5" />
+                </svg>
+                {loading ? "Atualizando…" : "Atualizar"}
+              </button>
+              <button
+                onClick={() => {
+                  setAction("");
+                  setEntityType("");
+                  setActor("");
+                  setTargetQuery("");
+                  setStartDate("");
+                  setEndDate("");
+                }}
+                className={styles.btnGhost}
+              >
+                Limpar filtros
+              </button>
+            </div>
+          </div>
+
+          {/* Table header */}
+          <div className={styles.tableHeader}>
             <div>Data / Hora</div>
             <div>Ação</div>
             <div>Alvo</div>
             <div>Ator</div>
           </div>
 
+          {/* Skeleton */}
           {showSkeleton && (
-            <div className="space-y-3 px-4 py-4">
-              {[...Array(4)].map((_, idx) => (
-                <div key={idx} className="flex flex-col sm:flex-row animate-pulse items-start sm:items-center justify-between gap-3 rounded-2xl bg-(--tc-surface-2) px-4 py-3">
-                  <div className="h-4 w-20 rounded-full bg-(--tc-border)" />
-                  <div className="h-4 w-12 rounded-full bg-(--tc-border)" />
-                  <div className="flex-1 rounded-full bg-(--tc-border) py-2" />
-                  <div className="h-4 w-32 rounded-full bg-(--tc-border)" />
+            <div>
+              {[...Array(5)].map((_, idx) => (
+                <div key={idx} className={styles.skeletonRow}>
+                  <div className={`${styles.skeletonBar} ${styles.skeletonDate}`} />
+                  <div className={`${styles.skeletonBar} ${styles.skeletonAction}`} />
+                  <div className={`${styles.skeletonBar} ${styles.skeletonTarget}`} />
+                  <div className={`${styles.skeletonBar} ${styles.skeletonActor}`} />
                 </div>
               ))}
             </div>
           )}
 
+          {/* Empty state */}
           {!showSkeleton && filteredItems.length === 0 && (
-              <div className="px-4 py-8 text-center text-sm text-(--tc-text-muted,#6b7280)">
-                Nenhuma ação registrada com os filtros atuais.
-              </div>
-            )}
+            <div className={styles.emptyState}>
+              Nenhuma movimentação registrada com os filtros atuais.
+            </div>
+          )}
 
-          <div className="divide-y divide-(--tc-border)">
-            {filteredItems.map((item) => (
-              <div key={item.id}>
+          {/* Rows */}
+          <div>
+            {filteredItems.map((item, idx) => (
+              <div key={item.id} className={styles.rowDivider}>
                 <button
                   type="button"
                   onClick={() => setExpandedId((prev) => (prev === item.id ? null : item.id))}
-                  className="group grid w-full grid-cols-1 sm:grid-cols-[200px_140px_1fr_220px] gap-3 px-4 py-3 text-left text-sm text-(--tc-text) hover:bg-(--tc-surface-2)"
+                  className={`${styles.row} ${idx % 2 === 0 ? "" : styles.rowEven}`}
                 >
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-[0.3em] text-(--tc-text-muted) sm:hidden">Data / Hora</span>
-                    <time className="text-(--tc-text-muted)" title={new Date(item.created_at).toISOString()}>
+                  {/* Data */}
+                  <div>
+                    <span className={styles.mobileLabel}>Data / Hora</span>
+                    <time className={styles.dateCell} title={new Date(item.created_at).toISOString()}>
                       {formatDate(item.created_at)}
                     </time>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-[0.3em] text-(--tc-text-muted) sm:hidden">AÃ§Ã£o</span>
-                    <span className="flex items-center">
-                      <span
-                        className={`rounded-full px-3 py-0.5 text-[11px] font-semibold tracking-[0.25em] uppercase ${
-                          ACTION_BADGE[item.action] ?? "bg-slate-100 text-slate-900"
-                        }`}
-                      >
-                        {item.action}
-                      </span>
+
+                  {/* Ação */}
+                  <div>
+                    <span className={styles.mobileLabel}>Ação</span>
+                    <span className={`${styles.badge} ${badgeClass(item.action)}`}>
+                      <ActionIcon action={item.action} />
+                      {ACTION_LABELS[item.action] ?? item.action.replace(/_/g, " ").toLowerCase()}
                     </span>
                   </div>
-                  <div className="min-w-0 flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-[0.3em] text-(--tc-text-muted) sm:hidden">Alvo</span>
-                    <div className="truncate font-semibold text-(--tc-text)">
-                      {item.entity_type}
-                      {item.entity_label ? `: ${item.entity_label}` : ""}
+
+                  {/* Alvo */}
+                  <div className={styles.cellMinW0}>
+                    <span className={styles.mobileLabel}>Alvo</span>
+                    <div className={styles.targetPrimary}>
+                      <span className={styles.targetEntityType}>{entityTypeLabel(item.entity_type)}: </span>
+                      {item.entity_label || "—"}
                     </div>
-                    {item.entity_id && <div className="text-xs text-(--tc-text-muted)">id: {item.entity_id}</div>}
+                    {item.entity_id && <div className={styles.targetSecondary}>id: {item.entity_id}</div>}
                   </div>
-                  <div className="min-w-0 flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-[0.3em] text-(--tc-text-muted) sm:hidden">Ator</span>
-                    <div className="truncate text-(--tc-text)">{item.actor_email || "desconhecido"}</div>
-                    {item.actor_user_id && <div className="text-xs text-(--tc-text-muted)">uid: {item.actor_user_id}</div>}
+
+                  {/* Ator */}
+                  <div className={styles.cellMinW0}>
+                    <span className={styles.mobileLabel}>Ator</span>
+                    <div className={styles.actorEmail}>{item.actor_email || "desconhecido"}</div>
+                    {item.actor_user_id && <div className={styles.actorUid}>uid: {item.actor_user_id}</div>}
                   </div>
                 </button>
+
                 {expandedId === item.id && (
-                  <div className="border-t border-(--tc-border,#e5e7eb) bg-(--tc-surface-2) px-4 sm:px-8 py-4 text-xs text-(--tc-text-muted)">
-                    <div className="grid gap-4 lg:grid-cols-3">
+                  <div className={styles.expandedRow}>
+                    <div className={styles.expandedGrid}>
                       <div>
-                        <p className="text-[10px] uppercase tracking-[0.35em] text-(--tc-text-muted)">Origem</p>
-                        <p className="text-sm text-(--tc-text)">UI · API · Sistema</p>
+                        <p className={styles.expandedLabel}>Origem</p>
+                        <p className={styles.expandedValue}>UI · API · Sistema</p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase tracking-[0.35em] text-(--tc-text-muted)">Entidade</p>
-                        <p className="text-sm text-(--tc-text)">
-                          {item.entity_type} {item.entity_id ? `(id: ${item.entity_id})` : ""}
+                        <p className={styles.expandedLabel}>Entidade</p>
+                        <p className={styles.expandedValue}>
+                          {entityTypeLabel(item.entity_type)} {item.entity_id ? `(${item.entity_id})` : ""}
                         </p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase tracking-[0.35em] text-(--tc-text-muted)">Metadata</p>
-                        <pre className="max-h-32 overflow-auto rounded-xl border border-(--tc-border) bg-(--tc-surface) p-3 text-[11px] text-(--tc-text)">
+                        <p className={styles.expandedLabel}>Metadata</p>
+                        <pre className={styles.metadataPre}>
                           {JSON.stringify(item.metadata ?? {}, null, 2)}
                         </pre>
                       </div>
@@ -256,55 +361,8 @@ export default function AdminAuditLogsPage() {
               </div>
             ))}
           </div>
-        </section>
+        </div>
       </div>
     </div>
-  );
-}
-
-function FilterSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (val: string) => void; options: string[] }) {
-  return (
-    <label className="text-xs font-semibold uppercase tracking-[0.4em] text-(--tc-text-muted)">
-      {label}
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg) px-3 py-2 text-sm text-(--tc-text) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30"
-      >
-        <option value="">Todas</option>
-        {options.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
-function FilterInput({
-  label,
-  value,
-  onChange,
-  type = "text",
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (val: string) => void;
-  type?: string;
-  placeholder?: string;
-}) {
-  return (
-    <label className="text-xs font-semibold uppercase tracking-[0.4em] text-(--tc-text-muted)">
-      {label}
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="mt-1 w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg) px-3 py-2 text-sm text-(--tc-text) placeholder:text-(--tc-text-muted) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30"
-      />
-    </label>
   );
 }

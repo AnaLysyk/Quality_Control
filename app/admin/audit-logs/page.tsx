@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useI18n } from "@/hooks/useI18n";
 import styles from "./AuditLogs.module.css";
 
 type AuditLog = {
@@ -369,7 +368,6 @@ const DATE_PRESETS: { value: DatePreset; label: string }[] = [
 const PAGE_SIZES = [25, 50, 100];
 
 export default function AdminAuditLogsPage() {
-  const { t } = useI18n();
   const [items, setItems] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -529,9 +527,6 @@ export default function AdminAuditLogsPage() {
         <div className={styles.card}>
           {/* Header */}
           <div className={styles.cardHeader}>
-            <div className={styles.cardHeaderLeft}>
-              <h2>{t("nav.auditTitle")}</h2>
-            </div>
             <div className={styles.cardHeaderRight}>
               <span className={styles.metaBadge}>
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M2 4h12M2 8h12M2 12h12" strokeLinecap="round"/></svg>

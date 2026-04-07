@@ -924,7 +924,7 @@ function AdminClientsPage() {
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      aria-pressed={currentActive}
+                      aria-pressed={currentActive ? "true" : "false"}
                       className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs border transition ${
                         currentActive
                           ? "bg-emerald-500 text-white border-emerald-400"
@@ -1659,7 +1659,7 @@ function TabButton({ active, children, onClick }: { active: boolean; children: R
     <button
       type="button"
       role="tab"
-      aria-selected={active}
+      aria-selected={active ? "true" : "false"}
       onClick={onClick}
       className={`px-3 py-2 text-sm font-semibold border-b-2 transition ${
         active

@@ -463,7 +463,7 @@ export default function AppShell({ children }: AppShellProps) {
         onMouseEnter={() => setMobileOpen(true)}
         onTouchStart={() => setMobileOpen(true)}
         aria-label="Abrir menu"
-        aria-expanded={mobileOpen}
+        aria-expanded={mobileOpen ? "true" : "false"}
         onMouseLeave={() => setMobileOpen(false)}
       >
         <FiMenu size={20} />

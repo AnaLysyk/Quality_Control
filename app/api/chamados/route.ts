@@ -8,6 +8,7 @@ import { getLocalUserById } from "@/lib/auth/localStore";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
 import { canAccessGlobalTicketWorkspace } from "@/lib/rbac/tickets";
+import { addAuditLogSafe } from "@/app/data/auditLogRepository";
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
@@ -97,6 +98,17 @@ export async function POST(req: Request) {
     });
 
     const enriched = await attachAssigneeToSuporte(suporte);
+
+    addAuditLogSafe({
+      actorUserId: user.id,
+      actorEmail: user.email ?? null,
+      action: "ticket.created",
+      entityType: "ticket",
+      entityId: suporte.id,
+      entityLabel: suporte.title ?? null,
+      metadata: { type: suporte.type ?? null, priority: suporte.priority ?? null, companyId: targetCompanyId, role: user.role ?? null },
+    });
+
     return NextResponse.json({ item: enriched }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erro ao criar chamado";

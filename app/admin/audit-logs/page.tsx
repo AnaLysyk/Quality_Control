@@ -28,6 +28,23 @@ const ACTION_TITLES: Record<string, string> = {
   "client.deleted": "Empresa removida",
   "run.created": "Execução criada",
   "run.deleted": "Execução removida",
+  // Auth
+  "auth.login.success": "Login realizado",
+  "auth.login.failure": "Tentativa de login falhou",
+  "auth.logout": "Logout realizado",
+  "auth.password.changed": "Senha alterada",
+  "auth.password.reset": "Senha redefinida via token",
+  // Tickets
+  "ticket.created": "Chamado aberto",
+  "ticket.updated": "Chamado atualizado",
+  // Access requests
+  "access_request.created": "Solicitação de acesso criada",
+  // Defects
+  "defect.created": "Defeito registrado",
+  // Integrations
+  "integration.updated": "Integração atualizada",
+  // Exports
+  "export.executed": "Exportação de dados",
   // legacy uppercase keys
   CREATE: "Registro criado",
   USER_CREATED: "Usuário criado",
@@ -47,6 +64,11 @@ const ENTITY_LABELS: Record<string, string> = {
   membership: "Vínculo",
   permission: "Permissão",
   run: "Execução",
+  ticket: "Chamado",
+  access_request: "Solicitação de acesso",
+  defect: "Defeito",
+  integration: "Integração",
+  export: "Exportação",
 };
 
 const METADATA_KEY_LABELS: Record<string, string> = {
@@ -69,22 +91,52 @@ const METADATA_KEY_LABELS: Record<string, string> = {
   actorRole: "Papel do ator",
   userEmail: "Email do usuário",
   userId: "ID do usuário",
+  // Auth
+  reason: "Motivo",
+  ip: "Endereço IP",
+  method: "Método",
+  sessionId: "Sessão",
+  // Tickets
+  type: "Tipo",
+  priority: "Prioridade",
+  // Access requests
+  profileType: "Tipo de perfil",
+  accessType: "Tipo de acesso",
+  company: "Empresa",
+  // Defects
+  releaseManualId: "ID do release manual",
+  // Integrations
+  projectCodesChanged: "Projetos alterados",
+  fieldsUpdated: "Campos atualizados",
+  // Exports
+  format: "Formato",
+  project: "Projeto",
+  runId: "ID da execução",
+  rows: "Registros exportados",
+  scope: "Escopo",
 };
 
 /** Keys that belong in the "summary" tier (not the operation details). */
-const SUMMARY_META_KEYS = new Set(["companyLabel", "companySlug", "companyId", "userEmail", "userId"]);
+const SUMMARY_META_KEYS = new Set(["companyLabel", "companySlug", "companyId", "userEmail", "userId", "ip", "sessionId"]);
 /** Keys that are IDs / technical — go in tier 3. */
-const TECHNICAL_META_KEYS = new Set(["companyId", "userId"]);
+const TECHNICAL_META_KEYS = new Set(["companyId", "userId", "ip", "sessionId"]);
 
 type ActionCategory = "create" | "update" | "delete" | "permission" | "link" | "auth" | "error" | "integration" | "default";
 
 function getCategory(action: string): ActionCategory {
   const a = action.toLowerCase();
-  if (a.includes("error") || a.includes("fail")) return "error";
-  if (a.includes("login") || a.includes("logout") || a.includes("auth")) return "auth";
-  if (a.includes("link") || a.includes("unlink") || a.includes("membership")) return "link";
+  if (a.includes("failure") || a.includes("fail")) return "error";
+  if (a.includes("error")) return "error";
+  if (a.includes("login") || a.includes("logout") || a.includes("auth") || a.includes("password")) return "auth";
+  if (a.includes("export")) return "integration";
+  if (a.includes("link") || a.includes("unlink") || a.includes("membership") || a.includes("access_request")) return "link";
   if (a.includes("integration") || a.includes("sync")) return "integration";
   if (a.includes("permission") || a.includes("reset")) return "permission";
+  if (a.includes("ticket") || a.includes("defect")) {
+    if (a.includes("create")) return "create";
+    if (a.includes("update")) return "update";
+    if (a.includes("delete")) return "delete";
+  }
   if (a.includes("create")) return "create";
   if (a.includes("update")) return "update";
   if (a.includes("delete")) return "delete";
@@ -181,6 +233,7 @@ function getCategoryLabel(cat: ActionCategory): string {
 function getResultLabel(cat: ActionCategory): { label: string; cls: string } {
   if (cat === "error") return { label: "Erro", cls: styles.resultError };
   if (cat === "delete") return { label: "Executado", cls: styles.resultWarning };
+  if (cat === "auth") return { label: "Registrado", cls: styles.resultSuccess };
   return { label: "Sucesso", cls: styles.resultSuccess };
 }
 
@@ -308,7 +361,7 @@ export default function AdminAuditLogsPage() {
           <div className={styles.cardHeader}>
             <div className={styles.cardHeaderLeft}>
               <h2>Central de Auditoria</h2>
-              <p>Rastreie quem fez o quê, quando e em qual entidade. Investigue alterações, vínculos e permissões com detalhe.</p>
+              <p>Rastreie logins, alterações, chamados, permissões, integrações e exportações. Investigue quem fez o quê, quando e em qual entidade.</p>
             </div>
             <div className={styles.cardHeaderRight}>
               <span className={styles.metaBadge}>

@@ -4,6 +4,7 @@ import { rateLimit } from "@/lib/rateLimit";
 import { readKanbanStore } from "../store";
 import type { Status } from "../types";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
+import { addAuditLogSafe } from "@/app/data/auditLogRepository";
 
 type ExportRow = {
   id: number;
@@ -146,11 +147,29 @@ export async function GET(request: NextRequest) {
     }));
 
   if (format === "json") {
+    addAuditLogSafe({
+      actorUserId: user.id,
+      actorEmail: user.email ?? null,
+      action: "export.executed",
+      entityType: "export",
+      entityLabel: `kanban_${project}_${runId}`,
+      metadata: { format: "json", project, runId, slug: effectiveSlug, rows: rows.length, role: user.role ?? null },
+    });
     return NextResponse.json({ items: rows });
   }
 
   const csv = toCsv(rows);
   const filename = `kanban_${project}_${runId}${effectiveSlug ? `_${effectiveSlug}` : ""}.csv`;
+
+  addAuditLogSafe({
+    actorUserId: user.id,
+    actorEmail: user.email ?? null,
+    action: "export.executed",
+    entityType: "export",
+    entityLabel: filename,
+    metadata: { format: "csv", project, runId, slug: effectiveSlug, rows: rows.length, role: user.role ?? null },
+  });
+
   return new NextResponse(csv, {
     status: 200,
     headers: {

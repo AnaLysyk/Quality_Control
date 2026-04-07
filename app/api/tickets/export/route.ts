@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { exportTickets, type TicketRecord } from "@/lib/ticketsStore";
 import { isItDev } from "@/lib/rbac/tickets";
+import { addAuditLogSafe } from "@/app/data/auditLogRepository";
 
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
@@ -16,5 +17,15 @@ export async function GET(req: Request) {
   };
 
   const payload = await exportTickets(filter);
+
+  addAuditLogSafe({
+    actorUserId: user.id,
+    actorEmail: user.email ?? null,
+    action: "export.executed",
+    entityType: "export",
+    entityLabel: "tickets_export",
+    metadata: { format: "json", scope: allowAll ? "all" : "own", role: user.role ?? null },
+  });
+
   return NextResponse.json(payload, { status: 200 });
 }

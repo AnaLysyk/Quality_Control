@@ -22,6 +22,7 @@ import {
   type RequestProfileType,
 } from "@/lib/requestRouting";
 import { shouldUseJsonStore } from "@/lib/storeMode";
+import { addAuditLogSafe } from "@/app/data/auditLogRepository";
 
 type Payload = {
   email?: string;
@@ -201,6 +202,15 @@ export async function POST(req: Request) {
       }
     }
   }
+
+  addAuditLogSafe({
+    actorEmail: email,
+    actorUserId: userId,
+    action: "access_request.created",
+    entityType: "access_request",
+    entityLabel: `${fullName} (${email})`,
+    metadata: { profileType, accessType, company: resolvedCompanyName || null, ip: ip_address },
+  });
 
   return NextResponse.json({
     ok: true,

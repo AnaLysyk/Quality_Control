@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getAccessContext } from "@/lib/auth/session";
 import { getLocalUserById, updateLocalUser } from "@/lib/auth/localStore";
 import { hashPasswordSha256, safeEqualHex } from "@/lib/passwordHash";
+import { addAuditLogSafe } from "@/app/data/auditLogRepository";
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 128;
@@ -49,6 +50,15 @@ export async function PATCH(req: Request) {
 
   const newHash = hashPasswordSha256(newPassword);
   await updateLocalUser(user.id, { password_hash: newHash });
+
+  addAuditLogSafe({
+    actorUserId: user.id,
+    actorEmail: user.email ?? null,
+    action: "auth.password.changed",
+    entityType: "user",
+    entityId: user.id,
+    entityLabel: user.email ?? null,
+  });
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }

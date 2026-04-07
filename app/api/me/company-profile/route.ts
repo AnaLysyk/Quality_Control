@@ -21,6 +21,7 @@ import {
   resolveCurrentCompanyFromAccess,
 } from "@/lib/companyProfileAccess";
 import { validateJiraCloudCredentials } from "@/lib/jiraCloud";
+import { addAuditLogSafe } from "@/app/data/auditLogRepository";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -278,6 +279,20 @@ export async function PATCH(req: NextRequest) {
       source: "qase",
     });
   }
+
+  addAuditLogSafe({
+    actorUserId: access.userId ?? null,
+    action: "integration.updated",
+    entityType: "integration",
+    entityId: updated.id,
+    entityLabel: updated.name ?? updated.company_name ?? updated.slug ?? null,
+    metadata: {
+      companyId: updated.id,
+      companySlug: updated.slug ?? null,
+      projectCodesChanged,
+      fieldsUpdated: Object.keys(patch).filter((k) => k !== "password_hash"),
+    },
+  });
 
   return NextResponse.json(ClientSchema.parse(mapCompanyRecord(updated, { maskQaseToken: true, maskJiraToken: true })), { status: 200 });
 }

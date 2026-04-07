@@ -9,6 +9,7 @@ import { buildLocalSessionForUser } from "@/lib/auth/sessionBuilder";
 import { getRedis } from "@/lib/redis";
 import { findLocalUserByEmailOrId } from "@/lib/auth/localStore";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
+import { addAuditLogSafe } from "@/app/data/auditLogRepository";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -52,11 +53,27 @@ export async function POST(req: Request) {
 
     const user = await findLocalUserByEmailOrId(identifier);
     if (!user || user.active === false || user.status === "blocked") {
+      addAuditLogSafe({
+        actorEmail: identifier,
+        action: "auth.login.failure",
+        entityType: "user",
+        entityLabel: identifier,
+        metadata: { reason: !user ? "user_not_found" : "account_inactive", ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null },
+      });
       return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
     }
 
     const hashedInput = hashPasswordSha256(password);
     if (!safeEqualHex(hashedInput, user.password_hash)) {
+      addAuditLogSafe({
+        actorEmail: user.email ?? identifier,
+        actorUserId: user.id,
+        action: "auth.login.failure",
+        entityType: "user",
+        entityId: user.id,
+        entityLabel: user.email ?? identifier,
+        metadata: { reason: "invalid_password", ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null },
+      });
       return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
     }
 
@@ -133,6 +150,16 @@ export async function POST(req: Request) {
         maxAge: 0,
       });
     }
+
+    addAuditLogSafe({
+      actorUserId: user.id,
+      actorEmail: user.email ?? identifier,
+      action: "auth.login.success",
+      entityType: "user",
+      entityId: user.id,
+      entityLabel: user.email ?? identifier,
+      metadata: { role: user.role ?? null, companySlug: built.requestedCompanySlug || null, ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null },
+    });
 
     return res;
   } catch (err: unknown) {

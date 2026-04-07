@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 // Importa o cliente Prisma para acesso ao banco de dados
 import { prisma } from "../../../lib/prismaClient";
+import { addAuditLogSafe } from "@/app/data/auditLogRepository";
 
 // POST: Cria um novo defeito para uma empresa e release manual
 // Espera receber no corpo: title, description, companyId, releaseManualId
@@ -17,6 +18,15 @@ export async function POST(req: NextRequest) {
   const defect = await prisma.defect.create({
     data: { title, description, companyId, releaseManualId },
   });
+
+  addAuditLogSafe({
+    action: "defect.created",
+    entityType: "defect",
+    entityId: defect.id,
+    entityLabel: title,
+    metadata: { companyId, releaseManualId: releaseManualId ?? null },
+  });
+
   // Retorna o defeito criado com status 201 (Created)
   return NextResponse.json(defect, { status: 201 });
 }

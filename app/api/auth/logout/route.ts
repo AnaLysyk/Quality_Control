@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { hashRefreshToken } from "@/lib/auth/refreshToken";
 import { getRedis } from "@/lib/redis";
 import { shouldUseSecureCookies } from "@/lib/auth/cookies";
+import { addAuditLogSafe } from "@/app/data/auditLogRepository";
 
 function readCookieValue(cookieHeader: string, name: string): string | null {
   if (!cookieHeader) return null;
@@ -30,6 +31,12 @@ export async function POST(req: Request) {
       await redis.del(`refresh:${hashRefreshToken(refreshToken)}`);
     }
   }
+
+  addAuditLogSafe({
+    action: "auth.logout",
+    entityType: "user",
+    metadata: { sessionId: sessionId ? `${sessionId.slice(0, 8)}...` : null },
+  });
 
   const res = NextResponse.json({ ok: true });
   const secureCookies = shouldUseSecureCookies(req);

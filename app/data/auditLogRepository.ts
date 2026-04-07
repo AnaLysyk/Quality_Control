@@ -26,9 +26,26 @@ export type AuditAction =
   | "client.updated"
   | "client.deleted"
   | "run.created"
-  | "run.deleted";
+  | "run.deleted"
+  // Auth
+  | "auth.login.success"
+  | "auth.login.failure"
+  | "auth.logout"
+  | "auth.password.changed"
+  | "auth.password.reset"
+  // Tickets / Chamados
+  | "ticket.created"
+  | "ticket.updated"
+  // Access requests
+  | "access_request.created"
+  // Defects
+  | "defect.created"
+  // Integrations
+  | "integration.updated"
+  // Data exports
+  | "export.executed";
 
-export type AuditEntityType = "user" | "client" | "run";
+export type AuditEntityType = "user" | "client" | "run" | "ticket" | "access_request" | "defect" | "integration" | "export";
 
 export type AuditLogRow = {
   id: string;

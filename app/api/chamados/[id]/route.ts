@@ -4,6 +4,7 @@ import { getTicketById, updateTicket } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { canEditTicketContent, canViewTicket } from "@/lib/rbac/tickets";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
+import { addAuditLogSafe } from "@/app/data/auditLogRepository";
 
 export const revalidate = 0;
 
@@ -82,5 +83,16 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
   }).catch((err) => console.error("Falha ao registrar atualizacao:", err));
 
   const enriched = await attachAssigneeToTicket(updated);
+
+  addAuditLogSafe({
+    actorUserId: user.id,
+    actorEmail: user.email ?? null,
+    action: "ticket.updated",
+    entityType: "ticket",
+    entityId: updated.id,
+    entityLabel: updated.title ?? null,
+    metadata: { type: updated.type ?? null, priority: updated.priority, role: user.role ?? null },
+  });
+
   return NextResponse.json({ item: enriched }, { status: 200 });
 }

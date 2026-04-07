@@ -385,7 +385,7 @@ export default function AdminAuditLogsPage() {
   const [items, setItems] = useState<AuditLog[]>([]);
   const [avatars, setAvatars] = useState<Record<string, string>>({});
   const [actorNames, setActorNames] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [action, setAction] = useState("");
@@ -764,7 +764,7 @@ export default function AdminAuditLogsPage() {
               const beforeData = (meta._before && typeof meta._before === "object" && !Array.isArray(meta._before)) ? meta._before as Record<string, unknown> : null;
               const operationEntries = Object.entries(meta).filter(([k, v]) => v !== undefined && v !== null && k !== "_before" && !SUMMARY_META_KEYS.has(k) && !TECHNICAL_META_KEYS.has(k));
               // For diff: merge keys from _before and current operation entries for full before→after view
-              const allDiffKeys = beforeData ? [...new Set([...Object.keys(beforeData), ...operationEntries.map(([k]) => k)])] : [];
+              const allDiffKeys = beforeData ? [...new Set([...Object.keys(beforeData).filter(k => k !== "_before" && k !== "_payload" && !TECHNICAL_META_KEYS.has(k)), ...operationEntries.map(([k]) => k)])] : [];
               const diffEntries = allDiffKeys.map((k) => {
                 const after = meta[k] ?? null;
                 const before = beforeData ? beforeData[k] ?? null : null;

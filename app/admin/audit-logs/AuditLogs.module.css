@@ -951,6 +951,7 @@
   text-align: center;
   color: var(--tc-text-muted, #6b7280);
   font-size: 0.8125rem;
+  -webkit-user-select: none;
   user-select: none;
 }
 

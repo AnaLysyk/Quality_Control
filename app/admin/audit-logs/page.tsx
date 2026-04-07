@@ -15,75 +15,158 @@ type AuditLog = {
   metadata: unknown;
 };
 
-const ACTION_LABELS: Record<string, string> = {
-  CREATE: "Criado",
+/* ── Translation layer ──────────────────────────────────── */
+
+const ACTION_TITLES: Record<string, string> = {
+  "user.created": "Usuário criado",
+  "user.updated": "Usuário atualizado",
+  "user.deleted": "Usuário removido",
+  "user.permissions.updated": "Permissões atualizadas",
+  "user.permissions.reset": "Permissões restauradas",
+  "client.created": "Empresa criada",
+  "client.updated": "Empresa atualizada",
+  "client.deleted": "Empresa removida",
+  "run.created": "Execução criada",
+  "run.deleted": "Execução removida",
+  // legacy uppercase keys
+  CREATE: "Registro criado",
   USER_CREATED: "Usuário criado",
-  CLIENT_CREATED: "Cliente criado",
-  UPDATE: "Atualizado",
+  CLIENT_CREATED: "Empresa criada",
+  UPDATE: "Registro atualizado",
   USER_UPDATED: "Usuário atualizado",
-  CLIENT_UPDATED: "Cliente atualizado",
-  DELETE: "Removido",
+  CLIENT_UPDATED: "Empresa atualizada",
+  DELETE: "Registro removido",
   USER_DELETED: "Usuário removido",
-  CLIENT_DELETED: "Cliente removido",
+  CLIENT_DELETED: "Empresa removida",
 };
 
-function badgeClass(action: string) {
-  const a = action.toUpperCase();
-  if (a.includes("CREATE")) return styles.badgeCreate;
-  if (a.includes("UPDATE")) return styles.badgeUpdate;
-  if (a.includes("DELETE")) return styles.badgeDelete;
-  return styles.badgeDefault;
+const ENTITY_LABELS: Record<string, string> = {
+  user: "Usuário",
+  client: "Empresa",
+  company: "Empresa",
+  membership: "Vínculo",
+  permission: "Permissão",
+  run: "Execução",
+};
+
+const METADATA_KEY_LABELS: Record<string, string> = {
+  slug: "Slug",
+  active: "Ativo",
+  role: "Papel",
+  permissionRole: "Papel de permissão",
+  companyId: "ID da empresa",
+  companySlug: "Slug da empresa",
+  companyLabel: "Empresa",
+  membershipRole: "Papel no vínculo",
+  user_origin: "Origem do usuário",
+  user_scope: "Escopo",
+  integrationMode: "Modo de integração",
+  allowCount: "Permissões concedidas",
+  denyCount: "Permissões negadas",
+  effectiveCount: "Permissões efetivas",
+  restored: "Restaurado",
+  targetPermissionRole: "Papel do alvo",
+  actorRole: "Papel do ator",
+  userEmail: "Email do usuário",
+  userId: "ID do usuário",
+};
+
+type ActionCategory = "create" | "update" | "delete" | "permission" | "default";
+
+function getCategory(action: string): ActionCategory {
+  const a = action.toLowerCase();
+  if (a.includes("permission") || a.includes("reset")) return "permission";
+  if (a.includes("create")) return "create";
+  if (a.includes("update")) return "update";
+  if (a.includes("delete")) return "delete";
+  return "default";
 }
 
-function ActionIcon({ action }: { action: string }) {
-  const a = action.toUpperCase();
-  if (a.includes("CREATE")) {
-    return (
-      <svg className={styles.actionIcon} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-        <circle cx="8" cy="8" r="6" />
-        <path d="M8 5.5v5M5.5 8h5" />
-      </svg>
-    );
+function iconClass(cat: ActionCategory) {
+  return {
+    create: styles.iconCreate,
+    update: styles.iconUpdate,
+    delete: styles.iconDelete,
+    permission: styles.iconPermission,
+    default: styles.iconDefault,
+  }[cat];
+}
+
+function badgeClass(cat: ActionCategory) {
+  return {
+    create: styles.badgeCreate,
+    update: styles.badgeUpdate,
+    delete: styles.badgeDelete,
+    permission: styles.badgePermission,
+    default: styles.badgeDefault,
+  }[cat];
+}
+
+function CategoryIcon({ category }: { category: ActionCategory }) {
+  const common = { viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "1.6", strokeLinecap: "round" as const };
+  if (category === "create") {
+    return (<svg {...common}><circle cx="8" cy="8" r="6" /><path d="M8 5.5v5M5.5 8h5" /></svg>);
   }
-  if (a.includes("UPDATE")) {
-    return (
-      <svg className={styles.actionIcon} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2.5 13.5l1.2-4.3L11 1.9a1.3 1.3 0 011.8 0l1.3 1.3a1.3 1.3 0 010 1.8L6.8 12.3z" />
-        <path d="M9.5 3.5l3 3" />
-      </svg>
-    );
+  if (category === "update") {
+    return (<svg {...common} strokeLinejoin="round"><path d="M2.5 13.5l1.2-4.3L11 1.9a1.3 1.3 0 011.8 0l1.3 1.3a1.3 1.3 0 010 1.8L6.8 12.3z" /><path d="M9.5 3.5l3 3" /></svg>);
   }
-  if (a.includes("DELETE")) {
-    return (
-      <svg className={styles.actionIcon} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-        <path d="M3 4h10M5.5 4V3a1 1 0 011-1h3a1 1 0 011 1v1M6 7v4M10 7v4" />
-        <path d="M4 4l.7 8.5a1.5 1.5 0 001.5 1.5h3.6a1.5 1.5 0 001.5-1.5L12 4" />
-      </svg>
-    );
+  if (category === "delete") {
+    return (<svg {...common}><path d="M3 4h10M5.5 4V3a1 1 0 011-1h3a1 1 0 011 1v1M6 7v4M10 7v4" /><path d="M4 4l.7 8.5a1.5 1.5 0 001.5 1.5h3.6a1.5 1.5 0 001.5-1.5L12 4" /></svg>);
   }
-  return (
-    <svg className={styles.actionIcon} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-      <circle cx="8" cy="8" r="6" />
-      <path d="M8 5v3l2 1.5" />
-    </svg>
-  );
+  if (category === "permission") {
+    return (<svg {...common}><path d="M8 1.5v3M12.6 3.4l-2.1 2.1M14.5 8h-3M12.6 12.6l-2.1-2.1M8 14.5v-3M3.4 12.6l2.1-2.1M1.5 8h3M3.4 3.4l2.1 2.1" /></svg>);
+  }
+  return (<svg {...common}><circle cx="8" cy="8" r="6" /><path d="M8 5v3l2 1.5" /></svg>);
 }
 
 function entityTypeLabel(type: string) {
-  const map: Record<string, string> = {
-    user: "Usuário",
-    client: "Empresa",
-    company: "Empresa",
-    membership: "Vínculo",
-    permission: "Permissão",
-  };
-  return map[type.toLowerCase()] ?? type;
+  return ENTITY_LABELS[type.toLowerCase()] ?? type;
+}
+
+function getEventTitle(item: AuditLog): string {
+  return ACTION_TITLES[item.action] ?? item.action.replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function getEventSubtitle(item: AuditLog): { actor: string; target: string; entity: string } {
+  const meta = (item.metadata && typeof item.metadata === "object" ? item.metadata : {}) as Record<string, unknown>;
+  const actor = item.actor_email || "sistema";
+  const entity = entityTypeLabel(item.entity_type);
+  let target = item.entity_label || "";
+  if (!target && meta.companyLabel) target = String(meta.companyLabel);
+  if (!target && meta.companySlug) target = String(meta.companySlug);
+  if (!target && meta.userEmail) target = String(meta.userEmail);
+  if (!target && item.entity_id) target = item.entity_id;
+  return { actor, target, entity };
+}
+
+function getCategoryLabel(cat: ActionCategory): string {
+  return { create: "Criação", update: "Alteração", delete: "Exclusão", permission: "Permissão", default: "Evento" }[cat];
+}
+
+function formatMetaValue(val: unknown): string {
+  if (val === true) return "Sim";
+  if (val === false) return "Não";
+  if (val === null || val === undefined) return "—";
+  if (typeof val === "object") return JSON.stringify(val);
+  return String(val);
 }
 
 function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+}
+
+function formatTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString("pt-BR", { timeStyle: "short" });
+}
+
+function formatDateOnly(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 export default function AdminAuditLogsPage() {
@@ -94,10 +177,11 @@ export default function AdminAuditLogsPage() {
   const [action, setAction] = useState("");
   const [entityType, setEntityType] = useState("");
   const [actor, setActor] = useState("");
-  const [targetQuery, setTargetQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showJson, setShowJson] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -122,9 +206,7 @@ export default function AdminAuditLogsPage() {
     }
   }, []);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
 
   const actions = useMemo(() => {
     const set = new Set(items.map((i) => i.action));
@@ -141,12 +223,15 @@ export default function AdminAuditLogsPage() {
       if (action && log.action !== action) return false;
       if (entityType && log.entity_type !== entityType) return false;
       if (actor && !(log.actor_email ?? "").toLowerCase().includes(actor.toLowerCase())) return false;
-      if (targetQuery) {
-        const q = targetQuery.toLowerCase();
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
         const label = (log.entity_label ?? "").toLowerCase();
         const id = (log.entity_id ?? "").toLowerCase();
         const type = (log.entity_type ?? "").toLowerCase();
-        if (!label.includes(q) && !id.includes(q) && !type.includes(q)) return false;
+        const email = (log.actor_email ?? "").toLowerCase();
+        const title = getEventTitle(log).toLowerCase();
+        const metaStr = JSON.stringify(log.metadata ?? {}).toLowerCase();
+        if (!label.includes(q) && !id.includes(q) && !type.includes(q) && !email.includes(q) && !title.includes(q) && !metaStr.includes(q)) return false;
       }
       if (startDate) {
         const date = new Date(log.created_at);
@@ -158,42 +243,36 @@ export default function AdminAuditLogsPage() {
       }
       return true;
     });
-  }, [items, action, actor, startDate, endDate, entityType, targetQuery]);
+  }, [items, action, actor, startDate, endDate, entityType, searchQuery]);
 
   const showSkeleton = loading && !items.length;
 
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
       <div className="mx-auto max-w-6xl px-4 py-10 space-y-5">
-        {/* Context line below cover — no card */}
         <p className={styles.contextLine}>
-          Registro imutável das movimentações administrativas do sistema.
+          Consulte movimentações, alterações administrativas, vínculos, permissões e eventos do sistema.
         </p>
 
         {error && (
-          <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-700">
-            {error}
-          </div>
+          <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>
         )}
-
         {warning && !error && (
-          <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
-            {warning}
-          </div>
+          <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">{warning}</div>
         )}
 
-        {/* ── Card principal ───────────────────────────────────── */}
+        {/* ── Card principal ─────────────────────────────────── */}
         <div className={styles.card}>
           {/* Header */}
           <div className={styles.cardHeader}>
             <div className={styles.cardHeaderLeft}>
-              <h2>Movimentações de usuários</h2>
-              <p>Acompanhe criação, atualização e alterações relevantes no sistema.</p>
+              <h2>Central de Auditoria</h2>
+              <p>Rastreie quem fez o quê, quando e em qual entidade. Investigue alterações, vínculos e permissões com detalhe.</p>
             </div>
             <div className={styles.cardHeaderRight}>
               <span className={styles.metaBadge}>
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M2 4h12M2 8h12M2 12h12" strokeLinecap="round"/></svg>
-                {filteredItems.length} registro{filteredItems.length !== 1 ? "s" : ""}
+                {filteredItems.length} evento{filteredItems.length !== 1 ? "s" : ""}
               </span>
               <span className={styles.metaBadge}>
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l2.5 1.5" strokeLinecap="round"/></svg>
@@ -206,11 +285,15 @@ export default function AdminAuditLogsPage() {
           <div className={styles.filtersWrap}>
             <div className={styles.filtersGrid}>
               <label className={styles.filterLabel}>
-                Ação
+                Busca textual
+                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="nome, email, id, campo…" className={styles.filterInput} />
+              </label>
+              <label className={styles.filterLabel}>
+                Tipo de evento
                 <select value={action} onChange={(e) => setAction(e.target.value)} className={styles.filterSelect}>
-                  <option value="">Todas</option>
+                  <option value="">Todos</option>
                   {actions.map((opt) => (
-                    <option key={opt} value={opt}>{ACTION_LABELS[opt] ?? opt}</option>
+                    <option key={opt} value={opt}>{ACTION_TITLES[opt] ?? opt}</option>
                   ))}
                 </select>
               </label>
@@ -225,12 +308,10 @@ export default function AdminAuditLogsPage() {
               </label>
               <label className={styles.filterLabel}>
                 Ator
-                <input type="text" value={actor} onChange={(e) => setActor(e.target.value)} placeholder="email ou uid" className={styles.filterInput} />
+                <input type="text" value={actor} onChange={(e) => setActor(e.target.value)} placeholder="email do responsável" className={styles.filterInput} />
               </label>
-              <label className={styles.filterLabel}>
-                Alvo
-                <input type="text" value={targetQuery} onChange={(e) => setTargetQuery(e.target.value)} placeholder="empresa, usuário, id" className={styles.filterInput} />
-              </label>
+            </div>
+            <div className={styles.filtersRow2}>
               <label className={styles.filterLabel}>
                 Data inicial
                 <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={styles.filterInput} />
@@ -248,14 +329,7 @@ export default function AdminAuditLogsPage() {
                 {loading ? "Atualizando…" : "Atualizar"}
               </button>
               <button
-                onClick={() => {
-                  setAction("");
-                  setEntityType("");
-                  setActor("");
-                  setTargetQuery("");
-                  setStartDate("");
-                  setEndDate("");
-                }}
+                onClick={() => { setAction(""); setEntityType(""); setActor(""); setSearchQuery(""); setStartDate(""); setEndDate(""); }}
                 className={styles.btnGhost}
               >
                 Limpar filtros
@@ -263,23 +337,17 @@ export default function AdminAuditLogsPage() {
             </div>
           </div>
 
-          {/* Table header */}
-          <div className={styles.tableHeader}>
-            <div>Data / Hora</div>
-            <div>Ação</div>
-            <div>Alvo</div>
-            <div>Ator</div>
-          </div>
-
           {/* Skeleton */}
           {showSkeleton && (
-            <div>
+            <div className={styles.eventList}>
               {[...Array(5)].map((_, idx) => (
                 <div key={idx} className={styles.skeletonRow}>
-                  <div className={`${styles.skeletonBar} ${styles.skeletonDate}`} />
-                  <div className={`${styles.skeletonBar} ${styles.skeletonAction}`} />
-                  <div className={`${styles.skeletonBar} ${styles.skeletonTarget}`} />
-                  <div className={`${styles.skeletonBar} ${styles.skeletonActor}`} />
+                  <div className={styles.skeletonCircle} />
+                  <div className={styles.skeletonLines}>
+                    <div className={`${styles.skeletonBar} ${styles.skeletonBarMed}`} />
+                    <div className={`${styles.skeletonBar} ${styles.skeletonBarLong}`} />
+                    <div className={`${styles.skeletonBar} ${styles.skeletonBarShort}`} />
+                  </div>
                 </div>
               ))}
             </div>
@@ -288,78 +356,128 @@ export default function AdminAuditLogsPage() {
           {/* Empty state */}
           {!showSkeleton && filteredItems.length === 0 && (
             <div className={styles.emptyState}>
-              Nenhuma movimentação registrada com os filtros atuais.
+              Nenhum evento encontrado com os filtros atuais.
             </div>
           )}
 
-          {/* Rows */}
-          <div>
-            {filteredItems.map((item, idx) => (
-              <div key={item.id} className={`${styles.rowDivider} ${expandedId === item.id ? styles.rowExpanded : ""}`}>
-                <button
-                  type="button"
-                  onClick={() => setExpandedId((prev) => (prev === item.id ? null : item.id))}
-                  className={`${styles.row} ${idx % 2 === 0 ? "" : styles.rowEven}`}
-                >
-                  {/* Data */}
-                  <div>
-                    <span className={styles.mobileLabel}>Data / Hora</span>
-                    <time className={styles.dateCell} title={new Date(item.created_at).toISOString()}>
-                      {formatDate(item.created_at)}
-                    </time>
-                  </div>
+          {/* ── Event timeline ─────────────────────────────────── */}
+          <div className={styles.eventList}>
+            {filteredItems.map((item) => {
+              const cat = getCategory(item.action);
+              const title = getEventTitle(item);
+              const sub = getEventSubtitle(item);
+              const isOpen = expandedId === item.id;
+              const meta = (item.metadata && typeof item.metadata === "object" ? item.metadata : {}) as Record<string, unknown>;
+              const metaEntries = Object.entries(meta).filter(([, v]) => v !== undefined && v !== null);
 
-                  {/* Ação */}
-                  <div>
-                    <span className={styles.mobileLabel}>Ação</span>
-                    <span className={`${styles.badge} ${badgeClass(item.action)}`}>
-                      <ActionIcon action={item.action} />
-                      {ACTION_LABELS[item.action] ?? item.action.replace(/_/g, " ").toLowerCase()}
-                    </span>
-                  </div>
-
-                  {/* Alvo */}
-                  <div className={styles.cellMinW0}>
-                    <span className={styles.mobileLabel}>Alvo</span>
-                    <div className={styles.targetPrimary} title={`${entityTypeLabel(item.entity_type)}: ${item.entity_label || "—"}`}>
-                      <span className={styles.targetEntityType}>{entityTypeLabel(item.entity_type)}: </span>
-                      {item.entity_label || "—"}
+              return (
+                <div key={item.id} className={`${styles.eventRow} ${isOpen ? styles.eventRowExpanded : ""}`}>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedId((prev) => (prev === item.id ? null : item.id))}
+                    className={styles.eventButton}
+                  >
+                    {/* Icon */}
+                    <div className={`${styles.eventIcon} ${iconClass(cat)}`}>
+                      <CategoryIcon category={cat} />
                     </div>
-                    {item.entity_id && <div className={styles.targetSecondary}>id: {item.entity_id}</div>}
-                  </div>
 
-                  {/* Ator */}
-                  <div className={styles.cellMinW0}>
-                    <span className={styles.mobileLabel}>Ator</span>
-                    <div className={styles.actorEmail} title={item.actor_email || undefined}>{item.actor_email || "desconhecido"}</div>
-                    {item.actor_user_id && <div className={styles.actorUid}>uid: {item.actor_user_id}</div>}
-                  </div>
-                </button>
+                    {/* Content */}
+                    <div className={styles.eventContent}>
+                      <p className={styles.eventTitle}>{title}</p>
+                      <p className={styles.eventSubtitle}>
+                        por <strong>{sub.actor}</strong>
+                        {sub.target ? <> · em <strong>{sub.target}</strong></> : null}
+                      </p>
+                      <div className={styles.eventBadges}>
+                        <span className={`${styles.badge} ${badgeClass(cat)}`}>{getCategoryLabel(cat)}</span>
+                        <span className={`${styles.badge} ${styles.badgeEntity}`}>{sub.entity}</span>
+                      </div>
+                    </div>
 
-                {expandedId === item.id && (
-                  <div className={styles.expandedRow}>
-                    <div className={styles.expandedGrid}>
-                      <div>
-                        <p className={styles.expandedLabel}>Origem</p>
-                        <p className={styles.expandedValue}>UI · API · Sistema</p>
+                    {/* Time */}
+                    <div className={styles.eventMeta}>
+                      <span className={styles.eventTime}>{formatTime(item.created_at)}</span>
+                      <span className={styles.eventTimeDate}>{formatDateOnly(item.created_at)}</span>
+                      <svg className={`${styles.eventChevron} ${isOpen ? styles.eventChevronOpen : ""}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 6l4 4 4-4" /></svg>
+                    </div>
+                  </button>
+
+                  {/* ── Expanded detail ───────────────────────────── */}
+                  {isOpen && (
+                    <div className={styles.expandedPanel}>
+                      {/* Summary grid */}
+                      <div className={styles.summaryGrid}>
+                        <div className={styles.summaryItem}>
+                          <p className={styles.summaryLabel}>O que aconteceu</p>
+                          <p className={styles.summaryValue}>{title}</p>
+                        </div>
+                        <div className={styles.summaryItem}>
+                          <p className={styles.summaryLabel}>Executado por</p>
+                          <p className={styles.summaryValue}>{sub.actor}</p>
+                        </div>
+                        <div className={styles.summaryItem}>
+                          <p className={styles.summaryLabel}>Entidade</p>
+                          <p className={styles.summaryValue}>{sub.entity}{sub.target ? `: ${sub.target}` : ""}</p>
+                        </div>
+                        <div className={styles.summaryItem}>
+                          <p className={styles.summaryLabel}>Data e hora</p>
+                          <p className={styles.summaryValue}>{formatDate(item.created_at)}</p>
+                        </div>
+                        {item.entity_id && (
+                          <div className={styles.summaryItem}>
+                            <p className={styles.summaryLabel}>ID da entidade</p>
+                            <p className={`${styles.summaryValue} ${styles.summaryValueMono}`}>{item.entity_id}</p>
+                          </div>
+                        )}
+                        {item.actor_user_id && (
+                          <div className={styles.summaryItem}>
+                            <p className={styles.summaryLabel}>ID do ator</p>
+                            <p className={`${styles.summaryValue} ${styles.summaryValueMono}`}>{item.actor_user_id}</p>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <p className={styles.expandedLabel}>Entidade</p>
-                        <p className={styles.expandedValue}>
-                          {entityTypeLabel(item.entity_type)} {item.entity_id ? `(${item.entity_id})` : ""}
-                        </p>
-                      </div>
-                      <div>
-                        <p className={styles.expandedLabel}>Metadata</p>
-                        <pre className={styles.metadataPre}>
-                          {JSON.stringify(item.metadata ?? {}, null, 2)}
+
+                      {/* Metadata table */}
+                      {metaEntries.length > 0 && (
+                        <div className={styles.changesSection}>
+                          <p className={styles.changesSectionTitle}>Detalhes da operação</p>
+                          <table className={styles.changesTable}>
+                            <thead>
+                              <tr><th>Campo</th><th>Valor</th></tr>
+                            </thead>
+                            <tbody>
+                              {metaEntries.map(([key, val]) => (
+                                <tr key={key}>
+                                  <td className={styles.changesKey}>{METADATA_KEY_LABELS[key] ?? key}</td>
+                                  <td className={styles.changesVal}>{formatMetaValue(val)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      {/* Collapsible raw JSON */}
+                      <hr className={styles.expandedDivider} />
+                      <button
+                        type="button"
+                        className={`${styles.technicalToggle} ${showJson === item.id ? styles.technicalToggleOpen : ""}`}
+                        onClick={() => setShowJson((prev) => (prev === item.id ? null : item.id))}
+                      >
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 4l4 4-4 4" /></svg>
+                        Payload técnico (JSON)
+                      </button>
+                      {showJson === item.id && (
+                        <pre className={styles.technicalPre}>
+                          {JSON.stringify({ id: item.id, action: item.action, entity_type: item.entity_type, entity_id: item.entity_id, entity_label: item.entity_label, actor_user_id: item.actor_user_id, actor_email: item.actor_email, created_at: item.created_at, metadata: item.metadata }, null, 2)}
                         </pre>
-                      </div>
+                      )}
                     </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

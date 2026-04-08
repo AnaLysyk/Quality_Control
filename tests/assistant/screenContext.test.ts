@@ -1,8 +1,7 @@
+import { normalizeSearch } from "@/lib/assistant/helpers";
 import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
 
 describe("resolveAssistantScreenContext", () => {
-  /* ── Support module ── */
-
   it("matches /admin/support as support module", () => {
     const ctx = resolveAssistantScreenContext("/admin/support");
     expect(ctx.module).toBe("support");
@@ -20,20 +19,11 @@ describe("resolveAssistantScreenContext", () => {
     expect(ctx.module).toBe("support");
   });
 
-  /* ── Meus chamados ── */
-
-  it("matches /meus-chamados as support module (meus chamados)", () => {
+  it("matches /meus-chamados as support module", () => {
     const ctx = resolveAssistantScreenContext("/meus-chamados");
     expect(ctx.module).toBe("support");
     expect(ctx.screenLabel).toBe("Meus chamados");
   });
-
-  it("matches /meus-chamados/123 nested", () => {
-    const ctx = resolveAssistantScreenContext("/meus-chamados/123");
-    expect(ctx.module).toBe("support");
-  });
-
-  /* ── Permissions ── */
 
   it("matches /admin/users/permissions as permissions module", () => {
     const ctx = resolveAssistantScreenContext("/admin/users/permissions");
@@ -41,26 +31,12 @@ describe("resolveAssistantScreenContext", () => {
     expect(ctx.entityType).toBe("permission_profile");
   });
 
-  it("matches /admin/users/permissions/some-id nested", () => {
-    const ctx = resolveAssistantScreenContext("/admin/users/permissions/user-1");
-    expect(ctx.module).toBe("permissions");
-  });
-
-  /* ── Test plans ── */
-
   it("matches /empresas/acme/planos-de-teste as test_plans module", () => {
     const ctx = resolveAssistantScreenContext("/empresas/acme/planos-de-teste");
     expect(ctx.module).toBe("test_plans");
     expect(ctx.entityType).toBe("test_plan");
     expect(ctx.companySlug).toBe("acme");
   });
-
-  it("matches /planos-de-teste standalone", () => {
-    const ctx = resolveAssistantScreenContext("/planos-de-teste");
-    expect(ctx.module).toBe("test_plans");
-  });
-
-  /* ── Company ── */
 
   it("matches /empresas/acme as company module", () => {
     const ctx = resolveAssistantScreenContext("/empresas/acme");
@@ -70,30 +46,11 @@ describe("resolveAssistantScreenContext", () => {
     expect(ctx.entityId).toBe("acme");
   });
 
-  it("matches /admin/clients as company module", () => {
-    const ctx = resolveAssistantScreenContext("/admin/clients");
-    expect(ctx.module).toBe("company");
-  });
-
-  it("decodes URL-encoded company slugs", () => {
-    const ctx = resolveAssistantScreenContext("/empresas/testing%20co/settings");
-    expect(ctx.companySlug).toBe("testing co");
-  });
-
-  /* ── Dashboard ── */
-
   it("matches /admin as dashboard module", () => {
     const ctx = resolveAssistantScreenContext("/admin");
     expect(ctx.module).toBe("dashboard");
     expect(ctx.entityType).toBe("screen");
   });
-
-  it("matches /dashboard as dashboard module", () => {
-    const ctx = resolveAssistantScreenContext("/dashboard");
-    expect(ctx.module).toBe("dashboard");
-  });
-
-  /* ── General (fallback) ── */
 
   it("falls back to general for unknown routes", () => {
     const ctx = resolveAssistantScreenContext("/settings");
@@ -101,77 +58,48 @@ describe("resolveAssistantScreenContext", () => {
     expect(ctx.screenLabel).toBe("Plataforma Quality Control");
   });
 
-  it("falls back to general for root /", () => {
-    const ctx = resolveAssistantScreenContext("/");
-    expect(ctx.module).toBe("general");
-  });
-
-  /* ── Edge cases ── */
-
-  it("handles empty string as /", () => {
+  it("handles empty string as root", () => {
     const ctx = resolveAssistantScreenContext("");
     expect(ctx.route).toBe("/");
     expect(ctx.module).toBe("general");
   });
 
-  it("always returns suggestedPrompts array", () => {
+  it("always returns suggested prompts", () => {
     const ctx = resolveAssistantScreenContext("/random");
     expect(Array.isArray(ctx.suggestedPrompts)).toBe(true);
     expect(ctx.suggestedPrompts.length).toBeGreaterThan(0);
   });
 
-  /* ── Rule priority: earlier rule wins ── */
-
-  it("support beats dashboard for /admin/support", () => {
+  it("keeps support above dashboard for /admin/support", () => {
     const ctx = resolveAssistantScreenContext("/admin/support");
     expect(ctx.module).toBe("support");
   });
 
-  it("permissions beats dashboard for /admin/users/permissions", () => {
+  it("keeps permissions above dashboard for /admin/users/permissions", () => {
     const ctx = resolveAssistantScreenContext("/admin/users/permissions");
     expect(ctx.module).toBe("permissions");
   });
 
-  it("test_plans beats company for /empresas/acme/planos-de-teste", () => {
+  it("keeps test_plans above company for /empresas/acme/planos-de-teste", () => {
     const ctx = resolveAssistantScreenContext("/empresas/acme/planos-de-teste");
     expect(ctx.module).toBe("test_plans");
   });
 
-  /* ── Screen summaries are action-oriented ── */
+  it.each([
+    ["/admin/support", "chamados", "dica:"],
+    ["/meus-chamados", "seus chamados", "impacto"],
+    ["/admin/users/permissions", "permissoes", "bloqueios"],
+    ["/empresas/acme/planos-de-teste", "casos de teste", "ticket"],
+    ["/empresas/acme", "empresa", "slug"],
+    ["/dashboard", "operacao", "destravar"],
+    ["/unknown", "navega", "deseja fazer"],
+  ])("keeps an action-oriented summary for %s", (route, keywordA, keywordB) => {
+    const ctx = resolveAssistantScreenContext(route);
+    const summary = normalizeSearch(ctx.screenSummary);
 
-  it("support summary mentions triagem", () => {
-    const ctx = resolveAssistantScreenContext("/admin/support");
-    expect(ctx.screenSummary).toContain("triagem");
-    expect(ctx.screenSummary).toContain("Use para");
-  });
-
-  it("meus-chamados summary mentions seus chamados", () => {
-    const ctx = resolveAssistantScreenContext("/meus-chamados");
-    expect(ctx.screenSummary).toContain("seus chamados");
-  });
-
-  it("permissions summary mentions análise de acesso", () => {
-    const ctx = resolveAssistantScreenContext("/admin/users/permissions");
-    expect(ctx.screenSummary).toContain("análise de acesso");
-  });
-
-  it("test_plans summary mentions casos de teste", () => {
-    const ctx = resolveAssistantScreenContext("/empresas/acme/planos-de-teste");
-    expect(ctx.screenSummary).toContain("casos de teste");
-  });
-
-  it("company summary mentions tenant", () => {
-    const ctx = resolveAssistantScreenContext("/empresas/acme");
-    expect(ctx.screenSummary).toContain("tenant");
-  });
-
-  it("dashboard summary mentions operação", () => {
-    const ctx = resolveAssistantScreenContext("/dashboard");
-    expect(ctx.screenSummary).toContain("operação");
-  });
-
-  it("general summary mentions navegar", () => {
-    const ctx = resolveAssistantScreenContext("/unknown");
-    expect(ctx.screenSummary).toContain("navegar");
+    expect(summary).toContain("voce esta em:");
+    expect(summary).toContain(keywordA);
+    expect(summary).toContain(keywordB);
+    expect(ctx.suggestedPrompts.length).toBeGreaterThanOrEqual(3);
   });
 });

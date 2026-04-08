@@ -23,6 +23,7 @@ import {
 import { useI18n } from "@/hooks/useI18n";
 import { useClientContext } from "@/context/ClientContext";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
 const debugSidebar = process.env.NEXT_PUBLIC_DEBUG_SIDEBAR === "true";
@@ -91,6 +92,23 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
     return activeClientSlug ?? user?.clientSlug ?? null;
   }, [pathname, activeClientSlug, user?.clientSlug, isGlobalAdmin]);
 
+  const companyRouteInput = useMemo(
+    () => ({
+      isGlobalAdmin,
+      permissionRole: typeof user?.permissionRole === "string" ? user.permissionRole : null,
+      role: typeof user?.role === "string" ? user.role : null,
+      companyRole: typeof user?.companyRole === "string" ? user.companyRole : null,
+      userOrigin:
+        typeof (user as { userOrigin?: string | null } | null)?.userOrigin === "string"
+          ? (user as { userOrigin?: string | null }).userOrigin
+          : typeof (user as { user_origin?: string | null } | null)?.user_origin === "string"
+            ? (user as { user_origin?: string | null }).user_origin
+            : null,
+      clientSlug: typeof user?.clientSlug === "string" ? user.clientSlug : activeClientSlug ?? null,
+    }),
+    [activeClientSlug, isGlobalAdmin, user],
+  );
+
   const adminCompanyHref = useMemo(() => {
     if (activeClientSlug) return `/empresas/${activeClientSlug}`;
     return "/empresas";
@@ -98,9 +116,9 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
 
   const logoHref = useMemo(() => {
     if (isGlobalAdmin) return "/admin/home";
-    if (companySlug) return `/empresas/${companySlug}/home`;
+    if (companySlug) return buildCompanyPathForAccess(companySlug, "home", companyRouteInput);
     return "/";
-  }, [isGlobalAdmin, companySlug]);
+  }, [isGlobalAdmin, companySlug, companyRouteInput]);
 
   const publicNav: NavItem[] = useMemo(
     () => [
@@ -130,7 +148,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
     }
 
     items.push(
-      { label: "Chamados", icon: FiColumns, href: "/admin/support" },
+      { label: "Suporte", icon: FiColumns, href: "/admin/support" },
       { label: "Gestão", icon: FiShield, href: "/admin/users/permissions" },
       { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
       { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
@@ -147,17 +165,17 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
     () =>
       companySlug
         ? [
-            { label: t("nav.home"), icon: FiHome, href: `/empresas/${companySlug}/home` },
-            { label: t("nav.dashboard"), icon: FiGrid, href: `/empresas/${companySlug}/dashboard` },
-            { label: t("nav.metrics"), icon: FiBarChart2, href: `/empresas/${companySlug}/metrics` },
-            { label: t("nav.apps"), icon: FiBriefcase, href: `/empresas/${companySlug}/aplicacoes` },
-            { label: t("nav.testPlans"), icon: FiClipboard, href: `/empresas/${companySlug}/planos-de-teste` },
-            { label: t("nav.runs"), icon: FiList, href: `/empresas/${companySlug}/runs` },
-            { label: t("nav.defects"), icon: FiAlertTriangle, href: `/empresas/${companySlug}/defeitos` },
-            { label: "Chamados", icon: FiColumns, href: `/empresas/${companySlug}/chamados` },
+            { label: t("nav.home"), icon: FiHome, href: buildCompanyPathForAccess(companySlug, "home", companyRouteInput) },
+            { label: t("nav.dashboard"), icon: FiGrid, href: buildCompanyPathForAccess(companySlug, "dashboard", companyRouteInput) },
+            { label: t("nav.metrics"), icon: FiBarChart2, href: buildCompanyPathForAccess(companySlug, "metrics", companyRouteInput) },
+            { label: t("nav.apps"), icon: FiBriefcase, href: buildCompanyPathForAccess(companySlug, "aplicacoes", companyRouteInput) },
+            { label: t("nav.testPlans"), icon: FiClipboard, href: buildCompanyPathForAccess(companySlug, "planos-de-teste", companyRouteInput) },
+            { label: t("nav.runs"), icon: FiList, href: buildCompanyPathForAccess(companySlug, "runs", companyRouteInput) },
+            { label: t("nav.defects"), icon: FiAlertTriangle, href: buildCompanyPathForAccess(companySlug, "defeitos", companyRouteInput) },
+            { label: "Suporte", icon: FiColumns, href: buildCompanyPathForAccess(companySlug, "chamados", companyRouteInput) },
           ]
         : [],
-    [companySlug, t]
+    [companyRouteInput, companySlug, t]
   );
 
   const navigation = useMemo(() => {
@@ -173,7 +191,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
 
   function resolveModuleFromHref(href: string) {
     if (href === "/admin/users/permissions") return "permissions";
-    if (href === "/admin/chamados") return "tickets";
+    if (href === "/admin/chamados") return "support";
     if (href === "/meus-chamados") return "support";
     if (href === "/admin/support" || href === "/kanban-it") return "support";
     if (href === "/empresas" || href === "/admin/clients") return "applications";

@@ -5,9 +5,9 @@ import { createTicket, listAllTickets, listTicketsForUser } from "@/lib/ticketsS
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketCreated } from "@/lib/notificationService";
 import { attachAssigneeInfo, attachAssigneeToTicket } from "@/lib/ticketsPresenter";
-import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
 import { canAccessGlobalTicketWorkspace } from "@/lib/rbac/tickets";
+import { canCreateSupportTickets, canViewSupportBoard } from "@/lib/supportAccess";
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
@@ -18,10 +18,7 @@ export async function GET(req: Request) {
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
-  if (
-    !hasPermissionAccess(user.permissions, "tickets", "view") &&
-    !hasPermissionAccess(user.permissions, "support", "view")
-  ) {
+  if (!canViewSupportBoard(user)) {
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
 
@@ -79,10 +76,7 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
-    if (
-      !hasPermissionAccess(user.permissions, "tickets", "create") &&
-      !hasPermissionAccess(user.permissions, "support", "create")
-    ) {
+    if (!canCreateSupportTickets(user)) {
       return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
     }
     const body = await req.json().catch(() => ({}));

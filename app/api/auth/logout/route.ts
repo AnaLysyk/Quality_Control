@@ -3,6 +3,7 @@ import { hashRefreshToken } from "@/lib/auth/refreshToken";
 import { getRedis } from "@/lib/redis";
 import { shouldUseSecureCookies } from "@/lib/auth/cookies";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
+import { COMPANY_ROUTE_MODE_COOKIE } from "@/lib/companyRoutes";
 
 function readCookieValue(cookieHeader: string, name: string): string | null {
   if (!cookieHeader) return null;
@@ -54,6 +55,7 @@ export async function POST(req: Request) {
   clear("access_token");
   clear("refresh_token");
   clear("active_company_slug");
+  clear(COMPANY_ROUTE_MODE_COOKIE);
 
   return res;
 }

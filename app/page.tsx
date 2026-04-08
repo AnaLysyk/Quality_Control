@@ -3,6 +3,8 @@ import HomeContent from "./home/HomeContent";
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 import { getAccessContext } from "@/lib/auth/session";
+import { getLocalUserById } from "@/lib/auth/localStore";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
 export default async function Page() {
   const headerStore = await headers();
@@ -21,6 +23,7 @@ export default async function Page() {
 
   const access = await getAccessContext(req);
   if (!access) redirect("/login");
+  const user = await getLocalUserById(access.userId);
 
   const isAdmin = access.isGlobalAdmin || access.role === "admin";
   if (isAdmin) {
@@ -34,7 +37,17 @@ export default async function Page() {
 
   const companySlug = access.companySlug ?? access.companySlugs[0] ?? null;
   if (companySlug) {
-    redirect(`/empresas/${companySlug}/home`);
+    redirect(
+      buildCompanyPathForAccess(companySlug, "home", {
+        isGlobalAdmin: access.isGlobalAdmin,
+        permissionRole: null,
+        role: access.role ?? null,
+        companyRole: access.companyRole ?? null,
+        userOrigin: user?.user_origin ?? null,
+        companyCount: access.companySlugs.length,
+        clientSlug: companySlug,
+      }),
+    );
   }
 
   return <HomeContent />;

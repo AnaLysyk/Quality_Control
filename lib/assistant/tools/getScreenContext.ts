@@ -2,51 +2,76 @@ import "server-only";
 
 import { getLocalUserById } from "@/lib/auth/localStore";
 import type { AuthUser } from "@/lib/jwtAuth";
-import type { AssistantScreenContext } from "../types";
 import { compactMultiline } from "../helpers";
-import { displayName, displayRole, summarizePermissionMatrix, buildPromptActions } from "../data";
+import { buildPromptActions, displayName, displayRole, summarizePermissionMatrix } from "../data";
+import type { AssistantScreenContext } from "../types";
 import type { AssistantExecutorResult } from "./types";
 
-/* ──────────────────── Module-aware purpose line ──────────────────── */
-
-function buildModulePurpose(context: AssistantScreenContext) {
+function buildImmediateActions(context: AssistantScreenContext) {
   switch (context.module) {
     case "support":
-      return "Esta tela é voltada para triagem, acompanhamento e ação sobre chamados.";
+      return [
+        "Localizar chamados por codigo, status, prioridade ou responsavel.",
+        "Entender o proximo passo de um ticket antes de mover ou comentar.",
+        "Transformar um relato solto em chamado estruturado quando faltar registro.",
+      ];
     case "permissions":
-      return "Esta tela ajuda a entender acessos, bloqueios e visibilidade por perfil.";
+      return [
+        "Explicar por que um perfil nao acessa determinada tela ou modulo.",
+        "Comparar escopos e revisar quem consegue ver ou editar cada area.",
+        "Apontar o ajuste necessario para liberar ou restringir acesso.",
+      ];
     case "company":
-      return `Esta tela trabalha no contexto da empresa${context.companySlug ? ` "${context.companySlug}"` : ""} e ajuda a navegar por dados e registros vinculados.`;
+      return [
+        "Resumir a empresa atual e os registros ligados a ela.",
+        "Buscar chamados, usuarios ou vinculos dentro deste contexto.",
+        "Preparar a proxima acao antes de trocar de empresa ou abrir um ticket.",
+      ];
     case "test_plans":
-      return "Esta tela é usada para estruturar e revisar planos e casos de teste.";
+      return [
+        "Rascunhar casos de teste com base em bug, ticket ou fluxo descrito.",
+        "Organizar pre-condicoes, passos e resultado esperado sem perder contexto.",
+        "Revisar a cobertura do fluxo antes de salvar ou compartilhar o plano.",
+      ];
     case "dashboard":
-      return "Esta tela centraliza indicadores, navegação e ações administrativas.";
+      return [
+        "Identificar qual modulo resolve a tarefa que voce quer destravar.",
+        "Resumir o contexto atual antes de navegar para suporte, usuarios ou empresas.",
+        "Buscar registros ou pedir o proximo passo com base na sua permissao.",
+      ];
     default:
-      return "Esta tela representa o contexto atual da plataforma.";
+      return [
+        "Entender onde voce esta e qual eh a proxima acao util na plataforma.",
+        "Buscar registros por palavra-chave, codigo ou contexto atual.",
+        "Transformar um pedido aberto em uma acao objetiva para o assistente.",
+      ];
   }
 }
 
-/* ──────────────────── Screen focus (quick-read line) ──────────────────── */
-
-function buildScreenFocus(context: AssistantScreenContext): string {
-  switch (context.module) {
-    case "support":     return "chamados";
-    case "permissions": return "permissões e acessos";
-    case "company":     return "empresa atual";
-    case "test_plans":  return "casos de teste";
-    case "dashboard":   return "operação e gestão";
-    default:            return "plataforma";
+function stripScreenLead(context: AssistantScreenContext) {
+  const lead = `Voce esta em: ${context.screenLabel}.`;
+  if (context.screenSummary.startsWith(lead)) {
+    return context.screenSummary.slice(lead.length).trim();
   }
+  return context.screenSummary.trim();
 }
 
-/* ──────────────────── Tool executor ──────────────────── */
+function buildScopeLabel(user: AuthUser, context: AssistantScreenContext) {
+  return context.companySlug ?? user.companySlug ?? "global";
+}
+
+function buildPermissionLine(user: AuthUser) {
+  const summary = summarizePermissionMatrix(user.permissions);
+  if (summary === "sem modulos liberados") {
+    return "Permissoes relevantes: nenhum modulo liberado para o perfil atual.";
+  }
+  return `Permissoes relevantes: ${summary}`;
+}
 
 export async function toolGetScreenContext(user: AuthUser, context: AssistantScreenContext): Promise<AssistantExecutorResult> {
   const currentUser = await getLocalUserById(user.id);
-
-  const promptList = context.suggestedPrompts
-    .map((p) => `- ${p}`)
-    .join("\n");
+  const actionList = buildImmediateActions(context).map((item) => `- ${item}`).join("\n");
+  const promptList = context.suggestedPrompts.slice(0, 5).map((prompt) => `- ${prompt}`).join("\n");
 
   return {
     tool: "get_screen_context",
@@ -54,23 +79,22 @@ export async function toolGetScreenContext(user: AuthUser, context: AssistantScr
     summary: context.screenLabel,
     actions: buildPromptActions(context),
     reply: compactMultiline([
-      `${context.screenLabel}`,
-      `Foco desta tela: ${buildScreenFocus(context)}`,
+      `Voce esta em ${context.screenLabel}.`,
+      stripScreenLead(context),
       "",
-      context.screenSummary,
-      buildModulePurpose(context),
+      "O que voce pode fazer agora:",
+      actionList,
       "",
-      "Contexto atual:",
-      `- Rota: ${context.route}`,
-      `- Modulo: ${context.module}`,
-      `- Usuario: ${displayName(currentUser)} | ${currentUser?.user ?? currentUser?.email ?? user.email}`,
-      `- Perfil: ${displayRole(user)}`,
-      `- Escopo: ${context.companySlug ?? user.companySlug ?? "global"}`,
-      "",
-      "Voce pode usar esta tela para:",
+      "Sugestoes de prompt:",
       promptList,
       "",
-      `Permissoes relevantes: ${summarizePermissionMatrix(user.permissions)}`,
+      "Contexto atual:",
+      `- Modulo: ${context.module}`,
+      `- Escopo: ${buildScopeLabel(user, context)}`,
+      `- Perfil: ${displayRole(user)}`,
+      `- Usuario: ${displayName(currentUser)}`,
+      "",
+      buildPermissionLine(user),
     ].join("\n")),
   };
 }

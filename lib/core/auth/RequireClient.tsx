@@ -3,6 +3,7 @@
 import { ReactNode, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
 type RequireClientProps = {
   slug?: string; // slug da rota /empresas/[slug]
@@ -27,7 +28,19 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
     }
 
     if (slug && user.clientSlug !== slug) {
-        router.replace(`/empresas/${user.clientSlug}/home`);
+      router.replace(
+        buildCompanyPathForAccess(user.clientSlug, "home", {
+          isGlobalAdmin: user.isGlobalAdmin === true,
+          permissionRole: user.permissionRole ?? null,
+          role: user.role ?? null,
+          companyRole: user.companyRole ?? null,
+          userOrigin:
+            (user as { userOrigin?: string | null } | null)?.userOrigin ??
+            (user as { user_origin?: string | null } | null)?.user_origin ??
+            null,
+          clientSlug: user.clientSlug,
+        }),
+      );
     }
   }, [loading, user, slug, router]);
 

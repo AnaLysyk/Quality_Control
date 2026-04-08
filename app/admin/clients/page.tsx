@@ -922,26 +922,41 @@ function AdminClientsPage() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      aria-pressed={currentActive ? "true" : "false"}
-                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs border transition ${
-                        currentActive
-                          ? "bg-emerald-500 text-white border-emerald-400"
-                          : "bg-amber-200 text-amber-800 border-amber-300"
-                      }`}
-                      onClick={() => {
-                        if (isEditing) {
-                          setForm((f) => ({ ...f, active: !currentActive }));
-                          return;
-                        }
-                        requestToggleCompanyStatus();
-                      }}
-                      title={isEditing ? "Alterar status" : "Ativar ou inativar empresa"}
-                    >
-                      {currentActive ? <FiCheckCircle size={12} /> : <FiXCircle size={12} />}
-                      {currentActive ? "Ativa" : "Inativa"}
-                    </button>
+                    {currentActive ? (
+                      <button
+                        type="button"
+                        aria-pressed="true"
+                        className="inline-flex items-center gap-1 rounded-full border border-emerald-400 bg-emerald-500 px-3 py-1 text-xs text-white transition"
+                        onClick={() => {
+                          if (isEditing) {
+                            setForm((f) => ({ ...f, active: false }));
+                            return;
+                          }
+                          requestToggleCompanyStatus();
+                        }}
+                        title={isEditing ? "Alterar status" : "Ativar ou inativar empresa"}
+                      >
+                        <FiCheckCircle size={12} />
+                        Ativa
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        aria-pressed="false"
+                        className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-200 px-3 py-1 text-xs text-amber-800 transition"
+                        onClick={() => {
+                          if (isEditing) {
+                            setForm((f) => ({ ...f, active: true }));
+                            return;
+                          }
+                          requestToggleCompanyStatus();
+                        }}
+                        title={isEditing ? "Alterar status" : "Ativar ou inativar empresa"}
+                      >
+                        <FiXCircle size={12} />
+                        Inativa
+                      </button>
+                    )}
                     {currentTaxId ? <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/90">CNPJ: {currentTaxId}</span> : null}
                     <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/90">Integracao: {currentIntegrationMode}</span>
                     {currentWebsite ? (
@@ -981,12 +996,56 @@ function AdminClientsPage() {
             <div className="shrink-0 border-b border-(--tc-border) bg-(--tc-surface,#ffffff) px-6 py-3 md:px-7">
             {/* Tabs */}
             <div role="tablist" aria-label="Detalhes da empresa" className="flex items-center gap-3">
-              <TabButton active={activeTab === "visao"} onClick={() => setActiveTab("visao")}>
-                Visao geral
-              </TabButton>
-              <TabButton active={activeTab === "pessoas"} onClick={() => setActiveTab("pessoas")}>
-                Usuários
-              </TabButton>
+              {activeTab === "visao" ? (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected="true"
+                  tabIndex={0}
+                  onClick={() => setActiveTab("visao")}
+                  className="border-b-2 border-(--tc-accent) px-3 py-2 text-sm font-semibold text-(--tc-text-primary) transition"
+                  data-testid="tab-button"
+                >
+                  Visao geral
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected="false"
+                  tabIndex={-1}
+                  onClick={() => setActiveTab("visao")}
+                  className="border-b-2 border-transparent px-3 py-2 text-sm font-semibold text-(--tc-text-muted) transition hover:text-(--tc-text-primary)"
+                  data-testid="tab-button"
+                >
+                  Visao geral
+                </button>
+              )}
+              {activeTab === "pessoas" ? (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected="true"
+                  tabIndex={0}
+                  onClick={() => setActiveTab("pessoas")}
+                  className="border-b-2 border-(--tc-accent) px-3 py-2 text-sm font-semibold text-(--tc-text-primary) transition"
+                  data-testid="tab-button"
+                >
+                  Usuários
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected="false"
+                  tabIndex={-1}
+                  onClick={() => setActiveTab("pessoas")}
+                  className="border-b-2 border-transparent px-3 py-2 text-sm font-semibold text-(--tc-text-muted) transition hover:text-(--tc-text-primary)"
+                  data-testid="tab-button"
+                >
+                  Usuários
+                </button>
+              )}
             </div>
             </div>
 
@@ -1651,24 +1710,6 @@ function HeaderLinkTag({
     >
       {label}
     </a>
-  );
-}
-
-function TabButton({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active ? "true" : "false"}
-      onClick={onClick}
-      className={`px-3 py-2 text-sm font-semibold border-b-2 transition ${
-        active
-          ? "text-(--tc-text-primary) border-(--tc-accent)"
-          : "text-(--tc-text-muted) border-transparent hover:text-(--tc-text-primary)"
-      }`}
-    >
-      {children}
-    </button>
   );
 }
 

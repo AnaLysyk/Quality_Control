@@ -2,10 +2,9 @@ import "server-only";
 
 import type { AuthUser } from "@/lib/jwtAuth";
 import type { AssistantScreenContext } from "../types";
-import { normalizeSearch, normalizeText } from "../helpers";
+import { normalizeSearch } from "../helpers";
 import {
   buildPromptActions,
-  extractTicketReference,
   getStatusFilters,
   getPriorityFilters,
   getVisibleCompanies,
@@ -14,6 +13,7 @@ import {
   scoreTicketMatch,
   MAX_RESULTS,
 } from "../data";
+import { extractTicketReference } from "../pure/parsing";
 import type { AssistantExecutorResult } from "./types";
 
 function extractSearchText(message: string) {

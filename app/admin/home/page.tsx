@@ -960,7 +960,7 @@ export default function AdminHomePage() {
                       Ver defeitos
                     </Link>
                     <Link href="/admin/chamados" className="tc-button-secondary">
-                      Abrir chamados
+                      Abrir suporte
                     </Link>
                   </div>
                 </div>

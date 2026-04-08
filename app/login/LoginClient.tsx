@@ -7,6 +7,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { buildCompanyPathForAccess, shortenCompanyPathname, shouldUseShortCompanyRoutes } from "@/lib/companyRoutes";
 
 type AuthUserShape = {
   role?: string | null;
@@ -14,6 +15,10 @@ type AuthUserShape = {
   isGlobalAdmin?: boolean;
   clientSlug?: string | null;
   companySlug?: string | null;
+  companyRole?: string | null;
+  permissionRole?: string | null;
+  userOrigin?: string | null;
+  user_origin?: string | null;
 };
 
 export default function LoginClient() {
@@ -121,7 +126,26 @@ export default function LoginClient() {
 
   function resolvePostLoginRedirect(nextParam: string | null, authUser: AuthUserShape | null) {
     const safeNext = typeof nextParam === "string" && nextParam.startsWith("/") ? nextParam : "";
-    if (safeNext) return safeNext;
+    const companyRouteInput = {
+      isGlobalAdmin: authUser?.isGlobalAdmin === true,
+      permissionRole: authUser?.permissionRole ?? null,
+      role: authUser?.role ?? null,
+      companyRole: authUser?.companyRole ?? null,
+      userOrigin: authUser?.userOrigin ?? authUser?.user_origin ?? null,
+      clientSlug:
+        typeof authUser?.clientSlug === "string"
+          ? authUser.clientSlug
+          : typeof authUser?.companySlug === "string"
+            ? authUser.companySlug
+            : null,
+    };
+    if (safeNext) {
+      const shortenedNext = shortenCompanyPathname(safeNext);
+      if (shortenedNext && shouldUseShortCompanyRoutes(companyRouteInput)) {
+        return shortenedNext;
+      }
+      return safeNext;
+    }
     const normalizedRole = typeof authUser?.role === "string" ? authUser.role.toLowerCase() : "";
     const isAdmin =
       authUser?.isGlobalAdmin === true ||
@@ -134,7 +158,9 @@ export default function LoginClient() {
           ? authUser.companySlug
           : null;
     if (isAdmin) return "/admin/home";
-    if (clientSlug) return `/empresas/${encodeURIComponent(clientSlug)}/home`;
+    if (clientSlug) {
+      return buildCompanyPathForAccess(clientSlug, "home", companyRouteInput);
+    }
     return "/empresas";
   }
 

@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
 import { CompanySelector } from "../components/CompanySelector";
 
@@ -21,7 +22,19 @@ export default function EmpresasIndexPage() {
     if (isAdmin) return;
     const slug = typeof user.clientSlug === "string" ? user.clientSlug.trim() : "";
     if (!slug) return;
-    router.replace(`/empresas/${encodeURIComponent(slug)}/home`);
+    router.replace(
+      buildCompanyPathForAccess(slug, "home", {
+        isGlobalAdmin: user.isGlobalAdmin === true,
+        permissionRole: user.permissionRole ?? null,
+        role: user.role ?? null,
+        companyRole: user.companyRole ?? null,
+        userOrigin:
+          (user as { userOrigin?: string | null }).userOrigin ??
+          (user as { user_origin?: string | null }).user_origin ??
+          null,
+        clientSlug: slug,
+      }),
+    );
   }, [loading, user, isAdmin, router]);
 
   if (!loading && user && !isAdmin && (user.clientSlug ?? "")) {
@@ -43,7 +56,19 @@ export default function EmpresasIndexPage() {
           <CompanySelector
             title="Empresas disponíveis"
             description="Acesse o hub completo de cada empresa, incluindo releases, runs e defeitos."
-            buildHref={(company) => `/empresas/${encodeURIComponent(company.clientSlug)}/home`}
+            buildHref={(company) =>
+              buildCompanyPathForAccess(company.clientSlug, "home", {
+                isGlobalAdmin: user?.isGlobalAdmin === true,
+                permissionRole: user?.permissionRole ?? null,
+                role: user?.role ?? null,
+                companyRole: user?.companyRole ?? null,
+                userOrigin:
+                  (user as { userOrigin?: string | null } | null)?.userOrigin ??
+                  (user as { user_origin?: string | null } | null)?.user_origin ??
+                  null,
+                clientSlug: company.clientSlug,
+              })
+            }
             ctaLabel={(company) => (company.role === "ADMIN" ? "Gerenciar" : "Entrar")}
           />
         </div>

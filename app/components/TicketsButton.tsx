@@ -4,6 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiMessageSquare, FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiSearch } from "react-icons/fi";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import TicketDetailsModal from "@/components/TicketDetailsModal";
+import {
+  canAccessGlobalSupportScope,
+  canCreateSupportTickets,
+  canManageSupportWorkflow,
+  canViewSupportBoard,
+} from "@/lib/supportAccess";
 import { getTicketStatusLabel, TICKET_STATUS_OPTIONS, type TicketStatus } from "@/lib/ticketsStatus";
 import type { TicketType, TicketPriority } from "@/lib/ticketsStore";
 
@@ -69,36 +75,8 @@ function getPriorityLabel(priority?: TicketPriority | null) {
   return TICKET_PRIORITY_OPTIONS.find((option) => option.value === priority)?.label ?? "Média";
 }
 
-function isPrivilegedTicketUser(user: {
-  role?: string | null;
-  permissionRole?: string | null;
-  companyRole?: string | null;
-  isGlobalAdmin?: boolean;
-} | null | undefined) {
-  const role = (user?.role ?? "").toLowerCase();
-  const permissionRole = (user?.permissionRole ?? "").toLowerCase();
-  const companyRole = (user?.companyRole ?? "").toLowerCase();
-
-  return (
-    user?.isGlobalAdmin === true ||
-    role === "admin" ||
-    role === "global_admin" ||
-    role === "it_dev" ||
-    role === "itdev" ||
-    role === "developer" ||
-    role === "dev" ||
-    permissionRole === "admin" ||
-    permissionRole === "dev" ||
-    companyRole === "it_dev"
-  );
-}
-
-function hasTicketEnteredSupportFlow(ticket: TicketItem) {
-  return ticket.status !== "backlog" || Boolean(ticket.assignedToUserId);
-}
-
 export default function TicketsButton({ defaultOpen = false }: TicketsButtonProps) {
-  const { user, can } = usePermissionAccess();
+  const { user } = usePermissionAccess();
   const [open, setOpen] = useState(defaultOpen);
   const [items, setItems] = useState<TicketItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -118,9 +96,10 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
   const triggerRef = useRef<HTMLButtonElement>(null);
   const createCardRef = useRef<HTMLDivElement>(null);
   const createTitleInputRef = useRef<HTMLInputElement>(null);
-  const canManageAll =
-    (can("tickets", "view_all") || can("tickets", "assign") || can("tickets", "status") || can("support", "assign") || can("support", "status") || isPrivilegedTicketUser(user)) &&
-    (can("tickets", "view") || can("support", "view"));
+  const canOpenSupport = canViewSupportBoard(user);
+  const canCreateSupport = canCreateSupportTickets(user);
+  const canManageAll = canAccessGlobalSupportScope(user);
+  const canManageWorkflow = canManageSupportWorkflow(user);
 
   const isCreating = editingId === "new";
 
@@ -163,12 +142,12 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
       const json = (await res.json().catch(() => ({}))) as { items?: TicketItem[]; error?: string };
       if (!res.ok) {
         setItems([]);
-        setError(json?.error || "Erro ao carregar chamados");
+        setError(json?.error || "Erro ao carregar tickets");
         return;
       }
       setItems(Array.isArray(json.items) ? json.items : []);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao carregar chamados";
+      const msg = err instanceof Error ? err.message : "Erro ao carregar tickets";
       setItems([]);
       setError(msg);
     } finally {
@@ -251,9 +230,9 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
   }, [isCreating, open]);
 
   const totalLabel = useMemo(() => {
-    if (!items.length) return "Nenhum chamado no total";
-    if (items.length === 1) return "1 chamado no total";
-    return `${items.length} chamados no total`;
+    if (!items.length) return "Nenhum ticket no total";
+    if (items.length === 1) return "1 ticket no total";
+    return `${items.length} tickets no total`;
   }, [items.length]);
 
   const statusFilterTone = useMemo(() => {
@@ -341,10 +320,10 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
-          setError(json?.error || "Erro ao criar chamado");
+          setError(json?.error || "Erro ao criar ticket");
           return;
         }
-        setMessage("Chamado criado com sucesso.");
+        setMessage("Ticket criado com sucesso.");
       } else if (editingId) {
         const res = await fetch(`/api/tickets/${editingId}`, {
           method: "PATCH",
@@ -354,16 +333,16 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
-          setError(json?.error || "Erro ao atualizar chamado");
+          setError(json?.error || "Erro ao atualizar ticket");
           return;
         }
-        setMessage("Chamado atualizado.");
+        setMessage("Ticket atualizado.");
       }
       setEditingId(null);
       setDraft(null);
       await loadTickets();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao salvar chamado";
+      const msg = err instanceof Error ? err.message : "Erro ao salvar ticket";
       setError(msg);
     } finally {
       setSaving(false);
@@ -381,22 +360,22 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        setError(json?.error || "Erro ao excluir chamado");
+        setError(json?.error || "Erro ao excluir ticket");
         return;
       }
-      setMessage("Chamado excluido.");
+      setMessage("Ticket excluido.");
       if (expandedId === ticketId) setExpandedId(null);
       if (editingId === ticketId) cancelEdit();
       await loadTickets();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao excluir chamado";
+      const msg = err instanceof Error ? err.message : "Erro ao excluir ticket";
       setError(msg);
     } finally {
       setSaving(false);
     }
   }
 
-  if (!user) return null;
+  if (!user || !canOpenSupport) return null;
 
   return (
     <div className="relative shrink-0" ref={boxRef}>
@@ -404,7 +383,7 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
         ref={triggerRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Abrir chamados"
+        aria-label="Abrir suporte"
         className="flex h-11 w-11 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-(--tc-accent,#ef0001)/60 hover:text-(--tc-accent,#ef0001)"
       >
         <FiMessageSquare size={18} />
@@ -450,13 +429,15 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                       placeholder="Buscar ticket"
                     />
                   </label>
-                  <button
-                    type="button"
-                    onClick={startCreate}
-                    className="notes-widget-new-btn tickets-widget-create-btn"
-                  >
-                    <FiPlus size={14} /> Criar
-                  </button>
+                  {canCreateSupport ? (
+                    <button
+                      type="button"
+                      onClick={startCreate}
+                      className="notes-widget-new-btn tickets-widget-create-btn"
+                    >
+                      <FiPlus size={14} /> Criar
+                    </button>
+                  ) : null}
                 </div>
                 <div className="tickets-widget-status-row">
                   <div className="tickets-widget-filter-group">
@@ -508,7 +489,7 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
             {isCreating && draft && (
               <div ref={createCardRef} className="tickets-card tickets-card-editor">
                 <p className="tickets-card-eyebrow">
-                  Novo chamado
+                  Novo ticket
                 </p>
                 <div className="mt-3 space-y-3">
                   <input
@@ -523,7 +504,7 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                       className="tickets-draft-select"
                       value={draft.type}
                       data-value={draft.type}
-                      aria-label="Tipo do chamado"
+                      aria-label="Tipo do ticket"
                       onChange={(e) => setDraft((prev) => (prev ? { ...prev, type: e.target.value as TicketType } : prev))}
                     >
                       {TICKET_TYPE_OPTIONS.map((opt) => (
@@ -534,7 +515,7 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                       className="tickets-draft-select"
                       value={draft.priority}
                       data-value={draft.priority}
-                      aria-label="Prioridade do chamado"
+                      aria-label="Prioridade do ticket"
                       onChange={(e) => setDraft((prev) => (prev ? { ...prev, priority: e.target.value as TicketPriority } : prev))}
                     >
                       {TICKET_PRIORITY_OPTIONS.map((opt) => (
@@ -545,7 +526,7 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                   <textarea
                     rows={4}
                     className="notes-input notes-textarea tickets-textarea"
-                    placeholder="Descreva o chamado..."
+                    placeholder="Descreva o ticket..."
                     value={draft.description}
                     onChange={(e) => setDraft((prev) => (prev ? { ...prev, description: e.target.value } : prev))}
                   />
@@ -572,19 +553,18 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
 
             {loading && <p className="tickets-empty-state">Carregando...</p>}
             {!loading && items.length === 0 && (
-              <p className="tickets-empty-state">Nenhum chamado criado ainda.</p>
+              <p className="tickets-empty-state">Nenhum ticket criado ainda.</p>
             )}
             {!loading && items.length > 0 && filteredItems.length === 0 && (
-              <p className="tickets-empty-state">Nenhum chamado encontrado com os filtros atuais.</p>
+              <p className="tickets-empty-state">Nenhum ticket encontrado com os filtros atuais.</p>
             )}
 
             {filteredItems.map((ticket) => {
               const isExpanded = expandedId === ticket.id;
               const isEditing = editingId === ticket.id;
               const localDraft = isEditing && draft ? draft : null;
-              const canEdit = canManageAll || (ticket.createdBy === user?.id && !hasTicketEnteredSupportFlow(ticket));
-              // Users can only delete while status is backlog; admins can always delete
-              const canDelete = canManageAll || (ticket.createdBy === user?.id && ticket.status === "backlog");
+              const canEdit = canManageWorkflow;
+              const canDelete = canManageWorkflow;
               const creatorLabel = ticket.createdByName || ticket.createdByEmail || ticket.createdBy || "";
               const ticketPriorityTone = priorityTone(ticket.priority);
               const ticketPriorityLabel = getPriorityLabel(ticket.priority);
@@ -622,17 +602,15 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                       <div className="tickets-ticket-body-head">
                         {!canEdit ? (
                           <p className="tickets-ticket-readonly">
-                            {ticket.createdBy === user?.id && hasTicketEnteredSupportFlow(ticket)
-                              ? "Em atendimento pelo suporte"
-                              : "Somente leitura"}
+                            Somente o time de suporte pode editar ou excluir tickets.
                           </p>
                         ) : null}
                         <button
                           type="button"
                           onClick={isEditing ? cancelEdit : () => setExpandedId(null)}
                           className="notes-icon-action tickets-ticket-close"
-                          aria-label={isEditing ? "Fechar edicao" : "Fechar chamado"}
-                          title={isEditing ? "Fechar edicao" : "Fechar chamado"}
+                          aria-label={isEditing ? "Fechar edicao" : "Fechar ticket"}
+                          title={isEditing ? "Fechar edicao" : "Fechar ticket"}
                         >
                           <FiX size={15} />
                         </button>
@@ -642,7 +620,7 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                           <input
                             className="notes-input tickets-input"
                             placeholder="Titulo"
-                            aria-label="Editar titulo do chamado"
+                            aria-label="Editar titulo do ticket"
                             value={localDraft.title}
                             onChange={(e) =>
                               setDraft((prev) => (prev ? { ...prev, title: e.target.value } : prev))
@@ -653,7 +631,7 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                               className="tickets-draft-select"
                               value={localDraft.type}
                               data-value={localDraft.type}
-                              aria-label="Tipo do chamado"
+                              aria-label="Tipo do ticket"
                               onChange={(e) =>
                                 setDraft((prev) => (prev ? { ...prev, type: e.target.value as TicketType } : prev))
                               }
@@ -666,7 +644,7 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                               className="tickets-draft-select"
                               value={localDraft.priority}
                               data-value={localDraft.priority}
-                              aria-label="Prioridade do chamado"
+                              aria-label="Prioridade do ticket"
                               onChange={(e) =>
                                 setDraft((prev) => (prev ? { ...prev, priority: e.target.value as TicketPriority } : prev))
                               }
@@ -679,8 +657,8 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                           <textarea
                             rows={4}
                             className="notes-input notes-textarea tickets-textarea"
-                            placeholder="Descreva o chamado..."
-                            aria-label="Editar descricao do chamado"
+                            placeholder="Descreva o ticket..."
+                            aria-label="Editar descricao do ticket"
                             value={localDraft.description}
                             onChange={(e) =>
                               setDraft((prev) => (prev ? { ...prev, description: e.target.value } : prev))
@@ -700,8 +678,8 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                                 type="button"
                                 onClick={() => deleteTicket(ticket.id)}
                                 className="notes-icon-action notes-icon-action-danger"
-                                aria-label="Excluir chamado"
-                                title="Excluir chamado"
+                                aria-label="Excluir ticket"
+                                title="Excluir ticket"
                               >
                                 <FiTrash2 size={15} />
                               </button>
@@ -741,8 +719,8 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                                 type="button"
                                 onClick={() => deleteTicket(ticket.id)}
                                 className="notes-icon-action notes-icon-action-danger"
-                                aria-label="Excluir chamado"
-                                title="Excluir chamado"
+                                aria-label="Excluir ticket"
+                                title="Excluir ticket"
                               >
                                 <FiTrash2 size={15} />
                               </button>

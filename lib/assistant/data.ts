@@ -4,18 +4,20 @@
  */
 import "server-only";
 
-import { findLocalCompanyBySlug, getLocalUserById, listLocalCompanies, listLocalMemberships, listLocalUsers } from "@/lib/auth/localStore";
+import { getLocalUserById, listLocalCompanies, listLocalMemberships, listLocalUsers } from "@/lib/auth/localStore";
 import type { AuthUser } from "@/lib/jwtAuth";
 import { hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
 import { canAccessGlobalTicketWorkspace } from "@/lib/rbac/tickets";
 import { attachAssigneeInfo, attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 import { listAllTickets, listTicketsForUser, type TicketRecord } from "@/lib/ticketsStore";
 import { normalizeSearch, formatDateTime } from "./helpers";
+import { extractTicketReference } from "./pure/parsing";
 import type { AssistantAction, AssistantScreenContext } from "./types";
 
 /* ──────────────────── Constants ──────────────────── */
 
 export const MAX_RESULTS = 6;
+export { extractTicketReference };
 
 /* ──────────────────── User helpers ──────────────────── */
 
@@ -59,25 +61,6 @@ export function summarizePermissionMatrix(permissions: PermissionMatrix | null |
 }
 
 /* ──────────────────── Ticket helpers ──────────────────── */
-
-export function extractTicketReference(text: string) {
-  const codeMatch = text.match(/\bSP[-\s]?0*(\d{1,8})\b/i);
-  if (codeMatch?.[1]) {
-    const numeric = Number(codeMatch[1]);
-    if (Number.isFinite(numeric)) return { type: "code" as const, code: `SP-${String(numeric).padStart(6, "0")}`, numeric };
-  }
-
-  const uuidMatch = text.match(/\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i);
-  if (uuidMatch?.[0]) return { type: "id" as const, id: uuidMatch[0].toLowerCase() };
-
-  const numericMatch = text.match(/\b(\d{2,8})\b/);
-  if (numericMatch?.[1]) {
-    const numeric = Number(numericMatch[1]);
-    if (Number.isFinite(numeric)) return { type: "numeric" as const, numeric, code: `SP-${String(numeric).padStart(6, "0")}` };
-  }
-
-  return null;
-}
 
 export function scoreTicketMatch(ticket: TicketRecord, text: string) {
   const query = normalizeSearch(text);

@@ -1,12 +1,3 @@
-/* Mock data module to avoid deep server-only import chain */
-jest.mock("@/lib/assistant/data", () => ({
-  extractTicketReference: (text: string) => {
-    const m = text.match(/\bSP[-\s]?0*(\d{1,8})\b/i);
-    if (m?.[1]) return { type: "code", code: `SP-${String(Number(m[1])).padStart(6, "0")}`, numeric: Number(m[1]) };
-    return null;
-  },
-}));
-
 /* Mock ticketHelpers to avoid transitive server-only deps */
 jest.mock("@/lib/assistant/tools/ticketHelpers", () => ({
   parseStructuredTicketDraft: () => null,

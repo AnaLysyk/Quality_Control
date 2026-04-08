@@ -62,6 +62,8 @@ export const AuthUserSchema = z
     capabilities: z.array(z.string().min(1)).optional(),
     permissions: z.record(z.string(), z.array(z.string().min(1))).optional(),
     permissionRole: z.string().optional().nullable(),
+    userOrigin: z.string().optional().nullable(),
+    user_origin: z.string().optional().nullable(),
     clientId: z.string().optional().nullable(),
     clientSlug: z.string().optional().nullable(),
     defaultClientSlug: z.string().optional().nullable(),

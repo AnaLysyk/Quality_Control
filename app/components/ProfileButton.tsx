@@ -16,6 +16,7 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import { useAppSettings } from "@/context/AppSettingsContext";
 import { useClientContext } from "@/context/ClientContext";
 import { resolveActiveIdentity } from "@/lib/activeIdentity";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
 type ToastState =
   | { kind: "idle" }
@@ -164,7 +165,18 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
   const docsRoute = hasCompanies
     ? companyCount > 1 || !companySlug
       ? "/documentos"
-      : `/empresas/${companySlug}/documentos`
+      : buildCompanyPathForAccess(companySlug, "documentos", {
+          isGlobalAdmin: user?.isGlobalAdmin === true,
+          permissionRole: user?.permissionRole ?? null,
+          role: user?.role ?? null,
+          companyRole: user?.companyRole ?? null,
+          userOrigin:
+            (user as { userOrigin?: string | null } | null)?.userOrigin ??
+            (user as { user_origin?: string | null } | null)?.user_origin ??
+            null,
+          companyCount,
+          clientSlug: companySlug,
+        })
     : "/docs";
   const docsLabel = hasCompanies
     ? companyCount > 1

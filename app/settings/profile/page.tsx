@@ -891,7 +891,6 @@ export default function SettingsProfilePage() {
   } = useSWRCompanyUsers(shouldFetchCompanyUsers, companyScopeKey);
   const companyDisplayName = (companyProfile?.company_name || companyProfile?.name || "Empresa").trim();
   const companyProfileBreadcrumbName = companyDisplayName || currentClientSlug || "Empresa";
-  const companySlug = companyProfile?.slug ?? currentClientSlug ?? null;
   const companySavedLogoUrl = companyProfile?.logo_url || null;
   const companyLogoPreviewUrl = companyLogoPreviewObjectUrl || companyLogoUrl.trim() || companySavedLogoUrl;
   const companySavedQaseProjectCodes = Array.isArray(companyProfile?.qase_project_codes) ? companyProfile.qase_project_codes : [];
@@ -1983,10 +1982,6 @@ export default function SettingsProfilePage() {
         <div className={pageShellClass}>
           <Breadcrumb
             items={[
-              {
-                label: "Home",
-                href: companySlug ? `/empresas/${encodeURIComponent(companySlug)}/home` : undefined,
-              },
               { label: companyProfileBreadcrumbName },
             ]}
           />
@@ -2856,7 +2851,7 @@ export default function SettingsProfilePage() {
   return (
     <div className="relative isolate min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
       <div className={pageShellClass}>
-        <Breadcrumb items={[{ label: "Usuario" }, { label: userProfileBreadcrumbName }]} />
+        <Breadcrumb items={[{ label: userProfileBreadcrumbName }]} />
 
         <section className={heroClass}>
           <div className="space-y-5">

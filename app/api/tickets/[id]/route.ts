@@ -5,8 +5,8 @@ import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketAssigned } from "@/lib/notificationService";
 import { canAssignTicket, canEditTicketContent, canManageAllTickets, canMoveTicket, canViewTicket } from "@/lib/rbac/tickets";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
-import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { listAdminUserItems } from "@/lib/adminUsers";
+import { isTechnicalSupportUser } from "@/lib/supportAccess";
 
 export const revalidate = 0;
 
@@ -15,7 +15,10 @@ function buildSupportAssigneeOptions(items: Awaited<ReturnType<typeof listAdminU
     .filter(
       (item) =>
         item.active !== false &&
-        (item.permission_role === "admin" || item.permission_role === "dev"),
+        isTechnicalSupportUser({
+          role: item.role ?? null,
+          permissionRole: item.permission_role ?? null,
+        }),
     )
     .map((item) => ({
       id: item.id,
@@ -157,28 +160,10 @@ export async function DELETE(req: Request, context: { params: Promise<{ id: stri
     return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
   }
 
-  const isOwner = item.createdBy === user.id;
-  const isPrivileged = canManageAllTickets(user);
-
-  // Privileged users (admin/it_dev) can delete any ticket at any time.
-  // Owners can only delete their own ticket while it is still in backlog.
-  const canDelete =
-    isPrivileged ||
-    (isOwner &&
-      item.status === "backlog" &&
-      (hasPermissionAccess(user.permissions, "tickets", "delete") ||
-        hasPermissionAccess(user.permissions, "support", "delete") ||
-        hasPermissionAccess(user.permissions, "tickets", "create") ||
-        hasPermissionAccess(user.permissions, "support", "create")));
+  const canDelete = canManageAllTickets(user);
 
   if (!canDelete) {
-    const reason =
-      !isOwner && !isPrivileged
-        ? "Sem permissao"
-        : item.status !== "backlog"
-          ? "Chamado so pode ser excluido enquanto estiver em Backlog"
-          : "Sem permissao";
-    return NextResponse.json({ error: reason }, { status: 403 });
+    return NextResponse.json({ error: "Somente o suporte pode excluir tickets" }, { status: 403 });
   }
 
   const removed = await deleteTicketForUser(item.createdBy, id);

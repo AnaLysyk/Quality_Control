@@ -29,7 +29,8 @@ import type { AuthUser } from "@/lib/jwtAuth";
 import { normalizePromptText, normalizeSearch, normalizeText, compactMultiline, sanitizeRoute } from "./helpers";
 import { REPEATED_REPLY_MESSAGES, CLARIFY_REPLY } from "./messages";
 import { chooseTool, isAwaitingTicketPayload, isAwaitingTestCasePayload } from "./router";
-import { buildPromptActions, extractTicketReference } from "./data";
+import { buildPromptActions } from "./data";
+import { extractTicketReference } from "./pure/parsing";
 import { extractNarrativePayload, isTicketTemplateRequest, parseStructuredTicketDraft } from "./tools/ticketHelpers";
 import {
   toolGetScreenContext,

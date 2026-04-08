@@ -11,7 +11,7 @@
 
 import type { AssistantConversationTurn, AssistantScreenContext, AssistantToolName } from "./types";
 import { normalizeSearch, normalizeText } from "./helpers";
-import { extractTicketReference } from "./data";
+import { extractTicketReference } from "./pure/parsing";
 import { extractNarrativePayload, parseStructuredTicketDraft } from "./tools/ticketHelpers";
 
 /* ──────────────────── Conversation state helpers ──────────────────── */

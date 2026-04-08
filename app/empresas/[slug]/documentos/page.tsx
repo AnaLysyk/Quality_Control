@@ -296,7 +296,6 @@ export default function CompanyDocumentsPage() {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-10">
         <Breadcrumb
           items={[
-            { label: "Empresas", href: "/admin/clients" },
             { label: companyName, href: currentCompanyHref(company?.slug ?? slug) },
             { label: "Documentos" },
           ]}

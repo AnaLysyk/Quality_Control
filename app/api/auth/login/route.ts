@@ -10,6 +10,7 @@ import { getRedis } from "@/lib/redis";
 import { findLocalUserByEmailOrId } from "@/lib/auth/localStore";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
+import { COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode } from "@/lib/companyRoutes";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -150,6 +151,20 @@ export async function POST(req: Request) {
         maxAge: 0,
       });
     }
+
+    res.cookies.set(COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode({
+      isGlobalAdmin: built.session.isGlobalAdmin,
+      role: built.session.role,
+      companyRole: built.session.companyRole,
+      userOrigin: user.user_origin ?? null,
+      clientSlug: built.session.companySlug ?? null,
+    }), {
+      httpOnly: false,
+      sameSite: "lax",
+      secure: secureCookies,
+      path: "/",
+      maxAge: refreshToken ? refreshTtlSeconds : SESSION_TTL_SECONDS,
+    });
 
     addAuditLogSafe({
       actorUserId: user.id,

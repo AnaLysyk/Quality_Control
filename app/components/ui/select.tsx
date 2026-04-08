@@ -41,7 +41,8 @@ const SelectContent = React.forwardRef<
       ref={ref}
       position={position}
       className={cn(
-        "z-50 min-w-[12rem] overflow-hidden rounded-[22px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] text-[color:var(--tc-text-primary)] shadow-[0_24px_50px_rgba(15,23,42,0.12)]",
+        // Portalled dropdowns must clear auth/login overlays that use a very high stacking context.
+        "z-[2147483647] min-w-[12rem] overflow-hidden rounded-[22px] border border-[color:var(--tc-border)] bg-[color:var(--tc-surface)] text-[color:var(--tc-text-primary)] shadow-[0_24px_50px_rgba(15,23,42,0.12)]",
         className,
       )}
       {...props}

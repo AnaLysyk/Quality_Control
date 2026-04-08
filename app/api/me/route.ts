@@ -17,6 +17,7 @@ import {
 import { isAvatarKey } from "@/lib/avatarCatalog";
 import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
+import { COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode } from "@/lib/companyRoutes";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -98,7 +99,7 @@ export async function GET(req: Request) {
     (typeof user.name === "string" ? user.name.trim() : "") ||
     user.email;
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     user: {
       id: user.id,
       email: user.email,
@@ -124,6 +125,8 @@ export async function GET(req: Request) {
       capabilities: access.capabilities ?? [],
       permissions: permissionAccess.permissions,
       permissionRole: permissionAccess.roleKey,
+      userOrigin: user.user_origin ?? null,
+      user_origin: user.user_origin ?? null,
       clientId: access.companyId ?? null,
       clientSlug: access.companySlug ?? null,
       defaultClientSlug: user.default_company_slug ?? access.companySlug ?? null,
@@ -132,6 +135,24 @@ export async function GET(req: Request) {
     },
     companies: companiesResponse,
   }, { headers: NO_STORE_HEADERS });
+
+  response.cookies.set(COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode({
+    isGlobalAdmin: access.isGlobalAdmin === true,
+    permissionRole: permissionAccess.roleKey,
+    role: access.role ?? null,
+    companyRole: access.companyRole ?? null,
+    userOrigin: user.user_origin ?? null,
+    companyCount: access.companySlugs?.length ?? companiesResponse.length,
+    clientSlug: access.companySlug ?? null,
+  }), {
+    httpOnly: false,
+    sameSite: "lax",
+    secure: new URL(req.url).protocol === "https:",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+
+  return response;
 }
 
 function sanitizeText(value: unknown, max = 255): string | null {

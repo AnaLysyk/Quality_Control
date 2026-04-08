@@ -718,7 +718,7 @@ function Panel(props: {
       : "text-(--tc-text-muted,#6b7280)";
 
   return (
-    <section className={`rounded-3xl border p-4 sm:p-4.5 ${surfaceClassName} ${props.className ?? ""}`}>
+    <section className={`h-full rounded-3xl border p-4 sm:p-4.5 ${surfaceClassName} ${props.className ?? ""}`}>
       <div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1.5">
@@ -753,7 +753,7 @@ function StatCard(props: {
     "text-(--tc-text,#0b1a3c)";
 
   return (
-    <div className="rounded-[20px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-4">
+    <div className="h-full min-h-[10.75rem] rounded-[20px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-4">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">{props.label}</div>
@@ -2030,7 +2030,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
 
   return (
     <div className="relative isolate min-h-screen bg-(--page-bg,#f5f6fa) px-4 pb-6 pt-2 text-(--page-text,#0b1a3c) sm:px-6 sm:pb-7 sm:pt-3 lg:px-10 lg:pb-8 lg:pt-4">
-      <div className="relative z-10 mx-auto flex max-w-7xl flex-col gap-4">
+      <div className="relative z-10 flex w-full max-w-none flex-col gap-4 2xl:gap-5">
         <section className="flex flex-col gap-2.5 border-b border-[rgba(15,23,42,0.08)] pb-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
@@ -2324,7 +2324,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
             </div>
 
             {activeView === "overview" ? (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-5">
                 <StatCard label="Runs" value={formatCompactNumber(executiveSummary.totalRuns)} note="Total no recorte aplicado." tone="neutral" delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.totalRuns, previousSummary.totalRuns, "neutral") : null} icon={<FiActivity className="h-5 w-5" />} />
                 <StatCard label="Pass rate" value={formatPercent(executiveSummary.passRate)} note="Leitura consolidada." tone={trendSummary.tone} delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.passRate, previousSummary.passRate, "higher_better", " p.p.") : null} icon={<FiTrendingUp className="h-5 w-5" />} />
                 <StatCard label="Falhas" value={formatPercent(executiveSummary.failRate)} note="Falhas sobre o total executado." tone={executiveSummary.failRate >= 15 ? "critical" : executiveSummary.failRate > 0 ? "warning" : "positive"} delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.failRate, previousSummary.failRate, "lower_better", " p.p.") : null} icon={<FiTrendingDown className="h-5 w-5" />} />
@@ -2335,7 +2335,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
         )}
 
         {analysisRequested && hasFilterResults && activeView === "overview" ? (
-          <div className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)] 2xl:grid-cols-[minmax(0,1.45fr)_minmax(24rem,0.75fr)]">
             {chartHasData ? (
               <Panel
                 eyebrow={chartPanelCopy.eyebrow}
@@ -2396,7 +2396,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
 
         {analysisRequested && hasFilterResults && activeView === "comparatives" ? (
           filteredRuns.length > 0 ? (
-        <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] 2xl:grid-cols-[minmax(0,1.2fr)_minmax(26rem,0.8fr)]">
           <Panel eyebrow="Comparativos" title="Runs com mais impacto" description={undefined} actions={<Link href={`/empresas/${encodeURIComponent(props.companySlug)}/runs`} className="inline-flex items-center gap-2 rounded-full border border-[rgba(15,23,42,0.08)] bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">Lista completa<FiArrowRight className="h-4 w-4" /></Link>}>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">

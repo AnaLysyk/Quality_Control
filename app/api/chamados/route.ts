@@ -5,25 +5,21 @@ import { notifySuporteCreated } from "@/lib/notificationService";
 import { attachAssigneeInfo, attachAssigneeToSuporte } from "@/lib/ticketsPresenter";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getLocalUserById } from "@/lib/auth/localStore";
-import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
 import { canAccessGlobalTicketWorkspace } from "@/lib/rbac/tickets";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
+import { canCreateSupportTickets, canViewSupportBoard } from "@/lib/supportAccess";
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
 }
 
-// GET /api/chamados: each authenticated user can only see their own chamados
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
-  if (
-    !hasPermissionAccess(user.permissions, "tickets", "view") &&
-    !hasPermissionAccess(user.permissions, "support", "view")
-  ) {
+  if (!canViewSupportBoard(user)) {
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
   }
   const url = new URL(req.url);
@@ -40,10 +36,7 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
-    if (
-      !hasPermissionAccess(user.permissions, "support", "create") &&
-      !hasPermissionAccess(user.permissions, "tickets", "create")
-    ) {
+    if (!canCreateSupportTickets(user)) {
       return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
     }
     const body = await req.json().catch(() => ({}));

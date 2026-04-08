@@ -18,7 +18,7 @@ function isValidTransition(from: string, to: string) {
 import { notifyTicketStatusChanged } from "@/lib/notificationService";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { canMoveTicket } from "@/lib/rbac/tickets";
+import { canAccessGlobalTicketWorkspace, canMoveTicket } from "@/lib/rbac/tickets";
 
 export async function PATCH(
   req: NextRequest,
@@ -43,6 +43,12 @@ export async function PATCH(
   }
   if (!canMoveTicket(user, current)) {
     return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+  }
+  if (canAccessGlobalTicketWorkspace(user) && !current.assignedToUserId) {
+    return NextResponse.json(
+      { error: "Selecione e salve um responsavel antes de mover o ticket" },
+      { status: 400 },
+    );
   }
 
 

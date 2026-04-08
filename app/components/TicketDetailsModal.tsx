@@ -214,7 +214,7 @@ export default function TicketDetailsModal({
         error?: string;
       };
       if (!res.ok || !json.item) {
-        throw new Error(json?.error || "Erro ao carregar chamado");
+        throw new Error(json?.error || "Erro ao carregar ticket");
       }
       setCurrentTicket(json.item);
       setDraft(toDraft(json.item));
@@ -226,7 +226,7 @@ export default function TicketDetailsModal({
         canMoveStatus: canEditStatus === true || Boolean(json.capabilities?.canMoveStatus),
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao carregar chamado";
+      const message = err instanceof Error ? err.message : "Erro ao carregar ticket";
       setError(message);
     } finally {
       setLoadingTicket(false);
@@ -329,7 +329,7 @@ export default function TicketDetailsModal({
         });
         const json = (await res.json().catch(() => ({}))) as { item?: TicketShape; error?: string };
         if (!res.ok || !json.item) {
-          throw new Error(json?.error || "Erro ao salvar chamado");
+          throw new Error(json?.error || "Erro ao salvar ticket");
         }
         nextTicket = json.item;
       }
@@ -352,7 +352,7 @@ export default function TicketDetailsModal({
       setDraft(toDraft(nextTicket));
       onTicketUpdated?.(nextTicket);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao salvar chamado";
+      const message = err instanceof Error ? err.message : "Erro ao salvar ticket";
       setError(message);
     } finally {
       setSavingDraft(false);
@@ -432,9 +432,9 @@ export default function TicketDetailsModal({
             </div>
             <div className="min-w-0">
               <p className="tc-panel-kicker">Atendimento</p>
-              <h2 className="tc-panel-title">Chamado em acompanhamento</h2>
+              <h2 className="tc-panel-title">Ticket em acompanhamento</h2>
               <p className="tc-panel-description">
-              Dados do chamado fixos na esquerda e conversa ativa com o suporte na direita.
+              Dados do ticket fixos na esquerda e conversa ativa com o suporte na direita.
               </p>
             </div>
           </div>
@@ -442,7 +442,7 @@ export default function TicketDetailsModal({
             type="button"
             onClick={onClose}
             className="ticket-detail-modal-close"
-            aria-label="Fechar detalhes do chamado"
+            aria-label="Fechar detalhes do ticket"
             title="Fechar"
           >
             <FiX size={18} />
@@ -481,7 +481,7 @@ export default function TicketDetailsModal({
                         value={draft.title}
                         onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
                         className="ticket-detail-input"
-                        placeholder="Titulo do chamado"
+                        placeholder="Titulo do ticket"
                       />
                     </div>
 
@@ -557,7 +557,7 @@ export default function TicketDetailsModal({
                         }
                         rows={4}
                         className="ticket-detail-textarea"
-                        placeholder="Descreva o chamado"
+                        placeholder="Descreva o ticket"
                       />
                     </div>
                   </>
@@ -577,7 +577,7 @@ export default function TicketDetailsModal({
                 )}
 
                 <div className="ticket-detail-inline-meta">
-                  <span><strong>Chamado:</strong> {getTicketCode(currentTicket)}</span>
+                  <span><strong>Ticket:</strong> {getTicketCode(currentTicket)}</span>
                   <span><strong>Criado em:</strong> {formatDateTime(currentTicket?.createdAt)}</span>
                   <span><strong>Atualizado:</strong> {formatDateTime(currentTicket?.updatedAt)}</span>
                   {loadingTicket ? <span>Atualizando dados...</span> : null}
@@ -624,8 +624,8 @@ export default function TicketDetailsModal({
                           value={assigneeDraft}
                           onChange={(event) => setAssigneeDraft(event.target.value)}
                           className="ticket-detail-select"
-                          aria-label="Selecionar responsavel pelo chamado"
-                          title="Selecionar responsavel pelo chamado"
+                          aria-label="Selecionar responsavel pelo ticket"
+                          title="Selecionar responsavel pelo ticket"
                         >
                           <option value="">Selecione um responsavel</option>
                           {assigneeOptions.map((option) => (
@@ -647,7 +647,7 @@ export default function TicketDetailsModal({
                     </div>
                   )}
                   <p className="ticket-detail-note">
-                    O chamado so pode ser movido no kanban depois que o responsavel estiver salvo.
+                    O ticket so pode ser movido no kanban depois que o responsavel estiver salvo.
                   </p>
                 </div>
               ) : null}
@@ -660,9 +660,9 @@ export default function TicketDetailsModal({
                 <FiMessageSquare size={18} />
               </div>
               <div>
-                <p className="ticket-detail-chat-title">Comentarios do chamado</p>
+                <p className="ticket-detail-chat-title">Comentarios do ticket</p>
                 <p className="ticket-detail-chat-description">
-                  Perfis globais acompanham e respondem todos. Perfis de empresa respondem apenas os proprios chamados.
+                  O time de suporte acompanha todos. Os demais perfis acompanham e comentam apenas os proprios tickets.
                 </p>
               </div>
             </div>
@@ -718,11 +718,11 @@ export default function TicketDetailsModal({
                   className="ticket-detail-textarea"
                   rows={4}
                   maxLength={COMMENT_MAX_LENGTH}
-                  placeholder="Escreva uma resposta ou atualizacao para este chamado"
+                  placeholder="Escreva uma resposta ou atualizacao para este ticket"
                 />
                 <div className="comments-chat-actions">
                   <div className="comments-chat-status">
-                    {error ? <span className="ticket-detail-chat-error">{error}</span> : <span className="ticket-detail-chat-note">Os comentarios ficam visiveis para quem tem acesso a este chamado.</span>}
+                    {error ? <span className="ticket-detail-chat-error">{error}</span> : <span className="ticket-detail-chat-note">Os comentarios ficam visiveis para quem tem acesso a este ticket.</span>}
                     <span className="ticket-detail-chat-counter" data-limit={commentLength >= COMMENT_MAX_LENGTH ? "max" : commentLength >= COMMENT_MAX_LENGTH * 0.9 ? "warning" : "ok"}>
                       {commentLength}/{COMMENT_MAX_LENGTH} caracteres
                     </span>

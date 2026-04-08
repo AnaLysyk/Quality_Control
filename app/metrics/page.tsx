@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
 export default function MetricasPage() {
   const router = useRouter();
@@ -16,6 +17,21 @@ export default function MetricasPage() {
   } = useClientContext();
 
   const isLoading = authLoading || clientsLoading;
+  const routeInput = useMemo(
+    () => ({
+      isGlobalAdmin: user?.isGlobalAdmin === true,
+      permissionRole: user?.permissionRole ?? null,
+      role: user?.role ?? null,
+      companyRole: user?.companyRole ?? null,
+      userOrigin:
+        (user as { userOrigin?: string | null } | null)?.userOrigin ??
+        (user as { user_origin?: string | null } | null)?.user_origin ??
+        null,
+      companyCount: clients.length,
+      clientSlug: activeClientSlug ?? user?.clientSlug ?? null,
+    }),
+    [activeClientSlug, clients.length, user],
+  );
 
   useEffect(() => {
     if (isLoading) return;
@@ -25,18 +41,23 @@ export default function MetricasPage() {
     }
 
     if (activeClientSlug) {
-      router.replace(`/empresas/${encodeURIComponent(activeClientSlug)}/metrics`);
+      router.replace(buildCompanyPathForAccess(activeClientSlug, "metrics", routeInput));
       return;
     }
 
     if (clients.length === 1) {
       setActiveClientSlug(clients[0].slug);
-      router.replace(`/empresas/${encodeURIComponent(clients[0].slug)}/metrics`);
+      router.replace(
+        buildCompanyPathForAccess(clients[0].slug, "metrics", {
+          ...routeInput,
+          clientSlug: clients[0].slug,
+        }),
+      );
       return;
     }
 
     // No active company selected; keep the page rendered to allow choosing one.
-  }, [isLoading, user, activeClientSlug, clients, router, setActiveClientSlug]);
+  }, [isLoading, user, activeClientSlug, clients, routeInput, router, setActiveClientSlug]);
 
   if (isLoading) return null;
 
@@ -66,7 +87,12 @@ export default function MetricasPage() {
                   className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-left hover:bg-slate-50"
                   onClick={() => {
                     setActiveClientSlug(client.slug);
-                    router.push(`/empresas/${encodeURIComponent(client.slug)}/metrics`);
+                    router.push(
+                      buildCompanyPathForAccess(client.slug, "metrics", {
+                        ...routeInput,
+                        clientSlug: client.slug,
+                      }),
+                    );
                   }}
                 >
                   <div className="min-w-0">

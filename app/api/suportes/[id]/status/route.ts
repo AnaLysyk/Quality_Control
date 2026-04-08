@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getTicketById, updateTicketStatus } from "@/lib/ticketsStore";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
-import { canMoveTicket } from "@/lib/rbac/tickets";
+import { canAccessGlobalTicketWorkspace, canMoveTicket } from "@/lib/rbac/tickets";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
+import { notifyTicketStatusChanged } from "@/lib/notificationService";
+import { getTicketStatusLabel } from "@/lib/ticketsStatus";
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
@@ -19,6 +21,12 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 
   if (!canMoveTicket(user, item)) {
     return NextResponse.json({ error: "Sem permissao para alterar status" }, { status: 403 });
+  }
+  if (canAccessGlobalTicketWorkspace(user) && !item.assignedToUserId) {
+    return NextResponse.json(
+      { error: "Selecione e salve um responsavel antes de mover o ticket" },
+      { status: 400 },
+    );
   }
 
   const body = await req.json().catch(() => ({}));
@@ -39,6 +47,12 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       actorUserId: user.id,
       payload: { from: item.status, to: updated.status },
     }).catch((err) => console.error("Falha ao registrar evento de status:", err));
+
+    notifyTicketStatusChanged({
+      ticket: updated,
+      actorId: user.id,
+      nextStatusLabel: getTicketStatusLabel(updated.status),
+    }).catch((err) => console.error("Falha ao notificar status:", err));
   }
 
   const enriched = await attachAssigneeToTicket(updated);

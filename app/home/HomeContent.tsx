@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useClientContext, type ClientAccess } from "@/context/ClientContext";
 import type { AuthUser } from "@/contracts/auth";
 import { CompanySelector } from "@/components/CompanySelector";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
 const cards = [
   {
@@ -39,7 +40,20 @@ function decideLandingRoute(user: AuthUser | null, clients: ClientAccess[], acti
   if (role === "admin") return "/admin";
   if (role === "company" || role === "user" || role === "viewer") {
     const slug = resolveCompanySlug(user, clients, activeClientSlug);
-    return slug ? `/empresas/${encodeURIComponent(slug)}/home` : "/empresas";
+    return slug
+      ? buildCompanyPathForAccess(slug, "home", {
+          isGlobalAdmin: user.isGlobalAdmin === true,
+          permissionRole: user.permissionRole ?? null,
+          role: user.role ?? null,
+          companyRole: user.companyRole ?? null,
+          userOrigin:
+            (user as { userOrigin?: string | null }).userOrigin ??
+            (user as { user_origin?: string | null }).user_origin ??
+            null,
+          companyCount: clients.length,
+          clientSlug: slug,
+        })
+      : "/empresas";
   }
   return "/empresas";
 }
@@ -118,7 +132,20 @@ export default function HomeContent() {
               <CompanySelector
                 title="Empresas vinculadas"
                 description="Selecione a empresa para ver dashboards, relatórios e executar ações específicas."
-                buildHref={(company) => `/empresas/${encodeURIComponent(company.clientSlug)}/home`}
+                buildHref={(company) =>
+                  buildCompanyPathForAccess(company.clientSlug, "home", {
+                    isGlobalAdmin: user?.isGlobalAdmin === true,
+                    permissionRole: user?.permissionRole ?? null,
+                    role: user?.role ?? null,
+                    companyRole: user?.companyRole ?? null,
+                    userOrigin:
+                      (user as { userOrigin?: string | null } | null)?.userOrigin ??
+                      (user as { user_origin?: string | null } | null)?.user_origin ??
+                      null,
+                    companyCount: clients.length,
+                    clientSlug: company.clientSlug,
+                  })
+                }
                 ctaLabel={(company) => (company.role === "ADMIN" ? "Entrar como admin" : "Acessar hub")}
               />
             </section>

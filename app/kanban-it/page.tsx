@@ -1,10 +1,14 @@
 ﻿"use client";
 
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent as ReactDragEvent, type PointerEvent as ReactPointerEvent, type WheelEvent } from "react";
 import { FiChevronLeft, FiChevronRight, FiEdit2, FiLifeBuoy, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiX } from "react-icons/fi";
+import { useAuth } from "@/context/AuthContext";
+import { useClientContext } from "@/context/ClientContext";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { useSuporteKanbanColumns } from "@/hooks/useSuporteKanbanColumns";
+import { canAccessGlobalSupportScope, canCreateSupportTickets, canManageSupportWorkflow, canViewSupportBoard } from "@/lib/supportAccess";
 import {
   getSuporteStatusLabel,
   normalizeKanbanStatus,
@@ -48,35 +52,31 @@ const TYPE_OPTIONS = [
 ];
 
 const SUPPORT_COLUMN_THEMES = ["rose", "sky", "emerald", "amber", "violet", "orange"] as const;
-
-
-function isPrivilegedRole(role: string | null | undefined) {
-  const value = (role ?? "").toLowerCase();
-  return (
-    value === "it_dev" ||
-    value === "itdev" ||
-    value === "developer" ||
-    value === "dev"
-  );
-}
-
-function isPrivilegedSupportUser(user: {
-  role?: string | null;
-  permissionRole?: string | null;
-  companyRole?: string | null;
-  isGlobalAdmin?: boolean;
-} | null | undefined) {
-  const permissionRole = (user?.permissionRole ?? "").toLowerCase();
-  const companyRole = (user?.companyRole ?? "").toLowerCase();
-
-  return (
-    user?.isGlobalAdmin === true ||
-    permissionRole === "admin" ||
-    permissionRole === "dev" ||
-    companyRole === "it_dev" ||
-    isPrivilegedRole(user?.role)
-  );
-}
+const KNOWN_SUPPORT_ROUTE_ROOTS = new Set([
+  "admin",
+  "api",
+  "login",
+  "settings",
+  "me",
+  "profile",
+  "home",
+  "dashboard",
+  "runs",
+  "release",
+  "requests",
+  "docs",
+  "documentos",
+  "chamados",
+  "meus-chamados",
+  "clients",
+  "clients-list",
+  "integrations",
+  "issues",
+  "metrics",
+  "brand-identity",
+  "empresas",
+  "kanban-it",
+]);
 
 function shortText(value?: string | null, max = 120) {
   if (!value) return "Sem descricao.";
@@ -196,8 +196,36 @@ function getTicketSearchMeta(query: string, suporte: SuporteItem) {
   return { bestScore, hasDirectMatch, nearestDistance };
 }
 
+function getInitials(label: string) {
+  const parts = label
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const compact = (parts.length > 1 ? parts.slice(0, 2).map((part) => part[0]) : [label.slice(0, 2)]).join("");
+  const normalized = compact.replace(/[^a-zA-Z0-9]/g, "").slice(0, 2).toUpperCase();
+  return normalized || "TC";
+}
+
+function resolveCompanySlugFromPath(pathname: string) {
+  const parts = pathname.split("/").filter(Boolean);
+  if (parts[0] === "empresas" && parts[2] === "chamados" && parts[1]) {
+    return decodeURIComponent(parts[1]);
+  }
+  if (parts.length >= 2 && parts[1] === "chamados" && !KNOWN_SUPPORT_ROUTE_ROOTS.has(parts[0])) {
+    return decodeURIComponent(parts[0]);
+  }
+  return null;
+}
+
+function shouldUseNativeImageTag(src: string) {
+  return src.startsWith("/api/s3/object?") || /^(https?:|data:|blob:)/i.test(src);
+}
+
 export default function KanbanItPage() {
-  const { user, loading, can } = usePermissionAccess();
+  const pathname = usePathname() || "";
+  const { user, loading } = usePermissionAccess();
+  const { companies } = useAuth();
+  const { activeClient, activeClientSlug } = useClientContext();
   const [suportes, setSuportes] = useState<SuporteItem[]>([]);
   const [ticketSearch, setTicketSearch] = useState("");
   const [loadingSuportes, setLoadingSuportes] = useState(false);
@@ -228,16 +256,37 @@ export default function KanbanItPage() {
   const [draggingColumnKey, setDraggingColumnKey] = useState<string | null>(null);
   const [columnDropTargetKey, setColumnDropTargetKey] = useState<string | null>(null);
 
-  // Só DEV pode editar/remover/adicionar colunas
-  const isPrivileged =
-    isPrivilegedSupportUser(user) ||
-    can("tickets", "assign") ||
-    can("tickets", "status") ||
-    can("support", "assign") ||
-    can("support", "status");
-  const canAccessGlobalKanban =
-    (can("tickets", "view_all") || isPrivileged) &&
-    (can("tickets", "view") || can("support", "view"));
+  const canOpenBoard = canViewSupportBoard(user);
+  const canCreateSupport = canCreateSupportTickets(user);
+  const hasGlobalScope = canAccessGlobalSupportScope(user);
+  const isPrivileged = canManageSupportWorkflow(user);
+  const supportBrand = useMemo(() => {
+    const routeCompanySlug = resolveCompanySlugFromPath(pathname);
+    const preferredSlug =
+      routeCompanySlug ??
+      activeClientSlug ??
+      (typeof user?.clientSlug === "string" ? user.clientSlug : null) ??
+      (typeof user?.defaultClientSlug === "string" ? user.defaultClientSlug : null) ??
+      null;
+
+    const matchedCompany =
+      (preferredSlug ? companies.find((company) => company.slug === preferredSlug) ?? null : null) ??
+      (activeClient && activeClient.slug === preferredSlug ? activeClient : null);
+
+    const companyName = matchedCompany?.name ?? (preferredSlug ? preferredSlug.replace(/[-_]+/g, " ") : null);
+    const logoSrc =
+      typeof matchedCompany?.logoUrl === "string" && matchedCompany.logoUrl.trim()
+        ? matchedCompany.logoUrl
+        : null;
+
+    return {
+      companyName,
+      logoSrc,
+      logoAlt: companyName ? `Logo da empresa ${companyName}` : "Logo Testing Company",
+      logoFallback: getInitials(companyName ?? "Testing Company"),
+      isCompanyScoped: Boolean(companyName),
+    };
+  }, [activeClient, activeClientSlug, companies, pathname, user?.clientSlug, user?.defaultClientSlug]);
   const statusKeys = useMemo(
     () => suportes.map((suporte) => normalizeKanbanStatus(suporte.status)),
     [suportes],
@@ -285,27 +334,35 @@ export default function KanbanItPage() {
 
     return [
       {
-        label: "Chamados no painel",
+        label: "Tickets no painel",
         value: filteredSuportes.length,
-        copy: "Tickets ativos no fluxo global de atendimento.",
+        copy: hasGlobalScope
+          ? "Tickets ativos no fluxo global de atendimento."
+          : "Tickets visiveis no seu painel pessoal de atendimento.",
       },
       {
         label: "Em andamento",
         value: inProgressCount,
-        copy: "Chamados em atendimento ou revisao pelo suporte global.",
+        copy: hasGlobalScope
+          ? "Tickets em atendimento ou revisao pelo time de suporte."
+          : "Seus tickets em atendimento ou revisao no momento.",
       },
       {
         label: "Com responsavel",
         value: assignedCount,
-        copy: "Chamados ja vinculados ao time de suporte global.",
+        copy: hasGlobalScope
+          ? "Tickets ja vinculados ao time de suporte."
+          : "Seus tickets que ja possuem responsavel definido.",
       },
       {
         label: "Concluidos",
         value: completedCount,
-        copy: "Tickets finalizados dentro do fluxo de suporte.",
+        copy: hasGlobalScope
+          ? "Tickets finalizados dentro do fluxo de suporte."
+          : "Tickets seus que ja foram finalizados no fluxo de suporte.",
       },
     ];
-  }, [filteredSuportes]);
+  }, [filteredSuportes, hasGlobalScope]);
 
   const updateColumnsRailState = useCallback(() => {
     const rail = columnsRailRef.current;
@@ -385,15 +442,16 @@ export default function KanbanItPage() {
   }, [columns.length, updateColumnsRailState]);
 
   function handleDragStart(suporte: SuporteItem) {
-    if (!(isPrivileged && (user?.id === suporte.createdBy || isPrivilegedSupportUser(user)))) return;
+    if (!isPrivileged) return;
     setDragging({ id: suporte.id, from: suporte.status });
   }
 
   async function updateStatus(suporteId: string, nextStatus: SuporteStatus) {
+    if (!isPrivileged) return;
     const currentSuporte = suportes.find((suporte) => suporte.id === suporteId) ?? null;
     if (!currentSuporte) return;
-    if (isPrivilegedSupportUser(user) && !currentSuporte.assignedToUserId) {
-      setError("Selecione e salve um responsavel antes de mover o chamado.");
+    if (hasGlobalScope && !currentSuporte.assignedToUserId) {
+      setError("Selecione e salve um responsavel antes de mover o ticket.");
       setSelectedSuporte(currentSuporte);
       return;
     }
@@ -475,7 +533,7 @@ export default function KanbanItPage() {
     const columnItems = grouped[columnKey] ?? [];
 
     if (columnItems.length > 0 && !fallbackColumn) {
-      setError("Crie outra coluna antes de remover esta, para nao perder os chamados.");
+      setError("Crie outra coluna antes de remover esta, para nao perder os tickets.");
       return;
     }
 
@@ -500,7 +558,7 @@ export default function KanbanItPage() {
           });
           const json = (await res.json().catch(() => ({}))) as { item?: SuporteItem; error?: string };
           if (!res.ok || !json.item) {
-            throw new Error(json?.error || "Falha ao mover chamados da coluna");
+            throw new Error(json?.error || "Falha ao mover tickets da coluna");
           }
           return json.item;
         }));
@@ -510,7 +568,7 @@ export default function KanbanItPage() {
         setSelectedSuporte((current) => (current ? movedMap.get(current.id) ?? current : current));
       } catch (err) {
         setSuportes(previous);
-        setError(err instanceof Error ? err.message : "Falha ao mover chamados da coluna");
+        setError(err instanceof Error ? err.message : "Falha ao mover tickets da coluna");
         return;
       }
     }
@@ -676,7 +734,7 @@ export default function KanbanItPage() {
     return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Carregando...</div>;
   }
 
-  if (!canAccessGlobalKanban) {
+  if (!canOpenBoard) {
     return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Acesso restrito.</div>;
   }
 
@@ -685,17 +743,50 @@ export default function KanbanItPage() {
       <section className="support-board-hero">
         <div className="support-board-hero-brand">
           <div className="support-board-hero-logo">
-            <Image src="/images/tc.png" alt="Logo Testing Company" width={72} height={72} className="h-14 w-14 object-contain sm:h-16 sm:w-16" priority />
+            {supportBrand.logoSrc ? (
+              shouldUseNativeImageTag(supportBrand.logoSrc) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={supportBrand.logoSrc}
+                  alt={supportBrand.logoAlt}
+                  width={72}
+                  height={72}
+                  className="h-14 w-14 object-contain sm:h-16 sm:w-16"
+                  loading="eager"
+                  decoding="async"
+                />
+              ) : (
+                <Image
+                  src={supportBrand.logoSrc}
+                  alt={supportBrand.logoAlt}
+                  width={72}
+                  height={72}
+                  className="h-14 w-14 object-contain sm:h-16 sm:w-16"
+                  priority
+                />
+              )
+            ) : supportBrand.isCompanyScoped ? (
+              <span className="text-lg font-bold tracking-[0.18em] text-white/90 sm:text-xl">
+                {supportBrand.logoFallback}
+              </span>
+            ) : (
+              <Image src="/images/tc.png" alt="Logo Testing Company" width={72} height={72} className="h-14 w-14 object-contain sm:h-16 sm:w-16" priority />
+            )}
           </div>
-          <h1 className="support-board-title">Suporte</h1>
+          <div className="min-w-0">
+            {supportBrand.companyName ? <p className="support-board-kicker">EMPRESA {supportBrand.companyName.toUpperCase()}</p> : null}
+            <h1 className="support-board-title">Suporte</h1>
+          </div>
         </div>
 
         <div className="support-board-hero-top">
           <div className="support-board-hero-copy">
             <p className="support-board-subtitle">
-              {isPrivilegedSupportUser(user)
-                ? "Acompanhe todos os chamados abertos que entram no atendimento global com a mesma hierarquia visual dos paineis administrativos."
-                : "Acompanhe os chamados vinculados ao usuario autenticado seguindo o mesmo padrao visual premium da plataforma."}
+              {hasGlobalScope
+                ? "Acompanhe todos os tickets visiveis no atendimento tecnico com a mesma hierarquia visual dos paineis administrativos."
+                : supportBrand.companyName
+                  ? `Acompanhe os tickets visiveis de ${supportBrand.companyName}, mantendo a mesma experiencia do fluxo de suporte.`
+                  : "Acompanhe apenas os tickets criados por voce, mantendo a mesma interface premium do fluxo de suporte."}
             </p>
           </div>
 
@@ -708,7 +799,7 @@ export default function KanbanItPage() {
               <FiRefreshCw size={14} />
               Atualizar
             </button>
-            {(can("support", "create") || can("tickets", "create")) && (
+            {canCreateSupport && (
               <button
                 type="button"
                 onClick={() => setCreateOpen(true)}
@@ -737,9 +828,13 @@ export default function KanbanItPage() {
         <div className="support-board-workspace-head">
           <div className="support-board-workspace-copy">
             <p className="support-board-section-kicker">Painel de atendimento</p>
-            <h2 className="support-board-section-title">Fluxo global de chamados</h2>
+            <h2 className="support-board-section-title">
+              {hasGlobalScope ? "Fluxo global de suporte" : "Seus tickets de suporte"}
+            </h2>
             <p className="support-board-section-description">
-              Organize colunas, acompanhe responsaveis e abra o detalhamento do ticket dentro de uma superficie unica, alinhada com empresa, usuarios e gestao.
+              {hasGlobalScope
+                ? "Organize colunas, acompanhe responsaveis e abra o detalhamento do ticket dentro de uma superficie unica, alinhada com empresa, usuarios e gestao."
+                : "Use a mesma superficie de atendimento para acompanhar seus tickets, comentar e consultar o historico sem trocar de experiencia visual."}
             </p>
           </div>
 
@@ -783,7 +878,7 @@ export default function KanbanItPage() {
             </div>
 
             <div className="support-board-search-card">
-              <div className="support-board-search-label">Buscar chamado</div>
+              <div className="support-board-search-label">Buscar ticket</div>
               <div className="support-board-search-field">
                 <FiSearch size={15} className="support-board-search-icon" />
                 <input
@@ -792,7 +887,7 @@ export default function KanbanItPage() {
                   onChange={(event) => setTicketSearch(event.target.value)}
                   className="support-board-search-input"
                   placeholder="ID ou codigo, ex.: 27 ou SP-000027"
-                  aria-label="Buscar chamado por ID"
+                  aria-label="Buscar ticket por ID"
                 />
               </div>
               <div className="support-board-meta-row" aria-label="Informacoes do painel">
@@ -807,11 +902,11 @@ export default function KanbanItPage() {
         </div>
 
         {error ? <p className="support-board-alert support-board-alert-error">{error}</p> : null}
-        {loadingSuportes ? <p className="support-board-alert">Carregando chamados...</p> : null}
+        {loadingSuportes ? <p className="support-board-alert">Carregando tickets...</p> : null}
         {ticketSearch.trim() && filteredSuportes.length === 0 && !loadingSuportes ? (
           <div className="support-board-no-results">
             <FiSearch size={18} className="support-board-no-results-icon" />
-            <span>Nenhum chamado encontrado para <strong>&ldquo;{ticketSearch.trim()}&rdquo;</strong>. Verifique o ID ou código e tente novamente.</span>
+            <span>Nenhum ticket encontrado para <strong>&ldquo;{ticketSearch.trim()}&rdquo;</strong>. Verifique o ID ou codigo e tente novamente.</span>
           </div>
         ) : null}
 
@@ -853,7 +948,7 @@ export default function KanbanItPage() {
           {columns.map((column, idx) => {
             const columnTheme = SUPPORT_COLUMN_THEMES[idx % SUPPORT_COLUMN_THEMES.length];
             const columnItems = grouped[column.key] ?? [];
-            const isDropTarget = Boolean(dragging && dragging.from !== column.key && isPrivilegedSupportUser(user));
+            const isDropTarget = Boolean(dragging && dragging.from !== column.key && isPrivileged);
             const isColumnDropTarget = Boolean(draggingColumnKey && draggingColumnKey !== column.key && columnDropTargetKey === column.key);
             const isDraggingColumn = draggingColumnKey === column.key;
 
@@ -929,7 +1024,7 @@ export default function KanbanItPage() {
                         <span className="support-board-column-title support-board-column-title-static">{column.label}</span>
                       )}
                       <p className="support-board-column-description">
-                        {columnItems.length} {columnItems.length === 1 ? "chamado nesta etapa" : "chamados nesta etapa"}
+                        {columnItems.length} {columnItems.length === 1 ? "ticket nesta etapa" : "tickets nesta etapa"}
                       </p>
                     </div>
                     <div className="support-board-column-head-side">
@@ -964,8 +1059,7 @@ export default function KanbanItPage() {
                   {columnItems.map((suporte) => {
                     const creatorLabel = suporte.createdByName || suporte.createdByEmail || suporte.createdBy || "-";
                     const assigneeLabel = suporte.assignedToName || suporte.assignedToEmail || "Nao definido";
-                    const canManageSuporte =
-                      isPrivileged && (user?.id === suporte.createdBy || isPrivilegedSupportUser(user));
+                    const canManageSuporte = isPrivileged;
 
                     return (
                       <article key={suporte.id} className="support-board-card" data-search-match={ticketSearch.trim() ? "true" : undefined}>
@@ -984,8 +1078,6 @@ export default function KanbanItPage() {
                           } : undefined}
                           onClick={() => setSelectedSuporte(suporte)}
                           className="support-board-card-button"
-                          data-disabled={!canManageSuporte ? "true" : undefined}
-                          disabled={!canManageSuporte}
                         >
                           <div className="support-board-card-top">
                             <p className="support-board-card-code">
@@ -1072,7 +1164,7 @@ export default function KanbanItPage() {
 
                           {!canManageSuporte ? (
                             <p className="support-board-card-warning">
-                              Voce nao tem permissao para mover o suporte.
+                              Apenas o time de suporte pode alterar status e responsavel.
                             </p>
                           ) : null}
                         </div>
@@ -1082,7 +1174,7 @@ export default function KanbanItPage() {
 
                   {columnItems.length === 0 ? (
                     <div className="support-board-column-empty">
-                      <p className="support-board-column-empty-title">Sem chamados nesta etapa</p>
+                      <p className="support-board-column-empty-title">Sem tickets nesta etapa</p>
                       <p className="support-board-column-empty-copy">
                         Novos tickets aparecerao aqui quando entrarem neste fluxo.
                       </p>
@@ -1101,7 +1193,7 @@ export default function KanbanItPage() {
         open={Boolean(selectedSuporte)}
         suporte={selectedSuporte}
         onClose={() => setSelectedSuporte(null)}
-        canEditStatus={true}
+        canEditStatus={isPrivileged}
         statusOptions={statusOptions}
         onSuporteUpdated={(updated: SuporteItem) => {
           setSelectedSuporte(updated);
@@ -1134,7 +1226,7 @@ export default function KanbanItPage() {
                     Novo suporte
                   </h2>
                   <p className="support-create-modal-subtitle">
-                    Abra um chamado com titulo, descricao, tipo e prioridade.
+                    Abra um ticket com titulo, descricao, tipo e prioridade.
                   </p>
                 </div>
               </div>

@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FiMenu } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
 import { useClientContext } from "@/context/ClientContext";
+import { shortenCompanyPathname, shouldUseShortCompanyRoutes } from "@/lib/companyRoutes";
 import {
   getFixedProfileLabel,
   resolveFixedProfileKind,
@@ -51,6 +52,7 @@ function humanizeSegment(value: string) {
     .trim();
 
   if (!normalized) return "Quality Control";
+  if (normalized === "chamados" || normalized === "meus chamados") return "Suporte";
 
   return normalized.replace(/\b\w/g, (char) => char.toUpperCase());
 }
@@ -65,6 +67,8 @@ function resolveSectionNote(section: string) {
       return "Catalogo visual das aplicacoes monitoradas, integracoes conectadas e projetos vinculados.";
     case "defeitos":
       return "Triagem dos defeitos e pontos de atencao que precisam de resposta do time.";
+    case "suporte":
+      return "Painel unificado de suporte para abrir tickets, acompanhar comentarios e consultar o andamento.";
     case "planos de teste":
       return "Panorama dos planos, campanhas e vinculos com as aplicacoes da empresa.";
     case "perfil":
@@ -301,13 +305,32 @@ function resolveRouteCompanySlug(pathname: string) {
   return decodeURIComponent(rootSegment);
 }
 
+function isSupportRoute(pathname: string) {
+  if (
+    pathname.startsWith("/kanban-it") ||
+    pathname.startsWith("/meus-chamados") ||
+    pathname.startsWith("/chamados") ||
+    pathname.startsWith("/admin/support") ||
+    pathname.startsWith("/admin/chamados")
+  ) {
+    return true;
+  }
+
+  if (/^\/empresas\/[^/]+\/chamados(?:\/.*)?$/.test(pathname)) {
+    return true;
+  }
+
+  const parts = pathname.split("/").filter(Boolean);
+  return parts.length >= 2 && parts[1] === "chamados" && resolveRouteCompanySlug(pathname) !== null;
+}
+
 function shouldHideShellCover(pathname: string) {
   const hasAdminHeroCover = /^\/admin\/(?:home|test-metric|users|clients|support)(?:\/.*)?$/.test(pathname);
   return (
     pathname.startsWith("/settings/profile") ||
     pathname.startsWith("/requests") ||
     pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/kanban-it") ||
+    isSupportRoute(pathname) ||
     hasAdminHeroCover
   );
 }
@@ -318,6 +341,7 @@ function shouldUseNativeImageTag(src: string) {
 
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname() || "";
+  const router = useRouter();
   const { user, companies } = useAuth();
   const { activeClient, activeClientSlug } = useClientContext();
   const isLoginRoute = pathname.startsWith("/login");
@@ -424,6 +448,31 @@ export default function AppShell({ children }: AppShellProps) {
   function handleTouchEnd() {
     touchStartX.current = null;
   }
+
+  useEffect(() => {
+    if (!pathname.startsWith("/empresas/")) return;
+
+    const nextPath = shortenCompanyPathname(pathname);
+    if (!nextPath) return;
+
+    const shouldCanonicalize = shouldUseShortCompanyRoutes({
+      isGlobalAdmin: user?.isGlobalAdmin === true,
+      permissionRole: typeof user?.permissionRole === "string" ? user.permissionRole : null,
+      role: typeof user?.role === "string" ? user.role : null,
+      companyRole: typeof user?.companyRole === "string" ? user.companyRole : null,
+      userOrigin:
+        typeof (user as { userOrigin?: string | null } | null)?.userOrigin === "string"
+          ? (user as { userOrigin?: string | null }).userOrigin
+          : typeof (user as { user_origin?: string | null } | null)?.user_origin === "string"
+            ? (user as { user_origin?: string | null }).user_origin
+            : null,
+      companyCount: companies.length,
+      clientSlug: typeof user?.clientSlug === "string" ? user.clientSlug : null,
+    });
+
+    if (!shouldCanonicalize || nextPath === pathname) return;
+    router.replace(nextPath);
+  }, [pathname, router, user, companies.length]);
 
   useEffect(() => {
     // Close mobile menu only when the route actually changes.

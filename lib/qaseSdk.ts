@@ -93,6 +93,54 @@ export class QaseClient {
     return { data: json, status: res.status };
   }
 
+  async patchWithStatus<T>(path: string, body?: unknown, options: RequestOptions = {}): Promise<{ data: T; status: number }> {
+    const url = this.buildUrl(path, options.params);
+    const headers = {
+      Token: this.token,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      ...(options.headers ?? {}),
+    };
+
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      cache: options.cache ?? this.defaultFetchOptions?.cache,
+      ...this.defaultFetchOptions,
+    });
+
+    if (!res.ok) {
+      throw new QaseError(`Qase request failed: ${res.status}`, res.status);
+    }
+
+    const json = (await res.json().catch(() => ({}))) as T;
+    return { data: json, status: res.status };
+  }
+
+  async deleteWithStatus<T>(path: string, options: RequestOptions = {}): Promise<{ data: T; status: number }> {
+    const url = this.buildUrl(path, options.params);
+    const headers = {
+      Token: this.token,
+      Accept: "application/json",
+      ...(options.headers ?? {}),
+    };
+
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers,
+      cache: options.cache ?? this.defaultFetchOptions?.cache,
+      ...this.defaultFetchOptions,
+    });
+
+    if (!res.ok) {
+      throw new QaseError(`Qase request failed: ${res.status}`, res.status);
+    }
+
+    const json = (await res.json().catch(() => ({}))) as T;
+    return { data: json, status: res.status };
+  }
+
   async listPlans(
     projectCode: string,
     params?: Record<string, string | number | undefined>,
@@ -100,6 +148,34 @@ export class QaseClient {
     const { data } = await this.getWithStatus<{ result?: { entities?: unknown[] } }>(`/plan/${projectCode}`, {
       params,
     });
+    return data;
+  }
+
+  async getPlan(projectCode: string, planId: string | number): Promise<{ result?: unknown }> {
+    const { data } = await this.getWithStatus<{ result?: unknown }>(
+      `/plan/${projectCode}/${encodeURIComponent(String(planId))}`,
+      { cache: "no-store" },
+    );
+    return data;
+  }
+
+  async createPlan(projectCode: string, body: Record<string, unknown>) {
+    const { data } = await this.postWithStatus<{ result?: unknown }>(`/plan/${projectCode}`, body);
+    return data;
+  }
+
+  async updatePlan(projectCode: string, planId: string | number, body: Record<string, unknown>) {
+    const { data } = await this.patchWithStatus<{ result?: unknown }>(
+      `/plan/${projectCode}/${encodeURIComponent(String(planId))}`,
+      body,
+    );
+    return data;
+  }
+
+  async deletePlan(projectCode: string, planId: string | number) {
+    const { data } = await this.deleteWithStatus<{ result?: unknown }>(
+      `/plan/${projectCode}/${encodeURIComponent(String(planId))}`,
+    );
     return data;
   }
 

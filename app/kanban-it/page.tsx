@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent as ReactDragEvent, type PointerEvent as ReactPointerEvent, type WheelEvent } from "react";
-import { FiChevronLeft, FiChevronRight, FiEdit2, FiLifeBuoy, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiX } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight, FiEdit2, FiLifeBuoy, FiPaperclip, FiPlus, FiSearch, FiTrash2, FiX } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
 import { useClientContext } from "@/context/ClientContext";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
@@ -38,6 +38,7 @@ type SuporteItem = {
 };
 
 type ColumnKey = string;
+type SupportEvidenceLink = { raw: string; label: string; href: string };
 
 const PRIORITY_OPTIONS = [
   { value: "low", label: "Baixa" },
@@ -77,6 +78,7 @@ const KNOWN_SUPPORT_ROUTE_ROOTS = new Set([
   "empresas",
   "kanban-it",
 ]);
+const SUPPORT_EVIDENCE_PATTERN = /\[([^\]]+)\]\(([^)\s]+)\)/g;
 
 function shortText(value?: string | null, max = 120) {
   if (!value) return "Sem descricao.";
@@ -206,6 +208,37 @@ function getInitials(label: string) {
   return normalized || "TC";
 }
 
+function sanitizeEvidenceFileName(name: string) {
+  return name.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/-+/g, "-").slice(-120);
+}
+
+function buildEvidenceMarkdown(name: string, url: string) {
+  return `[Evidencia: ${name}](${url})`;
+}
+
+function isSupportEvidenceLabel(label: string) {
+  return /^evid[eê]ncia:/i.test(label.trim());
+}
+
+function parseSupportDescription(body?: string | null): { text: string; evidence: SupportEvidenceLink[] } {
+  const source = body ?? "";
+  if (!source.trim()) {
+    return { text: "", evidence: [] };
+  }
+
+  const evidence: SupportEvidenceLink[] = [];
+  const text = source
+    .replace(SUPPORT_EVIDENCE_PATTERN, (raw, label, href) => {
+      if (!isSupportEvidenceLabel(label)) return raw;
+      evidence.push({ raw, label, href });
+      return "";
+    })
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  return { text, evidence };
+}
+
 function resolveCompanySlugFromPath(pathname: string) {
   const parts = pathname.split("/").filter(Boolean);
   if (parts[0] === "empresas" && parts[2] === "chamados" && parts[1]) {
@@ -242,6 +275,8 @@ export default function KanbanItPage() {
   });
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [createEvidenceFile, setCreateEvidenceFile] = useState<File | null>(null);
+  const createEvidenceInputRef = useRef<HTMLInputElement | null>(null);
 
   const [editingColumnKey, setEditingColumnKey] = useState<string | null>(null);
   const [editingColumnLabel, setEditingColumnLabel] = useState("");
@@ -399,9 +434,6 @@ export default function KanbanItPage() {
       setLoadingSuportes(false);
     }
   }, []);
-
-  // Backwards-compatible alias used in some UI handlers
-  const loadTickets = loadSuportes;
 
   useEffect(() => {
     loadSuportes();
@@ -604,13 +636,39 @@ export default function KanbanItPage() {
     }
 
     try {
+      let evidenceMarkdown = "";
+      if (createEvidenceFile) {
+        const safeName = sanitizeEvidenceFileName(createEvidenceFile.name || `evidencia-${Date.now()}`);
+        const key = `tickets/evidencias/tmp/${Date.now()}-${safeName}`;
+        const form = new FormData();
+        form.set("file", createEvidenceFile);
+        form.set("key", key);
+        const uploadRes = await fetch("/api/s3/upload", {
+          method: "POST",
+          credentials: "include",
+          body: form,
+        });
+        const uploadJson = (await uploadRes.json().catch(() => ({}))) as { ok?: boolean; key?: string; error?: string };
+        if (!uploadRes.ok || !uploadJson.ok || !uploadJson.key) {
+          setCreateError(uploadJson?.error || "Erro ao anexar evidencia");
+          setCreating(false);
+          return;
+        }
+        evidenceMarkdown = buildEvidenceMarkdown(
+          createEvidenceFile.name,
+          `/api/s3/object?key=${encodeURIComponent(uploadJson.key)}`,
+        );
+      }
+
+      const description = [createDraft.description.trim(), evidenceMarkdown].filter(Boolean).join("\n\n");
+
       const res = await fetch("/api/suportes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
           title: createDraft.title,
-          description: createDraft.description,
+          description,
           type: createDraft.type,
           priority: createDraft.priority,
         }),
@@ -622,6 +680,8 @@ export default function KanbanItPage() {
       }
       setCreateOpen(false);
       setCreateDraft({ title: "", description: "", type: "tarefa", priority: "medium" });
+      setCreateEvidenceFile(null);
+      if (createEvidenceInputRef.current) createEvidenceInputRef.current.value = "";
       setSuportes((current) => [json.item as SuporteItem, ...current]);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao criar suporte";
@@ -629,6 +689,13 @@ export default function KanbanItPage() {
     } finally {
       setCreating(false);
     }
+  }
+
+  function closeCreateModal() {
+    setCreateOpen(false);
+    setCreateError(null);
+    setCreateEvidenceFile(null);
+    if (createEvidenceInputRef.current) createEvidenceInputRef.current.value = "";
   }
 
   function startEditColumn(key: string, label: string) {
@@ -783,23 +850,15 @@ export default function KanbanItPage() {
           <div className="support-board-hero-copy">
             <p className="support-board-subtitle">
               {hasGlobalScope
-                ? "Acompanhe todos os tickets visiveis no atendimento tecnico com a mesma hierarquia visual dos paineis administrativos."
+                ? "Acompanhe os tickets do atendimento tecnico em um fluxo direto."
                 : supportBrand.companyName
-                  ? `Acompanhe os tickets visiveis de ${supportBrand.companyName}, mantendo a mesma experiencia do fluxo de suporte.`
-                  : "Acompanhe apenas os tickets criados por voce, mantendo a mesma interface premium do fluxo de suporte."}
+                  ? `Acompanhe os tickets visiveis de ${supportBrand.companyName} no fluxo de suporte.`
+                  : "Acompanhe apenas os tickets criados por voce no fluxo de suporte."}
             </p>
           </div>
 
-          <div className="support-board-hero-actions">
-            <button
-              type="button"
-              onClick={loadTickets}
-              className="support-board-ghost-btn"
-            >
-              <FiRefreshCw size={14} />
-              Atualizar
-            </button>
-            {canCreateSupport && (
+          {canCreateSupport ? (
+            <div className="support-board-hero-actions">
               <button
                 type="button"
                 onClick={() => setCreateOpen(true)}
@@ -809,8 +868,8 @@ export default function KanbanItPage() {
                 <FiPlus size={18} />
                 Novo suporte
               </button>
-            )}
-          </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="support-board-stat-grid">
@@ -829,12 +888,12 @@ export default function KanbanItPage() {
           <div className="support-board-workspace-copy">
             <p className="support-board-section-kicker">Painel de atendimento</p>
             <h2 className="support-board-section-title">
-              {hasGlobalScope ? "Fluxo global de suporte" : "Seus tickets de suporte"}
+              {hasGlobalScope ? "Kanban de suporte" : "Seus tickets"}
             </h2>
             <p className="support-board-section-description">
               {hasGlobalScope
-                ? "Organize colunas, acompanhe responsaveis e abra o detalhamento do ticket dentro de uma superficie unica, alinhada com empresa, usuarios e gestao."
-                : "Use a mesma superficie de atendimento para acompanhar seus tickets, comentar e consultar o historico sem trocar de experiencia visual."}
+                ? "Organize colunas, acompanhe responsaveis e abra o detalhamento do ticket."
+                : "Acompanhe seus tickets, responda e consulte o historico."}
             </p>
           </div>
 
@@ -878,7 +937,7 @@ export default function KanbanItPage() {
             </div>
 
             <div className="support-board-search-card">
-              <div className="support-board-search-label">Buscar ticket</div>
+              <div className="support-board-search-label">Busca</div>
               <div className="support-board-search-field">
                 <FiSearch size={15} className="support-board-search-icon" />
                 <input
@@ -886,12 +945,11 @@ export default function KanbanItPage() {
                   value={ticketSearch}
                   onChange={(event) => setTicketSearch(event.target.value)}
                   className="support-board-search-input"
-                  placeholder="ID ou codigo, ex.: 27 ou SP-000027"
+                  placeholder="ID ou codigo do ticket"
                   aria-label="Buscar ticket por ID"
                 />
               </div>
               <div className="support-board-meta-row" aria-label="Informacoes do painel">
-                <span className="support-board-meta-item">Atualizacao 30s</span>
                 <span className="support-board-meta-item">
                   {columns.length} {columns.length === 1 ? "coluna ativa" : "colunas ativas"}
                 </span>
@@ -1060,6 +1118,7 @@ export default function KanbanItPage() {
                     const creatorLabel = suporte.createdByName || suporte.createdByEmail || suporte.createdBy || "-";
                     const assigneeLabel = suporte.assignedToName || suporte.assignedToEmail || "Nao definido";
                     const canManageSuporte = isPrivileged;
+                    const parsedDescription = parseSupportDescription(suporte.description);
 
                     return (
                       <article key={suporte.id} className="support-board-card" data-search-match={ticketSearch.trim() ? "true" : undefined}>
@@ -1090,8 +1149,18 @@ export default function KanbanItPage() {
 
                           <p className="support-board-card-title">{suporte.title || "Sem titulo"}</p>
                           <p className="support-board-card-description">
-                            {shortText(suporte.description, 108)}
+                            {shortText(parsedDescription.text, 108)}
                           </p>
+                          {parsedDescription.evidence.length > 0 ? (
+                            <div className="support-board-card-evidence">
+                              <FiPaperclip size={12} />
+                              <span>
+                                {parsedDescription.evidence.length === 1
+                                  ? "1 evidencia"
+                                  : `${parsedDescription.evidence.length} evidencias`}
+                              </span>
+                            </div>
+                          ) : null}
 
                           <div className="support-board-badge-row">
                             <span
@@ -1206,7 +1275,7 @@ export default function KanbanItPage() {
       {createOpen && (
         <div
           className="ticket-detail-modal-overlay support-create-modal-overlay"
-          onClick={() => setCreateOpen(false)}
+          onClick={closeCreateModal}
         >
           <div
             className="support-create-modal-shell"
@@ -1232,7 +1301,7 @@ export default function KanbanItPage() {
               </div>
               <button
                 type="button"
-                onClick={() => setCreateOpen(false)}
+                onClick={closeCreateModal}
                 className="support-create-modal-close"
                 aria-label="Fechar modal de novo suporte"
                 title="Fechar"
@@ -1309,9 +1378,46 @@ export default function KanbanItPage() {
             </div>
 
             <div className="support-create-modal-footer">
+              <input
+                ref={createEvidenceInputRef}
+                type="file"
+                className="sr-only"
+                accept="image/*,.pdf,.txt,.log,.json,.zip,.csv,.xlsx,.doc,.docx"
+                onChange={(event) => setCreateEvidenceFile(event.target.files?.[0] ?? null)}
+              />
+              <div className="support-create-modal-footer-side">
+                <button
+                  type="button"
+                  onClick={() => createEvidenceInputRef.current?.click()}
+                  className="support-create-modal-attach"
+                  aria-label={createEvidenceFile ? "Trocar evidencia" : "Anexar evidencia"}
+                  title={createEvidenceFile ? "Trocar evidencia" : "Anexar evidencia"}
+                >
+                  <FiPaperclip size={16} />
+                </button>
+                {createEvidenceFile ? (
+                  <div className="support-create-modal-file-chip">
+                    <span className="support-create-modal-file-name" title={createEvidenceFile.name}>
+                      {createEvidenceFile.name}
+                    </span>
+                    <button
+                      type="button"
+                      className="support-create-modal-file-remove"
+                      onClick={() => {
+                        setCreateEvidenceFile(null);
+                        if (createEvidenceInputRef.current) createEvidenceInputRef.current.value = "";
+                      }}
+                      aria-label="Remover evidencia"
+                      title="Remover evidencia"
+                    >
+                      <FiX size={12} />
+                    </button>
+                  </div>
+                ) : null}
+              </div>
               <button
                 type="button"
-                onClick={() => setCreateOpen(false)}
+                onClick={closeCreateModal}
                 className="support-create-modal-secondary"
               >
                 Cancelar

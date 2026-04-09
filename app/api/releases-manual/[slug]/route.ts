@@ -8,9 +8,10 @@ import { evaluateQualityGate } from "@/lib/quality";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
 import { listManualReleaseResponsibleOptions, resolveLocalUserDisplayName } from "@/lib/manualReleaseResponsible";
 import { readManualReleases, writeManualReleases } from "@/lib/manualReleaseStore";
-import { notifyManualRunFailure } from "@/lib/notificationService";
+import { notifyDefectAssigned, notifyDefectStatusChanged, notifyManualRunFailure } from "@/lib/notificationService";
 import { appendDefectHistory } from "@/lib/manualDefectHistoryStore";
 import { getLocalUserById } from "@/lib/auth/localStore";
+import { invalidateCompanyDefectsDataset } from "@/lib/companyDefectsDataset";
 
 async function resolveActor(authUser: AuthUser | null) {
   if (!authUser) return { actorId: null, actorName: null };
@@ -50,6 +51,12 @@ function normalizeStats(stats?: Partial<Stats> | null): Stats {
     blocked: Math.max(0, Number(stats?.blocked ?? 0)),
     notRun: Math.max(0, Number(stats?.notRun ?? 0)),
   };
+}
+
+function normalizeOptionalLabel(value: unknown) {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  return normalized || null;
 }
 
 export async function GET(_req: Request, context: { params: Promise<{ slug: string }> }) {
@@ -170,10 +177,12 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
   const nextName =
     typeof body.name === "string" ? body.name : typeof body.title === "string" ? body.title : current.name;
   const nextRunSlug = typeof body.runSlug === "string" ? body.runSlug : current.runSlug;
+  const nextApp = typeof body.app === "string" ? body.app.trim() || "Aplicacao manual" : current.app;
 
   const updated: Release = {
     ...current,
     name: nextName,
+    app: nextApp,
     qaseProject:
       typeof body.qaseProject === "string"
         ? body.qaseProject.trim().toUpperCase()
@@ -181,8 +190,34 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
           ? body.qase_project_code.trim().toUpperCase()
           : current.qaseProject,
     status: nextStatus ?? current.status,
+    severity: body.severity === undefined ? current.severity ?? null : normalizeOptionalLabel(body.severity),
+    priority: body.priority === undefined ? current.priority ?? null : normalizeOptionalLabel(body.priority),
     runSlug: nextRunSlug,
     runName: typeof body.runName === "string" ? body.runName : current.runName,
+    testPlanId:
+      body.testPlanId === undefined
+        ? current.testPlanId ?? null
+        : typeof body.testPlanId === "string" && body.testPlanId.trim()
+          ? body.testPlanId.trim()
+          : null,
+    testPlanName:
+      body.testPlanName === undefined
+        ? current.testPlanName ?? null
+        : typeof body.testPlanName === "string" && body.testPlanName.trim()
+          ? body.testPlanName.trim()
+          : null,
+    testPlanSource:
+      body.testPlanSource === undefined
+        ? current.testPlanSource ?? null
+        : body.testPlanSource === "manual" || body.testPlanSource === "qase"
+          ? body.testPlanSource
+          : null,
+    testPlanProjectCode:
+      body.testPlanProjectCode === undefined
+        ? current.testPlanProjectCode ?? null
+        : typeof body.testPlanProjectCode === "string" && body.testPlanProjectCode.trim()
+          ? body.testPlanProjectCode.trim().toUpperCase()
+          : null,
     stats: statsPatch,
     kind: nextKind,
     createdByUserId: creatorUserId,
@@ -195,6 +230,9 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
 
   releases[index] = updated;
   await writeManualReleases(releases);
+  if (nextKind === "defect") {
+    invalidateCompanyDefectsDataset(updated.clientSlug ?? current.clientSlug ?? null);
+  }
   if (nextKind === "run") {
     try {
       await notifyManualRunFailure(updated);
@@ -209,6 +247,8 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
       const nextStatusFinal = normalizeDefectStatus(updated.status);
       const prevRun = typeof current.runSlug === "string" ? current.runSlug : null;
       const nextRun = typeof updated.runSlug === "string" ? updated.runSlug : null;
+      const prevAssignedToUserId = current.assignedToUserId ?? null;
+      const nextAssignedToUserId = updated.assignedToUserId ?? null;
       if (prevStatus !== nextStatusFinal) {
         await appendDefectHistory(updated.slug, {
           action: "status_changed",
@@ -233,6 +273,36 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
           actorId: actor.actorId,
           actorName: actor.actorName,
           note: `Nome atualizado: ${current.name} -> ${nextName}`,
+        });
+      }
+      if (prevStatus !== nextStatusFinal) {
+        void notifyDefectStatusChanged({
+          defect: {
+            slug: updated.slug,
+            title: updated.name,
+            name: updated.name,
+            createdByUserId: updated.createdByUserId ?? null,
+            assignedToUserId: updated.assignedToUserId ?? null,
+          },
+          companySlug: updated.clientSlug ?? null,
+          actorId: actor.actorId ?? "",
+          actorName: actor.actorName,
+          nextStatusLabel: nextStatusFinal === "done" ? "Concluido" : nextStatusFinal === "in_progress" ? "Em andamento" : "Aberto",
+        });
+      }
+      if (prevAssignedToUserId !== nextAssignedToUserId && nextAssignedToUserId) {
+        void notifyDefectAssigned({
+          defect: {
+            slug: updated.slug,
+            title: updated.name,
+            name: updated.name,
+            createdByUserId: updated.createdByUserId ?? null,
+            assignedToUserId: updated.assignedToUserId ?? null,
+          },
+          companySlug: updated.clientSlug ?? null,
+          actorId: actor.actorId ?? "",
+          assigneeId: nextAssignedToUserId,
+          assigneeName: updated.assignedToName ?? null,
         });
       }
     } catch (err) {
@@ -269,6 +339,9 @@ export async function DELETE(req: Request, context: { params: Promise<{ slug: st
 
   const filtered = releases.filter((r) => r.slug !== targetSlug);
   await writeManualReleases(filtered);
+  if (resolveManualReleaseKind(target) === "defect") {
+    invalidateCompanyDefectsDataset(target.clientSlug ?? null);
+  }
   if (resolveManualReleaseKind(target) === "defect") {
     try {
       const actor = await resolveActor(effectiveAuthUser as AuthUser);

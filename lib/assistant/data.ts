@@ -102,7 +102,7 @@ export async function findVisibleTicket(user: AuthUser, input: string) {
     const exact = visible.find((t) => t.id.toLowerCase() === ref.id);
     if (exact) return exact;
   }
-  if (ref?.code) {
+  if (ref?.type === "code" || ref?.type === "numeric") {
     const exact = visible.find((t) => t.code.toLowerCase() === ref.code.toLowerCase());
     if (exact) return exact;
   }

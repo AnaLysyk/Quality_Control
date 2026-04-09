@@ -89,7 +89,20 @@ export async function createApplication(input: ApplicationSeed): Promise<AppReco
     const prisma = await getPrisma();
     const id = `app_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
     const qaseProjectCode = normalizeProjectCode(input.qaseProjectCode);
-    const r = await prisma.application.create({ data: { id, companyId: input.companyId ?? input.companySlug ?? null, companySlug: input.companySlug ?? input.companyId ?? null, name: input.name || "Untitled", slug: normalizeSlug(input.slug || qaseProjectCode || input.name || "untitled"), description: input.description ?? null, qaseProjectCode, source: input.source ?? null, active: typeof input.active === "boolean" ? input.active : true } });
+    const r = await prisma.application.create({
+      data: {
+        id,
+        companyId: input.companyId ?? input.companySlug ?? null,
+        companySlug: input.companySlug ?? input.companyId ?? null,
+        name: input.name || "Untitled",
+        slug: normalizeSlug(input.slug || qaseProjectCode || input.name || "untitled"),
+        description: input.description ?? null,
+        imageUrl: input.imageUrl ?? null,
+        qaseProjectCode,
+        source: input.source ?? null,
+        active: typeof input.active === "boolean" ? input.active : true,
+      },
+    });
     return pgToRecord(r);
   }
   const db = readFile();
@@ -103,6 +116,7 @@ export async function createApplication(input: ApplicationSeed): Promise<AppReco
     name: input.name || "Untitled",
     slug: normalizeSlug(input.slug || qaseProjectCode || input.name || "untitled"),
     description: input.description ?? null,
+    imageUrl: input.imageUrl ?? null,
     qaseProjectCode,
     source: input.source ?? null,
     active: typeof input.active === "boolean" ? input.active : true,
@@ -154,7 +168,6 @@ export async function syncCompanyApplications(input: {
   if (USE_POSTGRES) {
     const prisma = await getPrisma();
     const synced: AppRecord[] = [];
-    const now = new Date().toISOString();
     for (const project of input.projects) {
       const code = normalizeProjectCode(project.code);
       if (!code) continue;

@@ -46,7 +46,7 @@ export async function toolSearchInternalRecords(user: AuthUser, context: Assista
   const query = extractSearchText(message);
   const hasExplicitFilters = Boolean(statusFilters || priorityFilters || wantsOnlyUnassigned || wantsOnlyAssigned);
 
-  if (reference?.code) {
+  if (reference?.type === "code" || reference?.type === "numeric") {
     const exact = tickets.find((t) => t.code.toLowerCase() === reference.code.toLowerCase());
     if (exact) tickets = [exact];
   } else if (query) {

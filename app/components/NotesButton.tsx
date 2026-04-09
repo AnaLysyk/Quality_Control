@@ -33,7 +33,6 @@ type NoteColorKey = "amber" | "sky" | "emerald" | "rose" | "violet" | "orange";
 type NoteStatus = "Rascunho" | "Em andamento" | "Concluido" | "Arquivado";
 type NotePriority = "Baixa" | "Media" | "Alta" | "Urgente";
 type NoteFilterValue<T extends string> = T | "all";
-type PanelSizeKey = "small" | "medium" | "large" | "expanded";
 
 type ColorOption = {
   key: NoteColorKey;
@@ -83,14 +82,17 @@ type TextTransformResult = {
 };
 
 type EditorTool = {
-  id: "h1" | "h2" | "list" | "checklist" | "bold" | "italic" | "highlight" | "code" | "json" | "link";
+  id: "h1" | "h2" | "h3" | "list" | "orderedList" | "checklist" | "quote" | "divider" | "bold" | "italic" | "highlight" | "code" | "json" | "link";
   label: string;
   title: string;
+  group: "structure" | "style";
 };
 
-type NoteMarker = {
-  icon: string;
+type NoteSnippet = {
+  id: "decision" | "nextSteps" | "risk" | "context" | "linkBlock" | "codeBlock";
   label: string;
+  title: string;
+  text: string;
 };
 
 const NOTE_COLORS: ColorOption[] = [
@@ -117,39 +119,86 @@ const NOTE_PRIORITY_OPTIONS: NoteOption<NotePriority>[] = [
 ];
 
 const EDITOR_TOOLS: EditorTool[] = [
-  { id: "h1", label: "H1", title: "Titulo" },
-  { id: "h2", label: "H2", title: "Subtitulo" },
-  { id: "list", label: "Lista", title: "Lista com marcadores" },
-  { id: "checklist", label: "Check", title: "Checklist" },
-  { id: "bold", label: "Negrito", title: "Negrito" },
-  { id: "italic", label: "Italico", title: "Italico" },
-  { id: "highlight", label: "Grifo", title: "Destaque" },
-  { id: "code", label: "</>", title: "Bloco de codigo" },
-  { id: "json", label: "{ }", title: "JSON formatado" },
-  { id: "link", label: "Link", title: "Link clicavel" },
+  { id: "h1", label: "H1", title: "Titulo", group: "structure" },
+  { id: "h2", label: "H2", title: "Subtitulo", group: "structure" },
+  { id: "h3", label: "H3", title: "Secao", group: "structure" },
+  { id: "list", label: "Lista", title: "Lista com marcadores", group: "structure" },
+  { id: "orderedList", label: "1.", title: "Lista numerada", group: "structure" },
+  { id: "checklist", label: "Check", title: "Checklist", group: "structure" },
+  { id: "quote", label: "Aspas", title: "Bloco de citacao", group: "style" },
+  { id: "divider", label: "---", title: "Divisor", group: "style" },
+  { id: "bold", label: "Negrito", title: "Negrito", group: "style" },
+  { id: "italic", label: "Italico", title: "Italico", group: "style" },
+  { id: "highlight", label: "Grifo", title: "Destaque", group: "style" },
+  { id: "code", label: "</>", title: "Bloco de codigo", group: "style" },
+  { id: "json", label: "{ }", title: "JSON formatado", group: "style" },
+  { id: "link", label: "Link", title: "Link clicavel", group: "style" },
 ];
 
-const NOTE_MARKERS: NoteMarker[] = [
+const NOTE_SNIPPETS: NoteSnippet[] = [
+  {
+    id: "decision",
+    label: "Decisao",
+    title: "Inserir bloco de decisao",
+    text: "## Decisao\n- Contexto:\n- Definicao:\n- Impacto:\n",
+  },
+  {
+    id: "nextSteps",
+    label: "Proximos passos",
+    title: "Inserir bloco de proximos passos",
+    text: "## Proximos passos\n- [ ] Item 1\n- [ ] Item 2\n- [ ] Item 3\n",
+  },
+  {
+    id: "risk",
+    label: "Risco",
+    title: "Inserir bloco de risco",
+    text: "## Risco\n- Descricao:\n- Impacto:\n- Mitigacao:\n",
+  },
+  {
+    id: "context",
+    label: "Contexto",
+    title: "Inserir bloco de contexto",
+    text: "## Contexto\n- Objetivo:\n- Premissas:\n- Referencias:\n",
+  },
+  {
+    id: "linkBlock",
+    label: "Referencias",
+    title: "Inserir bloco de referencias",
+    text: "## Referencias\n- [Link principal](https://exemplo.com)\n",
+  },
+  {
+    id: "codeBlock",
+    label: "Codigo",
+    title: "Inserir bloco de codigo",
+    text: "```ts\n// observacao tecnica\n```\n",
+  },
+];
+
+const NOTE_MARKERS = [
   { icon: "\u2705", label: "Tarefa" },
   { icon: "\u26A0\uFE0F", label: "Alerta" },
   { icon: "\uD83D\uDCCC", label: "Prioridade" },
   { icon: "\uD83D\uDCA1", label: "Ideia" },
   { icon: "\uD83D\uDEE0\uFE0F", label: "Ajuste" },
   { icon: "\uD83D\uDD17", label: "Link" },
-];
+] as const;
 const WIDGET_POS_KEY = "qc:notes_widget_pos";
 const WIDGET_STATE_KEY = "qc:notes_widget_state";
-const WIDGET_SIZE_KEY = "qc:notes_widget_size";
+const WIDGET_WIDTH_KEY = "qc:notes_widget_width";
+const WIDGET_HEIGHT_KEY = "qc:notes_widget_height";
 const INLINE_TOKEN_REGEX =
   /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|\*\*([^*]+)\*\*|==([^=]+)==|`([^`]+)`|_([^_]+)_|(https?:\/\/[^\s]+)/g;
 let testingLogoPromise: Promise<string | null> | null = null;
-
-const PANEL_SIZE_OPTIONS: Array<{ key: PanelSizeKey; label: string; width: number }> = [
-  { key: "small", label: "Pequeno", width: 560 },
-  { key: "medium", label: "Medio", width: 720 },
-  { key: "large", label: "Grande", width: 880 },
-  { key: "expanded", label: "Expandido", width: 1080 },
-];
+const NOTES_WIDGET_VIEW_WIDTH = 860;
+const NOTES_WIDGET_EDIT_WIDTH = 920;
+const NOTES_WIDGET_MIN_WIDTH = 720;
+const NOTES_WIDGET_MIN_WIDTH_EDITING = 860;
+const NOTES_WIDGET_MAX_WIDTH = 1180;
+const NOTES_WIDGET_VIEW_HEIGHT = 780;
+const NOTES_WIDGET_EDIT_HEIGHT = 900;
+const NOTES_WIDGET_MIN_HEIGHT = 520;
+const NOTES_WIDGET_MIN_HEIGHT_EDITING = 700;
+const NOTES_WIDGET_MAX_HEIGHT = 1120;
 
 const NOTES_WIDGET_Z_INDEX = 13050;
 
@@ -195,23 +244,51 @@ function saveWidgetState(state: { minimized: boolean; pinned: boolean }) {
   }
 }
 
-function loadWidgetSize(): PanelSizeKey {
-  if (typeof window === "undefined") return "large";
+function clampWidgetWidth(width: number, minWidth: number) {
+  return Math.max(minWidth, Math.min(width, NOTES_WIDGET_MAX_WIDTH));
+}
+
+function clampWidgetHeight(height: number, minHeight: number) {
+  return Math.max(minHeight, Math.min(height, NOTES_WIDGET_MAX_HEIGHT));
+}
+
+function loadWidgetWidth() {
+  if (typeof window === "undefined") return null;
   try {
-    const raw = window.sessionStorage.getItem(WIDGET_SIZE_KEY);
-    if (raw && PANEL_SIZE_OPTIONS.some((option) => option.key === raw)) {
-      return raw as PanelSizeKey;
-    }
+    const raw = window.sessionStorage.getItem(WIDGET_WIDTH_KEY);
+    if (!raw) return null;
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveWidgetWidth(width: number) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(WIDGET_WIDTH_KEY, String(width));
   } catch {
     // noop
   }
-  return "large";
 }
 
-function saveWidgetSize(size: PanelSizeKey) {
+function loadWidgetHeight() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(WIDGET_HEIGHT_KEY);
+    if (!raw) return null;
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveWidgetHeight(height: number) {
   if (typeof window === "undefined") return;
   try {
-    window.sessionStorage.setItem(WIDGET_SIZE_KEY, size);
+    window.sessionStorage.setItem(WIDGET_HEIGHT_KEY, String(height));
   } catch {
     // noop
   }
@@ -310,6 +387,45 @@ function getPriorityOption(priority: NotePriority) {
   return NOTE_PRIORITY_OPTIONS.find((option) => option.value === priority) ?? NOTE_PRIORITY_OPTIONS[1];
 }
 
+function getEditorToolFeedback(toolId: EditorTool["id"]) {
+  switch (toolId) {
+    case "h1":
+      return "Titulo principal aplicado na linha atual.";
+    case "h2":
+      return "Subtitulo aplicado na linha atual.";
+    case "h3":
+      return "Secao inserida para organizar o conteudo.";
+    case "list":
+      return "Lista com marcadores aplicada.";
+    case "orderedList":
+      return "Lista numerada aplicada.";
+    case "checklist":
+      return "Checklist inserida no cursor.";
+    case "quote":
+      return "Bloco de citacao aplicado.";
+    case "divider":
+      return "Divisor inserido no texto.";
+    case "bold":
+      return "Negrito aplicado na selecao.";
+    case "italic":
+      return "Italico aplicado na selecao.";
+    case "highlight":
+      return "Destaque aplicado na selecao.";
+    case "code":
+      return "Bloco de codigo inserido.";
+    case "json":
+      return "JSON formatado ou modelo inserido.";
+    case "link":
+      return "Estrutura de link inserida no cursor.";
+    default:
+      return "Formatacao aplicada.";
+  }
+}
+
+function getSnippetFeedback(label: string) {
+  return `${label} inserido no texto.`;
+}
+
 function getNoteColorLabel(color: NoteColorKey) {
   return NOTE_COLORS.find((item) => item.key === color)?.label ?? color;
 }
@@ -332,7 +448,7 @@ function ColorSwatchButton({
       type="button"
       onClick={onClick}
       aria-label={`Selecionar ${color.label}`}
-      aria-pressed={active}
+      aria-pressed={!!active}
       className={`group relative ${sizeClass} rounded-full border-2 note-swatch-${color.key} shadow-[0_8px_18px_rgba(15,23,42,0.18)] transition-all duration-150 hover:-translate-y-px hover:scale-[1.08] ${
         active
           ? "opacity-100 ring-2 ring-white/90 ring-offset-2 ring-offset-white scale-[1.08]"
@@ -600,6 +716,16 @@ function renderRichContent(content: string) {
       continue;
     }
 
+    if (/^###\s+/.test(trimmed)) {
+      blocks.push(
+        <h4 key={`section-${index}`} className="notes-rich-subtitle">
+          {renderInlineWithBreaks(trimmed.replace(/^###\s+/, ""), `section-${index}`)}
+        </h4>,
+      );
+      index += 1;
+      continue;
+    }
+
     if (/^##\s+/.test(trimmed)) {
       blocks.push(
         <h3 key={`sub-${index}`} className="notes-rich-subtitle">
@@ -690,6 +816,30 @@ function renderRichContent(content: string) {
       continue;
     }
 
+    if (/^>\s+/.test(trimmed)) {
+      const quoteLines: string[] = [];
+      let innerIndex = index;
+
+      while (innerIndex < lines.length && /^>\s+/.test(lines[innerIndex].trim())) {
+        quoteLines.push(lines[innerIndex].trim().replace(/^>\s+/, ""));
+        innerIndex += 1;
+      }
+
+      blocks.push(
+        <blockquote key={`quote-${index}`} className="notes-rich-quote">
+          {renderInlineWithBreaks(quoteLines.join("\n"), `quote-${index}`)}
+        </blockquote>,
+      );
+      index = innerIndex;
+      continue;
+    }
+
+    if (/^---+$/.test(trimmed)) {
+      blocks.push(<hr key={`divider-${index}`} className="notes-rich-divider" />);
+      index += 1;
+      continue;
+    }
+
     const paragraphLines = [line];
     let innerIndex = index + 1;
 
@@ -697,10 +847,12 @@ function renderRichContent(content: string) {
       innerIndex < lines.length &&
       lines[innerIndex].trim() &&
       !lines[innerIndex].trim().startsWith("```") &&
-      !/^#{1,2}\s+/.test(lines[innerIndex].trim()) &&
+      !/^#{1,3}\s+/.test(lines[innerIndex].trim()) &&
       !/^\s*-\s\[(?: |x|X)\]\s+/.test(lines[innerIndex]) &&
       !/^\s*[-*]\s+/.test(lines[innerIndex]) &&
-      !/^\s*\d+\.\s+/.test(lines[innerIndex])
+      !/^\s*\d+\.\s+/.test(lines[innerIndex]) &&
+      !/^>\s+/.test(lines[innerIndex].trim()) &&
+      !/^---+$/.test(lines[innerIndex].trim())
     ) {
       paragraphLines.push(lines[innerIndex]);
       innerIndex += 1;
@@ -812,6 +964,12 @@ function insertText(context: TextTransformContext, text: string): TextTransformR
   return replaceSelection(context.value, context.start, context.end, text, text.length);
 }
 
+function insertDivider(context: TextTransformContext): TextTransformResult {
+  const prefix = context.start > 0 && context.value[context.start - 1] !== "\n" ? "\n" : "";
+  const suffix = context.end < context.value.length && context.value[context.end] !== "\n" ? "\n" : "";
+  return insertText(context, `${prefix}---${suffix}\n`);
+}
+
 function formatJsonTransform(context: TextTransformContext): TextTransformResult | null {
   const selectedJson = context.selected.trim();
   if (selectedJson) {
@@ -844,6 +1002,9 @@ function NoteEditor({
   eyebrow,
   draft,
   saving,
+  lastAction,
+  activeToolId,
+  activeMarkerLabel,
   onTitleChange,
   onContentChange,
   onColorChange,
@@ -855,12 +1016,15 @@ function NoteEditor({
   onCopy,
   onExport,
   onApplyTool,
-  onInsertEmoji,
+  onInsertSnippet,
   textareaRef,
 }: {
   eyebrow: string;
   draft: DraftNote;
   saving: boolean;
+  lastAction: string | null;
+  activeToolId: EditorTool["id"] | null;
+  activeMarkerLabel: string | null;
   onTitleChange: (value: string) => void;
   onContentChange: (value: string) => void;
   onColorChange: (color: NoteColorKey) => void;
@@ -872,16 +1036,22 @@ function NoteEditor({
   onCopy?: () => void;
   onExport?: () => void;
   onApplyTool: (toolId: EditorTool["id"]) => void;
-  onInsertEmoji: (emoji: string) => void;
+  onInsertSnippet: (snippet: NoteSnippet) => void;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
 }) {
   const statusOption = getStatusOption(draft.status);
   const priorityOption = getPriorityOption(draft.priority);
+  const primaryToolIds: EditorTool["id"][] = ["bold", "italic", "list", "checklist", "link"];
+  const primaryTools = EDITOR_TOOLS.filter((tool) => primaryToolIds.includes(tool.id));
+  const advancedTools = EDITOR_TOOLS.filter((tool) => !primaryToolIds.includes(tool.id));
+  const [activePanel, setActivePanel] = useState<"write" | "preview">("write");
+  const [openMenu, setOpenMenu] = useState<"format" | "insert" | null>(null);
 
   return (
-    <>
+    <div className="notes-editor-sheet-shell">
+      <div className="notes-editor-sheet-main">
       <p className="notes-card-eyebrow">{eyebrow}</p>
-      <div className="mt-3 space-y-4">
+      <div className="notes-editor-sheet-content mt-3 space-y-4">
         <input
           autoFocus
           className="notes-input notes-title-input"
@@ -890,8 +1060,8 @@ function NoteEditor({
           onChange={(event) => onTitleChange(event.target.value)}
         />
 
-        <div className="notes-editor-setup-grid">
-          <div className="notes-editor-meta-grid">
+        <div className="notes-editor-modern-shell">
+          <div className="notes-editor-modern-meta">
             <label className="notes-editor-field notes-editor-field-toned" data-tone={statusOption.tone}>
               <span className="notes-editor-field-label">Status</span>
               <select
@@ -923,80 +1093,141 @@ function NoteEditor({
                 ))}
               </select>
             </label>
+
+            <div className="notes-editor-field notes-editor-field-toned notes-editor-color-field" data-tone="neutral">
+              <span className="notes-editor-field-label">Cor</span>
+              <div className="notes-editor-color-swatches notes-editor-color-swatches-sheet">
+                {NOTE_COLORS.map((color) => (
+                  <ColorSwatchButton key={color.key} color={color} size="sm" active={draft.color === color.key} onClick={() => onColorChange(color.key)} />
+                ))}
+              </div>
+            </div>
           </div>
 
-        </div>
-
-        <div className="notes-editor-shell">
-          <div className="notes-editor-toolbar">
-            <div className="notes-editor-toolbar-group">
-              <div className="notes-editor-tools">
-                {EDITOR_TOOLS.map((tool) => (
+          <div className="notes-editor-modern-frame" data-last-action={lastAction ?? undefined}>
+            <div className="notes-editor-modern-toolbar">
+              <div className="notes-editor-modern-tools">
+                {primaryTools.map((tool) => (
                   <button
                     key={tool.id}
                     type="button"
                     title={tool.title}
-                    className="notes-editor-tool"
+                    className={`notes-editor-tool notes-editor-tool-modern ${activeToolId === tool.id ? "notes-editor-tool-active" : ""}`}
                     onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => onApplyTool(tool.id)}
+                    onClick={() => {
+                      setOpenMenu(null);
+                      setActivePanel("write");
+                      onApplyTool(tool.id);
+                    }}
                   >
                     {tool.label}
                   </button>
                 ))}
               </div>
-            </div>
 
-            <div className="notes-editor-toolbar-group notes-editor-toolbar-group-emojis">
-              <div className="notes-editor-emojis">
-                {NOTE_MARKERS.map((marker) => (
+              <div className="notes-editor-modern-actions">
+                <button
+                  type="button"
+                  className={`notes-editor-mode-btn ${activePanel === "preview" ? "notes-editor-mode-btn-active" : ""}`}
+                  onClick={() => {
+                    setOpenMenu(null);
+                    setActivePanel((current) => (current === "preview" ? "write" : "preview"));
+                  }}
+                >
+                  {activePanel === "preview" ? "Voltar" : "Preview"}
+                </button>
+
+                <div className="notes-editor-menu-shell">
                   <button
-                    key={marker.icon}
                     type="button"
-                    className="notes-editor-emoji"
-                    aria-label={`Inserir ${marker.label}`}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => onInsertEmoji(`${marker.icon} `)}
+                    className={`notes-editor-mode-btn ${openMenu === "format" ? "notes-editor-mode-btn-active" : ""}`}
+                    onClick={() => setOpenMenu((current) => (current === "format" ? null : "format"))}
                   >
-                    <span className="notes-editor-emoji-icon" aria-hidden>
-                      {marker.icon}
-                    </span>
-                    <span className="notes-editor-emoji-label">{marker.label}</span>
+                    Formatar
                   </button>
-                ))}
+                  {openMenu === "format" ? (
+                    <div className="notes-editor-menu-panel">
+                      {advancedTools.map((tool) => (
+                        <button
+                          key={tool.id}
+                          type="button"
+                          className={`notes-editor-menu-item ${activeToolId === tool.id ? "notes-editor-menu-item-active" : ""}`}
+                          onClick={() => {
+                            setOpenMenu(null);
+                            setActivePanel("write");
+                            onApplyTool(tool.id);
+                          }}
+                        >
+                          <span className="notes-editor-menu-item-label">{tool.label}</span>
+                          <span className="notes-editor-menu-item-help">{tool.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="notes-editor-menu-shell">
+                  <button
+                    type="button"
+                    className={`notes-editor-mode-btn ${openMenu === "insert" ? "notes-editor-mode-btn-active" : ""}`}
+                    onClick={() => setOpenMenu((current) => (current === "insert" ? null : "insert"))}
+                  >
+                    Inserir
+                  </button>
+                  {openMenu === "insert" ? (
+                    <div className="notes-editor-menu-panel">
+                      {NOTE_SNIPPETS.map((snippet) => (
+                        <button
+                          key={snippet.id}
+                          type="button"
+                          className={`notes-editor-menu-item ${activeMarkerLabel === snippet.label ? "notes-editor-menu-item-active" : ""}`}
+                          onClick={() => {
+                            setOpenMenu(null);
+                            setActivePanel("write");
+                            onInsertSnippet(snippet);
+                          }}
+                        >
+                          <span className="notes-editor-menu-item-label">{snippet.label}</span>
+                          <span className="notes-editor-menu-item-help">{snippet.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="notes-editor-board">
-            <textarea
-              ref={textareaRef}
-              rows={9}
-              className="notes-input notes-textarea resize-none"
-              placeholder="Escreva a nota aqui. Use os atalhos acima para titulos, checklist, links, codigo ou JSON."
-              value={draft.content}
-              onChange={(event) => onContentChange(event.target.value)}
-            />
-          </div>
+            <div className="notes-editor-modern-workspace" data-panel={activePanel}>
+              <div className={`notes-editor-modern-write ${activePanel === "preview" ? "hidden" : ""}`}>
+                <textarea
+                  ref={textareaRef}
+                  rows={10}
+                  className="notes-input notes-textarea notes-textarea-modern resize-none"
+                  placeholder="Escreva a nota. Use os atalhos acima para estruturar o texto sem perder foco."
+                  value={draft.content}
+                  onChange={(event) => onContentChange(event.target.value)}
+                />
+                <div className="notes-editor-meta notes-editor-meta-modern">
+                  <span className="notes-card-inline-label">Conteudo</span>
+                  <span className="notes-card-counter">{draft.content.length} caracteres</span>
+                </div>
+              </div>
 
-          <div className="notes-editor-meta">
-            <span className="notes-card-inline-label">Conteudo</span>
-            <span className="notes-card-counter">{draft.content.length} caracteres</span>
-          </div>
-        </div>
-
-        <div className="notes-editor-footer">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="notes-card-inline-label">Cor</span>
-            <div className="notes-editor-color-swatches">
-              {NOTE_COLORS.map((color) => (
-                <ColorSwatchButton key={color.key} color={color} size="sm" active={draft.color === color.key} onClick={() => onColorChange(color.key)} />
-              ))}
+              {activePanel === "preview" ? (
+                <div className="notes-editor-modern-preview">
+                  <div className="notes-editor-live-header">
+                    <span className="notes-card-inline-label">Visualizacao</span>
+                    <span className="notes-card-counter">Renderizacao atual da nota</span>
+                  </div>
+                  <div className="notes-editor-preview-surface notes-editor-preview-surface-modern">{renderRichContent(draft.content)}</div>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="notes-actions-bar mt-4">
+      <div className="notes-actions-bar notes-actions-bar-sheet mt-4">
         <div className="notes-actions-main">
           <button type="button" onClick={onSave} disabled={saving} className="notes-btn-primary">
             <FiSave size={12} /> {saving ? "Salvando..." : "Salvar"}
@@ -1030,7 +1261,8 @@ function NoteEditor({
           ) : null}
         </div>
       </div>
-    </>
+      </div>
+    </div>
   );
 }
 
@@ -1046,6 +1278,9 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
   const [draft, setDraft] = useState<DraftNote | null>(null);
   const [saving, setSaving] = useState(false);
   const [, setSaveStatus] = useState<"idle" | "saving" | "saved" | "dirty">("idle");
+  const [editorLastAction, setEditorLastAction] = useState<string | null>(null);
+  const [editorActiveTool, setEditorActiveTool] = useState<EditorTool["id"] | null>(null);
+  const [editorActiveMarker, setEditorActiveMarker] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [selectedColor, setSelectedColor] = useState<NoteColorKey>(NOTE_COLORS[0].key);
   const [colorFilter, setColorFilter] = useState<NoteFilterValue<NoteColorKey>>("all");
@@ -1053,28 +1288,44 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
   const [priorityFilter, setPriorityFilter] = useState<NoteFilterValue<NotePriority>>("all");
   const [minimized, setMinimized] = useState(false);
   const [pinned, setPinned] = useState(false);
-  const [panelSize, setPanelSize] = useState<PanelSizeKey>("large");
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const [manualWidth, setManualWidth] = useState<number | null>(null);
+  const [manualHeight, setManualHeight] = useState<number | null>(null);
 
   const dragging = useRef(false);
+  const resizing = useRef<null | "width" | "height" | "both">(null);
   const dragOffset = useRef({ x: 0, y: 0 });
+  const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0 });
   const panelRef = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const draftTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isCreating = editingId === "new";
   const storageKey = user ? `qc:user_notes:${user.id}` : null;
-  const panelSizeConfig = PANEL_SIZE_OPTIONS.find((option) => option.key === panelSize) ?? PANEL_SIZE_OPTIONS[2];
+  const isEditorMode = Boolean(editingId && draft);
+  const widgetMinWidth = isEditorMode ? NOTES_WIDGET_MIN_WIDTH_EDITING : NOTES_WIDGET_MIN_WIDTH;
+  const widgetBaseWidth = isEditorMode ? NOTES_WIDGET_EDIT_WIDTH : NOTES_WIDGET_VIEW_WIDTH;
+  const widgetMinHeight = isEditorMode ? NOTES_WIDGET_MIN_HEIGHT_EDITING : NOTES_WIDGET_MIN_HEIGHT;
+  const widgetBaseHeight = isEditorMode ? NOTES_WIDGET_EDIT_HEIGHT : NOTES_WIDGET_VIEW_HEIGHT;
+  const editorModeWidth = clampWidgetWidth(manualWidth ?? widgetBaseWidth, widgetMinWidth);
+  const editorModeHeight = clampWidgetHeight(manualHeight ?? widgetBaseHeight, widgetMinHeight);
 
   useEffect(() => {
-    const savedSize = loadWidgetSize();
-    setPanelSize(savedSize);
+    const savedWidth = loadWidgetWidth();
+    if (typeof savedWidth === "number") {
+      setManualWidth(clampWidgetWidth(savedWidth, NOTES_WIDGET_MIN_WIDTH));
+    }
+    const savedHeight = loadWidgetHeight();
+    if (typeof savedHeight === "number") {
+      setManualHeight(clampWidgetHeight(savedHeight, NOTES_WIDGET_MIN_HEIGHT));
+    }
 
     const savedPos = loadWidgetPos();
     if (savedPos) {
-      const savedSizeConfig = PANEL_SIZE_OPTIONS.find((option) => option.key === savedSize) ?? PANEL_SIZE_OPTIONS[2];
-      const maxX = Math.max(0, window.innerWidth - savedSizeConfig.width);
-      const maxY = window.innerHeight - 120;
+      const initialWidth = clampWidgetWidth(savedWidth ?? NOTES_WIDGET_VIEW_WIDTH, NOTES_WIDGET_MIN_WIDTH);
+      const initialHeight = clampWidgetHeight(savedHeight ?? NOTES_WIDGET_VIEW_HEIGHT, NOTES_WIDGET_MIN_HEIGHT);
+      const maxX = Math.max(0, window.innerWidth - initialWidth);
+      const maxY = Math.max(0, window.innerHeight - initialHeight);
       if (savedPos.x >= 0 && savedPos.x <= maxX && savedPos.y >= 0 && savedPos.y <= maxY) {
         setPos(savedPos);
       } else {
@@ -1095,13 +1346,41 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
   }, [minimized, pinned]);
 
   useEffect(() => {
-    saveWidgetSize(panelSize);
-  }, [panelSize]);
+    if (manualWidth == null) return;
+    saveWidgetWidth(manualWidth);
+  }, [manualWidth]);
+
+  useEffect(() => {
+    if (manualHeight == null) return;
+    saveWidgetHeight(manualHeight);
+  }, [manualHeight]);
+
+  useEffect(() => {
+    if (!editorActiveTool && !editorActiveMarker) return;
+    const timeout = window.setTimeout(() => {
+      setEditorActiveTool(null);
+      setEditorActiveMarker(null);
+    }, 1400);
+    return () => window.clearTimeout(timeout);
+  }, [editorActiveMarker, editorActiveTool]);
+
+  useEffect(() => {
+    setManualWidth((current) => {
+      if (current == null) return current;
+      const clamped = clampWidgetWidth(current, widgetMinWidth);
+      return clamped === current ? current : clamped;
+    });
+    setManualHeight((current) => {
+      if (current == null) return current;
+      const clamped = clampWidgetHeight(current, widgetMinHeight);
+      return clamped === current ? current : clamped;
+    });
+  }, [widgetMinHeight, widgetMinWidth]);
 
   useEffect(() => {
     if (!pos) return;
 
-    const maxX = Math.max(8, window.innerWidth - panelSizeConfig.width - 8);
+    const maxX = Math.max(8, window.innerWidth - editorModeWidth - 8);
     const maxY = Math.max(8, window.innerHeight - 160);
     const nextPos = {
       x: Math.max(8, Math.min(pos.x, maxX)),
@@ -1112,7 +1391,7 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
       setPos(nextPos);
       saveWidgetPos(nextPos);
     }
-  }, [panelSizeConfig.width, pos]);
+  }, [editorModeWidth, pos]);
 
   const readLocalNotes = useCallback((): NoteItem[] => {
     if (!storageKey || typeof window === "undefined") return [];
@@ -1302,6 +1581,10 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
       return matchArchiveVisibility && matchSearch && matchStatus && matchPriority && matchColor;
     });
   }, [colorFilter, notes, priorityFilter, search, statusFilter]);
+  const editingNote = useMemo(
+    () => (editingId && editingId !== "new" ? notes.find((note) => note.id === editingId) ?? null : null),
+    [editingId, notes],
+  );
 
   const setDraftTitle = useCallback((value: string) => {
     setDraft((current) => (current ? { ...current, title: value } : current));
@@ -1333,6 +1616,9 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
     (color: NoteColorKey = selectedColor) => {
       setMessage(null);
       setError(null);
+      setEditorLastAction(null);
+      setEditorActiveTool(null);
+      setEditorActiveMarker(null);
       setSelectedColor(color);
       setEditingId("new");
       setExpandedId(null);
@@ -1393,10 +1679,18 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
             return toggleLinePrefix(context, "# ");
           case "h2":
             return toggleLinePrefix(context, "## ");
+          case "h3":
+            return toggleLinePrefix(context, "### ");
           case "list":
             return toggleLinePrefix(context, "- ");
+          case "orderedList":
+            return toggleLinePrefix(context, "1. ");
           case "checklist":
             return toggleLinePrefix(context, "- [ ] ");
+          case "quote":
+            return toggleLinePrefix(context, "> ");
+          case "divider":
+            return insertDivider(context);
           case "bold":
             return wrapSelection(context, "**", "**", "texto em destaque");
           case "italic":
@@ -1416,14 +1710,27 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
 
       if (!applied && toolId === "json") {
         setError("Selecione um JSON valido para formatar ou use o bloco JSON como modelo.");
+        setEditorLastAction("Nao foi possivel formatar o JSON selecionado.");
+        setEditorActiveTool(toolId);
+        setEditorActiveMarker(null);
+        return;
+      }
+
+      if (applied) {
+        setEditorLastAction(getEditorToolFeedback(toolId));
+        setEditorActiveTool(toolId);
+        setEditorActiveMarker(null);
       }
     },
     [applyDraftTransform],
   );
 
-  const insertEmoji = useCallback(
-    (emoji: string) => {
-      applyDraftTransform((context) => insertText(context, emoji));
+  const insertSnippet = useCallback(
+    (snippet: NoteSnippet) => {
+      applyDraftTransform((context) => insertText(context, snippet.text));
+      setEditorLastAction(getSnippetFeedback(snippet.label));
+      setEditorActiveTool(null);
+      setEditorActiveMarker(snippet.label);
     },
     [applyDraftTransform],
   );
@@ -1431,6 +1738,9 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
   function startEdit(note: NoteItem) {
     setMessage(null);
     setError(null);
+    setEditorLastAction(null);
+    setEditorActiveTool(null);
+    setEditorActiveMarker(null);
     setSelectedColor(note.color);
     setEditingId(note.id);
     setExpandedId(note.id);
@@ -1448,6 +1758,9 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
     setEditingId(null);
     setDraft(null);
     setSaveStatus("idle");
+    setEditorLastAction(null);
+    setEditorActiveTool(null);
+    setEditorActiveMarker(null);
   }
 
   async function saveDraft() {
@@ -1716,12 +2029,41 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
     event.preventDefault();
   }
 
+  function onResizeStart(mode: "width" | "height" | "both", event: ReactMouseEvent) {
+    resizing.current = mode;
+    const rect = panelRef.current?.getBoundingClientRect();
+    if (rect) {
+      resizeStart.current = {
+        x: event.clientX,
+        y: event.clientY,
+        width: rect.width,
+        height: rect.height,
+      };
+    }
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
   useEffect(() => {
     function onMove(event: MouseEvent) {
+      if (resizing.current) {
+        const deltaX = event.clientX - resizeStart.current.x;
+        const deltaY = event.clientY - resizeStart.current.y;
+
+        if (resizing.current === "width" || resizing.current === "both") {
+          setManualWidth(clampWidgetWidth(resizeStart.current.width + deltaX, widgetMinWidth));
+        }
+
+        if (resizing.current === "height" || resizing.current === "both") {
+          setManualHeight(clampWidgetHeight(resizeStart.current.height + deltaY, widgetMinHeight));
+        }
+        return;
+      }
+
       if (!dragging.current) return;
 
-      const panelWidth = panelRef.current?.offsetWidth ?? panelSizeConfig.width;
-      const panelHeight = panelRef.current?.offsetHeight ?? 220;
+      const panelWidth = panelRef.current?.offsetWidth ?? editorModeWidth;
+      const panelHeight = panelRef.current?.offsetHeight ?? editorModeHeight;
       const nextX = Math.max(8, Math.min(event.clientX - dragOffset.current.x, window.innerWidth - panelWidth - 8));
       const nextY = Math.max(8, Math.min(event.clientY - dragOffset.current.y, window.innerHeight - panelHeight - 8));
       const nextPos = { x: nextX, y: nextY };
@@ -1731,6 +2073,7 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
 
     function onUp() {
       dragging.current = false;
+      resizing.current = null;
     }
 
     window.addEventListener("mousemove", onMove);
@@ -1739,7 +2082,7 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     };
-  }, [panelSizeConfig.width]);
+  }, [editorModeHeight, editorModeWidth, widgetMinHeight, widgetMinWidth]);
 
   if (!user) return null;
 
@@ -1750,10 +2093,10 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
       : null;
 
   const panelStyle: CSSProperties = pos
-    ? { position: "fixed", left: pos.x, top: pos.y, zIndex: NOTES_WIDGET_Z_INDEX, width: `min(${panelSizeConfig.width}px, calc(100vw - 1rem))`, maxHeight: "calc(100vh - 1rem)" }
+    ? { position: "fixed", left: pos.x, top: pos.y, zIndex: NOTES_WIDGET_Z_INDEX, width: `min(${editorModeWidth}px, calc(100vw - 1rem))`, height: minimized ? undefined : `min(${editorModeHeight}px, calc(100vh - 0.5rem))`, maxHeight: "calc(100vh - 0.5rem)" }
     : pinned
-      ? { position: "fixed", bottom: "5rem", right: "1.5rem", zIndex: NOTES_WIDGET_Z_INDEX, width: `min(${panelSizeConfig.width}px, calc(100vw - 1rem))`, maxHeight: "calc(100vh - 1rem)" }
-      : { zIndex: NOTES_WIDGET_Z_INDEX, width: `min(${panelSizeConfig.width}px, calc(100vw - 1rem))`, maxHeight: "calc(100vh - 1rem)" };
+      ? { position: "fixed", bottom: "5rem", right: "1.5rem", zIndex: NOTES_WIDGET_Z_INDEX, width: `min(${editorModeWidth}px, calc(100vw - 1rem))`, height: minimized ? undefined : `min(${editorModeHeight}px, calc(100vh - 0.5rem))`, maxHeight: "calc(100vh - 0.5rem)" }
+      : { zIndex: NOTES_WIDGET_Z_INDEX, width: `min(${editorModeWidth}px, calc(100vw - 1rem))`, height: minimized ? undefined : `min(${editorModeHeight}px, calc(100vh - 0.5rem))`, maxHeight: "calc(100vh - 0.5rem)" };
   const statusFilterTone = statusFilter === "all" ? "neutral" : getStatusOption(statusFilter).tone;
   const priorityFilterTone = priorityFilter === "all" ? "neutral" : getPriorityOption(priorityFilter).tone;
 
@@ -1796,7 +2139,7 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
             exit={{ opacity: 0, scale: 0.94, y: 12 }}
             transition={{ type: "spring", stiffness: 340, damping: 28 }}
             style={panelStyle}
-            className={`notes-widget notes-widget-size-${panelSize} ${pos ? "" : "absolute right-0 mt-2"}`}
+            className={`notes-widget ${isEditorMode ? "notes-widget-editing" : ""} ${pos ? "" : "absolute right-0 mt-2"}`}
           >
             <div className="notes-widget-header cursor-grab active:cursor-grabbing select-none" onMouseDown={onDragStart}>
               <div className="notes-widget-header-main">
@@ -1804,22 +2147,6 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
               </div>
 
               <div className="notes-widget-header-controls" onMouseDown={(event) => event.stopPropagation()}>
-                <label className="notes-widget-size-shell">
-                  <span className="notes-widget-size-label">Tamanho</span>
-                  <select
-                    value={panelSize}
-                    onChange={(event) => setPanelSize(event.target.value as PanelSizeKey)}
-                    className="notes-widget-size-select"
-                    aria-label="Selecionar tamanho do modal"
-                  >
-                    {PANEL_SIZE_OPTIONS.map((option) => (
-                      <option key={option.key} value={option.key}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
                 <div className="notes-widget-actions">
                   <button
                     type="button"
@@ -1854,91 +2181,93 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
                   style={{ overflow: "hidden" }}
                   className="notes-widget-body"
                 >
-                  <div className="notes-widget-toolbar">
-                    <div className="notes-toolbar-primary">
-                      <div className="notes-search-shell">
-                        <FiSearch size={15} className="notes-search-icon" />
-                        <input
-                          type="text"
-                          placeholder="Buscar titulo, descricao, conteudo, status, prioridade ou cor"
-                          value={search}
-                          onChange={(event) => setSearch(event.target.value)}
-                          className="notes-search-input"
-                        />
-                      </div>
-
-                      <button type="button" onClick={() => startCreate()} className="notes-widget-new-btn" title="Nova nota">
-                        + Nova
-                      </button>
-                    </div>
-
-                    <div className="notes-toolbar-color-row">
-                      <div className="notes-toolbar-row-head">
-                        <span className="notes-filter-label">Cor</span>
-                        {colorFilter !== "all" ? (
-                          <button type="button" onClick={() => setColorFilter("all")} className="notes-color-filter-reset">
-                            Limpar filtro
-                          </button>
-                        ) : null}
-                      </div>
-
-                      <div className="notes-color-filter-bar" role="group" aria-label="Filtrar notas por cor">
-                        <button
-                          type="button"
-                          className={`notes-color-filter-reset-pill ${colorFilter === "all" ? "notes-color-filter-reset-pill-active" : ""}`}
-                          onClick={() => setColorFilter("all")}
-                        >
-                          Todas
-                        </button>
-                        {NOTE_COLORS.map((color) => (
-                          <ColorSwatchButton
-                            key={color.key}
-                            color={color}
-                            active={colorFilter === color.key}
-                            onClick={() => handlePaletteColorSelect(color.key)}
+                  {!isEditorMode ? (
+                    <div className="notes-widget-toolbar">
+                      <div className="notes-toolbar-primary">
+                        <div className="notes-search-shell">
+                          <FiSearch size={15} className="notes-search-icon" />
+                          <input
+                            type="text"
+                            placeholder="Buscar titulo, descricao, conteudo, status, prioridade ou cor"
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            className="notes-search-input"
                           />
-                        ))}
+                        </div>
+
+                        <button type="button" onClick={() => startCreate()} className="notes-widget-new-btn" title="Nova nota">
+                          + Nova
+                        </button>
+                      </div>
+
+                      <div className="notes-toolbar-color-row">
+                        <div className="notes-toolbar-row-head">
+                          <span className="notes-filter-label">Cor</span>
+                          {colorFilter !== "all" ? (
+                            <button type="button" onClick={() => setColorFilter("all")} className="notes-color-filter-reset">
+                              Limpar filtro
+                            </button>
+                          ) : null}
+                        </div>
+
+                        <div className="notes-color-filter-bar" role="group" aria-label="Filtrar notas por cor">
+                          <button
+                            type="button"
+                            className={`notes-color-filter-reset-pill ${colorFilter === "all" ? "notes-color-filter-reset-pill-active" : ""}`}
+                            onClick={() => setColorFilter("all")}
+                          >
+                            Todas
+                          </button>
+                          {NOTE_COLORS.map((color) => (
+                            <ColorSwatchButton
+                              key={color.key}
+                              color={color}
+                              active={colorFilter === color.key}
+                              onClick={() => handlePaletteColorSelect(color.key)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="notes-toolbar-select-row">
+                        <label className="notes-toolbar-select-shell notes-toolbar-select-shell-toned" data-tone={statusFilterTone}>
+                          <span className="notes-filter-label">Status</span>
+                          <select
+                            value={statusFilter}
+                            onChange={(event) => setStatusFilter(event.target.value as NoteFilterValue<NoteStatus>)}
+                            data-tone={statusFilterTone}
+                            className="notes-input notes-select notes-toolbar-select"
+                          >
+                            <option value="all">Todos os status</option>
+                            {NOTE_STATUS_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+
+                        <label className="notes-toolbar-select-shell notes-toolbar-select-shell-toned" data-tone={priorityFilterTone}>
+                          <span className="notes-filter-label">Prioridade</span>
+                          <select
+                            value={priorityFilter}
+                            onChange={(event) => setPriorityFilter(event.target.value as NoteFilterValue<NotePriority>)}
+                            data-tone={priorityFilterTone}
+                            className="notes-input notes-select notes-toolbar-select"
+                          >
+                            <option value="all">Todas as prioridades</option>
+                            {NOTE_PRIORITY_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
                       </div>
                     </div>
+                  ) : null}
 
-                    <div className="notes-toolbar-select-row">
-                      <label className="notes-toolbar-select-shell notes-toolbar-select-shell-toned" data-tone={statusFilterTone}>
-                        <span className="notes-filter-label">Status</span>
-                        <select
-                          value={statusFilter}
-                          onChange={(event) => setStatusFilter(event.target.value as NoteFilterValue<NoteStatus>)}
-                          data-tone={statusFilterTone}
-                          className="notes-input notes-select notes-toolbar-select"
-                        >
-                          <option value="all">Todos os status</option>
-                          {NOTE_STATUS_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-
-                      <label className="notes-toolbar-select-shell notes-toolbar-select-shell-toned" data-tone={priorityFilterTone}>
-                        <span className="notes-filter-label">Prioridade</span>
-                        <select
-                          value={priorityFilter}
-                          onChange={(event) => setPriorityFilter(event.target.value as NoteFilterValue<NotePriority>)}
-                          data-tone={priorityFilterTone}
-                          className="notes-input notes-select notes-toolbar-select"
-                        >
-                          <option value="all">Todas as prioridades</option>
-                          {NOTE_PRIORITY_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="notes-widget-scroll px-4 pb-4">
+                  <div className={`notes-widget-scroll px-4 pb-4 ${isEditorMode ? "notes-widget-scroll-editor" : ""}`}>
                     <div className="space-y-3">
                       <AnimatePresence>
                         {isCreating && draft ? (
@@ -1946,12 +2275,15 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className={`notes-card notes-card-editor note-color-${draft.color}`}
+                            className="notes-card notes-card-editor notes-card-editor-neutral"
                           >
                             <NoteEditor
                               eyebrow={`${getNoteEmoji({ color: draft.color, title: draft.title, content: draft.content })} Nova nota`}
                               draft={draft}
                               saving={saving}
+                              lastAction={editorLastAction}
+                              activeToolId={editorActiveTool}
+                              activeMarkerLabel={editorActiveMarker}
                               onTitleChange={setDraftTitle}
                               onContentChange={setDraftContent}
                               onColorChange={setDraftColor}
@@ -1960,16 +2292,47 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
                               onSave={() => void saveDraft()}
                               onCancel={cancelEdit}
                               onApplyTool={applyEditorTool}
-                              onInsertEmoji={insertEmoji}
+                              onInsertSnippet={insertSnippet}
                               textareaRef={draftTextareaRef}
                             />
                           </motion.div>
                         ) : null}
                       </AnimatePresence>
 
-                      {loading ? <div className="notes-empty-state">Carregando notas...</div> : null}
+                      {isEditorMode && editingId && editingId !== "new" && draft && editingNote ? (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="notes-card notes-card-editor notes-card-editor-neutral notes-card-editor-standalone"
+                        >
+                          <NoteEditor
+                            eyebrow={`${getNoteEmoji({ color: draft.color, title: draft.title, content: draft.content })} Editando nota`}
+                            draft={draft}
+                            saving={saving}
+                            lastAction={editorLastAction}
+                            activeToolId={editorActiveTool}
+                            activeMarkerLabel={editorActiveMarker}
+                            onTitleChange={setDraftTitle}
+                            onContentChange={setDraftContent}
+                            onColorChange={setDraftColor}
+                            onStatusChange={setDraftStatus}
+                            onPriorityChange={setDraftPriority}
+                            onSave={() => void saveDraft()}
+                            onCancel={cancelEdit}
+                            onDelete={() => void deleteNote(editingNote.id)}
+                            onCopy={() => void copyNote({ ...editingNote, ...draft })}
+                            onExport={() => void exportNotePdf({ ...editingNote, ...draft })}
+                            onApplyTool={applyEditorTool}
+                            onInsertSnippet={insertSnippet}
+                            textareaRef={draftTextareaRef}
+                          />
+                        </motion.div>
+                      ) : null}
 
-                      {!loading && filteredNotes.length === 0 ? (
+                      {!isEditorMode && loading ? <div className="notes-empty-state">Carregando notas...</div> : null}
+
+                      {!isEditorMode && !loading && filteredNotes.length === 0 ? (
                         <div className="notes-empty-state">
                           {search || statusFilter !== "all" || priorityFilter !== "all" || colorFilter !== "all"
                             ? "Nenhuma nota encontrada com os filtros atuais."
@@ -1977,7 +2340,7 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
                         </div>
                       ) : null}
 
-                      {!loading
+                      {!isEditorMode && !loading
                         ? filteredNotes.map((note) => {
                             const isExpanded = expandedId === note.id;
                             const isEditing = editingId === note.id;
@@ -2044,6 +2407,9 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
                                             eyebrow={`${noteEmoji} Editando nota`}
                                             draft={localDraft}
                                             saving={saving}
+                                            lastAction={editorLastAction}
+                                            activeToolId={editorActiveTool}
+                                            activeMarkerLabel={editorActiveMarker}
                                             onTitleChange={setDraftTitle}
                                             onContentChange={setDraftContent}
                                             onColorChange={setDraftColor}
@@ -2055,7 +2421,7 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
                                             onCopy={() => void copyNote(liveNote)}
                                             onExport={() => void exportNotePdf(liveNote)}
                                             onApplyTool={applyEditorTool}
-                                            onInsertEmoji={insertEmoji}
+                                            onInsertSnippet={insertSnippet}
                                             textareaRef={draftTextareaRef}
                                           />
                                         ) : (
@@ -2123,6 +2489,30 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
                 </motion.div>
               ) : null}
             </AnimatePresence>
+
+            <button
+              type="button"
+              className="notes-widget-resize-handle notes-widget-resize-handle-right"
+              onMouseDown={(event) => onResizeStart("width", event)}
+              aria-label="Arraste para ajustar largura"
+              title="Arraste para ajustar largura"
+            />
+
+            <button
+              type="button"
+              className="notes-widget-resize-handle notes-widget-resize-handle-bottom"
+              onMouseDown={(event) => onResizeStart("height", event)}
+              aria-label="Arraste para ajustar altura"
+              title="Arraste para ajustar altura"
+            />
+
+            <button
+              type="button"
+              className="notes-widget-resize-handle notes-widget-resize-handle-corner"
+              onMouseDown={(event) => onResizeStart("both", event)}
+              aria-label="Arraste para ajustar largura e altura"
+              title="Arraste para ajustar largura e altura"
+            />
 
           </motion.div>
         ) : null}

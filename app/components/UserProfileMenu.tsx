@@ -76,7 +76,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
       <div className="relative" ref={boxRef}>
       <button
         type="button"
-        aria-label="Menu do usuario"
+        aria-label={t("profileMenu.menuAria")}
         aria-haspopup="menu"
         onClick={() => setOpen((v) => !v)}
           className="flex items-center justify-center h-12 w-12 rounded-full border-2 border-(--tc-accent,#ef0001) bg-[#0f172a] text-white shadow-[0_8px_20px_rgba(0,0,0,0.22)] hover:border-(--tc-accent-dark,#c20000) hover:bg-[#111a2a] transition-all"
@@ -174,7 +174,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
               }}
               className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white hover:bg-blue-900"
             >
-              Meu perfil
+              {t("profileMenu.settings")}
             </button>
           </div>
 

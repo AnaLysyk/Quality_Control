@@ -20,12 +20,17 @@ export type Release = {
   id: string;
   slug: string;
   name: string;
+  summary?: string;
   app: string;
   qaseProject?: string;
   category?: string;
   kind?: "run" | "defect";
   runSlug?: string;
   runName?: string;
+  testPlanId?: string | null;
+  testPlanName?: string | null;
+  testPlanSource?: "manual" | "qase" | null;
+  testPlanProjectCode?: string | null;
   clientSlug?: string | null;
   environments: string[];
   source: ReleaseSource;
@@ -33,6 +38,8 @@ export type Release = {
   runId?: number;
   stats: Stats;
   observations?: string;
+  severity?: string | null;
+  priority?: string | null;
   createdByUserId?: string | null;
   createdByName?: string | null;
   assignedToUserId?: string | null;

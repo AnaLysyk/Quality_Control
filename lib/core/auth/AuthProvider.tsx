@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 import { AuthMeResponseSchema, type AuthUser, type AuthCompany } from "@/contracts/auth";
-import { getAccessToken } from "@/lib/api";
+import { getAccessToken, refreshClientSession } from "@/lib/api";
 import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
 import { publishAuthUser, subscribeAuthUserSync } from "@/lib/authUserSync";
 
@@ -37,11 +37,15 @@ function parseMeResponse(payload: unknown): MeResult | null {
 async function fetchMe(): Promise<MeResult> {
   const token = await getAccessToken().catch(() => null);
   const attemptKey = token ?? "__COOKIE_OR_NO_TOKEN__";
-  const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+  const buildHeaders = async () => {
+    const nextToken = await getAccessToken().catch(() => null);
+    return nextToken ? { Authorization: `Bearer ${nextToken}` } : undefined;
+  };
 
   const res = await fetch("/api/me", {
     method: "GET",
-    headers,
+    headers: await buildHeaders(),
     credentials: "include",
     cache: "no-store",
   });
@@ -69,13 +73,13 @@ async function fetchMe(): Promise<MeResult> {
       try {
         await fetch("/api/auth/bootstrap", {
           method: "POST",
-          headers,
+          headers: await buildHeaders(),
           credentials: "include",
           cache: "no-store",
         });
         const retry = await fetch("/api/me", {
           method: "GET",
-          headers,
+          headers: await buildHeaders(),
           credentials: "include",
           cache: "no-store",
         });
@@ -92,16 +96,11 @@ async function fetchMe(): Promise<MeResult> {
 
     if (res.status === 401) {
       try {
-        const refreshed = await fetch("/api/auth/refresh", {
-          method: "POST",
-          headers,
-          credentials: "include",
-          cache: "no-store",
-        });
-        if (refreshed.ok) {
+        const refreshed = await refreshClientSession();
+        if (refreshed) {
           const retry = await fetch("/api/me", {
             method: "GET",
-            headers,
+            headers: await buildHeaders(),
             credentials: "include",
             cache: "no-store",
           });

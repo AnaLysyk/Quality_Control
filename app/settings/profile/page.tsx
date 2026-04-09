@@ -15,6 +15,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import UserAvatar from "@/components/UserAvatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { publishAuthUser, useAuthUser } from "@/hooks/useAuthUser";
+import { useI18n } from "@/hooks/useI18n";
 import { useAppSettings, type Language, type Theme } from "@/context/AppSettingsContext";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { fetchApi } from "@/lib/api";
@@ -320,24 +321,24 @@ function resolveIntegrationActivationCopy(provider: CompanyIntegrationProvider, 
   const providerLabel = provider === "qase" ? "Qase" : provider === "jira" ? "Jira" : "Integracao";
 
   if (state === "active") {
-    return { label: "Ativa", detail: `${providerLabel} validada e pronta para uso.` };
+    return { label: `${providerLabel} ativa`, detail: `${providerLabel} validada e pronta para uso.` };
   }
   if (state === "pending_removal") {
-    return { label: "Remocao pendente", detail: `${providerLabel} sera removida quando voce salvar os dados de integracao.` };
+    return { label: `${providerLabel} com remocao pendente`, detail: `${providerLabel} sera removida quando voce salvar os dados de integracao.` };
   }
   if (state === "error") {
-    return { label: "Nao ativa", detail: `${providerLabel} com erro de validacao.` };
+    return { label: `${providerLabel} com erro`, detail: `${providerLabel} com erro de validacao.` };
   }
   if (state === "saved") {
-    return { label: "Nao ativa", detail: `${providerLabel} configurada, mas ainda nao validada.` };
+    return { label: `${providerLabel} nao ativa`, detail: `${providerLabel} configurada, mas ainda nao validada.` };
   }
   if (state === "pending") {
-    return { label: "Nao ativa", detail: `${providerLabel} em edicao. Valide para ativar.` };
+    return { label: `${providerLabel} nao ativa`, detail: `${providerLabel} em edicao. Valide para ativar.` };
   }
   if (provider === "manual") {
     return { label: "Sem integracao", detail: "Nenhuma integracao externa configurada." };
   }
-  return { label: "Nao ativa", detail: `${providerLabel} ainda nao configurada.` };
+  return { label: `${providerLabel} nao ativa`, detail: `${providerLabel} ainda nao configurada.` };
 }
 
 function shouldShowIntegrationStatusPill(state: CompanyIntegrationState) {
@@ -610,6 +611,7 @@ function resolveCompanyIntegrationMeta({
 
 export default function SettingsProfilePage() {
   const { user, loading, refreshUser } = useAuthUser();
+  const { t } = useI18n();
   const { theme, language, setTheme, setLanguage, saveSettings, loading: settingsLoading } = useAppSettings();
   const [companies, setCompanies] = useState<LinkedCompany[]>([]);
   const [companiesError, setCompaniesError] = useState<string | null>(null);
@@ -803,8 +805,8 @@ export default function SettingsProfilePage() {
   const heroAvatarUrl = persistedAvatarUrl;
   const avatarLoadingPlaceholder = loading && !persistedAvatarUrl && !profileAvatarDirty;
   const generatedUsernameHint = useMemo(
-    () => suggestUsername(profileFullName.trim() || profileEmail.trim() || heroName),
-    [heroName, profileEmail, profileFullName],
+    () => suggestUsername(companyName.trim() || profileFullName.trim() || profileEmail.trim() || heroName),
+    [companyName, heroName, profileEmail, profileFullName],
   );
   const filteredJobTitleOptions = useMemo(() => {
     const query = normalizeSearchTerm(profileJobTitle);
@@ -1108,6 +1110,9 @@ export default function SettingsProfilePage() {
     normalizeComparableText(companyLogoUrl) !== normalizeComparableText(companySavedLogoUrl) || Boolean(companyLogoFile);
   const companyLogoHasChanges = companyLogoDirty || companyLogoValueDirty;
   const companyDetailsHasChanges = companyDataFieldsDirty || companyLogoHasChanges;
+  const companyUsernameHasChanges =
+    normalizeComparableText(profileUsername.trim().toLowerCase()) !== normalizeComparableText(persistedUsername);
+  const companyProfileSaveHasChanges = companyDetailsHasChanges || companyUsernameHasChanges;
   const companyIntegrationHasChanges = companyHasUnsavedIntegrationChanges;
   const companyIntegrationSaveBlocked =
     companyPendingDisableAll
@@ -1276,7 +1281,7 @@ export default function SettingsProfilePage() {
   }, [profileUploadedAvatarUrl]);
 
   async function fetchUniqueUsernameCandidate() {
-    const seed = profileFullName.trim() || profileEmail.trim() || heroName;
+    const seed = companyName.trim() || profileFullName.trim() || profileEmail.trim() || heroName;
     const avoid = Array.from(
       new Set(
         [persistedUsername, profileUsername.trim().toLowerCase(), ...generatedUsernameHistory]
@@ -1348,17 +1353,17 @@ export default function SettingsProfilePage() {
 
     if (!nextEmail) {
       setProfileError("Informe o e-mail do usuario.");
-      return;
+      return false;
     }
     if (!options?.allowGeneratedReplacement && !nextUsername && persistedUsername) {
       const generatedUsername = await fetchUniqueUsernameCandidate();
-      if (!generatedUsername) return;
+      if (!generatedUsername) return false;
       setUsernameReplacementDialog({
         mode: "submit",
         currentUsername: persistedUsername,
         nextUsername: generatedUsername,
       });
-      return;
+      return false;
     }
 
     setProfileLoading(true);
@@ -1380,7 +1385,7 @@ export default function SettingsProfilePage() {
 
         if (!avatarResponse.ok) {
           setProfileError(extractApiError(avatarPayload) || "Nao foi possivel enviar a foto.");
-          return;
+          return false;
         }
 
         nextAvatarUrl =
@@ -1410,7 +1415,7 @@ export default function SettingsProfilePage() {
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
         setProfileError(extractApiError(payload) || `Nao foi possivel atualizar os dados (${response.status}).`);
-        return;
+        return false;
       }
 
       if (payload && typeof payload === "object" && "user" in payload) {
@@ -1428,8 +1433,8 @@ export default function SettingsProfilePage() {
 
       const settingsResult = await saveSettings({ theme, language });
       if (!settingsResult.ok) {
-        setProfileError("Nao foi possivel salvar as preferencias.");
-        return;
+        setProfileError(t("settings.savePreferencesError"));
+        return false;
       }
 
       await refreshUser();
@@ -1437,11 +1442,13 @@ export default function SettingsProfilePage() {
       const generatedOnSave = !typedUsername && !!resolvedUsernameAfterSave;
       setProfileSuccess(
         generatedOnSave
-          ? `Dados e preferencias atualizados com sucesso. Usuario gerado: @${resolvedUsernameAfterSave}.`
-          : "Dados e preferencias atualizados com sucesso.",
+          ? t("settings.profileSavedGenerated", { username: resolvedUsernameAfterSave })
+          : t("settings.profileSaved"),
       );
+      return true;
     } catch (error) {
       setProfileError(error instanceof Error ? error.message : "Nao foi possivel atualizar os dados.");
+      return false;
     } finally {
       setAvatarUploading(false);
       setProfileLoading(false);
@@ -1785,6 +1792,7 @@ export default function SettingsProfilePage() {
 
   function collectCompanyDetailsChangedFieldLabels() {
     const changed = new Set<string>();
+    if (companyUsernameHasChanges) changed.add("Usuario da empresa");
     if (normalizeComparableText(companyName) !== normalizeComparableText(companyProfile?.company_name ?? companyProfile?.name)) {
       changed.add("Nome da empresa");
     }
@@ -1818,7 +1826,7 @@ export default function SettingsProfilePage() {
         const nextName = companyName.trim();
         if (!nextName) {
           setCompanyError("Informe o nome da empresa.");
-          return;
+          return false;
         }
 
         requestPayload.name = nextName;
@@ -1860,7 +1868,7 @@ export default function SettingsProfilePage() {
       const responsePayload = await response.json().catch(() => ({}));
       if (!response.ok) {
         setCompanyError(extractApiError(responsePayload) || `Nao foi possivel atualizar a empresa (${response.status}).`);
-        return;
+        return false;
       }
 
       const normalized = normalizeCompanyProfile(responsePayload);
@@ -1881,7 +1889,7 @@ export default function SettingsProfilePage() {
         const logoPayload = await logoResponse.json().catch(() => ({}));
         if (!logoResponse.ok) {
           setCompanyLogoError(extractApiError(logoPayload) || "Nao foi possivel enviar o logo.");
-          return;
+          return false;
         }
 
         resolvedLogoUrl =
@@ -1932,25 +1940,53 @@ export default function SettingsProfilePage() {
           companyPendingDisableAll ? "Integracoes da empresa atualizadas com sucesso." : "Dados de integracao atualizados com sucesso.",
         );
       }
+      return true;
     } catch (error) {
       setCompanyError(error instanceof Error ? error.message : "Nao foi possivel atualizar a empresa.");
+      return false;
     } finally {
       setCompanyLogoUploading(false);
       setCompanyLoading(false);
     }
   }
 
+  async function submitCompanyProfileAndUsernameChanges() {
+    setCompanyError(null);
+    setCompanySuccess(null);
+    setProfileError(null);
+    setProfileSuccess(null);
+
+    if (companyDetailsHasChanges) {
+      const companySaved = await submitCompanyProfileChanges("details");
+      if (!companySaved) return false;
+    }
+
+    if (companyUsernameHasChanges) {
+      const usernameSaved = await submitProfileChanges();
+      if (!usernameSaved) return false;
+    }
+
+    if (companyDetailsHasChanges && companyUsernameHasChanges) {
+      setProfileSuccess(null);
+      setCompanySuccess("Dados da empresa e usuario institucional atualizados com sucesso.");
+    }
+
+    return true;
+  }
+
   function handleCompanyDetailsSaveRequest() {
     setCompanyError(null);
     setCompanySuccess(null);
+    setProfileError(null);
+    setProfileSuccess(null);
 
-    if (!companyDetailsHasChanges) {
+    if (!companyProfileSaveHasChanges) {
       return;
     }
 
     const changedFields = collectCompanyDetailsChangedFieldLabels();
     if (changedFields.length === 0) {
-      void submitCompanyProfileChanges("details");
+      void submitCompanyProfileAndUsernameChanges();
       return;
     }
 
@@ -2005,14 +2041,6 @@ export default function SettingsProfilePage() {
                       <h1 className="tc-hero-title">{companyDisplayName}</h1>
                     </div>
                     <div className="flex flex-wrap items-center gap-2.5 text-sm text-white/82">
-                      <span className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-extrabold uppercase tracking-[0.16em] ${heroStatusPillClass("neutral")}`}>
-                        <span className="h-2.5 w-2.5 rounded-full bg-current" />
-                        Empresa
-                      </span>
-                      <span className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-extrabold uppercase tracking-[0.16em] ${heroStatusPillClass(companyStatusMeta.tone)}`}>
-                        <span className="h-2.5 w-2.5 rounded-full bg-current" />
-                        Status da empresa: {companyStatusText}
-                      </span>
                       <span className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-extrabold uppercase tracking-[0.16em] ${heroStatusPillClass(companyIntegrationMeta.tone)}`}>
                         <span className="h-2.5 w-2.5 rounded-full bg-current" />
                         Status da integracao: {companyIntegrationText}
@@ -2051,90 +2079,6 @@ export default function SettingsProfilePage() {
             </div>
 
             <TabsContent value="perfil" className="space-y-5">
-          <form className="space-y-5" onSubmit={handleProfileSubmit}>
-            <section className={`${surfaceClass} space-y-6`}>
-              <PanelHeader title="Conta de acesso" description="Nome da conta, login unico, e-mail e telefone usados na autenticacao." />
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Nome da conta">
-                  <input
-                    className={`form-control-user ${inputClass}`}
-                    value={profileFullName}
-                    onChange={(event) => setProfileFullName(event.target.value)}
-                    disabled={profileLoading || loading}
-                    title="Nome da conta"
-                    aria-label="Nome da conta"
-                    placeholder="Ex.: Equipe Griaule"
-                    required
-                  />
-                </Field>
-
-                <Field label="Usuario (login)">
-                  <div className="space-y-2">
-                    <input
-                      className={`form-control-user ${inputClass}`}
-                      value={profileUsername}
-                      onChange={(event) => setProfileUsername(event.target.value)}
-                      disabled={profileLoading || loading}
-                      title="Usuario de acesso"
-                      aria-label="Usuario de acesso"
-                      placeholder={`Ex.: ${generatedUsernameHint}`}
-                    />
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#0b1f52] dark:text-[#d7e5ff]">
-                      <FieldHint tone="strong">Unico no sistema. Em branco, gera automaticamente.</FieldHint>
-                      <button
-                        type="button"
-                        className="rounded-full border border-[#0b1f52] bg-[#0b1f52] px-3 py-1 font-semibold text-white transition hover:border-(--tc-accent) hover:bg-(--tc-accent) hover:text-white disabled:opacity-60 dark:border-[#0b1f52] dark:bg-[#0b1f52] dark:text-white dark:hover:border-(--tc-accent) dark:hover:bg-(--tc-accent) dark:hover:text-white"
-                        onClick={() => void requestGeneratedUsername()}
-                        disabled={profileLoading || loading || generatingUsername}
-                      >
-                        {generatingUsername ? "Gerando..." : "Gerar login"}
-                      </button>
-                    </div>
-                  </div>
-                </Field>
-
-                <Field label="E-mail da conta">
-                  <input
-                    type="text"
-                    inputMode="email"
-                    autoComplete="email"
-                    spellCheck={false}
-                    className={`form-control-user ${inputClass}`}
-                    value={profileEmail}
-                    onChange={(event) => setProfileEmail(event.target.value)}
-                    disabled={profileLoading || loading}
-                    title="E-mail da conta"
-                    aria-label="E-mail da conta"
-                    placeholder="conta@empresa.com ou identificador legado"
-                    required
-                  />
-                </Field>
-
-                <Field label="Telefone de contato">
-                  <input
-                    className={`form-control-user ${inputClass}`}
-                    value={profilePhone}
-                    onChange={(event) => setProfilePhone(event.target.value)}
-                    disabled={profileLoading || loading}
-                    title="Telefone de contato"
-                    aria-label="Telefone de contato"
-                    placeholder="+55 11 99999-9999"
-                  />
-                </Field>
-              </div>
-
-              <Feedback message={profileError} tone="error" />
-              <Feedback message={profileSuccess} tone="success" />
-
-              <div className="flex flex-col gap-3 sm:items-end">
-                <button type="submit" className={`${primaryButtonClass} w-full sm:w-auto`} disabled={profileLoading || loading}>
-                  {profileLoading ? "Salvando..." : "Salvar conta de acesso"}
-                </button>
-              </div>
-            </section>
-          </form>
-
           <div className="space-y-5">
             <div className="grid gap-5 2xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.55fr)]">
               <section className={`${surfaceClass} space-y-6`}>
@@ -2187,7 +2131,7 @@ export default function SettingsProfilePage() {
                         {companyLogoUploading ? "Aplicando..." : "Escolher logo"}
                       </button>
                     </div>
-                    <p className="text-center text-sm font-bold leading-5 text-[#000f2d]! opacity-100 dark:text-[#d7e5ff]">
+                    <p className="text-center text-sm font-bold leading-5 text-[#000f2d] opacity-100 dark:!text-white">
                       A imagem aparece primeiro no preview desta tela. Use o botao abaixo para salvar a logo no restante do sistema.
                     </p>
                   </div>
@@ -2220,20 +2164,54 @@ export default function SettingsProfilePage() {
               </section>
             </div>
 
+            <section className={`${surfaceClass} space-y-6`}>
+              <PanelHeader title="Usuario da empresa" description="Login unico do perfil institucional. A sugestao usa o nome da empresa e ja evita duplicidade." />
+
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+                <Field label="Usuario da empresa">
+                  <input
+                    className={`form-control-user ${inputClass}`}
+                    value={profileUsername}
+                    onChange={(event) => setProfileUsername(event.target.value)}
+                    disabled={profileLoading || loading}
+                    title="Usuario da empresa"
+                    aria-label="Usuario da empresa"
+                    placeholder={`Ex.: ${generatedUsernameHint}`}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                  />
+                </Field>
+
+                <button
+                  type="button"
+                  className="rounded-full border border-[#0b1f52] bg-[#0b1f52] px-3 py-2 text-sm font-semibold text-white transition hover:border-(--tc-accent) hover:bg-(--tc-accent) hover:text-white disabled:opacity-60 dark:border-[#0b1f52] dark:bg-[#0b1f52] dark:text-white dark:hover:border-(--tc-accent) dark:hover:bg-(--tc-accent) dark:hover:text-white"
+                  onClick={() => void requestGeneratedUsername()}
+                  disabled={profileLoading || loading || generatingUsername}
+                >
+                  {generatingUsername ? "Gerando..." : "Gerar usuario"}
+                </button>
+              </div>
+
+              <FieldHint tone="strong">Baseado no nome da empresa e validado contra logins ja existentes.</FieldHint>
+              <Feedback message={profileError} tone="error" />
+              <Feedback message={profileSuccess} tone="success" />
+            </section>
+
             <section className={`${surfaceClass} flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`}>
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-(--tc-text-primary)">Salvar dados da empresa</p>
                 <p className="text-xs font-medium text-(--tc-text-muted)">
-                  Este botao salva a logo e as informacoes do cadastro da empresa.
+                  Este botao salva a logo, os dados da empresa e o usuario institucional.
                 </p>
               </div>
               <button
                 type="button"
                 className={`${primaryButtonClass} w-full sm:w-auto`}
-                disabled={companyLoading || companyLogoUploading || !companyDetailsHasChanges}
+                disabled={companyLoading || companyLogoUploading || profileLoading || loading || !companyProfileSaveHasChanges}
                 onClick={handleCompanyDetailsSaveRequest}
               >
-                {companyLoading || companyLogoUploading ? "Salvando..." : "Salvar"}
+                {companyLoading || companyLogoUploading || profileLoading ? "Salvando..." : "Salvar"}
               </button>
             </section>
 
@@ -2810,7 +2788,7 @@ export default function SettingsProfilePage() {
             onCancel={() => setCompanySaveConfirmOpen(false)}
             onConfirm={() => {
               setCompanySaveConfirmOpen(false);
-              void submitCompanyProfileChanges("details");
+              void submitCompanyProfileAndUsernameChanges();
             }}
           />
 
@@ -3080,32 +3058,32 @@ export default function SettingsProfilePage() {
             </div>
 
             <div className="space-y-4 border-t border-(--tc-border) pt-6">
-              <PanelSectionTitle title="Preferencias" />
+              <PanelSectionTitle title={t("settings.preferences")} />
               <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Tema">
+                <Field label={t("settings.theme")}>
                   <select
                     className={`form-control-user ${selectInputClass}`}
                     value={theme}
                     onChange={(event) => setTheme(event.target.value as Theme)}
                     disabled={profileLoading || settingsLoading}
-                    title="Tema"
+                    title={t("settings.theme")}
                   >
-                    <option value="system">Automatico</option>
-                    <option value="light">Claro</option>
-                    <option value="dark">Escuro</option>
+                    <option value="system">{t("settings.themeSystem")}</option>
+                    <option value="light">{t("settings.themeLight")}</option>
+                    <option value="dark">{t("settings.themeDark")}</option>
                   </select>
                 </Field>
 
-                <Field label="Idioma">
+                <Field label={t("settings.language")}>
                   <select
                     className={`form-control-user ${selectInputClass}`}
                     value={language}
                     onChange={(event) => setLanguage(event.target.value as Language)}
                     disabled={profileLoading || settingsLoading}
-                    title="Idioma"
+                    title={t("settings.language")}
                   >
-                    <option value="pt-BR">Portugues Brasil</option>
-                    <option value="en-US">English US</option>
+                    <option value="pt-BR">{t("settings.languagePt")}</option>
+                    <option value="en-US">{t("settings.languageEn")}</option>
                   </select>
                 </Field>
               </div>
@@ -3116,7 +3094,7 @@ export default function SettingsProfilePage() {
               <Feedback message={profileSuccess} tone="success" />
               <div className="flex justify-end">
                 <button type="submit" className={primaryButtonClass} disabled={profileLoading || loading || settingsLoading}>
-                  {profileLoading ? "Salvando..." : "Salvar perfil"}
+                  {profileLoading ? t("settings.savingProfile") : t("settings.saveProfile")}
                 </button>
               </div>
             </div>

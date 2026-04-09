@@ -73,6 +73,25 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
   return NextResponse.json(incoming);
 }
 
+export async function PUT(req: Request, context: { params: Promise<{ slug: string }> }) {
+  const user = await authenticateRequest(req);
+  if (!user) return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
+
+  const { slug } = await context.params;
+  const body = (await req.json().catch(() => null)) as unknown;
+  if (!body) return NextResponse.json({ message: "JSON invalido" }, { status: 400 });
+
+  const payload = Array.isArray(body) ? body : [];
+  const list = payload
+    .map((row) => normalizeItem((row ?? {}) as Record<string, unknown>))
+    .filter((item): item is ManualCaseItem => item !== null);
+
+  const store = await readManualReleaseCases();
+  store[slug] = list;
+  await writeManualReleaseCases(store);
+  return NextResponse.json(list);
+}
+
 export async function DELETE(req: Request, context: { params: Promise<{ slug: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });

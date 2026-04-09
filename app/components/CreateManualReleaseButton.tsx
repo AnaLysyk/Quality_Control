@@ -6,6 +6,7 @@ import { FiCheckCircle, FiLayers, FiLink2, FiPlus, FiTrendingUp, FiX } from "rea
 import { getAppMeta } from "@/lib/appMeta";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
+import { fetchApi } from "@/lib/api";
 import { stripRunPrefix } from "@/lib/runPresentation";
 
 type NewManualRelease = {
@@ -34,6 +35,25 @@ type ApplicationOption = {
   slug: string;
   companySlug?: string | null;
   qaseProjectCode?: string | null;
+};
+
+type TestPlanSource = "manual" | "qase";
+
+type TestPlanCaseRef = {
+  id: string;
+  title?: string | null;
+};
+
+type TestPlanItem = {
+  id: string;
+  title: string;
+  description?: string | null;
+  casesCount: number;
+  source: TestPlanSource;
+  projectCode?: string | null;
+  applicationId?: string | null;
+  applicationName?: string | null;
+  cases?: TestPlanCaseRef[];
 };
 
 type CaseColumn = {
@@ -82,6 +102,32 @@ function coercePositiveInteger(value: string) {
   return Math.max(0, Number(value) || 0);
 }
 
+function makePlanKey(source: TestPlanSource, id: string) {
+  return `${source}:${id}`;
+}
+
+function buildQaseCaseLink(projectCode: string | null | undefined, caseId: string) {
+  const normalizedProjectCode = String(projectCode ?? "").trim();
+  const normalizedCaseId = String(caseId ?? "").trim();
+  if (!normalizedProjectCode || !normalizedCaseId) return "";
+  return `https://app.qase.io/case/${encodeURIComponent(normalizedProjectCode)}/${encodeURIComponent(normalizedCaseId)}`;
+}
+
+function mergePlanCasesIntoDrafts(plan: TestPlanItem, currentCases: ManualCaseDraft[]) {
+  const currentCasesById = new Map(currentCases.map((item) => [item.id, item]));
+  const planCases = Array.isArray(plan.cases) ? plan.cases : [];
+
+  return planCases.map((item) => {
+    const current = currentCasesById.get(item.id);
+    return {
+      id: item.id,
+      title: current?.title || item.title?.trim() || `Caso ${item.id}`,
+      link: current?.link || buildQaseCaseLink(plan.projectCode, item.id),
+      status: current?.status || "notRun",
+    } satisfies ManualCaseDraft;
+  });
+}
+
 export function CreateManualReleaseButton({
   companySlug,
   redirectToRun = true,
@@ -104,6 +150,10 @@ export function CreateManualReleaseButton({
   const [caseDraft, setCaseDraft] = useState<ManualCaseDraft>({ ...initialCaseDraft });
   const [applications, setApplications] = useState<ApplicationOption[]>([]);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
+  const [plans, setPlans] = useState<TestPlanItem[]>([]);
+  const [plansLoading, setPlansLoading] = useState(false);
+  const [selectedPlanKey, setSelectedPlanKey] = useState("");
+  const [planActionLoading, setPlanActionLoading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -112,9 +162,8 @@ export function CreateManualReleaseButton({
     async function loadApplications() {
       try {
         const query = resolvedCompanySlug ? `?companySlug=${encodeURIComponent(resolvedCompanySlug)}` : "";
-        const response = await fetch(`/api/applications${query}`, {
+        const response = await fetchApi(`/api/applications${query}`, {
           cache: "no-store",
-          credentials: "include",
         });
         const payload = await response.json().catch(() => null);
         const items = Array.isArray(payload?.items) ? payload.items : [];
@@ -154,7 +203,54 @@ export function CreateManualReleaseButton({
     };
   }, [open, resolvedCompanySlug]);
 
+  useEffect(() => {
+    if (!open || !resolvedCompanySlug || !selectedApplicationId) {
+      setPlans([]);
+      setSelectedPlanKey("");
+      return;
+    }
+
+    const companySlug = resolvedCompanySlug;
+    const applicationId = selectedApplicationId;
+    let active = true;
+
+    async function loadPlans() {
+      setPlansLoading(true);
+      try {
+        const response = await fetchApi(
+          `/api/test-plans?companySlug=${encodeURIComponent(companySlug)}&applicationId=${encodeURIComponent(applicationId)}`,
+          {
+            cache: "no-store",
+          },
+        );
+        const payload = await response.json().catch(() => null);
+        const items = Array.isArray(payload?.plans) ? (payload.plans as TestPlanItem[]) : [];
+        if (!active) return;
+        setPlans(items);
+        setSelectedPlanKey((current) =>
+          current && items.some((item) => makePlanKey(item.source, item.id) === current) ? current : "",
+        );
+      } catch {
+        if (!active) return;
+        setPlans([]);
+        setSelectedPlanKey("");
+      } finally {
+        if (active) setPlansLoading(false);
+      }
+    }
+
+    void loadPlans();
+
+    return () => {
+      active = false;
+    };
+  }, [open, resolvedCompanySlug, selectedApplicationId]);
+
   const selectedApplication = applications.find((application) => application.id === selectedApplicationId) ?? null;
+  const selectedPlan = useMemo(
+    () => plans.find((item) => makePlanKey(item.source, item.id) === selectedPlanKey) ?? null,
+    [plans, selectedPlanKey],
+  );
   const effectiveAppKey = (selectedApplication?.slug || form.app || "SMART").toLowerCase();
   const appMeta = getAppMeta(effectiveAppKey, selectedApplication?.name || form.app || "Run");
   const total = form.pass + form.fail + form.blocked + form.notRun;
@@ -179,6 +275,10 @@ export function CreateManualReleaseButton({
     setCaseDraft({ ...initialCaseDraft });
     setApplications([]);
     setSelectedApplicationId(null);
+    setPlans([]);
+    setSelectedPlanKey("");
+    setPlansLoading(false);
+    setPlanActionLoading(false);
   }, []);
 
   const closeModal = useCallback(() => {
@@ -226,6 +326,45 @@ export function CreateManualReleaseButton({
     setCases((current) => current.filter((item) => item.id !== id));
   }
 
+  async function resolvePlanDetail(plan: TestPlanItem) {
+    if (!resolvedCompanySlug || !selectedApplicationId) {
+      throw new Error("Selecione a aplicacao antes de carregar o plano.");
+    }
+
+    const response = await fetchApi(
+      `/api/test-plans?companySlug=${encodeURIComponent(resolvedCompanySlug)}&applicationId=${encodeURIComponent(selectedApplicationId)}&planId=${encodeURIComponent(plan.id)}&source=${encodeURIComponent(plan.source)}`,
+      {
+        cache: "no-store",
+      },
+    );
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload?.plan) {
+      throw new Error(
+        (typeof payload?.error === "string" && payload.error) || "Nao foi possivel carregar o plano de teste.",
+      );
+    }
+    return payload.plan as TestPlanItem;
+  }
+
+  async function handleApplyPlan() {
+    if (!selectedPlan) return;
+
+    setPlanActionLoading(true);
+    setSubmitError(null);
+    try {
+      const planDetail = await resolvePlanDetail(selectedPlan);
+      const mergedCases = mergePlanCasesIntoDrafts(planDetail, cases);
+      setCases(mergedCases);
+    } catch (error) {
+      console.error(error);
+      setSubmitError(
+        error instanceof Error ? error.message : "Nao foi possivel aplicar o plano de teste.",
+      );
+    } finally {
+      setPlanActionLoading(false);
+    }
+  }
+
   async function handleSubmit() {
     const cleanedName = stripRunPrefix(form.name);
     if (!cleanedName) return;
@@ -243,6 +382,11 @@ export function CreateManualReleaseButton({
           name: cleanedName,
           app: selectedApplication?.slug || form.app,
           qaseProject: selectedApplication?.qaseProjectCode || form.app.toUpperCase(),
+          testPlanId: selectedPlan?.id ?? null,
+          testPlanName: selectedPlan?.title ?? null,
+          testPlanSource: selectedPlan?.source ?? null,
+          testPlanProjectCode:
+            selectedPlan?.projectCode || selectedApplication?.qaseProjectCode || form.app.toUpperCase(),
           slug: form.slug,
           ...(resolvedCompanySlug ? { clientSlug: resolvedCompanySlug } : {}),
           stats: {
@@ -450,6 +594,7 @@ export function CreateManualReleaseButton({
                             onChange={(event) => {
                               const nextId = event.target.value;
                               setSelectedApplicationId(nextId);
+                              setSelectedPlanKey("");
                               const nextApplication = applications.find((application) => application.id === nextId) ?? null;
                               if (nextApplication) {
                                 setForm((current) => ({ ...current, app: nextApplication.slug || nextApplication.name }));
@@ -497,6 +642,65 @@ export function CreateManualReleaseButton({
                           Se vazio, o slug sera derivado automaticamente do titulo.
                         </span>
                       </label>
+
+                      <div className="space-y-3 rounded-[22px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) p-4 lg:col-span-2">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                              Plano de teste
+                            </span>
+                            <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">
+                              Selecione um plano para preencher o quadro com os casos. Sem plano, a run segue direta.
+                            </p>
+                          </div>
+                          {selectedPlan ? (
+                            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">
+                              {selectedPlan.source === "qase" ? "Qase" : "Manual"} · {selectedPlan.casesCount} caso(s)
+                            </span>
+                          ) : null}
+                        </div>
+
+                        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
+                          <select
+                            aria-label="Selecionar plano de teste"
+                            value={selectedPlanKey}
+                            onChange={(event) => setSelectedPlanKey(event.target.value)}
+                            className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-white px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                            disabled={!selectedApplicationId || plansLoading}
+                          >
+                            <option value="">
+                              {plansLoading
+                                ? "Carregando planos..."
+                                : plans.length > 0
+                                  ? "Sem plano aplicado"
+                                  : "Nenhum plano disponivel"}
+                            </option>
+                            {plans.map((plan) => (
+                              <option key={makePlanKey(plan.source, plan.id)} value={makePlanKey(plan.source, plan.id)}>
+                                {plan.title} · {plan.source === "qase" ? "Qase" : "Manual"}
+                              </option>
+                            ))}
+                          </select>
+
+                          <button
+                            type="button"
+                            onClick={() => void handleApplyPlan()}
+                            disabled={!selectedPlan || planActionLoading}
+                            className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-white px-4 py-3 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) disabled:opacity-60"
+                          >
+                            {planActionLoading ? "Aplicando..." : "Aplicar plano"}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setSelectedPlanKey("")}
+                            disabled={!selectedPlanKey}
+                            className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-transparent px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-slate-400 hover:text-slate-900 disabled:opacity-60"
+                          >
+                            Run direta
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
 

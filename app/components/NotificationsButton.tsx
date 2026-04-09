@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiBell } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { fetchApi } from "@/lib/api";
 import { getTicketStatusLabel, TICKET_STATUS_OPTIONS, type TicketStatus } from "@/lib/ticketsStatus";
 
 type NotificationItem = {
@@ -101,7 +102,7 @@ export default function NotificationsButton({
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/notifications", { credentials: "include", cache: "no-store" });
+      const res = await fetchApi("/api/notifications", { credentials: "include", cache: "no-store" });
       const json = (await res.json().catch(() => ({}))) as { items?: NotificationItem[]; error?: string };
       if (!res.ok) {
         setItems([]);
@@ -161,7 +162,7 @@ export default function NotificationsButton({
       setTicketLoading(true);
       setTicketError(null);
       try {
-        const res = await fetch(`/api/tickets/${ticketId}`, {
+        const res = await fetchApi(`/api/tickets/${ticketId}`, {
           credentials: "include",
           cache: "no-store",
         });
@@ -204,7 +205,7 @@ export default function NotificationsButton({
   async function closeNotification(id: string) {
     setError(null);
     try {
-      const res = await fetch(`/api/notifications/${id}`, {
+      const res = await fetchApi(`/api/notifications/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -239,7 +240,7 @@ export default function NotificationsButton({
     setTicketUpdating(true);
     setTicketError(null);
     try {
-      const res = await fetch(`/api/tickets/${selected.ticketId}/status`, {
+      const res = await fetchApi(`/api/tickets/${selected.ticketId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

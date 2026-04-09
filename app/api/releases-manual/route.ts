@@ -11,6 +11,7 @@ import { readManualReleases, readManualReleaseCases, writeManualReleases, writeM
 import { notifyManualRunCreated } from "@/lib/notificationService";
 import { appendDefectHistory } from "@/lib/manualDefectHistoryStore";
 import { getLocalUserById } from "@/lib/auth/localStore";
+import { invalidateCompanyDefectsDataset } from "@/lib/companyDefectsDataset";
 
 async function resolveActor(authUser: AuthUser | null) {
   if (!authUser) return { actorId: null, actorName: null };
@@ -32,6 +33,12 @@ function resolveAllowedSlugs(user: AuthUser): string[] {
   if (Array.isArray(user.companySlugs) && user.companySlugs.length) return user.companySlugs;
   if (user.companySlug) return [user.companySlug];
   return [];
+}
+
+function normalizeOptionalLabel(value: unknown) {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  return normalized || null;
 }
 
 export async function GET(req: Request) {
@@ -129,8 +136,14 @@ export async function POST(req: Request) {
       category: body.category ? String(body.category) : undefined,
       runSlug: body.runSlug ? String(body.runSlug) : undefined,
       runName: body.runName ? String(body.runName) : undefined,
+      testPlanId: body.testPlanId ? String(body.testPlanId) : null,
+      testPlanName: body.testPlanName ? String(body.testPlanName) : null,
+      testPlanSource: body.testPlanSource === "qase" ? "qase" : body.testPlanSource === "manual" ? "manual" : null,
+      testPlanProjectCode: body.testPlanProjectCode ? String(body.testPlanProjectCode).trim().toUpperCase() : null,
       source: "MANUAL",
       status,
+      severity: normalizeOptionalLabel(body.severity),
+      priority: normalizeOptionalLabel(body.priority),
       stats: {
         pass: Math.max(0, Number(stats.pass ?? 0)),
         fail: Math.max(0, Number(stats.fail ?? (kind === "defect" ? 1 : 0))),
@@ -151,6 +164,9 @@ export async function POST(req: Request) {
     const filtered = releases.filter((r) => r.slug !== release.slug);
     filtered.unshift(release);
     await writeManualReleases(filtered);
+    if (kind === "defect") {
+      invalidateCompanyDefectsDataset(release.clientSlug ?? null);
+    }
 
     if (kind === "run") {
       if (release.slug) {

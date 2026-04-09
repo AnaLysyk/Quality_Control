@@ -4,6 +4,7 @@ import type { RequestRecord } from "@/data/requestsStore";
 import type { Release } from "@/types/release";
 import type { SuporteRecord } from "@/lib/ticketsStore";
 import type { TicketCommentRecord } from "@/lib/ticketCommentsStore";
+import type { CompanyDefectRecord } from "@/lib/companyDefects";
 import {
   closeNotificationsByDedupeKey,
   createNotificationsForUsers,
@@ -102,6 +103,30 @@ async function resolveCompanyUserIds(companySlug?: string | null) {
   const links = await listLocalLinksForCompany(company.id);
   const memberIds = links.map((link) => link.userId);
   return Array.from(new Set([...adminIds, ...memberIds]));
+}
+
+function buildDefectLink(companySlug?: string | null, defectSlug?: string | null) {
+  if (!companySlug || !defectSlug) return null;
+  return `/empresas/${encodeURIComponent(companySlug)}/defeitos?defect=${encodeURIComponent(defectSlug)}`;
+}
+
+async function resolveDefectRecipientIds(input: {
+  defect: Pick<CompanyDefectRecord, "slug" | "createdByUserId" | "assignedToUserId">;
+  companySlug?: string | null;
+  actorId: string;
+}) {
+  const recipients = new Set<string>();
+  const companyRecipients = await resolveCompanyUserIds(input.companySlug ?? null);
+  companyRecipients.forEach((id) => {
+    if (id && id !== input.actorId) recipients.add(id);
+  });
+  if (input.defect.createdByUserId && input.defect.createdByUserId !== input.actorId) {
+    recipients.add(input.defect.createdByUserId);
+  }
+  if (input.defect.assignedToUserId && input.defect.assignedToUserId !== input.actorId) {
+    recipients.add(input.defect.assignedToUserId);
+  }
+  return Array.from(recipients);
 }
 
 export async function notifyPasswordResetRequest(request: RequestRecord) {
@@ -280,6 +305,69 @@ export async function notifyManualRunFailure(
     companySlug,
     link,
     dedupeKey: `run:${runSlug}:fail`,
+  });
+}
+
+export async function notifyDefectStatusChanged(input: {
+  defect: Pick<CompanyDefectRecord, "slug" | "title" | "name" | "createdByUserId" | "assignedToUserId">;
+  companySlug?: string | null;
+  actorId: string;
+  actorName?: string | null;
+  nextStatusLabel: string;
+}) {
+  const recipients = await resolveDefectRecipientIds(input);
+  if (!recipients.length) return;
+  const defectLabel = input.defect.title || input.defect.name || input.defect.slug;
+  const actorLabel = input.actorName || "Fluxo de defeitos";
+  await createNotificationsForUsers(recipients, {
+    type: "DEFECT_STATUS_CHANGED",
+    title: "Status do defeito atualizado",
+    description: `${actorLabel} atualizou ${defectLabel} para ${input.nextStatusLabel}.`,
+    companySlug: input.companySlug ?? null,
+    link: buildDefectLink(input.companySlug ?? null, input.defect.slug),
+    dedupeKey: `defect:${input.defect.slug}:status:${input.nextStatusLabel}:${Date.now()}`,
+  });
+}
+
+export async function notifyDefectCommentAdded(input: {
+  defect: Pick<CompanyDefectRecord, "slug" | "title" | "name" | "createdByUserId" | "assignedToUserId">;
+  companySlug?: string | null;
+  actorId: string;
+  actorName?: string | null;
+  commentId: string;
+  body: string;
+}) {
+  const recipients = await resolveDefectRecipientIds(input);
+  if (!recipients.length) return;
+  const defectLabel = input.defect.title || input.defect.name || input.defect.slug;
+  const preview = input.body.length > 160 ? `${input.body.slice(0, 160)}...` : input.body;
+  await createNotificationsForUsers(recipients, {
+    type: "DEFECT_COMMENT_ADDED",
+    title: "Novo comentario no defeito",
+    description: `${input.actorName || "Novo comentario"} em ${defectLabel}: ${preview}`,
+    companySlug: input.companySlug ?? null,
+    link: buildDefectLink(input.companySlug ?? null, input.defect.slug),
+    dedupeKey: `defect:${input.defect.slug}:comment:${input.commentId}`,
+  });
+}
+
+export async function notifyDefectAssigned(input: {
+  defect: Pick<CompanyDefectRecord, "slug" | "title" | "name" | "createdByUserId" | "assignedToUserId">;
+  companySlug?: string | null;
+  actorId: string;
+  assigneeId: string;
+  assigneeName?: string | null;
+}) {
+  const recipients = await resolveDefectRecipientIds(input);
+  if (!recipients.length) return;
+  const defectLabel = input.defect.title || input.defect.name || input.defect.slug;
+  await createNotificationsForUsers(recipients, {
+    type: "DEFECT_ASSIGNED",
+    title: "Responsavel do defeito atualizado",
+    description: `${defectLabel} foi atribuido para ${input.assigneeName || "um responsavel"}.`,
+    companySlug: input.companySlug ?? null,
+    link: buildDefectLink(input.companySlug ?? null, input.defect.slug),
+    dedupeKey: `defect:${input.defect.slug}:assigned:${input.assigneeId}:${Date.now()}`,
   });
 }
 
@@ -601,4 +689,3 @@ export async function notifyTicketAssigned(input: { ticket: TicketRecord; assign
   if (!input || !input.ticket) return;
   return notifySuporteAssigned({ suporte: input.ticket as SuporteRecord, assigneeId: input.assigneeId, actorId: input.actorId });
 }
-

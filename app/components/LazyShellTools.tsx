@@ -4,13 +4,15 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
 import type { IconType } from "react-icons";
-import { FiBell, FiEdit3, FiMessageSquare } from "react-icons/fi";
+import { FiBell, FiEdit3, FiMessageSquare, FiMoon, FiSun } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import UserAvatar from "@/components/UserAvatar";
 import { useAppSettings } from "@/context/AppSettingsContext";
 import { useClientContext } from "@/context/ClientContext";
+import { useI18n } from "@/hooks/useI18n";
 import { resolveActiveIdentity } from "@/lib/activeIdentity";
+import { fetchApi } from "@/lib/api";
 
 type ToolComponentProps = {
   defaultOpen?: boolean;
@@ -145,25 +147,56 @@ function useDeferredShellTool() {
   return { mounted, defaultOpen, prime, open };
 }
 
+const NOTIFICATIONS_COUNT_TTL_MS = 15_000;
+
+const notificationsCountCache: {
+  userId: string | null;
+  unreadCount: number;
+  fetchedAt: number;
+} = {
+  userId: null,
+  unreadCount: 0,
+  fetchedAt: 0,
+};
+
 export function DeferredNotificationsButton() {
-  const { user } = useAuthUser();
+  const { user, loading } = useAuthUser();
   const { mounted, defaultOpen, prime, open } = useDeferredShellTool();
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    if (!user || mounted) return;
+    if (!user || loading || mounted) return;
 
     let alive = true;
+    const userId = user.id;
 
-    async function loadUnreadCount() {
+    async function loadUnreadCount(force = false) {
+      const sameUser = notificationsCountCache.userId === userId;
+      const fresh = notificationsCountCache.fetchedAt > Date.now() - NOTIFICATIONS_COUNT_TTL_MS;
+      if (!force && sameUser && fresh) {
+        setUnreadCount(notificationsCountCache.unreadCount);
+        return;
+      }
+
       try {
-        const response = await fetch("/api/notifications?summary=count", {
+        const response = await fetchApi("/api/notifications?summary=count", {
           credentials: "include",
           cache: "no-store",
         });
         const payload = (await response.json().catch(() => ({}))) as { unreadCount?: number };
-        if (!alive || !response.ok) return;
-        setUnreadCount(typeof payload.unreadCount === "number" ? payload.unreadCount : 0);
+        if (!alive) return;
+        if (!response.ok) {
+          notificationsCountCache.userId = userId;
+          notificationsCountCache.unreadCount = 0;
+          notificationsCountCache.fetchedAt = Date.now();
+          setUnreadCount(0);
+          return;
+        }
+        const nextCount = typeof payload.unreadCount === "number" ? payload.unreadCount : 0;
+        notificationsCountCache.userId = userId;
+        notificationsCountCache.unreadCount = nextCount;
+        notificationsCountCache.fetchedAt = Date.now();
+        setUnreadCount(nextCount);
       } catch {
         if (!alive) return;
         setUnreadCount(0);
@@ -181,7 +214,7 @@ export function DeferredNotificationsButton() {
       alive = false;
       window.removeEventListener("focus", handleFocus);
     };
-  }, [mounted, user]);
+  }, [loading, mounted, user]);
 
   if (!user) return null;
   if (mounted) {
@@ -223,6 +256,57 @@ export function DeferredTicketsButton() {
       onOpen={open}
       onPrime={prime}
     />
+  );
+}
+
+export function ThemeToggleButton() {
+  const { theme, saveSettings } = useAppSettings();
+  const { t } = useI18n();
+  const [resolvedDark, setResolvedDark] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const sync = () => {
+      const useDark = theme === "dark" || (theme === "system" && media.matches);
+      setResolvedDark(useDark);
+    };
+
+    sync();
+    media.addEventListener("change", sync);
+    return () => {
+      media.removeEventListener("change", sync);
+    };
+  }, [theme]);
+
+  const nextTheme = resolvedDark ? "light" : "dark";
+  const ariaLabel = resolvedDark ? t("themeToggle.switchToLight") : t("themeToggle.switchToDark");
+  const Icon = resolvedDark ? FiSun : FiMoon;
+
+  const handleToggle = useCallback(async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await saveSettings({ theme: nextTheme });
+    } finally {
+      setSaving(false);
+    }
+  }, [nextTheme, saveSettings, saving]);
+
+  return (
+    <button
+      type="button"
+      onClick={handleToggle}
+      aria-label={saving ? t("themeToggle.saving") : ariaLabel}
+      title={ariaLabel}
+      aria-busy={saving}
+      className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-(--tc-accent,#ef0001)/60 hover:text-(--tc-accent,#ef0001) disabled:cursor-progress disabled:opacity-75"
+      disabled={saving}
+    >
+      <Icon size={18} className={saving ? "animate-pulse" : undefined} />
+    </button>
   );
 }
 

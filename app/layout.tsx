@@ -49,12 +49,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         const key = lastUserId ? ("tc-settings:" + lastUserId) : "tc-settings:guest";
         const raw = sessionStorage.getItem(key) || sessionStorage.getItem("tc-settings:guest");
         const parsed = raw ? JSON.parse(raw) : null;
-        // Standard theme: light by default (avoids dark->light flash on first paint).
-        const storedTheme = parsed && isValid(parsed.theme) ? parsed.theme : "light";
-        const useDark = storedTheme === "dark";
+        const storedTheme = parsed && isValid(parsed.theme) ? parsed.theme : "system";
+        const storedLanguage = parsed && (parsed.language === "pt-BR" || parsed.language === "en-US") ? parsed.language : "pt-BR";
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const useDark = storedTheme === "dark" || (storedTheme === "system" && prefersDark);
         root.classList.toggle("dark", useDark);
         root.classList.toggle("theme-light", !useDark);
         root.style.colorScheme = useDark ? "dark" : "light";
+        root.dataset.themePreference = storedTheme;
+        root.dataset.themeResolved = useDark ? "dark" : "light";
+        root.lang = storedLanguage;
       } catch (err) {
         /* ignore */
       }

@@ -6,9 +6,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { FiMenu } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
 import { useClientContext } from "@/context/ClientContext";
+import { useI18n } from "@/hooks/useI18n";
 import { shortenCompanyPathname, shouldUseShortCompanyRoutes } from "@/lib/companyRoutes";
+import { normalizeLocale, type Locale } from "@/lib/i18n";
 import {
-  getFixedProfileLabel,
   resolveFixedProfileKind,
   type FixedProfileKind,
 } from "@/lib/fixedProfilePresentation";
@@ -20,6 +21,7 @@ import {
   DeferredNotificationsButton,
   DeferredProfileButton,
   DeferredTicketsButton,
+  ThemeToggleButton,
 } from "./LazyShellTools";
 
 interface AppShellProps {
@@ -46,6 +48,133 @@ type CompanyBrand = {
   logoUrl: string | null;
 };
 
+const APP_SHELL_COPY = {
+  "pt-BR": {
+    qualityControl: "Quality Control",
+    sections: {
+      home: "Home",
+      dashboard: "Dashboard",
+      metrics: "Metricas",
+      apps: "Aplicacoes",
+      runs: "Runs",
+      defects: "Defeitos",
+      support: "Suporte",
+      testPlans: "Planos de teste",
+      profile: "Perfil",
+      settings: "Configuracoes",
+      commandCenter: "Command Center",
+      requests: "Solicitacoes",
+      documents: "Documentos",
+      users: "Usuarios",
+      companies: "Empresas",
+      brandIdentity: "Identidade visual",
+    },
+    notes: {
+      dashboard: "Leitura operacional da empresa, com sinais de execucao, risco e desempenho.",
+      runs: "Acompanhe as execucoes manuais e integradas com contexto claro e leitura rapida.",
+      apps: "Catalogo visual das aplicacoes monitoradas, integracoes conectadas e projetos vinculados.",
+      defects: "Triagem dos defeitos e pontos de atencao que precisam de resposta do time.",
+      support: "Painel unificado de suporte para abrir tickets, acompanhar comentarios e consultar o andamento.",
+      testPlans: "Panorama dos planos, campanhas e vinculos com as aplicacoes da empresa.",
+      profile: "Cadastro institucional, identidade visual, usuarios e configuracoes do contexto atual.",
+      home: "Entrada institucional da empresa, com contexto salvo, aplicacoes e navegacao principal.",
+      commandCenter: "Visao executiva do ambiente administrativo, com acesso rapido aos modulos centrais.",
+      default: "Contexto visual da pagina com a assinatura da Testing Company e leitura imediata do modulo.",
+    },
+    badges: {
+      platform: "Plataforma",
+      company: "Empresa",
+    },
+    aria: {
+      openMenu: "Abrir menu",
+      pageCover: "Capa da pagina {title}",
+      companyLogo: "Logo da empresa {name}",
+      companyIdentity: "Identidade da empresa {name}",
+      platformLogo: "Logo Testing Company",
+    },
+    kickers: {
+      platform: "Testing Company",
+      admin: "Testing Company Admin",
+      company: "Empresa {name}",
+      companyProfile: "Perfil empresa • {name}",
+      companyUser: "Usuario da empresa • {name}",
+      leader: "Lider TC • Testing Company",
+      support: "Suporte tecnico • Testing Company",
+      tcUser: "Usuario TC • Testing Company",
+    },
+    profiles: {
+      empresa: "Empresa",
+      company_user: "Usuario da empresa",
+      testing_company_user: "Usuario TC",
+      leader_tc: "Lider TC",
+      technical_support: "Suporte tecnico",
+    },
+  },
+  "en-US": {
+    qualityControl: "Quality Control",
+    sections: {
+      home: "Home",
+      dashboard: "Dashboard",
+      metrics: "Metrics",
+      apps: "Applications",
+      runs: "Runs",
+      defects: "Defects",
+      support: "Support",
+      testPlans: "Test plans",
+      profile: "Profile",
+      settings: "Settings",
+      commandCenter: "Command Center",
+      requests: "Requests",
+      documents: "Documents",
+      users: "Users",
+      companies: "Companies",
+      brandIdentity: "Brand identity",
+    },
+    notes: {
+      dashboard: "Operational company view with execution signals, risk, and performance.",
+      runs: "Track manual and integrated executions with clear context and quick reading.",
+      apps: "Visual catalog of monitored applications, connected integrations, and linked projects.",
+      defects: "Defect triage and attention points that need a team response.",
+      support: "Unified support panel to open tickets, follow comments, and track progress.",
+      testPlans: "Overview of plans, campaigns, and links to the company's applications.",
+      profile: "Institutional profile, visual identity, users, and settings for the current context.",
+      home: "Company entry view with saved context, applications, and primary navigation.",
+      commandCenter: "Executive view of the admin environment, with quick access to core modules.",
+      default: "Page context with Testing Company identity and immediate module reading.",
+    },
+    badges: {
+      platform: "Platform",
+      company: "Company",
+    },
+    aria: {
+      openMenu: "Open menu",
+      pageCover: "Page cover {title}",
+      companyLogo: "Company logo {name}",
+      companyIdentity: "Company identity {name}",
+      platformLogo: "Testing Company logo",
+    },
+    kickers: {
+      platform: "Testing Company",
+      admin: "Testing Company Admin",
+      company: "Company {name}",
+      companyProfile: "Company profile • {name}",
+      companyUser: "Company user • {name}",
+      leader: "TC lead • Testing Company",
+      support: "Technical support • Testing Company",
+      tcUser: "TC user • Testing Company",
+    },
+    profiles: {
+      empresa: "Company",
+      company_user: "Company user",
+      testing_company_user: "TC user",
+      leader_tc: "TC lead",
+      technical_support: "Technical support",
+    },
+  },
+} as const;
+
+type AppShellCopy = (typeof APP_SHELL_COPY)[Locale];
+
 function humanizeSegment(value: string) {
   const normalized = decodeURIComponent(value || "")
     .replace(/[-_]+/g, " ")
@@ -57,33 +186,45 @@ function humanizeSegment(value: string) {
   return normalized.replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function resolveSectionNote(section: string) {
-  switch (section) {
-    case "dashboard":
-      return "Leitura operacional da empresa, com sinais de execucao, risco e desempenho.";
-    case "runs":
-      return "Acompanhe as execucoes manuais e integradas com contexto claro e leitura rapida.";
-    case "aplicacoes":
-      return "Catalogo visual das aplicacoes monitoradas, integracoes conectadas e projetos vinculados.";
-    case "defeitos":
-      return "Triagem dos defeitos e pontos de atencao que precisam de resposta do time.";
-    case "suporte":
-      return "Painel unificado de suporte para abrir tickets, acompanhar comentarios e consultar o andamento.";
-    case "planos de teste":
-      return "Panorama dos planos, campanhas e vinculos com as aplicacoes da empresa.";
-    case "perfil":
-    case "profile":
-      return "Cadastro institucional, identidade visual, usuarios e configuracoes do contexto atual.";
-    case "home":
-      return "Entrada institucional da empresa, com contexto salvo, aplicacoes e navegacao principal.";
-    case "command center":
-      return "Visao executiva do ambiente administrativo, com acesso rapido aos modulos centrais.";
-    default:
-      return "Contexto visual da pagina com a assinatura da Testing Company e leitura imediata do modulo.";
-  }
+function replaceName(template: string, name: string) {
+  return template.replace("{name}", name);
 }
 
-function resolveShortCompanyIdentity(pathname: string): Omit<ShellIdentity, "profileLabel" | "coverClassName" | "logoSrc" | "logoAlt" | "logoFallbackText"> | null {
+function normalizeSectionKey(value: string) {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "aplicacoes") return "apps";
+  if (normalized === "defeitos") return "defects";
+  if (normalized === "suporte" || normalized === "chamados" || normalized === "meus chamados" || normalized === "support") return "support";
+  if (normalized === "planos de teste" || normalized === "planos-de-teste") return "testPlans";
+  if (normalized === "perfil" || normalized === "profile") return "profile";
+  if (normalized === "configuracoes" || normalized === "settings") return "settings";
+  if (normalized === "command center") return "commandCenter";
+  if (normalized === "metricas" || normalized === "metrics") return "metrics";
+  if (normalized === "usuarios" || normalized === "users") return "users";
+  if (normalized === "documentos" || normalized === "documents") return "documents";
+  if (normalized === "solicitacoes" || normalized === "requests") return "requests";
+  if (normalized === "empresas" || normalized === "companies") return "companies";
+  if (normalized === "identidade visual" || normalized === "brand identity" || normalized === "brand-identity") return "brandIdentity";
+  if (normalized === "home" || normalized === "dashboard" || normalized === "runs") return normalized as "home" | "dashboard" | "runs";
+  return null;
+}
+
+function resolveSectionLabel(section: string, copy: AppShellCopy) {
+  const key = normalizeSectionKey(section);
+  return key ? copy.sections[key] : section;
+}
+
+function resolveSectionNote(section: string, copy: AppShellCopy) {
+  const key = normalizeSectionKey(section);
+  if (!key) return copy.notes.default;
+  const notes = copy.notes as Record<string, string>;
+  return notes[key] ?? copy.notes.default;
+}
+
+function resolveShortCompanyIdentity(
+  pathname: string,
+  copy: AppShellCopy,
+): Omit<ShellIdentity, "profileLabel" | "coverClassName" | "logoSrc" | "logoAlt" | "logoFallbackText"> | null {
   const parts = pathname.split("/").filter(Boolean);
   if (parts.length < 2) return null;
 
@@ -115,38 +256,42 @@ function resolveShortCompanyIdentity(pathname: string): Omit<ShellIdentity, "pro
 
   if (knownRoots.has(rootSegment)) return null;
 
-  const section = humanizeSegment(parts[1] ?? "home");
+  const rawSection = humanizeSegment(parts[1] ?? "home");
+  const section = resolveSectionLabel(rawSection, copy);
 
   return {
-    kicker: `Empresa ${humanizeSegment(rootSegment)}`,
-    title: section === "Home" ? humanizeSegment(rootSegment) : section,
-    note: resolveSectionNote(section.toLowerCase()),
-    badge: parts[1] ? humanizeSegment(parts[1]) : "Empresa",
+    kicker: replaceName(copy.kickers.company, humanizeSegment(rootSegment)),
+    title: normalizeSectionKey(rawSection) === "home" ? humanizeSegment(rootSegment) : section,
+    note: resolveSectionNote(rawSection, copy),
+    badge: parts[1] ? section : copy.badges.company,
   };
 }
 
-function resolveShellIdentity(pathname: string): Omit<ShellIdentity, "profileLabel" | "coverClassName" | "logoSrc" | "logoAlt" | "logoFallbackText"> {
+function resolveShellIdentity(
+  pathname: string,
+  copy: AppShellCopy,
+): Omit<ShellIdentity, "profileLabel" | "coverClassName" | "logoSrc" | "logoAlt" | "logoFallbackText"> {
   if (!pathname || pathname === "/") {
     return {
-      kicker: "Testing Company",
-      title: "Quality Control",
-      note: "Entrada principal da plataforma com identidade visual, contexto institucional e acesso aos modulos.",
-      badge: "Plataforma",
+      kicker: copy.kickers.platform,
+      title: copy.qualityControl,
+      note: copy.notes.default,
+      badge: copy.badges.platform,
     };
   }
 
-  const shortCompanyIdentity = resolveShortCompanyIdentity(pathname);
+  const shortCompanyIdentity = resolveShortCompanyIdentity(pathname, copy);
   if (shortCompanyIdentity) {
     return shortCompanyIdentity;
   }
 
   if (pathname.startsWith("/admin")) {
     const section = pathname.split("/").filter(Boolean)[1] ?? "home";
-    const normalizedSection = humanizeSegment(section === "home" ? "command center" : section);
+    const normalizedSection = resolveSectionLabel(humanizeSegment(section === "home" ? "command center" : section), copy);
     return {
-      kicker: "Testing Company Admin",
+      kicker: copy.kickers.admin,
       title: normalizedSection,
-      note: resolveSectionNote(normalizedSection.toLowerCase()),
+      note: resolveSectionNote(section === "home" ? "command center" : section, copy),
       badge: normalizedSection,
     };
   }
@@ -155,48 +300,49 @@ function resolveShellIdentity(pathname: string): Omit<ShellIdentity, "profileLab
     const parts = pathname.split("/").filter(Boolean);
     const slug = parts[1] ?? "empresa";
     const section = parts[2] ?? "home";
-    const normalizedSection = humanizeSegment(section);
+    const normalizedSection = resolveSectionLabel(humanizeSegment(section), copy);
 
     return {
-      kicker: `Empresa ${humanizeSegment(slug)}`,
-      title: normalizedSection === "Home" ? humanizeSegment(slug) : normalizedSection,
-      note: resolveSectionNote(normalizedSection.toLowerCase()),
+      kicker: replaceName(copy.kickers.company, humanizeSegment(slug)),
+      title: normalizeSectionKey(section) === "home" ? humanizeSegment(slug) : normalizedSection,
+      note: resolveSectionNote(section, copy),
       badge: normalizedSection,
     };
   }
 
   if (pathname.startsWith("/settings")) {
     return {
-      kicker: "Testing Company",
-      title: "Configuracoes",
-      note: "Ajustes de perfil, preferencias e dados institucionais do ambiente atual.",
-      badge: "Configuracoes",
+      kicker: copy.kickers.platform,
+      title: copy.sections.settings,
+      note: copy.notes.profile,
+      badge: copy.sections.settings,
     };
   }
 
   if (pathname.startsWith("/meus-chamados") || pathname.startsWith("/chamados")) {
     return {
-      kicker: "Testing Company",
-      title: "Suporte",
-      note: "Acompanhe solicitacoes, responsaveis e prioridade com leitura direta para operacao.",
-      badge: "Suporte",
+      kicker: copy.kickers.platform,
+      title: copy.sections.support,
+      note: copy.notes.support,
+      badge: copy.sections.support,
     };
   }
 
   if (pathname.startsWith("/runs")) {
     return {
-      kicker: "Testing Company",
-      title: "Runs",
-      note: resolveSectionNote("runs"),
-      badge: "Runs",
+      kicker: copy.kickers.platform,
+      title: copy.sections.runs,
+      note: resolveSectionNote("runs", copy),
+      badge: copy.sections.runs,
     };
   }
 
-  const fallbackTitle = humanizeSegment(pathname.split("/").filter(Boolean).at(-1) ?? "Quality Control");
+  const rawFallbackTitle = humanizeSegment(pathname.split("/").filter(Boolean).at(-1) ?? copy.qualityControl);
+  const fallbackTitle = resolveSectionLabel(rawFallbackTitle, copy);
   return {
-    kicker: "Testing Company",
+    kicker: copy.kickers.platform,
     title: fallbackTitle,
-    note: resolveSectionNote(fallbackTitle.toLowerCase()),
+    note: resolveSectionNote(rawFallbackTitle, copy),
     badge: fallbackTitle,
   };
 }
@@ -217,8 +363,8 @@ function normalizeViewerProfileKind(input: {
   });
 }
 
-function profileLabel(profileKind: ViewerProfileKind) {
-  return getFixedProfileLabel(profileKind, { short: true });
+function profileLabel(profileKind: ViewerProfileKind, copy: AppShellCopy) {
+  return copy.profiles[profileKind];
 }
 
 function profileCoverClassName(profileKind: ViewerProfileKind) {
@@ -229,12 +375,12 @@ function profileCoverClassName(profileKind: ViewerProfileKind) {
   return "app-page-cover--testing-company-user";
 }
 
-function profileKicker(profileKind: ViewerProfileKind, company: CompanyBrand | null) {
-  if (profileKind === "empresa") return company ? `Perfil empresa • ${company.name}` : "Perfil empresa";
-  if (profileKind === "company_user") return company ? `Usuario da empresa • ${company.name}` : "Usuario da empresa";
-  if (profileKind === "leader_tc") return "Lider TC • Testing Company";
-  if (profileKind === "technical_support") return "Suporte Tecnico • Testing Company";
-  return "Usuario TC â€¢ Testing Company";
+function profileKicker(profileKind: ViewerProfileKind, company: CompanyBrand | null, copy: AppShellCopy) {
+  if (profileKind === "empresa") return replaceName(copy.kickers.companyProfile, company?.name ?? copy.badges.company);
+  if (profileKind === "company_user") return replaceName(copy.kickers.companyUser, company?.name ?? copy.badges.company);
+  if (profileKind === "leader_tc") return copy.kickers.leader;
+  if (profileKind === "technical_support") return copy.kickers.support;
+  return copy.kickers.tcUser;
 }
 
 function buildLogoFallbackText(label: string) {
@@ -247,26 +393,31 @@ function buildLogoFallbackText(label: string) {
   return normalized || "TC";
 }
 
-function profileLogo(profileKind: ViewerProfileKind, company: CompanyBrand | null, routeCompanySlug: string | null) {
-  const companyLabel = company?.name ?? (routeCompanySlug ? humanizeSegment(routeCompanySlug) : "Empresa");
+function profileLogo(
+  profileKind: ViewerProfileKind,
+  company: CompanyBrand | null,
+  routeCompanySlug: string | null,
+  copy: AppShellCopy,
+) {
+  const companyLabel = company?.name ?? (routeCompanySlug ? humanizeSegment(routeCompanySlug) : copy.badges.company);
   const shouldUseCompanyLogo = (profileKind === "empresa" || profileKind === "company_user") && Boolean(company?.logoUrl);
   if (shouldUseCompanyLogo && company) {
     return {
       logoSrc: company.logoUrl ?? "/images/tc.png",
-      logoAlt: `Logo da empresa ${company.name}`,
+      logoAlt: replaceName(copy.aria.companyLogo, company.name),
       logoFallbackText: buildLogoFallbackText(company.name),
     };
   }
   if (profileKind === "empresa" || profileKind === "company_user") {
     return {
       logoSrc: null,
-      logoAlt: `Identidade da empresa ${companyLabel}`,
+      logoAlt: replaceName(copy.aria.companyIdentity, companyLabel),
       logoFallbackText: buildLogoFallbackText(companyLabel),
     };
   }
   return {
     logoSrc: "/images/tc.png",
-    logoAlt: "Logo Testing Company",
+    logoAlt: copy.aria.platformLogo,
     logoFallbackText: "TC",
   };
 }
@@ -324,12 +475,32 @@ function isSupportRoute(pathname: string) {
   return parts.length >= 2 && parts[1] === "chamados" && resolveRouteCompanySlug(pathname) !== null;
 }
 
+function isCompanyDefectsRoute(pathname: string) {
+  if (/^\/empresas\/[^/]+\/defeitos(?:\/.*)?$/.test(pathname)) {
+    return true;
+  }
+
+  const parts = pathname.split("/").filter(Boolean);
+  return parts.length >= 2 && parts[1] === "defeitos" && resolveRouteCompanySlug(pathname) !== null;
+}
+
+function isCompanyAppsRoute(pathname: string) {
+  if (/^\/empresas\/[^/]+\/aplicacoes(?:\/.*)?$/.test(pathname)) {
+    return true;
+  }
+
+  const parts = pathname.split("/").filter(Boolean);
+  return parts.length >= 2 && parts[1] === "aplicacoes" && resolveRouteCompanySlug(pathname) !== null;
+}
+
 function shouldHideShellCover(pathname: string) {
   const hasAdminHeroCover = /^\/admin\/(?:home|test-metric|users|clients|support)(?:\/.*)?$/.test(pathname);
   return (
     pathname.startsWith("/settings/profile") ||
     pathname.startsWith("/requests") ||
     pathname.startsWith("/dashboard") ||
+    isCompanyAppsRoute(pathname) ||
+    isCompanyDefectsRoute(pathname) ||
     isSupportRoute(pathname) ||
     hasAdminHeroCover
   );
@@ -342,6 +513,9 @@ function shouldUseNativeImageTag(src: string) {
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname() || "";
   const router = useRouter();
+  const { language } = useI18n();
+  const locale = normalizeLocale(language);
+  const shellCopy = APP_SHELL_COPY[locale];
   const { user, companies } = useAuth();
   const { activeClient, activeClientSlug } = useClientContext();
   const isLoginRoute = pathname.startsWith("/login");
@@ -352,7 +526,7 @@ export default function AppShell({ children }: AppShellProps) {
   const hideShellCover = shouldHideShellCover(pathname);
   const [mobileOpen, setMobileOpen] = useState(false);
   const shellIdentity = useMemo(() => {
-    const baseIdentity = resolveShellIdentity(pathname);
+    const baseIdentity = resolveShellIdentity(pathname, shellCopy);
     const routeCompanySlug = resolveRouteCompanySlug(pathname);
     const preferredCompanySlug =
       routeCompanySlug ??
@@ -394,18 +568,18 @@ export default function AppShell({ children }: AppShellProps) {
     });
     const viewerProfile: ViewerProfileKind = isCompanyRoute ? "empresa" : resolvedViewerProfile;
 
-    const { logoSrc, logoAlt, logoFallbackText } = profileLogo(viewerProfile, companyBrand, routeCompanySlug);
+    const { logoSrc, logoAlt, logoFallbackText } = profileLogo(viewerProfile, companyBrand, routeCompanySlug, shellCopy);
     const shouldCollapseCompanyKicker =
       baseIdentity.kicker.startsWith("Empresa ") &&
       companyBrand &&
       (viewerProfile === "empresa" || viewerProfile === "company_user");
-    const shortProfileLabel = profileLabel(viewerProfile);
+    const shortProfileLabel = profileLabel(viewerProfile, shellCopy);
 
     return {
       ...baseIdentity,
       kicker: shouldCollapseCompanyKicker
-        ? `${profileKicker(viewerProfile, companyBrand)}`
-        : `${profileKicker(viewerProfile, companyBrand)} | ${baseIdentity.kicker}`,
+        ? `${profileKicker(viewerProfile, companyBrand, shellCopy)}`
+        : `${profileKicker(viewerProfile, companyBrand, shellCopy)} | ${baseIdentity.kicker}`,
       title:
         isCompanyHomeRoute && companyBrand
           ? companyBrand.name
@@ -427,6 +601,7 @@ export default function AppShell({ children }: AppShellProps) {
     companies,
     activeClient,
     activeClientSlug,
+    shellCopy,
   ]);
 
   const prevPathRef = useRef(pathname);
@@ -506,13 +681,12 @@ export default function AppShell({ children }: AppShellProps) {
       {/* Botão de menu mobile/hamburguer */}
       <button
         type="button"
-        aria-label="Abrir menu"
+        aria-label={shellCopy.aria.openMenu}
         aria-expanded={mobileOpen ? "true" : "false"}
         className={[
-          "fixed top-3 left-3 z-50 rounded-2xl border border-white/14",
-          "bg-[linear-gradient(135deg,rgba(1,24,72,0.96)_0%,rgba(10,47,122,0.94)_58%,rgba(239,0,1,0.88)_100%)]",
-          "p-2.5 text-white shadow-[0_18px_40px_rgba(1,24,72,0.34)] backdrop-blur transition duration-200",
-          "hover:-translate-y-0.5 hover:shadow-[0_22px_48px_rgba(1,24,72,0.4)]",
+          "app-shell-menu-toggle fixed top-3 left-3 z-50 rounded-2xl border",
+          "p-2.5 text-white backdrop-blur transition duration-200",
+          "hover:-translate-y-0.5",
           "sm:top-4 sm:left-4 lg:hidden",
           mobileOpen ? "pointer-events-none opacity-0" : ""
         ].join(" ")}
@@ -528,6 +702,7 @@ export default function AppShell({ children }: AppShellProps) {
         <DeferredNotificationsButton />
         <DeferredTicketsButton />
         <DeferredNotesButton className="hidden shrink-0 sm:inline-flex" />
+        <ThemeToggleButton />
         <DeferredProfileButton />
       </div>
 
@@ -538,7 +713,10 @@ export default function AppShell({ children }: AppShellProps) {
           <MainWrapper
             pathname={pathname}
             beforeContent={hideShellCover ? null :
-              <section className={`app-page-cover ${shellIdentity.coverClassName}`} aria-label={`Capa da pagina ${shellIdentity.title}`}>
+              <section
+                className={`app-page-cover ${shellIdentity.coverClassName}`}
+                aria-label={replaceName(shellCopy.aria.pageCover, shellIdentity.title)}
+              >
                 <div className="app-page-cover-grid">
                   <div className="app-page-cover-copy">
                     <div className="app-page-cover-brand">

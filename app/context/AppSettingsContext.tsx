@@ -25,7 +25,7 @@ type AppSettingsContextValue = {
   refreshSettings: () => Promise<void>;
 };
 
-const DEFAULT_SETTINGS: AppSettings = { theme: "light", language: DEFAULT_LOCALE };
+const DEFAULT_SETTINGS: AppSettings = { theme: "system", language: DEFAULT_LOCALE };
 
 const LAST_USER_ID_KEY = "tc-settings:last-user-id";
 
@@ -198,11 +198,20 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
       root.classList.toggle("dark", useDark);
       root.classList.toggle("theme-light", !useDark);
       root.style.colorScheme = useDark ? "dark" : "light";
+      root.dataset.themeResolved = useDark ? "dark" : "light";
+      root.dataset.themePreference = settings.theme;
     };
 
     if (settings.theme === "system") {
-      applyTheme(false);
-      return undefined;
+      const media = window.matchMedia("(prefers-color-scheme: dark)");
+      applyTheme(media.matches);
+      const handleChange = (event: MediaQueryListEvent) => {
+        applyTheme(event.matches);
+      };
+      media.addEventListener("change", handleChange);
+      return () => {
+        media.removeEventListener("change", handleChange);
+      };
     }
 
     applyTheme(settings.theme === "dark");

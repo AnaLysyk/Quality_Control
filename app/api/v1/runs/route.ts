@@ -348,6 +348,7 @@ export async function POST(request: Request) {
   const title = normalizeString(rec.title);
   const description = normalizeString(rec.description) || "";
   const customType = normalizeString(rec.custom_type);
+  const planId = normalizeNumericId(rec.plan_id ?? rec.planId);
 
   if (!project && !DEFAULT_PROJECT) {
     return apiFail(request, "Missing project or title", {
@@ -386,6 +387,9 @@ export async function POST(request: Request) {
     title,
     description,
   };
+  if (planId) {
+    payload.plan_id = planId;
+  }
   if (customType) {
     payload.custom_fields = { custom_type: customType };
   }

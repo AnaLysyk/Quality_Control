@@ -42,10 +42,10 @@ export function canCommentTicket(user: AuthUser | null, ticket: TicketRecord) {
   return canViewTicket(user, ticket) && canCommentSupportTickets(user);
 }
 
-export function canEditTicketContent(user: AuthUser | null, _ticket: TicketRecord) {
+export function canEditTicketContent(user: AuthUser | null, ticket: TicketRecord) {
   if (!user) return false;
-  void _ticket;
-  return canManageSupportWorkflow(user);
+  if (canManageSupportWorkflow(user)) return true;
+  return ticket.createdBy === user.id;
 }
 
 export function canAssignTicket(user: AuthUser | null, ticket?: TicketRecord) {

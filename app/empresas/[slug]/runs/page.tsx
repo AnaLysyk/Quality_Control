@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
+import { CreateIntegratedRunButton } from "@/components/CreateIntegratedRunButton";
 import { fetchApi } from "@/lib/api";
 import { formatRunTitle } from "@/lib/runPresentation";
 
@@ -45,6 +46,10 @@ type IntegratedRun = {
   responsibleEmail: string | null;
   createdByName: string | null;
   createdByEmail: string | null;
+  testPlanId: string | null;
+  testPlanName: string | null;
+  testPlanSource: "manual" | "qase" | null;
+  testPlanProjectCode: string | null;
 };
 
 type UnifiedRun = {
@@ -61,6 +66,9 @@ type UnifiedRun = {
   responsibleLabel: string | null;
   passRate: number | null;
   stats: RunStats;
+  testPlanName: string | null;
+  testPlanSource: "manual" | "qase" | null;
+  testPlanProjectCode: string | null;
 };
 
 function normalizeKey(value: unknown) {
@@ -149,6 +157,18 @@ function normalizeManualRuns(data: unknown[]): UnifiedRun[] {
     const slug = String(rec.slug ?? rec.id ?? "");
     if (!slug) return accumulator;
 
+    const testPlanSource =
+      rec.testPlanSource === "qase" || rec.testPlanSource === "manual"
+        ? rec.testPlanSource
+        : null;
+    const testPlanId =
+      typeof rec.testPlanId === "string" && rec.testPlanId.trim() ? rec.testPlanId.trim() : null;
+    const testPlanName =
+      typeof rec.testPlanName === "string" && rec.testPlanName.trim()
+        ? rec.testPlanName.trim()
+        : testPlanId
+          ? `Plano ${testPlanId}`
+          : null;
     const stats = computeStats((rec.stats ?? {}) as RunStatsInput);
     accumulator.push({
       key: `manual:${slug}`,
@@ -171,6 +191,9 @@ function normalizeManualRuns(data: unknown[]): UnifiedRun[] {
               : null,
       passRate: computePassRate(stats),
       stats,
+      testPlanName,
+      testPlanSource,
+      testPlanProjectCode: normalizeProjectCode(rec.testPlanProjectCode ?? rec.qaseProject ?? rec.app),
     });
 
     return accumulator;
@@ -202,6 +225,26 @@ function normalizeIntegratedRuns(data: unknown[]): IntegratedRun[] {
       responsibleEmail: typeof rec.responsibleEmail === "string" ? rec.responsibleEmail : null,
       createdByName: typeof rec.createdByName === "string" ? rec.createdByName : null,
       createdByEmail: typeof rec.createdByEmail === "string" ? rec.createdByEmail : null,
+      testPlanId:
+        typeof rec.plan_id === "number" || typeof rec.plan_id === "string"
+          ? String(rec.plan_id)
+          : typeof rec.planId === "number" || typeof rec.planId === "string"
+            ? String(rec.planId)
+            : null,
+      testPlanName:
+        typeof rec.plan_name === "string" && rec.plan_name.trim()
+          ? rec.plan_name.trim()
+          : typeof rec.planName === "string" && rec.planName.trim()
+            ? rec.planName.trim()
+            : null,
+      testPlanSource:
+        rec.plan_id !== undefined || rec.planId !== undefined || rec.plan_name !== undefined || rec.planName !== undefined
+          ? "qase"
+          : null,
+      testPlanProjectCode:
+        typeof rec.planProjectCode === "string" && rec.planProjectCode.trim()
+          ? rec.planProjectCode.trim().toUpperCase()
+          : null,
     });
 
     return accumulator;
@@ -263,6 +306,11 @@ function toUnifiedIntegratedRuns(data: IntegratedRun[], companySlug: string, app
         responsibleLabel,
         passRate: computePassRate(stats),
         stats,
+        testPlanName:
+          run.testPlanName?.trim() ||
+          (run.testPlanId ? `Plano ${run.testPlanId}` : null),
+        testPlanSource: run.testPlanSource,
+        testPlanProjectCode: run.testPlanProjectCode || normalizeProjectCode(run.qaseProject ?? run.project ?? run.app),
       };
     });
 }
@@ -277,6 +325,7 @@ export default function CompanyRunsPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     const currentCompanySlug = companySlug ?? "";
@@ -345,14 +394,14 @@ export default function CompanyRunsPage() {
     return () => {
       active = false;
     };
-  }, [companySlug]);
+  }, [companySlug, reloadToken]);
 
   const filteredRuns = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return runs;
 
     return runs.filter((run) =>
-      [run.name, run.slug, run.applicationLabel, run.projectCode, run.sourceLabel, run.providerLabel, run.responsibleLabel]
+      [run.name, run.slug, run.applicationLabel, run.projectCode, run.sourceLabel, run.providerLabel, run.responsibleLabel, run.testPlanName]
         .filter((value): value is string => typeof value === "string" && value.length > 0)
         .some((value) => value.toLowerCase().includes(term)),
     );
@@ -393,7 +442,16 @@ export default function CompanyRunsPage() {
               {totals.total} no total | {totals.manual} manual(is) | {totals.integrated} integrada(s)
             </p>
           </div>
-          <CreateManualReleaseButton companySlug={companySlug} />
+          <div className="flex flex-wrap items-center gap-3">
+            <CreateIntegratedRunButton
+              companySlug={companySlug}
+              onCreated={() => setReloadToken((current) => current + 1)}
+            />
+            <CreateManualReleaseButton
+              companySlug={companySlug}
+              onCreated={() => setReloadToken((current) => current + 1)}
+            />
+          </div>
         </header>
 
         {error ? (
@@ -494,10 +552,21 @@ export default function CompanyRunsPage() {
                             {run.projectCode}
                           </span>
                         ) : null}
+                        {run.testPlanName ? (
+                          <span className="rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-700">
+                            {run.testPlanSource === "qase" ? "Plano Qase" : "Plano manual"}
+                          </span>
+                        ) : null}
                       </div>
                       <div className="mt-2 text-sm font-medium text-(--tc-text-primary,#0b1a3c)">
                         {run.applicationLabel}
                       </div>
+                      {run.testPlanName ? (
+                        <div className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-indigo-700">
+                          Plano aplicado: {run.testPlanName}
+                          {run.testPlanProjectCode ? ` · ${run.testPlanProjectCode}` : ""}
+                        </div>
+                      ) : null}
                       {run.responsibleLabel ? (
                         <div className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
                           Responsavel: {run.responsibleLabel}

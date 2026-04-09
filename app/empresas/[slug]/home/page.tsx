@@ -179,6 +179,12 @@ export default async function CompanyHomePage({ params }: PageProps) {
   const companyStatus = resolveCompanyStatus(company);
   const integrationStatus = resolveIntegrationStatus(company);
   const totalRuns = manualRuns.length + integratedRuns.length;
+  const elevatedSurfaceStyle = {
+    background: "linear-gradient(180deg, var(--tc-surface) 0%, var(--tc-surface-alt) 100%)",
+  } as const;
+  const subtleSurfaceStyle = {
+    background: "linear-gradient(180deg, var(--tc-surface-alt) 0%, var(--tc-surface) 100%)",
+  } as const;
   const quickLinks = [
     {
       title: "Dashboard",
@@ -234,19 +240,20 @@ export default async function CompanyHomePage({ params }: PageProps) {
   return (
     <div className="relative isolate min-h-screen bg-(--page-bg,#f5f6fa) px-4 py-8 text-(--page-text,#0b1a3c) sm:px-5 lg:px-6 xl:px-8 2xl:px-10">
       <div className="relative z-10 flex w-full max-w-none flex-col gap-6">
-        <section className="rounded-[30px] border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm sm:p-7">
+        <section className="rounded-[30px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-6 shadow-sm sm:p-7">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
             {quickLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="group rounded-3xl border border-(--tc-border,#e5e7eb) bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(15,23,42,0.08)]"
+                className="group rounded-3xl border border-(--tc-border,#e5e7eb) p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(15,23,42,0.08)]"
+                style={elevatedSurfaceStyle}
               >
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) text-(--tc-primary,#0b1a3c)">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-alt,#f8fafc) text-(--tc-text-primary,#0b1a3c)">
                     <item.icon className="h-5 w-5" />
                   </div>
-                  <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">
+                  <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface-alt,#f8fafc) px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-secondary,#475569)">
                     {item.note}
                   </span>
                 </div>
@@ -262,19 +269,19 @@ export default async function CompanyHomePage({ params }: PageProps) {
         </section>
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.18fr)_minmax(0,0.82fr)]">
-          <section className="rounded-[30px] border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm sm:p-7">
+          <section className="rounded-[30px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-6 shadow-sm sm:p-7">
             <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-(--tc-accent,#ef0001)">Contexto salvo</p>
             <h2 className="mt-2 text-2xl font-extrabold text-(--tc-text,#0b1a3c)">Projetos e aplicacoes da empresa</h2>
             <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
               Bloco institucional da home. Aqui ficam os vinculos salvos que contextualizam a empresa, sem misturar com o painel operacional.
             </p>
 
-            <div className="mt-5 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-5">
+            <div className="mt-5 rounded-3xl border border-(--tc-border,#e5e7eb) p-5" style={subtleSurfaceStyle}>
               <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Projetos vinculados</div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {Array.from(projectCodes).length > 0 ? (
                   Array.from(projectCodes).map((code) => (
-                    <span key={code} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">
+                    <span key={code} className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-(--tc-text-primary,#334155)">
                       {code}
                     </span>
                   ))
@@ -284,12 +291,12 @@ export default async function CompanyHomePage({ params }: PageProps) {
               </div>
             </div>
 
-            <div className="mt-4 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-5">
+            <div className="mt-4 rounded-3xl border border-(--tc-border,#e5e7eb) p-5" style={subtleSurfaceStyle}>
               <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Aplicacoes cadastradas</div>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 {applications.length > 0 ? (
                   applications.slice(0, 6).map((app) => (
-                    <div key={app.id} className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                    <div key={app.id} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) px-4 py-3">
                       <div className="text-sm font-semibold text-(--tc-text,#0b1a3c)">{app.name}</div>
                       <div className="mt-1 text-xs uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
                         {app.qaseProjectCode ?? app.slug}
@@ -303,21 +310,21 @@ export default async function CompanyHomePage({ params }: PageProps) {
             </div>
           </section>
 
-          <section className="rounded-[30px] border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm sm:p-7">
+          <section className="rounded-[30px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-6 shadow-sm sm:p-7">
             <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-(--tc-accent,#ef0001)">Leitura rapida</p>
             <h2 className="mt-2 text-2xl font-extrabold text-(--tc-text,#0b1a3c)">Estado atual da empresa</h2>
             <div className="mt-5 grid gap-4">
-              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5">
+              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) p-5" style={elevatedSurfaceStyle}>
                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Empresa</div>
                 <div className="mt-3 text-lg font-extrabold text-(--tc-text,#0b1a3c)">{companyStatus.title}</div>
                 <div className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">{companyStatus.detail}</div>
               </div>
-              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5">
+              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) p-5" style={elevatedSurfaceStyle}>
                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Integracao</div>
                 <div className="mt-3 text-lg font-extrabold text-(--tc-text,#0b1a3c)">{integrationStatus.title}</div>
                 <div className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">{integrationStatus.detail}</div>
               </div>
-              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5">
+              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) p-5" style={elevatedSurfaceStyle}>
                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Proximo passo recomendado</div>
                 <div className="mt-3 text-lg font-extrabold text-(--tc-text,#0b1a3c)">
                   {totalRuns > 0 ? "Abrir dashboard inteligente" : "Configurar primeira operacao"}
@@ -328,7 +335,7 @@ export default async function CompanyHomePage({ params }: PageProps) {
                     : "Comece por perfil, integracoes ou criacao da primeira run manual."}
                 </div>
               </div>
-              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5">
+              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) p-5" style={elevatedSurfaceStyle}>
                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Ultima execucao</div>
                 <div className="mt-3 text-lg font-extrabold text-(--tc-text,#0b1a3c)">{formatDate(latestExecutionAt)}</div>
                 <div className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">

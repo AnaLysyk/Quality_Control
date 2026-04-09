@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { FiEdit2, FiMessageSquare, FiSave, FiSend, FiX } from "react-icons/fi";
+import { FiEdit2, FiMessageSquare, FiPaperclip, FiSave, FiSend, FiX } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { TICKET_STATUS_OPTIONS } from "@/lib/ticketsStatus";
 import type { TicketPriority, TicketType } from "@/lib/ticketsStore";
@@ -62,6 +62,12 @@ type TicketDraft = {
   type: TicketType;
   priority: TicketPriority;
   status: string;
+};
+
+type TicketEvidenceLink = {
+  raw: string;
+  label: string;
+  href: string;
 };
 
 type TicketDetailsModalProps = {
@@ -134,6 +140,21 @@ function getStatusTone(status?: string | null) {
   return "neutral";
 }
 
+function getStatusLabel(status?: string | null, options: TicketStatusOption[] = TICKET_STATUS_OPTIONS) {
+  if (!status) return "-";
+  return options.find((option) => option.value === status)?.label ?? status;
+}
+
+function getTypeLabel(type?: TicketType | null) {
+  if (!type) return "-";
+  return TICKET_TYPE_OPTIONS.find((option) => option.value === type)?.label ?? type;
+}
+
+function getPriorityLabel(priority?: TicketPriority | null) {
+  if (!priority) return "-";
+  return TICKET_PRIORITY_OPTIONS.find((option) => option.value === priority)?.label ?? priority;
+}
+
 function getTypeTone(type?: TicketType | null) {
   if (type === "bug") return "danger";
   if (type === "melhoria") return "progress";
@@ -152,6 +173,7 @@ const TICKET_PRIORITY_OPTIONS: { value: TicketPriority; label: string }[] = [
   { value: "high", label: "Alta" },
 ];
 const COMMENT_MAX_LENGTH = 2000;
+const MARKDOWN_LINK_PATTERN = /\[([^\]]+)\]\(([^)\s]+)\)/g;
 
 function getPriorityTone(priority?: TicketPriority | null) {
   if (priority === "high") return "danger";
@@ -161,13 +183,98 @@ function getPriorityTone(priority?: TicketPriority | null) {
 }
 
 function toDraft(ticket: TicketShape | null): TicketDraft {
+  const parsedDescription = parseTicketDescription(ticket?.description || ticket?.body || "");
   return {
     title: ticket?.title || ticket?.subject || "",
-    description: ticket?.description || ticket?.body || "",
+    description: parsedDescription.text,
     type: ticket?.type ?? "tarefa",
     priority: ticket?.priority ?? "medium",
     status: ticket?.status ?? "backlog",
   };
+}
+
+function sanitizeFileName(name: string) {
+  return name.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/-+/g, "-").slice(-120);
+}
+
+function buildEvidenceMarkdown(name: string, url: string) {
+  return `[Evidencia: ${name}](${url})`;
+}
+
+function isEvidenceLabel(label: string) {
+  return /^evid[eê]ncia:/i.test(label.trim());
+}
+
+function getEvidenceDisplayLabel(label: string) {
+  return label.replace(/^evid[eê]ncia:\s*/i, "").trim() || label.trim();
+}
+
+function parseTicketDescription(body?: string | null): { text: string; evidence: TicketEvidenceLink[] } {
+  const source = body ?? "";
+  if (!source.trim()) {
+    return { text: "", evidence: [] };
+  }
+
+  const evidence: TicketEvidenceLink[] = [];
+  const text = source
+    .replace(MARKDOWN_LINK_PATTERN, (raw, label, href) => {
+      if (!isEvidenceLabel(label)) return raw;
+      evidence.push({ raw, label, href });
+      return "";
+    })
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  return { text, evidence };
+}
+
+function renderCommentBody(body: string) {
+  const lines = body.split("\n");
+  return lines.map((line, lineIndex) => {
+    const matches = Array.from(line.matchAll(MARKDOWN_LINK_PATTERN));
+    if (matches.length === 0) {
+      return (
+        <Fragment key={`line-${lineIndex}`}>
+          {line}
+          {lineIndex < lines.length - 1 ? <br /> : null}
+        </Fragment>
+      );
+    }
+
+    const parts: ReactNode[] = [];
+    let cursor = 0;
+    matches.forEach((match, matchIndex) => {
+      const [raw, label, href] = match;
+      const start = match.index ?? 0;
+      if (start > cursor) {
+        parts.push(
+          <span key={`text-${lineIndex}-${matchIndex}`}>{line.slice(cursor, start)}</span>,
+        );
+      }
+      parts.push(
+        <a
+          key={`link-${lineIndex}-${matchIndex}`}
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          className="ticket-detail-evidence-link"
+        >
+          {label}
+        </a>,
+      );
+      cursor = start + raw.length;
+    });
+    if (cursor < line.length) {
+      parts.push(<span key={`tail-${lineIndex}`}>{line.slice(cursor)}</span>);
+    }
+
+    return (
+      <Fragment key={`line-${lineIndex}`}>
+        {parts}
+        {lineIndex < lines.length - 1 ? <br /> : null}
+      </Fragment>
+    );
+  });
 }
 
 export default function TicketDetailsModal({
@@ -195,9 +302,14 @@ export default function TicketDetailsModal({
   const [comments, setComments] = useState<TicketComment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentDraft, setCommentDraft] = useState("");
+  const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
+  const [editEvidenceFile, setEditEvidenceFile] = useState<File | null>(null);
+  const [draftEvidence, setDraftEvidence] = useState<TicketEvidenceLink[]>([]);
   const [sendingComment, setSendingComment] = useState(false);
   const [loadingTicket, setLoadingTicket] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const evidenceInputRef = useRef<HTMLInputElement | null>(null);
+  const editEvidenceInputRef = useRef<HTMLInputElement | null>(null);
 
   const loadTicket = useCallback(async () => {
     if (!ticket?.id) return;
@@ -265,11 +377,19 @@ export default function TicketDetailsModal({
     setDraft(toDraft(ticket));
     setAssigneeOptions([]);
     setCommentDraft("");
+    setEvidenceFile(null);
+    setEditEvidenceFile(null);
+    if (evidenceInputRef.current) evidenceInputRef.current.value = "";
+    if (editEvidenceInputRef.current) editEvidenceInputRef.current.value = "";
     setEditingAssignee(false);
     setError(null);
     void loadTicket();
     void loadComments();
   }, [open, ticket, loadTicket, loadComments]);
+
+  useEffect(() => {
+    setDraftEvidence(parseTicketDescription(currentTicket?.description || currentTicket?.body || "").evidence);
+  }, [currentTicket?.description, currentTicket?.body]);
 
   useEffect(() => {
     if (!mounted || !open) return;
@@ -286,27 +406,49 @@ export default function TicketDetailsModal({
     () => currentTicket?.title || currentTicket?.subject || `#${currentTicket?.id ?? "-"}`,
     [currentTicket],
   );
+  const parsedDescription = useMemo(
+    () => parseTicketDescription(currentTicket?.description || currentTicket?.body || ""),
+    [currentTicket?.description, currentTicket?.body],
+  );
   const description = useMemo(
-    () => currentTicket?.description || currentTicket?.body || "Sem descricao.",
-    [currentTicket],
+    () => parsedDescription.text || "Sem descricao.",
+    [parsedDescription.text],
   );
   const canEditContent = capabilities.canEditContent;
   const canMoveStatus = capabilities.canMoveStatus;
   const canEditTicket = canEditContent || canMoveStatus;
-  const commentLength = commentDraft.length;
+  const hasVisibleComments = !commentsLoading && comments.length > 0;
+  const canSendComment = Boolean(commentDraft.trim() || evidenceFile) && !sendingComment;
+  const canSaveEditEvidence = Boolean(editEvidenceFile) && !savingDraft;
   const hasAssigneeSaved = Boolean(currentTicket?.assignedToUserId);
   const assigneeChanged = assigneeDraft !== (currentTicket?.assignedToUserId ?? "");
   const canSaveAssignee = Boolean(assigneeDraft) && assigneeChanged && !savingAssignee;
+  const evidenceChanged = useMemo(() => {
+    const currentEvidence = parsedDescription.evidence.map((item) => item.raw).join("|");
+    const nextEvidence = draftEvidence.map((item) => item.raw).join("|");
+    return currentEvidence !== nextEvidence;
+  }, [draftEvidence, parsedDescription.evidence]);
   const draftChanged = useMemo(() => {
     if (!currentTicket) return false;
     return (
       draft.title !== (currentTicket.title || currentTicket.subject || "") ||
-      draft.description !== (currentTicket.description || currentTicket.body || "") ||
+      draft.description !== parsedDescription.text ||
+      evidenceChanged ||
+      Boolean(editEvidenceFile) ||
       draft.type !== (currentTicket.type ?? "tarefa") ||
       draft.priority !== (currentTicket.priority ?? "medium") ||
       draft.status !== (currentTicket.status ?? "backlog")
     );
-  }, [currentTicket, draft]);
+  }, [currentTicket, draft, editEvidenceFile, evidenceChanged, parsedDescription.text]);
+  const summaryStatusLabel = useMemo(
+    () => getStatusLabel(currentTicket?.status, statusOptions),
+    [currentTicket?.status, statusOptions],
+  );
+  const summaryTypeLabel = useMemo(() => getTypeLabel(currentTicket?.type), [currentTicket?.type]);
+  const summaryPriorityLabel = useMemo(
+    () => getPriorityLabel(currentTicket?.priority),
+    [currentTicket?.priority],
+  );
 
   async function handleSaveDraft() {
     if (!ticket?.id || !currentTicket) return;
@@ -316,13 +458,22 @@ export default function TicketDetailsModal({
       let nextTicket: TicketShape = currentTicket;
 
       if (canEditContent) {
+        const editEvidence = editEvidenceFile ? await uploadEvidence(editEvidenceFile) : null;
+        const descriptionPayload = [
+          draft.description.trim(),
+          ...draftEvidence.map((item) => item.raw),
+          editEvidence ? buildEvidenceMarkdown(editEvidence.name, editEvidence.url) : "",
+        ]
+          .filter(Boolean)
+          .join("\n\n");
+
         const res = await fetch(`/api/tickets/${encodeURIComponent(ticket.id)}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
             title: draft.title,
-            description: draft.description,
+            description: descriptionPayload,
             type: draft.type,
             priority: draft.priority,
           }),
@@ -350,6 +501,8 @@ export default function TicketDetailsModal({
 
       setCurrentTicket(nextTicket);
       setDraft(toDraft(nextTicket));
+      setEditEvidenceFile(null);
+      if (editEvidenceInputRef.current) editEvidenceInputRef.current.value = "";
       onTicketUpdated?.(nextTicket);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erro ao salvar ticket";
@@ -386,16 +539,47 @@ export default function TicketDetailsModal({
     }
   }
 
+  async function uploadEvidence(file: File) {
+    if (!ticket?.id) throw new Error("Ticket invalido");
+    const safeName = sanitizeFileName(file.name || `evidencia-${Date.now()}`);
+    const key = `tickets/evidencias/${ticket.id}/${Date.now()}-${safeName}`;
+    const form = new FormData();
+    form.set("file", file);
+    form.set("key", key);
+
+    const res = await fetch("/api/s3/upload", {
+      method: "POST",
+      credentials: "include",
+      body: form,
+    });
+    const json = (await res.json().catch(() => ({}))) as { ok?: boolean; key?: string; error?: string };
+    if (!res.ok || !json.ok || !json.key) {
+      throw new Error(json.error || "Erro ao anexar evidencia");
+    }
+    return {
+      name: file.name,
+      url: `/api/s3/object?key=${encodeURIComponent(json.key)}`,
+    };
+  }
+
   async function handleSendComment() {
-    if (!ticket?.id || !commentDraft.trim()) return;
+    if (!ticket?.id || !commentDraft.trim() && !evidenceFile) return;
     setSendingComment(true);
     setError(null);
     try {
+      const evidence = evidenceFile ? await uploadEvidence(evidenceFile) : null;
+      const body = [
+        commentDraft.trim(),
+        evidence ? buildEvidenceMarkdown(evidence.name, evidence.url) : "",
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+
       const res = await fetch(`/api/tickets/${encodeURIComponent(ticket.id)}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ body: commentDraft }),
+        body: JSON.stringify({ body }),
       });
       const json = (await res.json().catch(() => ({}))) as { item?: TicketComment; error?: string };
       if (!res.ok || !json.item) {
@@ -403,6 +587,8 @@ export default function TicketDetailsModal({
       }
       setComments((current) => sortComments([...current, json.item as TicketComment]));
       setCommentDraft("");
+      setEvidenceFile(null);
+      if (evidenceInputRef.current) evidenceInputRef.current.value = "";
       await loadTicket();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erro ao enviar comentario";
@@ -434,7 +620,7 @@ export default function TicketDetailsModal({
               <p className="tc-panel-kicker">Atendimento</p>
               <h2 className="tc-panel-title">Ticket em acompanhamento</h2>
               <p className="tc-panel-description">
-              Dados do ticket fixos na esquerda e conversa ativa com o suporte na direita.
+              Dados do ticket na esquerda e conversa ativa com o suporte na direita. Quem abriu o chamado pode corrigir o proprio ticket e anexar evidencia ao responder.
               </p>
             </div>
           </div>
@@ -468,6 +654,41 @@ export default function TicketDetailsModal({
                       <span>@{currentTicket.createdByLogin.replace(/^@+/, "")}</span>
                     ) : null}
                     {currentTicket?.companySlug ? <span>{currentTicket.companySlug}</span> : null}
+                  </div>
+                </div>
+              </div>
+
+              <div className="ticket-detail-summary-bar" aria-label="Resumo do ticket">
+                <div className="ticket-detail-summary-grid">
+                  <div className="ticket-detail-summary-item">
+                    <p className="ticket-detail-summary-label">Ticket</p>
+                    <p className="ticket-detail-summary-value">{getTicketCode(currentTicket)}</p>
+                  </div>
+                  <div className="ticket-detail-summary-item">
+                    <p className="ticket-detail-summary-label">Status</p>
+                    <span className="ticket-detail-badge" data-tone={getStatusTone(currentTicket?.status)}>
+                      {summaryStatusLabel}
+                    </span>
+                  </div>
+                  <div className="ticket-detail-summary-item">
+                    <p className="ticket-detail-summary-label">Tipo</p>
+                    <span className="ticket-detail-badge" data-tone={getTypeTone(currentTicket?.type)}>
+                      {summaryTypeLabel}
+                    </span>
+                  </div>
+                  <div className="ticket-detail-summary-item">
+                    <p className="ticket-detail-summary-label">Prioridade</p>
+                    <span className="ticket-detail-badge" data-tone={getPriorityTone(currentTicket?.priority)}>
+                      {summaryPriorityLabel}
+                    </span>
+                  </div>
+                  <div className="ticket-detail-summary-item">
+                    <p className="ticket-detail-summary-label">Criado em</p>
+                    <p className="ticket-detail-summary-value">{formatDateTime(currentTicket?.createdAt)}</p>
+                  </div>
+                  <div className="ticket-detail-summary-item">
+                    <p className="ticket-detail-summary-label">Atualizado</p>
+                    <p className="ticket-detail-summary-value">{formatDateTime(currentTicket?.updatedAt)}</p>
                   </div>
                 </div>
               </div>
@@ -550,6 +771,13 @@ export default function TicketDetailsModal({
 
                     <div className="ticket-detail-field-shell">
                       <p className="tc-kv-label">Descricao</p>
+                      <input
+                        ref={editEvidenceInputRef}
+                        type="file"
+                        className="sr-only"
+                        accept="image/*,.pdf,.txt,.log,.json,.zip,.csv,.xlsx,.doc,.docx"
+                        onChange={(event) => setEditEvidenceFile(event.target.files?.[0] ?? null)}
+                      />
                       <textarea
                         value={draft.description}
                         onChange={(event) =>
@@ -559,6 +787,54 @@ export default function TicketDetailsModal({
                         className="ticket-detail-textarea"
                         placeholder="Descreva o ticket"
                       />
+                      {draftEvidence.length > 0 || editEvidenceFile ? (
+                        <div className="ticket-detail-evidence-bar">
+                          {draftEvidence.map((item) => (
+                            <div key={item.href} className="ticket-detail-evidence-chip">
+                              <a
+                                href={item.href}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="ticket-detail-evidence-chip-link"
+                                title={item.label}
+                              >
+                                <FiPaperclip size={12} />
+                                <span className="ticket-detail-evidence-name">
+                                  {getEvidenceDisplayLabel(item.label)}
+                                </span>
+                              </a>
+                              <button
+                                type="button"
+                                className="ticket-detail-evidence-remove"
+                                onClick={() => setDraftEvidence((current) => current.filter((entry) => entry.href !== item.href))}
+                                aria-label={`Remover evidencia ${getEvidenceDisplayLabel(item.label)}`}
+                                title="Remover evidencia"
+                              >
+                                <FiX size={12} />
+                              </button>
+                            </div>
+                          ))}
+                          {editEvidenceFile ? (
+                            <div className="ticket-detail-evidence-chip">
+                              <span className="ticket-detail-evidence-name" title={editEvidenceFile.name}>
+                                {editEvidenceFile.name}
+                              </span>
+                              <button
+                                type="button"
+                                className="ticket-detail-evidence-remove"
+                                onClick={() => {
+                                  setEditEvidenceFile(null);
+                                  if (editEvidenceInputRef.current) editEvidenceInputRef.current.value = "";
+                                }}
+                                aria-label="Remover evidencia do ticket"
+                                title="Remover evidencia do ticket"
+                              >
+                                <FiX size={12} />
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
                     </div>
                   </>
                 ) : (
@@ -572,23 +848,50 @@ export default function TicketDetailsModal({
                       <div className="ticket-detail-copy-card whitespace-pre-wrap">
                         {description}
                       </div>
+                      {parsedDescription.evidence.length > 0 ? (
+                        <div className="ticket-detail-evidence-bar">
+                          {parsedDescription.evidence.map((item) => (
+                            <a
+                              key={item.href}
+                              href={item.href}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="ticket-detail-evidence-link"
+                              title={item.label}
+                            >
+                              <FiPaperclip size={12} />
+                              {getEvidenceDisplayLabel(item.label)}
+                            </a>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   </>
                 )}
 
                 <div className="ticket-detail-inline-meta">
-                  <span><strong>Ticket:</strong> {getTicketCode(currentTicket)}</span>
-                  <span><strong>Criado em:</strong> {formatDateTime(currentTicket?.createdAt)}</span>
-                  <span><strong>Atualizado:</strong> {formatDateTime(currentTicket?.updatedAt)}</span>
+                  <span><strong>Solicitante:</strong> {getAuthorLabel(currentTicket)}</span>
+                  <span><strong>Responsavel:</strong> {getAssigneeLabel(currentTicket)}</span>
                   {loadingTicket ? <span>Atualizando dados...</span> : null}
                 </div>
 
                 {canEditTicket ? (
                   <div className="ticket-detail-form-actions">
+                    {canEditContent ? (
+                      <button
+                        type="button"
+                        className="ticket-detail-secondary-btn ticket-detail-secondary-btn-icon"
+                        onClick={() => editEvidenceInputRef.current?.click()}
+                        aria-label={editEvidenceFile ? "Trocar evidencia do ticket" : "Anexar evidencia ao ticket"}
+                        title={editEvidenceFile ? "Trocar evidencia do ticket" : "Anexar evidencia ao ticket"}
+                      >
+                        <FiPaperclip size={14} />
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={handleSaveDraft}
-                      disabled={savingDraft || !draftChanged}
+                      disabled={(savingDraft && !canSaveEditEvidence) || !draftChanged}
                       className="ticket-detail-primary-btn"
                     >
                       <FiSave size={14} />
@@ -662,15 +965,15 @@ export default function TicketDetailsModal({
               <div>
                 <p className="ticket-detail-chat-title">Comentarios do ticket</p>
                 <p className="ticket-detail-chat-description">
-                  O time de suporte acompanha todos. Os demais perfis acompanham e comentam apenas os proprios tickets.
+                  O time de suporte acompanha todos. Os demais perfis acompanham, comentam e podem anexar evidencia apenas nos proprios tickets.
                 </p>
               </div>
             </div>
 
             <div className="ticket-detail-comments">
-            <div className="comments-chat">
+            <div className={`comments-chat${hasVisibleComments ? "" : " comments-chat-compact"}`}>
               <div
-                className={`comments-chat-list${!commentsLoading && comments.length === 0 ? " comments-chat-list-empty" : ""}`}
+                className={`comments-chat-list${commentsLoading || comments.length === 0 ? " comments-chat-list-empty" : ""}`}
                 aria-live="polite"
               >
                 {commentsLoading ? (
@@ -703,7 +1006,7 @@ export default function TicketDetailsModal({
                             ) : null}
                           </div>
                         </div>
-                        <div className="comments-chat-bubble whitespace-pre-wrap">{entry.body}</div>
+                        <div className="comments-chat-bubble whitespace-pre-wrap">{renderCommentBody(entry.body)}</div>
                         <div className="comments-chat-meta">{formatDateTime(entry.createdAt)}</div>
                       </div>
                     );
@@ -712,6 +1015,13 @@ export default function TicketDetailsModal({
               </div>
 
               <div className="comments-chat-input">
+                <input
+                  ref={evidenceInputRef}
+                  type="file"
+                  className="sr-only"
+                  accept="image/*,.pdf,.txt,.log,.json,.zip,.csv,.xlsx,.doc,.docx"
+                  onChange={(event) => setEvidenceFile(event.target.files?.[0] ?? null)}
+                />
                 <textarea
                   value={commentDraft}
                   onChange={(event) => setCommentDraft(event.target.value)}
@@ -720,17 +1030,42 @@ export default function TicketDetailsModal({
                   maxLength={COMMENT_MAX_LENGTH}
                   placeholder="Escreva uma resposta ou atualizacao para este ticket"
                 />
+                <div className="ticket-detail-evidence-bar">
+                  <button
+                    type="button"
+                    className="ticket-detail-secondary-btn ticket-detail-secondary-btn-icon"
+                    onClick={() => evidenceInputRef.current?.click()}
+                    aria-label={evidenceFile ? "Trocar evidencia" : "Anexar evidencia"}
+                    title={evidenceFile ? "Trocar evidencia" : "Anexar evidencia"}
+                  >
+                    <FiPaperclip size={14} />
+                  </button>
+                  {evidenceFile ? (
+                    <div className="ticket-detail-evidence-chip">
+                      <span className="ticket-detail-evidence-name" title={evidenceFile.name}>
+                        {evidenceFile.name}
+                      </span>
+                      <button
+                        type="button"
+                        className="ticket-detail-evidence-remove"
+                        onClick={() => {
+                          setEvidenceFile(null);
+                          if (evidenceInputRef.current) evidenceInputRef.current.value = "";
+                        }}
+                        aria-label="Remover evidencia selecionada"
+                        title="Remover evidencia"
+                        >
+                          <FiX size={12} />
+                        </button>
+                      </div>
+                  ) : null}
+                </div>
                 <div className="comments-chat-actions">
-                  <div className="comments-chat-status">
-                    {error ? <span className="ticket-detail-chat-error">{error}</span> : <span className="ticket-detail-chat-note">Os comentarios ficam visiveis para quem tem acesso a este ticket.</span>}
-                    <span className="ticket-detail-chat-counter" data-limit={commentLength >= COMMENT_MAX_LENGTH ? "max" : commentLength >= COMMENT_MAX_LENGTH * 0.9 ? "warning" : "ok"}>
-                      {commentLength}/{COMMENT_MAX_LENGTH} caracteres
-                    </span>
-                  </div>
+                  {error ? <span className="ticket-detail-chat-error">{error}</span> : null}
                   <button
                     type="button"
                     onClick={handleSendComment}
-                    disabled={sendingComment || !commentDraft.trim()}
+                    disabled={!canSendComment}
                     className="ticket-detail-primary-btn"
                   >
                     <FiSend size={15} />
@@ -747,3 +1082,5 @@ export default function TicketDetailsModal({
     document.body,
   );
 }
+
+

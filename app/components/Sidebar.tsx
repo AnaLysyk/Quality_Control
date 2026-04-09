@@ -124,7 +124,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
     () => [
       { label: t("nav.home"), icon: FiHome, href: "/" },
       { label: t("nav.companies"), icon: FiUsers, href: "/empresas" },
-      { label: "Identidade Visual", icon: FiCompass, href: "/brand-identity" },
+      { label: t("nav.brandIdentity"), icon: FiCompass, href: "/brand-identity" },
     ],
     [t]
   );
@@ -134,8 +134,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
     const items: NavItem[] = [
       { label: t("nav.dashboard"), icon: FiCompass, href: "/admin/home" },
       { label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric" },
-      { label: "Runs", icon: FiList, href: "/admin/runs" },
-      { label: "Defeitos", icon: FiAlertTriangle, href: "/admin/defeitos" },
+      { label: t("nav.runs"), icon: FiList, href: "/admin/runs" },
+      { label: t("nav.defects"), icon: FiAlertTriangle, href: "/admin/defeitos" },
       { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
     ];
 
@@ -148,8 +148,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
     }
 
     items.push(
-      { label: "Suporte", icon: FiColumns, href: "/admin/support" },
-      { label: "Gestão", icon: FiShield, href: "/admin/users/permissions" },
+      { label: t("nav.support"), icon: FiColumns, href: "/admin/support" },
+      { label: t("nav.management"), icon: FiShield, href: "/admin/users/permissions" },
       { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
       { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
     );
@@ -172,7 +172,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
             { label: t("nav.testPlans"), icon: FiClipboard, href: buildCompanyPathForAccess(companySlug, "planos-de-teste", companyRouteInput) },
             { label: t("nav.runs"), icon: FiList, href: buildCompanyPathForAccess(companySlug, "runs", companyRouteInput) },
             { label: t("nav.defects"), icon: FiAlertTriangle, href: buildCompanyPathForAccess(companySlug, "defeitos", companyRouteInput) },
-            { label: "Suporte", icon: FiColumns, href: buildCompanyPathForAccess(companySlug, "chamados", companyRouteInput) },
+            { label: t("nav.support"), icon: FiColumns, href: buildCompanyPathForAccess(companySlug, "chamados", companyRouteInput) },
           ]
         : [],
     [companyRouteInput, companySlug, t]
@@ -253,8 +253,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
                 : "px-3 justify-start gap-3"
             } ${
               isActive
-                ? "bg-white/12 ring-1 ring-white/16 shadow-[0_14px_30px_rgba(1,24,72,0.3)] text-white"
-                : "text-white/74 hover:bg-white/8 hover:text-white"
+                ? "sidebar-link-state-active bg-white/12 ring-1 ring-white/16 shadow-[0_14px_30px_rgba(1,24,72,0.3)] text-white"
+                : "sidebar-link-state-idle text-white/74 hover:bg-white/8 hover:text-white"
             }`}
             onMouseEnter={() => prefetchHref(item.href)}
             onFocus={() => prefetchHref(item.href)}
@@ -269,8 +269,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
             <div
               className={`flex items-center justify-center w-11 h-11 rounded-[14px] border transition-all duration-200 shrink-0 backdrop-blur-sm sidebar-icon ${
                 isActive
-                  ? "border-white/16 bg-white/14 text-white shadow-[0_12px_26px_rgba(1,24,72,0.28)]"
-                  : "border-white/10 bg-white/6 text-white/84 group-hover/link:border-white/18 group-hover/link:bg-white/10 group-hover/link:text-white"
+                  ? "sidebar-icon-state-active border-white/16 bg-white/14 text-white shadow-[0_12px_26px_rgba(1,24,72,0.28)]"
+                  : "sidebar-icon-state-idle border-white/10 bg-white/6 text-white/84 group-hover/link:border-white/18 group-hover/link:bg-white/10 group-hover/link:text-white"
               }`}
             >
               <item.icon size={20} />
@@ -284,7 +284,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
 
   const DesktopNav = (
     <aside
-      className="hidden lg:flex fixed left-0 top-0 z-40 h-screen overflow-hidden border-r border-white/10 text-white flex-col bg-[linear-gradient(180deg,rgba(1,24,72,0.98)_0%,rgba(6,27,82,0.97)_52%,rgba(87,8,25,0.95)_100%)] shadow-[0_28px_80px_rgba(1,24,72,0.34)] backdrop-blur-2xl sidebar-shell"
+      className="sidebar-shell sidebar-shell-theme hidden fixed left-0 top-0 z-40 h-screen overflow-hidden border-r text-white flex-col backdrop-blur-2xl lg:flex"
       data-app-role={appRole ?? ""}
       data-active-client={activeClientSlug ?? ""}
       data-is-global-admin={isGlobalAdmin ? "1" : "0"}
@@ -294,7 +294,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
           href={logoHref}
           className="flex items-center gap-3 transition-all duration-200 justify-start w-full px-2 sidebar-logo"
         >
-          <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-white/14 bg-white/10 backdrop-blur sidebar-logo-mark">
+          <div className="sidebar-logo-mark sidebar-logo-mark-theme relative flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border backdrop-blur">
             <span
               className="absolute inset-0 bg-[radial-gradient(circle_at_28%_26%,rgba(255,255,255,0.18),transparent_56%)]"
               aria-hidden
@@ -322,8 +322,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
             </svg>
           </div>
           <div className="flex flex-col leading-tight transition duration-200 whitespace-nowrap sidebar-brand">
-            <span className="text-[11px] uppercase tracking-[0.24em] text-white/58">Testing Company</span>
-            <span className="text-base font-semibold tracking-[0.02em] text-white">Quality Control</span>
+            <span className="sidebar-brand-kicker text-[11px] uppercase tracking-[0.24em] text-white/58">Testing Company</span>
+            <span className="sidebar-brand-title text-base font-semibold tracking-[0.02em] text-white">Quality Control</span>
           </div>
         </Link>
       </div>
@@ -332,7 +332,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
         <div className="flex-1 px-3 py-6 space-y-6">
           <div className="space-y-3">
             <div className="flex items-center px-1">
-              <p className="text-xs uppercase tracking-[0.18em] text-white/55 transition duration-150 sidebar-divider">
+              <p className="sidebar-nav-caption text-xs uppercase tracking-[0.18em] text-white/55 transition duration-150 sidebar-divider">
                 Navegacao
               </p>
               <span className="h-px flex-1 ml-3 bg-white/12 sidebar-divider-line" aria-hidden />
@@ -353,12 +353,12 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
           data-app-role={appRole ?? ""}
           data-active-client={activeClientSlug ?? ""}
           data-is-global-admin={isGlobalAdmin ? "1" : "0"}
-          className="flex h-full w-72 text-white flex-col border-r border-white/10 bg-[linear-gradient(180deg,rgba(1,24,72,0.98)_0%,rgba(6,27,82,0.97)_52%,rgba(87,8,25,0.95)_100%)] shadow-[0_24px_60px_rgba(1,24,72,0.34)] backdrop-blur-2xl"
+          className="sidebar-mobile-theme flex h-full w-72 text-white flex-col border-r backdrop-blur-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center gap-3 p-4 border-b border-white/10 relative">
             <Link href={logoHref} className="flex items-center gap-3" onClick={onClose}>
-              <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border border-white/14 bg-white/10">
+              <div className="sidebar-logo-mark-theme relative flex items-center justify-center w-12 h-12 rounded-2xl overflow-hidden border">
                 <Image
                   src={logoSrc}
                   alt="Logo"
@@ -382,8 +382,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
                 </svg>
               </div>
               <div className="flex flex-col">
-                <span className="text-[11px] uppercase tracking-[0.22em] text-white/58">Testing Company</span>
-                <span className="text-sm font-semibold tracking-wide text-white">Quality Control</span>
+                <span className="sidebar-brand-kicker text-[11px] uppercase tracking-[0.22em] text-white/58">Testing Company</span>
+                <span className="sidebar-brand-title text-sm font-semibold tracking-wide text-white">Quality Control</span>
               </div>
             </Link>
           </div>
@@ -391,14 +391,14 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
           <nav className="flex-1 min-h-0 flex flex-col overflow-y-auto custom-scroll">
             <div className="flex-1 px-3 py-4 space-y-6">
               <div className="space-y-2">
-                <p className="px-1 text-xs uppercase tracking-[0.18em] text-white/52">Navegacao</p>
+                <p className="sidebar-nav-caption px-1 text-xs uppercase tracking-[0.18em] text-white/52">Navegacao</p>
                 <div className="space-y-2">{renderNavLinks(true)}</div>
               </div>
             </div>
           </nav>
 
           <div className="p-4 border-t border-white/10">
-            <div className="text-sm text-white/46">Testing Company Platform</div>
+            <div className="sidebar-footer-note text-sm text-white/46">Testing Company Platform</div>
           </div>
         </aside>
       </div>

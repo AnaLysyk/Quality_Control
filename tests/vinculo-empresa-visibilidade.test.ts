@@ -19,8 +19,7 @@
 jest.setTimeout(30000);
 
 import { randomUUID } from "crypto";
-import { PrismaClient } from "@prisma/client";
-
+import { prisma } from "../lib/prismaClient";
 import {
   upsertLocalLink,
   removeLocalLink,
@@ -30,8 +29,6 @@ import {
   createLocalUser,
   createLocalCompany,
 } from "../lib/core/auth/localStore";
-
-const prisma = new PrismaClient();
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

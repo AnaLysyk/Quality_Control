@@ -1,6 +1,7 @@
 import "server-only";
 
 import { QaseClient, QaseError, createQaseClient } from "@/lib/qaseSdk";
+import { buildQaseCaseLink, type TestPlanCase, type TestPlanCaseStep } from "@/lib/testPlanCases";
 
 type RawPlan = {
   id?: number | string;
@@ -21,10 +22,7 @@ type AccessibleProject = {
   title?: string | null;
 };
 
-export type QasePlanCaseRef = {
-  id: string;
-  title?: string | null;
-};
+export type QasePlanCaseRef = TestPlanCase;
 
 export type QasePlanRecord = {
   id: string;
@@ -85,6 +83,41 @@ function normalizeCaseRef(raw: unknown): QasePlanCaseRef | null {
   return { id, title };
 }
 
+function normalizeCaseStep(raw: unknown, fallbackIndex = 0): TestPlanCaseStep | null {
+  if (!raw || typeof raw !== "object") return null;
+  const record = raw as Record<string, unknown>;
+  const action =
+    normalizeString(record.action) ??
+    normalizeString(record.text) ??
+    normalizeString(record.step) ??
+    null;
+  const expectedResult =
+    normalizeString(record.expected_result) ??
+    normalizeString(record.expectedResult) ??
+    normalizeString(record.expected) ??
+    null;
+  const data = normalizeString(record.data);
+  if (!action && !expectedResult && !data) return null;
+  return {
+    id: normalizeString(record.id) ?? `step_${fallbackIndex + 1}`,
+    action,
+    expectedResult,
+    data,
+  };
+}
+
+function normalizeSeverity(raw: unknown) {
+  if (typeof raw === "string") return normalizeString(raw);
+  if (!raw || typeof raw !== "object") return null;
+  const record = raw as Record<string, unknown>;
+  return (
+    normalizeString(record.title) ??
+    normalizeString(record.name) ??
+    normalizeString(record.value) ??
+    null
+  );
+}
+
 function normalizePlan(raw: RawPlan, projectCode: string): QasePlanRecord | null {
   const id = String(raw.id ?? "").trim();
   if (!id) return null;
@@ -114,6 +147,34 @@ function normalizePlan(raw: RawPlan, projectCode: string): QasePlanRecord | null
           ? raw.updated
           : null,
     projectCode,
+  };
+}
+
+function normalizeQaseCase(raw: unknown, projectCode: string): TestPlanCase | null {
+  if (!raw || typeof raw !== "object") return null;
+  const record = raw as Record<string, unknown>;
+  const id = String(record.id ?? record.case_id ?? record.caseId ?? "").trim();
+  if (!id) return null;
+  const steps = Array.isArray(record.steps)
+    ? record.steps
+        .map((item, index) => normalizeCaseStep(item, index))
+        .filter((item): item is TestPlanCaseStep => item !== null)
+    : [];
+
+  return {
+    id,
+    title: normalizeString(record.title) ?? normalizeString(record.name) ?? `Caso ${id}`,
+    description: normalizeString(record.description),
+    preconditions:
+      normalizeString(record.preconditions) ?? normalizeString(record.precondition),
+    postconditions:
+      normalizeString(record.postconditions) ?? normalizeString(record.postcondition),
+    severity:
+      normalizeSeverity(record.severity) ??
+      normalizeString(record.severity_name) ??
+      normalizeString(record.priority),
+    steps: steps.length ? steps : undefined,
+    link: buildQaseCaseLink(projectCode, id),
   };
 }
 
@@ -246,6 +307,38 @@ export async function getQasePlan(input: {
   const result =
     data?.result && typeof data.result === "object" ? (data.result as Record<string, unknown>) : null;
   return normalizePlan((result ?? {}) as RawPlan, resolvedProjectCode);
+}
+
+export async function getQaseCase(input: {
+  token: string;
+  baseUrl?: string;
+  projectCode: string;
+  caseId: string | number;
+}) {
+  const client = createQaseClient({
+    token: input.token,
+    baseUrl: input.baseUrl,
+    defaultFetchOptions: { cache: "no-store" },
+  });
+  const baseUrl = (input.baseUrl || process.env.QASE_BASE_URL || "https://api.qase.io").replace(
+    /\/(v1|v2)\/?$/,
+    "",
+  );
+  const resolvedProjectCode = await resolveQaseProjectCodeExact(
+    client,
+    input.token,
+    baseUrl,
+    input.projectCode,
+  );
+  if (!resolvedProjectCode) return null;
+
+  const { data } = await client.getWithStatus<{ result?: unknown }>(
+    `/case/${resolvedProjectCode}/${encodeURIComponent(String(input.caseId))}`,
+    { cache: "no-store" },
+  );
+  const result =
+    data?.result && typeof data.result === "object" ? (data.result as Record<string, unknown>) : null;
+  return normalizeQaseCase(result, resolvedProjectCode);
 }
 
 export async function createQasePlan(input: {

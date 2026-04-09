@@ -9305,7 +9305,7 @@ video {
 }
 
 .app-page-cover--empresa {
-  background: linear-gradient(135deg, #10204f 0%, #245295 46%, #e1483f 100%);
+  background: var(--tc-brand-gradient-strong);
 }
 
 .app-page-cover--company-user {
@@ -9332,6 +9332,13 @@ video {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+}
+
+.app-page-cover-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
 }
 
 .app-page-cover-brand {
@@ -9366,6 +9373,23 @@ video {
   gap: 0.18rem;
   min-width: 0;
   justify-content: center;
+}
+
+.app-page-cover-addon {
+  display: grid;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .app-page-cover-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .app-page-cover-addon {
+    width: 100%;
+  }
 }
 
 .app-page-cover-kicker {

@@ -1000,7 +1000,7 @@ function AdminClientsPage() {
                 <button
                   type="button"
                   role="tab"
-                  aria-selected="true"
+                  aria-selected={activeTab === "visao"}
                   tabIndex={0}
                   onClick={() => setActiveTab("visao")}
                   className="border-b-2 border-(--tc-accent) px-3 py-2 text-sm font-semibold text-(--tc-text-primary) transition"
@@ -1012,7 +1012,7 @@ function AdminClientsPage() {
                 <button
                   type="button"
                   role="tab"
-                  aria-selected="false"
+                  aria-selected={activeTab !== "visao"}
                   tabIndex={-1}
                   onClick={() => setActiveTab("visao")}
                   className="border-b-2 border-transparent px-3 py-2 text-sm font-semibold text-(--tc-text-muted) transition hover:text-(--tc-text-primary)"
@@ -1025,7 +1025,7 @@ function AdminClientsPage() {
                 <button
                   type="button"
                   role="tab"
-                  aria-selected="true"
+                  aria-selected={activeTab === "pessoas"}
                   tabIndex={0}
                   onClick={() => setActiveTab("pessoas")}
                   className="border-b-2 border-(--tc-accent) px-3 py-2 text-sm font-semibold text-(--tc-text-primary) transition"
@@ -1037,7 +1037,7 @@ function AdminClientsPage() {
                 <button
                   type="button"
                   role="tab"
-                  aria-selected="false"
+                  aria-selected={activeTab !== "pessoas"}
                   tabIndex={-1}
                   onClick={() => setActiveTab("pessoas")}
                   className="border-b-2 border-transparent px-3 py-2 text-sm font-semibold text-(--tc-text-muted) transition hover:text-(--tc-text-primary)"

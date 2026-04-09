@@ -2970,7 +2970,7 @@ export default function SettingsProfilePage() {
                       <input
                         role="combobox"
                         aria-autocomplete="list"
-                        aria-expanded={jobTitleMenuOpen}
+                        aria-expanded={Boolean(jobTitleMenuOpen)}
                         aria-controls="job-title-suggestions"
                         autoComplete="off"
                         className={`form-control-user ${inputClass} pl-11 pr-12`}
@@ -3016,7 +3016,7 @@ export default function SettingsProfilePage() {
                                   key={jobTitleOption}
                                   type="button"
                                   role="option"
-                                  aria-selected={isSelected}
+                                  aria-selected={Boolean(isSelected)}
                                   className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold transition ${
                                     isSelected
                                       ? "bg-rose-50 text-[#0b1f52] dark:bg-rose-50 dark:text-[#0b1f52]"

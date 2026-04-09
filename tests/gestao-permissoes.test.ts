@@ -25,8 +25,7 @@ jest.mock("../lib/redis", () => ({
 }));
 
 import { randomUUID } from "crypto";
-import { PrismaClient } from "@prisma/client";
-
+import { prisma } from "../lib/prismaClient";
 import { ROLE_DEFAULTS } from "../lib/permissions/roleDefaults";
 import { effectivePermissions } from "../lib/store/permissionsStore";
 import {
@@ -42,8 +41,6 @@ import {
   createLocalCompany,
   upsertLocalLink,
 } from "../lib/core/auth/localStore";
-
-const prisma = new PrismaClient();
 
 // ── Helper: retorna a matriz de permissões padrão para um perfil ───────────
 function perm(role: string): Record<string, string[]> {

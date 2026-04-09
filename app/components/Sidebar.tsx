@@ -41,9 +41,10 @@ type SidebarProps = {
   pathname: string;
   mobileOpen?: boolean;
   onClose?: () => void;
+  mobilePanelId?: string;
 };
 
-export default function Sidebar({ pathname, mobileOpen = false, onClose }: SidebarProps) {
+export default function Sidebar({ pathname, mobileOpen = false, onClose, mobilePanelId }: SidebarProps) {
   const router = useRouter();
   const prefetchedRoutesRef = useRef<Set<string>>(new Set());
   const logoSrc = useMemo(() => (menuLogoEnv ? menuLogoEnv : "/images/tc.png"), []);
@@ -350,6 +351,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose }: Sideb
     onClose && (
       <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden dark:bg-black/60" onClick={onClose}>
         <aside
+          id={mobilePanelId}
           data-app-role={appRole ?? ""}
           data-active-client={activeClientSlug ?? ""}
           data-is-global-admin={isGlobalAdmin ? "1" : "0"}

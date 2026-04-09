@@ -3,6 +3,11 @@ import { listApplications } from "@/lib/applicationsStore";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { QaseError } from "@/lib/qaseSdk";
 import {
+  extractNumericCaseIds,
+  parseTestPlanCases,
+  type TestPlanCase,
+} from "@/lib/testPlanCases";
+import {
   createQasePlan,
   deleteQasePlan,
   getQasePlan,
@@ -24,11 +29,6 @@ type ApplicationItem = {
   qaseProjectCode?: string | null;
 };
 
-type PlanCaseRef = {
-  id: string;
-  title?: string | null;
-};
-
 type PlanSource = "manual" | "qase";
 
 function normalizeProjectCode(value: unknown) {
@@ -38,62 +38,6 @@ function normalizeProjectCode(value: unknown) {
 
 function normalizeSource(value: unknown): PlanSource {
   return String(value ?? "").trim().toLowerCase() === "qase" ? "qase" : "manual";
-}
-
-function parseCaseRefs(value: unknown): PlanCaseRef[] {
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => {
-        if (typeof item === "number" || typeof item === "string") {
-          const id = String(item).trim();
-          return id ? { id } : null;
-        }
-        if (!item || typeof item !== "object") return null;
-        const record = item as Record<string, unknown>;
-        const id = String(record.id ?? record.caseId ?? record.case_id ?? "").trim();
-        if (!id) return null;
-        const title = typeof record.title === "string" ? record.title.trim() || null : null;
-        return { id, title };
-      })
-      .filter((item): item is PlanCaseRef => item !== null);
-  }
-
-  const raw = String(value ?? "")
-    .split(/\r?\n|,/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-  return raw.map((item) => {
-    const pipeIndex = item.indexOf("|");
-    if (pipeIndex > 0) {
-      const id = item.slice(0, pipeIndex).trim();
-      const title = item.slice(pipeIndex + 1).trim();
-      return {
-        id,
-        title: title || null,
-      };
-    }
-
-    const dashMatch = item.match(/^([^\-]+?)\s+-\s+(.+)$/);
-    if (dashMatch) {
-      return {
-        id: dashMatch[1].trim(),
-        title: dashMatch[2].trim() || null,
-      };
-    }
-
-    return { id: item };
-  });
-}
-
-function extractNumericCaseIds(cases: PlanCaseRef[]) {
-  return Array.from(
-    new Set(
-      cases
-        .map((item) => Number(item.id))
-        .filter((value) => Number.isFinite(value) && value > 0),
-    ),
-  );
 }
 
 function toResponsePlan(input: {
@@ -107,7 +51,7 @@ function toResponsePlan(input: {
   source: PlanSource;
   applicationId?: string | null;
   applicationName?: string | null;
-  cases?: PlanCaseRef[];
+  cases?: TestPlanCase[];
 }) {
   return {
     id: input.id,
@@ -136,6 +80,11 @@ async function resolveApplication(companySlug: string, applicationId: string) {
   };
 }
 
+function normalizeWarningList(values: Array<string | null | undefined>) {
+  const unique = Array.from(new Set(values.filter((value): value is string => Boolean(value && value.trim()))));
+  return unique.length ? unique.join(" ") : null;
+}
+
 function resolveWarningFromQaseError(error: unknown) {
   const status = error instanceof QaseError ? error.status : 500;
   if (status === 401 || status === 403) {
@@ -162,7 +111,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "companySlug is required" }, { status: 400 });
   }
 
-  const { selectedApplication } = await resolveApplication(companySlug, applicationId);
+  const { applications, selectedApplication } = await resolveApplication(companySlug, applicationId);
   const projectCode = requestedProjectCode || normalizeProjectCode(selectedApplication?.qaseProjectCode);
   const manualPlans = await listManualTestPlans({
     companySlug,
@@ -249,7 +198,42 @@ export async function GET(request: Request) {
     } catch (error) {
       warning = resolveWarningFromQaseError(error);
     }
+  } else if (!applicationId && qaseSettings?.token) {
+    const applicationByProject = new Map<string, ApplicationItem>();
+    for (const application of applications) {
+      const code = normalizeProjectCode(application.qaseProjectCode);
+      if (code && !applicationByProject.has(code)) {
+        applicationByProject.set(code, application);
+      }
+    }
+
+    const warnings: string[] = [];
+    for (const [code, application] of applicationByProject.entries()) {
+      try {
+        const integratedPlans = await listQasePlans({
+          token: qaseSettings.token,
+          baseUrl: qaseSettings.baseUrl,
+          projectCode: code,
+        });
+        qasePlans.push(
+          ...integratedPlans.map((plan) =>
+            toResponsePlan({
+              ...plan,
+              source: "qase",
+              applicationId: application.id,
+              applicationName: application.name,
+            }),
+          ),
+        );
+      } catch (error) {
+        warnings.push(resolveWarningFromQaseError(error));
+      }
+    }
+
+    warning = normalizeWarningList(warnings);
   } else if (selectedApplication?.qaseProjectCode && !qaseSettings?.token) {
+    warning = "Token do Qase ausente ou invalido para esta empresa.";
+  } else if (!applicationId && applications.some((application) => normalizeProjectCode(application.qaseProjectCode)) && !qaseSettings?.token) {
     warning = "Token do Qase ausente ou invalido para esta empresa.";
   }
 
@@ -293,7 +277,7 @@ export async function POST(request: Request) {
   const source = normalizeSource(body.source);
   const title = String(body.title ?? "").trim();
   const description = typeof body.description === "string" ? body.description.trim() || null : null;
-  const caseRefs = parseCaseRefs(body.cases);
+  const caseRefs = parseTestPlanCases(body.cases);
 
   if (!companySlug || !applicationId || !title) {
     return NextResponse.json({ error: "companySlug, applicationId and title are required" }, { status: 400 });
@@ -388,7 +372,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "companySlug and planId are required" }, { status: 400 });
   }
 
-  const caseRefs = body.cases === undefined ? undefined : parseCaseRefs(body.cases);
+  const caseRefs = body.cases === undefined ? undefined : parseTestPlanCases(body.cases);
 
   if (source === "qase") {
     const { selectedApplication } = await resolveApplication(companySlug, applicationId);

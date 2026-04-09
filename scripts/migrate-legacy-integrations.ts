@@ -1,9 +1,8 @@
 import dotenv from "dotenv";
-import { PrismaClient, IntegrationType } from "@prisma/client";
+import { IntegrationType } from "@prisma/client";
+import { prisma } from "../lib/prismaClient";
 
 dotenv.config();
-
-const prisma = new PrismaClient();
 
 async function main() {
   const dryRun = process.argv.includes("--dry-run") || process.argv.includes("-n");

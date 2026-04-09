@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
+import { getPrismaClientOptions } from "@/lib/prismaClientOptions";
 import { isRedisConfigured } from "@/lib/redis";
 import { normalizePermissionMatrix } from "@/lib/permissionMatrix";
 import { getJson, setJson, deleteKey } from "./redisClient";
@@ -24,11 +25,11 @@ async function getPrisma() {
   // Re-use a global instance to avoid too many connections
   const g = global as unknown as { _permPrisma?: InstanceType<typeof PrismaClient> };
   if (!g._permPrisma) {
-    g._permPrisma = new PrismaClientUnsafe({
+    g._permPrisma = new PrismaClientUnsafe(getPrismaClientOptions({
       __internal: {
         configOverride: (config: Record<string, unknown>) => ({ ...config, copyEngine: true }),
       },
-    });
+    }));
   }
   return g._permPrisma;
 }

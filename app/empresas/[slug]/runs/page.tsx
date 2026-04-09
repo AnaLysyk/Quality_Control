@@ -444,7 +444,6 @@ export default function CompanyRunsPage() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <CreateIntegratedRunButton
-              companySlug={companySlug}
               onCreated={() => setReloadToken((current) => current + 1)}
             />
             <CreateManualReleaseButton

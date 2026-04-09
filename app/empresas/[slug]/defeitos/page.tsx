@@ -1114,9 +1114,9 @@ function RunSelectorField({
       <button
         type="button"
         disabled={disabled}
-        aria-label={ariaLabel}
-        aria-haspopup="listbox"
-        aria-expanded={open ? "true" : "false"}
+          aria-label={ariaLabel}
+          aria-haspopup="listbox"
+          aria-expanded={open === true}
         onClick={() => {
           if (disabled) return;
           setOpen((current) => !current);
@@ -1128,48 +1128,66 @@ function RunSelectorField({
         <FiChevronDown className={`shrink-0 transition ${open ? "rotate-180" : ""}`} size={16} />
       </button>
 
+      {/* Campo de busca fora do listbox para padrão ARIA */}
       {open && !disabled && (
         <div className="absolute left-0 top-[calc(100%+0.5rem)] z-30 w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) p-3 shadow-[0_18px_40px_rgba(15,23,42,0.24)]">
-          <div className="relative">
+          <div className="relative mb-3">
             <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-(--tc-text-muted,#64748b)" size={15} />
             <input
               autoFocus
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder={searchPlaceholder}
+              aria-label={searchPlaceholder}
               className="w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) py-2.5 pl-10 pr-4 text-sm text-(--tc-text-primary,#0b1a3c) placeholder:text-(--tc-text-muted,#64748b)"
             />
           </div>
 
-          <div className="mt-3 max-h-64 overflow-y-auto">
-            <button
-              type="button"
+          <div role="listbox" aria-label={ariaLabel} className="max-h-64 overflow-y-auto">
+            <div
+              role="option"
+              aria-selected={value === ""}
+              tabIndex={0}
               onClick={() => {
                 onSelect("");
                 setOpen(false);
                 setSearch("");
               }}
-              className="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-sm text-(--tc-text-primary,#0b1a3c) transition hover:bg-(--tc-surface-2,#f8fafc)"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  onSelect("");
+                  setOpen(false);
+                  setSearch("");
+                }
+              }}
+              className="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-sm text-(--tc-text-primary,#0b1a3c) transition hover:bg-(--tc-surface-2,#f8fafc) cursor-pointer"
             >
               <span>{clearLabel}</span>
               {!value ? <span className="text-xs text-(--tc-text-muted,#64748b)">✓</span> : null}
-            </button>
+            </div>
 
             {visibleOptions.length > 0 ? (
               visibleOptions.map((option) => {
                 const selected = option.slug === value;
                 return (
-                  <button
+                  <div
                     key={option.slug}
-                    type="button"
                     role="option"
-                    aria-selected={selected ? "true" : "false"}
+                    aria-selected={selected === true}
+                    tabIndex={0}
                     onClick={() => {
                       onSelect(option.slug);
                       setOpen(false);
                       setSearch("");
                     }}
-                    className={`mt-1 flex w-full items-start justify-between gap-3 rounded-2xl px-3 py-2 text-left transition ${
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        onSelect(option.slug);
+                        setOpen(false);
+                        setSearch("");
+                      }
+                    }}
+                    className={`mt-1 flex w-full items-start justify-between gap-3 rounded-2xl px-3 py-2 text-left transition cursor-pointer ${
                       selected ? "bg-(--tc-surface-2,#f8fafc)" : "hover:bg-(--tc-surface-2,#f8fafc)"
                     }`}
                   >
@@ -1181,7 +1199,7 @@ function RunSelectorField({
                       </p>
                     </div>
                     {selected ? <span className="text-xs font-semibold text-sky-600">✓</span> : null}
-                  </button>
+                  </div>
                 );
               })
             ) : (
@@ -2659,7 +2677,7 @@ export default function CompanyDefectsPage() {
                     onChange={(event) => setFilters((current) => ({ ...current, startDate: event.target.value }))}
                     aria-label={copy.filters.startDateAria}
                     title={copy.filters.startDateAria}
-                    className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) shadow-sm [color-scheme:dark]"
+                    className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) shadow-sm scheme-dark"
                   />
                   <input
                     type="date"
@@ -2668,7 +2686,7 @@ export default function CompanyDefectsPage() {
                     onChange={(event) => setFilters((current) => ({ ...current, endDate: event.target.value }))}
                     aria-label={copy.filters.endDateAria}
                     title={copy.filters.endDateAria}
-                    className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) shadow-sm [color-scheme:dark]"
+                    className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) shadow-sm scheme-dark"
                   />
                   <select
                     value={filters.status}
@@ -3104,6 +3122,7 @@ export default function CompanyDefectsPage() {
                   type="file"
                   className="hidden"
                   onChange={(event) => setCreateEvidenceFile(event.target.files?.[0] ?? null)}
+                  title="Anexar evidência"
                 />
                 <div className="flex flex-wrap items-center gap-3 md:col-span-2">
                   <button
@@ -3307,6 +3326,7 @@ export default function CompanyDefectsPage() {
                     type="file"
                     className="hidden"
                     onChange={(event) => setEditEvidenceFile(event.target.files?.[0] ?? null)}
+                    title="Trocar evidência"
                   />
                   <textarea
                     value={editDraft.description}
@@ -3604,6 +3624,7 @@ export default function CompanyDefectsPage() {
                               type="file"
                               className="hidden"
                               onChange={(event) => setCommentEvidenceFile(event.target.files?.[0] ?? null)}
+                              title="Anexar evidência ao comentário"
                             />
                             <textarea
                               value={commentBody}

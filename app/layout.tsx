@@ -45,9 +45,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       try {
         const root = document.documentElement;
         const isValid = (v) => v === "light" || v === "dark" || v === "system";
+        const bootstrapKey = "tc-settings:bootstrap";
         const lastUserId = sessionStorage.getItem("tc-settings:last-user-id");
         const key = lastUserId ? ("tc-settings:" + lastUserId) : "tc-settings:guest";
-        const raw = sessionStorage.getItem(key) || sessionStorage.getItem("tc-settings:guest");
+        const raw = sessionStorage.getItem(bootstrapKey) || sessionStorage.getItem(key) || sessionStorage.getItem("tc-settings:guest");
         const parsed = raw ? JSON.parse(raw) : null;
         const storedTheme = parsed && isValid(parsed.theme) ? parsed.theme : "system";
         const storedLanguage = parsed && (parsed.language === "pt-BR" || parsed.language === "en-US") ? parsed.language : "pt-BR";

@@ -3,11 +3,7 @@ import "server-only";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { getJsonStorePath } from "@/data/jsonStorePath";
-
-export type ManualTestPlanCaseRef = {
-  id: string;
-  title?: string | null;
-};
+import type { TestPlanCase } from "@/lib/testPlanCases";
 
 export type ManualTestPlanRecord = {
   id: string;
@@ -18,7 +14,7 @@ export type ManualTestPlanRecord = {
   projectCode?: string | null;
   title: string;
   description?: string | null;
-  cases: ManualTestPlanCaseRef[];
+  cases: TestPlanCase[];
   createdAt: string;
   updatedAt: string;
 };

@@ -13,6 +13,7 @@ import {
   resolveFixedProfileKind,
   type FixedProfileKind,
 } from "@/lib/fixedProfilePresentation";
+import { AppShellCoverSlotProvider } from "./AppShellCoverSlotContext";
 import MainWrapper from "./MainWrapper";
 import Sidebar from "./Sidebar";
 import {
@@ -525,6 +526,12 @@ export default function AppShell({ children }: AppShellProps) {
   const isHomeRoute = pathname === "/" || pathname === "/home" || /\/home$/.test(pathname);
   const hideShellCover = shouldHideShellCover(pathname);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [coverSlotContent, setCoverSlotContent] = useState<ReactNode | null>(null);
+  const mobileSidebarId = "app-shell-mobile-sidebar";
+  const mobileMenuA11y = {
+    "aria-controls": mobileSidebarId,
+    "aria-expanded": mobileOpen,
+  } as const;
   const shellIdentity = useMemo(() => {
     const baseIdentity = resolveShellIdentity(pathname, shellCopy);
     const routeCompanySlug = resolveRouteCompanySlug(pathname);
@@ -676,13 +683,18 @@ export default function AppShell({ children }: AppShellProps) {
         onTouchEnd={handleTouchEnd}
       />
 
-      <Sidebar pathname={pathname} mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <Sidebar
+        pathname={pathname}
+        mobileOpen={mobileOpen}
+        mobilePanelId={mobileSidebarId}
+        onClose={() => setMobileOpen(false)}
+      />
 
       {/* Botão de menu mobile/hamburguer */}
       <button
         type="button"
         aria-label={shellCopy.aria.openMenu}
-        aria-expanded={mobileOpen ? "true" : "false"}
+        {...mobileMenuA11y}
         className={[
           "app-shell-menu-toggle fixed top-3 left-3 z-50 rounded-2xl border",
           "p-2.5 text-white backdrop-blur transition duration-200",
@@ -710,55 +722,60 @@ export default function AppShell({ children }: AppShellProps) {
 
       <div className="flex flex-col min-h-screen app-main">
         <div className="app-stage flex-1 min-h-screen overflow-y-auto overflow-x-hidden">
-          <MainWrapper
-            pathname={pathname}
-            beforeContent={hideShellCover ? null :
-              <section
-                className={`app-page-cover ${shellIdentity.coverClassName}`}
-                aria-label={replaceName(shellCopy.aria.pageCover, shellIdentity.title)}
-              >
-                <div className="app-page-cover-grid">
-                  <div className="app-page-cover-copy">
-                    <div className="app-page-cover-brand">
-                      <div className="app-page-cover-logo">
-                        {shellIdentity.logoSrc ? (
-                          shouldUseNativeImageTag(shellIdentity.logoSrc) ? (
-                            <img
-                              src={shellIdentity.logoSrc}
-                              alt={shellIdentity.logoAlt}
-                              width={72}
-                              height={72}
-                              className="h-14 w-14 object-contain sm:h-16 sm:w-16"
-                              loading="eager"
-                              decoding="async"
-                            />
-                          ) : (
-                            <Image
-                              src={shellIdentity.logoSrc}
-                              alt={shellIdentity.logoAlt}
-                              width={72}
-                              height={72}
-                              className="h-14 w-14 object-contain sm:h-16 sm:w-16"
-                              priority
-                            />
-                          )
-                        ) : (
-                          <span className="text-lg font-bold tracking-[0.18em] text-white/90 sm:text-xl">
-                            {shellIdentity.logoFallbackText}
-                          </span>
-                        )}
+          <AppShellCoverSlotProvider setCoverSlot={setCoverSlotContent}>
+            <MainWrapper
+              pathname={pathname}
+              beforeContent={hideShellCover ? null :
+                <section
+                  className={`app-page-cover ${shellIdentity.coverClassName}`}
+                  aria-label={replaceName(shellCopy.aria.pageCover, shellIdentity.title)}
+                >
+                  <div className="app-page-cover-grid">
+                    <div className="app-page-cover-row">
+                      <div className="app-page-cover-copy">
+                        <div className="app-page-cover-brand">
+                          <div className="app-page-cover-logo">
+                            {shellIdentity.logoSrc ? (
+                              shouldUseNativeImageTag(shellIdentity.logoSrc) ? (
+                                <img
+                                  src={shellIdentity.logoSrc}
+                                  alt={shellIdentity.logoAlt}
+                                  width={72}
+                                  height={72}
+                                  className="h-14 w-14 object-contain sm:h-16 sm:w-16"
+                                  loading="eager"
+                                  decoding="async"
+                                />
+                              ) : (
+                                <Image
+                                  src={shellIdentity.logoSrc}
+                                  alt={shellIdentity.logoAlt}
+                                  width={72}
+                                  height={72}
+                                  className="h-14 w-14 object-contain sm:h-16 sm:w-16"
+                                  priority
+                                />
+                              )
+                            ) : (
+                              <span className="text-lg font-bold tracking-[0.18em] text-white/90 sm:text-xl">
+                                {shellIdentity.logoFallbackText}
+                              </span>
+                            )}
+                          </div>
+                          <div className="app-page-cover-brand-copy">
+                            <div className="app-page-cover-title">{shellIdentity.title}</div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="app-page-cover-brand-copy">
-                        <div className="app-page-cover-title">{shellIdentity.title}</div>
-                      </div>
+                      {coverSlotContent ? <div className="app-page-cover-addon">{coverSlotContent}</div> : null}
                     </div>
                   </div>
-                </div>
-              </section>
-            }
-          >
-            {children}
-          </MainWrapper>
+                </section>
+              }
+            >
+              {children}
+            </MainWrapper>
+          </AppShellCoverSlotProvider>
         </div>
       </div>
     </div>

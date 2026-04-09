@@ -10,9 +10,7 @@
  *   (ou via workflow GitHub Actions agendado)
  */
 
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient({ log: ["error"] });
+import { prisma } from "../lib/prismaClient";
 
 /** Domínios de e-mail usados exclusivamente pelos testes */
 const TEST_EMAIL_DOMAINS = ["@test-profile.local", "@test-del.local"];

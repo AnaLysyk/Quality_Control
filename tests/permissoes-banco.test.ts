@@ -27,16 +27,13 @@ jest.mock("../lib/redis", () => ({
 }));
 
 import { randomUUID } from "crypto";
-import { PrismaClient } from "@prisma/client";
-
+import { prisma } from "../lib/prismaClient";
 import { getUserOverride, setUserOverride, deleteUserOverride, listUserOverrides, effectivePermissions } from "../lib/store/permissionsStore";
 import { hasPermissionAccess } from "../lib/permissionMatrix";
 import { createLocalUser } from "../lib/core/auth/localStore";
 
 // Forçar uso do Postgres para estes testes
 process.env.AUTH_STORE = "postgres";
-
-const prisma = new PrismaClient();
 
 // ── Cleanup ───────────────────────────────────────────────────────────────────
 const createdUserIds: string[] = [];

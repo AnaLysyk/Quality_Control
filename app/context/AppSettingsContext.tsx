@@ -28,6 +28,7 @@ type AppSettingsContextValue = {
 const DEFAULT_SETTINGS: AppSettings = { theme: "system", language: DEFAULT_LOCALE };
 
 const LAST_USER_ID_KEY = "tc-settings:last-user-id";
+const BOOTSTRAP_SETTINGS_KEY = "tc-settings:bootstrap";
 
 const AppSettingsContext = createContext<AppSettingsContextValue | undefined>(undefined);
 
@@ -63,6 +64,8 @@ function rememberLastUserId(userId: string) {
 }
 
 function readInitialSettings(): AppSettings {
+  const bootstrap = readStoredSettings(BOOTSTRAP_SETTINGS_KEY);
+  if (bootstrap) return bootstrap;
   const lastUserId = readLastUserId();
   const preferredKey = lastUserId ? storageKey(lastUserId) : storageKey(undefined);
   return readStoredSettings(preferredKey) ?? readStoredSettings(storageKey(undefined)) ?? DEFAULT_SETTINGS;
@@ -90,6 +93,9 @@ function writeStoredSettings(key: string, settings: AppSettings) {
   if (typeof window === "undefined") return;
   try {
     window.sessionStorage.setItem(key, JSON.stringify(settings));
+    if (key !== BOOTSTRAP_SETTINGS_KEY) {
+      window.sessionStorage.setItem(BOOTSTRAP_SETTINGS_KEY, JSON.stringify(settings));
+    }
   } catch {
     /* ignore */
   }
@@ -111,9 +117,11 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const refreshSettings = useCallback(async () => {
     const userId = resolveUserId(user);
     const key = storageKey(userId);
+    if (userId) rememberLastUserId(userId);
     const cached = readStoredSettings(key);
     if (cached) {
       setSettings(cached);
+      writeStoredSettings(BOOTSTRAP_SETTINGS_KEY, cached);
     }
 
     if (!user) {
@@ -153,6 +161,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
       const key = storageKey(userId);
       const normalized = normalizeSettings({ ...settings, ...next });
       setSettings(normalized);
+      if (userId) rememberLastUserId(userId);
       writeStoredSettings(key, normalized);
 
       if (!user) {
@@ -191,6 +200,11 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     refreshSettings();
   }, [refreshSettings]);
+
+  useEffect(() => {
+    const userId = resolveUserId(user);
+    if (userId) rememberLastUserId(userId);
+  }, [user]);
 
   useEffect(() => {
     const root = document.documentElement;

@@ -23,6 +23,7 @@ export type RequestUser = {
 
 export type RequestType = "EMAIL_CHANGE" | "COMPANY_CHANGE" | "PASSWORD_RESET" | "PROFILE_DELETION";
 export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type RequestSort = "createdAt_desc" | "createdAt_asc";
 
 export type RequestRecord = {
   id: string;
@@ -150,26 +151,42 @@ function pgRowToRecord(r: { id: string; userId: string; userName: string; userEm
   return { id: r.id, userId: r.userId, userName: r.userName, userEmail: r.userEmail, companyId: r.companyId, companyName: r.companyName, type: r.type as RequestType, payload: (r.payload ?? {}) as Record<string, unknown>, status: r.status as RequestStatus, createdAt: r.createdAt.toISOString(), reviewedBy: r.reviewedBy ?? undefined, reviewNote: r.reviewNote ?? undefined, reviewedAt: r.reviewedAt?.toISOString() ?? undefined };
 }
 
-export async function listUserRequests(userId: string, filters?: { status?: RequestStatus; type?: RequestType }) {
+export async function listUserRequests(
+  userId: string,
+  filters?: { status?: RequestStatus; type?: RequestType; sort?: RequestSort },
+) {
   if (USE_POSTGRES) {
     const prisma = await getPrisma();
-    const rows = await prisma.request.findMany({ where: { userId, ...(filters?.status ? { status: filters.status } : {}), ...(filters?.type ? { type: filters.type } : {}) }, orderBy: { createdAt: "desc" } });
+    const rows = await prisma.request.findMany({
+      where: {
+        userId,
+        ...(filters?.status ? { status: filters.status } : {}),
+        ...(filters?.type ? { type: filters.type } : {}),
+      },
+      orderBy: { createdAt: filters?.sort === "createdAt_asc" ? "asc" : "desc" },
+    });
     return rows.map(pgRowToRecord);
   }
   const items = await loadItems();
-  return items.filter(
+  const results = items.filter(
     (req) =>
       req.userId === userId &&
       (!filters?.status || req.status === filters.status) &&
       (!filters?.type || req.type === filters.type),
   );
+  if (filters?.sort === "createdAt_asc") {
+    results.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  } else {
+    results.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+  return results;
 }
 
 export async function listAllRequests(filters?: {
   status?: RequestStatus;
   type?: RequestType;
   companyId?: string;
-  sort?: "createdAt_desc" | "createdAt_asc";
+  sort?: RequestSort;
 }) {
   if (USE_POSTGRES) {
     const prisma = await getPrisma();

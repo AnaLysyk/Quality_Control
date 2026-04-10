@@ -92,6 +92,20 @@ export type AuditLogRow = {
   metadata: unknown;
 };
 
+export type AuditLogSearchParams = {
+  action?: string | null;
+  entityType?: string | null;
+  actor?: string | null;
+  query?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+};
+
+export type AuditLogListParams = AuditLogSearchParams & {
+  limit?: number;
+  offset?: number;
+};
+
 export const AUDIT_LOG_RETENTION_DAYS = 60;
 
 type AuditLogStore = { items: AuditLogRow[] };
@@ -151,11 +165,98 @@ async function writeStore(next: AuditLogStore) {
   }
 }
 
-function isWithinRetention(createdAt: string) {
-  const timestamp = Date.parse(createdAt);
-  if (!Number.isFinite(timestamp)) return true;
-  const cutoff = Date.now() - AUDIT_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000;
-  return timestamp >= cutoff;
+type NormalizedAuditLogSearchParams = {
+  action: string;
+  entityType: string;
+  actor: string;
+  query: string;
+  startDate: number | null;
+  endDate: number | null;
+};
+
+function normalizeAuditLogSearchParams(params?: AuditLogSearchParams): NormalizedAuditLogSearchParams {
+  const startDate = params?.startDate ? new Date(params.startDate) : null;
+  const endDate = params?.endDate ? new Date(params.endDate) : null;
+
+  if (startDate && Number.isFinite(startDate.getTime())) {
+    startDate.setHours(0, 0, 0, 0);
+  }
+
+  if (endDate && Number.isFinite(endDate.getTime())) {
+    endDate.setHours(23, 59, 59, 999);
+  }
+
+  return {
+    action: (params?.action ?? "").trim(),
+    entityType: (params?.entityType ?? "").trim(),
+    actor: (params?.actor ?? "").trim().toLowerCase(),
+    query: (params?.query ?? "").trim().toLowerCase(),
+    startDate: startDate && Number.isFinite(startDate.getTime()) ? startDate.getTime() : null,
+    endDate: endDate && Number.isFinite(endDate.getTime()) ? endDate.getTime() : null,
+  };
+}
+
+function serializeSearchableMetadata(metadata: unknown): string {
+  if (metadata === null || metadata === undefined) return "";
+  if (typeof metadata === "string") return metadata.toLowerCase();
+  try {
+    return JSON.stringify(metadata).toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function matchesAuditLogQuery(log: AuditLogRow, params: NormalizedAuditLogSearchParams): boolean {
+  if (params.action && log.action !== params.action) return false;
+  if (params.entityType && log.entity_type !== params.entityType) return false;
+
+  if (params.actor) {
+    const actorEmail = (log.actor_email ?? "").toLowerCase();
+    const actorId = (log.actor_user_id ?? "").toLowerCase();
+    if (!actorEmail.includes(params.actor) && !actorId.includes(params.actor)) return false;
+  }
+
+  if (params.query) {
+    const haystacks = [
+      (log.entity_label ?? "").toLowerCase(),
+      (log.entity_id ?? "").toLowerCase(),
+      (log.entity_type ?? "").toLowerCase(),
+      (log.actor_email ?? "").toLowerCase(),
+      log.action.toLowerCase(),
+      serializeSearchableMetadata(log.metadata),
+    ];
+    if (!haystacks.some((value) => value.includes(params.query))) return false;
+  }
+
+  const createdAt = Date.parse(log.created_at);
+  if (params.startDate && Number.isFinite(createdAt) && createdAt < params.startDate) return false;
+  if (params.endDate && Number.isFinite(createdAt) && createdAt > params.endDate) return false;
+
+  return true;
+}
+
+function mapAuditLogRow(row: {
+  id: string;
+  created_at: Date;
+  actor_user_id: string | null;
+  actor_email: string | null;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  entity_label: string | null;
+  metadata: unknown;
+}): AuditLogRow {
+  return {
+    id: row.id,
+    created_at: row.created_at.toISOString(),
+    actor_user_id: row.actor_user_id ?? null,
+    actor_email: row.actor_email ?? null,
+    action: row.action as AuditAction,
+    entity_type: row.entity_type as AuditEntityType,
+    entity_id: row.entity_id ?? null,
+    entity_label: row.entity_label ?? null,
+    metadata: row.metadata,
+  };
 }
 
 export async function addAuditLog(input: {
@@ -192,43 +293,43 @@ export async function addAuditLog(input: {
   await writeStore({ items });
 }
 
-export async function listAuditLogs(params?: {
-  limit?: number;
-  offset?: number;
-  action?: string | null;
-  entityType?: string | null;
-  actor?: string | null;
-  query?: string | null;
-  startDate?: string | null;
-  endDate?: string | null;
-}) {
+export async function searchAuditLogs(params?: AuditLogSearchParams) {
+  const normalized = normalizeAuditLogSearchParams(params);
+
   if (USE_POSTGRES) {
     const prisma = await getPrisma();
-    const limit = Math.max(1, Math.min(500, Number(params?.limit ?? 200)));
-    const offset = Math.max(0, Number(params?.offset ?? 0));
-    const action = (params?.action ?? "").trim();
-    const entityType = (params?.entityType ?? "").trim();
-    const actor = (params?.actor ?? "").trim();
-    const query = (params?.query ?? "").trim();
-    const startDate = params?.startDate ? new Date(params.startDate) : undefined;
-    const endDate = params?.endDate ? new Date(params.endDate) : undefined;
     const rows = await prisma.auditLog.findMany({
       where: {
-        ...(action ? { action } : {}),
-        ...(entityType ? { entity_type: entityType } : {}),
-        ...(actor ? { OR: [{ actor_email: { contains: actor, mode: "insensitive" } }, { actor_user_id: { contains: actor, mode: "insensitive" } }] } : {}),
-        ...(query ? { OR: [{ entity_label: { contains: query, mode: "insensitive" } }, { entity_id: { contains: query, mode: "insensitive" } }, { entity_type: { contains: query, mode: "insensitive" } }] } : {}),
-        created_at: { ...(startDate ? { gte: startDate } : {}), ...(endDate ? { lte: endDate } : {}) },
+        ...(normalized.action ? { action: normalized.action } : {}),
+        ...(normalized.entityType ? { entity_type: normalized.entityType } : {}),
+        ...(normalized.actor
+          ? {
+              OR: [
+                { actor_email: { contains: normalized.actor, mode: "insensitive" } },
+                { actor_user_id: { contains: normalized.actor, mode: "insensitive" } },
+              ],
+            }
+          : {}),
+        created_at: {
+          ...(normalized.startDate ? { gte: new Date(normalized.startDate) } : {}),
+          ...(normalized.endDate ? { lte: new Date(normalized.endDate) } : {}),
+        },
       },
       orderBy: { created_at: "desc" },
-      take: limit,
-      skip: offset,
     });
-    return rows.map((r) => ({ id: r.id, created_at: r.created_at.toISOString(), actor_user_id: r.actor_user_id ?? null, actor_email: r.actor_email ?? null, action: r.action as AuditAction, entity_type: r.entity_type as AuditEntityType, entity_id: r.entity_id ?? null, entity_label: r.entity_label ?? null, metadata: r.metadata }));
+    return rows.map(mapAuditLogRow).filter((row) => matchesAuditLogQuery(row, normalized));
   }
+
   const store = await readStore();
+  return (store.items ?? [])
+    .filter((log) => matchesAuditLogQuery(log, normalized))
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+}
+
+export async function listAuditLogs(params?: AuditLogListParams) {
   const limit = Math.max(1, Math.min(500, Number(params?.limit ?? 200)));
   const offset = Math.max(0, Number(params?.offset ?? 0));
+  const store = await readStore();
   const action = (params?.action ?? "").trim();
   const entityType = (params?.entityType ?? "").trim();
   const actor = (params?.actor ?? "").trim().toLowerCase();

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import styles from "./AuditLogs.module.css";
 
 type AuditLog = {
@@ -13,6 +14,43 @@ type AuditLog = {
   entity_id: string | null;
   entity_label: string | null;
   metadata: unknown;
+};
+
+type AuditSummary = {
+  total: number;
+  errorCount: number;
+  authCount: number;
+  uniqueActors: number;
+  lastEventAt: string | null;
+};
+
+type TrendPoint = {
+  bucket: string;
+  label: string;
+  total: number;
+  error: number;
+};
+
+type FacetCount = {
+  value: string;
+  count: number;
+};
+
+type AuditLogsResponse = {
+  items?: AuditLog[];
+  avatars?: Record<string, string>;
+  actorNames?: Record<string, string>;
+  retentionDays?: number;
+  warning?: string | null;
+  total?: number;
+  summary?: AuditSummary;
+  trend?: TrendPoint[];
+  topActions?: FacetCount[];
+  categoryCounts?: Partial<Record<ActionCategory, number>>;
+  facets?: {
+    actions?: FacetCount[];
+    entityTypes?: FacetCount[];
+  };
 };
 
 /* ── Translation layer ──────────────────────────────────── */
@@ -232,38 +270,6 @@ function badgeClass(cat: ActionCategory) {
   return map[cat];
 }
 
-function CategoryIcon({ category }: { category: ActionCategory }) {
-  const common = { viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "1.6", strokeLinecap: "round" as const };
-  if (category === "create") {
-    return (<svg {...common}><circle cx="8" cy="8" r="6" /><path d="M8 5.5v5M5.5 8h5" /></svg>);
-  }
-  if (category === "update") {
-    return (<svg {...common} strokeLinejoin="round"><path d="M2.5 13.5l1.2-4.3L11 1.9a1.3 1.3 0 011.8 0l1.3 1.3a1.3 1.3 0 010 1.8L6.8 12.3z" /><path d="M9.5 3.5l3 3" /></svg>);
-  }
-  if (category === "delete") {
-    return (<svg {...common}><path d="M3 4h10M5.5 4V3a1 1 0 011-1h3a1 1 0 011 1v1M6 7v4M10 7v4" /><path d="M4 4l.7 8.5a1.5 1.5 0 001.5 1.5h3.6a1.5 1.5 0 001.5-1.5L12 4" /></svg>);
-  }
-  if (category === "permission") {
-    return (<svg {...common}><rect x="3" y="7" width="10" height="7" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 015 0v2" /><circle cx="8" cy="10.5" r="1" fill="currentColor" stroke="none" /></svg>);
-  }
-  if (category === "link") {
-    return (<svg {...common}><path d="M6.5 9.5l3-3" /><path d="M9 5h2a2 2 0 010 4h-1" /><path d="M7 11H5a2 2 0 010-4h1" /></svg>);
-  }
-  if (category === "auth") {
-    return (<svg {...common}><circle cx="8" cy="5.5" r="2.5" /><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5" /></svg>);
-  }
-  if (category === "error") {
-    return (<svg {...common}><circle cx="8" cy="8" r="6" /><path d="M8 5v3.5" /><circle cx="8" cy="11" r="0.5" fill="currentColor" stroke="none" /></svg>);
-  }
-  if (category === "integration") {
-    return (<svg {...common}><path d="M4 4l4 4-4 4" /><path d="M12 4l-4 4 4 4" /></svg>);
-  }
-  if (category === "export") {
-    return (<svg {...common}><path d="M8 3v7" /><path d="M5 7l3 3 3-3" /><path d="M3 13h10" /></svg>);
-  }
-  return (<svg {...common}><circle cx="8" cy="8" r="6" /><path d="M8 5v3l2 1.5" /></svg>);
-}
-
 function entityTypeLabel(type: string) {
   return ENTITY_LABELS[type.toLowerCase()] ?? type;
 }
@@ -343,6 +349,16 @@ function formatDateOnly(value: string) {
   return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+function formatCount(value: number) {
+  return value.toLocaleString("pt-BR");
+}
+
+function renderTrendTooltip(value: number | string, name: string) {
+  const numericValue = typeof value === "number" ? value : Number(value) || 0;
+  if (name === "error") return [`${formatCount(numericValue)} eventos`, "Erros / negados"];
+  return [`${formatCount(numericValue)} eventos`, "Volume"];
+}
+
 type ResultFilter = "" | "success" | "error" | "warning";
 type DatePreset = "" | "today" | "yesterday" | "7d" | "30d" | "thisMonth" | "lastMonth" | "custom";
 
@@ -361,13 +377,6 @@ function applyDatePreset(preset: DatePreset): { start: string; end: string } {
   }
 }
 
-const RESULT_CATEGORIES: Record<ResultFilter, ActionCategory[]> = {
-  "": [],
-  success: ["create", "update", "permission", "link", "auth", "export", "default"],
-  error: ["error"],
-  warning: ["delete"],
-};
-
 const DATE_PRESETS: { value: DatePreset; label: string }[] = [
   { value: "", label: "Qualquer período" },
   { value: "today", label: "Hoje" },
@@ -385,6 +394,20 @@ export default function AdminAuditLogsPage() {
   const [items, setItems] = useState<AuditLog[]>([]);
   const [avatars, setAvatars] = useState<Record<string, string>>({});
   const [actorNames, setActorNames] = useState<Record<string, string>>({});
+  const [actionOptions, setActionOptions] = useState<FacetCount[]>([]);
+  const [entityTypeOptions, setEntityTypeOptions] = useState<FacetCount[]>([]);
+  const [trend, setTrend] = useState<TrendPoint[]>([]);
+  const [topActions, setTopActions] = useState<FacetCount[]>([]);
+  const [summary, setSummary] = useState<AuditSummary>({
+    total: 0,
+    errorCount: 0,
+    authCount: 0,
+    uniqueActors: 0,
+    lastEventAt: null,
+  });
+  const [categoryCounts, setCategoryCounts] = useState<Partial<Record<ActionCategory, number>>>({});
+  const [total, setTotal] = useState(0);
+  const [retentionDays, setRetentionDays] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
@@ -414,6 +437,8 @@ export default function AdminAuditLogsPage() {
   const [purging, setPurging] = useState(false);
   const [purgeResult, setPurgeResult] = useState<string | null>(null);
   const [purgeError, setPurgeError] = useState<string | null>(null);
+  const deferredActor = useDeferredValue(actor);
+  const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -421,24 +446,63 @@ export default function AdminAuditLogsPage() {
     setWarning(null);
     try {
       const url = new URL("/api/admin/audit-logs", window.location.origin);
-      url.searchParams.set("limit", "300");
+      url.searchParams.set("limit", String(pageSize));
+      url.searchParams.set("offset", String((currentPage - 1) * pageSize));
+      if (action) url.searchParams.set("action", action);
+      if (entityType) url.searchParams.set("entityType", entityType);
+      if (categoryFilter) url.searchParams.set("category", categoryFilter);
+      if (resultFilter) url.searchParams.set("result", resultFilter);
+      if (deferredActor) url.searchParams.set("actor", deferredActor);
+      if (deferredSearchQuery) url.searchParams.set("query", deferredSearchQuery);
+      if (startDate) url.searchParams.set("startDate", startDate);
+      if (endDate) url.searchParams.set("endDate", endDate);
       const res = await fetch(url.toString(), { credentials: "include", cache: "no-store" });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
         throw new Error(typeof json?.error === "string" ? json.error : "Não foi possível carregar o histórico");
       }
-      const json = await res.json().catch(() => ({}));
+      const json = (await res.json().catch(() => ({}))) as AuditLogsResponse;
       setItems(Array.isArray(json?.items) ? (json.items as AuditLog[]) : []);
-      setAvatars(json?.avatars && typeof json.avatars === "object" ? json.avatars as Record<string, string> : {});
-      setActorNames(json?.actorNames && typeof json.actorNames === "object" ? json.actorNames as Record<string, string> : {});
+      setAvatars(json?.avatars && typeof json.avatars === "object" ? (json.avatars as Record<string, string>) : {});
+      setActorNames(json?.actorNames && typeof json.actorNames === "object" ? (json.actorNames as Record<string, string>) : {});
       setWarning(typeof json?.warning === "string" ? json.warning : null);
+      setRetentionDays(typeof json?.retentionDays === "number" ? json.retentionDays : null);
+      setTotal(typeof json?.total === "number" ? json.total : 0);
+      setSummary(
+        json?.summary ?? {
+          total: 0,
+          errorCount: 0,
+          authCount: 0,
+          uniqueActors: 0,
+          lastEventAt: null,
+        },
+      );
+      setTrend(Array.isArray(json?.trend) ? json.trend : []);
+      setTopActions(Array.isArray(json?.topActions) ? json.topActions : []);
+      setCategoryCounts(json?.categoryCounts && typeof json.categoryCounts === "object" ? json.categoryCounts : {});
+      setActionOptions(Array.isArray(json?.facets?.actions) ? json.facets.actions : []);
+      setEntityTypeOptions(Array.isArray(json?.facets?.entityTypes) ? json.facets.entityTypes : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Falha ao carregar histórico");
       setItems([]);
+      setTotal(0);
+      setTrend([]);
+      setTopActions([]);
+      setCategoryCounts({});
+      setActionOptions([]);
+      setEntityTypeOptions([]);
+      setSummary({
+        total: 0,
+        errorCount: 0,
+        authCount: 0,
+        uniqueActors: 0,
+        lastEventAt: null,
+      });
+      setRetentionDays(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [action, categoryFilter, currentPage, deferredActor, deferredSearchQuery, endDate, entityType, pageSize, resultFilter, startDate]);
 
   const handlePurge = useCallback(async () => {
     if (!purgeStart || !purgeEnd) return;
@@ -465,69 +529,12 @@ export default function AdminAuditLogsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const actions = useMemo(() => {
-    const set = new Set(items.map((i) => i.action));
-    return Array.from(set).sort();
-  }, [items]);
-
-  const entityTypes = useMemo(() => {
-    const set = new Set(items.map((i) => i.entity_type));
-    return Array.from(set).sort();
-  }, [items]);
-
-  const filteredItems = useMemo(() => {
-    return items.filter((log) => {
-      if (action && log.action !== action) return false;
-      if (entityType && log.entity_type !== entityType) return false;
-      if (categoryFilter && getCategory(log.action) !== categoryFilter) return false;
-      if (resultFilter) {
-        const cats = RESULT_CATEGORIES[resultFilter];
-        if (!cats.includes(getCategory(log.action))) return false;
-      }
-      if (actor && !(log.actor_email ?? "").toLowerCase().includes(actor.toLowerCase())) return false;
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        const label = (log.entity_label ?? "").toLowerCase();
-        const id = (log.entity_id ?? "").toLowerCase();
-        const type = (log.entity_type ?? "").toLowerCase();
-        const email = (log.actor_email ?? "").toLowerCase();
-        const title = getEventTitle(log).toLowerCase();
-        const metaStr = JSON.stringify(log.metadata ?? {}).toLowerCase();
-        if (!label.includes(q) && !id.includes(q) && !type.includes(q) && !email.includes(q) && !title.includes(q) && !metaStr.includes(q)) return false;
-      }
-      if (startDate) {
-        const date = new Date(log.created_at);
-        if (date < new Date(startDate)) return false;
-      }
-      if (endDate) {
-        const date = new Date(log.created_at);
-        const endD = new Date(endDate);
-        endD.setHours(23, 59, 59, 999);
-        if (date > endD) return false;
-      }
-      return true;
-    });
-  }, [items, action, actor, startDate, endDate, entityType, searchQuery, categoryFilter, resultFilter]);
-
-  // Reset page when filters change
   useEffect(() => { setCurrentPage(1); }, [action, entityType, categoryFilter, resultFilter, actor, searchQuery, startDate, endDate]);
-
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(filteredItems.length / pageSize)), [filteredItems.length, pageSize]);
-  const paginatedItems = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredItems.slice(start, start + pageSize);
-  }, [filteredItems, currentPage, pageSize]);
-
-  /** Category breakdown for quick-filter chips. */
-  const categoryCounts = useMemo(() => {
-    const counts: Partial<Record<ActionCategory, number>> = {};
-    for (const item of items) {
-      const cat = getCategory(item.action);
-      counts[cat] = (counts[cat] ?? 0) + 1;
-    }
-    return counts;
-  }, [items]);
-
+  const allCategoryCount = useMemo(
+    () => Object.values(categoryCounts).reduce((sum, count) => sum + (count ?? 0), 0),
+    [categoryCounts],
+  );
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [pageSize, total]);
   const showSkeleton = loading && !items.length;
 
   return (
@@ -550,7 +557,7 @@ export default function AdminAuditLogsPage() {
               type="button"
               className={`${styles.categoryChip} ${categoryFilter === "" ? styles.categoryChipActive : ""}`}
               onClick={() => setCategoryFilter("")}
-            >Todos <span className={styles.chipCount}>{items.length}</span></button>
+            >Todos <span className={styles.chipCount}>{allCategoryCount}</span></button>
             {(["auth", "create", "update", "delete", "permission", "link", "integration", "export", "error"] as ActionCategory[]).map((cat) => {
               const count = categoryCounts[cat] ?? 0;
               if (!count) return null;
@@ -567,6 +574,111 @@ export default function AdminAuditLogsPage() {
             })}
           </div>
 
+          <div className={styles.overviewWrap}>
+            <div className={styles.summaryGrid}>
+              <div className={styles.summaryCard}>
+                <span className={styles.summaryLabel}>Eventos filtrados</span>
+                <strong className={styles.summaryValue}>{formatCount(summary.total)}</strong>
+                <span className={styles.summaryHint}>Total da consulta atual.</span>
+              </div>
+              <div className={styles.summaryCard}>
+                <span className={styles.summaryLabel}>Erros / negados</span>
+                <strong className={styles.summaryValue}>{formatCount(summary.errorCount)}</strong>
+                <span className={styles.summaryHint}>Falhas, acessos negados e eventos sensÃ­veis.</span>
+              </div>
+              <div className={styles.summaryCard}>
+                <span className={styles.summaryLabel}>AutenticaÃ§Ã£o</span>
+                <strong className={styles.summaryValue}>{formatCount(summary.authCount)}</strong>
+                <span className={styles.summaryHint}>Login, logout e senha na janela atual.</span>
+              </div>
+              <div className={styles.summaryCard}>
+                <span className={styles.summaryLabel}>Atores Ãºnicos</span>
+                <strong className={styles.summaryValue}>{formatCount(summary.uniqueActors)}</strong>
+                <span className={styles.summaryHint}>Quem gerou eventos no recorte atual.</span>
+              </div>
+            </div>
+
+            <div className={styles.monitorGrid}>
+              <section className={styles.monitorCard}>
+                <div className={styles.monitorHeader}>
+                  <div>
+                    <p className={styles.monitorTitle}>TendÃªncia de eventos</p>
+                    <p className={styles.monitorSubtitle}>Volume total vs. erros/negados na consulta atual.</p>
+                  </div>
+                  <div className={styles.monitorMeta}>
+                    <span>{summary.lastEventAt ? `Ãšltimo evento ${formatDate(summary.lastEventAt)}` : "Sem eventos"}</span>
+                  </div>
+                </div>
+                <div className={styles.monitorChart}>
+                  {trend.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={trend} margin={{ top: 10, right: 12, left: -18, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="audit-total-gradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#1d4ed8" stopOpacity={0.24} />
+                            <stop offset="95%" stopColor="#1d4ed8" stopOpacity={0.02} />
+                          </linearGradient>
+                          <linearGradient id="audit-error-gradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#dc2626" stopOpacity={0.24} />
+                            <stop offset="95%" stopColor="#dc2626" stopOpacity={0.02} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.25)" vertical={false} />
+                        <XAxis dataKey="label" tickLine={false} axisLine={false} minTickGap={24} tick={{ fontSize: 11, fill: "#64748b" }} />
+                        <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#64748b" }} width={32} />
+                        <Tooltip
+                          formatter={renderTrendTooltip}
+                          labelFormatter={(value) => `PerÃ­odo ${String(value)}`}
+                          contentStyle={{
+                            borderRadius: "12px",
+                            border: "1px solid rgba(148,163,184,0.18)",
+                            backgroundColor: "rgba(15,23,42,0.96)",
+                            color: "#f8fafc",
+                            fontSize: "12px",
+                          }}
+                          itemStyle={{ color: "#f8fafc" }}
+                          labelStyle={{ color: "#cbd5e1" }}
+                        />
+                        <Area type="monotone" dataKey="total" stroke="#1d4ed8" strokeWidth={2.25} fill="url(#audit-total-gradient)" />
+                        <Area type="monotone" dataKey="error" stroke="#dc2626" strokeWidth={2} fill="url(#audit-error-gradient)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className={styles.monitorEmpty}>Sem eventos suficientes para montar a tendÃªncia.</div>
+                  )}
+                </div>
+              </section>
+
+              <section className={styles.monitorCard}>
+                <div className={styles.monitorHeader}>
+                  <div>
+                    <p className={styles.monitorTitle}>Sinais mais frequentes</p>
+                    <p className={styles.monitorSubtitle}>AÃ§Ãµes com maior volume para o recorte atual.</p>
+                  </div>
+                  <div className={styles.monitorMeta}>
+                    <span>{retentionDays ? `RetenÃ§Ã£o ${retentionDays} dias` : "Monitoramento ativo"}</span>
+                  </div>
+                </div>
+                {topActions.length > 0 ? (
+                  <div className={styles.signalList}>
+                    {topActions.map((entry, index) => (
+                      <div key={entry.value} className={styles.signalRow}>
+                        <div className={styles.signalRank}>{index + 1}</div>
+                        <div className={styles.signalCopy}>
+                          <div className={styles.signalName}>{ACTION_TITLES[entry.value] ?? entry.value}</div>
+                          <div className={styles.signalMeta}>{entry.value}</div>
+                        </div>
+                        <div className={styles.signalValue}>{formatCount(entry.count)}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={styles.monitorEmpty}>Nenhuma aÃ§Ã£o encontrada para os filtros atuais.</div>
+                )}
+              </section>
+            </div>
+          </div>
+
           {/* Filtros */}
           <div className={styles.filtersWrap}>
             <div className={styles.filtersGrid}>
@@ -578,8 +690,10 @@ export default function AdminAuditLogsPage() {
                 Tipo de evento
                 <select value={action} onChange={(e) => setAction(e.target.value)} className={styles.filterSelect}>
                   <option value="">Todos</option>
-                  {actions.map((opt) => (
-                    <option key={opt} value={opt}>{ACTION_TITLES[opt] ?? opt}</option>
+                  {actionOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {ACTION_TITLES[opt.value] ?? opt.value} ({formatCount(opt.count)})
+                    </option>
                   ))}
                 </select>
               </label>
@@ -587,8 +701,10 @@ export default function AdminAuditLogsPage() {
                 Entidade
                 <select value={entityType} onChange={(e) => setEntityType(e.target.value)} className={styles.filterSelect}>
                   <option value="">Todas</option>
-                  {entityTypes.map((opt) => (
-                    <option key={opt} value={opt}>{entityTypeLabel(opt)}</option>
+                  {entityTypeOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {entityTypeLabel(opt.value)} ({formatCount(opt.count)})
+                    </option>
                   ))}
                 </select>
               </label>
@@ -682,7 +798,7 @@ export default function AdminAuditLogsPage() {
           )}
 
           {/* Empty state */}
-          {!showSkeleton && filteredItems.length === 0 && (
+          {!showSkeleton && total === 0 && (
             <div className={styles.emptyState}>
               <svg className={styles.emptyStateIcon} width="32" height="32" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
                 <circle cx="8" cy="8" r="6" /><path d="M8 5v3.5" /><circle cx="8" cy="11" r="0.5" fill="currentColor" stroke="none" />
@@ -692,20 +808,20 @@ export default function AdminAuditLogsPage() {
           )}
 
           {/* ── Event timeline ─────────────────────────────────── */}
-          {!showSkeleton && filteredItems.length > 0 && (
+          {!showSkeleton && total > 0 && (
             <div className={styles.listHeader}>
               <span className={styles.listHeaderLabel}>
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M2 4h12M2 8h12M2 12h12" /></svg>
                 Eventos
               </span>
-              <span className={styles.listHeaderCount}>{filteredItems.length} resultado{filteredItems.length !== 1 ? "s" : ""} · Página {currentPage} de {totalPages}</span>
+              <span className={styles.listHeaderCount}>{total} resultado{total !== 1 ? "s" : ""} · Página {currentPage} de {totalPages}</span>
             </div>
           )}
           {/* ── Pagination ─────────────────────────────────── */}
-          {filteredItems.length > 0 && (
+          {total > 0 && (
             <div className={styles.paginationBar}>
               <div className={styles.paginationInfo}>
-                <span>{filteredItems.length} resultado{filteredItems.length !== 1 ? "s" : ""}</span>
+                <span>{total} resultado{total !== 1 ? "s" : ""}</span>
                 <span className={styles.paginationSep}>·</span>
                 <label className={styles.paginationLabel}>
                   Por página
@@ -753,7 +869,7 @@ export default function AdminAuditLogsPage() {
             </div>
           )}
           <div className={styles.eventList}>
-            {paginatedItems.map((item) => {
+            {items.map((item) => {
               const cat = getCategory(item.action);
               const title = getEventTitle(item);
               const sub = getEventSubtitle(item, actorNames);
@@ -783,6 +899,7 @@ export default function AdminAuditLogsPage() {
                     {/* Avatar */}
                     <div className={`${styles.eventAvatar} ${iconClass(cat)}`}>
                       {avatars[item.actor_user_id ?? ""] ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={avatars[item.actor_user_id!]}
                           alt={item.actor_email ?? ""}

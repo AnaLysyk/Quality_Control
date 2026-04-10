@@ -47,7 +47,7 @@ export default function RequestsPage() {
     router.push("/login");
   }, [router]);
 
-  const { requests, loading, error, refetch } = useSWRRequests();
+  const { requests, loading, error, refetch, scope } = useSWRRequests();
 
   const summary = useMemo(() => {
     const pending = requests.filter((item: RequestRecord) => item.status === "PENDING").length;
@@ -123,10 +123,12 @@ export default function RequestsPage() {
           <div className="tc-hero-grid">
             <div className="space-y-5">
               <div className="tc-hero-copy">
-                <p className="tc-hero-kicker">Solicitacoes do usuario</p>
+                <p className="tc-hero-kicker">{scope === "all" ? "Central de solicitacoes" : "Solicitacoes do usuario"}</p>
                 <h1 className="tc-hero-title">Ajustes de conta</h1>
                 <p className="tc-hero-description">
-                  Abra pedidos de troca de e-mail ou empresa e acompanhe o retorno no mesmo fluxo.
+                  {scope === "all"
+                    ? "Suporte tecnico acompanha toda a fila e os demais perfis continuam vendo apenas os proprios registros."
+                    : "Abra pedidos de troca de e-mail ou empresa e acompanhe o retorno no mesmo fluxo."}
                 </p>
               </div>
             </div>
@@ -135,7 +137,7 @@ export default function RequestsPage() {
               <div className="tc-hero-stat">
                 <div className="tc-hero-stat-label">Solicitacoes</div>
                 <div className="tc-hero-stat-value">{requests.length}</div>
-                <div className="tc-hero-stat-note">Total de pedidos registrados.</div>
+                <div className="tc-hero-stat-note">{scope === "all" ? "Total da fila visivel." : "Total de pedidos registrados."}</div>
               </div>
               <div className="tc-hero-stat">
                 <div className="tc-hero-stat-label">Pendentes</div>

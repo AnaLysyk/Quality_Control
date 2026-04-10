@@ -4,19 +4,19 @@ import { NextResponse } from "next/server";
 import { getRequestById, updateRequestStatus, type RequestStatus } from "@/data/requestsStore";
 import { getLocalUserById, updateLocalUser } from "@/lib/auth/localStore";
 import { emailService } from "@/lib/email";
+import { authenticateRequest } from "@/lib/jwtAuth";
 import { notifyPasswordResetStatus, notifyProfileDeletionStatus } from "@/lib/notificationService";
 import { getRedis } from "@/lib/redis";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
-import { canReviewerAccessQueue, resolveGenericRequestQueue } from "@/lib/requestReviewAccess";
+import { canAccessSelfServiceRequest, canReviewSelfServiceRequests } from "@/lib/selfServiceRequestAccess";
 
 function isFinalStatus(value: string | null): value is Exclude<RequestStatus, "PENDING"> {
   return value === "APPROVED" || value === "REJECTED";
 }
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) {
-    return NextResponse.json({ message: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+  const authUser = await authenticateRequest(req);
+  if (!authUser) {
+    return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
   }
 
   const body = (await req.json().catch(() => null)) as { status?: string; reviewNote?: string } | null;
@@ -31,8 +31,11 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   if (!requestRecord) {
     return NextResponse.json({ message: "Solicitacao nao encontrada" }, { status: 404 });
   }
-  if (!canReviewerAccessQueue(admin, resolveGenericRequestQueue(requestRecord))) {
+  if (!canAccessSelfServiceRequest(authUser, requestRecord)) {
     return NextResponse.json({ message: "Sem permissao para esta solicitacao" }, { status: 403 });
+  }
+  if (!canReviewSelfServiceRequests(authUser)) {
+    return NextResponse.json({ message: "Sem permissao para revisar solicitacoes" }, { status: 403 });
   }
   if (requestRecord.status !== "PENDING") {
     return NextResponse.json({ item: requestRecord });
@@ -70,7 +73,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     }
   }
 
-  const updated = await updateRequestStatus(id, nextStatus, { id: admin.id }, body?.reviewNote);
+  const updated = await updateRequestStatus(id, nextStatus, { id: authUser.id }, body?.reviewNote);
   if (updated && updated.type === "PASSWORD_RESET") {
     try {
       await notifyPasswordResetStatus(updated, nextStatus);

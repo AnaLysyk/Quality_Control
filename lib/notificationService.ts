@@ -16,7 +16,7 @@ import {
   listLocalMemberships,
   getLocalUserById,
 } from "@/lib/auth/localStore";
-import { canAdminReviewQueue, resolveReviewQueue, toRequestProfileTypeLabel, type ReviewQueue } from "@/lib/requestRouting";
+import { canAdminReviewQueue, toRequestProfileTypeLabel, type ReviewQueue } from "@/lib/requestRouting";
 
 function isAdminUser(user: { is_global_admin?: boolean; globalRole?: string | null }) {
   return user.is_global_admin === true || user.globalRole === "global_admin";
@@ -94,6 +94,10 @@ async function resolveRequestReviewerIds(queue: ReviewQueue) {
   return Array.from(all);
 }
 
+async function resolveSelfServiceRequestReviewerIds() {
+  return resolveTechnicalSupportUserIds();
+}
+
 async function resolveCompanyUserIds(companySlug?: string | null) {
   const adminIds = await resolveAdminUserIds();
   if (!companySlug) return adminIds;
@@ -130,27 +134,12 @@ async function resolveDefectRecipientIds(input: {
 }
 
 export async function notifyPasswordResetRequest(request: RequestRecord) {
-  const requestedProfileType =
-    typeof request.payload?.profileType === "string" ? request.payload.profileType : null;
-  const reviewQueue =
-    typeof request.payload?.reviewQueue === "string" &&
-    (request.payload.reviewQueue === "admin_and_global" || request.payload.reviewQueue === "global_only")
-      ? request.payload.reviewQueue
-      : resolveReviewQueue(
-          requestedProfileType === "testing_company_user" ||
-            requestedProfileType === "company_user" ||
-            requestedProfileType === "testing_company_lead" ||
-            requestedProfileType === "technical_support"
-            ? requestedProfileType
-            : "testing_company_user",
-        );
-  const reviewerIds = await resolveRequestReviewerIds(reviewQueue);
+  const reviewerIds = await resolveSelfServiceRequestReviewerIds();
   const userLabel = request.userName || request.userEmail || "Usuario";
-  const reviewerLabel = canAdminReviewQueue(reviewQueue) ? "Admin e Global" : "Global";
   await createNotificationsForUsers(reviewerIds, {
     type: "PASSWORD_RESET_REQUEST",
     title: "Reset de senha solicitado",
-    description: `${userLabel} solicitou reset de senha para ${reviewerLabel}.`,
+    description: `${userLabel} solicitou reset de senha para o Suporte tecnico.`,
     requestId: request.id,
     dedupeKey: `reset:reviewers:${request.id}`,
   });
@@ -158,9 +147,7 @@ export async function notifyPasswordResetRequest(request: RequestRecord) {
   await createNotificationsForUsers([request.userId], {
     type: "PASSWORD_RESET_PENDING",
     title: "Solicitacao de reset enviada",
-    description: canAdminReviewQueue(reviewQueue)
-      ? "Aguardando analise de Admin ou Global."
-      : "Aguardando analise exclusiva do Global.",
+    description: "Aguardando analise do Suporte tecnico.",
     requestId: request.id,
     dedupeKey: `reset:user:${request.id}`,
   });
@@ -197,12 +184,7 @@ export async function notifyPasswordResetStatus(
     ? `Reset de senha de ${userLabel} foi aprovado por ${reviewerName}.`
     : `Reset de senha de ${userLabel} foi rejeitado por ${reviewerName}.`;
 
-  const reviewQueue =
-    typeof request.payload?.reviewQueue === "string" &&
-    (request.payload.reviewQueue === "admin_and_global" || request.payload.reviewQueue === "global_only")
-      ? request.payload.reviewQueue
-      : "admin_and_global" as ReviewQueue;
-  const reviewerIds = (await resolveRequestReviewerIds(reviewQueue)).filter((id) => id !== request.userId);
+  const reviewerIds = (await resolveSelfServiceRequestReviewerIds()).filter((id) => id !== request.userId);
   if (reviewerIds.length > 0) {
     await createNotificationsForUsers(reviewerIds, {
       type,
@@ -215,12 +197,7 @@ export async function notifyPasswordResetStatus(
 }
 
 export async function notifyProfileDeletionRequest(request: RequestRecord) {
-  const reviewQueue =
-    typeof request.payload?.reviewQueue === "string" &&
-    (request.payload.reviewQueue === "admin_and_global" || request.payload.reviewQueue === "global_only")
-      ? request.payload.reviewQueue
-      : "admin_and_global";
-  const reviewerIds = await resolveRequestReviewerIds(reviewQueue);
+  const reviewerIds = await resolveSelfServiceRequestReviewerIds();
   const userLabel = request.userName || request.userEmail || "Usuario";
   await createNotificationsForUsers(reviewerIds, {
     type: "PROFILE_DELETION_REQUEST",

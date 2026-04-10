@@ -52,7 +52,7 @@ export default function CreateUserForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 space-y-2" aria-busy={loading}>
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 space-y-2">
       <h2 className="text-lg font-bold mb-2">Criar novo usuario</h2>
       <label className="block">
         <span className="text-sm">E-mail</span>
@@ -119,8 +119,6 @@ export default function CreateUserForm({
         type="submit"
         className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
         disabled={loading || !email || !login || !name || !password || !companyId}
-        aria-busy={loading}
-        aria-disabled={loading || !email || !login || !name || !password || !companyId}
         role="button"
       >
         {loading ? <span className="animate-pulse">Salvando...</span> : "Criar Usuario"}

@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+import {
+  APP_SETTINGS_COOKIE_MAX_AGE,
+  THEME_PREFERENCE_COOKIE,
+  THEME_RESOLVED_COOKIE,
+} from "@/lib/appSettingsCookies";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
@@ -41,6 +46,22 @@ const isValidTheme = (value?: string | null): value is Theme =>
 
 const isValidLanguage = (value?: string | null): value is Locale =>
   Boolean(value) && LOCALES.includes(value as Locale);
+
+function applyThemeCookies(response: NextResponse, theme: Theme) {
+  response.cookies.set(THEME_PREFERENCE_COOKIE, theme, {
+    path: "/",
+    sameSite: "lax",
+    maxAge: APP_SETTINGS_COOKIE_MAX_AGE,
+  });
+
+  if (theme === "light" || theme === "dark") {
+    response.cookies.set(THEME_RESOLVED_COOKIE, theme, {
+      path: "/",
+      sameSite: "lax",
+      maxAge: APP_SETTINGS_COOKIE_MAX_AGE,
+    });
+  }
+}
 
 async function readStoreFile(): Promise<Record<string, StoredSettings>> {
   if (!fs || !STORE_PATH) return {};
@@ -162,7 +183,10 @@ export async function GET(req: Request) {
   }
 
   const stored = await fetchSettingsFromStore(userId);
-  return NextResponse.json({ settings: normalizeSettings(stored) }, { status: 200 });
+  const settings = normalizeSettings(stored);
+  const response = NextResponse.json({ settings }, { status: 200 });
+  applyThemeCookies(response, settings.theme);
+  return response;
 }
 
 export async function PATCH(req: Request) {
@@ -188,5 +212,8 @@ export async function PATCH(req: Request) {
   });
 
   const saved = await saveSettingsToStore(userId, normalized);
-  return NextResponse.json({ settings: normalizeSettings(saved) }, { status: 200 });
+  const settings = normalizeSettings(saved);
+  const response = NextResponse.json({ settings }, { status: 200 });
+  applyThemeCookies(response, settings.theme);
+  return response;
 }

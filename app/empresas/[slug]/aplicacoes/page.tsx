@@ -158,7 +158,7 @@ function ApplicationModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/72 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="max-h-[calc(100dvh-1.5rem)] w-full max-w-[min(78rem,calc(100vw-1rem))] overflow-y-auto rounded-[2rem] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) shadow-[0_32px_90px_rgba(15,23,42,0.42)]"
+        className="max-h-[calc(100dvh-1.5rem)] w-full max-w-[min(78rem,calc(100vw-1rem))] overflow-y-auto rounded-4xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) shadow-[0_32px_90px_rgba(15,23,42,0.42)]"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4 border-b border-(--tc-border,#e5e7eb) bg-[linear-gradient(135deg,#0f2350_0%,#274a99_48%,#b30f2d_100%)] px-5 py-4 text-white sm:px-6 sm:py-5">
@@ -523,7 +523,7 @@ export default function CompanyAppsPage() {
                 {blockedApps.length} projeto(s) fora de uso
               </div>
             </div>
-            <div className="mt-5 grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]">
+            <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(18rem,1fr))] gap-3">
               {blockedApps.map((app) => (
                 <div key={app.id} className="rounded-3xl border border-amber-200 bg-white/70 px-4 py-4">
                   <div className="flex flex-wrap items-center gap-2">
@@ -583,7 +583,7 @@ export default function CompanyAppsPage() {
               Nenhuma aplicação corresponde ao filtro informado.
             </div>
           ) : (
-            <div className="mt-6 grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(21rem,1fr))]">
+            <div className="mt-6 grid grid-cols-[repeat(auto-fit,minmax(21rem,1fr))] gap-4">
               {filteredApps.map((app) => {
                 const sourceMeta = resolveSourceMeta(app);
                 return (

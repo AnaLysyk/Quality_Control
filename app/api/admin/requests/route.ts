@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { listAllRequests, type RequestStatus, type RequestType } from "@/data/requestsStore";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
-import { canReviewerAccessQueue, resolveGenericRequestQueue } from "@/lib/requestReviewAccess";
+import { listAllRequests, listUserRequests, type RequestStatus, type RequestType } from "@/data/requestsStore";
+import { authenticateRequest } from "@/lib/jwtAuth";
+import { canReviewSelfServiceRequests, resolveSelfServiceRequestScope } from "@/lib/selfServiceRequestAccess";
 
 export const revalidate = 0;
 
@@ -19,22 +19,33 @@ function isSort(value: string | null): value is "createdAt_desc" | "createdAt_as
 }
 
 export async function GET(request: NextRequest) {
-  const { admin, status } = await requireGlobalAdminWithStatus(request);
-  if (!admin) {
-    return NextResponse.json({ message: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+  const authUser = await authenticateRequest(request);
+  if (!authUser) {
+    return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
   const statusParam = searchParams.get("status");
   const typeParam = searchParams.get("type");
-  const statusFilter = isRequestStatus(statusParam) ? statusParam : undefined;
-  const typeFilter = isRequestType(typeParam) ? typeParam : undefined;
+  const status = isRequestStatus(statusParam) ? statusParam : undefined;
+  const type = isRequestType(typeParam) ? typeParam : undefined;
   const companyId = searchParams.get("companyId") || undefined;
   const sortParam = searchParams.get("sort");
   const sort = isSort(sortParam) ? sortParam : "createdAt_desc";
+  const scope = resolveSelfServiceRequestScope(authUser);
+  if (!scope) {
+    return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
+  }
 
-  const items = (await listAllRequests({ status: statusFilter, type: typeFilter, companyId, sort })).filter((item) =>
-    canReviewerAccessQueue(admin, resolveGenericRequestQueue(item)),
-  );
-  return NextResponse.json({ items, total: items.length });
+  const items =
+    scope === "all"
+      ? await listAllRequests({ status, type, companyId, sort })
+      : await listUserRequests(authUser.id, { status, type, sort });
+
+  return NextResponse.json({
+    items,
+    total: items.length,
+    scope,
+    canReview: canReviewSelfServiceRequests(authUser),
+  });
 }

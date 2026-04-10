@@ -1,7 +1,8 @@
 "use client";
 
 import { ReactNode, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { AuthSkeleton } from "@/components/AuthSkeleton";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
@@ -14,16 +15,27 @@ type RequireClientProps = {
 export function RequireClient({ slug, children, fallback }: RequireClientProps) {
   const { user, loading } = useAuthUser();
   const router = useRouter();
+  const pathname = usePathname() || "/";
+
+  const role = typeof user?.role === "string" ? user.role.toLowerCase() : null;
+  const isAdmin = role === "admin" || role === "global_admin" || user?.isGlobalAdmin === true;
+  const loginHref =
+    pathname.startsWith("/") && pathname !== "/login" ? `/login?next=${encodeURIComponent(pathname)}` : "/login";
+  const shouldRedirectToLogin = !loading && !user;
+  const shouldRedirectToCompanyHome =
+    !loading && !!user && !isAdmin && !!slug && !!user.clientSlug && user.clientSlug !== slug;
+  const shouldBlockContent = loading || shouldRedirectToLogin || (!isAdmin && !!user && !user.clientSlug) || shouldRedirectToCompanyHome;
 
   useEffect(() => {
-    if (loading || !user) return;
-
-    const role = typeof user.role === "string" ? user.role.toLowerCase() : null;
-    const isAdmin = role === "admin" || role === "global_admin" || user.isGlobalAdmin;
-    if (isAdmin) return; // admin pode acessar qualquer empresa
+    if (loading) return;
+    if (!user) {
+      router.replace(loginHref);
+      return;
+    }
+    if (isAdmin) return;
 
     if (!user.clientSlug) {
-      router.replace("/login");
+      router.replace(loginHref);
       return;
     }
 
@@ -42,10 +54,11 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
         }),
       );
     }
-  }, [loading, user, slug, router]);
+  }, [isAdmin, loading, loginHref, router, slug, user]);
 
-  if (loading) return (fallback as ReactNode) ?? null;
-  if (!user) return (fallback as ReactNode) ?? null;
+  if (shouldBlockContent) {
+    return (fallback as ReactNode) ?? <AuthSkeleton message="Validando acesso da empresa" />;
+  }
 
   return <>{children}</>;
 }

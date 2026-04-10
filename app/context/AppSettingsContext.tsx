@@ -2,6 +2,12 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import {
+  APP_SETTINGS_COOKIE_MAX_AGE,
+  THEME_PREFERENCE_COOKIE,
+  THEME_RESOLVED_COOKIE,
+  type ResolvedTheme,
+} from "@/lib/appSettingsCookies";
 import { getAccessToken } from "@/lib/api";
 import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
 
@@ -39,6 +45,16 @@ const isValidLanguage = (value?: string | null): value is Language =>
   Boolean(value) && LOCALES.includes(value as Language);
 
 const storageKey = (userId?: string | null) => `tc-settings:${userId ?? "guest"}`;
+
+function writeCookie(name: string, value: string) {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; Max-Age=${APP_SETTINGS_COOKIE_MAX_AGE}; SameSite=Lax`;
+}
+
+function persistThemeCookies(theme: Theme, resolved: ResolvedTheme) {
+  writeCookie(THEME_PREFERENCE_COOKIE, theme);
+  writeCookie(THEME_RESOLVED_COOKIE, resolved);
+}
 
 function resolveUserId(user: { id?: string | null; userId?: string | null } | null | undefined) {
   return (typeof user?.id === "string" && user.id) || (typeof user?.userId === "string" && user.userId) || null;
@@ -106,13 +122,37 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(() => readInitialSettings());
   const [loading, setLoading] = useState(true);
 
-  const setTheme = useCallback((theme: Theme) => {
-    setSettings((prev) => ({ ...prev, theme }));
-  }, []);
+  const persistLocalSettings = useCallback(
+    (next: AppSettings) => {
+      const userId = resolveUserId(user);
+      const key = storageKey(userId);
+      if (userId) rememberLastUserId(userId);
+      writeStoredSettings(key, next);
+    },
+    [user],
+  );
 
-  const setLanguage = useCallback((language: Language) => {
-    setSettings((prev) => ({ ...prev, language }));
-  }, []);
+  const setTheme = useCallback(
+    (theme: Theme) => {
+      setSettings((prev) => {
+        const next = { ...prev, theme };
+        persistLocalSettings(next);
+        return next;
+      });
+    },
+    [persistLocalSettings],
+  );
+
+  const setLanguage = useCallback(
+    (language: Language) => {
+      setSettings((prev) => {
+        const next = { ...prev, language };
+        persistLocalSettings(next);
+        return next;
+      });
+    },
+    [persistLocalSettings],
+  );
 
   const refreshSettings = useCallback(async () => {
     const userId = resolveUserId(user);
@@ -209,11 +249,13 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const root = document.documentElement;
     const applyTheme = (useDark: boolean) => {
+      const resolvedTheme = useDark ? "dark" : "light";
       root.classList.toggle("dark", useDark);
       root.classList.toggle("theme-light", !useDark);
-      root.style.colorScheme = useDark ? "dark" : "light";
-      root.dataset.themeResolved = useDark ? "dark" : "light";
+      root.style.colorScheme = resolvedTheme;
+      root.dataset.themeResolved = resolvedTheme;
       root.dataset.themePreference = settings.theme;
+      persistThemeCookies(settings.theme, resolvedTheme);
     };
 
     if (settings.theme === "system") {

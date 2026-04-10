@@ -11,6 +11,8 @@ type RequestItem = {
 
 type RequestsResponse = {
   items?: RequestItem[];
+  canReview?: boolean;
+  scope?: "all" | "own";
 };
 
 const EMPTY_REQUESTS: RequestItem[] = [];
@@ -25,6 +27,8 @@ export function useSWRRequests() {
 
   return {
     requests: data?.items ?? EMPTY_REQUESTS,
+    canReview: data?.canReview === true,
+    scope: data?.scope === "all" ? "all" : "own",
     loading: isLoading,
     error,
     refetch: mutate,

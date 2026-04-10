@@ -35,6 +35,7 @@ input[type="password"]::-ms-clear {
 
   /* BRAND (fixos da Testing Company) */
   --tc-primary: #011848;
+  --tc-primary-rgb: 1 24 72;
   --tc-primary-dark: #000f2e;
   --tc-accent: #ef0001;
   --tc-accent-hover: #c80001;
@@ -3486,7 +3487,7 @@ video {
 .notes-editor-tool:hover,
 .notes-editor-emoji:hover {
   background: color-mix(in srgb, var(--tc-primary) 12%, var(--tc-surface) 88%);
-  border-color: color-mix(in srgb, var(--tc-primary) 20%, transparent);
+  border-color: rgba(var(--tc-primary-rgb, 1 24 72) / 0.2);
 }
 
 .notes-editor-board {
@@ -7467,6 +7468,7 @@ video {
   color: rgba(255, 255, 255, 0.82);
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

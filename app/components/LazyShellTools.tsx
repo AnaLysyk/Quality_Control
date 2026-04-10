@@ -119,7 +119,6 @@ function ToolbarGhostButton({
       onFocus={onPrime}
       onTouchStart={onPrime}
       aria-label={mounted ? loadingLabel : ariaLabel}
-      aria-busy={mounted}
       className="relative flex h-11 w-11 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-(--tc-accent,#ef0001)/60 hover:text-(--tc-accent,#ef0001) disabled:cursor-progress disabled:opacity-75"
       disabled={mounted}
     >
@@ -260,10 +259,9 @@ export function DeferredTicketsButton() {
 }
 
 export function ThemeToggleButton() {
-  const { theme, saveSettings } = useAppSettings();
+  const { theme, setTheme } = useAppSettings();
   const { t } = useI18n();
   const [resolvedDark, setResolvedDark] = useState(false);
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -285,27 +283,19 @@ export function ThemeToggleButton() {
   const ariaLabel = resolvedDark ? t("themeToggle.switchToLight") : t("themeToggle.switchToDark");
   const Icon = resolvedDark ? FiSun : FiMoon;
 
-  const handleToggle = useCallback(async () => {
-    if (saving) return;
-    setSaving(true);
-    try {
-      await saveSettings({ theme: nextTheme });
-    } finally {
-      setSaving(false);
-    }
-  }, [nextTheme, saveSettings, saving]);
+  const handleToggle = useCallback(() => {
+    setTheme(nextTheme);
+  }, [nextTheme, setTheme]);
 
   return (
     <button
       type="button"
       onClick={handleToggle}
-      aria-label={saving ? t("themeToggle.saving") : ariaLabel}
+      aria-label={ariaLabel}
       title={ariaLabel}
-      aria-busy={saving}
       className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-(--tc-accent,#ef0001)/60 hover:text-(--tc-accent,#ef0001) disabled:cursor-progress disabled:opacity-75"
-      disabled={saving}
     >
-      <Icon size={18} className={saving ? "animate-pulse" : undefined} />
+      <Icon size={18} />
     </button>
   );
 }
@@ -355,7 +345,6 @@ export function DeferredChatButton() {
         onFocus={prime}
         onTouchStart={prime}
         aria-label="Abrir assistente da plataforma"
-        aria-busy={mounted}
         title="Assistente Testing Company"
         className="group relative flex h-14 w-14 items-center justify-center rounded-full shadow-[0_18px_35px_rgba(1,24,72,0.22)] transition hover:scale-105 disabled:cursor-progress"
         disabled={mounted}
@@ -433,7 +422,6 @@ export function DeferredProfileButton() {
     <button
       type="button"
       aria-label={`Abrir menu de perfil: ${effectiveAvatarName}`}
-      aria-busy={isLoadingComponent}
       onClick={open}
       onMouseEnter={prime}
       onFocus={prime}

@@ -7,7 +7,6 @@ import {
   deriveProfileTypeFromAccount,
   normalizeRequestProfileType,
   resolveReviewQueue,
-  resolveRequestQueueMessage,
 } from "@/lib/requestRouting";
 
 export async function POST(req: Request) {
@@ -92,5 +91,5 @@ export async function POST(req: Request) {
     metadata: { method: "forgot_password", companyLabel: preferredCompanyName ?? null },
   });
 
-  return NextResponse.json({ ok: true, message: resolveRequestQueueMessage(reviewQueue) });
+  return NextResponse.json({ ok: true, message: "Solicitacao enviada. O Suporte tecnico sera notificado." });
 }

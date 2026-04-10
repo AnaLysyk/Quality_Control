@@ -15,52 +15,59 @@ function readPid() {
   }
 }
 
-const pid = readPid();
-if (!pid) {
-  console.log("No .dev.pid found (nothing to stop). ");
-  process.exit(0);
+function tryTaskkill(targetPid) {
+  execFileSync("taskkill", ["/PID", String(targetPid), "/T", "/F"], { stdio: "ignore" });
 }
 
-function tryTaskkill(targetPid) {
-  execFileSync("taskkill", ["/PID", String(targetPid), "/T", "/F"], { stdio: "inherit" });
+function readRepoNextPidsWindows() {
+  const escapedRoot = root.replace(/'/g, "''");
+  const cmd = `
+$ErrorActionPreference='SilentlyContinue'
+$root='${escapedRoot}'
+Get-CimInstance Win32_Process |
+  Where-Object {
+    $_.Name -eq 'node.exe' -and
+    $_.CommandLine -and
+    ($_.CommandLine -like ('*' + $root + '*node_modules\\next\\dist\\*'))
+  } |
+  Select-Object -ExpandProperty ProcessId
+`;
+
+  const stdout = execFileSync("powershell", ["-NoProfile", "-Command", cmd], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "ignore"],
+  });
+
+  return stdout
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => Number(line))
+    .filter((n) => Number.isFinite(n));
 }
+
+const pid = readPid();
+let stoppedAny = false;
 
 try {
   if (process.platform === "win32") {
-    try {
-      tryTaskkill(pid);
-    } catch {
-      // PID may already be gone; continue with fallback discovery below.
+    if (pid) {
+      try {
+        tryTaskkill(pid);
+        stoppedAny = true;
+      } catch {
+        // PID may already be gone; continue with fallback discovery below.
+      }
     }
 
-    // Fallback: stop any "next dev" processes for THIS repo.
-    // This covers cases where Next spawns a different PID that actually owns port 3000.
     try {
-      const escapedRoot = root.replace(/'/g, "''");
-      const cmd = [
-        "$ErrorActionPreference='SilentlyContinue'",
-        `$root='${escapedRoot}'`,
-        "Get-CimInstance Win32_Process",
-        "| Where-Object { $_.CommandLine -and ($_.CommandLine -match 'next(\\.js)?\\s+dev') -and ($_.CommandLine -like ('*' + $root + '*')) }",
-        "| Select-Object -ExpandProperty ProcessId",
-      ].join("; ");
-
-      const stdout = execFileSync("powershell", ["-NoProfile", "-Command", cmd], {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "ignore"],
-      });
-
-      const pids = stdout
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .map((line) => Number(line))
-        .filter((n) => Number.isFinite(n));
+      const pids = readRepoNextPidsWindows();
 
       for (const otherPid of pids) {
-        if (otherPid === pid) continue;
+        if (pid && otherPid === pid) continue;
         try {
           tryTaskkill(otherPid);
+          stoppedAny = true;
         } catch {
           // ignore
         }
@@ -69,8 +76,13 @@ try {
       // ignore
     }
   } else {
+    if (!pid) {
+      console.log("No .dev.pid found (nothing to stop).");
+      process.exit(0);
+    }
     // kill the whole process group
     process.kill(-pid, "SIGTERM");
+    stoppedAny = true;
   }
 } catch {
   // ignore
@@ -95,4 +107,8 @@ for (const lockPath of [
   }
 }
 
-console.log(`Stopped dev server (pid ${pid}).`);
+if (stoppedAny) {
+  console.log(pid ? `Stopped dev server (pid ${pid}).` : "Stopped dev server(s).");
+} else {
+  console.log("No running dev server found for this repo.");
+}

@@ -462,18 +462,20 @@ export default function TestPlansPage() {
       return;
     }
 
-    const casesPayload = normalizeCasesForSave(draft.source, draft.cases);
-    if (draft.source === "qase" && !casesPayload.length) {
-      setError("Informe ao menos um case ID numerico para o plano do Qase.");
-      return;
-    }
-
     if (draft.source === "manual") {
-      const untitledCase = casesPayload.find((testCase) => !trimText(testCase.title));
+      const untitledCase = draft.cases.find(
+        (testCase) => !isCaseEffectivelyEmpty(testCase) && !trimText(testCase.title),
+      );
       if (untitledCase) {
         setError(`Informe o titulo do caso manual ${untitledCase.id}.`);
         return;
       }
+    }
+
+    const casesPayload = normalizeCasesForSave(draft.source, draft.cases);
+    if (draft.source === "qase" && !casesPayload.length) {
+      setError("Informe ao menos um case ID numerico para o plano do Qase.");
+      return;
     }
 
     setSaving(true);

@@ -1012,7 +1012,7 @@ function AdminClientsPage() {
                 <button
                   type="button"
                   role="tab"
-                  aria-selected={activeTab !== "visao"}
+                  aria-selected={false}
                   tabIndex={-1}
                   onClick={() => setActiveTab("visao")}
                   className="border-b-2 border-transparent px-3 py-2 text-sm font-semibold text-(--tc-text-muted) transition hover:text-(--tc-text-primary)"
@@ -1037,7 +1037,7 @@ function AdminClientsPage() {
                 <button
                   type="button"
                   role="tab"
-                  aria-selected={activeTab !== "pessoas"}
+                  aria-selected={false}
                   tabIndex={-1}
                   onClick={() => setActiveTab("pessoas")}
                   className="border-b-2 border-transparent px-3 py-2 text-sm font-semibold text-(--tc-text-muted) transition hover:text-(--tc-text-primary)"

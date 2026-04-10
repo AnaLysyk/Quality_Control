@@ -2,6 +2,7 @@
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { Formatter, NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 import styles from "./AuditLogs.module.css";
 
 type AuditLog = {
@@ -353,11 +354,18 @@ function formatCount(value: number) {
   return value.toLocaleString("pt-BR");
 }
 
-function renderTrendTooltip(value: number | string, name: string) {
-  const numericValue = typeof value === "number" ? value : Number(value) || 0;
-  if (name === "error") return [`${formatCount(numericValue)} eventos`, "Erros / negados"];
-  return [`${formatCount(numericValue)} eventos`, "Volume"];
-}
+const renderTrendTooltip: Formatter<ValueType, NameType> = (value, name) => {
+  const firstValue = Array.isArray(value) ? value[0] : value;
+
+  const numericValue =
+    typeof firstValue === "number"
+      ? firstValue
+      : Number(firstValue ?? 0) || 0;
+
+  const label = name === "error" ? "Erros / negados" : "Volume";
+
+  return [`${formatCount(numericValue)} eventos`, label];
+};
 
 type ResultFilter = "" | "success" | "error" | "warning";
 type DatePreset = "" | "today" | "yesterday" | "7d" | "30d" | "thisMonth" | "lastMonth" | "custom";

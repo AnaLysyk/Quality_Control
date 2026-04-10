@@ -7,6 +7,7 @@ import { FiMenu } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
 import { useClientContext } from "@/context/ClientContext";
 import { useI18n } from "@/hooks/useI18n";
+import { hasFailedImageSrc, markFailedImageSrc } from "@/lib/failedImageSrc";
 import { shortenCompanyPathname, shouldUseShortCompanyRoutes } from "@/lib/companyRoutes";
 import { normalizeLocale, type Locale } from "@/lib/i18n";
 import {
@@ -527,6 +528,7 @@ export default function AppShell({ children }: AppShellProps) {
   const hideShellCover = shouldHideShellCover(pathname);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [coverSlotContent, setCoverSlotContent] = useState<ReactNode | null>(null);
+  const [, setLogoFailureTick] = useState(0);
   const mobileSidebarId = "app-shell-mobile-sidebar";
   const mobileMenuA11y = {
     "aria-controls": mobileSidebarId,
@@ -610,6 +612,19 @@ export default function AppShell({ children }: AppShellProps) {
     activeClientSlug,
     shellCopy,
   ]);
+
+  const shellLogoSrc =
+    typeof shellIdentity.logoSrc === "string" && shellIdentity.logoSrc.trim()
+      ? shellIdentity.logoSrc.trim()
+      : null;
+  const resolvedShellLogoSrc =
+    shellLogoSrc && !hasFailedImageSrc(shellLogoSrc) ? shellLogoSrc : null;
+
+  function handleShellLogoError() {
+    if (!shellLogoSrc) return;
+    markFailedImageSrc(shellLogoSrc);
+    setLogoFailureTick((current) => current + 1);
+  }
 
   const prevPathRef = useRef(pathname);
 
@@ -735,25 +750,27 @@ export default function AppShell({ children }: AppShellProps) {
                       <div className="app-page-cover-copy">
                         <div className="app-page-cover-brand">
                           <div className="app-page-cover-logo">
-                            {shellIdentity.logoSrc ? (
-                              shouldUseNativeImageTag(shellIdentity.logoSrc) ? (
+                            {resolvedShellLogoSrc ? (
+                              shouldUseNativeImageTag(resolvedShellLogoSrc) ? (
                                 <img
-                                  src={shellIdentity.logoSrc}
+                                  src={resolvedShellLogoSrc}
                                   alt={shellIdentity.logoAlt}
                                   width={72}
                                   height={72}
                                   className="h-14 w-14 object-contain sm:h-16 sm:w-16"
                                   loading="eager"
                                   decoding="async"
+                                  onError={handleShellLogoError}
                                 />
                               ) : (
                                 <Image
-                                  src={shellIdentity.logoSrc}
+                                  src={resolvedShellLogoSrc}
                                   alt={shellIdentity.logoAlt}
                                   width={72}
                                   height={72}
                                   className="h-14 w-14 object-contain sm:h-16 sm:w-16"
                                   priority
+                                  onError={handleShellLogoError}
                                 />
                               )
                             ) : (

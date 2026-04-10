@@ -242,7 +242,7 @@ export function getRedis() {
       if (!warnedRedisMissing) {
         warnedRedisMissing = true;
         console.warn(
-          "[REDIS] UPSTASH_REDIS_REST_URL/TOKEN ou KV_REST_API_URL/TOKEN ausentes; usando fallback persistente em PostgreSQL.",
+          "[REDIS] Redis REST nao configurado; usando fallback persistente em PostgreSQL.",
         );
       }
       return redis;

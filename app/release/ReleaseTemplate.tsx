@@ -276,7 +276,7 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
             <section className="space-y-4 text-[#0b1a3c]">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-center gap-3 flex-1">
-                  <Image src="/images/tc.png" alt="Testing Company" width={44} height={44} className="h-11 w-auto" />
+                  <Image src="/images/tc.png" alt="Testing Company" width={44} height={44} className="h-11 w-11 object-contain" />
                   <div className="space-y-1 leading-tight">
                     <p className="text-xs uppercase tracking-[0.28em] text-[#6b7280]">Run</p>
                     <h1 className="text-2xl font-extrabold leading-tight text-[#0b1a3c]">Resumo da Run</h1>
@@ -370,7 +370,7 @@ export default function ReleaseTemplate({ appName, finalTitle, stats, total }: R
       <div className="space-y-8 flex-1 flex flex-col max-w-[180mm] mx-auto">
         <div className="flex items-start justify-between gap-6">
           <div className="flex items-center gap-3">
-            <Image src="/images/tc.png" alt="Testing Company" width={48} height={48} className="h-12 w-auto" />
+            <Image src="/images/tc.png" alt="Testing Company" width={48} height={48} className="h-12 w-12 object-contain" />
             <div className="space-y-1 leading-tight">
               <p className="text-xs uppercase tracking-[0.28em] text-[#6b7280]">Run</p>
               <h1 className="text-3xl font-extrabold leading-tight text-[#0b1a3c]">{appName}</h1>

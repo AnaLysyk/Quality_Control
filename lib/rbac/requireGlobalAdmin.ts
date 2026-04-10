@@ -16,6 +16,7 @@ type AdminSession = {
   role?: string | null;
   isGlobalAdmin?: boolean;
   globalRole?: string | null;
+  isGlobalReviewer?: boolean;
 };
 
 type SessionUser = {
@@ -236,7 +237,7 @@ export async function requireAccessRequestReviewer(
   const role = session.role ?? null;
   const isGlobalAdmin = session.isGlobalAdmin === true || (session.globalRole ?? "").toLowerCase() === "global_admin";
 
-  if (!(isGlobalAdmin || isGlobalDeveloperRole(role) || isSupportRole(role))) return null;
+  const isGlobalReviewer = isGlobalAdmin || isGlobalDeveloperRole(role) || isSupportRole(role);
 
   return {
     id: session.userId ?? session.id ?? "",
@@ -245,6 +246,7 @@ export async function requireAccessRequestReviewer(
     role,
     isGlobalAdmin,
     globalRole: session.globalRole ?? null,
+    isGlobalReviewer,
   };
 }
 

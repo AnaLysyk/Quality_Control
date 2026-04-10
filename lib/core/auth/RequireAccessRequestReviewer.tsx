@@ -14,14 +14,29 @@ type RequireAccessRequestReviewerProps = {
 function isReviewerUser(
   user?: { role?: string | null; permissionRole?: string | null; companyRole?: string | null } | null,
 ) {
-  const role = (user?.role ?? "").toLowerCase();
-  const permissionRole = (user?.permissionRole ?? "").toLowerCase();
-  const companyRole = (user?.companyRole ?? "").toLowerCase();
+  // Allow any authenticated user that participates in the access-request flow.
+  // Global reviewers (support/dev/admin) will be detected server-side via `isGlobalReviewer`.
+  if (!user) return false;
+  const role = (user.role ?? "").toLowerCase().trim();
+  const permissionRole = (user.permissionRole ?? "").toLowerCase().trim();
+  const companyRole = (user.companyRole ?? "").toLowerCase().trim();
 
-  const isGlobalDeveloper = role === "it_dev" || permissionRole === "dev" || companyRole === "it_dev";
-  const isSupport = role === "support" || role === "technical_support" || role === "tech_support" || role === "support_tech" || permissionRole === "support" || companyRole === "support";
+  // Recognized roles that participate in the flow
+  const known = new Set([
+    "company",
+    "company_admin",
+    "client_admin",
+    "user",
+    "testing_company_user",
+    "testing_company_lead",
+    "it_dev",
+    "dev",
+    "developer",
+    "support",
+    "technical_support",
+  ]);
 
-  return isGlobalDeveloper || isSupport;
+  return Boolean(role && (known.has(role) || known.has(permissionRole) || known.has(companyRole)));
 }
 
 export function RequireAccessRequestReviewer({ children, fallback }: RequireAccessRequestReviewerProps) {
@@ -32,12 +47,6 @@ export function RequireAccessRequestReviewer({ children, fallback }: RequireAcce
   const allowed = isReviewerUser(user);
   const clientSlug = typeof (user as { clientSlug?: string | null } | null)?.clientSlug === "string" ? String((user as { clientSlug?: string | null }).clientSlug) : null;
   const nonGlobalRedirect = user?.isGlobalAdmin ? "/admin/home" : clientSlug ? `/empresas/${encodeURIComponent(clientSlug)}/home` : "/empresas";
-  const deniedFallback =
-    fallback ?? (
-      <div className="p-8 text-center text-lg">
-        <p>Acesso restrito aos revisores de solicitações.</p>
-      </div>
-    );
 
   useEffect(() => {
     if (loading) return;
@@ -45,6 +54,7 @@ export function RequireAccessRequestReviewer({ children, fallback }: RequireAcce
       router.replace(`/login?next=${encodeURIComponent(pathname || "/")}`);
       return;
     }
+    // if user exists but is not part of known roles, redirect to their home
     if (!allowed) {
       router.replace(nonGlobalRedirect);
     }
@@ -52,7 +62,11 @@ export function RequireAccessRequestReviewer({ children, fallback }: RequireAcce
 
   if (loading) return fallback ?? <AuthSkeleton message="Validando sessao..." />;
   if (!user) return fallback ?? null;
-  if (!allowed) return deniedFallback;
+  if (!allowed) return (
+    <div className="p-8 text-center text-lg">
+      <p>Acesso restrito.</p>
+    </div>
+  );
   return <>{children}</>;
 }
 

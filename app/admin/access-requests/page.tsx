@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./AccessRequests.module.css";
 import { FiCheckCircle, FiClock, FiRefreshCw, FiSearch, FiSlash } from "react-icons/fi";
-import { RequireGlobalDeveloper } from "@/core/auth/RequireGlobalDeveloper";
+import { RequireAccessRequestReviewer } from "@/core/auth/RequireAccessRequestReviewer";
 import { getAccessToken } from "@/lib/api";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 import type {
@@ -1643,8 +1643,8 @@ function AccessRequestsPage() {
 
 export default function AccessRequestsPageWithGuard() {
   return (
-    <RequireGlobalDeveloper>
+    <RequireAccessRequestReviewer>
       <AccessRequestsPage />
-    </RequireGlobalDeveloper>
+    </RequireAccessRequestReviewer>
   );
 }

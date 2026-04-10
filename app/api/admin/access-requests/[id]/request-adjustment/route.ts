@@ -9,7 +9,7 @@ import {
   type AccessRequestAdjustmentRound,
 } from "@/lib/accessRequestMessage";
 import { prisma } from "@/lib/prismaClient";
-import { requireGlobalDeveloperWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 
@@ -23,7 +23,7 @@ function isFinalStatus(status: string | null | undefined) {
 }
 
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
-  const { admin, status } = await requireGlobalDeveloperWithStatus(req);
+  const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
   if (!admin) {
     return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
   }

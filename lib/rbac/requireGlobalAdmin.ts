@@ -151,6 +151,16 @@ function isGlobalDeveloperRole(role?: string | null) {
   return normalized === "it_dev" || normalized === "itdev" || normalized === "developer" || normalized === "dev";
 }
 
+function isSupportRole(role?: string | null) {
+  const normalized = (role ?? "").toLowerCase().trim();
+  return (
+    normalized === "support" ||
+    normalized === "technical_support" ||
+    normalized === "tech_support" ||
+    normalized === "support_tech"
+  );
+}
+
 export async function requireGlobalAdmin(
   req: Request,
   opts?: { token?: string | null },
@@ -209,6 +219,40 @@ export async function requireGlobalDeveloperWithStatus(
   opts?: { token?: string | null },
 ): Promise<{ admin: AdminSession | null; status: 200 | 401 | 403 }> {
   const admin = await requireGlobalDeveloper(req, opts);
+  if (admin) return { admin, status: 200 };
+
+  const session = await readSessionUser(req);
+  if (!session) return { admin: null, status: 401 };
+  return { admin: null, status: 403 };
+}
+
+export async function requireAccessRequestReviewer(
+  req: Request,
+  opts?: { token?: string | null },
+): Promise<AdminSession | null> {
+  const session = await readSessionUser(req);
+  if (!session) return null;
+
+  const role = session.role ?? null;
+  const isGlobalAdmin = session.isGlobalAdmin === true || (session.globalRole ?? "").toLowerCase() === "global_admin";
+
+  if (!(isGlobalAdmin || isGlobalDeveloperRole(role) || isSupportRole(role))) return null;
+
+  return {
+    id: session.userId ?? session.id ?? "",
+    email: session.email ?? "",
+    token: opts?.token ?? "",
+    role,
+    isGlobalAdmin,
+    globalRole: session.globalRole ?? null,
+  };
+}
+
+export async function requireAccessRequestReviewerWithStatus(
+  req: Request,
+  opts?: { token?: string | null },
+): Promise<{ admin: AdminSession | null; status: 200 | 401 | 403 }> {
+  const admin = await requireAccessRequestReviewer(req, opts);
   if (admin) return { admin, status: 200 };
 
   const session = await readSessionUser(req);

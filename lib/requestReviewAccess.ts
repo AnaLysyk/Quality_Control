@@ -13,8 +13,19 @@ type ReviewerSession = {
 };
 
 export function isGlobalReviewer(session: ReviewerSession | null | undefined) {
-  const role = (session?.role ?? "").toLowerCase();
-  return role === "it_dev" || role === "itdev" || role === "developer" || role === "dev";
+  if (!session) return false;
+  if (session.isGlobalAdmin === true) return true;
+  const role = (session?.role ?? "").toLowerCase().trim();
+  return (
+    role === "it_dev" ||
+    role === "itdev" ||
+    role === "developer" ||
+    role === "dev" ||
+    role === "technical_support" ||
+    role === "support" ||
+    role === "tech_support" ||
+    role === "support_tech"
+  );
 }
 
 export function canReviewerAccessQueue(session: ReviewerSession | null | undefined, queue: ReviewQueue) {

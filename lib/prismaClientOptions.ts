@@ -3,10 +3,15 @@ import { PrismaPg } from "@prisma/adapter-pg";
 let adapter: PrismaPg | undefined;
 
 function getDatabaseUrl() {
-  const databaseUrl = process.env.DATABASE_URL;
+  const databaseUrl =
+    process.env.DATABASE_URL ??
+    process.env.POSTGRES_PRISMA_URL ??
+    process.env.POSTGRES_URL;
 
   if (!databaseUrl) {
-    throw new Error("DATABASE_URL is required to initialize Prisma.");
+    throw new Error(
+      "DATABASE_URL, POSTGRES_PRISMA_URL or POSTGRES_URL is required to initialize Prisma.",
+    );
   }
 
   return databaseUrl;

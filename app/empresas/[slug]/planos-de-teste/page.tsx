@@ -213,7 +213,6 @@ export default function TestPlansPage() {
     [applications],
   );
   const canCreateManual = applications.length > 0;
-  const canCreateQase = qaseEnabledApplications.length > 0;
   const draftApplication = useMemo(
     () => applications.find((item) => item.id === draft.applicationId) ?? null,
     [applications, draft.applicationId],
@@ -702,18 +701,8 @@ export default function TestPlansPage() {
                 className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a)"
               >
                 <FiPlus className="h-4 w-4" />
-                Novo manual
+                Novo plano
               </button>
-              {canCreateQase ? (
-                <button
-                  type="button"
-                  onClick={() => openCreate("qase")}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-(--tc-accent,#ef0001) px-4 py-3 text-sm font-semibold text-white shadow-sm"
-                >
-                  <FiPlus className="h-4 w-4" />
-                  Novo no Qase
-                </button>
-              ) : null}
             </div>
           </div>
 

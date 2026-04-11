@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getUserOverride, effectivePermissions, type UserPermissionsOverride } from "./store/permissionsStore";
-import { ROLE_DEFAULTS, type Role } from "./permissions/roleDefaults";
+import { resolveRoleDefaults, type Role } from "./permissions/roleDefaults";
 import { listLocalLinksForUser, listLocalUsers } from "@/lib/auth/localStore";
 import { resolvePermissionRoleForUser } from "@/lib/adminUsers";
 import { normalizePermissionMatrix, type PermissionMatrix } from "@/lib/permissionMatrix";
@@ -25,7 +25,7 @@ export async function resolveRoleKeyForUser(userId: string): Promise<RoleKey> {
 export async function resolvePermissionAccessForUser(userId: string): Promise<ResolvedPermissionAccess> {
   const roleKey = await resolveRoleKeyForUser(userId);
   const override = await getUserOverride(userId);
-  const roleDefaults = (ROLE_DEFAULTS as Record<string, Record<string, string[]>>)[roleKey] ?? {};
+  const roleDefaults = resolveRoleDefaults(roleKey);
   const calculated = effectivePermissions(roleKey, override ?? undefined);
   const permissions = normalizePermissionMatrix(
     Object.fromEntries(Object.entries(calculated).map(([moduleId, actions]) => [moduleId, Array.from(actions)])),

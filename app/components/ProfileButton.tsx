@@ -16,6 +16,7 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import { useAppSettings } from "@/context/AppSettingsContext";
 import { useClientContext } from "@/context/ClientContext";
 import { resolveActiveIdentity } from "@/lib/activeIdentity";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
 type ToastState =
@@ -83,7 +84,7 @@ type ProfileButtonProps = {
 export default function ProfileButton({ defaultOpen = false }: ProfileButtonProps) {
   const router = useRouter();
   const { user, loading, logout } = useAuthUser();
-  const { theme } = useAppSettings();
+  const { resolvedTheme } = useAppSettings();
   const { activeClient, clients } = useClientContext();
 
   const legacyUser = (user ?? null) as
@@ -98,7 +99,7 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
   const [open, setOpen] = useState(defaultOpen);
   const [toast, setToast] = useState<ToastState>({ kind: "idle" });
   const [copied, setCopied] = useState(false);
-  const isDarkTheme = theme === "dark";
+  const isDarkTheme = resolvedTheme === "dark";
 
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -108,14 +109,14 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
       (user ?? null) && typeof (user as Record<string, unknown>) === "object"
         ? (user as Record<string, unknown>)
         : null;
-    const permissionRole =
-      typeof runtimeUser?.permissionRole === "string" ? runtimeUser.permissionRole.toLowerCase() : "";
-    const role = typeof runtimeUser?.role === "string" ? runtimeUser.role.toLowerCase() : "";
-    const companyRole = typeof runtimeUser?.companyRole === "string" ? runtimeUser.companyRole.toLowerCase() : "";
-    return permissionRole || role || companyRole;
+    const permissionRole = typeof runtimeUser?.permissionRole === "string" ? runtimeUser.permissionRole : null;
+    const role = typeof runtimeUser?.role === "string" ? runtimeUser.role : null;
+    const companyRole = typeof runtimeUser?.companyRole === "string" ? runtimeUser.companyRole : null;
+    return normalizeLegacyRole(permissionRole) ?? normalizeLegacyRole(role) ?? normalizeLegacyRole(companyRole);
   })();
 
-  const isGlobalProfile = normalizedRuntimeRole === "dev" || normalizedRuntimeRole === "it_dev";
+  const isTechnicalSupportProfile = normalizedRuntimeRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
+  const isInstitutionalAdminProfile = normalizedRuntimeRole === SYSTEM_ROLES.LEADER_TC;
   const isAdmin = Boolean(user?.isGlobalAdmin || legacyUser?.isGlobalAdmin || legacyUser?.roleGlobal === "ADMIN");
   const activeIdentity = resolveActiveIdentity({ user, activeCompany: activeClient });
   const displayName = activeIdentity.displayName;
@@ -127,9 +128,9 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
   const avatarLoadingPlaceholder = loading && !activeIdentity.avatarUrl;
   const contextBadgeLabel = activeIdentity.kind === "company"
     ? null
-    : isGlobalProfile
-      ? "Global"
-      : isAdmin
+    : isTechnicalSupportProfile
+      ? "Suporte tecnico"
+      : isInstitutionalAdminProfile || isAdmin
         ? "Admin do sistema"
         : activeIdentity.showCompanyTag
           ? activeIdentity.companyTagLabel
@@ -250,7 +251,7 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
   const effectiveAvatarUrl = activeIdentity.avatarUrl;
   const effectiveAvatarName = activeIdentity.displayName;
   const profileAvatarFrameClass = effectiveAvatarUrl
-    ? "border border-slate-300 bg-[#f7f9fc] ring-1 ring-white/70 shadow-[0_18px_40px_rgba(15,23,42,0.16)] dark:border-slate-500 dark:bg-[#13213a] dark:ring-white/10"
+    ? "border border-border bg-surface2 ring-1 ring-border/40 shadow-[0_18px_40px_rgba(15,23,42,0.16)]"
     : "border-0 bg-linear-to-br from-(--tc-primary) to-[#7a1026] ring-0 shadow-none";
 
   return (
@@ -318,7 +319,7 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
                   className="h-14 w-14 shrink-0"
                   frameClassName={
                     effectiveAvatarUrl
-                      ? "border border-slate-300 bg-[#f7f9fc] ring-1 ring-white/70 shadow-[0_18px_40px_rgba(15,23,42,0.16)] dark:border-slate-500 dark:bg-[#13213a] dark:ring-white/10"
+                      ? "border border-border bg-surface2 ring-1 ring-border/40 shadow-[0_18px_40px_rgba(15,23,42,0.16)]"
                       : "shadow-[0_14px_34px_rgba(15,23,42,0.18)]"
                   }
                   fallbackClassName="text-sm font-semibold tracking-[0.18em] text-white"
@@ -349,7 +350,7 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
                 className={`inline-flex h-9 w-9 items-center justify-center rounded-[14px] shadow-[0_8px_20px_rgba(15,23,42,0.08)] transition ${
                   isDarkTheme
                     ? "border border-[#355483] bg-[#102042] text-white hover:border-[#ff8a9c] hover:text-[#ffd4db]"
-                    : "border border-[#d5dced] bg-white text-[#5e79a8] hover:border-(--tc-accent) hover:text-(--tc-accent)"
+                    : "border border-border bg-surface text-(--tc-text-secondary,#5e79a8) hover:border-(--tc-accent) hover:text-(--tc-accent)"
                 }`}
                 aria-label="Fechar menu"
                 onClick={() => {
@@ -371,7 +372,7 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
               >
                 {contextBadgeLabel ? (
                   <div className="flex flex-wrap gap-2">
-                    <span className={`tc-status-pill shadow-[0_10px_18px_rgba(0,0,0,0.12)]`} data-tone={isGlobalProfile ? "danger" : "neutral"}>
+                    <span className={`tc-status-pill shadow-[0_10px_18px_rgba(0,0,0,0.12)]`} data-tone={isTechnicalSupportProfile ? "danger" : "neutral"}>
                       {contextBadgeLabel}
                     </span>
                   </div>
@@ -379,7 +380,7 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
 
                 <div
                   className={`${contextBadgeLabel ? "mt-2.5 " : ""}flex items-start gap-2 rounded-[14px] border px-3 py-2 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] ${
-                    isDarkTheme ? "border-[#355483] bg-[#0c1831]" : "border-[#d7ddea] bg-white"
+                    isDarkTheme ? "border-[#355483] bg-[#0c1831]" : "border-border bg-surface"
                   }`}
                 >
                   <span className={`min-w-0 flex-1 break-all font-semibold ${isDarkTheme ? "text-white" : "text-[#081f4d]"}`}>
@@ -472,7 +473,7 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
                 className={`flex w-full items-center gap-2 rounded-[18px] px-4 py-3 text-sm font-semibold shadow-[0_10px_26px_rgba(15,23,42,0.05)] transition ${
                   isDarkTheme
                     ? "border border-[#355483] bg-[#0d1a35] text-[#ffd4db] hover:border-[#ff8a9c] hover:bg-[#4d1220] hover:text-white"
-                    : "border border-[#f0b9c3] bg-white text-[#c9485f] hover:border-[#df7a8b] hover:bg-rose-50 hover:text-[#a81f3d]"
+                    : "border border-danger/35 bg-surface text-danger hover:border-danger hover:bg-danger/12 hover:text-danger"
                 }`}
               >
                 <FiLogOut aria-hidden />

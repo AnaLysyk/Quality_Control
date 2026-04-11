@@ -935,6 +935,7 @@ export function normalizeGlobalRole(role?: string | null) {
 export function toLegacyRole(companyRole?: string | null, isGlobalAdmin?: boolean) {
   const normalized = normalizeMembershipRole(companyRole ?? null);
   if (normalized === "it_dev") return "it_dev";
+  if (normalized === "technical_support") return "technical_support";
   if (isGlobalAdmin) return "admin";
   if (normalized === "company_admin") return "company";
   return "user";

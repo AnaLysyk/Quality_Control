@@ -1,3 +1,5 @@
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+
 export type FixedProfileKind =
   | "empresa"
   | "company_user"
@@ -45,53 +47,8 @@ const FIXED_PROFILE_META: Record<FixedProfileKind, FixedProfileMeta> = {
   },
 };
 
-function normalizeValue(value?: string | null) {
-  return (value ?? "").trim().toLowerCase();
-}
-
-function isLeaderRole(value?: string | null) {
-  const normalized = normalizeValue(value);
-  return (
-    normalized === "admin" ||
-    normalized === "global_admin" ||
-    normalized === "leader_tc" ||
-    normalized === "lider_tc" ||
-    normalized === "tc_leader"
-  );
-}
-
-function isSupportRole(value?: string | null) {
-  const normalized = normalizeValue(value);
-  return (
-    normalized === "dev" ||
-    normalized === "it_dev" ||
-    normalized === "developer" ||
-    normalized === "technical_support" ||
-    normalized === "support" ||
-    normalized === "tech_support" ||
-    normalized === "support_tech"
-  );
-}
-
-function isCompanyAdminRole(value?: string | null) {
-  const normalized = normalizeValue(value);
-  return (
-    normalized === "company" ||
-    normalized === "company_admin" ||
-    normalized === "client_admin" ||
-    normalized === "client_owner" ||
-    normalized === "client_manager"
-  );
-}
-
 export function normalizeFixedProfileKind(value?: string | null): FixedProfileKind | null {
-  const normalized = normalizeValue(value);
-  if (normalized === "empresa") return "empresa";
-  if (normalized === "company_user") return "company_user";
-  if (normalized === "testing_company_user") return "testing_company_user";
-  if (normalized === "leader_tc") return "leader_tc";
-  if (normalized === "technical_support") return "technical_support";
-  return null;
+  return normalizeLegacyRole(value) as FixedProfileKind | null;
 }
 
 export function resolveFixedProfileKind(input?: {
@@ -108,40 +65,40 @@ export function resolveFixedProfileKind(input?: {
   if (explicitProfileKind) return explicitProfileKind;
 
   if (
-    isLeaderRole(input?.permissionRole) ||
-    isLeaderRole(input?.role) ||
-    isLeaderRole(input?.companyRole)
+    normalizeFixedProfileKind(input?.permissionRole) === SYSTEM_ROLES.LEADER_TC ||
+    normalizeFixedProfileKind(input?.role) === SYSTEM_ROLES.LEADER_TC ||
+    normalizeFixedProfileKind(input?.companyRole) === SYSTEM_ROLES.LEADER_TC
   ) {
-    return "leader_tc";
+    return SYSTEM_ROLES.LEADER_TC;
   }
 
   if (
-    isSupportRole(input?.permissionRole) ||
-    isSupportRole(input?.role) ||
-    isSupportRole(input?.companyRole)
+    normalizeFixedProfileKind(input?.permissionRole) === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
+    normalizeFixedProfileKind(input?.role) === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
+    normalizeFixedProfileKind(input?.companyRole) === SYSTEM_ROLES.TECHNICAL_SUPPORT
   ) {
-    return "technical_support";
+    return SYSTEM_ROLES.TECHNICAL_SUPPORT;
   }
 
   if (
     input?.isInstitutionalCompany === true ||
-    isCompanyAdminRole(input?.permissionRole) ||
-    isCompanyAdminRole(input?.role) ||
-    isCompanyAdminRole(input?.companyRole)
+    normalizeFixedProfileKind(input?.permissionRole) === SYSTEM_ROLES.EMPRESA ||
+    normalizeFixedProfileKind(input?.role) === SYSTEM_ROLES.EMPRESA ||
+    normalizeFixedProfileKind(input?.companyRole) === SYSTEM_ROLES.EMPRESA
   ) {
-    return "empresa";
+    return SYSTEM_ROLES.EMPRESA;
   }
 
-  if (normalizeValue(input?.userOrigin) === "client_company") {
-    return "company_user";
+  if ((input?.userOrigin ?? "").trim().toLowerCase() === "client_company") {
+    return SYSTEM_ROLES.COMPANY_USER;
   }
 
   const hasCompanyContext =
-    Boolean(normalizeValue(input?.companyRole)) ||
-    Boolean(normalizeValue(input?.clientSlug)) ||
+    Boolean((input?.companyRole ?? "").trim()) ||
+    Boolean((input?.clientSlug ?? "").trim()) ||
     Number(input?.companyCount ?? 0) > 0;
 
-  return hasCompanyContext ? "company_user" : "testing_company_user";
+  return hasCompanyContext ? SYSTEM_ROLES.COMPANY_USER : SYSTEM_ROLES.TESTING_COMPANY_USER;
 }
 
 export function getFixedProfileLabel(kind: FixedProfileKind, options?: { short?: boolean }) {

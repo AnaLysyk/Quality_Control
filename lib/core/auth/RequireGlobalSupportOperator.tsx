@@ -5,40 +5,46 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { AuthSkeleton } from "@/components/AuthSkeleton";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
-type RequireGlobalDeveloperProps = {
+type RequireGlobalSupportOperatorProps = {
   children: ReactNode;
   fallback?: ReactNode;
 };
 
-function isGlobalDeveloperUser(
+function canAccessGlobalSupport(
   user?: {
     role?: string | null;
     permissionRole?: string | null;
     companyRole?: string | null;
   } | null,
 ) {
-  const role = (user?.role ?? "").toLowerCase();
-  const permissionRole = (user?.permissionRole ?? "").toLowerCase();
-  const companyRole = (user?.companyRole ?? "").toLowerCase();
-  return role === "it_dev" || permissionRole === "dev" || companyRole === "it_dev";
+  return (
+    normalizeLegacyRole(user?.role) === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
+    normalizeLegacyRole(user?.permissionRole) === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
+    normalizeLegacyRole(user?.companyRole) === SYSTEM_ROLES.TECHNICAL_SUPPORT
+  );
 }
 
-export function RequireGlobalDeveloper({ children, fallback }: RequireGlobalDeveloperProps) {
+export function RequireGlobalSupportOperator({ children, fallback }: RequireGlobalSupportOperatorProps) {
   const { user, loading } = useAuthUser();
   const router = useRouter();
   const pathname = usePathname();
 
-  const isGlobalDeveloper = isGlobalDeveloperUser(user);
+  const hasSupportAccess = canAccessGlobalSupport(user);
   const clientSlug =
     typeof (user as { clientSlug?: string | null } | null)?.clientSlug === "string"
       ? String((user as { clientSlug?: string | null }).clientSlug)
       : null;
-  const nonGlobalRedirect = user?.isGlobalAdmin ? "/admin/home" : clientSlug ? `/empresas/${encodeURIComponent(clientSlug)}/home` : "/empresas";
+  const nonSupportRedirect = user?.isGlobalAdmin
+    ? "/admin/home"
+    : clientSlug
+      ? `/empresas/${encodeURIComponent(clientSlug)}/home`
+      : "/empresas";
   const deniedFallback =
     fallback ?? (
       <div className="p-8 text-center text-lg">
-        <p>Acesso restrito ao perfil Global.</p>
+        <p>Acesso restrito ao suporte tecnico.</p>
       </div>
     );
 
@@ -48,10 +54,10 @@ export function RequireGlobalDeveloper({ children, fallback }: RequireGlobalDeve
       router.replace(`/login?next=${encodeURIComponent(pathname || "/")}`);
       return;
     }
-    if (!isGlobalDeveloper) {
-      router.replace(nonGlobalRedirect);
+    if (!hasSupportAccess) {
+      router.replace(nonSupportRedirect);
     }
-  }, [isGlobalDeveloper, loading, nonGlobalRedirect, pathname, router, user]);
+  }, [hasSupportAccess, loading, nonSupportRedirect, pathname, router, user]);
 
   if (loading) {
     return fallback ?? <AuthSkeleton message="Validando sessao..." />;
@@ -61,7 +67,7 @@ export function RequireGlobalDeveloper({ children, fallback }: RequireGlobalDeve
     return fallback ?? null;
   }
 
-  if (!isGlobalDeveloper) {
+  if (!hasSupportAccess) {
     return deniedFallback;
   }
 

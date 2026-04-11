@@ -178,11 +178,15 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     sessionRole === "admin";
 
   // 6) Lista de empresas permitidas (todas para admin global, ou apenas as vinculadas).
-  const hasDevRole =
+  const hasLegacyTechnicalSupportRole =
     sessionRole === "it_dev" ||
     normalizeLocalRole(user.role ?? null) === "it_dev" ||
     links.some((link) => normalizeLocalRole(link.role ?? null) === "it_dev");
-  const hasFullCompanyAccess = isGlobalAdmin || hasDevRole;
+  const hasTechnicalSupportRole =
+    sessionRole === "technical_support" ||
+    normalizeLocalRole(user.role ?? null) === "technical_support" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "technical_support");
+  const hasFullCompanyAccess = isGlobalAdmin || hasLegacyTechnicalSupportRole || hasTechnicalSupportRole;
   const shouldBindCompanyContext = !hasFullCompanyAccess;
   const allowedCompanies = hasFullCompanyAccess
     ? companies

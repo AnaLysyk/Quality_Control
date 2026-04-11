@@ -8,7 +8,7 @@ import { getPrismaClientOptions } from "@/lib/prismaClientOptions";
 import { isRedisConfigured } from "@/lib/redis";
 import { normalizePermissionMatrix } from "@/lib/permissionMatrix";
 import { getJson, setJson, deleteKey } from "./redisClient";
-import { ROLE_DEFAULTS } from "../permissions/roleDefaults";
+import { resolveRoleDefaults } from "../permissions/roleDefaults";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
 
@@ -206,7 +206,7 @@ export async function listUserOverrides(): Promise<UserPermissionsOverride[]> {
 }
 
 export function effectivePermissions(role: string, override?: UserPermissionsOverride) {
-  const roleDefaults = (ROLE_DEFAULTS as Record<string, Record<string, string[]>>)[role] ?? {};
+  const roleDefaults = resolveRoleDefaults(role);
   const allow = override?.allow || {};
   const deny = override?.deny || {};
 

@@ -16,58 +16,40 @@ import {
   listLocalMemberships,
   getLocalUserById,
 } from "@/lib/auth/localStore";
-import { canAdminReviewQueue, toRequestProfileTypeLabel, type ReviewQueue } from "@/lib/requestRouting";
+import { toRequestProfileTypeLabel, type RequestProfileType, type ReviewQueue } from "@/lib/requestRouting";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { hasPermissionAccess } from "@/lib/permissionMatrix";
+import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
 
 function isAdminUser(user: { is_global_admin?: boolean; globalRole?: string | null }) {
-  return user.is_global_admin === true || user.globalRole === "global_admin";
+  return user.is_global_admin === true || normalizeLegacyRole(user.globalRole) === SYSTEM_ROLES.LEADER_TC;
 }
 
-function isItDevUser(user: { role?: string | null }) {
-  const role = (user.role ?? "").toLowerCase();
-  return role === "it_dev" || role === "itdev" || role === "developer" || role === "dev";
+function canReviewAccessRequestsByRole(role?: string | null) {
+  return hasPermissionAccess(resolveRoleDefaults(role), "access_requests", "view");
 }
 
-function isLeaderTcUser(user: { role?: string | null }) {
-  const role = (user.role ?? "").toLowerCase();
-  return role === "leader_tc" || role === "tc_lead";
+function canReceiveReviewQueue(role: string | null | undefined, queue: ReviewQueue, isGlobalAdmin = false) {
+  if (isGlobalAdmin) return true;
+  if (queue !== "admin_and_global" && queue !== "global_only") return false;
+  return canReviewAccessRequestsByRole(role);
 }
 
 function isTechnicalSupportUser(user: { role?: string | null }) {
-  const role = (user.role ?? "").toLowerCase();
-  return role === "technical_support" || role === "support";
+  return normalizeLegacyRole(user.role) === SYSTEM_ROLES.TECHNICAL_SUPPORT;
 }
 
 function describePermissionRole(role?: string | null) {
-  const normalized = (role ?? "").toLowerCase();
-  if (normalized === "admin" || normalized === "global_admin") return "Admin";
-  if (normalized === "dev" || normalized === "it_dev" || normalized === "itdev" || normalized === "developer") return "Dev";
-  if (normalized === "company" || normalized === "company_admin" || normalized === "client_admin") return "Empresa";
+  const normalized = normalizeLegacyRole(role);
+  if (normalized === SYSTEM_ROLES.LEADER_TC) return "Lider TC";
+  if (normalized === SYSTEM_ROLES.TECHNICAL_SUPPORT) return "Suporte tecnico";
+  if (normalized === SYSTEM_ROLES.EMPRESA || normalized === SYSTEM_ROLES.COMPANY_USER) return "Empresa";
   return "Usuario";
 }
 
 async function resolveAdminUserIds() {
   const users = await listLocalUsers();
   return users.filter(isAdminUser).map((user) => user.id);
-}
-
-async function resolveItDevUserIds() {
-  const [users, memberships] = await Promise.all([listLocalUsers(), listLocalMemberships()]);
-  const ids = new Set<string>();
-  users.filter(isItDevUser).forEach((user) => ids.add(user.id));
-  memberships
-    .filter((membership) => isItDevUser({ role: membership.role }))
-    .forEach((membership) => ids.add(membership.userId));
-  return Array.from(ids);
-}
-
-async function resolveLeaderTcUserIds() {
-  const [users, memberships] = await Promise.all([listLocalUsers(), listLocalMemberships()]);
-  const ids = new Set<string>();
-  users.filter(isLeaderTcUser).forEach((user) => ids.add(user.id));
-  memberships
-    .filter((membership) => isLeaderTcUser({ role: membership.role }))
-    .forEach((membership) => ids.add(membership.userId));
-  return Array.from(ids);
 }
 
 async function resolveTechnicalSupportUserIds() {
@@ -81,16 +63,21 @@ async function resolveTechnicalSupportUserIds() {
 }
 
 async function resolveRequestReviewerIds(queue: ReviewQueue) {
-  const [globalIds, leaderIds, supportIds] = await Promise.all([
-    resolveItDevUserIds(),
-    resolveLeaderTcUserIds(),
-    resolveTechnicalSupportUserIds(),
-  ]);
-  const all = new Set([...globalIds, ...leaderIds, ...supportIds]);
-  if (canAdminReviewQueue(queue)) {
-    const adminIds = await resolveAdminUserIds();
-    adminIds.forEach((id) => all.add(id));
+  const [users, memberships] = await Promise.all([listLocalUsers(), listLocalMemberships()]);
+  const all = new Set<string>();
+
+  for (const user of users) {
+    if (canReceiveReviewQueue(user.role, queue, isAdminUser(user))) {
+      all.add(user.id);
+    }
   }
+
+  for (const membership of memberships) {
+    if (canReceiveReviewQueue(membership.role, queue)) {
+      all.add(membership.userId);
+    }
+  }
+
   return Array.from(all);
 }
 
@@ -408,7 +395,7 @@ async function resolveCompanySlugForIntegration(
 }
 
 export async function notifySuporteCreated(suporte: SuporteRecord) {
-  const recipients = Array.from(new Set([...(await resolveAdminUserIds()), ...(await resolveItDevUserIds())]));
+  const recipients = Array.from(new Set([...(await resolveAdminUserIds()), ...(await resolveTechnicalSupportUserIds())]));
   if (!recipients.length) return;
   const requester = suporte.createdByName || suporte.createdByEmail || "Usuario";
   const companyLabel = suporte.companySlug ? ` (${suporte.companySlug})` : "";
@@ -468,8 +455,8 @@ export async function notifySuporteCommentAdded(input: {
     recipients.add(input.suporte.assignedToUserId);
   }
   if (!input.suporte.assignedToUserId && input.suporte.createdBy === input.actorId) {
-    const itDevs = await resolveItDevUserIds();
-    itDevs.filter((id) => id !== input.actorId).forEach((id) => recipients.add(id));
+    const supportUsers = await resolveTechnicalSupportUserIds();
+    supportUsers.filter((id) => id !== input.actorId).forEach((id) => recipients.add(id));
   }
   if (!recipients.size) return;
   const authorLabel = input.actorName || "Novo comentario";
@@ -541,7 +528,7 @@ export async function notifyAccessRequestComment(input: {
 export async function notifyAccessRequestCreated(input: {
   requestId: string;
   requesterName: string;
-  profileType: "testing_company_user" | "company_user" | "testing_company_lead" | "technical_support";
+  profileType: RequestProfileType;
   reviewQueue: ReviewQueue;
 }) {
   const reviewerIds = await resolveRequestReviewerIds(input.reviewQueue);
@@ -560,7 +547,7 @@ export async function notifyAccessRequestAccepted(input: {
   requestId: string;
   requesterName: string;
   approverName: string;
-  profileType: "testing_company_user" | "company_user" | "testing_company_lead" | "technical_support";
+  profileType: RequestProfileType;
   reviewQueue: ReviewQueue;
 }) {
   const reviewerIds = await resolveRequestReviewerIds(input.reviewQueue);
@@ -579,7 +566,7 @@ export async function notifyAccessRequestRejected(input: {
   requestId: string;
   requesterName: string;
   rejectorName: string;
-  profileType: "testing_company_user" | "company_user" | "testing_company_lead" | "technical_support";
+  profileType: RequestProfileType;
   reviewQueue: ReviewQueue;
   reason?: string | null;
 }) {

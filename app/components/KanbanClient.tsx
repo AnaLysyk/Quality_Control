@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
+import { TcButton } from "@/components/theme/TcPrimitives";
 
 type Status = "PASS" | "FAIL" | "BLOCKED" | "NOT_RUN";
 
@@ -350,7 +351,7 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
   );
 
   return (
-    <div className="w-full p-4">
+    <div className="w-full p-4 text-text">
 
       <input
         ref={fileInputRef}
@@ -386,26 +387,24 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
         </h2>
 
         <div className="flex flex-wrap gap-2">
-          <button
-            className="px-3 py-1 bg-indigo-600 text-white rounded disabled:opacity-50"
-            onClick={() => loadCards()}
-            disabled={loading || importing}
-          >
+          <TcButton className="px-3 py-1 text-sm disabled:opacity-50" onClick={() => loadCards()} disabled={loading || importing}>
             Refresh
-          </button>
+          </TcButton>
 
-          <button
+          <TcButton
             type="button"
-            className="px-3 py-1 border rounded bg-white disabled:opacity-50"
+            variant="secondary"
+            className="px-3 py-1 text-sm disabled:opacity-50"
             disabled={loading || importing}
             onClick={() => fileInputRef.current?.click()}
           >
             {importing ? "Importando…" : "Importar (CSV/JSON)"}
-          </button>
+          </TcButton>
 
-          <button
+          <TcButton
             type="button"
-            className="px-3 py-1 border rounded bg-white disabled:opacity-50"
+            variant="secondary"
+            className="px-3 py-1 text-sm disabled:opacity-50"
             disabled={loading || importing}
             onClick={async () => {
               try {
@@ -419,11 +418,12 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
             }}
           >
             Exportar CSV
-          </button>
+          </TcButton>
 
-          <button
+          <TcButton
             type="button"
-            className="px-3 py-1 border rounded bg-white disabled:opacity-50"
+            variant="secondary"
+            className="px-3 py-1 text-sm disabled:opacity-50"
             disabled={loading || importing}
             onClick={async () => {
               try {
@@ -437,19 +437,19 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
             }}
           >
             Exportar JSON
-          </button>
+          </TcButton>
         </div>
       </div>
 
-      {error && <div className="mb-4 text-red-600 text-sm">{error}</div>}
+      {error && <div className="mb-4 text-sm text-danger">{error}</div>}
 
       {editable && (
         <form className="mb-6 flex flex-wrap gap-3 items-end" onSubmit={handleCreate}>
           <div className="flex-1 min-w-50">
-            <label className="block text-sm text-gray-700" htmlFor="new-title">Título</label>
+            <label className="block text-sm text-muted" htmlFor="new-title">Título</label>
             <input
               id="new-title"
-              className="w-full px-3 py-2 border rounded bg-white"
+              className="tc-input w-full px-3 py-2"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="Título do case"
@@ -457,10 +457,10 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
             />
           </div>
           <div className="min-w-35 flex-1 sm:flex-none sm:w-32">
-            <label className="block text-sm text-gray-700" htmlFor="new-status">Status</label>
+            <label className="block text-sm text-muted" htmlFor="new-status">Status</label>
             <select
               id="new-status"
-              className="w-full px-3 py-2 border rounded bg-white"
+              className="tc-select w-full px-3 py-2"
               value={newStatus}
               onChange={(e) => setNewStatus(e.target.value as Status)}
             >
@@ -472,39 +472,39 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
             </select>
           </div>
           <div className="min-w-30 flex-1 sm:flex-none sm:w-28">
-            <label className="block text-sm text-gray-700" htmlFor="new-case-id">Case ID</label>
+            <label className="block text-sm text-muted" htmlFor="new-case-id">Case ID</label>
             <input
               id="new-case-id"
               type="number"
-              className="w-full px-3 py-2 border rounded bg-white"
+              className="tc-input w-full px-3 py-2"
               value={newCaseId ?? ""}
               onChange={(e) => setNewCaseId(e.target.value ? Number(e.target.value) : undefined)}
               placeholder="opcional"
             />
           </div>
           <div className="min-w-40 flex-1 sm:flex-none sm:w-40">
-            <label className="block text-sm text-gray-700" htmlFor="new-bug">Bug</label>
+            <label className="block text-sm text-muted" htmlFor="new-bug">Bug</label>
             <input
               id="new-bug"
-              className="w-full px-3 py-2 border rounded bg-white"
+              className="tc-input w-full px-3 py-2"
               value={newBug}
               onChange={(e) => setNewBug(e.target.value)}
               placeholder="opcional"
             />
           </div>
           <div className="min-w-40 flex-1 sm:flex-none sm:w-40">
-            <label className="block text-sm text-gray-700" htmlFor="new-link">Link</label>
+            <label className="block text-sm text-muted" htmlFor="new-link">Link</label>
             <input
               id="new-link"
-              className="w-full px-3 py-2 border rounded bg-white"
+              className="tc-input w-full px-3 py-2"
               value={newLink}
               onChange={(e) => setNewLink(e.target.value)}
               placeholder="opcional"
             />
           </div>
-          <button type="submit" className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50" disabled={loading}>
+          <TcButton type="submit" className="w-full px-4 py-2 disabled:opacity-50 sm:w-auto" disabled={loading}>
             Criar
-          </button>
+          </TcButton>
         </form>
       )}
 
@@ -514,11 +514,11 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
             key={col.status}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, col.status)}
-            className="min-h-55 bg-white p-3 rounded border border-gray-200 shadow-sm"
+            className="tc-section min-h-55 rounded p-3"
           >
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-medium text-[#0b1a3c]">{col.title}</h3>
-              <span className="text-sm text-gray-500">{col.items.length}</span>
+              <h3 className="font-medium text-text">{col.title}</h3>
+              <span className="text-sm text-muted">{col.items.length}</span>
             </div>
             <div className="space-y-2">
               {col.items.map((card) => (
@@ -526,18 +526,18 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
                   key={card.id}
                   draggable={editable}
                   onDragStart={(e) => editable && handleDragStart(e, card.id)}
-                  className="bg-white p-3 rounded border border-gray-200 shadow-xs flex flex-col gap-2"
+                  className="tc-section rounded p-3 shadow-none flex flex-col gap-2"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <div className="text-sm font-semibold text-[#0b1a3c]">{card.title ?? "—"}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-sm font-semibold text-text">{card.title ?? "—"}</div>
+                      <div className="text-xs text-muted">
                         case: {card.case_id ?? "-"} • created: {card.created_at ? new Date(card.created_at).toLocaleString() : "-"}
                       </div>
-                      {card.bug && <div className="text-xs text-red-600">Bug: {card.bug}</div>}
+                      {card.bug && <div className="text-xs text-danger">Bug: {card.bug}</div>}
                       {card.link && (
                         <div className="text-xs">
-                          <a className="text-indigo-600" href={card.link} target="_blank" rel="noreferrer">
+                          <a className="text-accent" href={card.link} target="_blank" rel="noreferrer">
                             Link
                           </a>
                         </div>
@@ -545,17 +545,17 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
                     </div>
                     {editable && (
                       <div className="flex flex-col items-end gap-2 text-xs">
-                        <button className="text-blue-600" onClick={() => startEdit(card)}>
+                        <button className="text-primary" onClick={() => startEdit(card)}>
                           Editar
                         </button>
-                        <button className="text-red-600" onClick={() => handleDelete(card.id)} disabled={!!busyIds[card.id]}>
+                        <button className="text-danger" onClick={() => handleDelete(card.id)} disabled={!!busyIds[card.id]}>
                           Deletar
                         </button>
                         <div className="flex flex-wrap gap-1">
                           {STATUSES.map((st) => (
                             <button
                               key={st}
-                              className="px-2 py-1 border rounded text-[11px] text-gray-600 hover:border-indigo-500"
+                              className="px-2 py-1 rounded border border-border text-[11px] text-muted hover:border-accent"
                               onClick={() => moveCard(card.id, st)}
                               disabled={!!busyIds[card.id]}
                             >
@@ -568,44 +568,44 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
                   </div>
                 </div>
               ))}
-              {col.items.length === 0 && <div className="text-xs text-gray-400 italic">Sem cards</div>}
+              {col.items.length === 0 && <div className="text-xs text-muted italic">Sem cards</div>}
             </div>
           </div>
         ))}
       </div>
 
-      {loading && <div className="mt-4 text-sm text-gray-500">Carregando...</div>}
+      {loading && <div className="mt-4 text-sm text-muted">Carregando...</div>}
 
       {editingId !== null && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-6">
-          <div className="my-auto w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto bg-white p-4 rounded shadow space-y-3">
+          <div className="my-auto w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto tc-section rounded p-4 space-y-3">
             <h4 className="text-lg font-medium">Editar card</h4>
             <div className="space-y-2">
               <div>
-                <label className="block text-sm text-gray-700" htmlFor="edit-title">Título</label>
+                <label className="block text-sm text-muted" htmlFor="edit-title">Título</label>
                 <input
                   id="edit-title"
-                  className="w-full px-3 py-2 border rounded bg-white"
+                  className="tc-input w-full px-3 py-2"
                   value={editingTitle}
                   onChange={(e) => setEditingTitle(e.target.value)}
                   placeholder="Título do card"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-700" htmlFor="edit-bug">Bug</label>
+                <label className="block text-sm text-muted" htmlFor="edit-bug">Bug</label>
                 <input
                   id="edit-bug"
-                  className="w-full px-3 py-2 border rounded bg-white"
+                  className="tc-input w-full px-3 py-2"
                   value={editingBug}
                   onChange={(e) => setEditingBug(e.target.value)}
                   placeholder="Bug"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-700" htmlFor="edit-link">Link</label>
+                <label className="block text-sm text-muted" htmlFor="edit-link">Link</label>
                 <input
                   id="edit-link"
-                  className="w-full px-3 py-2 border rounded bg-white"
+                  className="tc-input w-full px-3 py-2"
                   value={editingLink}
                   onChange={(e) => setEditingLink(e.target.value)}
                   placeholder="Link ou evidência"
@@ -613,12 +613,12 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
               </div>
             </div>
             <div className="mt-4 flex justify-end gap-2">
-              <button className="px-3 py-1 border rounded" onClick={() => setEditingId(null)}>
+              <TcButton variant="secondary" className="px-3 py-1 rounded" onClick={() => setEditingId(null)}>
                 Cancelar
-              </button>
-              <button className="px-3 py-1 bg-indigo-600 text-white rounded" onClick={() => saveEdit()} disabled={!!(editingId && busyIds[editingId])}>
+              </TcButton>
+              <TcButton className="px-3 py-1 rounded" onClick={() => saveEdit()} disabled={!!(editingId && busyIds[editingId])}>
                 Salvar
-              </button>
+              </TcButton>
             </div>
           </div>
         </div>

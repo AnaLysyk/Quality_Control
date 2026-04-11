@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { TcButton, TcCard, TcInput, TcTextarea } from "@/components/theme/TcPrimitives";
 
 type ManualRelease = {
   id: string;
@@ -56,39 +57,41 @@ export default function ReleaseManualList({ companyId }: { companyId: string }) 
   }, [fetchReleases]);
 
   return (
-    <div className="max-w-xl mx-auto p-4">
-      <h2 className="text-xl font-bold mb-4">Releases Manuais</h2>
+    <div className="mx-auto max-w-xl p-4 text-text">
+      <h2 className="mb-4 text-xl font-bold">Releases Manuais</h2>
       <form onSubmit={handleSubmit} className="mb-6 space-y-2">
-        <input
-          className="border rounded px-2 py-1 w-full"
+        <TcInput
+          className="w-full"
           placeholder="Titulo"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
         />
-        <textarea
-          className="border rounded px-2 py-1 w-full"
+        <TcTextarea
+          className="w-full"
           placeholder="Descricao"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
-        <button
+        <TcButton
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          className="px-4 py-2 disabled:opacity-50"
           disabled={loading || !title}
         >
           {loading ? "Salvando..." : "Adicionar Release"}
-        </button>
+        </TcButton>
       </form>
-      {error && <div className="text-red-600 mb-2">{error}</div>}
+      {error && <div className="mb-2 text-sm text-danger">{error}</div>}
       <ul className="space-y-2">
         {releases.map((r) => (
-          <li key={r.id} className="border rounded p-2">
-            <div className="font-semibold">{r.title ?? "Sem titulo"}</div>
-            <div className="text-sm text-gray-600">{r.description ?? ""}</div>
-            <div className="text-xs text-gray-400">
-              Status: {r.status ?? "N/A"} | Criado em: {r.createdAt ? new Date(r.createdAt).toLocaleString() : "-"}
-            </div>
+          <li key={r.id} className="list-none">
+            <TcCard className="rounded-xl p-3">
+              <div className="font-semibold">{r.title ?? "Sem titulo"}</div>
+              <div className="text-sm text-muted">{r.description ?? ""}</div>
+              <div className="text-xs text-muted">
+                Status: {r.status ?? "N/A"} | Criado em: {r.createdAt ? new Date(r.createdAt).toLocaleString() : "-"}
+              </div>
+            </TcCard>
           </li>
         ))}
       </ul>

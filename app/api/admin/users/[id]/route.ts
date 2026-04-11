@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { canDeleteUserByProfile, isGlobalDeveloperAccess } from "@/lib/adminUserDeleteAccess";
+import { canDeleteUserByProfile, canManageInstitutionalProfiles } from "@/lib/adminUserDeleteAccess";
 import { getAdminUserItem } from "@/lib/adminUsers";
 import {
+  editableProfileNeedsCompany,
   isGlobalPrivilegeProfileRole,
+  resolveEditableProfileUserState,
   resolveEditableProfileRole,
   toStoredEditableUserRole,
   type EditableProfileRole,
@@ -46,10 +48,6 @@ function membershipRoleFromPermissionRole(role: PermissionRole) {
   return toStoredEditableUserRole(role);
 }
 
-function permissionRoleNeedsCompany(role: PermissionRole) {
-  return role === "user" || role === "leader_tc" || role === "technical_support";
-}
-
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(_req);
   if (!admin) {
@@ -70,7 +68,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
   }
   const access = await getAccessContext(req);
-  const canManagePrivilegedProfiles = isGlobalDeveloperAccess(access);
+  const canManageProfiles = canManageInstitutionalProfiles(access);
 
   const { id } = await params;
   const body = await req.json().catch(() => null);
@@ -113,8 +111,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
 
-  if ((permissionRole === "admin" || permissionRole === "dev" || wantsGlobalAdmin) && !canManagePrivilegedProfiles) {
-    return NextResponse.json({ error: "Somente Global pode atribuir perfis privilegiados" }, { status: 403 });
+  if (wantsGlobalAdmin && !canManageProfiles) {
+    return NextResponse.json({ error: "Somente Lider TC pode atribuir perfis privilegiados" }, { status: 403 });
   }
 
   const selectedCompany = clientId ? await findLocalCompanyById(clientId) : null;
@@ -122,18 +120,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Empresa nao encontrada" }, { status: 404 });
   }
 
-  const existingLinks = permissionRole ? await listLocalLinksForUser(id) : [];
-  const targetCompanyIds = permissionRole
-    ? permissionRoleNeedsCompany(permissionRole)
+  const existingLinks = effectiveProfileRole ? await listLocalLinksForUser(id) : [];
+  const targetCompanyIds = effectiveProfileRole
+    ? editableProfileNeedsCompany(effectiveProfileRole)
       ? Array.from(
           new Set(
             [...existingLinks.map((link) => link.companyId).filter(Boolean), ...(clientId ? [clientId] : [])].filter(Boolean),
           ),
         )
-      : []
+    : []
     : [];
 
-  if (permissionRole && permissionRoleNeedsCompany(permissionRole) && targetCompanyIds.length === 0) {
+  if (effectiveProfileRole && editableProfileNeedsCompany(effectiveProfileRole) && targetCompanyIds.length === 0) {
     return NextResponse.json(
       { error: "Esse perfil precisa de pelo menos uma empresa vinculada" },
       { status: 400 },
@@ -164,8 +162,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(rawRole || permissionRole
         ? { globalRole: wantsGlobalAdmin ? "global_admin" : null, is_global_admin: wantsGlobalAdmin }
         : {}),
-      ...(rawRole || permissionRole ? { role: wantsGlobalAdmin && role !== "it_dev" ? "user" : role } : {}),
-      ...(permissionRole && !permissionRoleNeedsCompany(permissionRole)
+      ...(rawRole || permissionRole ? { role } : {}),
+      ...(effectiveProfileRole ? resolveEditableProfileUserState(effectiveProfileRole, clientId) : {}),
+      ...(effectiveProfileRole && !editableProfileNeedsCompany(effectiveProfileRole)
         ? { default_company_slug: null }
         : selectedCompany
           ? { default_company_slug: selectedCompany.slug }
@@ -186,11 +185,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  if (permissionRole && !permissionRoleNeedsCompany(permissionRole) && existingLinks.length > 0) {
+  if (effectiveProfileRole && !editableProfileNeedsCompany(effectiveProfileRole) && existingLinks.length > 0) {
     for (const link of existingLinks) {
       await removeLocalLink(id, link.companyId);
     }
-  } else if (permissionRole && permissionRoleNeedsCompany(permissionRole) && targetCompanyIds.length > 0) {
+  } else if (effectiveProfileRole && editableProfileNeedsCompany(effectiveProfileRole) && targetCompanyIds.length > 0) {
     const nextCapabilities = capabilities ?? [];
     try {
       for (const companyId of targetCompanyIds) {

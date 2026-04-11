@@ -50,7 +50,7 @@ describe("supportAccess", () => {
     expect(canManageSupportWorkflow(user)).toBe(true);
   });
 
-  it("mantem it dev no escopo proprio do suporte", () => {
+  it("normaliza it_dev legado para suporte tecnico global", () => {
     const user = {
       role: "it_dev",
       permissionRole: "dev",
@@ -61,8 +61,8 @@ describe("supportAccess", () => {
     expect(canViewSupportBoard(user)).toBe(true);
     expect(canCreateSupportTickets(user)).toBe(true);
     expect(canCommentSupportTickets(user)).toBe(true);
-    expect(canAccessGlobalSupportScope(user)).toBe(false);
-    expect(canManageSupportWorkflow(user)).toBe(false);
+    expect(canAccessGlobalSupportScope(user)).toBe(true);
+    expect(canManageSupportWorkflow(user)).toBe(true);
   });
 
   it("mantem admin fora do fluxo global de suporte", () => {

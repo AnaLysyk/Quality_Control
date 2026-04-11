@@ -1,12 +1,15 @@
 import type { AccessType } from "@/lib/accessRequestMessage";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 export type RequestProfileType =
+  | "empresa"
   | "testing_company_user"
   | "company_user"
-  | "testing_company_lead"
+  | "leader_tc"
   | "technical_support";
 
 export type RequestProfileTypeLabel =
+  | "Empresa"
   | "Usuario TC"
   | "Usuario da empresa"
   | "Lider TC"
@@ -19,9 +22,10 @@ function normalizeText(value: string) {
 }
 
 export function toRequestProfileTypeLabel(profileType: RequestProfileType): RequestProfileTypeLabel {
+  if (profileType === "empresa") return "Empresa";
   if (profileType === "testing_company_user") return "Usuario TC";
   if (profileType === "company_user") return "Usuario da empresa";
-  if (profileType === "testing_company_lead") return "Lider TC";
+  if (profileType === "leader_tc") return "Lider TC";
   return "Suporte Tecnico";
 }
 
@@ -34,6 +38,7 @@ export function normalizeRequestProfileType(value: string | null | undefined): R
     normalized === "usuario testing company" ||
     normalized === "testing company user" ||
     normalized === "tc_user" ||
+    normalized === "tc user" ||
     normalized === "testing_company_user"
   ) {
     return "testing_company_user";
@@ -41,11 +46,20 @@ export function normalizeRequestProfileType(value: string | null | undefined): R
 
   if (
     normalized === "empresa" ||
+    normalized === "company" ||
+    normalized === "company_admin" ||
+    normalized === "client_admin"
+  ) {
+    return "empresa";
+  }
+
+  if (
     normalized === "usuario empresa" ||
     normalized === "usuario da empresa" ||
+    normalized === "empresa_user" ||
     normalized === "company user" ||
     normalized === "company_user" ||
-    normalized === "company"
+    normalized === "client_user"
   ) {
     return "company_user";
   }
@@ -55,10 +69,11 @@ export function normalizeRequestProfileType(value: string | null | undefined): R
     normalized === "admin do sistema" ||
     normalized === "usuario lider tc" ||
     normalized === "lider tc" ||
+    normalized === "leader_tc" ||
     normalized === "testing_company_lead" ||
     normalized === "tc_lead"
   ) {
-    return "testing_company_lead";
+    return "leader_tc";
   }
 
   if (
@@ -75,20 +90,22 @@ export function normalizeRequestProfileType(value: string | null | undefined): R
 }
 
 export function toInternalAccessType(profileType: RequestProfileType): AccessType {
-  if (profileType === "testing_company_lead") return "admin";
-  if (profileType === "company_user") return "company";
+  if (profileType === "leader_tc") return "admin";
+  if (profileType === "empresa" || profileType === "company_user") return "company";
   if (profileType === "technical_support") return "global";
   return "user";
 }
 
 export function requestProfileTypeNeedsCompany(profileType: RequestProfileType) {
+  // This helper means "requires selecting an existing company". Company/company_user requests can carry company profile data.
   return profileType === "testing_company_user";
 }
 
 export const requiresCompanyForProfileType = requestProfileTypeNeedsCompany;
 
 export function resolveReviewQueue(profileType: RequestProfileType): ReviewQueue {
-  return profileType === "technical_support" ? "global_only" : "admin_and_global";
+  void profileType;
+  return "admin_and_global";
 }
 
 export function canAdminReviewQueue(queue: ReviewQueue) {
@@ -109,15 +126,14 @@ export function deriveProfileTypeFromAccount(input: {
   globalRole?: string | null;
   isGlobalAdmin?: boolean;
 }) {
-  const role = normalizeText(input.role ?? "");
-  const globalRole = normalizeText(input.globalRole ?? "");
-  if (role === "it_dev" || role === "itdev" || role === "developer" || role === "dev") {
-    return "technical_support" as const;
+  const role = normalizeLegacyRole(input.role);
+  const globalRole = normalizeLegacyRole(input.globalRole);
+  if (role === SYSTEM_ROLES.TECHNICAL_SUPPORT) return "technical_support" as const;
+  if (input.isGlobalAdmin === true || globalRole === SYSTEM_ROLES.LEADER_TC || role === SYSTEM_ROLES.LEADER_TC) {
+    return "leader_tc" as const;
   }
-  if (input.isGlobalAdmin === true || globalRole === "global_admin" || role === "admin") {
-    return "testing_company_lead" as const;
-  }
-  if (role === "company" || role === "company_admin" || role === "client_admin") {
+  if (role === SYSTEM_ROLES.EMPRESA) return "empresa" as const;
+  if (role === SYSTEM_ROLES.COMPANY_USER) {
     return "company_user" as const;
   }
   return "testing_company_user" as const;

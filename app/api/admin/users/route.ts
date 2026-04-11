@@ -7,7 +7,9 @@ import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAccessContext } from "@/lib/auth/session";
 import { getAdminUserItem, listAdminUserItems } from "@/lib/adminUsers";
 import {
+  editableProfileNeedsCompany,
   isGlobalPrivilegeProfileRole,
+  resolveEditableProfileUserState,
   resolveEditableProfileRole,
   toStoredEditableUserRole,
 } from "@/lib/editableProfileRoles";
@@ -21,6 +23,7 @@ import {
   updateLocalUser,
   upsertLocalLink,
 } from "@/lib/auth/localStore";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -64,18 +67,12 @@ function buildUniqueLogin(
   return `${base}.${counter}`;
 }
 
-function roleNeedsCompany(role: string, wantsGlobalAdmin: boolean) {
-  if (wantsGlobalAdmin) return false;
-  return role === "viewer" || role === "leader_tc" || role === "technical_support";
-}
-
-function isGlobalDeveloperAccess(access: Awaited<ReturnType<typeof getAccessContext>> | null) {
+function canManageInstitutionalProfiles(access: Awaited<ReturnType<typeof getAccessContext>> | null) {
   if (!access) return false;
-  // global_admin users (is_global_admin flag) can manage all privileged profiles
-  if (access.isGlobalAdmin === true) return true;
-  const role = (access?.role ?? "").toLowerCase();
-  const companyRole = (access?.companyRole ?? "").toLowerCase();
-  return role === "it_dev" || companyRole === "it_dev" || role === "global_admin" || role === "admin";
+  const role = normalizeLegacyRole(access.role);
+  const companyRole = normalizeLegacyRole(access.companyRole);
+  if (role === SYSTEM_ROLES.TECHNICAL_SUPPORT || companyRole === SYSTEM_ROLES.TECHNICAL_SUPPORT) return false;
+  return access.isGlobalAdmin === true || role === SYSTEM_ROLES.LEADER_TC || companyRole === SYSTEM_ROLES.LEADER_TC;
 }
 
 export async function GET(req: NextRequest) {
@@ -84,7 +81,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
   }
 
-  const isGlobalAdmin = access.isGlobalAdmin === true || (access.role ?? "").toLowerCase() === "admin";
+  const isGlobalAdmin = access.isGlobalAdmin === true || normalizeLegacyRole(access.role) === SYSTEM_ROLES.LEADER_TC;
   const { searchParams } = new URL(req.url);
   const clientId = searchParams.get("client_id");
 
@@ -112,7 +109,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
   }
   const access = await getAccessContext(req);
-  const canManagePrivilegedProfiles = isGlobalDeveloperAccess(access);
+  const canManageProfiles = canManageInstitutionalProfiles(access);
 
   const body = await req.json().catch(() => null);
   const fullName =
@@ -131,7 +128,7 @@ export async function POST(req: NextRequest) {
   const linkedinUrl = typeof body?.linkedin_url === "string" ? body.linkedin_url.trim() || null : null;
   const avatarUrl = typeof body?.avatar_url === "string" ? body.avatar_url.trim() || null : null;
   const rawRole = typeof body?.role === "string" ? body.role : "";
-  const profileRole = resolveEditableProfileRole(rawRole) ?? "user";
+  const profileRole = resolveEditableProfileRole(rawRole) ?? "testing_company_user";
   const wantsGlobalAdmin = isGlobalPrivilegeProfileRole(profileRole);
   const role = toStoredEditableUserRole(profileRole);
   const capabilities = Array.isArray(body?.capabilities)
@@ -144,8 +141,8 @@ export async function POST(req: NextRequest) {
     console.error(`[ADMIN-USERS][POST] missing-fields admin=${admin?.email ?? "-"} name='${name}' email='${email}'`);
     return NextResponse.json({ error: "Nome e e-mail sao obrigatorios" }, { status: 400 });
   }
-  if (wantsGlobalAdmin && !canManagePrivilegedProfiles) {
-    return NextResponse.json({ error: "Somente Global pode criar perfis privilegiados" }, { status: 403 });
+  if (wantsGlobalAdmin && !canManageProfiles) {
+    return NextResponse.json({ error: "Somente Lider TC pode criar perfis privilegiados" }, { status: 403 });
   }
   if (clientId) {
     const selectedCompany = await findLocalCompanyById(clientId);
@@ -153,12 +150,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Empresa nao encontrada" }, { status: 404 });
     }
   }
-  if (roleNeedsCompany(role, wantsGlobalAdmin) && !clientId) {
+  if (editableProfileNeedsCompany(profileRole) && !clientId) {
     console.error(`[ADMIN-USERS][POST] missing-client admin=${admin?.email ?? "-"} clientId=${clientId}`);
     return NextResponse.json({ error: "Empresa obrigatoria para este perfil" }, { status: 400 });
   }
   if (wantsGlobalAdmin && (!password || password.trim().length < 8)) {
-    return NextResponse.json({ error: "Senha obrigatoria com pelo menos 8 caracteres para criar Global" }, { status: 400 });
+    return NextResponse.json({ error: "Senha obrigatoria com pelo menos 8 caracteres para criar Lider TC" }, { status: 400 });
   }
 
   const users = await listLocalUsers();
@@ -188,9 +185,10 @@ export async function POST(req: NextRequest) {
       user: login,
       password_hash: passwordHash,
       active: true,
-      role: wantsGlobalAdmin && role !== "it_dev" ? "user" : role,
+      role,
       globalRole: wantsGlobalAdmin ? "global_admin" : null,
       is_global_admin: wantsGlobalAdmin,
+      ...resolveEditableProfileUserState(profileRole, clientId),
       job_title: jobTitle || null,
       linkedin_url: linkedinUrl || null,
       avatar_url: avatarUrl || null,
@@ -208,7 +206,7 @@ export async function POST(req: NextRequest) {
     throw err;
   }
 
-  if (clientId && !wantsGlobalAdmin) {
+  if (clientId && editableProfileNeedsCompany(profileRole)) {
     try {
       await upsertLocalLink({ userId: user.id, companyId: clientId, role, capabilities });
     } catch (error) {
@@ -240,7 +238,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
   }
   const access = await getAccessContext(req);
-  const canManagePrivilegedProfiles = isGlobalDeveloperAccess(access);
+  const canManageProfiles = canManageInstitutionalProfiles(access);
 
   const body = await req.json().catch(() => null);
   const userId = typeof body?.id === "string" ? body.id : "";
@@ -263,7 +261,7 @@ export async function PATCH(req: NextRequest) {
       : null
     : undefined;
   const rawRole = typeof body?.role === "string" ? body.role : "";
-  const profileRole = resolveEditableProfileRole(rawRole) ?? "user";
+  const profileRole = resolveEditableProfileRole(rawRole) ?? "testing_company_user";
   const wantsGlobalAdmin = isGlobalPrivilegeProfileRole(profileRole);
   const role = toStoredEditableUserRole(profileRole);
   const fullName =
@@ -278,15 +276,15 @@ export async function PATCH(req: NextRequest) {
     : null;
   const selectedCompany = clientId ? await findLocalCompanyById(clientId) : null;
 
-  if (wantsGlobalAdmin && !canManagePrivilegedProfiles) {
-    return NextResponse.json({ error: "Somente Global pode promover perfis privilegiados" }, { status: 403 });
+  if (wantsGlobalAdmin && !canManageProfiles) {
+    return NextResponse.json({ error: "Somente Lider TC pode promover perfis privilegiados" }, { status: 403 });
   }
   if (clientId && !selectedCompany) {
     return NextResponse.json({ error: "Empresa nao encontrada" }, { status: 404 });
   }
 
   const existingLinks = rawRole ? await listLocalLinksForUser(userId) : [];
-  if (rawRole && roleNeedsCompany(role, wantsGlobalAdmin) && !clientId && existingLinks.length === 0) {
+  if (rawRole && editableProfileNeedsCompany(profileRole) && !clientId && existingLinks.length === 0) {
     return NextResponse.json({ error: "Empresa obrigatoria para este perfil" }, { status: 400 });
   }
 
@@ -313,14 +311,13 @@ export async function PATCH(req: NextRequest) {
       ...(phone !== undefined ? { phone } : {}),
       ...(rawRole
         ? {
-            role: wantsGlobalAdmin && role !== "it_dev" ? "user" : role,
+            role,
             globalRole: wantsGlobalAdmin ? "global_admin" : null,
             is_global_admin: wantsGlobalAdmin,
-            ...(wantsGlobalAdmin
-              ? { default_company_slug: null }
-              : selectedCompany
-                ? { default_company_slug: selectedCompany.slug }
-                : {}),
+            ...resolveEditableProfileUserState(profileRole, clientId),
+            ...(editableProfileNeedsCompany(profileRole) && selectedCompany
+              ? { default_company_slug: selectedCompany.slug }
+              : { default_company_slug: null }),
           }
         : {}),
     });
@@ -339,11 +336,11 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
   }
 
-  if (rawRole && !roleNeedsCompany(role, wantsGlobalAdmin) && existingLinks.length > 0) {
+  if (rawRole && !editableProfileNeedsCompany(profileRole) && existingLinks.length > 0) {
     for (const link of existingLinks) {
       await removeLocalLink(userId, link.companyId);
     }
-  } else if (rawRole && roleNeedsCompany(role, wantsGlobalAdmin) && clientId) {
+  } else if (rawRole && editableProfileNeedsCompany(profileRole) && clientId) {
     try {
       await upsertLocalLink({ userId, companyId: clientId, role, capabilities });
     } catch (error) {

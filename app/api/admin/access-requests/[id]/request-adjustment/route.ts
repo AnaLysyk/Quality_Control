@@ -9,7 +9,7 @@ import {
   type AccessRequestAdjustmentRound,
 } from "@/lib/accessRequestMessage";
 import { prisma } from "@/lib/prismaClient";
-import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
 import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 

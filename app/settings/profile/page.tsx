@@ -861,7 +861,7 @@ export default function SettingsProfilePage() {
     Boolean(currentClientSlug) &&
     !institutionalCompanyContext &&
     (
-      scopePolicy.roleKey === "company" ||
+      scopePolicy.roleKey === "empresa" ||
       userOriginValue === "client_company" ||
       userScopeValue === "company_only"
     );

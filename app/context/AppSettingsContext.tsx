@@ -23,6 +23,7 @@ type SaveResult = { ok: boolean; error?: string };
 
 type AppSettingsContextValue = {
   theme: Theme;
+  resolvedTheme: ResolvedTheme;
   language: Language;
   loading: boolean;
   setTheme: (theme: Theme) => void;
@@ -117,9 +118,17 @@ function writeStoredSettings(key: string, settings: AppSettings) {
   }
 }
 
+function resolveThemePreference(theme: Theme): ResolvedTheme {
+  if (theme === "dark") return "dark";
+  if (theme === "light") return "light";
+  if (typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
+  return "light";
+}
+
 export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuthUser();
   const [settings, setSettings] = useState<AppSettings>(() => readInitialSettings());
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => resolveThemePreference(readInitialSettings().theme));
   const [loading, setLoading] = useState(true);
 
   const persistLocalSettings = useCallback(
@@ -250,9 +259,11 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement;
     const applyTheme = (useDark: boolean) => {
       const resolvedTheme = useDark ? "dark" : "light";
+      setResolvedTheme(resolvedTheme);
       root.classList.toggle("dark", useDark);
       root.classList.toggle("theme-light", !useDark);
       root.style.colorScheme = resolvedTheme;
+      root.dataset.theme = resolvedTheme;
       root.dataset.themeResolved = resolvedTheme;
       root.dataset.themePreference = settings.theme;
       persistThemeCookies(settings.theme, resolvedTheme);
@@ -281,6 +292,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       theme: settings.theme,
+      resolvedTheme,
       language: settings.language,
       loading,
       setTheme,
@@ -288,7 +300,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
       saveSettings,
       refreshSettings,
     }),
-    [settings.theme, settings.language, loading, setTheme, setLanguage, saveSettings, refreshSettings]
+    [settings.theme, resolvedTheme, settings.language, loading, setTheme, setLanguage, saveSettings, refreshSettings]
   );
 
   return <AppSettingsContext.Provider value={value}>{children}</AppSettingsContext.Provider>;

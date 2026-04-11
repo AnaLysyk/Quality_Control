@@ -26,7 +26,7 @@ jest.mock("../lib/redis", () => ({
 
 import { randomUUID } from "crypto";
 import { prisma } from "../lib/prismaClient";
-import { ROLE_DEFAULTS } from "../lib/permissions/roleDefaults";
+import { resolveRoleDefaults } from "../lib/permissions/roleDefaults";
 import { effectivePermissions } from "../lib/store/permissionsStore";
 import {
   hasPermissionAccess,
@@ -44,7 +44,7 @@ import {
 
 // ── Helper: retorna a matriz de permissões padrão para um perfil ───────────
 function perm(role: string): Record<string, string[]> {
-  return (ROLE_DEFAULTS as Record<string, Record<string, string[]>>)[role] ?? {};
+  return resolveRoleDefaults(role);
 }
 
 // ── Cleanup state ─────────────────────────────────────────────────────────────
@@ -67,7 +67,7 @@ afterAll(async () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("A) Perfil 'user' (viewer) — permissões bloqueadas", () => {
-  const p = perm("user");
+  const p = perm("testing_company_user");
 
   test("A1. releases: view/create/edit/delete todos bloqueados", () => {
     expect(hasPermissionAccess(p, "releases", "view")).toBe(false);
@@ -151,7 +151,7 @@ describe("A) Perfil 'user' (viewer) — permissões bloqueadas", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("B) Perfil 'company' (company_admin) — permissões bloqueadas", () => {
-  const p = perm("company");
+  const p = perm("empresa");
 
   test("B1. users: view/create/edit/delete todos bloqueados", () => {
     expect(hasPermissionAccess(p, "users", "view")).toBe(false);
@@ -245,7 +245,7 @@ describe("B) Perfil 'company' (company_admin) — permissões bloqueadas", () =>
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("C) Perfil 'support' — módulos ausentes verificados", () => {
-  const p = perm("support");
+  const p = perm("technical_support");
 
   test("C1. applications: view bloqueado (módulo ausente)", () => {
     expect(hasPermissionAccess(p, "applications", "view")).toBe(false);
@@ -304,6 +304,14 @@ describe("C) Perfil 'support' — módulos ausentes verificados", () => {
     expect(hasPermissionAccess(p, "tickets", "delete")).toBe(false);
     console.log("✅ C9. support: tickets/suporte com escopo correto");
   });
+
+  test("C10. support nao administra access_requests", () => {
+    expect(hasPermissionAccess(p, "access_requests", "view")).toBe(false);
+    expect(hasPermissionAccess(p, "access_requests", "comment")).toBe(false);
+    expect(hasPermissionAccess(p, "access_requests", "approve")).toBe(false);
+    expect(hasPermissionAccess(p, "access_requests", "reject")).toBe(false);
+    console.log("C10. support: access_requests bloqueado para revisao institucional");
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -311,18 +319,18 @@ describe("C) Perfil 'support' — módulos ausentes verificados", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("D) Overrides de permissão (deny/allow)", () => {
-  test("D1. effectivePermissions com deny remove ação disponível do admin", () => {
-    const override = { userId: "test", deny: { audit: ["export"] } };
-    const effective = effectivePermissions("admin", override);
-    const auditActions = Array.from(effective["audit"] ?? new Set());
-    expect(auditActions).not.toContain("export");
-    expect(auditActions).toContain("view"); // view deve continuar
-    console.log(`✅ D1. admin: audit.export removido via deny | restantes=${auditActions.join(",")}`);
+  test("D1. effectivePermissions com deny remove ação disponível do leader_tc", () => {
+    const override = { userId: "test", deny: { users: ["edit"] } };
+    const effective = effectivePermissions("leader_tc", override);
+    const userActions = Array.from(effective["users"] ?? new Set());
+    expect(userActions).not.toContain("edit");
+    expect(userActions).toContain("view"); // view deve continuar
+    console.log(`D1. leader_tc: users.edit removido via deny | restantes=${userActions.join(",")}`);
   });
 
   test("D2. effectivePermissions com allow adiciona ação ao 'user'", () => {
     const override = { userId: "test", allow: { releases: ["view"] } };
-    const effective = effectivePermissions("user", override);
+    const effective = effectivePermissions("testing_company_user", override);
     const releaseActions = Array.from(effective["releases"] ?? new Set());
     expect(releaseActions).toContain("view");
     console.log(`✅ D2. user: releases.view adicionado via allow`);
@@ -330,17 +338,17 @@ describe("D) Overrides de permissão (deny/allow)", () => {
 
   test("D3. deny não afeta outros módulos", () => {
     const override = { userId: "test", deny: { audit: ["view", "export"] } };
-    const effective = effectivePermissions("admin", override);
+    const effective = effectivePermissions("leader_tc", override);
     // applications não deve ser afetado
     const appActions = Array.from(effective["applications"] ?? new Set());
     expect(appActions).toContain("view");
     expect(appActions).toContain("create");
-    expect(appActions).toContain("delete");
+    expect(appActions).toContain("edit");
     console.log(`✅ D3. deny em audit não afeta applications`);
   });
 
   test("D4. applyPermissionOverride: deny remove, allow adiciona na mesma chamada", () => {
-    const baseDefaults = perm("company");
+    const baseDefaults = perm("empresa");
     const override = {
       allow: { releases: ["create"] },
       deny: { releases: ["view"] },
@@ -358,18 +366,18 @@ describe("D) Overrides de permissão (deny/allow)", () => {
       userId: "test",
       deny: { tickets: ["delete", "assign", "status"] },
     };
-    const effective = effectivePermissions("admin", override);
+    const effective = effectivePermissions("technical_support", override);
     const ticketActions = Array.from(effective["tickets"] ?? new Set());
     expect(ticketActions).not.toContain("delete");
     expect(ticketActions).not.toContain("assign");
     expect(ticketActions).not.toContain("status");
     expect(ticketActions).toContain("view"); // view permanece
     expect(ticketActions).toContain("create"); // create permanece
-    console.log(`✅ D5. admin: tickets.delete/assign/status negados | restantes=${ticketActions.join(",")}`);
+    console.log(`D5. technical_support: tickets.delete/assign/status negados | restantes=${ticketActions.join(",")}`);
   });
 
   test("D6. toVisibilityMap retorna false para módulos sem view", () => {
-    const userPerms = perm("user");
+    const userPerms = perm("testing_company_user");
     const visibility = toVisibilityMap(userPerms);
     expect(visibility["releases"]).toBe(false);
     expect(visibility["runs"]).toBe(false);
@@ -380,15 +388,15 @@ describe("D) Overrides de permissão (deny/allow)", () => {
   });
 
   test("D7. getTicketViewScope retorna 'own' para perfil user", () => {
-    const userPerms = perm("user");
+    const userPerms = perm("testing_company_user");
     expect(getTicketViewScope(userPerms)).toBe("own");
     console.log(`✅ D7. getTicketViewScope: user → 'own'`);
   });
 
-  test("D8. getTicketViewScope retorna 'all' para perfil admin", () => {
-    const adminPerms = perm("admin");
-    expect(getTicketViewScope(adminPerms)).toBe("all");
-    console.log(`✅ D8. getTicketViewScope: admin → 'all'`);
+  test("D8. getTicketViewScope retorna 'company' para suporte tecnico", () => {
+    const supportPerms = perm("technical_support");
+    expect(getTicketViewScope(supportPerms)).toBe("company");
+    console.log(`D8. getTicketViewScope: technical_support -> 'company'`);
   });
 });
 
@@ -397,53 +405,53 @@ describe("D) Overrides de permissão (deny/allow)", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("E) Mapeamento de role — resolvePermissionRoleForUser", () => {
-  test("E1. Usuário viewer (sem role especial) → permissionRole 'user'", () => {
+  test("E1. Usuário viewer legado → permissionRole 'testing_company_user'", () => {
     const user = { globalRole: null, is_global_admin: false, role: null };
     const links = [{ role: "viewer" }];
-    expect(resolvePermissionRoleForUser(user, links)).toBe("user");
-    console.log(`✅ E1. viewer → permissionRole='user'`);
+    expect(resolvePermissionRoleForUser(user, links)).toBe("testing_company_user");
+    console.log(`E1. viewer legado -> permissionRole='testing_company_user'`);
   });
 
-  test("E2. Membership company_admin → permissionRole 'company'", () => {
+  test("E2. Membership company_admin legado → permissionRole 'empresa'", () => {
     const user = { globalRole: null, is_global_admin: false, role: null };
     const links = [{ role: "company_admin" }];
-    expect(resolvePermissionRoleForUser(user, links)).toBe("company");
-    console.log(`✅ E2. company_admin → permissionRole='company'`);
+    expect(resolvePermissionRoleForUser(user, links)).toBe("empresa");
+    console.log(`E2. company_admin legado -> permissionRole='empresa'`);
   });
 
-  test("E3. Membership it_dev → permissionRole 'dev'", () => {
+  test("E3. Membership it_dev legado → permissionRole 'technical_support'", () => {
     const user = { globalRole: null, is_global_admin: false, role: null };
     const links = [{ role: "it_dev" }];
-    expect(resolvePermissionRoleForUser(user, links)).toBe("dev");
-    console.log(`✅ E3. it_dev membership → permissionRole='dev'`);
+    expect(resolvePermissionRoleForUser(user, links)).toBe("technical_support");
+    console.log(`E3. it_dev legado -> permissionRole='technical_support'`);
   });
 
-  test("E4. Usuário global_admin (is_global_admin=true) → permissionRole 'admin'", () => {
+  test("E4. Usuário global_admin legado → permissionRole 'leader_tc'", () => {
     const user = { globalRole: "global_admin" as const, is_global_admin: true, role: null };
     const links: Array<{ role: string }> = [];
-    expect(resolvePermissionRoleForUser(user, links)).toBe("admin");
-    console.log(`✅ E4. global_admin → permissionRole='admin'`);
+    expect(resolvePermissionRoleForUser(user, links)).toBe("leader_tc");
+    console.log(`E4. global_admin legado -> permissionRole='leader_tc'`);
   });
 
-  test("E5. Sem links e sem role → permissionRole 'user'", () => {
+  test("E5. Sem links e sem role → permissionRole 'testing_company_user'", () => {
     const user = { globalRole: null, is_global_admin: false, role: null };
     const links: Array<{ role: string }> = [];
-    expect(resolvePermissionRoleForUser(user, links)).toBe("user");
-    console.log(`✅ E5. sem links nem role → permissionRole='user'`);
+    expect(resolvePermissionRoleForUser(user, links)).toBe("testing_company_user");
+    console.log(`E5. sem links nem role -> permissionRole='testing_company_user'`);
   });
 
-  test("E6. it_dev tem precedência sobre company_admin (role mais forte)", () => {
+  test("E6. it_dev legado tem precedência sobre company_admin legado", () => {
     const user = { globalRole: null, is_global_admin: false, role: null };
     const links = [{ role: "company_admin" }, { role: "it_dev" }];
-    expect(resolvePermissionRoleForUser(user, links)).toBe("dev");
-    console.log(`✅ E6. it_dev > company_admin → permissionRole='dev'`);
+    expect(resolvePermissionRoleForUser(user, links)).toBe("technical_support");
+    console.log(`E6. it_dev legado > company_admin legado -> permissionRole='technical_support'`);
   });
 
-  test("E7. company_admin tem precedência sobre viewer", () => {
+  test("E7. company_admin legado tem precedência sobre viewer legado", () => {
     const user = { globalRole: null, is_global_admin: false, role: null };
     const links = [{ role: "viewer" }, { role: "company_admin" }];
-    expect(resolvePermissionRoleForUser(user, links)).toBe("company");
-    console.log(`✅ E7. company_admin > viewer → permissionRole='company'`);
+    expect(resolvePermissionRoleForUser(user, links)).toBe("empresa");
+    console.log(`E7. company_admin legado > viewer legado -> permissionRole='empresa'`);
   });
 });
 
@@ -485,7 +493,7 @@ describe("F) Integração DB — resolvePermissionAccessForUser", () => {
 
     const access = await resolvePermissionAccessForUser(user.id);
 
-    expect(access.roleKey).toBe("user");
+    expect(access.roleKey).toBe("testing_company_user");
     expect(hasPermissionAccess(access.permissions, "releases", "view")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "runs", "view")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "defects", "view")).toBe(false);
@@ -506,7 +514,7 @@ describe("F) Integração DB — resolvePermissionAccessForUser", () => {
 
     const access = await resolvePermissionAccessForUser(user.id);
 
-    expect(access.roleKey).toBe("company");
+    expect(access.roleKey).toBe("empresa");
     expect(hasPermissionAccess(access.permissions, "users", "view")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "permissions", "edit")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "audit", "view")).toBe(false);
@@ -518,7 +526,7 @@ describe("F) Integração DB — resolvePermissionAccessForUser", () => {
     console.log(`✅ F2. company_admin (DB) → roleKey=${access.roleKey} | users=${hasPermissionAccess(access.permissions,"users","view")} | releases.view=${hasPermissionAccess(access.permissions,"releases","view")}`);
   });
 
-  test("F3. Usuário it_dev → roleKey='dev', acesso total incluindo access_requests.approve", async () => {
+  test("F3. Usuário it_dev → roleKey='technical_support', sem access_requests.approve", async () => {
     const tag = uid();
     const user = await makeUser(`itdev-${tag}`, { role: "it_dev" });
     const company = await makeCompany(`dev-${tag}`);
@@ -526,14 +534,14 @@ describe("F) Integração DB — resolvePermissionAccessForUser", () => {
 
     const access = await resolvePermissionAccessForUser(user.id);
 
-    expect(access.roleKey).toBe("dev");
-    expect(hasPermissionAccess(access.permissions, "releases", "delete")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "runs", "export")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "defects", "delete")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "users", "view")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "audit", "export")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "access_requests", "approve")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "access_requests", "reject")).toBe(true);
+    expect(access.roleKey).toBe("technical_support");
+    expect(hasPermissionAccess(access.permissions, "releases", "delete")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "runs", "export")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "defects", "delete")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "users", "view")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "audit", "export")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "access_requests", "approve")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "access_requests", "reject")).toBe(false);
 
     console.log(`✅ F3. it_dev (DB) → roleKey=${access.roleKey} | audit.export=${hasPermissionAccess(access.permissions,"audit","export")} | access_requests.approve=${hasPermissionAccess(access.permissions,"access_requests","approve")}`);
   });
@@ -544,12 +552,12 @@ describe("F) Integração DB — resolvePermissionAccessForUser", () => {
 
     const access = await resolvePermissionAccessForUser(user.id);
 
-    expect(access.roleKey).toBe("admin");
+    expect(access.roleKey).toBe("leader_tc");
     expect(hasPermissionAccess(access.permissions, "permissions", "reset")).toBe(true);
     expect(hasPermissionAccess(access.permissions, "permissions", "clone")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "audit", "export")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "users", "delete")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "tickets", "view_all")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "audit", "export")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "users", "delete")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "tickets", "view_all")).toBe(false);
 
     console.log(`✅ F4. global_admin (DB) → roleKey=${access.roleKey} | permissions.reset=${hasPermissionAccess(access.permissions,"permissions","reset")}`);
   });

@@ -62,10 +62,13 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   const isGlobalAdmin =
     (user as { is_global_admin?: boolean; globalRole?: string | null }).is_global_admin === true ||
     (user as { globalRole?: string | null }).globalRole === "global_admin";
-  const hasDevRole =
+  const hasLegacyTechnicalSupportRole =
     normalizeLocalRole((user as { role?: string | null }).role ?? null) === "it_dev" ||
     links.some((link) => normalizeLocalRole(link.role ?? null) === "it_dev");
-  const hasFullCompanyAccess = isGlobalAdmin || hasDevRole;
+  const hasTechnicalSupportRole =
+    normalizeLocalRole((user as { role?: string | null }).role ?? null) === "technical_support" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "technical_support");
+  const hasFullCompanyAccess = isGlobalAdmin || hasLegacyTechnicalSupportRole || hasTechnicalSupportRole;
   const shouldBindCompanyContext = !hasFullCompanyAccess;
   const allowedCompanies = hasFullCompanyAccess
     ? companies

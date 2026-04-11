@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { readApiError } from "@/lib/apiEnvelope";
-import { normalizeEditableProfileRole } from "@/lib/editableProfileRoles";
+import { editableProfileNeedsCompany, normalizeEditableProfileRole } from "@/lib/editableProfileRoles";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -27,8 +27,9 @@ type Props = {
 };
 
 const ROLE_OPTIONS = [
-  { value: "client_admin", label: "Admin da empresa" },
-  { value: "client_user", label: "Usuario" },
+  { value: "empresa", label: "Admin da empresa" },
+  { value: "company_user", label: "Usuario da empresa" },
+  { value: "testing_company_user", label: "Usuario TC" },
   { value: "leader_tc", label: "Lider TC" },
   { value: "technical_support", label: "Suporte Tecnico" },
 ];
@@ -40,7 +41,7 @@ export function CreateUserModal({
   clients,
   onClose,
   onCreated,
-  initialRole = "admin",
+  initialRole = "testing_company_user",
   lockRole = false,
   showCompanyField = true,
   requireCompanySelection = false,
@@ -67,25 +68,15 @@ export function CreateUserModal({
   });
 
   const normalizedRole = useMemo(() => normalizeEditableProfileRole(role), [role]);
-  const roleOptions = useMemo(
-    () =>
-      ROLE_OPTIONS.map((option) => {
-        if (option.value !== "client_user") return option;
-        return {
-          ...option,
-          label: showCompanyField || !!localClientId ? "Usuario da empresa" : "Usuario TC",
-        };
-      }),
-    [localClientId, showCompanyField],
-  );
+  const roleOptions = useMemo(() => ROLE_OPTIONS, []);
   const requiresClient = useMemo(
     () =>
       showCompanyField &&
-      (requireCompanySelection || normalizedRole === "leader_tc" || normalizedRole === "technical_support"),
+      (requireCompanySelection || editableProfileNeedsCompany(normalizedRole)),
     [showCompanyField, requireCompanySelection, normalizedRole],
   );
   const requiresPassword = useMemo(
-    () => normalizedRole === "admin" || normalizedRole === "dev",
+    () => normalizedRole === "leader_tc",
     [normalizedRole],
   );
   const canSubmit = useMemo(
@@ -282,7 +273,7 @@ export function CreateUserModal({
                     placeholder="Minimo 8 caracteres"
                     required
                   />
-                  <span className="mt-1 block text-xs text-gray-500">Obrigatoria para criar perfil admin/global.</span>
+                  <span className="mt-1 block text-xs text-gray-500">Obrigatoria para criar Lider TC.</span>
                 </label>
               ) : null}
               <label className="block text-sm">

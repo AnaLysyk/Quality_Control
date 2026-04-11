@@ -17,7 +17,7 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { resolveAvatarEmoji } from "@/lib/avatarCatalog";
-import { normalizeEditableProfileRole, type EditableProfileRole } from "@/lib/editableProfileRoles";
+import { editableProfileNeedsCompany, normalizeEditableProfileRole, type EditableProfileRole } from "@/lib/editableProfileRoles";
 import {
   getFixedProfileHint,
   getFixedProfileLabel,
@@ -26,7 +26,7 @@ import {
   type FixedProfileKind,
 } from "@/lib/fixedProfilePresentation";
 import { PERMISSION_MODULES, getActionLabel, getPermissionModule } from "@/lib/permissionCatalog";
-import { ROLE_DEFAULTS } from "@/lib/roleDefaults";
+import { resolveRoleDefaults } from "@/lib/roleDefaults";
 import {
   applyPermissionOverride,
   getOverrideState,
@@ -97,12 +97,11 @@ const ROLE_FILTERS: Array<{ value: RoleFilter; label: string; hint: string }> = 
 ];
 
 const PROFILE_OPTIONS: Array<{ value: EditableProfileRole; label: string; hint: string }> = [
-  { value: "admin", label: getFixedProfileLabel("leader_tc"), hint: getFixedProfileHint("leader_tc") },
-  { value: "dev", label: getFixedProfileLabel("technical_support"), hint: getFixedProfileHint("technical_support") },
   { value: "leader_tc", label: getFixedProfileLabel("leader_tc"), hint: getFixedProfileHint("leader_tc") },
   { value: "technical_support", label: getFixedProfileLabel("technical_support"), hint: getFixedProfileHint("technical_support") },
-  { value: "company", label: getFixedProfileLabel("empresa"), hint: getFixedProfileHint("empresa") },
-  { value: "user", label: "Usuario", hint: "Base individual. O contexto final define se vira Usuario TC ou Usuario da empresa." },
+  { value: "empresa", label: getFixedProfileLabel("empresa"), hint: getFixedProfileHint("empresa") },
+  { value: "company_user", label: getFixedProfileLabel("company_user"), hint: getFixedProfileHint("company_user") },
+  { value: "testing_company_user", label: getFixedProfileLabel("testing_company_user"), hint: getFixedProfileHint("testing_company_user") },
 ];
 
 function emptyOverride(): PermissionOverride {
@@ -125,21 +124,15 @@ function normalizeRole(value?: string | null): EditableProfileRole {
 
 function roleLabel(value?: string | null) {
   const normalized = normalizeRole(value);
-  if (normalized === "admin" || normalized === "leader_tc") return getFixedProfileLabel("leader_tc");
-  if (normalized === "dev" || normalized === "technical_support") return getFixedProfileLabel("technical_support");
-  if (normalized === "company") return getFixedProfileLabel("empresa");
-  return "Usuario";
+  return getFixedProfileLabel(normalized);
 }
 
 function roleHint(role: EditableProfileRole) {
-  if (role === "admin" || role === "leader_tc") return getFixedProfileHint("leader_tc");
-  if (role === "dev" || role === "technical_support") return getFixedProfileHint("technical_support");
-  if (role === "company") return getFixedProfileHint("empresa");
-  return "Base individual. O contexto final define se o usuario opera como Usuario TC ou Usuario da empresa.";
+  return getFixedProfileHint(role);
 }
 
 function roleNeedsCompany(role: EditableProfileRole) {
-  return role === "user" || role === "leader_tc" || role === "technical_support";
+  return editableProfileNeedsCompany(role);
 }
 
 function statusLabel(value?: string | null) {
@@ -163,14 +156,6 @@ function badgeLabel(state: "allow" | "deny" | "default") {
   if (state === "allow") return "Adicionado";
   if (state === "deny") return "Removido";
   return "Perfil base";
-}
-
-function roleTone(value?: string | null, selected = false) {
-  const normalized = normalizeRole(value);
-  if (normalized === "admin" || normalized === "leader_tc") return getFixedProfileTone("leader_tc", { selected });
-  if (normalized === "dev" || normalized === "technical_support") return getFixedProfileTone("technical_support", { selected });
-  if (normalized === "company") return getFixedProfileTone("empresa", { selected });
-  return selected ? "border border-white/20 bg-white/10 text-white" : "border border-(--tc-border) bg-(--tc-surface-2) text-(--tc-text-muted)";
 }
 
 function profileKindForUser(user?: Pick<AdminUserItem, "profile_kind" | "permission_role" | "role" | "user_origin" | "company_count"> | null) {
@@ -265,13 +250,14 @@ function isValidEmailAddress(value?: string | null) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(source);
 }
 
-function isGlobalDeveloperUser(
+function canManageInstitutionalProfiles(
   user?: { role?: string | null; permissionRole?: string | null; companyRole?: string | null } | null,
 ) {
-  const role = (user?.role ?? "").toLowerCase();
-  const permissionRole = (user?.permissionRole ?? "").toLowerCase();
-  const companyRole = (user?.companyRole ?? "").toLowerCase();
-  return role === "it_dev" || permissionRole === "dev" || companyRole === "it_dev";
+  return (
+    normalizeEditableProfileRole(user?.role) === "leader_tc" ||
+    normalizeEditableProfileRole(user?.permissionRole) === "leader_tc" ||
+    normalizeEditableProfileRole(user?.companyRole) === "leader_tc"
+  );
 }
 
 function companyLabel(user: AdminUserItem) {
@@ -305,7 +291,7 @@ function summarizeMatrixModules(matrix: PermissionMatrix) {
 }
 
 function summarizeRoleModules(role: EditableProfileRole) {
-  const matrix = normalizePermissionMatrix((ROLE_DEFAULTS as Record<string, PermissionMatrix>)[role] ?? {});
+  const matrix = normalizePermissionMatrix(resolveRoleDefaults(role));
   return summarizeMatrixModules(matrix);
 }
 
@@ -489,7 +475,7 @@ export default function PermissionsPage() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [permissionData, setPermissionData] = useState<PermissionResponse | null>(null);
   const [draftOverride, setDraftOverride] = useState<PermissionOverride>(emptyOverride());
-  const [profileDraft, setProfileDraft] = useState<EditableProfileRole>("user");
+  const [profileDraft, setProfileDraft] = useState<EditableProfileRole>("testing_company_user");
   const [companyDraft, setCompanyDraft] = useState("");
   const [panelLoading, setPanelLoading] = useState(false);
   const [panelError, setPanelError] = useState<string | null>(null);
@@ -504,10 +490,10 @@ export default function PermissionsPage() {
   const [createGlobalDraft, setCreateGlobalDraft] = useState<GlobalCreateDraft>(emptyGlobalCreateDraft());
   const [createGlobalLoading, setCreateGlobalLoading] = useState(false);
   const [createGlobalError, setCreateGlobalError] = useState<string | null>(null);
-  const [profileModalRole, setProfileModalRole] = useState<EditableProfileRole>("user");
+  const [profileModalRole, setProfileModalRole] = useState<EditableProfileRole>("testing_company_user");
   const [profileModalCompany, setProfileModalCompany] = useState("");
 
-  const canManagePrivilegedProfiles = useMemo(() => isGlobalDeveloperUser(authUser), [authUser]);
+  const canManageProfiles = useMemo(() => canManageInstitutionalProfiles(authUser), [authUser]);
 
   async function loadUsers() {
     setUsersLoading(true);
@@ -631,15 +617,13 @@ export default function PermissionsPage() {
   }, [users]);
 
   const availableProfileOptions = useMemo(() => {
-    if (canManagePrivilegedProfiles) return PROFILE_OPTIONS;
+    if (canManageProfiles) return PROFILE_OPTIONS;
     return PROFILE_OPTIONS.filter(
       (option) =>
-        option.value !== "admin" &&
-        option.value !== "dev" &&
         option.value !== "leader_tc" &&
         option.value !== "technical_support",
     );
-  }, [canManagePrivilegedProfiles]);
+  }, [canManageProfiles]);
 
   const testingCompanyUsersCount = useMemo(
     () => users.filter((user) => profileKindForUser(user) === "testing_company_user").length,
@@ -695,7 +679,7 @@ export default function PermissionsPage() {
   }, [permissionData, selectedUser, selectedUserId, serverOverrideSignature]);
 
   const roleDefaultsPreview = useMemo(
-    () => normalizePermissionMatrix((ROLE_DEFAULTS as Record<string, PermissionMatrix>)[profileDraft] ?? {}),
+    () => normalizePermissionMatrix(resolveRoleDefaults(profileDraft)),
     [profileDraft],
   );
 
@@ -775,14 +759,12 @@ export default function PermissionsPage() {
     [companyDraft, originalCompanyId, originalRole, profileDraft],
   );
   const canEditProfileBase = useMemo(() => {
-    if (canManagePrivilegedProfiles) return true;
+    if (canManageProfiles) return true;
     return (
-      profileDraft !== "admin" &&
-      profileDraft !== "dev" &&
       profileDraft !== "leader_tc" &&
       profileDraft !== "technical_support"
     );
-  }, [canManagePrivilegedProfiles, profileDraft]);
+  }, [canManageProfiles, profileDraft]);
 
   const hasDraftChanges = hasPermissionChanges || profileMetaChanged;
 
@@ -794,9 +776,9 @@ export default function PermissionsPage() {
       ]),
     );
     if (customModules.length) return customModules[0] ?? "";
-    if (profileDraft === "admin" || profileDraft === "leader_tc") return "users";
-    if (profileDraft === "dev" || profileDraft === "technical_support") return "support";
-    if (profileDraft === "company") return "tickets";
+    if (profileDraft === "leader_tc") return "users";
+    if (profileDraft === "technical_support") return "support";
+    if (profileDraft === "empresa" || profileDraft === "company_user") return "tickets";
     return "settings";
   }, [permissionData?.override?.allow, permissionData?.override?.deny, profileDraft]);
 
@@ -813,13 +795,13 @@ export default function PermissionsPage() {
   const nextRoleModules = useMemo(() => summarizeRoleModules(profileModalRole), [profileModalRole]);
 
   const profileChangePreview = useMemo(() => {
-    const currentDefaults = normalizePermissionMatrix((ROLE_DEFAULTS as Record<string, PermissionMatrix>)[profileDraft] ?? {});
-    const nextDefaults = normalizePermissionMatrix((ROLE_DEFAULTS as Record<string, PermissionMatrix>)[profileModalRole] ?? {});
+    const currentDefaults = normalizePermissionMatrix(resolveRoleDefaults(profileDraft));
+    const nextDefaults = normalizePermissionMatrix(resolveRoleDefaults(profileModalRole));
     return diffPermissionMatrices(currentDefaults, nextDefaults);
   }, [profileDraft, profileModalRole]);
 
   const resetTargetPermissions = useMemo(
-    () => normalizePermissionMatrix((ROLE_DEFAULTS as Record<string, PermissionMatrix>)[originalRole] ?? {}),
+    () => normalizePermissionMatrix(resolveRoleDefaults(originalRole)),
     [originalRole],
   );
 
@@ -975,7 +957,7 @@ export default function PermissionsPage() {
         email,
         phone,
         password,
-        role: "it_dev",
+        role: "technical_support",
       };
 
       const doCreate = () =>
@@ -1142,7 +1124,7 @@ export default function PermissionsPage() {
                 Filtre usuários, ajuste o perfil base e gerencie os módulos e ações em um único painel.
               </p>
             </div>
-            {canManagePrivilegedProfiles ? (
+            {canManageProfiles ? (
               <button
                 type="button"
                 onClick={() => {

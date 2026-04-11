@@ -190,10 +190,9 @@ function toneFromGate(status: Gate["status"]) {
 function Sparkline({ points }: { points: SparkPoint[] }) {
   const validPoints = points.filter((point) => typeof point.value === "number" && Number.isFinite(point.value));
   if (!validPoints.length) {
-    return <div className="flex h-20 items-center justify-center rounded-xl border border-(--tc-border)/40 bg-slate-50 text-[11px] text-(--tc-text-muted)">Sem leitura de qualidade</div>;
+    return <div className="flex h-20 items-center justify-center rounded-xl border border-(--tc-border)/40 bg-(--tc-surface-2) text-[11px] text-(--tc-text-muted)">Sem leitura de qualidade</div>;
   }
 
-  const QUALITY_TARGET = 85;
   const width = 260;
   const height = 116;
   const left = 26;
@@ -244,7 +243,7 @@ function Sparkline({ points }: { points: SparkPoint[] }) {
         : "rgba(239,68,68,0.96)";
 
   return (
-    <div className="rounded-xl border border-(--tc-border)/40 bg-slate-50 p-2">
+    <div className="rounded-xl border border-(--tc-border)/40 bg-(--tc-surface-2) p-2">
       <svg viewBox={`0 0 ${width} ${height}`} className="h-28 w-full">
         <rect x={left} y={toY(100)} width={plotW} height={toY(85) - toY(100)} rx="10" fill="rgba(16,185,129,0.14)" />
         <rect x={left} y={toY(85)} width={plotW} height={toY(70) - toY(85)} rx="10" fill="rgba(245,158,11,0.14)" />
@@ -258,16 +257,6 @@ function Sparkline({ points }: { points: SparkPoint[] }) {
             </text>
           </g>
         ))}
-
-        <line
-          x1={left}
-          y1={toY(QUALITY_TARGET)}
-          x2={width - right}
-          y2={toY(QUALITY_TARGET)}
-          stroke="rgba(239,0,1,0.55)"
-          strokeWidth="1.25"
-          strokeDasharray="4 3"
-        />
 
         {area ? <path d={area} fill="rgba(239,0,1,0.10)" /> : null}
         <path d={path} fill="none" stroke="rgba(37,99,235,0.9)" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round" />
@@ -288,7 +277,6 @@ function Sparkline({ points }: { points: SparkPoint[] }) {
       </svg>
       <div className="mt-2 flex flex-wrap gap-3 text-[10px] text-(--tc-text-muted)">
         <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-(--tc-accent,#ef0001)" />Pass rate</span>
-        <span className="inline-flex items-center gap-1.5"><span className="h-px w-4 bg-red-400" />Meta 85%</span>
       </div>
     </div>
   );
@@ -306,7 +294,7 @@ function CountStat({
   tone: string;
 }) {
   return (
-    <div className="rounded-2xl border border-(--tc-border)/60 bg-white px-3.5 py-3.5 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+    <div className="rounded-2xl border border-(--tc-border)/60 bg-(--tc-surface) px-3.5 py-3.5 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
       <div className="text-[11px] uppercase tracking-[0.22em] text-(--tc-text-muted)">{label}</div>
       <div className={`mt-2 text-2xl font-extrabold ${tone}`}>{value}</div>
       <div className="mt-1 text-[11px] text-(--tc-text-muted)">{pct}% do total</div>
@@ -316,7 +304,7 @@ function CountStat({
 
 function SummaryStat({ label, value, note }: { label: string; value: string | number; note: string }) {
   return (
-    <div className="rounded-2xl border border-(--tc-border)/50 bg-slate-50 p-3.5">
+    <div className="rounded-2xl border border-(--tc-border)/50 bg-(--tc-surface-2) p-3.5">
       <div className="text-[11px] uppercase tracking-[0.24em] text-(--tc-text-muted)">{label}</div>
       <div className="mt-1 text-2xl font-extrabold text-(--tc-text-primary,#0b1a3c)">{value}</div>
       <div className="text-[11px] text-(--tc-text-muted)">{note}</div>
@@ -544,7 +532,7 @@ export function CompanyMetricsCard(props: {
 
   return (
     <div
-      className={`flex h-full min-h-156 flex-col rounded-[28px] border bg-white shadow-sm transition ${
+      className={`flex h-full min-h-156 flex-col rounded-[28px] border bg-(--tc-surface) shadow-sm transition ${
         focused ? "border-(--tc-accent)/50 shadow-[0_18px_40px_rgba(239,0,1,0.12)]" : "border-(--tc-border)/60"
       }`}
     >
@@ -588,7 +576,7 @@ export function CompanyMetricsCard(props: {
               className={`rounded-full border px-3 py-1 text-[12px] font-semibold transition ${
                 !activeApp
                   ? "border-(--tc-accent)/50 bg-(--tc-accent)/10 text-(--tc-accent)"
-                  : "border-(--tc-border)/60 bg-white text-(--tc-text-muted) hover:bg-slate-50"
+                  : "border-(--tc-border)/60 bg-(--tc-surface) text-(--tc-text-muted) hover:bg-(--tc-surface-2)"
               }`}
             >
               Todas
@@ -601,7 +589,7 @@ export function CompanyMetricsCard(props: {
                 className={`rounded-full border px-3 py-1 text-[12px] font-semibold transition ${
                   isActiveApp(app)
                     ? "border-(--tc-accent)/50 bg-(--tc-accent)/10 text-(--tc-accent)"
-                    : "border-(--tc-border)/60 bg-white text-(--tc-text-muted) hover:bg-slate-50"
+                    : "border-(--tc-border)/60 bg-(--tc-surface) text-(--tc-text-muted) hover:bg-(--tc-surface-2)"
                 }`}
               >
                 {app}
@@ -611,13 +599,13 @@ export function CompanyMetricsCard(props: {
         ) : null}
 
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_17rem]">
-          <div className="rounded-3xl border border-(--tc-border)/60 bg-linear-to-b from-white to-slate-50 p-4">
+          <div className="rounded-3xl border border-(--tc-border)/60 bg-linear-to-b from-(--tc-surface) to-(--tc-surface-2) p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Distribuicao real de execucao</h3>
                 <p className="mt-1 text-[11px] text-(--tc-text-muted)">Grafico e contadores conectados aos resultados reais da empresa.</p>
               </div>
-              <span className="rounded-full border border-(--tc-border)/60 bg-white px-3 py-1 text-[11px] font-semibold text-(--tc-text-muted)">
+              <span className="rounded-full border border-(--tc-border)/60 bg-(--tc-surface) px-3 py-1 text-[11px] font-semibold text-(--tc-text-muted)">
                 Total {total}
               </span>
             </div>
@@ -641,7 +629,7 @@ export function CompanyMetricsCard(props: {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-(--tc-border)/60 bg-linear-to-b from-white to-slate-50 p-4">
+        <div className="rounded-3xl border border-(--tc-border)/60 bg-linear-to-b from-(--tc-surface) to-(--tc-surface-2) p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Qualidade das ultimas execucoes</h3>
@@ -656,7 +644,7 @@ export function CompanyMetricsCard(props: {
           </div>
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
             {trendCards.map((item) => (
-              <div key={item.label} className="rounded-2xl border border-(--tc-border)/50 bg-white px-3 py-3">
+              <div key={item.label} className="rounded-2xl border border-(--tc-border)/50 bg-(--tc-surface) px-3 py-3">
                 <div className="text-[10px] uppercase tracking-[0.2em] text-(--tc-text-muted)">{item.label}</div>
                 <div className="mt-1 text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{item.value}</div>
                 <div className="text-[11px] text-(--tc-text-muted)">{item.note}</div>
@@ -675,7 +663,7 @@ export function CompanyMetricsCard(props: {
               type="button"
               onClick={() => void handleExportPdf()}
               disabled={exportingPdf}
-              className="inline-flex items-center justify-center rounded-xl border border-(--tc-border)/60 bg-white px-3 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-slate-50 disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-xl border border-(--tc-border)/60 bg-(--tc-surface) px-3 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-2) disabled:opacity-60"
               title="Exportar métricas em PDF"
               aria-label="Exportar métricas em PDF"
             >
@@ -685,7 +673,7 @@ export function CompanyMetricsCard(props: {
               <>
               <Link
                 href={`/empresas/${encodeURIComponent(companySlug)}/home`}
-                className="rounded-xl border border-(--tc-border)/60 bg-white px-4 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-slate-50"
+                className="rounded-xl border border-(--tc-border)/60 bg-(--tc-surface) px-4 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-2)"
               >
                 Abrir empresa
               </Link>
@@ -705,4 +693,3 @@ export function CompanyMetricsCard(props: {
     </div>
   );
 }
-

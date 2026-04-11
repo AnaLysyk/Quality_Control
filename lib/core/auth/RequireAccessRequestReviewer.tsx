@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { AuthSkeleton } from "@/components/AuthSkeleton";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { normalizeLegacyRole } from "@/lib/auth/roles";
 
 type RequireAccessRequestReviewerProps = {
   children: ReactNode;
@@ -15,28 +16,13 @@ function isReviewerUser(
   user?: { role?: string | null; permissionRole?: string | null; companyRole?: string | null } | null,
 ) {
   // Allow any authenticated user that participates in the access-request flow.
-  // Global reviewers (support/dev/admin) will be detected server-side via `isGlobalReviewer`.
+  // Global reviewers are resolved server-side from canonical roles and legacy aliases.
   if (!user) return false;
-  const role = (user.role ?? "").toLowerCase().trim();
-  const permissionRole = (user.permissionRole ?? "").toLowerCase().trim();
-  const companyRole = (user.companyRole ?? "").toLowerCase().trim();
-
-  // Recognized roles that participate in the flow
-  const known = new Set([
-    "company",
-    "company_admin",
-    "client_admin",
-    "user",
-    "testing_company_user",
-    "testing_company_lead",
-    "it_dev",
-    "dev",
-    "developer",
-    "support",
-    "technical_support",
-  ]);
-
-  return Boolean(role && (known.has(role) || known.has(permissionRole) || known.has(companyRole)));
+  return Boolean(
+    normalizeLegacyRole(user.role) ||
+      normalizeLegacyRole(user.permissionRole) ||
+      normalizeLegacyRole(user.companyRole),
+  );
 }
 
 export function RequireAccessRequestReviewer({ children, fallback }: RequireAccessRequestReviewerProps) {

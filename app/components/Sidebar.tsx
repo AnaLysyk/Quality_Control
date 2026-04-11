@@ -24,11 +24,12 @@ import { useI18n } from "@/hooks/useI18n";
 import { useClientContext } from "@/context/ClientContext";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
 const debugSidebar = process.env.NEXT_PUBLIC_DEBUG_SIDEBAR === "true";
 
-type AppRole = "admin" | "client" | "user" | "it_dev";
+type AppRole = "admin" | "client" | "user" | "technical_support";
 
 type NavItem = {
   label: string;
@@ -56,20 +57,27 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
   const legacyUser = (user ?? null) as unknown as { is_global_admin?: boolean } | null;
 
-  const normalizedRole = typeof user?.role === "string" ? user.role.toLowerCase() : null;
+  const normalizedRole =
+    normalizeLegacyRole(typeof user?.permissionRole === "string" ? user.permissionRole : null) ??
+    normalizeLegacyRole(typeof user?.role === "string" ? user.role : null) ??
+    normalizeLegacyRole(typeof user?.companyRole === "string" ? user.companyRole : null);
+  const isTechnicalSupport = normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
   const isGlobalAdmin =
-    user?.isGlobalAdmin === true ||
-    legacyUser?.is_global_admin === true ||
-    normalizedRole === "admin" ||
-    normalizedRole === "global_admin";
+    !isTechnicalSupport &&
+    (user?.isGlobalAdmin === true ||
+      legacyUser?.is_global_admin === true ||
+      normalizedRole === SYSTEM_ROLES.LEADER_TC);
 
   const appRole = useMemo<AppRole | null>(() => {
     if (!user) return null;
-    const role = (user.role ?? "").toLowerCase();
-    if (["it_dev", "itdev", "developer", "dev"].includes(role)) return "it_dev";
+    const role =
+      normalizeLegacyRole(typeof user.permissionRole === "string" ? user.permissionRole : null) ??
+      normalizeLegacyRole(typeof user.role === "string" ? user.role : null) ??
+      normalizeLegacyRole(typeof user.companyRole === "string" ? user.companyRole : null);
+    if (role === SYSTEM_ROLES.TECHNICAL_SUPPORT) return "technical_support";
     if (isGlobalAdmin) return "admin";
-    if (["client_owner", "client_manager", "client_admin", "company", "company_admin"].includes(role)) return "client";
-    if (["client_member", "client_user", "user"].includes(role)) return "user";
+    if (role === SYSTEM_ROLES.EMPRESA || role === SYSTEM_ROLES.COMPANY_USER) return "client";
+    if (role === SYSTEM_ROLES.TESTING_COMPANY_USER) return "user";
     return "user";
   }, [user, isGlobalAdmin]);
 
@@ -158,7 +166,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     return items;
   }, [t, activeClientSlug, adminCompanyHref]);
 
-  const itDevNav: NavItem[] = useMemo(() => {
+  const supportNav: NavItem[] = useMemo(() => {
     return adminNav.filter((item) => item.href !== "/admin/home" || item.label === t("nav.dashboard"));
   }, [adminNav, t]);
 
@@ -185,10 +193,10 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     // If the current path is inside a company, prefer the company navigation
     if (pathname.startsWith("/empresas/") && companyNav.length) return companyNav;
     if (appRole === "admin") return adminNav;
-    if (appRole === "it_dev") return itDevNav;
+    if (appRole === "technical_support") return supportNav;
     if (companyNav.length) return companyNav;
     return publicNav;
-  }, [loading, user, appRole, adminNav, itDevNav, companyNav, publicNav, pathname]);
+  }, [loading, user, appRole, adminNav, supportNav, companyNav, publicNav, pathname]);
 
   function resolveModuleFromHref(href: string) {
     if (href === "/admin/users/permissions") return "permissions";

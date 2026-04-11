@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
 import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import { parseAccessRequestMessage } from "@/lib/accessRequestMessage";
 import { notifyAccessRequestRejected } from "@/lib/notificationService";

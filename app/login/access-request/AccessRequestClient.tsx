@@ -10,7 +10,7 @@ import type {
   AccessRequestAdjustmentRound,
   AccessRequestSnapshot,
 } from "@/lib/accessRequestMessage";
-import { normalizeRequestProfileType, requestProfileTypeNeedsCompany } from "@/lib/requestRouting";
+import { normalizeRequestProfileType, requestProfileTypeNeedsCompany, type RequestProfileType } from "@/lib/requestRouting";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -26,7 +26,7 @@ const ACCESS_OPTIONS = [
     hint: "Usuario vinculado ao contexto da empresa.",
   },
   {
-    value: "testing_company_lead",
+    value: "leader_tc",
     label: "Lider TC",
     hint: "Perfil institucional da Testing Company.",
   },
@@ -140,7 +140,7 @@ type LookupDraft = {
   company: string;
   clientId: string;
   role: string;
-  accessType: "testing_company_user" | "company_user" | "testing_company_lead" | "technical_support";
+  accessType: RequestProfileType;
   title: string;
   description: string;
   notes: string;
@@ -180,9 +180,7 @@ export default function AccessRequestClient() {
   const [clientId, setClientId] = useState("");
   const [companyDraft, setCompanyDraft] = useState<CompanyRequestDraft>(emptyCompanyRequestDraft);
   const [role, setRole] = useState("");
-  const [accessType, setAccessType] = useState<
-    "testing_company_user" | "company_user" | "testing_company_lead" | "technical_support"
-  >("testing_company_user");
+  const [accessType, setAccessType] = useState<RequestProfileType>("testing_company_user");
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [password, setPassword] = useState("");
@@ -874,10 +872,7 @@ export default function AccessRequestClient() {
                     value={accessType}
                     onChange={(event) => {
                       const next = event.target.value as
-                        | "testing_company_user"
-                        | "company_user"
-                        | "testing_company_lead"
-                        | "technical_support";
+                        RequestProfileType;
                       setAccessType(next);
                       if (!requestProfileTypeNeedsCompany(next)) {
                         setClientId("");

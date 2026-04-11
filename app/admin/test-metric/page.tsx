@@ -220,15 +220,6 @@ function GlobalTrendSparkline({ points }: { points: TrendPoint[] }) {
           );
         })}
 
-        <line
-          x1={left}
-          y1={toY(QUALITY_TARGET)}
-          x2={plotRight}
-          y2={toY(QUALITY_TARGET)}
-          stroke="rgba(255,255,255,0.78)"
-          strokeWidth="1.5"
-          strokeDasharray="5 4"
-        />
         <text x={left + 8} y={toY(QUALITY_TARGET) - 8} textAnchor="start" fontSize="11" fontWeight="700" fill="rgba(255,255,255,0.9)">
           Meta 85%
         </text>
@@ -268,7 +259,6 @@ function GlobalTrendSparkline({ points }: { points: TrendPoint[] }) {
       </svg>
       <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-white/78">
         <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-white" />Pass rate</span>
-        <span className="inline-flex items-center gap-2"><span className="h-0.5 w-4 bg-white/80 bg-[repeating-linear-gradient(to_right,currentColor_0,currentColor_4px,transparent_4px,transparent_8px)]" />Meta 85%</span>
         <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />Saudável</span>
         <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-amber-300/80" />Atenção</span>
         <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-red-400/80" />Risco</span>
@@ -684,7 +674,7 @@ export default function TestMetricPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar empresa, aplicação ou release"
-                className="w-full md:w-105 rounded-2xl border border-(--tc-border)/60 bg-white px-4 py-3 text-sm text-(--tc-text,#0f172a) placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30"
+                className="w-full md:w-105 rounded-2xl border border-(--tc-border)/60 bg-(--tc-surface) px-4 py-3 text-sm text-(--tc-text,#0f172a) placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30"
               />
             </div>
 
@@ -692,7 +682,7 @@ export default function TestMetricPage() {
             {error && !loading && <p className="text-sm text-red-600">{error}</p>}
 
             {!loading && !error && companies.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-(--tc-border)/60 bg-white p-6 text-sm text-(--tc-text-muted)">
+              <div className="rounded-2xl border border-dashed border-(--tc-border)/60 bg-(--tc-surface) p-6 text-sm text-(--tc-text-muted)">
                 Nenhuma empresa encontrada.
               </div>
             )}
@@ -703,7 +693,7 @@ export default function TestMetricPage() {
                   <button
                     type="button"
                     onClick={() => focusCompany(activeIndex - 1)}
-                    className="rounded-2xl border border-(--tc-border)/60 bg-white px-4 py-3 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-slate-50 disabled:opacity-40"
+                    className="rounded-2xl border border-(--tc-border)/60 bg-(--tc-surface) px-4 py-3 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-2) disabled:opacity-40"
                     disabled={activeIndex <= 0}
                     aria-label="Empresa anterior"
                   >
@@ -715,7 +705,7 @@ export default function TestMetricPage() {
                   <button
                     type="button"
                     onClick={() => focusCompany(activeIndex + 1)}
-                    className="rounded-2xl border border-(--tc-border)/60 bg-white px-4 py-3 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-slate-50 disabled:opacity-40"
+                    className="rounded-2xl border border-(--tc-border)/60 bg-(--tc-surface) px-4 py-3 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-2) disabled:opacity-40"
                     disabled={activeIndex >= companies.length - 1}
                     aria-label="Próxima empresa"
                   >
@@ -779,7 +769,7 @@ export default function TestMetricPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-(--tc-border)/60 bg-white p-5 space-y-3">
+              <div className="rounded-2xl border border-(--tc-border)/60 bg-(--tc-surface) p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Quebras de gate (empresas)</h3>
                   <span className="text-xs text-(--tc-text-muted)">{attentionNow.companiesNeedingAttention.length} no total</span>
@@ -790,7 +780,7 @@ export default function TestMetricPage() {
                 ) : (
                   <div className="space-y-2">
                     {attentionNow.companiesNeedingAttention.slice(0, 6).map((c) => (
-                      <div key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-(--tc-border)/60 bg-slate-50 px-4 py-3">
+                      <div key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-(--tc-border)/60 bg-(--tc-surface-2) px-4 py-3">
                         <div className="min-w-0">
                           <div className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c) truncate" title={c.name}>{c.name}</div>
                           <div className="text-[11px] text-(--tc-text-muted)">
@@ -813,7 +803,7 @@ export default function TestMetricPage() {
                 )}
               </div>
 
-              <div className="rounded-2xl border border-(--tc-border)/60 bg-white p-5 space-y-3">
+              <div className="rounded-2xl border border-(--tc-border)/60 bg-(--tc-surface) p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Releases em risco sem execução recente</h3>
                   <span className="text-xs text-(--tc-text-muted)">≥ {attentionNow.staleDays} dias</span>
@@ -826,7 +816,7 @@ export default function TestMetricPage() {
                     {attentionNow.staleRiskReleases.slice(0, 6).map(({ company, release }) => (
                       <div
                         key={`${company.id}-${release.slug ?? release.title ?? "release"}`}
-                        className="flex items-center justify-between gap-3 rounded-xl border border-(--tc-border)/60 bg-slate-50 px-4 py-3"
+                        className="flex items-center justify-between gap-3 rounded-xl border border-(--tc-border)/60 bg-(--tc-surface-2) px-4 py-3"
                       >
                         <div className="min-w-0">
                           <div className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c) truncate" title={release.title ?? release.slug ?? ""}>
@@ -839,7 +829,7 @@ export default function TestMetricPage() {
                         {company.slug ? (
                           <a
                             href={`/empresas/${encodeURIComponent(company.slug)}/releases`}
-                            className="shrink-0 rounded-xl border border-(--tc-border)/60 bg-white px-3 py-2 text-xs font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-slate-50"
+                            className="shrink-0 rounded-xl border border-(--tc-border)/60 bg-(--tc-surface) px-3 py-2 text-xs font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-2)"
                           >
                             Ver
                           </a>
@@ -854,7 +844,7 @@ export default function TestMetricPage() {
             <div className="flex items-center justify-end">
               <Link
                 href="/admin/defeitos"
-                className="rounded-xl border border-(--tc-border)/60 bg-white px-4 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-slate-50"
+                className="rounded-xl border border-(--tc-border)/60 bg-(--tc-surface) px-4 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-2)"
               >
                 Ver defeitos (global)
               </Link>

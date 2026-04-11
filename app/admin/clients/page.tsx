@@ -8,6 +8,7 @@ import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 import { useAuth } from "@/context/AuthContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { fetchApi } from "@/lib/api";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, readApiError, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 import { FiCheckCircle, FiExternalLink, FiEye, FiEyeOff, FiHome, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiUpload, FiUsers, FiX, FiXCircle, FiCloudLightning } from "react-icons/fi";
 import { toast } from "react-hot-toast";
@@ -1935,8 +1936,10 @@ function CompanyUsers({ clientId, companyName, disabled = false }: CompanyUsersP
       const linkedIds = new Set(users.map((user) => user.id));
       setAvailableUsers(
         items.filter(
-          (item: { id: string; permission_role?: string | null }) =>
-            item?.permission_role !== "dev" && !linkedIds.has(item.id),
+          (item: { id: string; permission_role?: string | null }) => {
+            const role = normalizeLegacyRole(item?.permission_role);
+            return role !== SYSTEM_ROLES.TECHNICAL_SUPPORT && role !== SYSTEM_ROLES.LEADER_TC && !linkedIds.has(item.id);
+          },
         ),
       );
     } catch {
@@ -2186,6 +2189,7 @@ function CompanyUsers({ clientId, companyName, disabled = false }: CompanyUsersP
         open={openCreateUserModal}
         clientId={clientId}
         clients={[{ id: clientId, name: companyName }]}
+        initialRole="company_user"
         onClose={() => setOpenCreateUserModal(false)}
         onCreated={async () => {
           await loadLinkedUsers();

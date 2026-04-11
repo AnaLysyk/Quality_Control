@@ -117,7 +117,7 @@ function CompanyMark({ name, logo, selected = false }: { name: string; logo?: st
       className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[18px] border text-sm font-black shadow-[0_14px_28px_rgba(15,23,42,0.08)] ${
         selected
           ? "border-[rgba(239,0,1,0.22)] bg-[linear-gradient(135deg,rgba(1,24,72,0.95)_0%,rgba(239,0,1,0.92)_100%)] text-white"
-          : "border-(--tc-border) bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] text-(--tc-primary)"
+          : "border-(--tc-border) bg-[linear-gradient(180deg,var(--tc-surface)_0%,var(--tc-surface-2)_100%)] text-(--tc-primary) dark:text-(--tc-text-primary)"
       }`}
     >
       {logo && !failed ? (
@@ -687,7 +687,7 @@ export default function AdminHomePage() {
 
               <label className="w-full max-w-md">
                 <span className="sr-only">Buscar empresa</span>
-                <div className="flex items-center gap-3 rounded-[20px] border border-(--tc-border) bg-white px-4 py-3 shadow-[0_14px_30px_rgba(15,23,42,0.05)] transition focus-within:border-[rgba(239,0,1,0.28)] focus-within:ring-2 focus-within:ring-[rgba(239,0,1,0.10)]">
+                <div className="flex items-center gap-3 rounded-[20px] border border-(--tc-border) bg-(--tc-surface) px-4 py-3 shadow-[0_14px_30px_rgba(15,23,42,0.05)] transition focus-within:border-[rgba(239,0,1,0.28)] focus-within:ring-2 focus-within:ring-[rgba(239,0,1,0.10)]">
                   <span className="text-(--tc-text-muted)">
                     <FiSearch size={15} />
                   </span>
@@ -707,7 +707,7 @@ export default function AdminHomePage() {
                   onClick={() => setSelectedCompanySlug(null)}
                   className={`group flex w-[78vw] min-w-56 max-w-73 sm:w-73 shrink-0 flex-col gap-2 sm:gap-3 rounded-2xl sm:rounded-3xl border p-3 sm:p-4 text-left transition ${
                     selectedCompanySlug == null
-                      ? "border-[rgba(1,24,72,0.14)] bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] shadow-[0_18px_35px_rgba(1,24,72,0.08)]"
+                      ? "border-[rgba(1,24,72,0.14)] bg-[linear-gradient(180deg,var(--tc-surface)_0%,var(--tc-surface-2)_100%)] shadow-[0_18px_35px_rgba(1,24,72,0.08)] dark:border-[rgba(239,0,1,0.34)] dark:shadow-[0_18px_35px_rgba(0,0,0,0.32)]"
                       : "border-(--tc-border) bg-(--tc-surface) hover:border-[rgba(239,0,1,0.18)]"
                   }`}
                 >
@@ -737,7 +737,7 @@ export default function AdminHomePage() {
                       aria-pressed={selected}
                       className={`group relative flex w-[78vw] min-w-56 max-w-74 sm:w-74 shrink-0 flex-col gap-2 sm:gap-3 overflow-hidden rounded-2xl sm:rounded-3xl border p-3 sm:p-4 text-left transition ${
                         selected
-                          ? "border-[rgba(239,0,1,0.28)] bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] shadow-[0_24px_44px_rgba(1,24,72,0.12)] ring-1 ring-[rgba(239,0,1,0.16)]"
+                          ? "border-[rgba(239,0,1,0.28)] bg-[linear-gradient(180deg,var(--tc-surface)_0%,var(--tc-surface-2)_100%)] shadow-[0_24px_44px_rgba(1,24,72,0.12)] ring-1 ring-[rgba(239,0,1,0.16)] dark:border-[rgba(239,0,1,0.38)] dark:shadow-[0_24px_44px_rgba(0,0,0,0.34)]"
                           : "border-(--tc-border) bg-(--tc-surface) hover:border-[rgba(239,0,1,0.18)]"
                       }`}
                     >
@@ -833,7 +833,7 @@ export default function AdminHomePage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-1 flex-col rounded-2xl sm:rounded-3xl border border-(--tc-border) bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-3 sm:p-5 shadow-[0_14px_28px_rgba(15,23,42,0.04)]">
+                  <div className="flex flex-1 flex-col rounded-2xl sm:rounded-3xl border border-(--tc-border) bg-[linear-gradient(180deg,var(--tc-surface)_0%,var(--tc-surface-2)_100%)] p-3 sm:p-5 shadow-[0_14px_28px_rgba(15,23,42,0.04)] dark:shadow-[0_14px_28px_rgba(0,0,0,0.28)]">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                       <div className="space-y-2">
                         <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Visao util sem clique</div>
@@ -900,7 +900,7 @@ export default function AdminHomePage() {
                     <div className="tc-kv"><div className="tc-kv-label">Releases em risco</div><div className="tc-kv-value">{countRuns(selectedCompany, ["failed", "warning"])}</div><div className="tc-kv-note">Soma de releases com status warning ou failed.</div></div>
                     <div className="tc-kv"><div className="tc-kv-label">Sem telemetria</div><div className="tc-kv-value">{countRuns(selectedCompany, "no_data")}</div><div className="tc-kv-note">Runs sem base suficiente para decisao automatica.</div></div>
                   </div>
-                  <div className="grid gap-2 sm:gap-3 rounded-2xl sm:rounded-3xl border border-(--tc-border) bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-3 sm:p-4 shadow-[0_12px_24px_rgba(15,23,42,0.04)] lg:grid-cols-3">
+                  <div className="grid gap-2 sm:gap-3 rounded-2xl sm:rounded-3xl border border-(--tc-border) bg-[linear-gradient(180deg,var(--tc-surface)_0%,var(--tc-surface-2)_100%)] p-3 sm:p-4 shadow-[0_12px_24px_rgba(15,23,42,0.04)] dark:shadow-[0_12px_24px_rgba(0,0,0,0.28)] lg:grid-cols-3">
                     <div className="space-y-1">
                       <div className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Acao sugerida</div>
                       <div className="text-sm font-bold text-(--tc-text-primary)">
@@ -1069,7 +1069,7 @@ export default function AdminHomePage() {
                   </div>
                 ) : (
                   relevantDefects.map((defect) => (
-                    <div key={defect.id} className="rounded-2xl sm:rounded-[22px] border border-(--tc-border) bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-3 sm:p-4 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                    <div key={defect.id} className="rounded-2xl sm:rounded-[22px] border border-(--tc-border) bg-[linear-gradient(180deg,var(--tc-surface)_0%,var(--tc-surface-2)_100%)] p-3 sm:p-4 shadow-[0_14px_28px_rgba(15,23,42,0.05)] dark:shadow-[0_14px_28px_rgba(0,0,0,0.28)]">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="space-y-2">
                           <div className="flex flex-wrap items-center gap-2">
@@ -1160,8 +1160,8 @@ export default function AdminHomePage() {
               ) : rankingRows.length ? (
                 <>
                   {/* ── Desktop table (hidden on small screens) ── */}
-                  <div className="hidden sm:block overflow-x-auto overflow-hidden rounded-[28px] border border-(--tc-border) bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-[0_18px_38px_rgba(15,23,42,0.05)]">
-                    <div className="min-w-208 grid grid-cols-[4.75rem_minmax(0,1.8fr)_7rem_9rem_7rem_7rem_9rem_8rem] gap-3 border-b border-(--tc-border) bg-[rgba(1,24,72,0.04)] px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">
+                  <div className="hidden sm:block overflow-x-auto overflow-hidden rounded-[28px] border border-(--tc-border) bg-[linear-gradient(180deg,var(--tc-surface)_0%,var(--tc-surface-2)_100%)] shadow-[0_18px_38px_rgba(15,23,42,0.05)] dark:shadow-[0_18px_38px_rgba(0,0,0,0.3)]">
+                    <div className="min-w-208 grid grid-cols-[4.75rem_minmax(0,1.8fr)_7rem_9rem_7rem_7rem_9rem_8rem] gap-3 border-b border-(--tc-border) bg-[color-mix(in_srgb,var(--tc-primary)_4%,transparent)] px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">
                       <span>Pos.</span>
                       <span>Empresa</span>
                       <span>Score</span>
@@ -1175,11 +1175,11 @@ export default function AdminHomePage() {
                       {rankingRows.map((company) => (
                         <div
                           key={`${company.slug}-${company.position}`}
-                          className={`min-w-208 grid grid-cols-[4.75rem_minmax(0,1.8fr)_7rem_9rem_7rem_7rem_9rem_8rem] items-center gap-3 px-5 py-4 transition hover:bg-[rgba(1,24,72,0.03)] ${
-                            company.position <= 3 ? "bg-[rgba(1,24,72,0.015)]" : ""
+                          className={`min-w-208 grid grid-cols-[4.75rem_minmax(0,1.8fr)_7rem_9rem_7rem_7rem_9rem_8rem] items-center gap-3 px-5 py-4 transition hover:bg-[color-mix(in_srgb,var(--tc-primary)_3%,transparent)] dark:hover:bg-[color-mix(in_srgb,var(--tc-text-primary)_5%,transparent)] ${
+                            company.position <= 3 ? "bg-[color-mix(in_srgb,var(--tc-primary)_2%,transparent)]" : ""
                           } ${
                             selectedCompany && normalizeText(selectedCompany.name) === normalizeText(company.name)
-                              ? "bg-[rgba(239,0,1,0.04)]"
+                              ? "bg-[color-mix(in_srgb,var(--tc-accent)_7%,transparent)]"
                               : ""
                           }`}
                         >
@@ -1187,7 +1187,7 @@ export default function AdminHomePage() {
                             <div className={`flex h-10 w-10 items-center justify-center rounded-2xl border text-sm font-black ${
                               company.position === 1
                                 ? "border-[rgba(239,0,1,0.2)] bg-[rgba(239,0,1,0.08)] text-(--tc-accent)"
-                                : "border-[rgba(1,24,72,0.08)] bg-white text-(--tc-primary)"
+                                : "border-(--tc-border) bg-(--tc-surface) text-(--tc-primary) dark:text-(--tc-text-primary)"
                             }`}>
                               #{company.position}
                             </div>
@@ -1212,7 +1212,7 @@ export default function AdminHomePage() {
                             <button
                               type="button"
                               onClick={() => focusRankingCompany(company.slug, company.name)}
-                              className="inline-flex items-center gap-2 rounded-full border border-[rgba(1,24,72,0.08)] bg-white px-3 py-2 text-sm font-semibold text-(--tc-primary) transition hover:border-[rgba(239,0,1,0.18)] hover:text-(--tc-accent)"
+                              className="inline-flex items-center gap-2 rounded-full border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm font-semibold text-(--tc-primary) transition hover:border-[rgba(239,0,1,0.18)] hover:text-(--tc-accent) dark:text-(--tc-text-primary) dark:hover:text-[#ff8a8a]"
                             >
                               Abrir contexto
                               <FiArrowUpRight size={14} />
@@ -1232,7 +1232,7 @@ export default function AdminHomePage() {
                         onClick={() => focusRankingCompany(company.slug, company.name)}
                         className={`w-full rounded-2xl border p-3 text-left transition active:scale-[0.98] ${
                           selectedCompany && normalizeText(selectedCompany.name) === normalizeText(company.name)
-                            ? "border-[rgba(239,0,1,0.28)] bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] shadow-[0_12px_24px_rgba(1,24,72,0.08)]"
+                            ? "border-[rgba(239,0,1,0.28)] bg-[linear-gradient(180deg,var(--tc-surface)_0%,var(--tc-surface-2)_100%)] shadow-[0_12px_24px_rgba(1,24,72,0.08)] dark:border-[rgba(239,0,1,0.38)] dark:shadow-[0_12px_24px_rgba(0,0,0,0.28)]"
                             : "border-(--tc-border) bg-(--tc-surface)"
                         }`}
                       >
@@ -1240,7 +1240,7 @@ export default function AdminHomePage() {
                           <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-xs font-black ${
                             company.position === 1
                               ? "border-[rgba(239,0,1,0.2)] bg-[rgba(239,0,1,0.08)] text-(--tc-accent)"
-                              : "border-[rgba(1,24,72,0.08)] bg-white text-(--tc-primary)"
+                              : "border-(--tc-border) bg-(--tc-surface) text-(--tc-primary) dark:text-(--tc-text-primary)"
                           }`}>
                             #{company.position}
                           </div>

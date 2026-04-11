@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import UserAvatar from "@/components/UserAvatar";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { normalizeEditableProfileRole } from "@/lib/editableProfileRoles";
+import { editableProfileNeedsCompany, normalizeEditableProfileRole } from "@/lib/editableProfileRoles";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -35,12 +35,11 @@ type Props = {
 };
 
 const ROLE_OPTIONS = [
-  { value: "client_admin", label: "Admin da empresa" },
-  { value: "client_user", label: "Usuario" },
+  { value: "empresa", label: "Admin da empresa" },
+  { value: "company_user", label: "Usuario da empresa" },
+  { value: "testing_company_user", label: "Usuario TC" },
   { value: "leader_tc", label: "Lider TC" },
   { value: "technical_support", label: "Suporte Tecnico" },
-  { value: "it_dev", label: "Suporte Tecnico" },
-  { value: "global_admin", label: "Lider TC" },
 ] as const;
 const EMPTY_JOB_TITLE = "__empty_job_title__";
 
@@ -48,21 +47,17 @@ type RoleValue = (typeof ROLE_OPTIONS)[number]["value"];
 
 const normalizeRole = (value?: string | null): RoleValue => {
   const normalized = normalizeEditableProfileRole(value);
-  if (normalized === "admin") return "global_admin";
-  if (normalized === "dev") return "it_dev";
-  if (normalized === "leader_tc") return "leader_tc";
-  if (normalized === "technical_support") return "technical_support";
-  if (normalized === "company") return "client_admin";
-  return "client_user";
+  return normalized;
 };
 
-function isGlobalDeveloperUser(
+function canManageInstitutionalProfiles(
   user?: { role?: string | null; permissionRole?: string | null; companyRole?: string | null } | null,
 ) {
-  const role = (user?.role ?? "").toLowerCase();
-  const permissionRole = (user?.permissionRole ?? "").toLowerCase();
-  const companyRole = (user?.companyRole ?? "").toLowerCase();
-  return role === "it_dev" || permissionRole === "dev" || companyRole === "it_dev";
+  return (
+    normalizeEditableProfileRole(user?.role) === "leader_tc" ||
+    normalizeEditableProfileRole(user?.permissionRole) === "leader_tc" ||
+    normalizeEditableProfileRole(user?.companyRole) === "leader_tc"
+  );
 }
 
 function isDirty(a: {
@@ -105,7 +100,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
   const [name, setName] = useState("");
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<RoleValue>("client_user");
+  const [role, setRole] = useState<RoleValue>("testing_company_user");
   const [jobTitle, setJobTitle] = useState("");
   const [linkedin, setLinkedin] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -123,7 +118,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
         name: "",
         login: "",
         email: "",
-        role: "client_user" as RoleValue,
+        role: "testing_company_user" as RoleValue,
         clientId: null as string | null,
         jobTitle: "",
         linkedin: "",
@@ -151,23 +146,21 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
   );
 
   const dirty = useMemo(() => isDirty(initial, draft), [initial, draft]);
-  const canManagePrivilegedProfiles = useMemo(() => isGlobalDeveloperUser(authUser), [authUser]);
+  const canManageProfiles = useMemo(() => canManageInstitutionalProfiles(authUser), [authUser]);
   const availableRoleOptions = useMemo(() => {
-    if (canManagePrivilegedProfiles) return ROLE_OPTIONS;
+    if (canManageProfiles) return ROLE_OPTIONS;
     return ROLE_OPTIONS.filter(
       (option) =>
-        option.value !== "it_dev" &&
-        option.value !== "global_admin" &&
         option.value !== "leader_tc" &&
         option.value !== "technical_support",
     );
-  }, [canManagePrivilegedProfiles]);
+  }, [canManageProfiles]);
   const canEditRole =
-    canManagePrivilegedProfiles ||
-    (role !== "it_dev" && role !== "global_admin" && role !== "leader_tc" && role !== "technical_support");
+    canManageProfiles ||
+    (role !== "leader_tc" && role !== "technical_support");
   const requiresClient = useMemo(() => {
     const normalized = normalizeEditableProfileRole(role);
-    return normalized === "leader_tc" || normalized === "technical_support";
+    return editableProfileNeedsCompany(normalized);
   }, [role]);
   const canSave =
     !!user?.id &&
@@ -176,11 +169,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
     !!name.trim() &&
     !!email.trim();
   const roleLabel =
-    role === "client_user"
-      ? clientId
-        ? "Usuario da empresa"
-        : "Usuario TC"
-      : ROLE_OPTIONS.find((option) => option.value === role)?.label ?? role;
+    ROLE_OPTIONS.find((option) => option.value === role)?.label ?? role;
   const linkedCompanyName =
     clients?.find((client) => client.id === clientId)?.name ?? (clientId ? "Empresa vinculada" : "Sem empresa");
   const displayName = name.trim() || user?.name || "Usuario";

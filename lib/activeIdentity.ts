@@ -94,7 +94,17 @@ export function getAuthUserContextRole(user: AuthUser | null | undefined) {
 
 export function normalizeIdentityRole(value?: string | null): IdentityRoleKind {
   const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "it_dev" || normalized === "dev" || normalized === "developer") return "global";
+  if (
+    normalized === "it_dev" ||
+    normalized === "dev" ||
+    normalized === "developer" ||
+    normalized === "technical_support" ||
+    normalized === "support" ||
+    normalized === "tech_support" ||
+    normalized === "support_tech"
+  ) {
+    return "global";
+  }
   if (normalized === "admin" || normalized === "global_admin") return "admin";
   if (normalized === "company" || normalized === "company_admin" || normalized === "client_admin") return "empresa";
   return "usuario";

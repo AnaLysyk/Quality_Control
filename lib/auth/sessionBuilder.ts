@@ -52,10 +52,13 @@ export async function buildLocalSessionForUser(
   ]);
 
   const isGlobalAdmin = user.globalRole === "global_admin" || user.is_global_admin === true;
-  const hasDevRole =
+  const hasLegacyTechnicalSupportRole =
     normalizeLocalRole(user.role ?? null) === "it_dev" ||
     links.some((link) => normalizeLocalRole(link.role ?? null) === "it_dev");
-  const hasFullCompanyAccess = isGlobalAdmin || hasDevRole;
+  const hasTechnicalSupportRole =
+    normalizeLocalRole(user.role ?? null) === "technical_support" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "technical_support");
+  const hasFullCompanyAccess = isGlobalAdmin || hasLegacyTechnicalSupportRole || hasTechnicalSupportRole;
   const shouldBindCompanyContext = !hasFullCompanyAccess;
   const allowedCompanies = hasFullCompanyAccess
     ? companies
@@ -95,11 +98,13 @@ export async function buildLocalSessionForUser(
   const effectiveRole =
     companyRole === "it_dev"
       ? "it_dev"
-      : isGlobalAdmin
-        ? "admin"
-        : companyRole === "company_admin"
-          ? "company"
-          : "user";
+      : companyRole === "technical_support"
+        ? "technical_support"
+        : isGlobalAdmin
+          ? "admin"
+          : companyRole === "company_admin"
+            ? "company"
+            : "user";
 
   const displayName =
     (typeof user.full_name === "string" ? user.full_name.trim() : "") ||

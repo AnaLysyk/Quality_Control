@@ -1,5 +1,6 @@
 import type { AccessContext } from "@/core/session/session.store";
 import { resolveEditableProfileRole, type EditableProfileRole } from "@/lib/editableProfileRoles";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 export type DeletablePermissionRole = EditableProfileRole;
 
@@ -7,10 +8,10 @@ function normalizePermissionRole(input?: string | null): DeletablePermissionRole
   return resolveEditableProfileRole(input);
 }
 
-export function isGlobalDeveloperAccess(access: Pick<AccessContext, "role" | "companyRole"> | null | undefined) {
-  const role = (access?.role ?? "").toLowerCase();
-  const companyRole = (access?.companyRole ?? "").toLowerCase();
-  return role === "it_dev" || companyRole === "it_dev";
+export function canManageInstitutionalProfiles(access: Pick<AccessContext, "role" | "companyRole"> | null | undefined) {
+  const role = normalizeLegacyRole(access?.role);
+  const companyRole = normalizeLegacyRole(access?.companyRole);
+  return role === SYSTEM_ROLES.LEADER_TC || companyRole === SYSTEM_ROLES.LEADER_TC;
 }
 
 export function canDeleteUserByProfile(
@@ -20,13 +21,13 @@ export function canDeleteUserByProfile(
   const targetRole = normalizePermissionRole(targetPermissionRole);
   if (!targetRole) return false;
 
-  if (isGlobalDeveloperAccess(access)) {
+  if (canManageInstitutionalProfiles(access)) {
     return true;
   }
 
-  const actorRole = (access?.role ?? "").toLowerCase();
-  if (actorRole === "admin") {
-    return targetRole === "admin" || targetRole === "leader_tc" || targetRole === "company" || targetRole === "user";
+  const actorRole = normalizeLegacyRole(access?.role);
+  if (actorRole === SYSTEM_ROLES.LEADER_TC) {
+    return true;
   }
 
   return false;

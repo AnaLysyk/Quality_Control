@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { listUserRequests } from "@/data/requestsStore";
 import { countUnreadUserNotifications, createUserNotification, listUserNotifications } from "@/lib/userNotificationsStore";
-import { canAdminReviewQueue, resolveReviewQueue } from "@/lib/requestRouting";
+import { canAdminReviewQueue, normalizeRequestProfileType, resolveReviewQueue } from "@/lib/requestRouting";
 
 const PENDING_RESET_SYNC_TTL_MS = 60_000;
 
@@ -34,12 +34,8 @@ async function syncPendingResetNotifications(userId: string) {
       (request.payload.reviewQueue === "admin_and_global" || request.payload.reviewQueue === "global_only")
         ? request.payload.reviewQueue
         : resolveReviewQueue(
-            typeof request.payload?.profileType === "string" &&
-              (request.payload.profileType === "testing_company_user" ||
-                request.payload.profileType === "company_user" ||
-                request.payload.profileType === "testing_company_lead" ||
-                request.payload.profileType === "technical_support")
-              ? request.payload.profileType
+            typeof request.payload?.profileType === "string"
+              ? normalizeRequestProfileType(request.payload.profileType) ?? "testing_company_user"
               : "testing_company_user",
           );
     await createUserNotification(userId, {

@@ -59,13 +59,13 @@ export async function PATCH(
     return NextResponse.json({ error: `Transição não permitida: ${getTicketStatusLabel(fromStatus)} → ${getTicketStatusLabel(toStatus)}` }, { status: 400 });
   }
 
-  // Regra: não pode ir para DONE sem comentário de dev
+  // Regra: nao pode ir para DONE sem comentario do operador responsavel.
   if (toStatus === "done") {
     // Busca comentários do ticket
     const commentsRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/chamados/${id}/comments`, { headers: { "Content-Type": "application/json" }, credentials: "include" });
     const commentsJson = await commentsRes.json().catch(() => ({}));
-    const hasDevComment = Array.isArray(commentsJson.items) && commentsJson.items.some((c: any) => c.authorUserId === user.id && !c.deletedAt);
-    if (!hasDevComment) {
+    const hasOperatorComment = Array.isArray(commentsJson.items) && commentsJson.items.some((c: any) => c.authorUserId === user.id && !c.deletedAt);
+    if (!hasOperatorComment) {
       return NextResponse.json({ error: "Para concluir (DONE), é obrigatório pelo menos 1 comentário seu neste chamado." }, { status: 400 });
     }
   }

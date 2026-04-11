@@ -1,5 +1,8 @@
 import type { RequestRecord } from "@/data/requestsStore";
 import { parseAccessRequestMessage } from "@/lib/accessRequestMessage";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { hasPermissionAccess } from "@/lib/permissionMatrix";
+import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
 import {
   canAdminReviewQueue,
   normalizeRequestProfileType,
@@ -13,24 +16,20 @@ type ReviewerSession = {
 };
 
 export function isGlobalReviewer(session: ReviewerSession | null | undefined) {
+  return canReviewAccessRequests(session);
+}
+
+export function canReviewAccessRequests(session: ReviewerSession | null | undefined) {
   if (!session) return false;
+  const role = normalizeLegacyRole(session.role);
+  if (role === SYSTEM_ROLES.TECHNICAL_SUPPORT) return false;
   if (session.isGlobalAdmin === true) return true;
-  const role = (session?.role ?? "").toLowerCase().trim();
-  return (
-    role === "it_dev" ||
-    role === "itdev" ||
-    role === "developer" ||
-    role === "dev" ||
-    role === "technical_support" ||
-    role === "support" ||
-    role === "tech_support" ||
-    role === "support_tech"
-  );
+  return role === SYSTEM_ROLES.LEADER_TC || hasPermissionAccess(resolveRoleDefaults(role), "access_requests", "view");
 }
 
 export function canReviewerAccessQueue(session: ReviewerSession | null | undefined, queue: ReviewQueue) {
-  if (isGlobalReviewer(session)) return true;
-  return canAdminReviewQueue(queue);
+  if (!canReviewAccessRequests(session)) return false;
+  return queue === "global_only" || canAdminReviewQueue(queue);
 }
 
 export function resolveAccessRequestQueue(message: string, fallbackEmail: string) {

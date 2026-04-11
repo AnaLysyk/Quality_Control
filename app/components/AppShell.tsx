@@ -575,7 +575,10 @@ export default function AppShell({ children }: AppShellProps) {
       clientSlug: typeof user?.clientSlug === "string" ? user.clientSlug : null,
       companyCount: companies.length,
     });
-    const viewerProfile: ViewerProfileKind = isCompanyRoute ? "empresa" : resolvedViewerProfile;
+    const viewerProfile: ViewerProfileKind =
+      isCompanyRoute && (resolvedViewerProfile === "empresa" || resolvedViewerProfile === "company_user")
+        ? "empresa"
+        : resolvedViewerProfile;
 
     const { logoSrc, logoAlt, logoFallbackText } = profileLogo(viewerProfile, companyBrand, routeCompanySlug, shellCopy);
     const shouldCollapseCompanyKicker =

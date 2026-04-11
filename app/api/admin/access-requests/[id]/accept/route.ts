@@ -10,13 +10,14 @@ import {
   parseAccessRequestMessage,
 } from "@/lib/accessRequestMessage";
 import { prisma } from "@/lib/prismaClient";
-import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
 import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import {
   normalizeRequestProfileType,
   requestProfileTypeNeedsCompany,
   toInternalAccessType,
 } from "@/lib/requestRouting";
+import { resolveEditableProfileUserState, type EditableProfileRole } from "@/lib/editableProfileRoles";
 import { notifyAccessRequestAccepted } from "@/lib/notificationService";
 import { resolveReviewQueue } from "@/lib/requestRouting";
 import { shouldUseJsonStore } from "@/lib/storeMode";
@@ -210,9 +211,10 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
       login,
       fullName,
       displayName,
-      role: "it_dev" as const,
-      globalRole: "global_admin" as const,
-      isGlobalAdmin: true,
+      profileRole: "technical_support" as EditableProfileRole,
+      role: "technical_support" as const,
+      globalRole: null,
+      isGlobalAdmin: false,
       linkCompanyId: null,
       membershipRole: null,
       passwordHash: parsed.passwordHash,
@@ -225,7 +227,8 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
       login,
       fullName,
       displayName,
-      role: "user" as const,
+      profileRole: "leader_tc" as EditableProfileRole,
+      role: "leader_tc" as const,
       globalRole: "global_admin" as const,
       isGlobalAdmin: true,
       linkCompanyId: null,
@@ -257,16 +260,18 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
       status: "active",
       created_at: new Date().toISOString(),
     });
+    const membershipRole = profileType === "company_user" ? "user" : "company_admin";
     return {
       email,
       login,
       fullName,
       displayName,
-      role: "company_admin" as const,
+      profileRole: (profileType === "company_user" ? "company_user" : "empresa") as EditableProfileRole,
+      role: membershipRole,
       globalRole: null,
       isGlobalAdmin: false,
       linkCompanyId: createdCompany.id,
-      membershipRole: "company_admin" as const,
+      membershipRole,
       passwordHash: parsed.passwordHash,
     };
   }
@@ -282,6 +287,7 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
     login,
     fullName,
     displayName,
+    profileRole: "testing_company_user" as EditableProfileRole,
     role: "user" as const,
     globalRole: null,
     isGlobalAdmin: false,
@@ -302,6 +308,7 @@ async function ensureLocalUser(message: string, fallbackEmail: string) {
     role: resolved.role,
     globalRole: resolved.globalRole,
     is_global_admin: resolved.isGlobalAdmin,
+    ...resolveEditableProfileUserState(resolved.profileRole, resolved.linkCompanyId),
     active: true,
   });
 

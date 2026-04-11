@@ -67,7 +67,7 @@ describe("admin user profile classification", () => {
     });
     const links = [makeLink("company_admin")];
 
-    expect(resolvePermissionRoleForUser(user, links)).toBe("company");
+    expect(resolvePermissionRoleForUser(user, links)).toBe("empresa");
     expect(resolveAdminUserProfileKind(user, links, makeCompany("company_admin"))).toBe("empresa");
     expect(
       buildAdminUserItem(
@@ -94,7 +94,7 @@ describe("admin user profile classification", () => {
     });
     const links = [makeLink("user")];
 
-    expect(resolvePermissionRoleForUser(user, links)).toBe("user");
+    expect(resolvePermissionRoleForUser(user, links)).toBe("company_user");
     expect(resolveAdminUserProfileKind(user, links, makeCompany("user"))).toBe("company_user");
   });
 
@@ -110,7 +110,7 @@ describe("admin user profile classification", () => {
     });
     const links = [makeLink("user")];
 
-    expect(resolvePermissionRoleForUser(user, links)).toBe("user");
+    expect(resolvePermissionRoleForUser(user, links)).toBe("testing_company_user");
     expect(resolveAdminUserProfileKind(user, links, makeCompany("user"))).toBe("testing_company_user");
   });
 

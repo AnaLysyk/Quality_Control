@@ -1,5 +1,6 @@
 import { hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
-import { ROLE_DEFAULTS, type Role } from "@/lib/permissions/roleDefaults";
+import { resolveRoleDefaults, type Role } from "@/lib/permissions/roleDefaults";
+import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 
 type SupportAccessUser = {
   role?: string | null;
@@ -9,48 +10,16 @@ type SupportAccessUser = {
   permissions?: PermissionMatrix | null;
 } | null | undefined;
 
-function normalizeRole(value?: string | null) {
-  return (value ?? "").trim().toLowerCase();
-}
-
 function toRoleKey(value?: string | null): Role | null {
-  const normalized = normalizeRole(value);
-  if (!normalized) return null;
-
-  if (normalized === "admin" || normalized === "global_admin") return "admin";
-  if (normalized === "dev" || normalized === "it_dev" || normalized === "itdev" || normalized === "developer") return "dev";
-  if (
-    normalized === "company" ||
-    normalized === "company_admin" ||
-    normalized === "client_admin" ||
-    normalized === "client_owner" ||
-    normalized === "client_manager"
-  ) {
-    return "company";
-  }
-  if (normalized === "support") return "support";
-  if (
-    normalized === "technical_support" ||
-    normalized === "tech_support" ||
-    normalized === "support_tech"
-  ) {
-    return "technical_support";
-  }
-  if (normalized === "leader_tc" || normalized === "lider_tc" || normalized === "tc_leader") return "leader_tc";
-  if (
-    normalized === "user" ||
-    normalized === "viewer" ||
-    normalized === "company_user" ||
-    normalized === "testing_company_user"
-  ) {
-    return "user";
-  }
-
-  return null;
+  return normalizeLegacyRole(value);
 }
 
 function resolveRoleKey(user: SupportAccessUser) {
   return toRoleKey(user?.permissionRole) ?? toRoleKey(user?.role) ?? toRoleKey(user?.companyRole);
+}
+
+function hasCanonicalRole(user: SupportAccessUser, role: SystemRole) {
+  return resolveRoleKey(user) === role;
 }
 
 function hasRoleDefaultAccess(
@@ -60,19 +29,8 @@ function hasRoleDefaultAccess(
 ) {
   const roleKey = resolveRoleKey(user);
   if (!roleKey) return false;
-  return Array.isArray(ROLE_DEFAULTS[roleKey]?.[moduleId]) && ROLE_DEFAULTS[roleKey][moduleId].includes(action);
-}
-
-function matchesAnyRole(
-  user: SupportAccessUser,
-  values: string[],
-) {
-  const allowed = new Set(values.map((value) => normalizeRole(value)));
-  return (
-    allowed.has(normalizeRole(user?.role)) ||
-    allowed.has(normalizeRole(user?.permissionRole)) ||
-    allowed.has(normalizeRole(user?.companyRole))
-  );
+  const roleDefaults = resolveRoleDefaults(roleKey);
+  return Array.isArray(roleDefaults[moduleId]) && roleDefaults[moduleId].includes(action);
 }
 
 export function hasSupportAccess(
@@ -97,28 +55,15 @@ export function canCommentSupportTickets(user: SupportAccessUser) {
 }
 
 export function isTechnicalSupportUser(user: SupportAccessUser) {
-  return matchesAnyRole(user, [
-    "technical_support",
-    "support",
-    "tech_support",
-    "support_tech",
-  ]);
+  return hasCanonicalRole(user, SYSTEM_ROLES.TECHNICAL_SUPPORT);
 }
 
 export function isSupportDeveloperUser(user: SupportAccessUser) {
-  return matchesAnyRole(user, [
-    "it_dev",
-    "itdev",
-    "developer",
-    "dev",
-  ]);
+  return hasCanonicalRole(user, SYSTEM_ROLES.TECHNICAL_SUPPORT);
 }
 
 export function isSupportAdminUser(user: SupportAccessUser) {
-  return Boolean(user?.isGlobalAdmin) || matchesAnyRole(user, [
-    "admin",
-    "global_admin",
-  ]);
+  return Boolean(user?.isGlobalAdmin) || hasCanonicalRole(user, SYSTEM_ROLES.LEADER_TC);
 }
 
 export function isSupportOperatorUser(user: SupportAccessUser) {

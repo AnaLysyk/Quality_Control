@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { useClientContext } from "@/context/ClientContext";
 import { useEffect } from "react";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 export default function CreateSupportTicketButton() {
   const { user, can } = usePermissionAccess();
@@ -17,7 +18,7 @@ export default function CreateSupportTicketButton() {
     title: "",
     description: "",
   });
-  const [devs, setDevs] = useState<Array<{ id: string; name: string }>>([]);
+  const [supportOperators, setSupportOperators] = useState<Array<{ id: string; name: string }>>([]);
   const [assignedTo, setAssignedTo] = useState<string | null>(null);
 
   const handleSubmit = async () => {
@@ -55,7 +56,7 @@ export default function CreateSupportTicketButton() {
 
   useEffect(() => {
     let mounted = true;
-    async function loadDevs() {
+    async function loadSupportOperators() {
       if (!open) return;
       try {
         const companyId = activeClientId ?? (user as any)?.company?.id ?? (user as any)?.companyId ?? null;
@@ -64,16 +65,16 @@ export default function CreateSupportTicketButton() {
         if (!res.ok) return;
         const users = await res.json().catch(() => []);
         if (!mounted) return;
-        const devs = Array.isArray(users) ? users.filter((u: any) => {
-          const role = (u.role ?? "").toString().toLowerCase();
-          return role === "dev" || role === "it_dev" || role === "itdev" || role === "developer";
+        const operators = Array.isArray(users) ? users.filter((u: any) => {
+          const role = normalizeLegacyRole(u.role ?? null);
+          return role === SYSTEM_ROLES.TECHNICAL_SUPPORT;
         }).map((u: any) => ({ id: u.id, name: u.name || u.email || u.id })) : [];
-        setDevs(devs);
+        setSupportOperators(operators);
       } catch {
         // ignore
       }
     }
-    loadDevs();
+    loadSupportOperators();
     return () => { mounted = false; };
   }, [open]);
 
@@ -113,18 +114,18 @@ export default function CreateSupportTicketButton() {
                   placeholder="Descreva o problema ou solicitação"
                 />
               </div>
-              {devs.length > 0 && (
+              {supportOperators.length > 0 && (
                 <div>
-                  <label className="text-sm font-semibold text-(--tc-text-muted)">Atribuir a (dev)</label>
+                  <label className="text-sm font-semibold text-(--tc-text-muted)">Atribuir ao suporte tecnico</label>
                   <select
                     id="create-support-assignee"
-                    aria-label="Atribuir a (dev)"
+                    aria-label="Atribuir ao suporte tecnico"
                     className="w-full rounded-xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent)"
                     value={assignedTo ?? ""}
                     onChange={(e) => setAssignedTo(e.target.value || null)}
                   >
                     <option value="">-- nenhum --</option>
-                    {devs.map((d) => (
+                    {supportOperators.map((d) => (
                       <option key={d.id} value={d.id}>{d.name}</option>
                     ))}
                   </select>

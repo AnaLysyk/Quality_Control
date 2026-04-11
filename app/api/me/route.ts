@@ -18,6 +18,7 @@ import { isAvatarKey } from "@/lib/avatarCatalog";
 import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 import { COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode } from "@/lib/companyRoutes";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -48,10 +49,12 @@ export async function GET(req: Request) {
   ]);
   const permissionAccess = await resolvePermissionAccessForUser(user.id);
   const isGlobalAdmin = access.isGlobalAdmin === true;
-  const normalizedRole = (access.role ?? "").toLowerCase();
-  const normalizedCompanyRole = (access.companyRole ?? "").toLowerCase();
-  const hasDeveloperPrivileges = normalizedRole === "it_dev" || normalizedCompanyRole === "it_dev";
-  const hasPrivilegedAccess = isGlobalAdmin || hasDeveloperPrivileges;
+  const normalizedRole = normalizeLegacyRole(access.role);
+  const normalizedCompanyRole = normalizeLegacyRole(access.companyRole);
+  const hasTechnicalSupportPrivileges =
+    normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
+    normalizedCompanyRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
+  const hasPrivilegedAccess = isGlobalAdmin || hasTechnicalSupportPrivileges;
   const allowedSlugSet = new Set(
     (access.companySlugs ?? [])
       .map((slug) => (typeof slug === "string" ? slug.trim().toLowerCase() : ""))
@@ -394,16 +397,15 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
-    const normalizedRole = (access.role ?? "").trim().toLowerCase();
-    const normalizedCompanyRole = (access.companyRole ?? "").trim().toLowerCase();
+    const normalizedRole = normalizeLegacyRole(access.role);
+    const normalizedCompanyRole = normalizeLegacyRole(access.companyRole);
     const canDeleteDirectly =
       access.isGlobalAdmin === true ||
-      normalizedRole === "admin" ||
-      normalizedRole === "global_admin" ||
-      normalizedRole === "it_dev" ||
-      normalizedCompanyRole === "it_dev";
+      normalizedRole === SYSTEM_ROLES.LEADER_TC ||
+      normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
+      normalizedCompanyRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
     if (!canDeleteDirectly) {
-      return NextResponse.json({ error: "Somente admin ou global podem deletar o perfil diretamente" }, { status: 403 });
+      return NextResponse.json({ error: "Somente lider TC ou suporte tecnico podem deletar o perfil diretamente" }, { status: 403 });
     }
 
     const user = await getLocalUserById(access.userId);

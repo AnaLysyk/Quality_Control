@@ -259,25 +259,9 @@ export function DeferredTicketsButton() {
 }
 
 export function ThemeToggleButton() {
-  const { theme, setTheme } = useAppSettings();
+  const { resolvedTheme, setTheme } = useAppSettings();
   const { t } = useI18n();
-  const [resolvedDark, setResolvedDark] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const sync = () => {
-      const useDark = theme === "dark" || (theme === "system" && media.matches);
-      setResolvedDark(useDark);
-    };
-
-    sync();
-    media.addEventListener("change", sync);
-    return () => {
-      media.removeEventListener("change", sync);
-    };
-  }, [theme]);
+  const resolvedDark = resolvedTheme === "dark";
 
   const nextTheme = resolvedDark ? "light" : "dark";
   const ariaLabel = resolvedDark ? t("themeToggle.switchToLight") : t("themeToggle.switchToDark");
@@ -372,7 +356,7 @@ export function DeferredChatButton() {
 
 export function DeferredProfileButton() {
   const { user, loading } = useAuthUser();
-  const { theme } = useAppSettings();
+  const { resolvedTheme } = useAppSettings();
   const { activeClient } = useClientContext();
   const [mounted, setMounted] = useState(false);
   const [defaultOpen, setDefaultOpen] = useState(false);
@@ -415,7 +399,7 @@ export function DeferredProfileButton() {
   const effectiveAvatarName = activeIdentity.displayName;
   const isLoadingComponent = mounted && !ProfileButtonComponent;
   const profileAvatarFrameClass = effectiveAvatarUrl
-    ? "border border-slate-300 bg-[#f7f9fc] ring-1 ring-white/70 shadow-[0_18px_40px_rgba(15,23,42,0.16)] dark:border-slate-500 dark:bg-[#13213a] dark:ring-white/10"
+    ? "border border-border bg-surface2 ring-1 ring-border/40 shadow-[0_18px_40px_rgba(15,23,42,0.16)]"
     : "border-0 bg-linear-to-br from-(--tc-primary) to-[#7a1026] ring-0 shadow-none";
 
   return (
@@ -430,7 +414,7 @@ export function DeferredProfileButton() {
         effectiveAvatarUrl
           ? "bg-transparent p-0 hover:shadow-[0_12px_26px_rgba(15,23,42,0.24)]"
           : "border border-white/12 bg-(--tc-surface-dark,#0f1828) hover:border-(--tc-primary,#4e8df5) hover:shadow-[0_12px_26px_rgba(78,141,245,0.25)]"
-      } ${theme === "dark" ? "dark" : ""} ${isLoadingComponent ? "cursor-progress opacity-80" : ""}`}
+      } ${resolvedTheme === "dark" ? "dark" : ""} ${isLoadingComponent ? "cursor-progress opacity-80" : ""}`}
       disabled={isLoadingComponent}
     >
       <UserAvatar
@@ -440,7 +424,7 @@ export function DeferredProfileButton() {
         size="sm"
         className="h-full w-full"
         frameClassName={profileAvatarFrameClass}
-        fallbackClassName={effectiveAvatarUrl ? "text-slate-700 dark:text-slate-100" : "text-white tracking-[0.16em]"}
+        fallbackClassName={effectiveAvatarUrl ? "text-muted" : "text-white tracking-[0.16em]"}
       />
     </button>
   );

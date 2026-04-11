@@ -7,7 +7,7 @@ import {
   parseAccessRequestMessage,
 } from "@/lib/accessRequestMessage";
 import { prisma } from "@/lib/prismaClient";
-import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
 import { canReviewerAccessQueue, isGlobalReviewer, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import {
   normalizeRequestProfileType,

@@ -80,11 +80,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         const storedLanguage = parsed && (parsed.language === "pt-BR" || parsed.language === "en-US") ? parsed.language : "pt-BR";
         const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
         const useDark = storedTheme === "dark" || (storedTheme === "system" && (isResolved(cookieResolved) ? cookieResolved === "dark" : prefersDark));
+        const resolvedTheme = useDark ? "dark" : "light";
         root.classList.toggle("dark", useDark);
         root.classList.toggle("theme-light", !useDark);
-        root.style.colorScheme = useDark ? "dark" : "light";
+        root.dataset.theme = resolvedTheme;
         root.dataset.themePreference = storedTheme;
-        root.dataset.themeResolved = useDark ? "dark" : "light";
+        root.dataset.themeResolved = resolvedTheme;
         root.lang = storedLanguage;
       } catch (err) {
         /* ignore */
@@ -122,9 +123,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       lang="pt-BR"
       suppressHydrationWarning
       className={initialUseDark ? "dark" : "theme-light"}
+      data-theme={initialResolvedTheme}
       data-theme-preference={initialThemePreference}
       data-theme-resolved={initialResolvedTheme}
-      style={{ colorScheme: initialResolvedTheme }}
     >
       <head>
         <Script id="migrate-storage" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: migrateStorageScript }} />

@@ -4,6 +4,7 @@ import { shouldUseJsonStore } from "@/lib/storeMode";
 import { listAccessRequests } from "@/data/accessRequestsStore";
 import { listAccessRequestComments } from "@/data/accessRequestCommentsStore";
 import { extractAdminNotes, parseAccessRequestMessage } from "@/lib/accessRequestMessage";
+import { matchesAccessRequestLookup, normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 
 export const dynamic = "force-dynamic";
@@ -17,14 +18,6 @@ type SupportRequestRow = {
   created_at: Date | string;
   updated_at?: Date | string | null;
 };
-
-function normalizeLookup(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
 
 function normalizeCreatedAt(value: Date | string) {
   if (typeof value === "string") return value;
@@ -41,8 +34,9 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const rawName = url.searchParams.get("name") ?? "";
   const rawEmail = url.searchParams.get("email") ?? "";
-  const name = normalizeLookup(rawName);
-  const email = normalizeLookup(rawEmail);
+  const name = normalizeAccessRequestLookup(rawName);
+  const email = normalizeAccessRequestLookup(rawEmail);
+  const trimmedEmail = rawEmail.trim().toLowerCase();
 
   if (!name || !email) {
     return NextResponse.json({ error: "Informe nome e e-mail." }, { status: 400, headers: NO_STORE_HEADERS });
@@ -62,7 +56,12 @@ export async function GET(req: Request) {
   } else {
     try {
       const list = (await prisma.supportRequest.findMany({
-        where: { email: rawEmail.trim().toLowerCase() },
+        where: {
+          OR: [
+            { email: trimmedEmail },
+            { message: { contains: trimmedEmail, mode: "insensitive" } },
+          ],
+        },
         orderBy: { created_at: "desc" },
       })) as SupportRequestRow[];
       items = list.map((item: SupportRequestRow) => ({
@@ -88,9 +87,13 @@ export async function GET(req: Request) {
   }
 
   const match = items.find((item) => {
-    if (normalizeLookup(item.email ?? "") !== email) return false;
     const parsed = parseAccessRequestMessage(String(item.message ?? ""), String(item.email ?? ""));
-    return normalizeLookup(parsed.fullName || parsed.name || "") === name;
+    return matchesAccessRequestLookup({
+      lookupEmail: email,
+      lookupName: name,
+      parsed,
+      storedEmail: item.email,
+    });
   });
 
   if (!match) {

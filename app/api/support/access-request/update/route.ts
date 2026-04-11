@@ -24,6 +24,7 @@ import {
   type RequestProfileType,
 } from "@/lib/requestRouting";
 import { shouldUseJsonStore } from "@/lib/storeMode";
+import { matchesAccessRequestLookup, normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
 
 type SupportRequestRow = {
   id: string;
@@ -86,14 +87,6 @@ type AdjustmentSnapshot = {
   notes: string;
   passwordHash: string;
 };
-
-function normalizeLookup(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
 
 function sanitize(value: unknown, max = 255): string {
   if (typeof value !== "string") return "";
@@ -199,8 +192,8 @@ async function findRequestById(id: string): Promise<SupportRequestRow | null> {
 }
 
 async function findRequestByLookup(email: string, name: string): Promise<SupportRequestRow | null> {
-  const normalizedEmail = normalizeLookup(email);
-  const normalizedName = normalizeLookup(name);
+  const normalizedEmail = normalizeAccessRequestLookup(email);
+  const normalizedName = normalizeAccessRequestLookup(name);
   if (!normalizedEmail || !normalizedName) return null;
 
   let items: SupportRequestRow[] = [];
@@ -217,7 +210,12 @@ async function findRequestByLookup(email: string, name: string): Promise<Support
   } else {
     try {
       const list = (await prisma.supportRequest.findMany({
-        where: { email: email.trim().toLowerCase() },
+        where: {
+          OR: [
+            { email: email.trim().toLowerCase() },
+            { message: { contains: email.trim().toLowerCase(), mode: "insensitive" } },
+          ],
+        },
         orderBy: { created_at: "desc" },
       })) as SupportRequestRow[];
       items = list.map((item) => ({
@@ -244,9 +242,13 @@ async function findRequestByLookup(email: string, name: string): Promise<Support
 
   return (
     items.find((item) => {
-      if (normalizeLookup(item.email ?? "") !== normalizedEmail) return false;
       const parsed = parseAccessRequestMessage(String(item.message ?? ""), String(item.email ?? ""));
-      return normalizeLookup(parsed.fullName || parsed.name || "") === normalizedName;
+      return matchesAccessRequestLookup({
+        lookupEmail: normalizedEmail,
+        lookupName: normalizedName,
+        parsed,
+        storedEmail: item.email,
+      });
     }) ?? null
   );
 }
@@ -271,10 +273,7 @@ export async function PATCH(req: Request) {
   }
 
   const parsed = parseAccessRequestMessage(String(request.message ?? ""), String(request.email ?? ""));
-  if (
-    normalizeLookup(parsed.fullName || parsed.name || "") !== normalizeLookup(lookupName) ||
-    normalizeLookup(request.email ?? "") !== normalizeLookup(lookupEmail)
-  ) {
+  if (!matchesAccessRequestLookup({ lookupEmail, lookupName, parsed, storedEmail: request.email })) {
     return NextResponse.json({ error: "Dados nao conferem com a solicitacao." }, { status: 403 });
   }
 

@@ -496,7 +496,7 @@ function isCompanyAppsRoute(pathname: string) {
 }
 
 function shouldHideShellCover(pathname: string) {
-  const hasAdminHeroCover = /^\/admin\/(?:home|test-metric|users|clients|support)(?:\/.*)?$/.test(pathname);
+  const hasAdminHeroCover = /^\/admin\/(?:home|test-metric|users|clients|support|access-requests)(?:\/.*)?$/.test(pathname);
   return (
     pathname.startsWith("/settings/profile") ||
     pathname.startsWith("/requests") ||

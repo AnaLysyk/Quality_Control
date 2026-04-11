@@ -1,9 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./AccessRequests.module.css";
 import { FiCheckCircle, FiClock, FiRefreshCw, FiSearch, FiSlash } from "react-icons/fi";
 import { RequireAccessRequestReviewer } from "@/core/auth/RequireAccessRequestReviewer";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import { getAccessToken } from "@/lib/api";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 import type {
@@ -251,6 +253,7 @@ const sectionMuted =
   "rounded-3xl border border-(--tc-border) bg-(--tc-surface-2) p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]";
 
 function AccessRequestsPage() {
+  const { user } = useAuthUser();
   const [items, setItems] = useState<AccessRequestItem[]>([]);
   const [clients, setClients] = useState<ClientOption[]>([]);
   const [existingLogins, setExistingLogins] = useState<string[]>([]);
@@ -269,6 +272,22 @@ function AccessRequestsPage() {
   const [commentError, setCommentError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "in_progress" | "closed" | "rejected">("all");
+
+  const viewerProfileLabel = useMemo(() => {
+    const permissionRole = typeof user?.permissionRole === "string" ? user.permissionRole : null;
+    const role = typeof user?.role === "string" ? user.role : null;
+    const companyRole = typeof user?.companyRole === "string" ? user.companyRole : null;
+    const normalizedRole =
+      normalizeRequestProfileType(permissionRole) ??
+      normalizeRequestProfileType(role) ??
+      normalizeRequestProfileType(companyRole);
+
+    if (normalizedRole === "technical_support") return "Suporte tecnico";
+    if (normalizedRole === "leader_tc") return "Lider TC";
+    if (normalizedRole === "empresa") return "Empresa";
+    if (normalizedRole === "company_user") return "Usuario da empresa";
+    return "Painel institucional";
+  }, [user?.companyRole, user?.permissionRole, user?.role]);
 
   // Track whether the user has modified the draft form since the last selection change.
   // Prevents React Strict Mode double-invoke of load() from resetting user edits.
@@ -725,13 +744,26 @@ function AccessRequestsPage() {
         >
           <div className={`pointer-events-none absolute -right-10 top-0 h-28 w-28 rounded-full blur-3xl ${styles.blurDecorWhite}`} />
           <div className={`pointer-events-none absolute bottom-0 left-1/3 h-24 w-24 rounded-full blur-3xl ${styles.blurDecorRed}`} />
-          <div className="flex flex-wrap items-start justify-between gap-5">
-            <div className="max-w-3xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/72">Admin</p>
-              <h1 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Solicitacoes de acesso</h1>
-              <p className="mt-2 max-w-2xl text-sm text-white/84">
-                Central de triagem para revisar o que foi enviado pelo solicitante, decidir perfil, empresa e concluir a aprovacao.
-              </p>
+          <div className="relative z-10 flex flex-wrap items-start justify-between gap-5">
+            <div className="flex min-w-0 max-w-3xl items-start gap-4 sm:gap-5">
+              <div className="app-page-cover-logo h-14 w-14 sm:h-16 sm:w-16">
+                <Image
+                  src="/images/tc.png"
+                  alt="Logo Testing Company"
+                  width={72}
+                  height={72}
+                  className="h-12 w-12 object-contain sm:h-14 sm:w-14"
+                  priority
+                />
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/72">{viewerProfileLabel}</p>
+                <h1 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Solicitacoes de acesso</h1>
+                <p className="mt-2 max-w-2xl text-sm text-white/84">
+                  Central de triagem para revisar o que foi enviado pelo solicitante, decidir perfil, empresa e concluir a aprovacao.
+                </p>
+              </div>
             </div>
 
             <button

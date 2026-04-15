@@ -240,6 +240,7 @@ export default function LoginClient() {
         <form
           className="mx-auto w-full max-w-sm min-w-0 rounded-2xl border border-[#011848]/10 bg-white/90 p-5 shadow-2xl backdrop-blur-sm sm:max-w-md sm:p-8"
           onSubmit={handleSubmit}
+          autoComplete="off"
         >
           <div className="space-y-4">
             <div>
@@ -253,7 +254,7 @@ export default function LoginClient() {
                 required
                 className="form-control-user w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
                 placeholder="usuário"
-                autoComplete="username"
+                autoComplete="off"
                 value={user}
                 onChange={(e) => setUser(e.target.value)}
               />
@@ -268,10 +269,10 @@ export default function LoginClient() {
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   required
                   className="form-control-user w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white pr-11 text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
-                  placeholder="********"
+                  placeholder="Senha"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />

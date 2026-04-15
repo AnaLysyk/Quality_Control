@@ -134,11 +134,18 @@ function resolveProfileKind(input?: CompanyRouteAccessInput | null): FixedProfil
     return SYSTEM_ROLES.LEADER_TC;
   }
 
+  // companyRole reflects the user's role for the active company in their session.
+  // It must take priority over permissionRole (which is system-wide and can include
+  // cross-company TS links) to avoid routing empresa accounts through /suporte/.
+  if (input.isInstitutionalCompany === true || companyRole === SYSTEM_ROLES.EMPRESA) {
+    return SYSTEM_ROLES.EMPRESA;
+  }
+
   if (permissionRole === SYSTEM_ROLES.TECHNICAL_SUPPORT || role === SYSTEM_ROLES.TECHNICAL_SUPPORT || companyRole === SYSTEM_ROLES.TECHNICAL_SUPPORT) {
     return SYSTEM_ROLES.TECHNICAL_SUPPORT;
   }
 
-  if (input.isInstitutionalCompany === true || permissionRole === SYSTEM_ROLES.EMPRESA || role === SYSTEM_ROLES.EMPRESA || companyRole === SYSTEM_ROLES.EMPRESA) {
+  if (permissionRole === SYSTEM_ROLES.EMPRESA || role === SYSTEM_ROLES.EMPRESA) {
     return SYSTEM_ROLES.EMPRESA;
   }
 

@@ -233,6 +233,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
 
   async function pushAssistantResponse(payload: { message?: string; action?: AssistantToolAction | null }, optimisticText?: string) {
     if (sending) return;
+    if (!user) return;
     const trimmedOptimistic = optimisticText?.trim() ?? "";
     if (!payload.action && !trimmedOptimistic) return;
 

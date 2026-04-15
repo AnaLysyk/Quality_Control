@@ -32,6 +32,7 @@ import {
   DeferredTicketsButton,
   ThemeToggleButton,
 } from "./LazyShellTools";
+import NewVersionBanner from "./NewVersionBanner";
 
 interface AppShellProps {
   children: ReactNode;
@@ -629,6 +630,7 @@ export default function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="min-h-screen w-full bg-(--page-bg) text-(--page-text) app-shell">
+      <NewVersionBanner />
       {/* Detector de hover na lateral esquerda para telas pequenas */}
       <div
         className={`fixed top-0 left-0 h-full w-16 z-40 menu-hover-area${mobileOpen ? ' menu-hover-area--disabled' : ''}`}

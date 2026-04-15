@@ -150,7 +150,8 @@ export default function LoginClient() {
     const isAdmin =
       authUser?.isGlobalAdmin === true ||
       authUser?.globalRole === "global_admin" ||
-      normalizedRole === "admin";
+      normalizedRole === "leader_tc" ||
+      normalizedRole === "technical_support";
     const clientSlug =
       typeof authUser?.clientSlug === "string"
         ? authUser.clientSlug

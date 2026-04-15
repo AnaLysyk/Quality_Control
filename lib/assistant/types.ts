@@ -2,9 +2,12 @@ export type AssistantModule =
   | "support"
   | "permissions"
   | "company"
+  | "companies"
   | "test_plans"
   | "dashboard"
   | "releases"
+  | "integrations"
+  | "admin"
   | "general";
 
 export type AssistantContextEntityType =

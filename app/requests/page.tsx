@@ -12,16 +12,17 @@ import { useI18n } from "@/hooks/useI18n";
 type RequestRecord = {
   id: string;
   type: "EMAIL_CHANGE" | "COMPANY_CHANGE" | "PASSWORD_RESET" | "PROFILE_DELETION";
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_REVISION";
   payload: Record<string, unknown>;
   createdAt: string;
   reviewNote?: string;
 };
 
-const STATUS_TONE: Record<RequestRecord["status"], "warning" | "positive" | "danger"> = {
+const STATUS_TONE: Record<RequestRecord["status"], "warning" | "positive" | "danger" | "info"> = {
   PENDING: "warning",
   APPROVED: "positive",
   REJECTED: "danger",
+  NEEDS_REVISION: "info",
 };
 
 export default function RequestsPage() {
@@ -29,6 +30,7 @@ export default function RequestsPage() {
   const { t, language } = useI18n();
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
+  const [deletionReason, setDeletionReason] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
   const REQUEST_TYPE_LABEL: Record<RequestRecord["type"], string> = {
@@ -42,6 +44,7 @@ export default function RequestsPage() {
     PENDING: t("requestsPage.statusPending"),
     APPROVED: t("requestsPage.statusApproved"),
     REJECTED: t("requestsPage.statusRejected"),
+    NEEDS_REVISION: language === "en" ? "Needs revision" : "Aguardando ajuste",
   };
 
   const handleUnauthorized = useCallback(() => {
@@ -54,7 +57,7 @@ export default function RequestsPage() {
   const { requests, loading, error, refetch, scope } = useSWRRequests();
 
   const summary = useMemo(() => {
-    const pending = requests.filter((item: RequestRecord) => item.status === "PENDING").length;
+    const pending = requests.filter((item: RequestRecord) => item.status === "PENDING" || item.status === "NEEDS_REVISION").length;
     const approved = requests.filter((item: RequestRecord) => item.status === "APPROVED").length;
     const rejected = requests.filter((item: RequestRecord) => item.status === "REJECTED").length;
     return { pending, approved, rejected };
@@ -115,6 +118,95 @@ export default function RequestsPage() {
     setCompany("");
     setMessage(t("requestsPage.companySent"));
     toast.success(t("requestsPage.companySent"));
+    void refetch();
+  }
+
+  async function submitPasswordReset() {
+    setMessage(null);
+    const response = await fetch("/api/requests/password-reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+      credentials: "include",
+      cache: "no-store",
+    });
+
+    if (response.status === 401) {
+      handleUnauthorized();
+      return;
+    }
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      const nextMessage = payload.message || t("requestsPage.requestError");
+      setMessage(nextMessage);
+      toast.error(nextMessage);
+      return;
+    }
+
+    const msg = language === "en" ? "Password reset request sent." : "Solicitação de reset de senha enviada.";
+    setMessage(msg);
+    toast.success(msg);
+    void refetch();
+  }
+
+  async function submitProfileDeletion() {
+    if (!deletionReason.trim()) return;
+    setMessage(null);
+    const response = await fetch("/api/requests/profile-deletion", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason: deletionReason.trim() }),
+      credentials: "include",
+      cache: "no-store",
+    });
+
+    if (response.status === 401) {
+      handleUnauthorized();
+      return;
+    }
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      const nextMessage = payload.message || t("requestsPage.requestError");
+      setMessage(nextMessage);
+      toast.error(nextMessage);
+      return;
+    }
+
+    setDeletionReason("");
+    const msg = language === "en" ? "Profile deletion request sent." : "Solicitação de exclusão de perfil enviada.";
+    setMessage(msg);
+    toast.success(msg);
+    void refetch();
+  }
+
+  async function resubmitRequest(requestId: string, payload: Record<string, unknown>) {
+    setMessage(null);
+    const response = await fetch("/api/requests/resubmit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ requestId, ...payload }),
+      credentials: "include",
+      cache: "no-store",
+    });
+
+    if (response.status === 401) {
+      handleUnauthorized();
+      return;
+    }
+
+    if (!response.ok) {
+      const errPayload = await response.json().catch(() => ({}));
+      const nextMessage = errPayload.message || t("requestsPage.requestError");
+      setMessage(nextMessage);
+      toast.error(nextMessage);
+      return;
+    }
+
+    const msg = language === "en" ? "Request resubmitted." : "Solicitação reenviada.";
+    setMessage(msg);
+    toast.success(msg);
     void refetch();
   }
 
@@ -219,6 +311,50 @@ export default function RequestsPage() {
           </section>
         </div>
 
+        <div className="grid gap-4 xl:grid-cols-2">
+          <section className="tc-panel">
+            <div className="tc-panel-header">
+              <div>
+                <p className="tc-panel-kicker">{language === "en" ? "Password" : "Senha"}</p>
+                <h2 className="tc-panel-title">{language === "en" ? "Request password reset" : "Solicitar reset de senha"}</h2>
+                <p className="tc-panel-description">{language === "en" ? "A reset link will be sent to your email after approval." : "Um link de reset será enviado ao seu e-mail após aprovação."}</p>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              <button type="button" onClick={submitPasswordReset} className="tc-button-primary">
+                {t("requestsPage.sendRequest")}
+              </button>
+            </div>
+          </section>
+
+          <section className="tc-panel">
+            <div className="tc-panel-header">
+              <div>
+                <p className="tc-panel-kicker">{language === "en" ? "Account" : "Conta"}</p>
+                <h2 className="tc-panel-title">{language === "en" ? "Request profile deletion" : "Solicitar exclusão de perfil"}</h2>
+                <p className="tc-panel-description">{language === "en" ? "Your account will be deactivated after administrative approval." : "Sua conta será desativada após aprovação administrativa."}</p>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              <label className="flex flex-col gap-2 text-sm text-(--tc-text-primary,#0b1a3c)">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{language === "en" ? "Reason" : "Motivo"}</span>
+                <textarea
+                  value={deletionReason}
+                  onChange={(event) => setDeletionReason(event.target.value)}
+                  placeholder={language === "en" ? "Why do you want to delete your account?" : "Por que deseja excluir sua conta?"}
+                  className="form-control-user w-full rounded-xl px-4 py-3 text-sm"
+                  rows={3}
+                />
+              </label>
+              <button type="button" onClick={submitProfileDeletion} className="tc-button-primary" disabled={!deletionReason.trim()}>
+                {t("requestsPage.sendRequest")}
+              </button>
+            </div>
+          </section>
+        </div>
+
         {message ? (
           <div className="rounded-[18px] border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm font-medium text-(--tc-text-primary,#0b1a3c)">
             {message}
@@ -257,6 +393,21 @@ export default function RequestsPage() {
                       {STATUS_LABEL[request.status]}
                     </span>
                   </div>
+
+                  {request.status === "NEEDS_REVISION" ? (
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void resubmitRequest(request.id, request.payload)}
+                        className="tc-button-primary text-xs"
+                      >
+                        {language === "en" ? "Resubmit" : "Reenviar solicitação"}
+                      </button>
+                      <span className="text-xs text-(--tc-text-muted,#6b7280)">
+                        {language === "en" ? "Adjust and resubmit for review" : "Ajuste e reenvie para análise"}
+                      </span>
+                    </div>
+                  ) : null}
                 </article>
               ))
             )}

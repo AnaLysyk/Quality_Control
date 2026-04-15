@@ -22,7 +22,7 @@ export type RequestUser = {
 };
 
 export type RequestType = "EMAIL_CHANGE" | "COMPANY_CHANGE" | "PASSWORD_RESET" | "PROFILE_DELETION";
-export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_REVISION";
 export type RequestSort = "createdAt_desc" | "createdAt_asc";
 
 export type RequestRecord = {
@@ -272,7 +272,7 @@ export async function updateRequestStatus(
   if (USE_POSTGRES) {
     const prisma = await getPrisma();
     const current = await prisma.request.findUnique({ where: { id } });
-    if (!current || current.status !== "PENDING") return current ? pgRowToRecord(current) : null;
+    if (!current || (current.status !== "PENDING" && current.status !== "NEEDS_REVISION")) return current ? pgRowToRecord(current) : null;
     const r = await prisma.request.update({ where: { id }, data: { status, reviewedBy: reviewer.id, reviewNote: reviewNote ?? null, reviewedAt: new Date() } });
     return pgRowToRecord(r);
   }
@@ -280,13 +280,44 @@ export async function updateRequestStatus(
   const idx = items.findIndex((r) => r.id === id);
   if (idx === -1) return null;
   const req = items[idx];
-  if (req.status !== "PENDING") return req;
+  if (req.status !== "PENDING" && req.status !== "NEEDS_REVISION") return req;
   const updated: RequestRecord = {
     ...req,
     status,
     reviewedBy: reviewer.id,
     reviewNote,
     reviewedAt: new Date().toISOString(),
+  };
+  const next = [...items];
+  next[idx] = updated;
+  await persist(next);
+  return updated;
+}
+
+export async function resubmitRequest(id: string, payload: Record<string, unknown>) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const current = await prisma.request.findUnique({ where: { id } });
+    if (!current || current.status !== "NEEDS_REVISION") return current ? pgRowToRecord(current) : null;
+    const merged = { ...((current.payload ?? {}) as Record<string, unknown>), ...payload };
+    const r = await prisma.request.update({
+      where: { id },
+      data: { status: "PENDING", payload: JSON.parse(JSON.stringify(merged)), reviewedBy: null, reviewNote: null, reviewedAt: null },
+    });
+    return pgRowToRecord(r);
+  }
+  const items = await loadItems();
+  const idx = items.findIndex((r) => r.id === id);
+  if (idx === -1) return null;
+  const req = items[idx];
+  if (req.status !== "NEEDS_REVISION") return req;
+  const updated: RequestRecord = {
+    ...req,
+    status: "PENDING",
+    payload: { ...req.payload, ...payload },
+    reviewedBy: undefined,
+    reviewNote: undefined,
+    reviewedAt: undefined,
   };
   const next = [...items];
   next[idx] = updated;

@@ -13,7 +13,7 @@ type RequestRecord = {
   userEmail: string;
   companyName: string;
   type: "EMAIL_CHANGE" | "COMPANY_CHANGE" | "PASSWORD_RESET" | "PROFILE_DELETION";
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_REVISION";
   payload: Record<string, unknown>;
   createdAt: string;
   reviewNote?: string;
@@ -95,7 +95,7 @@ function AdminRequestsPage() {
     load();
   }, [load]);
 
-  async function update(id: string, next: "APPROVED" | "REJECTED") {
+  async function update(id: string, next: "APPROVED" | "REJECTED" | "NEEDS_REVISION") {
     if (!canReview) {
       const nextMessage = "Seu perfil pode apenas consultar as próprias solicitações.";
       setMessage(nextMessage);
@@ -133,7 +133,7 @@ function AdminRequestsPage() {
         prev.map((req) => (req.id === id ? { ...req, status: next } : req)),
       );
     }
-    toast.success(next === "APPROVED" ? "Solicitação aprovada" : "Solicitação rejeitada");
+    toast.success(next === "APPROVED" ? "Solicitação aprovada" : next === "NEEDS_REVISION" ? "Solicitação enviada para ajuste" : "Solicitação rejeitada");
   }
 
   return (
@@ -174,6 +174,7 @@ function AdminRequestsPage() {
             <option value="PENDING">Pendente</option>
             <option value="APPROVED">Aprovado</option>
             <option value="REJECTED">Rejeitado</option>
+            <option value="NEEDS_REVISION">Aguardando ajuste</option>
           </select>
 
           <label className="sr-only" htmlFor="requests-filter-type">
@@ -222,6 +223,7 @@ function AdminRequestsPage() {
                   {req.status === "PENDING" && <span className="text-yellow-600">Pendente</span>}
                   {req.status === "APPROVED" && <span className="text-green-600">Aprovado</span>}
                   {req.status === "REJECTED" && <span className="text-red-600">Rejeitado</span>}
+                  {req.status === "NEEDS_REVISION" && <span className="text-blue-600">Aguardando ajuste</span>}
                 </div>
               </div>
               <div className="text-sm text-(--tc-text-secondary,#4b5563)">
@@ -241,7 +243,7 @@ function AdminRequestsPage() {
                 <div>Criado em {new Date(req.createdAt).toLocaleString()}</div>
                 {req.reviewNote && <div>Nota: {req.reviewNote}</div>}
               </div>
-              {canReview && req.status === "PENDING" && (
+              {canReview && (req.status === "PENDING" || req.status === "NEEDS_REVISION") && (
                 <div className="flex gap-2 flex-wrap">
                   <button
                     type="button"
@@ -257,6 +259,15 @@ function AdminRequestsPage() {
                   >
                     Rejeitar
                   </button>
+                  {req.status === "PENDING" && (
+                    <button
+                      type="button"
+                      onClick={() => update(req.id, "NEEDS_REVISION")}
+                      className="rounded-lg bg-blue-600 text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    >
+                      Solicitar ajuste
+                    </button>
+                  )}
                 </div>
               )}
             </li>

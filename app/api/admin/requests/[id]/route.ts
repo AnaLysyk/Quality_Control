@@ -9,8 +9,12 @@ import { notifyPasswordResetStatus, notifyProfileDeletionStatus } from "@/lib/no
 import { getRedis } from "@/lib/redis";
 import { canAccessSelfServiceRequest, canReviewSelfServiceRequests } from "@/lib/selfServiceRequestAccess";
 
-function isFinalStatus(value: string | null): value is Exclude<RequestStatus, "PENDING"> {
+function isFinalStatus(value: string | null): value is Exclude<RequestStatus, "PENDING" | "NEEDS_REVISION"> {
   return value === "APPROVED" || value === "REJECTED";
+}
+
+function isValidNextStatus(value: string | null): value is Exclude<RequestStatus, "PENDING"> {
+  return value === "APPROVED" || value === "REJECTED" || value === "NEEDS_REVISION";
 }
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
@@ -21,7 +25,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 
   const body = (await req.json().catch(() => null)) as { status?: string; reviewNote?: string } | null;
   const rawStatus = body?.status ?? null;
-  const nextStatus: Exclude<RequestStatus, "PENDING"> | null = isFinalStatus(rawStatus) ? rawStatus : null;
+  const nextStatus: Exclude<RequestStatus, "PENDING"> | null = isValidNextStatus(rawStatus) ? rawStatus : null;
   if (!nextStatus) {
     return NextResponse.json({ message: "Status invalido" }, { status: 400 });
   }
@@ -37,7 +41,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   if (!canReviewSelfServiceRequests(authUser)) {
     return NextResponse.json({ message: "Sem permissão para revisar solicitações" }, { status: 403 });
   }
-  if (requestRecord.status !== "PENDING") {
+  if (requestRecord.status !== "PENDING" && requestRecord.status !== "NEEDS_REVISION") {
     return NextResponse.json({ item: requestRecord });
   }
 

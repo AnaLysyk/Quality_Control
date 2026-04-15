@@ -42,7 +42,7 @@ function getItemsFromEnvelope<T>(value: unknown): T[] {
 function statusLabel(status: string) {
   if (status === "closed") return "Aprovada";
   if (status === "rejected") return "Rejeitada";
-  if (status === "in_progress") return "Em análise";
+  if (status === "in_progress") return "Aguardando ajuste";
   return "Aberta";
 }
 
@@ -370,6 +370,40 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
       } catch {}
       if (!res.ok) {
         setError((json.error as string) || (json.message as string) || "Falha ao recusar");
+        return;
+      }
+
+      draftTouchedRef.current = false;
+      await load();
+      await loadComments(selected.id);
+    } finally {
+      setAccepting(false);
+    }
+  }
+
+  async function requestAdjustment() {
+    if (!selected || !draft) return;
+    const comment = (draft.adminNotes ?? "").trim();
+    if (!comment) {
+      setError("Adicione uma nota administrativa descrevendo o ajuste necessário.");
+      return;
+    }
+
+    setAccepting(true);
+    setError(null);
+    try {
+      const res = await fetchWithToken(`/api/admin/access-requests/${selected.id}/request-adjustment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          comment,
+          fields: [],
+        }),
+      });
+
+      const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setError((json.error as string) || (json.message as string) || "Falha ao solicitar ajuste");
         return;
       }
 
@@ -720,6 +754,18 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                     >
                       {accepting ? "Processando..." : "Recusar"}
                     </button>
+
+                    {selected.status === "open" && (
+                      <button
+                        type="button"
+                        onClick={requestAdjustment}
+                        aria-label="Solicitar ajuste ao solicitante"
+                        disabled={accepting}
+                        className="rounded-full border border-blue-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-blue-600 transition hover:bg-blue-50 disabled:opacity-60"
+                      >
+                        {accepting ? "Processando..." : "Solicitar ajuste"}
+                      </button>
+                    )}
                   </div>
                 </div>
 

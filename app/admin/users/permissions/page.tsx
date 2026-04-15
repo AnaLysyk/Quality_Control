@@ -36,7 +36,7 @@ import {
   type PermissionMatrix,
   type PermissionOverride,
 } from "@/lib/permissionMatrix";
-import { useI18n } from "@/lib/i18n";
+import { useI18n } from "@/hooks/useI18n";
 
 type AdminUserItem = {
   id: string;

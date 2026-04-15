@@ -1,14 +1,14 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
 test("admin consegue exportar release", async ({ page, context }) => {
   await mockAuth(context, {
     role: "admin",
-    companies: ["griaule"],
-    clientSlug: "griaule",
+    companies: ["DEMO"],
+    clientSlug: "DEMO",
   });
 
-  await page.goto("/empresas/griaule/releases/v1_8_0_reg", { waitUntil: "networkidle" });
+  await page.goto("/empresas/demo/releases/v1_8_0_reg", { waitUntil: "networkidle" });
 
   const [download] = await Promise.all([
     page.waitForEvent("download"),
@@ -18,3 +18,4 @@ test("admin consegue exportar release", async ({ page, context }) => {
   const filename = download.suggestedFilename();
   expect(filename).toMatch(/release-.*\.(pdf|csv)$/);
 });
+

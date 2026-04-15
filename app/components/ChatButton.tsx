@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { FiChevronRight, FiSend, FiX, FiZap } from "react-icons/fi";
-import type { AssistantAction, AssistantConversationTurn, AssistantReplyPayload, AssistantToolAction } from "@/lib/assistant/types";
+import type { AssistantAction, AssistantConversationTurn, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
 import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
 import { fetchApi } from "@/lib/api";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
@@ -102,6 +102,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [assistantContext, setAssistantContext] = useState<AssistantScreenContext>(screenContext);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [confirmState, setConfirmState] = useState<ConfirmState>({ open: false });
   const [hintVisible, setHintVisible] = useState(false);
@@ -195,11 +196,18 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
     };
   }, []);
 
+  useEffect(() => {
+    setAssistantContext(screenContext);
+  }, [screenContext]);
+
   if (!assistantEnabled) return null;
   if (!user) return null;
   if (!can("ai", "view") || !can("ai", "use")) return null;
 
   const roleLabel = user.permissionRole ?? user.role ?? user.companyRole ?? "usu\u00e1rio";
+  const activeCompanyScope = assistantContext.companySlug ?? user.clientSlug ?? user.defaultClientSlug ?? "global";
+  const activeModule = assistantContext.module ?? screenContext.module;
+  const activeScreenLabel = assistantContext.screenLabel ?? screenContext.screenLabel;
   const hasConversation = messages.length > 0;
   const compactViewport = viewportHeight > 0 && viewportHeight <= 860;
   const denseViewport = viewportHeight > 0 && viewportHeight <= 740;
@@ -220,7 +228,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const summaryText = denseViewport
     ? `Assistente contextual de ${screenContext.screenLabel.toLowerCase()}.`
     : compactViewport && hasConversation
-      ? `Contexto: ${screenContext.screenLabel}.`
+      ? `Contexto: ${activeScreenLabel}.`
       : screenContext.screenSummary;
 
   async function pushAssistantResponse(payload: { message?: string; action?: AssistantToolAction | null }, optimisticText?: string) {
@@ -254,6 +262,16 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
         body: JSON.stringify({
           ...payload,
           context: { route: screenContext.route },
+          actor: {
+            userId: user.id,
+            permissionRole: user.permissionRole ?? null,
+            role: user.role ?? null,
+            companyRole: user.companyRole ?? null,
+            companySlug: user.clientSlug ?? null,
+            companySlugs: Array.isArray(user.clientSlugs) ? user.clientSlugs : null,
+            userOrigin: user.userOrigin ?? user.user_origin ?? null,
+            isGlobalAdmin: Boolean(user.isGlobalAdmin ?? user.is_global_admin),
+          },
           history: requestHistory,
         }),
       });
@@ -261,6 +279,10 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
       const data = (await response.json().catch(() => ({}))) as AssistantReplyPayload & { error?: string };
       if (!response.ok) {
         throw new Error(data?.error || response.statusText || `Erro ${response.status}`);
+      }
+
+      if (data.context) {
+        setAssistantContext(data.context);
       }
 
       setMessages((current) => [
@@ -426,11 +448,12 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                       <p className={`font-semibold uppercase tracking-[0.34em] text-white/72 ${compactConversationChrome ? "text-[0.58rem]" : denseViewport ? "text-[0.62rem]" : "text-[0.68rem]"}`}>Testing Company</p>
                       <div>
                         <h3 className={`${denseViewport ? "text-[1rem]" : hasConversation ? "text-[1.05rem]" : "text-[1.35rem]"} font-black tracking-[-0.03em] text-white`}>Assistente</h3>
-                        <p className={`max-w-[20rem] ${compactConversationChrome ? "text-[0.74rem] leading-4.5" : denseViewport ? "text-[0.76rem] leading-5" : "text-sm leading-6"} text-white/82`}>{screenContext.screenLabel}</p>
+                        <p className={`max-w-[20rem] ${compactConversationChrome ? "text-[0.74rem] leading-4.5" : denseViewport ? "text-[0.76rem] leading-5" : "text-sm leading-6"} text-white/82`}>{activeScreenLabel}</p>
                       </div>
                       <div className={`flex flex-wrap gap-2 pt-1 text-[0.68rem] uppercase tracking-[0.26em] text-white/72 ${compactConversationChrome ? "hidden" : ""}`}>
                         <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">{roleLabel}</span>
-                        <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">{screenContext.module}</span>
+                        <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">{activeModule}</span>
+                        <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">escopo {activeCompanyScope}</span>
                       </div>
                     </div>
                   </div>
@@ -472,7 +495,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                   <div className={`rounded-[1.6rem] border border-[#dfe6f3] bg-white shadow-[0_18px_40px_rgba(15,23,42,0.06)] ${denseViewport ? "p-4" : "p-5"}`}>
                     <p className="text-base font-bold text-[#ef0001]">Pronto para atuar dentro do seu perfil.</p>
                     <p className="mt-2 text-base leading-7 text-[#011848]">
-                      Eu uso a sess?o atual, enxergo apenas o que seu perfil pode ver e executo a??es somente dentro do seu RBAC.
+                      Eu uso a sessão atual, enxergo apenas o que seu perfil pode ver e executo ações somente dentro do seu RBAC.
                     </p>
                   </div>
                 ) : null}

@@ -55,6 +55,6 @@ describe("companyRoutes", () => {
   it("converte rota publica curta para a rota interna e vice-versa", () => {
     expect(rewriteShortCompanyPathname("/griaule/chamados")).toBe("/empresas/griaule/chamados");
     expect(shortenCompanyPathname("/empresas/griaule/chamados")).toBe("/griaule/chamados");
-    expect(rewriteShortCompanyPathname("/admin/home")).toBeNull();
+    expect(rewriteShortCompanyPathname("/admin/dashboard")).toBeNull();
   });
 });

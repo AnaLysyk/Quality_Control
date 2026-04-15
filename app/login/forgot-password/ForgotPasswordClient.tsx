@@ -4,16 +4,18 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import loginStyles from "../LoginClient.module.css";
 import styles from "./ForgotPasswordClient.module.css";
+import { useI18n } from "@/hooks/useI18n";
 
 const PROFILE_OPTIONS = [
-  { value: "empresa", label: "Empresa" },
-  { value: "testing_company_user", label: "Usuario TC" },
-  { value: "company_user", label: "Usuario da empresa" },
-  { value: "leader_tc", label: "Lider TC" },
-  { value: "technical_support", label: "Suporte Tecnico" },
+  { value: "empresa" },
+  { value: "testing_company_user" },
+  { value: "company_user" },
+  { value: "leader_tc" },
+  { value: "technical_support" },
 ] as const;
 
 export default function ForgotPasswordClient() {
+  const { t } = useI18n();
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
   const [profileType, setProfileType] = useState<(typeof PROFILE_OPTIONS)[number]["value"]>("testing_company_user");
@@ -29,13 +31,13 @@ export default function ForgotPasswordClient() {
     const normalizedLogin = login.trim().toLowerCase();
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedLogin || !normalizedEmail) {
-      setError("Informe seu usuário e e-mail.");
+      setError(t("forgotPassword.requiredFields"));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(normalizedEmail)) {
-      setError("E-mail inválido.");
+      setError(t("forgotPassword.invalidEmail"));
       return;
     }
 
@@ -57,15 +59,15 @@ export default function ForgotPasswordClient() {
       const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data?.error || "Não foi possível registrar sua solicitação.");
+        throw new Error(data?.error || t("forgotPassword.requestFailed"));
       }
 
-      setSuccess(typeof data?.message === "string" ? data.message : "Solicitação registrada com sucesso.");
+      setSuccess(typeof data?.message === "string" ? data.message : t("forgotPassword.successMessage"));
       setLogin("");
       setEmail("");
       setProfileType("testing_company_user");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro desconhecido");
+      setError(err instanceof Error ? err.message : t("forgotPassword.unknownError"));
     } finally {
       setLoading(false);
     }
@@ -91,11 +93,10 @@ export default function ForgotPasswordClient() {
       <div className="relative z-10 w-full max-w-lg space-y-8 sm:max-w-xl md:max-w-2xl">
         <div className={`text-center ${styles.introBase} ${styles.introDelay1}`}>
           <h2 className="mb-2 text-3xl font-bold leading-tight text-[#011848] drop-shadow-sm sm:text-4xl">
-            Esqueceu sua senha?
+            {t("forgotPassword.title")}
           </h2>
           <p className="font-medium text-[#0b1a3c]">
-            Registre sua solicitacao. O roteamento vai para Admin e Global ou apenas para Global, conforme o tipo
-            de perfil informado.
+            {t("forgotPassword.subtitle")}. {t("forgotPassword.routingInfo")}
           </p>
         </div>
 
@@ -121,7 +122,7 @@ export default function ForgotPasswordClient() {
           <div className="space-y-4">
             <div>
               <label htmlFor="login" className="mb-2 block text-sm font-semibold text-[#011848]">
-                Usuário
+                {t("forgotPassword.username")}
               </label>
               <input
                 id="login"
@@ -130,7 +131,7 @@ export default function ForgotPasswordClient() {
                 autoComplete="username"
                 required
                 className="form-control-user w-full rounded-xl border border-[#011848]/15 bg-white px-4 py-3 text-[#011848] caret-[#ef0001] placeholder:text-[#9aa3b2] focus:border-[#ef0001]/60 focus:ring-2 focus:ring-[#ef0001]/40"
-                placeholder="Seu usuário"
+                placeholder={t("forgotPassword.usernamePlaceholder")}
                 value={login}
                 onChange={(e) => setLogin(e.target.value)}
               />
@@ -138,7 +139,7 @@ export default function ForgotPasswordClient() {
 
             <div>
               <label htmlFor="email" className="mb-2 block text-sm font-semibold text-[#011848]">
-                E-mail
+                {t("forgotPassword.email")}
               </label>
               <input
                 id="email"
@@ -147,7 +148,7 @@ export default function ForgotPasswordClient() {
                 autoComplete="email"
                 required
                 className="form-control-user w-full rounded-xl border border-[#011848]/15 bg-white px-4 py-3 text-[#011848] caret-[#ef0001] placeholder:text-[#9aa3b2] focus:border-[#ef0001]/60 focus:ring-2 focus:ring-[#ef0001]/40"
-                placeholder="seu@email.com"
+                placeholder={t("forgotPassword.emailPlaceholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -155,7 +156,7 @@ export default function ForgotPasswordClient() {
 
             <div>
               <label htmlFor="profileType" className="mb-2 block text-sm font-semibold text-[#011848]">
-                Tipo de perfil
+                {t("forgotPassword.profileType")}
               </label>
               <select
                 id="profileType"
@@ -166,7 +167,15 @@ export default function ForgotPasswordClient() {
               >
                 {PROFILE_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {option.value === "empresa"
+                      ? t("roles.company")
+                      : option.value === "testing_company_user"
+                        ? t("roles.userTc")
+                        : option.value === "company_user"
+                          ? t("roles.companyUser")
+                          : option.value === "leader_tc"
+                            ? t("roles.leaderTc")
+                            : t("roles.technicalSupport")}
                   </option>
                 ))}
               </select>
@@ -178,12 +187,12 @@ export default function ForgotPasswordClient() {
             disabled={loading}
             className="mt-6 w-full rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 font-semibold text-white transition-all duration-200 hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:ring-2 focus:ring-[#ef0001]/60 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Enviando..." : "Enviar solicitação"}
+            {loading ? t("forgotPassword.sending") : t("forgotPassword.submit")}
           </button>
 
           <div className="mt-6 text-center">
             <Link href="/login" className="text-sm font-medium text-[#011848] hover:text-[#ef0001]">
-              Voltar para o login
+              {t("forgotPassword.backToLogin")}
             </Link>
           </div>
         </form>

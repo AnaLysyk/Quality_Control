@@ -36,10 +36,10 @@ type Props = {
 
 const ROLE_OPTIONS = [
   { value: "empresa", label: "Admin da empresa" },
-  { value: "company_user", label: "Usuario da empresa" },
-  { value: "testing_company_user", label: "Usuario TC" },
+  { value: "company_user", label: "Usuário da empresa" },
+  { value: "testing_company_user", label: "Usuário TC" },
   { value: "leader_tc", label: "Lider TC" },
-  { value: "technical_support", label: "Suporte Tecnico" },
+  { value: "technical_support", label: "Suporte Técnico" },
 ] as const;
 const EMPTY_JOB_TITLE = "__empty_job_title__";
 
@@ -172,11 +172,11 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
     ROLE_OPTIONS.find((option) => option.value === role)?.label ?? role;
   const linkedCompanyName =
     clients?.find((client) => client.id === clientId)?.name ?? (clientId ? "Empresa vinculada" : "Sem empresa");
-  const displayName = name.trim() || user?.name || "Usuario";
+  const displayName = name.trim() || user?.name || "Usuário";
   const displayLogin = login.trim() || user?.user || "sem-login";
   const displayEmail = email.trim() || user?.email || "Sem e-mail";
-  const displayJobTitle = jobTitle.trim() || "Cargo nao informado";
-  const stateLabel = loading ? "Salvando alteracoes" : dirty ? "Alteracoes pendentes" : "Sincronizado";
+  const displayJobTitle = jobTitle.trim() || "Cargo não informado";
+  const stateLabel = loading ? "Salvando alterações" : dirty ? "Alterações pendentes" : "Sincronizado";
   const stateToneClass = loading
     ? "border-sky-200 bg-sky-50 text-sky-700"
     : dirty
@@ -232,16 +232,16 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
       }
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       if (!res.ok) {
-        const msg = (json.error as string) || "Erro ao excluir usuario";
+        const msg = (json.error as string) || "Erro ao excluir usuário";
         setError(msg);
         toast.error(msg);
         setConfirmDelete(false);
         return;
       }
-      toast.success("Usuario excluido.");
+      toast.success("Usuário excluido.");
       await onDeleted?.();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao excluir usuario";
+      const msg = err instanceof Error ? err.message : "Erro ao excluir usuário";
       setError(msg);
       toast.error(msg);
       setConfirmDelete(false);
@@ -292,7 +292,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
 
       if (!res.ok) {
-        const msg = (json.error as string) || "Erro ao salvar usuario";
+        const msg = (json.error as string) || "Erro ao salvar usuário";
         setError(msg);
         toast.error(msg);
         return;
@@ -302,10 +302,10 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
         await refreshUser();
       }
 
-      toast.success("Usuario atualizado.");
+      toast.success("Usuário atualizado.");
       await onSaved?.();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao salvar usuario";
+      const msg = err instanceof Error ? err.message : "Erro ao salvar usuário";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -336,7 +336,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
               />
 
               <div className="min-w-0">
-                <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-(--tc-accent)">Painel do usuario</p>
+                <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-(--tc-accent)">Painel do usuário</p>
                 <h3 className="wrap-break-word text-[1.8rem] font-extrabold leading-tight text-[#081f4d]">{displayName}</h3>
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-medium text-[#27457d]">
                   <span>@{displayLogin}</span>
@@ -369,7 +369,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
           <div className="mt-5 rounded-[22px] border border-[#ffd7de] bg-[linear-gradient(135deg,#fff6f8_0%,#fffafb_100%)] px-4 py-4">
             <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-(--tc-accent)">Sincronizacao ativa</p>
             <p className="mt-2 text-sm font-medium leading-6 text-[#27457d]">
-              Este painel administrativo edita os mesmos dados exibidos no perfil do usuario. O que for salvo aqui
+              Este painel administrativo edita os mesmos dados exibidos no perfil do usuário. O que for salvo aqui
               aparece no perfil, e o que for alterado no perfil aparece aqui.
             </p>
           </div>
@@ -386,7 +386,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                 </label>
 
                 <label className="block text-sm">
-                  <span className={labelClass}>Usuario (login)</span>
+                  <span className={labelClass}>Usuário (login)</span>
                   <input
                     className={fieldClass}
                     value={login}
@@ -394,7 +394,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                     placeholder="Se deixar em branco, gera automaticamente"
                   />
                   <span className="mt-2 block text-xs font-semibold text-[#5f77a2]">
-                    Unico no sistema. Se ficar vazio, sera gerado automaticamente.
+                    Único no sistema. Se ficar vazio, será gerado automaticamente.
                   </span>
                 </label>
 
@@ -415,7 +415,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                     className={fieldClass}
                     value={linkedin}
                     onChange={(event) => setLinkedin(event.target.value)}
-                    placeholder="https://www.linkedin.com/in/usuario"
+                    placeholder="https://www.linkedin.com/in/usuário"
                   />
                 </label>
 
@@ -424,10 +424,10 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                   <div className="mt-2">
                     <Select value={jobTitle || EMPTY_JOB_TITLE} onValueChange={(value) => setJobTitle(value === EMPTY_JOB_TITLE ? "" : value)}>
                       <SelectTrigger className="h-12.5 rounded-2xl border-[#d8dfeb] bg-white px-4 text-sm font-medium text-[#081f4d] shadow-[0_8px_18px_rgba(15,23,42,0.04)] focus-visible:border-(--tc-accent) focus-visible:ring-4 focus-visible:ring-[#ef0001]/10">
-                        <SelectValue placeholder="Selecione uma profissao" />
+                        <SelectValue placeholder="Selecione uma profissão" />
                       </SelectTrigger>
                       <SelectContent className="max-h-80">
-                        <SelectItem value={EMPTY_JOB_TITLE}>Nao informado</SelectItem>
+                        <SelectItem value={EMPTY_JOB_TITLE}>Não informado</SelectItem>
                         {JOB_TITLE_OPTIONS.map((jobTitleOption) => (
                           <SelectItem key={jobTitleOption} value={jobTitleOption}>
                             {jobTitleOption}
@@ -441,7 +441,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
             </section>
 
             <section className="rounded-3xl border border-[#d7e0ef] bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
-              <p className={sectionTitleClass}>Acesso e vinculo</p>
+              <p className={sectionTitleClass}>Acesso e vínculo</p>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <label className="block text-sm md:col-span-2">
                   <span className={labelClass}>Empresa vinculada</span>
@@ -449,7 +449,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                     className={fieldClass}
                     value={clientId ?? ""}
                     onChange={(event) => setClientId(event.target.value || null)}
-                    aria-label="Empresa vinculada ao usuario"
+                    aria-label="Empresa vinculada ao usuário"
                   >
                     <option value="">{requiresClient ? "Selecione" : "Sem empresa vinculada"}</option>
                     {clients?.map((client) => (
@@ -467,7 +467,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                       className={fieldClass}
                       value={role}
                       onChange={(event) => setRole(event.target.value as RoleValue)}
-                      aria-label="Perfil do usuario"
+                      aria-label="Perfil do usuário"
                       title="Perfil"
                     >
                       {availableRoleOptions.map((option) => (
@@ -477,7 +477,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                       ))}
                     </select>
                   ) : (
-                    <div className={`${fieldClass} flex items-center bg-[#f7faff] text-[#4f658d]`} title="Somente perfis tecnicos privilegiados podem alterar este campo.">
+                    <div className={`${fieldClass} flex items-center bg-[#f7faff] text-[#4f658d]`} title="Somente perfis técnicos privilegiados podem alterar este campo.">
                       {roleLabel}
                     </div>
                   )}
@@ -492,7 +492,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                       onChange={(event) => setActive(event.target.checked)}
                       className="h-4 w-4 accent-[#ef0001]"
                     />
-                    <span className="text-sm font-semibold text-[#081f4d]">{active ? "Usuario ativo" : "Usuario inativo"}</span>
+                    <span className="text-sm font-semibold text-[#081f4d]">{active ? "Usuário ativo" : "Usuário inativo"}</span>
                   </label>
                 </label>
               </div>
@@ -513,7 +513,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                 />
                 <p className="mt-4 text-sm font-bold text-[#081f4d]">{displayJobTitle}</p>
                 <p className="mt-1 text-xs font-medium leading-5 text-[#5f77a2]">
-                  O avatar salvo aqui e o mesmo usado na capa e no perfil do usuario.
+                  O avatar salvo aqui e o mesmo usado na capa e no perfil do usuário.
                 </p>
               </div>
 
@@ -529,7 +529,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
             </section>
 
             <section className="rounded-3xl border border-[#d7e0ef] bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
-              <p className={sectionTitleClass}>Estado da edicao</p>
+              <p className={sectionTitleClass}>Estado da edição</p>
               <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm font-semibold ${stateToneClass}`}>
                 {stateLabel}
               </div>
@@ -552,7 +552,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
           <div className="px-6 pb-2">
             {requiresClient && !clientId ? (
               <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-                Empresa e obrigatoria.
+                Empresa e obrigatória.
               </p>
             ) : null}
             {error ? (
@@ -567,7 +567,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
           <div className="flex items-center gap-3">
             {confirmDelete ? (
               <>
-                <span className="text-sm font-semibold text-rose-700">Confirmar exclusao?</span>
+                <span className="text-sm font-semibold text-rose-700">Confirmar exclusão?</span>
                 <button
                   type="button"
                   className="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
@@ -590,7 +590,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                 className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
                 onClick={() => setConfirmDelete(true)}
               >
-                Excluir usuario
+                Excluir usuário
               </button>
             )}
           </div>
@@ -608,7 +608,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
               disabled={!canSave || loading}
               onClick={save}
             >
-              {loading ? "Salvando..." : "Salvar alteracoes"}
+              {loading ? "Salvando..." : "Salvar alterações"}
             </button>
           </div>
         </div>

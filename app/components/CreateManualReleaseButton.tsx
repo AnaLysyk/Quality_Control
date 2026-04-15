@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FiCheckCircle, FiLayers, FiLink2, FiPlus, FiTrendingUp, FiX } from "react-icons/fi";
+import { createPortal } from "react-dom";
+import { FiCheckCircle, FiEdit2, FiLayers, FiLink2, FiPlus, FiTrendingUp, FiX } from "react-icons/fi";
 import { getAppMeta } from "@/lib/appMeta";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
@@ -27,6 +28,11 @@ type ManualCaseDraft = {
   title: string;
   link: string;
   status: CaseStatus;
+  description: string;
+  precondition: string;
+  postcondition: string;
+  steps: string;
+  expected: string;
 };
 
 type ApplicationOption = {
@@ -39,9 +45,22 @@ type ApplicationOption = {
 
 type TestPlanSource = "manual" | "qase";
 
+type TestPlanCaseStep = {
+  id: string;
+  action?: string | null;
+  expectedResult?: string | null;
+  data?: string | null;
+};
+
 type TestPlanCaseRef = {
   id: string;
   title?: string | null;
+  description?: string | null;
+  preconditions?: string | null;
+  postconditions?: string | null;
+  severity?: string | null;
+  link?: string | null;
+  steps?: TestPlanCaseStep[];
 };
 
 type TestPlanItem = {
@@ -80,15 +99,26 @@ const initialCaseDraft: ManualCaseDraft = {
   title: "",
   link: "",
   status: "notRun",
+  description: "",
+  precondition: "",
+  postcondition: "",
+  steps: "",
+  expected: "",
 };
+
+let autoIdCounter = 0;
+function nextAutoId() {
+  autoIdCounter += 1;
+  return `MAN-${String(autoIdCounter).padStart(4, "0")}`;
+}
 
 const fallbackApps = ["SMART", "PRINT", "BOOKING", "CDS", "TRUST", "CIDADAO SMART", "GMT"];
 
 const CASE_COLUMNS: CaseColumn[] = [
-  { key: "pass", label: "Aprovado", ringClass: "border-emerald-200", chipClass: "bg-emerald-50 text-emerald-700 border-emerald-200", toneClass: "from-emerald-50 to-white" },
-  { key: "fail", label: "Falha", ringClass: "border-rose-200", chipClass: "bg-rose-50 text-rose-700 border-rose-200", toneClass: "from-rose-50 to-white" },
-  { key: "blocked", label: "Bloqueado", ringClass: "border-amber-200", chipClass: "bg-amber-50 text-amber-700 border-amber-200", toneClass: "from-amber-50 to-white" },
-  { key: "notRun", label: "Nao executado", ringClass: "border-slate-200", chipClass: "bg-slate-100 text-slate-700 border-slate-200", toneClass: "from-slate-50 to-white" },
+  { key: "pass", label: "Aprovado", ringClass: "border-emerald-300 dark:border-emerald-700", chipClass: "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-200 dark:border-emerald-700", toneClass: "from-emerald-50 to-(--tc-surface) dark:from-emerald-950/60 dark:to-(--tc-surface)" },
+  { key: "fail", label: "Falha", ringClass: "border-rose-300 dark:border-rose-700", chipClass: "bg-rose-50 text-rose-800 border-rose-300 dark:bg-rose-900/50 dark:text-rose-200 dark:border-rose-700", toneClass: "from-rose-50 to-(--tc-surface) dark:from-rose-950/60 dark:to-(--tc-surface)" },
+  { key: "blocked", label: "Bloqueado", ringClass: "border-amber-300 dark:border-amber-700", chipClass: "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-900/50 dark:text-amber-100 dark:border-amber-700", toneClass: "from-amber-50 to-(--tc-surface) dark:from-amber-950/60 dark:to-(--tc-surface)" },
+  { key: "notRun", label: "Não executado", ringClass: "border-slate-300 dark:border-slate-600", chipClass: "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-600", toneClass: "from-slate-50 to-(--tc-surface) dark:from-slate-900/60 dark:to-(--tc-surface)" },
 ];
 
 const CASE_STATUS_VALUES: Record<CaseStatus, "APROVADO" | "FALHA" | "BLOQUEADO" | "NAO_EXECUTADO"> = {
@@ -108,9 +138,28 @@ function makePlanKey(source: TestPlanSource, id: string) {
 
 function buildQaseCaseLink(projectCode: string | null | undefined, caseId: string) {
   const normalizedProjectCode = String(projectCode ?? "").trim();
-  const normalizedCaseId = String(caseId ?? "").trim();
+  const normalizedCaseId = String(caseId ?? "").replace(/\D/g, "").trim();
   if (!normalizedProjectCode || !normalizedCaseId) return "";
-  return `https://app.qase.io/case/${encodeURIComponent(normalizedProjectCode)}/${encodeURIComponent(normalizedCaseId)}`;
+  return `https://app.qase.io/case/${encodeURIComponent(normalizedProjectCode)}-${encodeURIComponent(normalizedCaseId)}`;
+}
+
+function formatSteps(steps?: TestPlanCaseStep[] | null): string {
+  if (!steps || steps.length === 0) return "";
+  return steps
+    .map((s, i) => `${i + 1}. ${(s.action ?? "").trim()}`)
+    .filter((line) => line.length > 3)
+    .join("\n");
+}
+
+function formatExpected(steps?: TestPlanCaseStep[] | null): string {
+  if (!steps || steps.length === 0) return "";
+  return steps
+    .map((s, i) => {
+      const er = (s.expectedResult ?? "").trim();
+      return er ? `${i + 1}. ${er}` : "";
+    })
+    .filter(Boolean)
+    .join("\n");
 }
 
 function mergePlanCasesIntoDrafts(plan: TestPlanItem, currentCases: ManualCaseDraft[]) {
@@ -122,8 +171,13 @@ function mergePlanCasesIntoDrafts(plan: TestPlanItem, currentCases: ManualCaseDr
     return {
       id: item.id,
       title: current?.title || item.title?.trim() || `Caso ${item.id}`,
-      link: current?.link || buildQaseCaseLink(plan.projectCode, item.id),
+      link: current?.link || item.link?.trim() || buildQaseCaseLink(plan.projectCode, item.id),
       status: current?.status || "notRun",
+      description: current?.description || item.description?.trim() || "",
+      precondition: current?.precondition || item.preconditions?.trim() || "",
+      postcondition: current?.postcondition || item.postconditions?.trim() || "",
+      steps: current?.steps || formatSteps(item.steps) || "",
+      expected: current?.expected || formatExpected(item.steps) || "",
     } satisfies ManualCaseDraft;
   });
 }
@@ -131,10 +185,12 @@ function mergePlanCasesIntoDrafts(plan: TestPlanItem, currentCases: ManualCaseDr
 export function CreateManualReleaseButton({
   companySlug,
   redirectToRun = true,
+  manualOnly = false,
   onCreated,
 }: {
   companySlug?: string;
   redirectToRun?: boolean;
+  manualOnly?: boolean;
   onCreated?: (release: { slug?: string; name?: string; title?: string }) => void;
 }) {
   useAuthUser();
@@ -145,6 +201,11 @@ export function CreateManualReleaseButton({
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [columnOrder, setColumnOrder] = useState<CaseStatus[]>(["pass", "fail", "blocked", "notRun"]);
+  const [draggingCardId, setDraggingCardId] = useState<string | null>(null);
+  const [draggingCardFrom, setDraggingCardFrom] = useState<CaseStatus | null>(null);
+  const [draggingColumnKey, setDraggingColumnKey] = useState<CaseStatus | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<CaseStatus | null>(null);
   const [form, setForm] = useState<NewManualRelease>(initialState);
   const [cases, setCases] = useState<ManualCaseDraft[]>([]);
   const [caseDraft, setCaseDraft] = useState<ManualCaseDraft>({ ...initialCaseDraft });
@@ -154,6 +215,8 @@ export function CreateManualReleaseButton({
   const [plansLoading, setPlansLoading] = useState(false);
   const [selectedPlanKey, setSelectedPlanKey] = useState("");
   const [planActionLoading, setPlanActionLoading] = useState(false);
+  const [runMode, setRunMode] = useState<"integration" | "manual">("manual");
+  const [editingCase, setEditingCase] = useState<ManualCaseDraft | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -253,8 +316,6 @@ export function CreateManualReleaseButton({
   );
   const effectiveAppKey = (selectedApplication?.slug || form.app || "SMART").toLowerCase();
   const appMeta = getAppMeta(effectiveAppKey, selectedApplication?.name || form.app || "Run");
-  const total = form.pass + form.fail + form.blocked + form.notRun;
-  const passRate = total > 0 ? Math.round((form.pass / total) * 100) : 0;
 
   const groupedCases = useMemo(
     () =>
@@ -268,6 +329,20 @@ export function CreateManualReleaseButton({
     [cases],
   );
 
+  const caseStats = useMemo(() => ({
+    pass: cases.filter((c) => c.status === "pass").length,
+    fail: cases.filter((c) => c.status === "fail").length,
+    blocked: cases.filter((c) => c.status === "blocked").length,
+    notRun: cases.filter((c) => c.status === "notRun").length,
+  }), [cases]);
+
+  const total = runMode === "integration"
+    ? caseStats.pass + caseStats.fail + caseStats.blocked + caseStats.notRun
+    : form.pass + form.fail + form.blocked + form.notRun;
+  const passRate = total > 0
+    ? Math.round(((runMode === "integration" ? caseStats.pass : form.pass) / total) * 100)
+    : 0;
+
   const resetState = useCallback(() => {
     setSubmitError(null);
     setForm(initialState);
@@ -279,6 +354,13 @@ export function CreateManualReleaseButton({
     setSelectedPlanKey("");
     setPlansLoading(false);
     setPlanActionLoading(false);
+    setRunMode("manual");
+    setEditingCase(null);
+    setColumnOrder(["pass", "fail", "blocked", "notRun"]);
+    setDraggingCardId(null);
+    setDraggingCardFrom(null);
+    setDraggingColumnKey(null);
+    setDragOverColumn(null);
   }, []);
 
   const closeModal = useCallback(() => {
@@ -298,6 +380,8 @@ export function CreateManualReleaseButton({
 
   function handleOpen() {
     setSubmitError(null);
+    setCaseDraft({ ...initialCaseDraft, id: nextAutoId() });
+    setRunMode("manual");
     setOpen(true);
   }
 
@@ -310,25 +394,97 @@ export function CreateManualReleaseButton({
   }
 
   function handleAddCase() {
-    const trimmedId = caseDraft.id.trim();
+    const trimmedId = caseDraft.id.trim() || nextAutoId();
     const trimmedTitle = caseDraft.title.trim();
     if (!trimmedId || !trimmedTitle) return;
 
     setCases((current) => {
       const next = current.filter((item) => item.id !== trimmedId);
-      next.push({ id: trimmedId, title: trimmedTitle, link: caseDraft.link.trim(), status: caseDraft.status });
+      next.push({
+        id: trimmedId,
+        title: trimmedTitle,
+        link: caseDraft.link.trim(),
+        status: caseDraft.status,
+        description: caseDraft.description.trim(),
+        precondition: caseDraft.precondition.trim(),
+        postcondition: caseDraft.postcondition.trim(),
+        steps: caseDraft.steps.trim(),
+        expected: caseDraft.expected.trim(),
+      });
       return next;
     });
-    setCaseDraft({ ...initialCaseDraft, status: caseDraft.status });
+    setCaseDraft({ ...initialCaseDraft, id: nextAutoId(), status: caseDraft.status });
+  }
+
+  function handleSaveEditingCase() {
+    if (!editingCase) return;
+    const trimmedId = editingCase.id.trim();
+    const trimmedTitle = editingCase.title.trim();
+    if (!trimmedId || !trimmedTitle) return;
+    setCases((current) =>
+      current.map((item) =>
+        item.id === trimmedId
+          ? { ...editingCase, id: trimmedId, title: trimmedTitle }
+          : item,
+      ),
+    );
+    setEditingCase(null);
   }
 
   function handleRemoveCase(id: string) {
     setCases((current) => current.filter((item) => item.id !== id));
   }
 
+  function handleCardDragStart(e: React.DragEvent, id: string, fromColumn: CaseStatus) {
+    setDraggingCardId(id);
+    setDraggingCardFrom(fromColumn);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("cardId", id);
+    e.dataTransfer.setData("fromColumn", fromColumn);
+  }
+
+  function handleCardDrop(e: React.DragEvent, toColumn: CaseStatus) {
+    e.preventDefault();
+    const id = e.dataTransfer.getData("cardId");
+    if (!id) return;
+    setCases((current) =>
+      current.map((item) => (item.id === id ? { ...item, status: toColumn } : item)),
+    );
+    setDraggingCardId(null);
+    setDraggingCardFrom(null);
+    setDragOverColumn(null);
+  }
+
+  function handleColumnDragStart(e: React.DragEvent, key: CaseStatus) {
+    setDraggingColumnKey(key);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("columnKey", key);
+  }
+
+  function handleColumnDrop(e: React.DragEvent, targetKey: CaseStatus) {
+    e.preventDefault();
+    const sourceKey = e.dataTransfer.getData("columnKey");
+    if (!sourceKey || sourceKey === targetKey) {
+      setDraggingColumnKey(null);
+      setDragOverColumn(null);
+      return;
+    }
+    setColumnOrder((current) => {
+      const next = [...current];
+      const fromIdx = next.indexOf(sourceKey as CaseStatus);
+      const toIdx = next.indexOf(targetKey);
+      if (fromIdx === -1 || toIdx === -1) return current;
+      next.splice(fromIdx, 1);
+      next.splice(toIdx, 0, sourceKey as CaseStatus);
+      return next;
+    });
+    setDraggingColumnKey(null);
+    setDragOverColumn(null);
+  }
+
   async function resolvePlanDetail(plan: TestPlanItem) {
     if (!resolvedCompanySlug || !selectedApplicationId) {
-      throw new Error("Selecione a aplicacao antes de carregar o plano.");
+      throw new Error("Selecione a aplicação antes de carregar o plano.");
     }
 
     const response = await fetchApi(
@@ -340,7 +496,7 @@ export function CreateManualReleaseButton({
     const payload = await response.json().catch(() => null);
     if (!response.ok || !payload?.plan) {
       throw new Error(
-        (typeof payload?.error === "string" && payload.error) || "Nao foi possivel carregar o plano de teste.",
+        (typeof payload?.error === "string" && payload.error) || "Não foi possível carregar o plano de teste.",
       );
     }
     return payload.plan as TestPlanItem;
@@ -355,10 +511,14 @@ export function CreateManualReleaseButton({
       const planDetail = await resolvePlanDetail(selectedPlan);
       const mergedCases = mergePlanCasesIntoDrafts(planDetail, cases);
       setCases(mergedCases);
+      setForm((current) => ({
+        ...current,
+        name: current.name || `${selectedApplication?.name || appMeta.label} — ${planDetail.title}`,
+      }));
     } catch (error) {
       console.error(error);
       setSubmitError(
-        error instanceof Error ? error.message : "Nao foi possivel aplicar o plano de teste.",
+        error instanceof Error ? error.message : "Não foi possível aplicar o plano de teste.",
       );
     } finally {
       setPlanActionLoading(false);
@@ -389,7 +549,12 @@ export function CreateManualReleaseButton({
             selectedPlan?.projectCode || selectedApplication?.qaseProjectCode || form.app.toUpperCase(),
           slug: form.slug,
           ...(resolvedCompanySlug ? { clientSlug: resolvedCompanySlug } : {}),
-          stats: {
+          stats: runMode === "integration" ? {
+            pass: caseStats.pass,
+            fail: caseStats.fail,
+            blocked: caseStats.blocked,
+            notRun: caseStats.notRun,
+          } : {
             pass: form.pass,
             fail: form.fail,
             blocked: form.blocked,
@@ -481,9 +646,9 @@ export function CreateManualReleaseButton({
         <span data-testid="run-create">Criar run manual</span>
       </button>
 
-      {open ? (
+      {open ? createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-3 py-4 backdrop-blur-sm sm:px-5"
+          className="fixed inset-0 z-100 flex items-center justify-center overflow-auto bg-black/55 p-4 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           onClick={(event) => {
@@ -492,103 +657,104 @@ export function CreateManualReleaseButton({
             }
           }}
         >
-          <div className="flex max-h-[calc(100dvh-1rem)] w-full max-w-[1320px] flex-col overflow-hidden rounded-[32px] border border-white/20 bg-white shadow-[0_30px_120px_rgba(15,23,42,0.42)]">
-            <div className="bg-[linear-gradient(135deg,#011848_0%,#0a2f7a_52%,#ef0001_100%)] px-5 py-5 text-white sm:px-7 sm:py-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-white/70">Run manual</p>
-                  <h2 className="mt-2 text-3xl font-black tracking-[-0.04em]">Criar nova run</h2>
-                  <p className="mt-2 max-w-3xl text-sm text-white/82">
-                    Registre a execucao manual, distribua os casos no quadro de status e salve tudo em uma unica superficie.
-                  </p>
+          <div className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-4xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) shadow-[0_40px_140px_rgba(15,23,42,0.38)]">
+            <div className="bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-6 py-4 text-white sm:px-8 sm:py-5">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.36em] text-white/80">Run manual</p>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full border border-white/20 bg-white/14 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/90">
+                      {resolvedCompanySlug ? `Empresa ${resolvedCompanySlug}` : "Contexto institucional"}
+                    </span>
+                    <span className="rounded-full border border-white/20 bg-white/14 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/90">
+                      {selectedApplication?.name || appMeta.label}
+                    </span>
+                    {selectedApplication?.qaseProjectCode ? (
+                      <span className="rounded-full border border-emerald-300/50 bg-emerald-400/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-100">
+                        Qase {selectedApplication.qaseProjectCode}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/8 text-white transition hover:bg-white/16"
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white transition hover:bg-white/20"
                   aria-label="Fechar modal"
                 >
                   <FiX className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className="rounded-full border border-white/18 bg-white/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/88">
-                  {resolvedCompanySlug ? `Empresa ${resolvedCompanySlug}` : "Contexto institucional"}
-                </span>
-                <span className="rounded-full border border-white/18 bg-white/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/88">
-                  {selectedApplication?.name || appMeta.label}
-                </span>
-                {selectedApplication?.qaseProjectCode ? (
-                  <span className="rounded-full border border-emerald-200/40 bg-emerald-400/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-50">
-                    Qase {selectedApplication.qaseProjectCode}
-                  </span>
-                ) : null}
-              </div>
-
-              <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-[22px] border border-white/18 bg-white/12 p-4 backdrop-blur">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/68">Aplicacao</p>
-                  <div className="mt-2 text-xl font-extrabold text-white">{selectedApplication?.name || appMeta.label}</div>
-                  <p className="mt-2 text-sm text-white/76">Projeto visual e contexto da run manual.</p>
+              <div className="mt-3 grid gap-3 grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
+                <div className="rounded-xl border border-white/20 bg-white/14 px-4 py-3 backdrop-blur">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">Aplicação</p>
+                  <div className="mt-1 text-lg font-extrabold text-white">{selectedApplication?.name || appMeta.label}</div>
                 </div>
-                <div className="rounded-[22px] border border-white/18 bg-white/12 p-4 backdrop-blur">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/68">Total executado</p>
-                  <div className="mt-2 text-xl font-extrabold text-white">{total} caso(s)</div>
-                  <p className="mt-2 text-sm text-white/76">Soma de aprovado, falha, bloqueado e nao executado.</p>
+                <div className="rounded-xl border border-white/20 bg-white/14 px-4 py-3 backdrop-blur">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">Total executado</p>
+                  <div className="mt-1 text-lg font-extrabold text-white">{total} caso(s)</div>
                 </div>
-                <div className="rounded-[22px] border border-white/18 bg-white/12 p-4 backdrop-blur">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/68">Pass rate</p>
-                  <div className="mt-2 text-xl font-extrabold text-white">{passRate}%</div>
-                  <p className="mt-2 text-sm text-white/76">Leitura rapida da saude da execucao.</p>
+                <div className="rounded-xl border border-white/20 bg-white/14 px-4 py-3 backdrop-blur">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">Pass rate</p>
+                  <div className="mt-1 text-lg font-extrabold text-white">{passRate}%</div>
                 </div>
-                <div className="rounded-[22px] border border-white/18 bg-white/12 p-4 backdrop-blur">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/68">Casos no quadro</p>
-                  <div className="mt-2 text-xl font-extrabold text-white">{cases.length}</div>
-                  <p className="mt-2 text-sm text-white/76">Cartoes prontos para salvar junto da run.</p>
+                <div className="rounded-xl border border-white/20 bg-white/14 px-4 py-3 backdrop-blur">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">Casos no quadro</p>
+                  <div className="mt-1 text-lg font-extrabold text-white">{cases.length}</div>
                 </div>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] px-5 py-5 sm:px-7 sm:py-6">
-              <div className="grid gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-                <section className="space-y-6">
+            <div className="flex-1 overflow-y-auto bg-[linear-gradient(180deg,var(--tc-surface)_0%,var(--tc-surface-alt)_100%)] px-4 py-6 sm:px-6 sm:py-8">
+              <div className="space-y-6">
+                  {/* ── Seletor de modo ── */}
+                  {!manualOnly ? (
+                    <div className="flex items-center gap-2 rounded-full border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) p-1">
+                      <button
+                        type="button"
+                        onClick={() => setRunMode("integration")}
+                        className={`flex-1 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.22em] transition ${
+                          runMode === "integration"
+                            ? "bg-emerald-600 text-white shadow"
+                            : "text-(--tc-text-muted,#6b7280) hover:text-(--tc-text,#0b1a3c)"
+                        }`}
+                      >
+                        Integração
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRunMode("manual")}
+                        className={`flex-1 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.22em] transition ${
+                          runMode === "manual"
+                            ? "bg-(--tc-accent,#ef0001) text-white shadow"
+                            : "text-(--tc-text-muted,#6b7280) hover:text-(--tc-text,#0b1a3c)"
+                        }`}
+                      >
+                        Manual
+                      </button>
+                    </div>
+                  ) : null}
+
+                  {/* ── Integração Qase / Plano de teste ── */}
+                  {!manualOnly && runMode === "integration" && (<>
                   <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
                     <div className="flex items-center gap-2">
-                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700">
-                        <FiLayers className="h-4 w-4" />
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-700">
+                        <FiLink2 className="h-4 w-4" />
                       </span>
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Contexto da run</p>
-                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Base da execucao</h3>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-600">Integração</p>
+                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Aplicação e plano de teste</h3>
                       </div>
                     </div>
 
-                    <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                      <label className="space-y-2">
-                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Titulo</span>
-                        <input
-                          className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
-                          data-testid="run-title"
-                          value={form.name}
-                          onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                          placeholder="Ex: Run 1.9.0 - Regressao"
-                        />
-                        <input
-                          aria-hidden="true"
-                          tabIndex={-1}
-                          data-testid="run-name"
-                          value={form.name}
-                          onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                          className="sr-only"
-                        />
-                      </label>
-
-                      <label className="space-y-2">
-                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Aplicacao</span>
+                    <div className="mt-5 space-y-4">
+                      <label className="block space-y-2">
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Aplicação</span>
                         {applications.length > 0 ? (
                           <select
-                            aria-label="Selecionar aplicacao"
+                            aria-label="Selecionar aplicação"
                             className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                             value={selectedApplicationId ?? ""}
                             onChange={(event) => {
@@ -610,7 +776,7 @@ export function CreateManualReleaseButton({
                           </select>
                         ) : (
                           <select
-                            aria-label="Selecionar aplicacao"
+                            aria-label="Selecionar aplicação"
                             className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                             value={form.app}
                             onChange={(event) => setForm((current) => ({ ...current, app: event.target.value }))}
@@ -624,26 +790,12 @@ export function CreateManualReleaseButton({
                         )}
                         <span className="text-xs text-(--tc-text-muted,#6b7280)">
                           {selectedApplication?.qaseProjectCode
-                            ? `Projeto Qase ${selectedApplication.qaseProjectCode}`
+                            ? `Conectado ao projeto Qase ${selectedApplication.qaseProjectCode}`
                             : `${appMeta.label} sera usado como contexto desta run.`}
                         </span>
                       </label>
 
-                      <label className="space-y-2 lg:col-span-2">
-                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Slug da run</span>
-                        <input
-                          className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
-                          data-testid="run-slug"
-                          value={form.slug}
-                          onChange={(event) => setForm((current) => ({ ...current, slug: event.target.value }))}
-                          placeholder="Ex: v1_9_0_reg"
-                        />
-                        <span className="text-xs text-(--tc-text-muted,#6b7280)">
-                          Se vazio, o slug sera derivado automaticamente do titulo.
-                        </span>
-                      </label>
-
-                      <div className="space-y-3 rounded-[22px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) p-4 lg:col-span-2">
+                      <div className="space-y-3 rounded-[22px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) p-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
                             <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
@@ -660,7 +812,7 @@ export function CreateManualReleaseButton({
                           ) : null}
                         </div>
 
-                        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
+                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_auto_auto]">
                           <select
                             aria-label="Selecionar plano de teste"
                             value={selectedPlanKey}
@@ -673,7 +825,7 @@ export function CreateManualReleaseButton({
                                 ? "Carregando planos..."
                                 : plans.length > 0
                                   ? "Sem plano aplicado"
-                                  : "Nenhum plano disponivel"}
+                                  : "Nenhum plano disponível"}
                             </option>
                             {plans.map((plan) => (
                               <option key={makePlanKey(plan.source, plan.id)} value={makePlanKey(plan.source, plan.id)}>
@@ -704,11 +856,141 @@ export function CreateManualReleaseButton({
                     </div>
                   </div>
 
+                  {/* ── Título (auto-preenchido do plano) ── */}
+                  <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-700">
+                        <FiLayers className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-600">Preenchido automaticamente</p>
+                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Título da run</h3>
+                      </div>
+                    </div>
+                    <div className="mt-5">
+                      <label className="space-y-2">
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Título da run *</span>
+                        <input
+                          className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                          data-testid="run-title"
+                          value={form.name}
+                          onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                          placeholder="Será preenchido ao aplicar o plano"
+                        />
+                        <input
+                          aria-hidden="true"
+                          tabIndex={-1}
+                          data-testid="run-name"
+                          value={form.name}
+                          onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                          className="sr-only"
+                        />
+                      </label>
+                    </div>
+                    <p className="mt-3 text-xs text-(--tc-text-muted,#6b7280)">
+                      Preenchido automaticamente a partir do plano. Você pode editar se necessário.
+                    </p>
+                  </div>
+
+                  {/* ── Resultados calculados do plano ── */}
+                  {cases.length > 0 && (
+                    <div className="rounded-[28px] border border-emerald-300 bg-emerald-50 p-5 shadow-sm dark:border-emerald-800 dark:bg-emerald-950/40">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-600 dark:text-emerald-400">Calculado automaticamente</p>
+                      <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Resultados do plano</h3>
+                      <div className="mt-4 grid gap-3 grid-cols-[repeat(auto-fit,minmax(100px,1fr))]">
+                        {([
+                          { label: "Aprovado", value: caseStats.pass, dotClass: "bg-emerald-500", labelClass: "text-emerald-600 dark:text-emerald-400" },
+                          { label: "Falha", value: caseStats.fail, dotClass: "bg-rose-500", labelClass: "text-rose-600 dark:text-rose-400" },
+                          { label: "Bloqueado", value: caseStats.blocked, dotClass: "bg-amber-500", labelClass: "text-amber-600 dark:text-amber-400" },
+                          { label: "N/Executado", value: caseStats.notRun, dotClass: "bg-slate-400", labelClass: "text-slate-500 dark:text-slate-400" },
+                        ]).map((s) => (
+                          <div key={s.label} className="flex items-center gap-2 rounded-xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) px-3 py-2">
+                            <span className={`inline-block h-2.5 w-2.5 rounded-full ${s.dotClass}`} />
+                            <span className={`text-xs font-semibold uppercase tracking-[0.2em] ${s.labelClass}`}>{s.label}</span>
+                            <span className="ml-auto text-lg font-black text-(--tc-text,#0b1a3c)">{s.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  </>)}
+
+                  {runMode === "manual" && (<>
+                  {/* ── Dados da run (obrigatório) ── */}
+                  <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700">
+                        <FiLayers className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Obrigatório</p>
+                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Dados da run</h3>
+                      </div>
+                    </div>
+                    <div className="mt-5 grid gap-4 md:grid-cols-2">
+                      <label className="space-y-2">
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Título da run *</span>
+                        <input
+                          className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                          data-testid="run-title"
+                          value={form.name}
+                          onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                          placeholder="Ex: Run 1.9.0 - Regressao"
+                        />
+                        <input
+                          aria-hidden="true"
+                          tabIndex={-1}
+                          data-testid="run-name"
+                          value={form.name}
+                          onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                          className="sr-only"
+                        />
+                      </label>
+                      <label className="block space-y-2">
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Aplicação</span>
+                        {applications.length > 0 ? (
+                          <select
+                            aria-label="Selecionar aplicação"
+                            className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                            value={selectedApplicationId ?? ""}
+                            onChange={(event) => {
+                              const nextId = event.target.value;
+                              setSelectedApplicationId(nextId);
+                              const nextApp = applications.find((a) => a.id === nextId) ?? null;
+                              if (nextApp) {
+                                setForm((current) => ({ ...current, app: nextApp.slug || nextApp.name }));
+                              }
+                            }}
+                          >
+                            {applications.map((application) => (
+                              <option key={application.id} value={application.id}>
+                                {application.name}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <select
+                            aria-label="Selecionar aplicação"
+                            className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                            value={form.app}
+                            onChange={(event) => setForm((current) => ({ ...current, app: event.target.value }))}
+                          >
+                            {fallbackApps.map((application) => (
+                              <option key={application} value={application}>
+                                {application}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </label>
+                    </div>
+                  </div>
+
                   <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Totais da execucao</p>
-                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Distribuicao de status</h3>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Totais da execução</p>
+                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Preencha os resultados</h3>
                       </div>
                       <button
                         type="button"
@@ -724,21 +1006,24 @@ export function CreateManualReleaseButton({
                       </button>
                     </div>
 
-                    <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="mt-5 grid gap-4 grid-cols-[repeat(auto-fit,minmax(140px,1fr))]">
                       {([
-                        { key: "pass", label: "Aprovado", testId: "run-stat-pass", chipClass: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-                        { key: "fail", label: "Falha", testId: "run-stat-fail", chipClass: "border-rose-200 bg-rose-50 text-rose-700" },
-                        { key: "blocked", label: "Bloqueado", testId: "run-stat-blocked", chipClass: "border-amber-200 bg-amber-50 text-amber-700" },
-                        { key: "notRun", label: "Nao executado", testId: "run-stat-not-run", chipClass: "border-slate-200 bg-slate-100 text-slate-700" },
+                        { key: "pass", label: "Aprovado", testId: "run-stat-pass", dotClass: "bg-emerald-500", borderClass: "border-emerald-500/30", labelClass: "text-emerald-600" },
+                        { key: "fail", label: "Falha", testId: "run-stat-fail", dotClass: "bg-rose-500", borderClass: "border-rose-500/30", labelClass: "text-rose-600" },
+                        { key: "blocked", label: "Bloqueado", testId: "run-stat-blocked", dotClass: "bg-amber-500", borderClass: "border-amber-500/30", labelClass: "text-amber-600" },
+                        { key: "notRun", label: "Não executado", testId: "run-stat-not-run", dotClass: "bg-slate-400", borderClass: "border-slate-300", labelClass: "text-slate-500" },
                       ] as const).map((item) => (
-                        <div key={item.key} className={`rounded-[24px] border p-4 shadow-sm ${item.chipClass}`}>
-                          <div className="text-[11px] font-semibold uppercase tracking-[0.24em]">{item.label}</div>
+                        <div key={item.key} className={`rounded-2xl border-2 ${item.borderClass} bg-(--tc-surface,#f8fafc) p-4`}>
+                          <div className={`flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] ${item.labelClass}`}>
+                            <span className={`inline-block h-2.5 w-2.5 rounded-full ${item.dotClass}`} />
+                            {item.label}
+                          </div>
                           <input
                             type="number"
                             min={0}
                             aria-label={`Total ${item.label}`}
                             data-testid={item.testId}
-                            className="mt-3 w-full border-0 bg-transparent p-0 text-3xl font-black text-(--tc-text,#0b1a3c) outline-none"
+                            className="mt-2 w-full rounded-xl border border-(--tc-border,#dfe5f1) bg-white px-3 py-2 text-2xl font-black text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                             value={form[item.key]}
                             onChange={(event) => handleNumber(item.key, event.target.value)}
                           />
@@ -746,18 +1031,18 @@ export function CreateManualReleaseButton({
                       ))}
                     </div>
 
-                    <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                      <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Total consolidado</div>
-                        <div className="mt-2 text-2xl font-black text-(--tc-text,#0b1a3c)">{total}</div>
+                    <div className="mt-4 grid gap-3 grid-cols-[repeat(auto-fit,minmax(140px,1fr))]">
+                      <div className="flex items-center justify-between rounded-xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Total</span>
+                        <span className="text-xl font-black text-(--tc-text,#0b1a3c)">{total}</span>
                       </div>
-                      <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Pass rate</div>
-                        <div className="mt-2 text-2xl font-black text-(--tc-text,#0b1a3c)">{passRate}%</div>
+                      <div className="flex items-center justify-between rounded-xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Pass rate</span>
+                        <span className="text-xl font-black text-(--tc-text,#0b1a3c)">{passRate}%</span>
                       </div>
-                      <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Casos ligados</div>
-                        <div className="mt-2 text-2xl font-black text-(--tc-text,#0b1a3c)">{cases.length}</div>
+                      <div className="flex items-center justify-between rounded-xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Casos</span>
+                        <span className="text-xl font-black text-(--tc-text,#0b1a3c)">{cases.length}</span>
                       </div>
                     </div>
                   </div>
@@ -768,21 +1053,19 @@ export function CreateManualReleaseButton({
                         <FiTrendingUp className="h-4 w-4" />
                       </span>
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Observacoes</p>
-                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Notas da execucao</h3>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Observações</p>
+                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Notas da execução</h3>
                       </div>
                     </div>
                     <textarea
-                      className="mt-5 min-h-[170px] w-full rounded-[24px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                      className="mt-5 min-h-42.5 w-full rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                       rows={6}
                       value={form.observations}
                       onChange={(event) => setForm((current) => ({ ...current, observations: event.target.value }))}
-                      placeholder="Contexto da execucao, riscos encontrados, links uteis e proximos passos."
+                      placeholder="Contexto da execução, riscos encontrados, links úteis e próximos passos."
                     />
                   </div>
-                </section>
 
-                <section className="space-y-6">
                   <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
                     <div className="flex items-center gap-2">
                       <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700">
@@ -794,16 +1077,17 @@ export function CreateManualReleaseButton({
                       </div>
                     </div>
 
-                    <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                    <div className="mt-5 grid gap-4 md:grid-cols-2">
                       <label className="space-y-2">
-                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">ID do caso</span>
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                          ID do caso (auto)
+                        </span>
                         <input
                           type="text"
-                          autoFocus
                           value={caseDraft.id}
                           onChange={(event) => handleCaseDraftChange("id", event.target.value)}
                           className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
-                          placeholder="Ex: 12345"
+                          placeholder="Deixe vazio para gerar automaticamente"
                         />
                       </label>
                       <label className="space-y-2">
@@ -821,8 +1105,8 @@ export function CreateManualReleaseButton({
                           ))}
                         </select>
                       </label>
-                      <label className="space-y-2 lg:col-span-2">
-                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Titulo</span>
+                      <label className="space-y-2 md:col-span-2">
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Título *</span>
                         <input
                           type="text"
                           value={caseDraft.title}
@@ -831,8 +1115,10 @@ export function CreateManualReleaseButton({
                           placeholder="Nome do caso executado"
                         />
                       </label>
-                      <label className="space-y-2 lg:col-span-2">
-                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Link opcional</span>
+                      <label className="space-y-2 md:col-span-2">
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                          Link opcional (URL externa)
+                        </span>
                         <div className="relative">
                           <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                             <FiLink2 className="h-4 w-4" />
@@ -842,7 +1128,7 @@ export function CreateManualReleaseButton({
                             value={caseDraft.link}
                             onChange={(event) => handleCaseDraftChange("link", event.target.value)}
                             className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) py-3 pr-4 pl-11 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
-                            placeholder="https://app.qase.io/run/..."
+                            placeholder="https://link-externo.com/..."
                           />
                         </div>
                       </label>
@@ -850,111 +1136,161 @@ export function CreateManualReleaseButton({
 
                     <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3">
                       <div className="text-sm text-(--tc-text-secondary,#4b5563)">
-                        ID e titulo sao obrigatorios. O cartao entra direto na coluna selecionada.
+                        Título obrigatório. ID gerado automaticamente se vazio.
                       </div>
                       <button
                         type="button"
                         onClick={handleAddCase}
                         className="rounded-full bg-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white shadow transition hover:brightness-110 disabled:opacity-60"
-                        disabled={!caseDraft.id.trim() || !caseDraft.title.trim()}
+                        disabled={!caseDraft.title.trim()}
                       >
                         Adicionar caso
                       </button>
                     </div>
                   </div>
+                  </>)}
 
-                  <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Quadro da run</p>
-                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Kanban dos casos executados</h3>
-                      </div>
-                      <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">
-                        <FiCheckCircle className="h-3.5 w-3.5" />
-                        {cases.length} caso(s)
-                      </div>
-                    </div>
-
-                    <div className="mt-5 grid gap-4 xl:grid-cols-4">
-                      {CASE_COLUMNS.map((column) => {
-                        const columnCases = groupedCases[column.key];
-                        return (
-                          <div
-                            key={column.key}
-                            className={`rounded-[24px] border bg-linear-to-b ${column.toneClass} p-4 shadow-sm ${column.ringClass}`}
-                          >
-                            <div className="flex items-center justify-between gap-3">
-                              <div className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] ${column.chipClass}`}>
-                                {column.label}
-                              </div>
-                              <span className="text-sm font-extrabold text-(--tc-text,#0b1a3c)">{columnCases.length}</span>
-                            </div>
-
-                            <div className="mt-4 max-h-[340px] space-y-3 overflow-y-auto pr-1">
-                              {columnCases.length === 0 ? (
-                                <div className="rounded-[20px] border border-dashed border-slate-200 bg-white/80 px-4 py-5 text-sm text-slate-500">
-                                  Nenhum caso nesta coluna.
-                                </div>
-                              ) : (
-                                columnCases.map((item) => (
-                                  <article
-                                    key={`${column.key}-${item.id}`}
-                                    className="relative rounded-[22px] border border-white/80 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
-                                  >
-                                    <div className="pr-10">
-                                      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
-                                        Caso {item.id}
-                                      </p>
-                                      <p className="mt-2 text-sm font-semibold leading-6 text-(--tc-text,#0b1a3c)">{item.title}</p>
-                                      {item.link ? (
-                                        <a
-                                          href={item.link}
-                                          target="_blank"
-                                          rel="noreferrer"
-                                          className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-(--tc-accent,#ef0001)"
-                                        >
-                                          <FiLink2 className="h-3.5 w-3.5" />
-                                          Abrir link
-                                        </a>
-                                      ) : (
-                                        <p className="mt-3 text-xs text-slate-500">Sem link informado.</p>
-                                      )}
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveCase(item.id)}
-                                      className="absolute top-3 right-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
-                                      aria-label={`Remover caso ${item.id}`}
-                                    >
-                                      <FiX className="h-3.5 w-3.5" />
-                                    </button>
-                                  </article>
-                                ))
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                  <div className="overflow-hidden rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white shadow-sm">
+                <div className="flex flex-col gap-2 px-5 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Quadro da run</p>
+                    <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Kanban dos casos executados</h3>
                   </div>
-                </section>
+                  <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">
+                    <FiCheckCircle className="h-3.5 w-3.5" />
+                    {cases.length} caso(s)
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] divide-x divide-(--tc-border,#dfe5f1)">
+                  {columnOrder.map((colKey) => {
+                    const column = CASE_COLUMNS.find((c) => c.key === colKey)!;
+                    const columnCases = groupedCases[column.key];
+                    const isColumnDragOver = dragOverColumn === column.key && draggingColumnKey !== null && draggingColumnKey !== column.key;
+                    const isCardDragOver = dragOverColumn === column.key && draggingCardId !== null;
+                    return (
+                      <div
+                        key={column.key}
+                        draggable
+                        onDragStart={(e) => handleColumnDragStart(e, column.key)}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setDragOverColumn(column.key);
+                        }}
+                        onDragLeave={() => setDragOverColumn(null)}
+                        onDrop={(e) => {
+                          if (draggingColumnKey) handleColumnDrop(e, column.key);
+                          else handleCardDrop(e, column.key);
+                        }}
+                        onDragEnd={() => { setDraggingColumnKey(null); setDragOverColumn(null); }}
+                        className={[
+                          "bg-linear-to-b p-4 transition-all",
+                          column.toneClass,
+                          draggingColumnKey === column.key ? "opacity-40 scale-[0.97]" : "",
+                          isColumnDragOver ? "ring-inset ring-2 ring-(--tc-accent,#ef0001) brightness-95" : "",
+                          isCardDragOver ? "ring-inset ring-2 ring-slate-400 brightness-95" : "",
+                        ].filter(Boolean).join(" ")}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div
+                            className={`cursor-grab rounded-full border px-4 py-1.5 text-sm font-semibold uppercase tracking-[0.2em] select-none ${column.chipClass}`}
+                            title="Segure para mover a coluna"
+                          >
+                            {column.label}
+                          </div>
+                          <span className="text-base font-extrabold text-(--tc-text,#0b1a3c)">{columnCases.length}</span>
+                        </div>
+
+                        <div className="mt-4 max-h-96 space-y-2 overflow-y-auto pr-1">
+                          {columnCases.length === 0 ? (
+                            <div className={[
+                              "rounded-[20px] border border-dashed px-4 py-7 text-base text-(--tc-text-muted,#4b5563) transition-colors",
+                              isCardDragOver
+                                ? "border-(--tc-accent,#ef0001) bg-(--tc-accent,#ef0001)/5"
+                                : "border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc)",
+                            ].join(" ")}>
+                              {isCardDragOver ? "Solte aqui ↓" : "Nenhum caso nesta coluna."}
+                            </div>
+                          ) : (
+                            columnCases.map((item) => (
+                              <article
+                                key={`${column.key}-${item.id}`}
+                                draggable
+                                onDragStart={(e) => { e.stopPropagation(); handleCardDragStart(e, item.id, column.key); }}
+                                onDragEnd={() => { setDraggingCardId(null); setDraggingCardFrom(null); }}
+                                onClick={() => setEditingCase({ ...item })}
+                                className={[
+                                  "relative cursor-pointer rounded-[22px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) p-5 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition-all hover:border-(--tc-accent,#ef0001)/30 hover:shadow-md",
+                                  draggingCardId === item.id ? "opacity-40" : "",
+                                ].join(" ")}
+                              >
+                                <div className="pr-16">
+                                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#4b5563)">
+                                    Caso {item.id}
+                                  </p>
+                                  <p className="mt-2 text-base font-semibold leading-6 text-(--tc-text,#0b1a3c)">{item.title}</p>
+                                  {item.description ? (
+                                    <p className="mt-1 line-clamp-2 text-xs text-(--tc-text-muted,#4b5563)">{item.description}</p>
+                                  ) : null}
+                                  {item.link ? (
+                                    <a
+                                      href={item.link}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-(--tc-accent,#ef0001)"
+                                    >
+                                      <FiLink2 className="h-3.5 w-3.5" />
+                                      Abrir link
+                                    </a>
+                                  ) : null}
+                                </div>
+                                <div className="absolute top-3 right-3 flex items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); setEditingCase({ ...item }); }}
+                                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) text-(--tc-text-muted,#4b5563) transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
+                                    aria-label={`Editar caso ${item.id}`}
+                                    title="Editar caso"
+                                  >
+                                    <FiEdit2 className="h-3 w-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); handleRemoveCase(item.id); }}
+                                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) text-(--tc-text-muted,#4b5563) transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600"
+                                    aria-label={`Remover caso ${item.id}`}
+                                    title="Remover caso"
+                                  >
+                                    <FiX className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              </article>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
+            </div>
 
-            <div className="sticky bottom-0 z-10 border-t border-slate-200 bg-white/96 px-5 py-4 backdrop-blur sm:px-7">
+            <div className="sticky bottom-0 z-10 border-t border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff)/96 px-7 py-5 backdrop-blur sm:px-10">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="min-h-[20px] text-sm">
+                <div className="min-h-6 text-base">
                   {submitError ? (
                     <span className="font-medium text-rose-600">{submitError}</span>
                   ) : (
-                    <span className="text-slate-500">Voce pode salvar sem casos e complementar depois.</span>
+                    <span className="text-(--tc-text-muted,#4b5563)">Você pode salvar sem casos e complementar depois.</span>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center justify-end gap-3">
+                <div className="flex flex-wrap items-center justify-end gap-4">
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="rounded-2xl border border-(--tc-border,#dfe5f1) px-5 py-2.5 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:border-slate-400 hover:text-slate-900"
+                    className="rounded-2xl border border-(--tc-border,#dfe5f1) px-6 py-3 text-base font-semibold text-(--tc-text,#0b1a3c) transition hover:border-slate-400 hover:text-slate-900"
                   >
                     Cancelar
                   </button>
@@ -963,7 +1299,7 @@ export function CreateManualReleaseButton({
                     onClick={handleSubmit}
                     disabled={saving || !form.name.trim()}
                     data-testid="run-submit"
-                    className="rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-2.5 text-sm font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
+                    className="rounded-2xl bg-(--tc-accent,#ef0001) px-6 py-3 text-base font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
                   >
                     {saving ? "Salvando..." : <span data-testid="run-save">{redirectToRun ? "Salvar e abrir" : "Salvar run"}</span>}
                   </button>
@@ -971,8 +1307,185 @@ export function CreateManualReleaseButton({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
+
+      {/* ── Case editing modal ── */}
+      {editingCase
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-110 flex items-center justify-center overflow-auto bg-black/60 p-4 backdrop-blur-sm"
+              role="dialog"
+              aria-modal="true"
+              onClick={(e) => { if (e.target === e.currentTarget) setEditingCase(null); }}
+            >
+              <div className="w-full max-w-2xl rounded-[28px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) shadow-[0_40px_140px_rgba(15,23,42,0.38)]">
+                {/* Header */}
+                <div className="flex items-center justify-between gap-4 border-b border-(--tc-border,#dfe5f1) px-6 py-4">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Caso {editingCase.id}</p>
+                    <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Detalhes do caso</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditingCase(null)}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-(--tc-border,#dfe5f1) text-(--tc-text-muted,#4b5563) transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600"
+                    aria-label="Fechar detalhes"
+                    title="Fechar"
+                  >
+                    <FiX className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Body */}
+                <div className="max-h-[calc(100dvh-12rem)] space-y-4 overflow-y-auto px-6 py-5">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">ID</span>
+                      <input
+                        type="text"
+                        value={editingCase.id}
+                        readOnly
+                        className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-slate-50 px-4 py-2.5 text-sm text-(--tc-text-muted,#6b7280)"
+                      />
+                    </label>
+                    <label className="space-y-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Status</span>
+                      <select
+                        aria-label="Status do caso"
+                        value={editingCase.status}
+                        onChange={(e) => setEditingCase((c) => c ? { ...c, status: e.target.value as CaseStatus } : c)}
+                        className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                      >
+                        {CASE_COLUMNS.map((col) => (
+                          <option key={col.key} value={col.key}>{col.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+
+                  <label className="block space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Título *</span>
+                    <input
+                      type="text"
+                      value={editingCase.title}
+                      onChange={(e) => setEditingCase((c) => c ? { ...c, title: e.target.value } : c)}
+                      className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                    />
+                  </label>
+
+                  <label className="block space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Descrição</span>
+                    <textarea
+                      rows={3}
+                      value={editingCase.description}
+                      onChange={(e) => setEditingCase((c) => c ? { ...c, description: e.target.value } : c)}
+                      className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                      placeholder="O que este caso válida?"
+                    />
+                  </label>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Pre-condicao</span>
+                      <textarea
+                        rows={2}
+                        value={editingCase.precondition}
+                        onChange={(e) => setEditingCase((c) => c ? { ...c, precondition: e.target.value } : c)}
+                        className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                        placeholder="Condicoes necessarias antes da execução"
+                      />
+                    </label>
+                    <label className="space-y-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Pos-condicao</span>
+                      <textarea
+                        rows={2}
+                        value={editingCase.postcondition}
+                        onChange={(e) => setEditingCase((c) => c ? { ...c, postcondition: e.target.value } : c)}
+                        className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                        placeholder="Estado esperado apos a execução"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Passos</span>
+                      <textarea
+                        rows={6}
+                        value={editingCase.steps}
+                        onChange={(e) => setEditingCase((c) => c ? { ...c, steps: e.target.value } : c)}
+                        className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                        placeholder={"1. Acessar a tela X\n2. Clicar em Y\n3. Preencher campo Z"}
+                      />
+                    </label>
+                    <label className="space-y-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Resultado esperado</span>
+                      <textarea
+                        rows={6}
+                        value={editingCase.expected}
+                        onChange={(e) => setEditingCase((c) => c ? { ...c, expected: e.target.value } : c)}
+                        className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                        placeholder={"1. Sistema exibe X\n2. Mensagem Y aparece\n3. Campo Z validado"}
+                      />
+                    </label>
+                  </div>
+
+                  <label className="block space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                      {runMode === "integration" ? "Link Qase" : "Link externo (opcional)"}
+                    </span>
+                    <div className="relative">
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                        <FiLink2 className="h-4 w-4" />
+                      </span>
+                      <input
+                        type="url"
+                        value={editingCase.link}
+                        onChange={(e) => setEditingCase((c) => c ? { ...c, link: e.target.value } : c)}
+                        readOnly={runMode === "integration" && !!editingCase.link}
+                        className={[
+                          "w-full rounded-2xl border border-(--tc-border,#dfe5f1) py-2.5 pr-4 pl-11 text-sm outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20",
+                          runMode === "integration" && editingCase.link
+                            ? "bg-slate-50 text-(--tc-text-muted,#6b7280)"
+                            : "bg-(--tc-surface,#f8fafc) text-(--tc-text,#0f172a)",
+                        ].join(" ")}
+                        placeholder={runMode === "integration" ? "Link Qase gerado automaticamente" : "https://..."}
+                      />
+                    </div>
+                    {runMode === "integration" && editingCase.link ? (
+                      <a href={editingCase.link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline">
+                        <FiLink2 className="h-3 w-3" />
+                        Abrir no Qase
+                      </a>
+                    ) : null}
+                  </label>
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-end gap-3 border-t border-(--tc-border,#dfe5f1) px-6 py-4">
+                  <button
+                    type="button"
+                    onClick={() => setEditingCase(null)}
+                    className="rounded-2xl border border-(--tc-border,#dfe5f1) px-5 py-2.5 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:border-slate-400"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveEditingCase}
+                    disabled={!editingCase.title.trim()}
+                    className="rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-2.5 text-sm font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
+                  >
+                    Salvar alterações
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

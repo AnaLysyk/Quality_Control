@@ -22,7 +22,7 @@ type SupportRequestRow = {
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status, headers: NO_STORE_HEADERS });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status, headers: NO_STORE_HEADERS });
   }
 
   if (shouldUseJsonStore()) {

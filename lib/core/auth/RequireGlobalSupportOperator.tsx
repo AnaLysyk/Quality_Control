@@ -37,7 +37,7 @@ export function RequireGlobalSupportOperator({ children, fallback }: RequireGlob
       ? String((user as { clientSlug?: string | null }).clientSlug)
       : null;
   const nonSupportRedirect = user?.isGlobalAdmin
-    ? "/admin/home"
+    ? "/admin/dashboard"
     : clientSlug
       ? `/empresas/${encodeURIComponent(clientSlug)}/home`
       : "/empresas";

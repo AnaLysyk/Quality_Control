@@ -701,20 +701,20 @@ function Panel(props: {
 }) {
   const surfaceClassName =
     props.variant === "softGradient"
-      ? "border-[rgba(1,24,72,0.08)] [background:radial-gradient(circle_at_top_left,rgba(1,24,72,0.09)_0%,transparent_26%),radial-gradient(circle_at_bottom_right,rgba(239,0,1,0.1)_0%,transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.98)_0%,rgba(246,249,255,0.98)_56%,rgba(255,246,247,0.98)_100%)]"
-      : "border-[rgba(15,23,42,0.06)] bg-white/96";
+      ? "border-[rgba(1,24,72,0.08)] [background:radial-gradient(circle_at_top_left,rgba(1,24,72,0.09)_0%,transparent_26%),radial-gradient(circle_at_bottom_right,rgba(239,0,1,0.1)_0%,transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.98)_0%,rgba(246,249,255,0.98)_56%,rgba(255,246,247,0.98)_100%)] dark:border-(--tc-border,#334155) dark:[background:linear-gradient(180deg,rgba(15,23,42,0.92)_0%,rgba(2,6,23,0.92)_100%)]"
+      : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)";
 
   const eyebrowClassName =
     props.variant === "softGradient"
-      ? "text-[rgba(8,32,77,0.56)]"
+      ? "text-[rgba(8,32,77,0.56)] dark:text-(--tc-text-muted,#94a3b8)"
       : "text-(--tc-text-muted,#6b7280)";
   const titleClassName =
     props.variant === "softGradient"
-      ? "text-[#08204d]"
-      : "text-(--tc-text,#0b1a3c)";
+      ? "text-[#08204d] dark:text-(--tc-text,#e2e8f0)"
+      : "text-(--tc-text,#0b1a3c) dark:text-(--tc-text,#e2e8f0)";
   const descriptionClassName =
     props.variant === "softGradient"
-      ? "text-[rgba(8,32,77,0.66)]"
+      ? "text-[rgba(8,32,77,0.66)] dark:text-(--tc-text-muted,#94a3b8)"
       : "text-(--tc-text-muted,#6b7280)";
 
   return (
@@ -753,13 +753,13 @@ function StatCard(props: {
     "text-(--tc-text,#0b1a3c)";
 
   return (
-    <div className="h-full min-h-[10.75rem] rounded-[20px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-4">
+    <div className="h-full min-h-43 rounded-[20px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-4">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">{props.label}</div>
           <div className={`mt-2 text-3xl font-extrabold tracking-[-0.04em] ${tone}`}>{props.value}</div>
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-(--tc-primary,#0b1a3c)">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-(--tc-surface-2,#f1f5f9) text-(--tc-primary,#0b1a3c)">
           {props.icon}
         </div>
       </div>
@@ -1114,24 +1114,24 @@ function SelectField(props: {
 
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgba(8,32,77,0.58)]">{props.label}</span>
+      <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">{props.label}</span>
       <Select value={props.value} onValueChange={props.onChange} disabled={props.disabled}>
-        <SelectTrigger className={`h-10.5 rounded-2xl border-[rgba(1,24,72,0.08)] bg-white/92 px-3.5 py-2 text-[15px] font-semibold text-[#08204d] shadow-none focus-visible:ring-[rgba(36,82,149,0.16)] data-placeholder:text-[rgba(8,32,77,0.56)] ${props.disabled ? "cursor-not-allowed opacity-55" : ""}`}>
+        <SelectTrigger className={`h-10.5 rounded-2xl border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 py-2 text-[15px] font-semibold text-(--tc-text,#0b1a3c) shadow-none focus-visible:ring-[rgba(36,82,149,0.16)] data-placeholder:text-(--tc-text-muted,#6b7280) ${props.disabled ? "cursor-not-allowed opacity-55" : ""}`}>
           <SelectValue aria-label={selectedOption?.label}>{selectedOption?.label ?? "Selecionar"}</SelectValue>
         </SelectTrigger>
-        <SelectContent className="w-(--radix-select-trigger-width) rounded-[18px] border-[rgba(1,24,72,0.08)] bg-white/98 shadow-[0_18px_38px_rgba(1,24,72,0.12)]">
+        <SelectContent className="w-(--radix-select-trigger-width) rounded-[18px] border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) shadow-[0_18px_38px_rgba(1,24,72,0.12)]">
           {props.options.map((option) => (
             <SelectItem
               key={option.value}
               value={option.value}
-              className="rounded-xl py-2.5 pl-9 pr-3 text-[14px] font-medium text-[#08204d] focus:bg-[rgba(36,82,149,0.08)] focus:text-[#08204d]"
+              className="rounded-xl py-2.5 pl-9 pr-3 text-[14px] font-medium text-(--tc-text,#0b1a3c) focus:bg-(--tc-surface-2,#eef4ff) focus:text-(--tc-text,#0b1a3c)"
             >
               {option.label}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      {props.hint ? <span className="pl-1 text-[11px] leading-4 text-[rgba(8,32,77,0.54)]">{props.hint}</span> : null}
+      {props.hint ? <span className="pl-1 text-[11px] leading-4 text-(--tc-text-muted,#6b7280)">{props.hint}</span> : null}
     </label>
   );
 }
@@ -1141,7 +1141,7 @@ function ToggleChip(props: { active: boolean; onClick: () => void; label: string
     <button
       type="button"
       onClick={props.onClick}
-      className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-semibold tracking-[0.03em] transition ${props.active ? "border-[rgba(1,24,72,0.14)] bg-white text-[#08204d] shadow-[0_4px_10px_rgba(1,24,72,0.08)]" : "border-[rgba(15,23,42,0.06)] bg-white/80 text-[rgba(8,32,77,0.78)]"}`}
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-semibold tracking-[0.03em] transition ${props.active ? "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text,#0b1a3c) shadow-[0_4px_10px_rgba(1,24,72,0.08)]" : "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) text-(--tc-text-muted,#6b7280)"}`}
     >
       {props.label}
     </button>
@@ -1156,7 +1156,7 @@ function ResultViewButton(props: { active: boolean; label: string; onClick: () =
       className={`inline-flex items-center rounded-full border px-3.5 py-2 text-sm font-semibold transition ${
         props.active
           ? "border-transparent bg-(--tc-primary,#0b1a3c) text-white"
-          : "border-[rgba(15,23,42,0.08)] bg-white text-(--tc-text,#0b1a3c)"
+          : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text,#0b1a3c)"
       }`}
     >
       {props.label}
@@ -1395,11 +1395,18 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   }, [props.defects, props.runs]);
 
   const filterOptions = useMemo(() => {
-    const applications = Array.from(
-      new Map(
-        enrichedRuns.map((run) => [run.applicationKey, { key: run.applicationKey, label: run.applicationName }]),
-      ).values(),
-    );
+    const appMap = new Map<string, { key: string; label: string }>();
+    // Start with run-derived applications (authoritative keys)
+    for (const run of enrichedRuns) {
+      appMap.set(run.applicationKey, { key: run.applicationKey, label: run.applicationName });
+    }
+    // Add all registered applications not already covered by a run-derived key
+    for (const app of props.applications ?? []) {
+      const key = app.slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      if (!key || appMap.has(key)) continue;
+      appMap.set(key, { key, label: app.name });
+    }
+    const applications = Array.from(appMap.values());
     const runs = enrichedRuns.map((run) => ({ key: run.slug, label: run.title }));
     const statuses = buildStatusOptions(enrichedRuns);
     const environments = Array.from(new Set(enrichedRuns.flatMap((run) => run.environments))).sort();
@@ -1407,7 +1414,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
     const memberNames = (props.companyMembers ?? []).map((m) => m.name);
     const responsibles = Array.from(new Set([...runResponsibles, ...memberNames])).sort();
     return { applications, runs, statuses, environments, responsibles };
-  }, [enrichedRuns, props.companyMembers]);
+  }, [enrichedRuns, props.companyMembers, props.applications]);
 
   const draftFilterOptions = useMemo(() => {
     const matchesDraftRun = (run: EnrichedRun, ignore?: ContextualFilterKey) => {
@@ -1424,9 +1431,20 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
       return true;
     };
 
-    const applications = Array.from(
-      new Map(enrichedRuns.map((run) => [run.applicationKey, { key: run.applicationKey, label: run.applicationName }])).values(),
+    const appMap = new Map<string, { key: string; label: string }>();
+    for (const run of enrichedRuns) {
+      appMap.set(run.applicationKey, { key: run.applicationKey, label: run.applicationName });
+    }
+    const draftRunProjectCodes = new Set(
+      enrichedRuns.map((run) => run.projectCode?.trim().toUpperCase()).filter(Boolean),
     );
+    for (const app of props.applications ?? []) {
+      const key = app.slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      const code = app.qaseProjectCode?.trim().toUpperCase();
+      if (!key || appMap.has(key) || (code && draftRunProjectCodes.has(code))) continue;
+      appMap.set(key, { key, label: app.name });
+    }
+    const applications = Array.from(appMap.values());
     const runs = enrichedRuns
       .filter((run) => matchesDraftRun(run, "runFilter"))
       .map((run) => ({ key: run.slug, label: run.title }));
@@ -1461,6 +1479,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
     statusFilter,
     onlyWithDefects,
     onlyRegression,
+    props.applications,
   ]);
   const hasMultipleEnvironments = filterOptions.environments.length > 1;
 
@@ -2048,12 +2067,12 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                   {trendSummary.label}
                 </span>
                 {compactActiveChips.map((chip) => (
-                  <span key={chip} className="inline-flex rounded-full border border-[rgba(15,23,42,0.08)] bg-white px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-slate-700">
+                  <span key={chip} className="inline-flex rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-(--tc-text,#0b1a3c)">
                     {chip}
                   </span>
                 ))}
                 {hiddenActiveChipCount > 0 ? (
-                  <span className="inline-flex rounded-full border border-[rgba(15,23,42,0.08)] bg-white px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-slate-700">
+                  <span className="inline-flex rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-(--tc-text,#0b1a3c)">
                     +{hiddenActiveChipCount}
                   </span>
                 ) : null}
@@ -2063,8 +2082,8 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
 
           <div className="flex shrink-0 flex-wrap items-start gap-2 lg:justify-end lg:self-start">
             <Link
-              href={`/empresas/${encodeURIComponent(props.companySlug)}/metrics`}
-              className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-[rgba(15,23,42,0.08)] bg-white px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c)"
+              href="../metrics"
+              className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c)"
             >
               <FiLayers className="h-4 w-4" />
               Métricas
@@ -2073,7 +2092,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
               type="button"
               onClick={handleExportPdf}
               disabled={!analysisRequested || !hasFilterResults || exportingPdf}
-              className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-[rgba(15,23,42,0.08)] bg-white px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-60"
             >
               <FiDownload className="h-4 w-4" />
               {exportingPdf ? "Gerando PDF..." : "Exportar PDF"}
@@ -2103,14 +2122,14 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                   key={option.value}
                   type="button"
                   onClick={() => setPeriodPreset(option.value)}
-                  className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-[0.03em] transition ${periodPreset === option.value ? "border-[rgba(1,24,72,0.14)] bg-white text-[#08204d] shadow-[0_4px_10px_rgba(1,24,72,0.08)]" : "border-[rgba(15,23,42,0.06)] bg-white/80 text-[rgba(8,32,77,0.78)]"}`}
+                  className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-[0.03em] transition ${periodPreset === option.value ? "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text,#0b1a3c) shadow-[0_4px_10px_rgba(1,24,72,0.08)]" : "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) text-(--tc-text-muted,#6b7280)"}`}
                 >
                   {option.label}
                 </button>
               ))}
             </div>
 
-            <div className="grid gap-2.5 lg:grid-cols-4">
+            <div className="grid gap-2.5 lg:grid-cols-3">
               <SelectField
                 label="Aplicação"
                 value={applicationFilter}
@@ -2129,6 +2148,9 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                 onChange={setStatusFilter}
                 options={[{ value: STATUS_FILTER_ALL, label: "Todos" }, ...draftFilterOptions.statuses]}
               />
+            </div>
+
+            <div className="grid gap-2.5 lg:grid-cols-4">
               <SelectField
                 label="Origem"
                 value={sourceFilter}
@@ -2139,9 +2161,6 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                   { value: "integration", label: "Integração" },
                 ]}
               />
-            </div>
-
-            <div className="grid gap-2.5 lg:grid-cols-4">
               {showEnvironmentFilter ? (
                 <SelectField
                   label="Ambiente da execução"
@@ -2187,7 +2206,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
               />
             </div>
 
-            <div className="grid gap-2.5 lg:grid-cols-[1fr_1fr_1fr_auto]">
+            <div className="grid gap-2.5 lg:grid-cols-3">
               <SelectField
                 label="Visualização principal"
                 value={chartView}
@@ -2204,7 +2223,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                     setDateFrom(event.target.value);
                     setPeriodPreset("custom");
                   }}
-                  className="rounded-2xl border border-[rgba(1,24,72,0.08)] bg-white/92 px-3.5 py-2 text-[15px] font-semibold text-[#08204d] outline-none transition focus:border-[rgba(36,82,149,0.32)] focus:bg-white"
+                  className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 py-2 text-[15px] font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-[rgba(36,82,149,0.32)]"
                 />
               </label>
               <label className="flex flex-col gap-1.5">
@@ -2216,42 +2235,43 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                     setDateTo(event.target.value);
                     setPeriodPreset("custom");
                   }}
-                  className="rounded-2xl border border-[rgba(1,24,72,0.08)] bg-white/92 px-3.5 py-2 text-[15px] font-semibold text-[#08204d] outline-none transition focus:border-[rgba(36,82,149,0.32)] focus:bg-white"
+                  className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 py-2 text-[15px] font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-[rgba(36,82,149,0.32)]"
                 />
               </label>
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgba(8,32,77,0.58)]">Atalhos</span>
-                <div className="flex flex-wrap gap-2">
-                  <ToggleChip active={compareEnabled} onClick={() => setCompareEnabled((value) => !value)} label="Comparar período" />
-                  <ToggleChip active={onlyWithDefects} onClick={() => setOnlyWithDefects((value) => !value)} label="Com defeitos" />
-                  <ToggleChip active={onlyRegression} onClick={() => setOnlyRegression((value) => !value)} label="Com regressão" />
-                </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgba(8,32,77,0.58)]">Atalhos</span>
+              <div className="flex flex-wrap gap-2">
+                <ToggleChip active={compareEnabled} onClick={() => setCompareEnabled((value) => !value)} label="Comparar período" />
+                <ToggleChip active={onlyWithDefects} onClick={() => setOnlyWithDefects((value) => !value)} label="Com defeitos" />
+                <ToggleChip active={onlyRegression} onClick={() => setOnlyRegression((value) => !value)} label="Com regressão" />
               </div>
             </div>
 
             <div className="flex flex-wrap gap-2">
               {compactDraftChips.map((chip) => (
-                <span key={chip} className="inline-flex items-center rounded-full border border-[rgba(15,23,42,0.06)] bg-white/76 px-3 py-1 text-[10px] font-semibold tracking-[0.03em] text-[rgba(8,32,77,0.8)]">
+                <span key={chip} className="inline-flex items-center rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 py-1 text-[10px] font-semibold tracking-[0.03em] text-(--tc-text,#0b1a3c)">
                   <FiFilter className="mr-1.5 h-3 w-3" />
                   {chip}
                 </span>
               ))}
               {hiddenDraftChipCount > 0 ? (
-                <span className="inline-flex items-center rounded-full border border-[rgba(15,23,42,0.06)] bg-white/76 px-3 py-1 text-[10px] font-semibold tracking-[0.03em] text-[rgba(8,32,77,0.8)]">
+                <span className="inline-flex items-center rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 py-1 text-[10px] font-semibold tracking-[0.03em] text-(--tc-text,#0b1a3c)">
                   +{hiddenDraftChipCount}
                 </span>
               ) : null}
             </div>
 
             <div className="flex flex-col gap-3 border-t border-(--tc-border,#e6ecf5) pt-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="text-sm text-[rgba(8,32,77,0.64)]">
+                <div className="text-sm text-(--tc-text-muted,#6b7280)">
                 {analysisRequested && !hasPendingFilterChanges ? "Recorte atual sincronizado." : "Aplique para atualizar a leitura."}
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={resetFilters}
-                  className="inline-flex items-center gap-2 rounded-full border border-[rgba(15,23,42,0.06)] bg-white/84 px-4 py-2 text-sm font-semibold text-[#08204d]"
+                  className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"
                 >
                   <FiRefreshCw className="h-4 w-4" />
                   Limpar filtros
@@ -2276,17 +2296,17 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
             title="Selecione os filtros para gerar a leitura analítica."
             description={undefined}
           >
-            <div className="rounded-[20px] border border-dashed border-(--tc-border,#d7deea) bg-slate-50/70 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-(--tc-primary,#0b1a3c)">
+            <div className="rounded-[20px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-(--tc-surface,#ffffff) dark:bg-(--tc-surface-2,#1e293b) text-(--tc-primary,#0b1a3c) dark:text-(--tc-text,#e2e8f0)">
                 <FiFilter className="h-5 w-5" />
               </div>
               <p className="mt-4 max-w-2xl text-sm leading-6 text-(--tc-text-muted,#6b7280)">
                 Defina o recorte e aplique a análise. Os resultados entram só depois disso.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                <button type="button" onClick={() => applyAnalysis({ ...currentDraftFilters, periodPreset: "7d", dateFrom: "", dateTo: "" })} className="rounded-full border border-[rgba(15,23,42,0.08)] bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">Últimos 7 dias</button>
-                <button type="button" onClick={() => applyAnalysis({ ...currentDraftFilters, periodPreset: "30d", groupBy: "release", runFilter: "all", dateFrom: "", dateTo: "" })} className="rounded-full border border-[rgba(15,23,42,0.08)] bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">Últimas runs</button>
-                <button type="button" onClick={() => applyAnalysis({ ...currentDraftFilters, riskFilter: "critical", applicationFilter: "all", runFilter: "all" })} className="rounded-full border border-[rgba(15,23,42,0.08)] bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">Aplicações críticas</button>
+                <button type="button" onClick={() => applyAnalysis({ ...currentDraftFilters, periodPreset: "7d", dateFrom: "", dateTo: "" })} className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">Últimos 7 dias</button>
+                <button type="button" onClick={() => applyAnalysis({ ...currentDraftFilters, periodPreset: "30d", groupBy: "release", runFilter: "all", dateFrom: "", dateTo: "" })} className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">Últimas runs</button>
+                <button type="button" onClick={() => applyAnalysis({ ...currentDraftFilters, riskFilter: "critical", applicationFilter: "all", runFilter: "all" })} className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">Aplicações críticas</button>
               </div>
             </div>
           </Panel>
@@ -2296,10 +2316,10 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
             title="Nenhum dado encontrado para esse recorte."
             description="Não faz sentido ocupar a tela com blocos vazios. Ajuste o período ou alivie os filtros para ampliar a leitura."
           >
-            <div className="rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-slate-50/70 p-6">
+            <div className="rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-slate-50/70 dark:bg-(--tc-surface-2,#1e293b)/70 p-6">
               <div className="flex flex-wrap gap-2">
                 {activeFilterChips.map((chip) => (
-                  <span key={chip} className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-slate-700">
+                  <span key={chip} className="inline-flex items-center rounded-full border border-slate-200 dark:border-(--tc-border,#334155) bg-white dark:bg-(--tc-surface,#0f172a) px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-slate-700 dark:text-(--tc-text,#e2e8f0)">
                     {chip}
                   </span>
                 ))}
@@ -2311,7 +2331,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
           </Panel>
         ) : (
           <>
-            <div className="flex flex-col gap-3 rounded-[20px] border border-[rgba(15,23,42,0.06)] bg-white/96 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 rounded-[20px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <div className="text-sm font-semibold text-(--tc-text,#0b1a3c)">Leitura aplicada</div>
                 <div className="mt-1 text-sm text-(--tc-text-muted,#6b7280)">{resultSummaryLine}</div>
@@ -2369,14 +2389,14 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                   ) : null}
 
                   {insights.slice(1, 3).map((insight) => (
-                    <div key={insight.id} className="rounded-[18px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3">
+                    <div key={insight.id} className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-3">
                       <div className="text-sm font-semibold text-(--tc-text,#0b1a3c)">{insight.title}</div>
                       <p className="mt-1 text-xs leading-5 text-(--tc-text-muted,#6b7280)">{insight.detail}</p>
                     </div>
                   ))}
 
                   {relevantAlerts.length > 0 ? (
-                    <div className="rounded-[18px] border border-[rgba(15,23,42,0.06)] bg-slate-50 px-4 py-3">
+                    <div className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
                       <div className="text-xs font-semibold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Alertas recentes</div>
                       <div className="mt-3 grid gap-2">
                         {relevantAlerts.slice(0, 2).map((alert, index) => (
@@ -2397,7 +2417,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
         {analysisRequested && hasFilterResults && activeView === "comparatives" ? (
           filteredRuns.length > 0 ? (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] 2xl:grid-cols-[minmax(0,1.2fr)_minmax(26rem,0.8fr)]">
-          <Panel eyebrow="Comparativos" title="Runs com mais impacto" description={undefined} actions={<Link href={`/empresas/${encodeURIComponent(props.companySlug)}/runs`} className="inline-flex items-center gap-2 rounded-full border border-[rgba(15,23,42,0.08)] bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">Lista completa<FiArrowRight className="h-4 w-4" /></Link>}>
+          <Panel eyebrow="Comparativos" title="Runs com mais impacto" description={undefined} actions={<Link href="../runs" className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">Lista completa<FiArrowRight className="h-4 w-4" /></Link>}>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
@@ -2427,7 +2447,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
               {applicationRanking.length > 0 ? applicationRanking.slice(0, 6).map((aggregate) => {
                 const appMeta = getAppMeta(aggregate.key, aggregate.label);
                 return (
-                  <div key={aggregate.key} className="rounded-[18px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3">
+                  <div key={aggregate.key} className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-3">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2">
@@ -2443,8 +2463,8 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                       </div>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold tracking-[0.04em] text-(--tc-text-muted,#6b7280)">
-                      <span className="rounded-full bg-slate-100 px-3 py-1">falha {formatPercent(aggregate.failRate)}</span>
-                      <span className="rounded-full bg-slate-100 px-3 py-1">bloqueios {aggregate.blocked}</span>
+                      <span className="rounded-full bg-(--tc-surface-2,#f1f5f9) px-3 py-1">falha {formatPercent(aggregate.failRate)}</span>
+                      <span className="rounded-full bg-(--tc-surface-2,#f1f5f9) px-3 py-1">bloqueios {aggregate.blocked}</span>
                     </div>
                   </div>
                 );
@@ -2463,15 +2483,15 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
 
         {analysisRequested && hasFilterResults && activeView === "drilldown" ? (
           filteredRuns.length > 0 ? (
-        <Panel eyebrow="Drilldown" title="Base detalhada" description={undefined} actions={<div className="flex flex-wrap gap-2"><button type="button" onClick={handleExportPdf} disabled={exportingPdf} className="inline-flex items-center gap-2 rounded-full border border-[rgba(15,23,42,0.08)] bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c) disabled:opacity-60"><FiDownload className="h-4 w-4" />{exportingPdf ? "Gerando PDF..." : "PDF do filtro"}</button><button type="button" onClick={() => downloadCsv(filteredRuns)} className="inline-flex items-center gap-2 rounded-full border border-[rgba(15,23,42,0.08)] bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"><FiDownload className="h-4 w-4" />CSV do filtro</button></div>}>
+        <Panel eyebrow="Drilldown" title="Base detalhada" description={undefined} actions={<div className="flex flex-wrap gap-2"><button type="button" onClick={handleExportPdf} disabled={exportingPdf} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c) disabled:opacity-60"><FiDownload className="h-4 w-4" />{exportingPdf ? "Gerando PDF..." : "PDF do filtro"}</button><button type="button" onClick={() => downloadCsv(filteredRuns)} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"><FiDownload className="h-4 w-4" />CSV do filtro</button></div>}>
           <div className="mb-4 flex flex-wrap gap-2">
             {compactActiveChips.map((chip) => (
-              <span key={chip} className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-slate-700">
+              <span key={chip} className="inline-flex items-center rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f1f5f9) px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-(--tc-text,#0b1a3c)">
                 <FiFilter className="mr-1.5 h-3.5 w-3.5" />
                 {chip}
               </span>
             ))}
-            {hiddenActiveChipCount > 0 ? <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-slate-700">+{hiddenActiveChipCount}</span> : null}
+            {hiddenActiveChipCount > 0 ? <span className="inline-flex items-center rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f1f5f9) px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-(--tc-text,#0b1a3c)">+{hiddenActiveChipCount}</span> : null}
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">

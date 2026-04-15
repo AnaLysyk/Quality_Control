@@ -3,7 +3,7 @@ import { listClients } from "@/data/clientsRepository";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 const MOCK_CLIENTS = [
-  { slug: "griaule", name: "Griaule" },
+  { slug: "demo", name: "Demo" },
   { slug: "testing-company", name: "Testing Company" },
   { slug: "cliente-x", name: "Cliente X" },
 ];
@@ -26,7 +26,7 @@ async function fetchSummary(slug: string) {
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    const msg = status === 401 ? "Nao autenticado" : "Sem permissao";
+    const msg = status === 401 ? "Não autenticado" : "Sem permissão";
     return NextResponse.json({ error: msg }, { status });
   }
 

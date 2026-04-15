@@ -7,49 +7,70 @@ import { buildPromptActions, displayName, displayRole, summarizePermissionMatrix
 import type { AssistantScreenContext } from "../types";
 import type { AssistantExecutorResult } from "./types";
 
-function buildImmediateActions(context: AssistantScreenContext) {
+function getModuleEmoji(module: string): string {
+  switch (module) {
+    case "support": return "🎫";
+    case "dashboard": return "📊";
+    case "permissions": return "🔐";
+    case "test_plans": return "🧪";
+    case "company": return "🏢";
+    case "releases": return "🚀";
+    case "integrations": return "🔗";
+    case "admin": return "⚙️";
+    default: return "📍";
+  }
+}
+
+function buildImmediateActions(context: AssistantScreenContext): Array<{ emoji: string; text: string }> {
   switch (context.module) {
     case "support":
       return [
-        "Localizar chamados por codigo, status, prioridade ou responsavel.",
-        "Entender o proximo passo de um ticket antes de mover ou comentar.",
-        "Transformar um relato solto em chamado estruturado quando faltar registro.",
+        { emoji: "🔍", text: "Localizar chamados por código, status, prioridade ou responsável" },
+        { emoji: "📋", text: "Resumir um ticket antes de mover ou comentar" },
+        { emoji: "✏️", text: "Transformar um relato em chamado estruturado" },
+        { emoji: "🧪", text: "Gerar caso de teste a partir de um bug" },
       ];
     case "permissions":
       return [
-        "Explicar por que um perfil nao acessa determinada tela ou modulo.",
-        "Comparar escopos e revisar quem consegue ver ou editar cada area.",
-        "Apontar o ajuste necessario para liberar ou restringir acesso.",
+        { emoji: "🔐", text: "Explicar por que um perfil não acessa determinada tela" },
+        { emoji: "📊", text: "Comparar escopos entre perfis diferentes" },
+        { emoji: "⚙️", text: "Apontar ajustes para liberar ou restringir acesso" },
       ];
     case "company":
       return [
-        "Resumir a empresa atual e os registros ligados a ela.",
-        "Buscar chamados, usuarios ou vinculos dentro deste contexto.",
-        "Preparar a proxima acao antes de trocar de empresa ou abrir um ticket.",
+        { emoji: "📋", text: "Resumir a empresa atual e registros vinculados" },
+        { emoji: "🔍", text: "Buscar chamados ou usuários desta empresa" },
+        { emoji: "📊", text: "Analisar métricas de atendimento" },
       ];
     case "test_plans":
       return [
-        "Rascunhar casos de teste com base em bug, ticket ou fluxo descrito.",
-        "Organizar pre-condicoes, passos e resultado esperado sem perder contexto.",
-        "Revisar a cobertura do fluxo antes de salvar ou compartilhar o plano.",
+        { emoji: "🧪", text: "Gerar casos de teste a partir de bug ou fluxo" },
+        { emoji: "📋", text: "Organizar pré-condições, passos e resultado esperado" },
+        { emoji: "✅", text: "Validar cobertura de testes existente" },
       ];
     case "dashboard":
       return [
-        "Identificar qual modulo resolve a tarefa que voce quer destravar.",
-        "Resumir o contexto atual antes de navegar para suporte, usuarios ou empresas.",
-        "Buscar registros ou pedir o proximo passo com base na sua permissao.",
+        { emoji: "📊", text: "Analisar métricas de qualidade do período" },
+        { emoji: "🎯", text: "Identificar tendências nos indicadores" },
+        { emoji: "⚠️", text: "Listar áreas que precisam de atenção" },
+      ];
+    case "releases":
+      return [
+        { emoji: "🚀", text: "Verificar status do último deploy" },
+        { emoji: "📦", text: "Analisar testes pendentes para release" },
+        { emoji: "📋", text: "Gerar relatório de qualidade da versão" },
       ];
     default:
       return [
-        "Entender onde voce esta e qual eh a proxima acao util na plataforma.",
-        "Buscar registros por palavra-chave, codigo ou contexto atual.",
-        "Transformar um pedido aberto em uma acao objetiva para o assistente.",
+        { emoji: "📍", text: "Entender o contexto atual e próximos passos" },
+        { emoji: "🔍", text: "Buscar registros por palavra-chave ou contexto" },
+        { emoji: "💡", text: "Transformar um pedido em ação objetiva" },
       ];
   }
 }
 
 function stripScreenLead(context: AssistantScreenContext) {
-  const lead = `Voce esta em: ${context.screenLabel}.`;
+  const lead = `Você está em: ${context.screenLabel}.`;
   if (context.screenSummary.startsWith(lead)) {
     return context.screenSummary.slice(lead.length).trim();
   }
@@ -62,39 +83,50 @@ function buildScopeLabel(user: AuthUser, context: AssistantScreenContext) {
 
 function buildPermissionLine(user: AuthUser) {
   const summary = summarizePermissionMatrix(user.permissions);
-  if (summary === "sem modulos liberados") {
-    return "Permissoes relevantes: nenhum modulo liberado para o perfil atual.";
+  if (summary === "sem módulos liberados") {
+    return "⚠️ **Permissões:** Nenhum módulo liberado para o perfil atual";
   }
-  return `Permissoes relevantes: ${summary}`;
+  return `🔐 **Permissões:** ${summary}`;
 }
 
 export async function toolGetScreenContext(user: AuthUser, context: AssistantScreenContext): Promise<AssistantExecutorResult> {
   const currentUser = await getLocalUserById(user.id);
-  const actionList = buildImmediateActions(context).map((item) => `- ${item}`).join("\n");
-  const promptList = context.suggestedPrompts.slice(0, 5).map((prompt) => `- ${prompt}`).join("\n");
+  const actions = buildImmediateActions(context);
+  const moduleEmoji = getModuleEmoji(context.module);
+  const prompts = context.suggestedPrompts.slice(0, 4);
+
+  const replyParts = [
+    `## ${moduleEmoji} ${context.screenLabel}`,
+    "",
+    `> ${stripScreenLead(context)}`,
+    "",
+    "### 🎯 O que posso fazer aqui:",
+    "",
+    ...actions.map((a) => `- ${a.emoji} ${a.text}`),
+    "",
+    "### 💡 Sugestões rápidas:",
+    "",
+    ...prompts.map((p, i) => `${i + 1}. ${p}`),
+    "",
+    "---",
+    "",
+    "### 📋 Contexto Atual:",
+    "",
+    `| Campo | Valor |`,
+    `|-------|-------|`,
+    `| **Módulo** | ${context.module} |`,
+    `| **Escopo** | ${buildScopeLabel(user, context)} |`,
+    `| **Perfil** | ${displayRole(user)} |`,
+    `| **Usuário** | ${displayName(currentUser)} |`,
+    "",
+    buildPermissionLine(user),
+  ];
 
   return {
     tool: "get_screen_context",
     success: true,
     summary: context.screenLabel,
     actions: buildPromptActions(context),
-    reply: compactMultiline([
-      `Voce esta em ${context.screenLabel}.`,
-      stripScreenLead(context),
-      "",
-      "O que voce pode fazer agora:",
-      actionList,
-      "",
-      "Sugestoes de prompt:",
-      promptList,
-      "",
-      "Contexto atual:",
-      `- Modulo: ${context.module}`,
-      `- Escopo: ${buildScopeLabel(user, context)}`,
-      `- Perfil: ${displayRole(user)}`,
-      `- Usuario: ${displayName(currentUser)}`,
-      "",
-      buildPermissionLine(user),
-    ].join("\n")),
+    reply: compactMultiline(replyParts.join("\n")),
   };
 }

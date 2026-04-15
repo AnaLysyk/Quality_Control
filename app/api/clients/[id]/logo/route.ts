@@ -12,7 +12,7 @@ export async function POST(
   try {
     const { admin, status } = await requireGlobalAdminWithStatus(req);
     if (!admin) {
-      return NextResponse.json({ error: status === 401 ? "Nao autorizado" : "Sem permissao" }, { status });
+      return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
     }
 
     const { id } = await params;
@@ -27,7 +27,7 @@ export async function POST(
 
     const file = form.get("file");
     if (!(file instanceof File)) {
-      return NextResponse.json({ error: "Arquivo obrigatorio" }, { status: 400 });
+      return NextResponse.json({ error: "Arquivo obrigatório" }, { status: 400 });
     }
 
     const { logoUrl } = await uploadAndPersistCompanyLogo(id.trim(), file);
@@ -36,7 +36,7 @@ export async function POST(
     const message =
       error instanceof Error && error.message.trim()
         ? error.message.trim()
-        : "Nao foi possivel enviar o logo";
+        : "Não foi possível enviar o logo";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

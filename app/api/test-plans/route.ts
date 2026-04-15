@@ -88,15 +88,15 @@ function normalizeWarningList(values: Array<string | null | undefined>) {
 function resolveWarningFromQaseError(error: unknown) {
   const status = error instanceof QaseError ? error.status : 500;
   if (status === 401 || status === 403) {
-    return "Qase recusou a autenticacao deste projeto.";
+    return "Qase recusou a autenticação deste projeto.";
   }
   if (status === 404) {
-    return "Projeto ou plano nao encontrado no Qase.";
+    return "Projeto ou plano não encontrado no Qase.";
   }
   if (status === 422) {
     return "Qase recusou os dados do plano informado.";
   }
-  return "Nao foi possivel consultar os planos de teste no Qase.";
+  return "Não foi possível consultar os planos de teste no Qase.";
 }
 
 export async function GET(request: Request) {

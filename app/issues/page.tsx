@@ -1,4 +1,6 @@
-﻿"use client";
+"use client";
+
+export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useState } from "react";
 import { FiAlertTriangle, FiRefreshCcw } from "react-icons/fi";
@@ -16,12 +18,12 @@ type Defect = {
 };
 
 const TAGS = [
-  { id: "ALL", label: "Todas as aplicaÃ§Ãµes", color: "bg-gray-700" },
+  { id: "ALL", label: "Todas as aplicações", color: "bg-gray-700" },
   { id: "SFQ", label: "SMART", color: "bg-green-600" },
   { id: "PRINT", label: "PRINT", color: "bg-blue-600" },
   { id: "BOOKING", label: "BOOKING", color: "bg-yellow-600" },
   { id: "CDS", label: "CIDADÃƒO SMART", color: "bg-red-600" },
-  { id: "GMT", label: "GRIAULE MOBILE", color: "bg-teal-600" },
+  { id: "GMT", label: "GMT MOBILE", color: "bg-teal-600" },
 ];
 
 export default function DefectsPage() {
@@ -155,10 +157,10 @@ export default function DefectsPage() {
                   </div>
                 </div>
                 <h2 className="font-semibold text-white leading-snug text-lg line-clamp-2">
-                  {defect.title || "Sem tÃ­tulo"}
+                  {defect.title || "Sem título"}
                 </h2>
                 <p className="text-xs text-gray-400 mt-2 line-clamp-3">
-                  {defect.description || "Sem descriÃ§Ã£o"}
+                  {defect.description || "Sem descrição"}
                 </p>
                 <div className="mt-3 text-xs text-gray-300 flex items-center gap-2">
                   <span className="rounded-full border border-white/10 px-2 py-1">

@@ -41,7 +41,7 @@ function getItemsFromEnvelope<T>(value: unknown): T[] {
 function statusLabel(status: string) {
   if (status === "closed") return "Aprovada";
   if (status === "rejected") return "Rejeitada";
-  if (status === "in_progress") return "Em analise";
+  if (status === "in_progress") return "Em análise";
   return "Aberta";
 }
 
@@ -69,7 +69,7 @@ const sectionMuted = "rounded-xl border border-[#e5e7eb] bg-[#f8fafc] p-4";
 export type AccessRequestComment = {
   id: string;
   requestId: string;
-  authorRole: "admin" | "requester";
+  authorRole: "leader_tc" | "requester";
   authorName: string;
   authorEmail?: string | null;
   body: string;
@@ -119,7 +119,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
         name: String(parsedMsg.fullName ?? parsedMsg.name ?? ""),
         fullName: String(parsedMsg.fullName ?? parsedMsg.name ?? ""),
         jobRole: String(parsedMsg.jobRole ?? ""),
-        accessType: (parsedMsg.accessType as AccessTypeLabel) ?? "Usuario Testing Company",
+        accessType: (parsedMsg.accessType as AccessTypeLabel) ?? "Usuário Testing Company",
         clientId: parsedMsg.clientId ?? null,
         company: String(parsedMsg.company ?? ""),
         notes: String(parsedMsg.notes ?? ""),
@@ -207,13 +207,13 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
         const res = await fetchWithToken(`/api/admin/access-requests/${id}/comments`);
         const json = (await res.json().catch(() => ({}))) as { items?: AccessRequestComment[]; error?: string };
         if (!res.ok) {
-          setCommentError(json?.error || "Falha ao carregar comentarios");
+          setCommentError(json?.error || "Falha ao carregar comentários");
           setComments([]);
           return;
         }
         setComments(Array.isArray(json.items) ? json.items : []);
       } catch (err) {
-        setCommentError(err instanceof Error ? err.message : "Erro ao carregar comentarios");
+        setCommentError(err instanceof Error ? err.message : "Erro ao carregar comentários");
         setComments([]);
       } finally {
         setCommentLoading(false);
@@ -302,7 +302,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
       });
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setCommentError(json?.error || "Falha ao enviar comentario");
+        setCommentError(json?.error || "Falha ao enviar comentário");
         return;
       }
       setCommentDraft("");
@@ -327,7 +327,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
           client_id: draft.clientId,
           comment: draft.adminNotes ?? "",
           admin_notes: draft.adminNotes ?? "",
-          access_type: toAcceptAccessType((draft.accessType ?? "Usuario Testing Company") as AccessTypeLabel),
+          access_type: toAcceptAccessType((draft.accessType ?? "Usuário Testing Company") as AccessTypeLabel),
         }),
       });
 
@@ -386,8 +386,8 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.45em] text-[#94a3b8]">Admin</p>
-            <h1 className="mt-2 text-3xl font-semibold">Solicitacoes de acesso</h1>
-            <p className="mt-1 text-sm text-[#64748b]">Acompanhe, revise e aprove solicitacoes em um unico lugar.</p>
+            <h1 className="mt-2 text-3xl font-semibold">Solicitações de acesso</h1>
+            <p className="mt-1 text-sm text-[#64748b]">Acompanhe, revise e aprove solicitações em um único lugar.</p>
           </div>
           <button
             onClick={load}
@@ -407,7 +407,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
           <div className="rounded-2xl bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
-              <h2 className={labelBase}>Solicitacoes</h2>
+              <h2 className={labelBase}>Solicitações</h2>
               <span className="text-xs text-[#94a3b8]">{items.length}</span>
             </div>
 
@@ -418,7 +418,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                 </div>
               ) : items.length === 0 ? (
                 <div className={sectionMuted + " text-sm text-[#64748b]"}>
-                  Nenhuma solicitacao.
+                  Nenhuma solicitação.
                 </div>
               ) : (
                 items.map((it) => (
@@ -465,7 +465,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
 
           <div className="rounded-2xl bg-white p-6 shadow-[0_8px_32px_rgba(0,0,0,0.05)]">
             {!selected || !draft ? (
-              <div className="text-sm text-[#64748b]">Selecione uma solicitacao.</div>
+              <div className="text-sm text-[#64748b]">Selecione uma solicitação.</div>
             ) : (
               <div className="space-y-6">
                 <div className={sectionMuted + " flex flex-wrap items-center justify-between gap-4"}>
@@ -487,8 +487,8 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                 </div>
 
                 <div className="space-y-1">
-                  <h3 className="text-lg font-semibold text-[#1e293b]">Detalhes da solicitacao</h3>
-                  <p className="text-sm text-[#64748b]">Revise os dados e tome uma decisao.</p>
+                  <h3 className="text-lg font-semibold text-[#1e293b]">Detalhes da solicitação</h3>
+                  <p className="text-sm text-[#64748b]">Revise os dados e tome uma decisão.</p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -496,7 +496,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                     Tipo de perfil
                     <select
                       className={inputBase}
-                      value={(draft.accessType ?? "Usuario Testing Company") as AccessTypeLabel}
+                      value={(draft.accessType ?? "Usuário Testing Company") as AccessTypeLabel}
                       onChange={(e) => {
                         draftTouchedRef.current = true;
                         const v = e.target.value as AccessTypeLabel;
@@ -508,10 +508,10 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                       aria-label="Tipo de perfil"
                       title="Tipo de perfil"
                     >
-                      <option value="Usuario Testing Company">Usuario Testing Company</option>
-                      <option value="Usuario da empresa">Usuario da empresa</option>
+                      <option value="Usuário Testing Company">Usuário Testing Company</option>
+                      <option value="Usuário da empresa">Usuário da empresa</option>
                       <option value="Lider TC">Lider TC</option>
-                      <option value="Suporte Tecnico">Suporte Tecnico</option>
+                      <option value="Suporte Técnico">Suporte Técnico</option>
                     </select>
                   </label>
 
@@ -531,7 +531,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                       }}
                       disabled={
                         !requestProfileTypeNeedsCompany(
-                          normalizeRequestProfileType((draft.accessType ?? "Usuario Testing Company") as string) ?? "company_user",
+                          normalizeRequestProfileType((draft.accessType ?? "Usuário Testing Company") as string) ?? "company_user",
                         )
                       }
                       aria-label="Empresa"
@@ -584,7 +584,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                   </label>
 
                   <label className="block text-sm font-medium text-[#1e293b] sm:col-span-2">
-                    Observacoes
+                    Observações
                     <textarea
                       className={inputBase}
                       rows={4}
@@ -597,7 +597,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                   </label>
 
                   <label className="block text-sm font-medium text-[#1e293b] sm:col-span-2">
-                    Notas do admin (motivo / observacao)
+                    Notas do admin (motivo / observação)
                     <textarea
                       className={inputBase}
                       rows={3}
@@ -612,7 +612,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
 
                 <div className={sectionMuted + " space-y-3"}>
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-[#1e293b]">Comentarios</p>
+                    <p className="text-sm font-semibold text-[#1e293b]">Comentários</p>
                     {commentLoading && <span className="text-xs text-[#94a3b8]">Carregando...</span>}
                   </div>
 
@@ -625,17 +625,17 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                   <div className="comments-chat">
                     <div className="comments-chat-list" aria-live="polite">
                       {comments.length === 0 ? (
-                        <p className="comments-chat-empty">Nenhum comentario ainda.</p>
+                        <p className="comments-chat-empty">Nenhum comentário ainda.</p>
                       ) : (
                         comments.map((comment) => {
-                          const mine = comment.authorRole === "admin";
+                          const mine = comment.authorRole === "leader_tc";
                           return (
                             <div
                               key={comment.id}
                               className={`comments-chat-message ${mine ? "mine" : "other"}`}
                             >
                               <div className="comments-chat-author">
-                                {comment.authorRole === "admin" ? "Admin" : "Solicitante"}: {comment.authorName}
+                                {comment.authorRole === "leader_tc" ? "Admin" : "Solicitante"}: {comment.authorName}
                               </div>
                               <div className="comments-chat-bubble whitespace-pre-wrap">{comment.body}</div>
                               <div className="comments-chat-meta">
@@ -651,7 +651,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                       <textarea
                         className={`${inputBase} mt-0`}
                         rows={3}
-                        placeholder="Responder comentario"
+                        placeholder="Responder comentário"
                         value={commentDraft}
                         onChange={(e) => setCommentDraft(e.target.value)}
                       />
@@ -662,7 +662,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                           disabled={commentSaving || !commentDraft.trim()}
                           className="rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#1e293b] transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
                         >
-                          {commentSaving ? "Enviando..." : "Enviar comentario"}
+                          {commentSaving ? "Enviando..." : "Enviar comentário"}
                         </button>
                       </div>
                     </div>
@@ -670,7 +670,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#e5e7eb] bg-white px-4 py-3">
-                  <div className="text-xs text-[#94a3b8]">Acoes</div>
+                  <div className="text-xs text-[#94a3b8]">Ações</div>
                   <div className="flex flex-wrap gap-3">
                     <button
                       type="button"
@@ -678,13 +678,13 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                       disabled={!dirty || saving}
                       className="rounded-full border border-[#e5e7eb] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#1e293b] transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
                     >
-                      {saving ? "Salvando..." : "Salvar alteracoes"}
+                      {saving ? "Salvando..." : "Salvar alterações"}
                     </button>
                     {(() => {
                       const acceptDisabled =
                         accepting ||
                         (requestProfileTypeNeedsCompany(
-                          normalizeRequestProfileType((draft.accessType ?? "Usuario Testing Company") as string) ?? "company_user",
+                          normalizeRequestProfileType((draft.accessType ?? "Usuário Testing Company") as string) ?? "company_user",
                         ) &&
                           !draft.clientId);
                       try {
@@ -701,7 +701,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                         <button
                           type="button"
                           onClick={acceptRequest}
-                          aria-label="Aceitar solicitacao"
+                          aria-label="Aceitar solicitação"
                           disabled={acceptDisabled}
                           className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:bg-emerald-600 disabled:opacity-60"
                         >
@@ -713,7 +713,7 @@ export function AccessRequestsClient({ initialRequests, initialClients }: Access
                     <button
                       type="button"
                       onClick={rejectRequest}
-                      aria-label="Recusar solicitacao"
+                      aria-label="Recusar solicitação"
                       disabled={accepting}
                       className="rounded-full border border-rose-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-rose-600 transition hover:bg-rose-50 disabled:opacity-60"
                     >

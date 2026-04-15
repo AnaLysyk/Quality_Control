@@ -41,26 +41,26 @@ function buildDraftCommentFromTicket(
 ) {
   if (!ticket) return "";
   const itemTypeLabel =
-    ticket.type === "bug" ? "bug reportado" : ticket.type === "melhoria" ? "solicitacao de melhoria" : "chamado";
+    ticket.type === "bug" ? "bug reportado" : ticket.type === "melhoria" ? "solicitação de melhoria" : "chamado";
   const statusLine =
     ticket.status === "backlog"
       ? "O item segue em backlog aguardando triagem operacional."
       : ticket.status === "doing"
-        ? "O item esta em atendimento ativo pelo suporte."
+        ? "O item está em atendimento ativo pelo suporte."
         : ticket.status === "review"
-          ? "O item esta em revisao tecnica."
-          : "O item consta como concluido no fluxo.";
+          ? "O item está em revisão técnica."
+          : "O item consta como concluído no fluxo.";
   const continuationLine =
     recentCommentCount > 0
-      ? "Atualizando o historico tecnico com base no contexto atual e nos comentarios ja registrados."
-      : "Registrando a primeira triagem tecnica deste chamado.";
+      ? "Atualizando o histórico técnico com base no contexto atual e nos comentários já registrados."
+      : "Registrando a primeira triagem técnica deste chamado.";
 
   return compactMultiline([
     `${continuationLine}`,
-    `Analise do ${itemTypeLabel} ${ticket.code}: titulo "${ticket.title}".`,
-    `Contexto atual: status ${ticket.status}, prioridade ${ticket.priority} e responsavel ${ticket.assignedToName ?? "nao definido"}.`,
+    `Análise do ${itemTypeLabel} ${ticket.code}: título "${ticket.title}".`,
+    `Contexto atual: status ${ticket.status}, prioridade ${ticket.priority} e responsável ${ticket.assignedToName ?? "não definido"}.`,
     statusLine,
-    "Proximo passo sugerido: reproduzir o fluxo informado, validar impacto real e anexar evidencia tecnica ou conclusao objetiva.",
+    "Próximo passo sugerido: reproduzir o fluxo informado, validar impacto real e anexar evidência técnica ou conclusão objetiva.",
   ].join("\n"));
 }
 
@@ -70,14 +70,14 @@ export async function buildCommentCreationAction(user: AuthUser, context: Assist
     return {
       tool: "create_comment",
       success: false,
-      summary: "ticket nao identificado",
-      reply: "Preciso do ID/codigo do chamado para montar o comentario. Exemplo: `Comentar no chamado SP-000027 ...`",
+      summary: "ticket não identificado",
+      reply: "Preciso do ID/código do chamado para montar o comentário. Exemplo: `Comentar no chamado SP-000027 ...`",
       actions: buildPromptActions(context),
     };
   }
 
   if (!canCommentTicket(user, ticket)) {
-    return { tool: "create_comment", success: false, summary: "sem permissao para comentar", reply: `Seu perfil nao pode comentar no chamado ${ticket.code}.` };
+    return { tool: "create_comment", success: false, summary: "sem permissão para comentar", reply: `Seu perfil não pode comentar no chamado ${ticket.code}.` };
   }
 
   const recentComments = await listTicketComments(ticket.id, { limit: 5, offset: 0 });
@@ -91,13 +91,13 @@ export async function buildCommentCreationAction(user: AuthUser, context: Assist
     return {
       tool: "create_comment",
       success: true,
-      summary: "pendencias para comentar",
+      summary: "pendências para comentar",
       reply: compactMultiline([
-        `Antes de publicar no chamado ${ticket.code}, preciso passar pelas validacoes do modulo de comentarios.`,
+        `Antes de publicar no chamado ${ticket.code}, preciso passar pelas validações do módulo de comentários.`,
         "",
         formatValidationIssues(validation.issues),
         "",
-        `Exemplo: comentar no chamado ${ticket.code} com [seu texto tecnico aqui]`,
+        `Exemplo: comentar no chamado ${ticket.code} com [seu texto técnico aqui]`,
       ].join("\n")),
     };
   }
@@ -109,13 +109,13 @@ export async function buildCommentCreationAction(user: AuthUser, context: Assist
     return {
       tool: "create_comment",
       success: true,
-      summary: "comentario ja existente",
+      summary: "comentário já existente",
       actions: [{ kind: "prompt", label: "Resumir chamado atualizado", prompt: `Resumir o chamado ${ticket.code}` }],
       reply: compactMultiline([
-        `Ja existe um comentario muito parecido no chamado ${ticket.code}.`,
+        `Já existe um comentário muito parecido no chamado ${ticket.code}.`,
         "",
-        `Ultimo registro similar: ${formatDateTime(duplicateComment.updatedAt)}`,
-        "Se precisar, posso montar uma atualizacao diferente ou resumir o chamado antes de comentar de novo.",
+        `Último registro similar: ${formatDateTime(duplicateComment.updatedAt)}`,
+        "Se precisar, posso montar uma atualização diferente ou resumir o chamado antes de comentar de novo.",
       ].join("\n")),
     };
   }
@@ -125,14 +125,14 @@ export async function buildCommentCreationAction(user: AuthUser, context: Assist
     success: true,
     summary: ticket.code,
     actions: [
-      { kind: "tool", label: "Publicar comentario", tool: "create_comment", input: { ticketId: ticket.id, body: validation.body } },
+      { kind: "tool", label: "Publicar comentário", tool: "create_comment", input: { ticketId: ticket.id, body: validation.body } },
     ],
     reply: compactMultiline([
-      `Comentario pronto para ${ticket.code}.`,
+      `Comentário pronto para ${ticket.code}.`,
       "",
       validation.body,
       "",
-      "Se estiver ok, execute a acao abaixo para publicar no chamado.",
+      "Se estiver ok, execute a ação abaixo para publicar no chamado.",
     ].join("\n")),
   };
 }
@@ -144,9 +144,9 @@ export async function executeCreateComment(user: AuthUser, action: AssistantTool
     return {
       tool: "create_comment",
       success: false,
-      summary: "dados invalidos",
+      summary: "dados inválidos",
       reply: compactMultiline([
-        "Nao consegui publicar o comentario porque ele nao passou nas validacoes do modulo de comentarios.",
+        "Não consegui publicar o comentário porque ele não passou nas validações do módulo de comentários.",
         "",
         ...(validation.issues.length ? [formatValidationIssues(validation.issues)] : ["Identificador do chamado ausente."]),
       ].join("\n")),
@@ -155,11 +155,11 @@ export async function executeCreateComment(user: AuthUser, action: AssistantTool
 
   const ticket = await getTicketById(ticketId);
   if (!ticket || !canViewTicket(user, ticket)) {
-    return { tool: "create_comment", success: false, summary: "ticket nao encontrado", reply: "Esse chamado nao esta disponivel para o seu perfil atual." };
+    return { tool: "create_comment", success: false, summary: "ticket não encontrado", reply: "Esse chamado não está disponível para o seu perfil atual." };
   }
 
   if (!canCommentTicket(user, ticket)) {
-    return { tool: "create_comment", success: false, summary: "comentario bloqueado", reply: `Seu perfil nao pode comentar no chamado ${ticket.code}.` };
+    return { tool: "create_comment", success: false, summary: "comentário bloqueado", reply: `Seu perfil não pode comentar no chamado ${ticket.code}.` };
   }
 
   const recentComments = await listTicketComments(ticket.id, { limit: 5, offset: 0 });
@@ -170,11 +170,11 @@ export async function executeCreateComment(user: AuthUser, action: AssistantTool
     return {
       tool: "create_comment",
       success: false,
-      summary: "comentario duplicado bloqueado",
+      summary: "comentário duplicado bloqueado",
       reply: compactMultiline([
-        `Nao publiquei o comentario porque ja existe um registro muito parecido no chamado ${ticket.code}.`,
+        `Não publiquei o comentário porque já existe um registro muito parecido no chamado ${ticket.code}.`,
         "",
-        `Comentario similar atualizado em ${formatDateTime(duplicateComment.updatedAt)}.`,
+        `Comentário similar atualizado em ${formatDateTime(duplicateComment.updatedAt)}.`,
       ].join("\n")),
     };
   }
@@ -188,7 +188,7 @@ export async function executeCreateComment(user: AuthUser, action: AssistantTool
   });
 
   if (!comment) {
-    return { tool: "create_comment", success: false, summary: "falha ao comentar", reply: "Nao consegui publicar o comentario. Verifique se o texto nao ficou vazio." };
+    return { tool: "create_comment", success: false, summary: "falha ao comentar", reply: "Não consegui publicar o comentário. Verifique se o texto não ficou vazio." };
   }
 
   await touchTicket(ticket.id, user.id).catch(() => null);
@@ -200,6 +200,6 @@ export async function executeCreateComment(user: AuthUser, action: AssistantTool
     success: true,
     summary: ticket.code,
     actions: [{ kind: "prompt", label: "Resumir chamado atualizado", prompt: `Resumir o chamado ${ticket.code}` }],
-    reply: `Comentario publicado com sucesso no chamado ${ticket.code}.`,
+    reply: `Comentário publicado com sucesso no chamado ${ticket.code}.`,
   };
 }

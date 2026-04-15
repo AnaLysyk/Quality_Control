@@ -22,7 +22,7 @@ function normalizeString(value: unknown) {
 export async function PATCH(request: Request, context: { params: Promise<{ slug: string }> }) {
   const user = await authenticateRequest(request);
   if (!user) {
-    return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
   const { slug } = await context.params;
@@ -30,7 +30,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ slug:
   const companySlug = normalizeString(body?.companySlug);
 
   if (!companySlug) {
-    return NextResponse.json({ message: "Empresa nao informada" }, { status: 400 });
+    return NextResponse.json({ message: "Empresa não informada" }, { status: 400 });
   }
   if (!canAccessCompanyDefects(user, companySlug)) {
     return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
@@ -38,15 +38,15 @@ export async function PATCH(request: Request, context: { params: Promise<{ slug:
 
   const role = await resolveDefectRole(user, companySlug);
   if (!canEditManualDefect(role)) {
-    return NextResponse.json({ message: "Sem permissao para atribuir responsavel" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissão para atribuir responsável" }, { status: 403 });
   }
 
   const defect = await resolveAccessibleCompanyDefect(companySlug, slug);
   if (!defect) {
-    return NextResponse.json({ message: "Defeito nao encontrado" }, { status: 404 });
+    return NextResponse.json({ message: "Defeito não encontrado" }, { status: 404 });
   }
   if (defect.sourceType !== "qase") {
-    return NextResponse.json({ message: "Atribuicao local so e usada para defeitos integrados" }, { status: 400 });
+    return NextResponse.json({ message: "Atribuicao local só e usada para defeitos integrados" }, { status: 400 });
   }
 
   const requestedAssigneeId =
@@ -57,7 +57,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ slug:
   const nextAssignee = requestedAssigneeId ? options.find((option) => option.userId === requestedAssigneeId) ?? null : null;
 
   if (requestedAssigneeId && !nextAssignee) {
-    return NextResponse.json({ message: "Responsavel precisa estar vinculado a empresa" }, { status: 400 });
+    return NextResponse.json({ message: "Responsável precisa estar vinculado a empresa" }, { status: 400 });
   }
 
   const actor = await resolveDefectActor(user);
@@ -71,7 +71,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ slug:
     }),
   });
   if (!event) {
-    return NextResponse.json({ message: "Nao foi possivel salvar o responsavel" }, { status: 500 });
+    return NextResponse.json({ message: "Não foi possível salvar o responsável" }, { status: 500 });
   }
 
   invalidateCompanyDefectsDataset(companySlug);

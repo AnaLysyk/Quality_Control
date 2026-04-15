@@ -71,7 +71,7 @@ export default function UserAvatar({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={normalizedSrc}
-            alt={name ? `Foto de ${name}` : "Foto do usuario"}
+            alt={name ? `Foto de ${name}` : "Foto do usuário"}
             className={`block h-full w-full object-cover ${imageClassName}`}
             onError={() => {
               markFailedImageSrc(normalizedSrc);

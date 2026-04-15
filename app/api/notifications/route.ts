@@ -40,10 +40,10 @@ async function syncPendingResetNotifications(userId: string) {
           );
     await createUserNotification(userId, {
       type: "PASSWORD_RESET_PENDING",
-      title: "Solicitacao de reset enviada",
+      title: "Solicitação de reset enviada",
       description: canAdminReviewQueue(queue)
-        ? "Aguardando analise de Admin ou Global."
-        : "Aguardando analise exclusiva do Global.",
+        ? "Aguardando análise de Admin ou Global."
+        : "Aguardando análise exclusiva do Global.",
       requestId: request.id,
       dedupeKey: `reset:user:${request.id}`,
     });
@@ -53,7 +53,7 @@ async function syncPendingResetNotifications(userId: string) {
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const url = new URL(req.url);

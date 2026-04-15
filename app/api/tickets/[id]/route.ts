@@ -31,16 +31,16 @@ function buildSupportAssigneeOptions(items: Awaited<ReturnType<typeof listAdminU
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const { id } = await context.params;
   const item = await getTicketById(id);
   if (!item) {
-    return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
   }
   if (!canViewTicket(user, item)) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   const enriched = await attachAssigneeToTicket(item);
@@ -64,17 +64,17 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const { id } = await context.params;
   const body = await req.json().catch(() => ({}));
   const item = await getTicketById(id);
   if (!item) {
-    return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
   }
   if (!canViewTicket(user, item)) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   const wantsAssignment = body?.assignedToUserId !== undefined;
@@ -86,14 +86,14 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     body?.tags !== undefined;
 
   if (!wantsAssignment && !wantsContentUpdate) {
-    return NextResponse.json({ error: "Nenhuma alteracao informada" }, { status: 400 });
+    return NextResponse.json({ error: "Nenhuma alteração informada" }, { status: 400 });
   }
 
   if (wantsAssignment && !canAssignTicket(user, item)) {
-    return NextResponse.json({ error: "Sem permissao para atribuir" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão para atribuir" }, { status: 403 });
   }
   if (wantsContentUpdate && !canEditTicketContent(user, item)) {
-    return NextResponse.json({ error: "Sem permissao para editar" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão para editar" }, { status: 403 });
   }
 
   const tags =
@@ -110,7 +110,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   });
 
   if (!updated) {
-    return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
   }
 
   if (wantsAssignment && updated.assignedToUserId !== item.assignedToUserId) {
@@ -141,7 +141,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
         priority: updated.priority,
         tags: updated.tags,
       },
-    }).catch((err) => console.error("Falha ao registrar atualizacao:", err));
+    }).catch((err) => console.error("Falha ao registrar atualização:", err));
   }
 
   const enriched = await attachAssigneeToTicket(updated);
@@ -151,13 +151,13 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const { id } = await context.params;
   const item = await getTicketById(id);
   if (!item) {
-    return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
   }
 
   const canDelete = canManageAllTickets(user);

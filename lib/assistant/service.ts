@@ -28,10 +28,11 @@ import type { AuthUser } from "@/lib/jwtAuth";
 
 import { normalizePromptText, normalizeSearch, normalizeText, compactMultiline, sanitizeRoute } from "./helpers";
 import { REPEATED_REPLY_MESSAGES, CLARIFY_REPLY } from "./messages";
-import { chooseTool, isAwaitingTicketPayload, isAwaitingTestCasePayload } from "./router";
+import { chooseTool, isAwaitingTicketPayload, isAwaitingTestCasePayload, analyzeIntent, getConversationMomentum } from "./router";
 import { buildPromptActions } from "./data";
 import { extractTicketReference } from "./pure/parsing";
 import { extractNarrativePayload, isTicketTemplateRequest, parseStructuredTicketDraft } from "./tools/ticketHelpers";
+import { buildBrainContextForAI } from "@/lib/brain/aiContext";
 import {
   toolGetScreenContext,
   toolListAvailableActions,
@@ -81,13 +82,28 @@ function getLastUserTurn(history: AssistantConversationTurn[]) {
 
 /* ──────────────────── Low-signal detection ──────────────────── */
 
-function isLowSignalMessage(message: string) {
+function isLowSignalMessage(message: string, context: AssistantScreenContext) {
   const normalized = normalizeSearch(message);
   if (!normalized) return true;
   if (/^\d+$/.test(normalized)) return true;
   if (Boolean(extractTicketReference(message))) return false;
   if (Boolean(extractNarrativePayload(message))) return false;
   if (Boolean(parseStructuredTicketDraft(message)?.hasNamedFields)) return false;
+
+  // Use intent analyzer for smarter detection
+  const intent = analyzeIntent(message, context, []);
+  
+  // Se tem entidades extraídas, não é low signal
+  if (intent.entities.length > 0) return false;
+  
+  // Se tem tópicos identificados, não é low signal
+  if (intent.topics.length > 0) return false;
+  
+  // Se é uma confirmação ou clarificação válida
+  if (intent.primary === "confirmation" || intent.primary === "clarification") return false;
+  
+  // Se tem confiança alta no intent
+  if (intent.confidence > 0.7 && intent.primary !== "unknown") return false;
 
   const tokenCount = normalized.split(/\s+/).filter(Boolean).length;
   const hasKnownIntent = /(ticket|chamado|bug|erro|empresa|usuario|perfil|permiss|nota|teste|caso|coment|resum|buscar|mostrar|explicar|criar|gerar|transformar|converter|modelo)/.test(normalized);
@@ -179,7 +195,7 @@ async function executeToolAction(user: AuthUser, context: AssistantScreenContext
     case "create_ticket":  return executeCreateTicket(user, context, action);
     case "create_comment": return executeCreateComment(user, action);
     default:
-      return { tool: "suggest_next_step", success: false, summary: "acao nao suportada", reply: "Essa acao nao esta disponivel neste MVP do agente." };
+      return { tool: "suggest_next_step", success: false, summary: "ação não suportada", reply: "Essa ação não está disponível neste MVP do agente." };
   }
 }
 
@@ -193,24 +209,67 @@ function reply(
   return { tool, reply: result.reply, actions: result.actions, context };
 }
 
+function normalizeCompanySlug(value?: string | null) {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  return normalized ? normalized : null;
+}
+
+function resolveAssistantRequestContext(user: AuthUser, request: AssistantClientRequest) {
+  const baseContext = resolveAssistantScreenContext(sanitizeRoute(request.context?.route));
+  const actor = request.actor ?? null;
+
+  const effectiveCompanySlug =
+    normalizeCompanySlug(user.companySlug) ??
+    normalizeCompanySlug(actor?.companySlug) ??
+    normalizeCompanySlug(Array.isArray(user.companySlugs) ? user.companySlugs[0] : null) ??
+    normalizeCompanySlug(Array.isArray(actor?.companySlugs) ? actor?.companySlugs?.[0] ?? null : null) ??
+    normalizeCompanySlug(baseContext.companySlug);
+
+  // Keep route-derived module/screen info, but enforce active user company scope when available.
+  if (!effectiveCompanySlug) return baseContext;
+
+  return {
+    ...baseContext,
+    companySlug: effectiveCompanySlug,
+    entityId: baseContext.entityType === "company" ? effectiveCompanySlug : baseContext.entityId,
+  } as AssistantScreenContext;
+}
+
 export async function runAssistantRequest(user: AuthUser, request: AssistantClientRequest): Promise<AssistantReplyPayload> {
-  const context = resolveAssistantScreenContext(sanitizeRoute(request.context?.route));
+  const context = resolveAssistantRequestContext(user, request);
   const action = request.action;
   const message = normalizePromptText(request.message, 3000);
   const history = normalizeConversationHistory(request.history);
 
   let result: AssistantExecutorResult;
 
+  // Enriquecer com contexto do Brain (inclui busca semântica pela query do usuário)
+  let brainContext: string | null = null;
+  try {
+    brainContext = await buildBrainContextForAI({
+      companySlug: context.companySlug,
+      entityType: context.entityType,
+      entityId: context.entityId,
+      userQuery: message, // Permite busca semântica nos nós e memórias
+    });
+  } catch { /* brain context is optional */ }
+
+  // Se há contexto do brain, anexar à mensagem para enriquecer respostas
+  const enrichedMessage = brainContext
+    ? `${message}\n\n---\n[Brain Context]\n${brainContext}`
+    : message;
+
   if (action?.kind === "tool") {
     result = await executeToolAction(user, context, action);
   } else {
-    if (!isAwaitingTicketPayload(history) && !isAwaitingTestCasePayload(history) && isLowSignalMessage(message)) {
+    if (!isAwaitingTicketPayload(history) && !isAwaitingTestCasePayload(history) && isLowSignalMessage(message, context)) {
       result = buildClarifyReply(context);
     } else {
       const tool = chooseTool(message, context, history);
       result = shouldShortCircuitRepeatedPrompt(history, tool, message)
         ? buildRecentDuplicateReply(tool, context)
-        : await executeTool(user, context, tool, message);
+        : await executeTool(user, context, tool, enrichedMessage);
     }
   }
 

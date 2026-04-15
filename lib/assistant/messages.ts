@@ -9,35 +9,41 @@ import type { AssistantToolName } from "./types";
 
 export const REPEATED_REPLY_MESSAGES: Record<AssistantToolName, string> = {
   get_screen_context:
-    "Acabei de mostrar esse contexto nesta conversa. Se quiser, posso aprofundar em permissao, chamados ou empresa atual.",
+    "📍 Acabei de mostrar esse contexto. Quer que eu aprofunde em **permissões**, **chamados** ou **empresa**?",
   list_available_actions:
-    "Ja listei as acoes disponiveis agora ha pouco. Se quiser, posso executar uma delas com base no seu contexto atual.",
+    "✅ Já listei as ações disponíveis. Qual delas você quer executar?",
   search_internal_records:
-    "Acabei de rodar essa busca. Se quiser, refine por ID, status, prioridade, usuario ou empresa.",
+    "🔍 Acabei de fazer essa busca. Quer refinar por **ID**, **status**, **prioridade** ou **responsável**?",
   summarize_entity:
-    "Ja fiz esse resumo agora ha pouco. Se quiser, posso detalhar um ponto especifico ou resumir outra entidade.",
+    "📋 Já fiz esse resumo. Posso detalhar algum ponto específico ou resumir outra entidade.",
   draft_test_case:
-    "Ja gerei um caso de teste com esse contexto recente. Se quiser, posso refinar para bug, melhoria ou fluxo especifico.",
+    "🧪 Já gerei um caso de teste com esse contexto. Quer ajustar para **bug**, **melhoria** ou outro cenário?",
   explain_permission:
-    "Ja expliquei esse escopo nesta conversa. Se quiser, posso comparar com outra tela, perfil ou modulo.",
+    "🔐 Já expliquei esse escopo. Quer comparar com outra tela, perfil ou módulo?",
   create_ticket:
-    "Ja analisei esse pedido de criacao recentemente. Se quiser, me envie dados novos ou um modelo preenchido.",
+    "🎫 Já analisei esse pedido. Me envie **dados novos** ou o **modelo preenchido** para continuar.",
   create_comment:
-    "Ja tratei esse comentario recentemente. Se quiser, posso montar uma atualizacao diferente.",
+    "💬 Já tratei esse comentário. Quer fazer uma atualização diferente?",
   suggest_next_step:
-    "Ja sugeri o proximo passo nesta conversa. Se quiser, eu sigo direto para a proxima acao util.",
+    "💡 Já sugeri os próximos passos. Escolha uma das opções ou descreva o que precisa fazer.",
 };
 
 /* ──────────────────── Clarify / low-signal ──────────────────── */
 
 export const CLARIFY_REPLY = [
-  "Nao consegui interpretar esse texto como uma acao valida nesta tela.",
+  "🤔 Não consegui entender completamente sua solicitação.",
   "",
-  "Se quiser, posso ajudar de forma objetiva com algo como:",
-  "- resumir esta tela",
-  "- explicar meu escopo de acesso",
-  "- transformar um relato real em chamado",
-  "- buscar um chamado por ID",
+  "**Posso ajudar com:**",
+  "• 📍 Resumir o contexto desta tela",
+  "• 🔐 Explicar seu escopo de acesso",
+  "• 🎫 Criar um chamado a partir de uma descrição",
+  "• 🔍 Buscar tickets, usuários ou empresas",
+  "• 🧪 Gerar casos de teste",
+  "",
+  "💡 **Dica:** Seja específico! Por exemplo:",
+  "  - \"buscar tickets de alta prioridade\"",
+  "  - \"criar chamado sobre erro no login\"",
+  "  - \"explicar por que não vejo o módulo X\"",
 ].join("\n");
 
 /* ──────────────────── Ticket template ──────────────────── */
@@ -45,13 +51,13 @@ export const CLARIFY_REPLY = [
 export const TICKET_TEMPLATE_LINES = [
   "Use este modelo para eu estruturar melhor o chamado:",
   "",
-  "Titulo:",
-  "Descricao:",
+  "Título:",
+  "Descrição:",
   "Impacto:",
   "Comportamento esperado:",
   "Comportamento atual:",
   "Tipo: bug | tarefa | melhoria",
-  "Prioridade: baixa | media | alta",
+  "Prioridade: baixa | média | alta",
 ];
 
 /* ──────────────────── Test case template ──────────────────── */
@@ -59,9 +65,9 @@ export const TICKET_TEMPLATE_LINES = [
 export const TEST_CASE_TEMPLATE_LINES = [
   "Use este modelo para eu validar o caso de teste antes de montar:",
   "",
-  "Titulo:",
+  "Título:",
   "Objetivo:",
-  "Pre-condicoes:",
+  "Pré-condições:",
   "Passos:",
   "Resultado esperado:",
   "Severidade/Prioridade:",

@@ -52,7 +52,7 @@ export function normalizeTicketPriorityInput(value: string): TicketPriority | nu
 /* ──────────────────── "Instruction only" detector ──────────────────── */
 
 const INSTRUCTION_ONLY_EXACT = new Set([
-  "mostrar acoes disponiveis",
+  "mostrar ações disponíveis",
   "explicar meu escopo de acesso",
   "resumir esta tela",
   "resumir meu perfil atual",
@@ -72,8 +72,8 @@ const INSTRUCTION_ONLY_EXACT = new Set([
   "montar caso de teste",
   "usar modelo de chamado",
   "usar modelo de caso de teste",
-  "publicar comentario",
-  "montar comentario tecnico",
+  "publicar comentário",
+  "montar comentário técnico",
 ]);
 
 export function looksLikeInstructionOnly(value: string) {
@@ -108,24 +108,24 @@ export function validateAssistantTicketDraft(input: {
   if (!parsed.success) {
     const fieldErrors = parsed.error.flatten().fieldErrors;
     if (fieldErrors.title?.length) {
-      issues.push("Titulo do chamado obrigatorio, com pelo menos 3 caracteres.");
+      issues.push("Título do chamado obrigatório, com pelo menos 3 caracteres.");
     }
     if (fieldErrors.description?.length) {
-      issues.push("Descricao do chamado obrigatoria, com pelo menos 8 caracteres.");
+      issues.push("Descrição do chamado obrigatória, com pelo menos 8 caracteres.");
     }
   }
 
   if (typeValue && !normalizeTicketTypeInput(typeValue)) {
-    issues.push("Tipo do chamado invalido. Use bug, tarefa ou melhoria.");
+    issues.push("Tipo do chamado inválido. Use bug, tarefa ou melhoria.");
   }
   if (priorityValue && !normalizeTicketPriorityInput(priorityValue)) {
-    issues.push("Prioridade invalida. Use baixa, media ou alta.");
+    issues.push("Prioridade inválida. Use baixa, média ou alta.");
   }
   if (looksLikeInstructionOnly(title)) {
-    issues.push("O titulo ainda esta como instrucao. Informe o titulo real do chamado.");
+    issues.push("O título ainda está como instrução. Informe o título real do chamado.");
   }
   if (looksLikeInstructionOnly(description)) {
-    issues.push("A descricao ainda nao traz o relato real. Cole o problema, a nota ou o comportamento observado.");
+    issues.push("A descrição ainda não traz o relato real. Cole o problema, a nota ou o comportamento observado.");
   }
 
   return {
@@ -144,10 +144,10 @@ export function validateAssistantCommentBody(bodyInput: unknown): AssistantComme
   const parsed = ticketCommentSchema.safeParse({ body });
 
   if (!parsed.success) {
-    issues.push("Comentario obrigatorio, com pelo menos 3 caracteres.");
+    issues.push("Comentário obrigatório, com pelo menos 3 caracteres.");
   }
   if (looksLikeInstructionOnly(body)) {
-    issues.push("O texto do comentario ainda esta como instrucao. Informe o comentario real antes de publicar.");
+    issues.push("O texto do comentário ainda está como instrução. Informe o comentário real antes de publicar.");
   }
 
   return { ok: issues.length === 0, body, issues };
@@ -168,14 +168,14 @@ export function validateAssistantTestCaseDraft(input: {
 
   if (!parsed.success) {
     const fieldErrors = parsed.error.flatten().fieldErrors;
-    if (fieldErrors.sourceTitle?.length) issues.push("Titulo/base do caso de teste obrigatorio.");
-    if (fieldErrors.objective?.length) issues.push("Objetivo do caso de teste obrigatorio e precisa ser mais especifico.");
+    if (fieldErrors.sourceTitle?.length) issues.push("Título/base do caso de teste obrigatório.");
+    if (fieldErrors.objective?.length) issues.push("Objetivo do caso de teste obrigatório e precisa ser mais específico.");
     if (fieldErrors.reproductionBase?.length) issues.push("Preciso do fluxo, bug ou relato base para montar os passos do teste.");
-    if (fieldErrors.expectedResult?.length) issues.push("Resultado esperado obrigatorio para validar o comportamento.");
+    if (fieldErrors.expectedResult?.length) issues.push("Resultado esperado obrigatório para validar o comportamento.");
   }
 
   if (looksLikeInstructionOnly(sourceTitle) || looksLikeInstructionOnly(reproductionBase)) {
-    issues.push("Ainda nao tenho contexto funcional suficiente. Envie o bug, relato ou ticket base antes de gerar o caso de teste.");
+    issues.push("Ainda não tenho contexto funcional suficiente. Envie o bug, relato ou ticket base antes de gerar o caso de teste.");
   }
 
   return { ok: issues.length === 0, sourceTitle, objective, reproductionBase, expectedResult, issues };

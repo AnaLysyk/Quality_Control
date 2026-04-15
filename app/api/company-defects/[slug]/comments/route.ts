@@ -20,7 +20,7 @@ function normalizeString(value: unknown) {
 export async function POST(request: Request, context: { params: Promise<{ slug: string }> }) {
   const user = await authenticateRequest(request);
   if (!user) {
-    return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
   const { slug } = await context.params;
@@ -29,18 +29,18 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
   const commentBody = normalizeString(body?.body);
 
   if (!companySlug) {
-    return NextResponse.json({ message: "Empresa nao informada" }, { status: 400 });
+    return NextResponse.json({ message: "Empresa não informada" }, { status: 400 });
   }
   if (!canAccessCompanyDefects(user, companySlug)) {
     return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
   }
   if (!commentBody) {
-    return NextResponse.json({ message: "Comentario obrigatorio" }, { status: 400 });
+    return NextResponse.json({ message: "Comentário obrigatório" }, { status: 400 });
   }
 
   const defect = await resolveAccessibleCompanyDefect(companySlug, slug);
   if (!defect) {
-    return NextResponse.json({ message: "Defeito nao encontrado" }, { status: 404 });
+    return NextResponse.json({ message: "Defeito não encontrado" }, { status: 404 });
   }
 
   const actor = await resolveDefectActor(user);
@@ -51,7 +51,7 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
     note: commentBody,
   });
   if (!event) {
-    return NextResponse.json({ message: "Nao foi possivel salvar o comentario" }, { status: 500 });
+    return NextResponse.json({ message: "Não foi possível salvar o comentário" }, { status: 500 });
   }
 
   invalidateCompanyDefectsDataset(companySlug);

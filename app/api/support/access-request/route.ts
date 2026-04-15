@@ -94,26 +94,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Campos obrigatorios ausentes" }, { status: 400 });
   }
   if (password.length < 8) {
-    return NextResponse.json({ message: "Senha obrigatoria com pelo menos 8 caracteres" }, { status: 400 });
+    return NextResponse.json({ message: "Senha obrigatória com pelo menos 8 caracteres" }, { status: 400 });
   }
 
   let resolvedCompanyName = company || "";
   let resolvedClientId = clientId || null;
+  let resolvedCompanySlug: string | null = null;
 
   if (requestProfileTypeNeedsCompany(profileType)) {
     if (!resolvedClientId) {
       return NextResponse.json(
-        { message: "Selecione uma empresa cadastrada para vincular ao perfil Usuario" },
+        { message: "Selecione uma empresa cadastrada para vincular ao perfil Usuário" },
         { status: 400 },
       );
     }
 
     const selectedCompany = await findLocalCompanyById(resolvedClientId);
     if (!selectedCompany) {
-      return NextResponse.json({ message: "Empresa selecionada nao encontrada" }, { status: 404 });
+      return NextResponse.json({ message: "Empresa selecionada não encontrada" }, { status: 404 });
     }
 
     resolvedCompanyName = (selectedCompany.name ?? selectedCompany.company_name ?? "").trim() || "Empresa";
+    resolvedCompanySlug = selectedCompany.slug ?? null;
   } else if (profileType === "company_user") {
     if (!companyProfile.companyName) {
       return NextResponse.json({ message: "Informe o nome ou razao social da empresa" }, { status: 400 });
@@ -135,7 +137,7 @@ export async function POST(req: Request) {
     phone: phone || null,
     passwordHash: hashPasswordSha256(password),
     role,
-    company: resolvedCompanyName || "(nao informado)",
+    company: resolvedCompanyName || "(não informado)",
     clientId: resolvedClientId,
     accessType,
     profileType,
@@ -160,6 +162,8 @@ export async function POST(req: Request) {
         requesterName: fullName,
       profileType,
       reviewQueue: resolveReviewQueue(profileType),
+      companySlug: resolvedCompanySlug,
+      clientId: resolvedClientId,
     });
   } else {
     try {
@@ -178,6 +182,8 @@ export async function POST(req: Request) {
         requesterName: fullName,
         profileType,
         reviewQueue: resolveReviewQueue(profileType),
+        companySlug: resolvedCompanySlug,
+        clientId: resolvedClientId,
       });
     } catch (error) {
       console.error("Erro ao registrar support_request:", error);
@@ -195,10 +201,12 @@ export async function POST(req: Request) {
           requesterName: fullName,
           profileType,
           reviewQueue: resolveReviewQueue(profileType),
+          companySlug: resolvedCompanySlug,
+          clientId: resolvedClientId,
         });
       } catch (jsonError) {
         console.error("Fallback JSON store falhou:", jsonError);
-        return NextResponse.json({ message: "Erro interno ao registrar solicitacao" }, { status: 500 });
+        return NextResponse.json({ message: "Erro interno ao registrar solicitação" }, { status: 500 });
       }
     }
   }
@@ -221,7 +229,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ message: status === 401 ? "Nao autorizado" : "Acesso proibido" }, { status });
+    return NextResponse.json({ message: status === 401 ? "Não autorizado" : "Acesso proibido" }, { status });
   }
 
   const useJson = shouldUseJsonStore();

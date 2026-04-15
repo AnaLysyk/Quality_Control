@@ -175,18 +175,18 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     resolvedGlobalRole === "global_admin" ||
     user.is_global_admin === true ||
     session.isGlobalAdmin === true ||
-    sessionRole === "admin";
+    sessionRole === "leader_tc";
 
   // 6) Lista de empresas permitidas (todas para admin global, ou apenas as vinculadas).
-  const hasLegacyTechnicalSupportRole =
-    sessionRole === "it_dev" ||
-    normalizeLocalRole(user.role ?? null) === "it_dev" ||
-    links.some((link) => normalizeLocalRole(link.role ?? null) === "it_dev");
   const hasTechnicalSupportRole =
     sessionRole === "technical_support" ||
     normalizeLocalRole(user.role ?? null) === "technical_support" ||
     links.some((link) => normalizeLocalRole(link.role ?? null) === "technical_support");
-  const hasFullCompanyAccess = isGlobalAdmin || hasLegacyTechnicalSupportRole || hasTechnicalSupportRole;
+  const hasLeaderTcRole =
+    sessionRole === "leader_tc" ||
+    normalizeLocalRole(user.role ?? null) === "leader_tc" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc");
+  const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
   const shouldBindCompanyContext = !hasFullCompanyAccess;
   const allowedCompanies = hasFullCompanyAccess
     ? companies
@@ -214,14 +214,7 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
   const companyRole = normalizeLocalRole(rawRole);
   const capabilities = resolveCapabilities({
     globalRole: isGlobalAdmin ? "global_admin" : null,
-    companyRole:
-      companyRole === "company_admin"
-        ? "company_admin"
-        : companyRole === "it_dev"
-          ? "it_dev"
-          : companyRole === "viewer"
-            ? "viewer"
-            : "user",
+    companyRole,
     membershipCapabilities: primaryLink?.capabilities ?? session.capabilities ?? null,
   });
   const effectiveRole = toLegacyRole(companyRole, isGlobalAdmin);

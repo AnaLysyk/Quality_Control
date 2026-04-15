@@ -179,7 +179,7 @@ async function saveSettingsToStore(userId: string, next: Omit<StoredSettings, "u
 export async function GET(req: Request) {
   const userId = await resolveUserId(req);
   if (!userId) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const stored = await fetchSettingsFromStore(userId);
@@ -192,7 +192,7 @@ export async function GET(req: Request) {
 export async function PATCH(req: Request) {
   const userId = await resolveUserId(req);
   if (!userId) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const body = await req.json().catch(() => ({}));

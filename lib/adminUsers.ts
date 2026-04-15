@@ -60,8 +60,11 @@ export type AdminUserItem = {
 
 const ROLE_WEIGHT: Record<string, number> = {
   viewer: 0,
+  testing_company_user: 0,
   user: 1,
+  company_user: 1,
   company_admin: 2,
+  empresa: 2,
   it_dev: 3,
   technical_support: 3,
   leader_tc: 4,
@@ -110,12 +113,12 @@ function summarizeCompanyNames(companyNames: string[]) {
 }
 
 export function resolveStrongestCompanyRole(links: Array<Pick<LocalAuthMembership, "role">>) {
-  let strongest = "user";
+  let strongest = "company_user";
   let strongestWeight = ROLE_WEIGHT[strongest] ?? 0;
 
   for (const link of links) {
     const role = normalizeLocalRole(link.role ?? null);
-    const weight = ROLE_WEIGHT[role] ?? ROLE_WEIGHT.user;
+    const weight = ROLE_WEIGHT[role] ?? ROLE_WEIGHT.company_user;
     if (weight > strongestWeight) {
       strongest = role;
       strongestWeight = weight;
@@ -144,13 +147,13 @@ export function resolvePermissionRoleForUser(
     user?.user_scope,
   );
   const strongest =
-    (ROLE_WEIGHT[userRole] ?? ROLE_WEIGHT.user) > (ROLE_WEIGHT[strongestFromLinks] ?? ROLE_WEIGHT.user)
+    (ROLE_WEIGHT[userRole] ?? ROLE_WEIGHT.company_user) > (ROLE_WEIGHT[strongestFromLinks] ?? ROLE_WEIGHT.company_user)
       ? userRole
       : strongestFromLinks;
   if (strongest === "leader_tc") return SYSTEM_ROLES.LEADER_TC;
   if (strongest === "technical_support" || strongest === "it_dev") return SYSTEM_ROLES.TECHNICAL_SUPPORT;
-  if (user?.globalRole === "global_admin" || user?.is_global_admin === true) return SYSTEM_ROLES.LEADER_TC;
-  if (strongest === "company_admin") return SYSTEM_ROLES.EMPRESA;
+  if (user?.globalRole === "global_admin" || user?.globalRole === "leader_tc" || user?.is_global_admin === true) return SYSTEM_ROLES.LEADER_TC;
+  if (strongest === "company_admin" || strongest === "empresa") return SYSTEM_ROLES.EMPRESA;
   if (origin === "client_company" || scope === "company_only" || allowMultiCompanyLink === false) {
     return SYSTEM_ROLES.COMPANY_USER;
   }
@@ -178,7 +181,8 @@ function isInstitutionalCompanyProfile(
     origin === "client_company" ||
     Boolean(companySlug) ||
     Boolean(companyName) ||
-    companyRole === "company_admin";
+    companyRole === "company_admin" ||
+    companyRole === "empresa";
 
   if (!hasCompanyScopedSignal) return false;
 
@@ -204,6 +208,7 @@ export function resolveAdminUserProfileKind(
 
   if (
     user.globalRole === "global_admin" ||
+    user.globalRole === "leader_tc" ||
     user.is_global_admin === true ||
     normalizedUserRole === "leader_tc" ||
     normalizedLinkRoles.includes("leader_tc")

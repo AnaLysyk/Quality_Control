@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import {
@@ -16,6 +18,7 @@ import {
 } from "react-icons/fi";
 import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
 import { fetchApi } from "@/lib/api";
+import { useI18n } from "@/hooks/useI18n";
 import {
   buildQaseCaseLink,
   createEmptyCaseStep,
@@ -25,6 +28,283 @@ import {
   type TestPlanCase,
   type TestPlanCaseStep,
 } from "@/lib/testPlanCases";
+
+const COPY = {
+  "pt-BR": {
+    coverTotal: "Total",
+    coverQase: "Qase",
+    coverCases: "Casos",
+    filterApp: "Aplicação",
+    filterAll: "Todas",
+    filterSearch: "Buscar",
+    searchPlaceholder: "Título, descrição, projeto ou origem",
+    refresh: "Atualizar",
+    newPlan: "Novo plano",
+    projectLabel: "Projeto:",
+    projectAll: "Todos",
+    projectNone: "Sem Qase",
+    manualLabel: "Manual:",
+    integratedLabel: "Integrado:",
+    loadingApps: "Carregando aplicações...",
+    loadingPlans: "Carregando planos de teste...",
+    emptyPlans: "Nenhum plano encontrado para os filtros atuais.",
+    noDate: "Sem data",
+    createdLabel: "Criado:",
+    updatedLabel: "Atualizado:",
+    clickToDetails: "Clique para ver casos e detalhes",
+    open: "Abrir",
+    edit: "Editar",
+    deletePlan: "Excluir",
+    confirmDelete: (title: string) => `Remover o plano "${title}"?`,
+    casesCount: (n: number) => `${n} casos`,
+    noDescription: "Plano sem descrição detalhada.",
+    unknownApp: "Aplicação não identificada",
+    modalEditLabel: "Editar plano",
+    modalNewLabel: "Novo plano",
+    modalQaseTitle: "Plano integrado Qase",
+    modalManualTitle: "Plano manual",
+    modalQaseDesc: "Visualize os casos vinculados, adicione novos IDs e expanda cada item para consultar os detalhes do Qase.",
+    modalManualDesc: "Os casos manuais ficam visiveis no próprio plano, com título rápido e campos completos para detalhamento.",
+    closeModalAria: "Fechar modal",
+    titleLabel: "Título",
+    titlePlaceholder: "Ex: Regressao sprint 32",
+    appLabel: "Aplicação",
+    selectApp: "Selecione",
+    sourceLabel: "Origem",
+    sourceManual: "Manual local",
+    sourceQase: "Qase",
+    noQaseWarning: "A aplicação escolhida não possui projeto Qase vinculado. Para criar no Qase, selecione uma aplicação com codigo de projeto.",
+    descLabel: "Descrição do plano",
+    descPlaceholder: "Contexto, objetivo e recorte do plano.",
+    casesSection: "Casos do plano",
+    casesLinked: (n: number) => `${n} caso${n === 1 ? "" : "s"} vinculado${n === 1 ? "" : "s"}`,
+    casesQaseDesc: "Cada caso mostra ID, título, link direto e expande os detalhes sob demanda.",
+    casesManualDesc: "No manual, cada caso pode ser criado só com título e ganhar detalhes completos quando você expandir.",
+    addManualCase: "Adicionar caso manual",
+    qaseIdsLabel: "IDs dos casos Qase",
+    qaseIdsPlaceholder: "IDs numericos separados por linha ou virgula. Ex: 101, 102, 103",
+    linkCases: "Vincular casos",
+    qaseIdsNote: "O plano do Qase aceita apenas case IDs numericos. Ao expandir um item, a tela consulta descrição, pre-condicoes, pos-condicoes, severidade e passos do caso.",
+    loadingPlanDetail: "Carregando detalhes do plano...",
+    emptyQaseCases: "Adicione IDs de casos do Qase para visualizar a lista.",
+    emptyManualCases: "Adicione um caso manual para montar título, passos e criterios do plano.",
+    openLink: "Abrir link",
+    removeCase: "Remover",
+    loadingCaseDetail: "Carregando detalhes do caso do Qase...",
+    descriptionLabel: "Descrição",
+    noQaseDescription: "Sem descrição detalhada no Qase.",
+    preconditionsLabel: "Pre-condicoes",
+    noPreconditions: "Sem pre-condicoes cadastradas.",
+    postconditionsLabel: "Pos-condicoes e severidade",
+    noPostconditions: "Sem pos-condicoes cadastradas.",
+    severityLabel: "Severidade:",
+    severityNotSet: "Não informada",
+    stepsLabel: "Passos",
+    stepLabel: (n: number) => `Passo ${n}`,
+    noSteps: "O caso do Qase não retornou passos estruturados.",
+    expectedResult: "Resultado esperado",
+    notSpecified: "Não informado.",
+    dataLabel: "Dados",
+    caseIdLabel: "ID do caso",
+    caseTitleLabel: "Título do caso",
+    caseTitlePlaceholder: "Ex: Login com operador",
+    caseDescLabel: "Descrição",
+    caseDescPlaceholder: "Descreva o objetivo e o contexto do caso.",
+    casePrecondLabel: "Pre-condicoes",
+    casePrecondPlaceholder: "Estado inicial necessário antes do teste.",
+    casePostcondLabel: "Pos-condicoes",
+    casePostcondPlaceholder: "Estado esperado apos a execução.",
+    caseSeverityLabel: "Severidade",
+    stepsDesc: "Crie o caso só com título e detalhe os passos apenas quando precisar.",
+    addStep: "Adicionar passo",
+    removeStep: "Remover passo",
+    actionLabel: "Ação",
+    actionPlaceholder: "O que deve ser executado neste passo.",
+    expectedResultLabel: "Resultado esperado",
+    expectedResultPlaceholder: "Qual resultado deve aparecer apos o passo.",
+    stepDataLabel: "Dados do passo",
+    stepDataPlaceholder: "Dados, massa ou observação opcional.",
+    noStepsManual: "Este caso ainda não tem passos. Se quiser, pode salvar apenas com o título e detalhar depois.",
+    noAction: "Sem ação descrita.",
+    appInFocus: "Aplicação em foco:",
+    noApp: "Sem aplicação",
+    cancel: "Cancelar",
+    saving: "Salvando...",
+    savePlan: "Salvar plano",
+    createPlan: "Criar plano",
+    severityOptions: [
+      { value: "", label: "Sem severidade" },
+      { value: "low", label: "Baixa" },
+      { value: "medium", label: "Media" },
+      { value: "high", label: "Alta" },
+      { value: "critical", label: "Critica" },
+    ],
+    errLoadApps: "Não foi possível carregar as aplicações da empresa.",
+    errLoadPlans: "Não foi possível consultar os planos de teste.",
+    errOpenPlan: "Não foi possível abrir o plano selecionado.",
+    errDeletePlan: "Não foi possível remover o plano.",
+    errSelectApp: "Selecione uma aplicação especifica para salvar um plano.",
+    errTitle: "Informe o título do plano.",
+    errCaseTitle: (id: string) => `Informe o título do caso manual ${id}.`,
+    errMinQaseCase: "Informe ao menos um case ID numerico para o plano do Qase.",
+    errSavePlan: "Não foi possível salvar o plano.",
+    errNoAppQase: "Nenhuma aplicação com projeto Qase vinculado esta disponível para criar o plano.",
+    errNoApp: "Nenhuma aplicação disponível para criar o plano.",
+    errAddQaseIds: "Informe pelo menos um case ID numerico para adicionar ao plano do Qase.",
+    errNoValidIds: "Nenhum case ID numerico válido foi encontrado.",
+    errLoadCase: "Não foi possível carregar o caso do Qase.",
+    errLoadApp: "Erro ao carregar aplicações",
+    errLoadPlan: "Erro ao carregar planos",
+    errOpenPlanShort: "Erro ao abrir plano",
+    errDeletePlanShort: "Erro ao remover plano",
+    errSavePlanShort: "Erro ao salvar plano",
+    errLoadCaseShort: "Erro ao carregar caso",
+    caseQaseLabel: (id: string) => `Caso Qase ${id}`,
+    caseManualLabel: (n: number) => `Caso manual ${n}`,
+    collapseCase: "Recolher",
+    expandCase: "Expandir",
+    caseDetailsAria: (action: string, title: string) => `${action} detalhes do caso ${title}`,
+    planDetailsAria: (title: string) => `Abrir detalhes do plano ${title}`,
+  },
+  "en-US": {
+    coverTotal: "Total",
+    coverQase: "Qase",
+    coverCases: "Cases",
+    filterApp: "Application",
+    filterAll: "All",
+    filterSearch: "Search",
+    searchPlaceholder: "Title, description, project or source",
+    refresh: "Refresh",
+    newPlan: "New plan",
+    projectLabel: "Project:",
+    projectAll: "All",
+    projectNone: "No Qase",
+    manualLabel: "Manual:",
+    integratedLabel: "Integrated:",
+    loadingApps: "Loading applications...",
+    loadingPlans: "Loading test plans...",
+    emptyPlans: "No plans found for the current filters.",
+    noDate: "No date",
+    createdLabel: "Created:",
+    updatedLabel: "Updated:",
+    clickToDetails: "Click to view cases and details",
+    open: "Open",
+    edit: "Edit",
+    deletePlan: "Delete",
+    confirmDelete: (title: string) => `Remove plan "${title}"?`,
+    casesCount: (n: number) => `${n} cases`,
+    noDescription: "Plan has no detailed description.",
+    unknownApp: "Unknown application",
+    modalEditLabel: "Edit plan",
+    modalNewLabel: "New plan",
+    modalQaseTitle: "Qase integrated plan",
+    modalManualTitle: "Manual plan",
+    modalQaseDesc: "View linked cases, add new IDs and expand each item to check Qase details.",
+    modalManualDesc: "Manual cases are visible in the plan itself, with a quick title and full fields for detailed description.",
+    closeModalAria: "Close modal",
+    titleLabel: "Title",
+    titlePlaceholder: "E.g.: Sprint 32 regression",
+    appLabel: "Application",
+    selectApp: "Select",
+    sourceLabel: "Source",
+    sourceManual: "Manual local",
+    sourceQase: "Qase",
+    noQaseWarning: "The selected application has no linked Qase project. To create in Qase, select an application with a project code.",
+    descLabel: "Plan description",
+    descPlaceholder: "Context, objective and scope of the plan.",
+    casesSection: "Plan cases",
+    casesLinked: (n: number) => `${n} case${n === 1 ? "" : "s"} linked`,
+    casesQaseDesc: "Each case shows ID, title, direct link and expands details on demand.",
+    casesManualDesc: "In manual mode, each case can be created with just a title and get full details when you expand it.",
+    addManualCase: "Add manual case",
+    qaseIdsLabel: "Qase case IDs",
+    qaseIdsPlaceholder: "Numeric IDs separated by line or comma. E.g.: 101, 102, 103",
+    linkCases: "Link cases",
+    qaseIdsNote: "The Qase plan only accepts numeric case IDs. When expanding an item, the screen queries description, preconditions, postconditions, severity and case steps.",
+    loadingPlanDetail: "Loading plan details...",
+    emptyQaseCases: "Add Qase case IDs to view the list.",
+    emptyManualCases: "Add a manual case to build the title, steps and criteria for the plan.",
+    openLink: "Open link",
+    removeCase: "Remove",
+    loadingCaseDetail: "Loading Qase case details...",
+    descriptionLabel: "Description",
+    noQaseDescription: "No detailed description in Qase.",
+    preconditionsLabel: "Preconditions",
+    noPreconditions: "No preconditions registered.",
+    postconditionsLabel: "Postconditions and severity",
+    noPostconditions: "No postconditions registered.",
+    severityLabel: "Severity:",
+    severityNotSet: "Not specified",
+    stepsLabel: "Steps",
+    stepLabel: (n: number) => `Step ${n}`,
+    noSteps: "The Qase case did not return structured steps.",
+    expectedResult: "Expected result",
+    notSpecified: "Not specified.",
+    dataLabel: "Data",
+    caseIdLabel: "Case ID",
+    caseTitleLabel: "Case title",
+    caseTitlePlaceholder: "E.g.: Login with operator",
+    caseDescLabel: "Description",
+    caseDescPlaceholder: "Describe the objective and context of the case.",
+    casePrecondLabel: "Preconditions",
+    casePrecondPlaceholder: "Initial state required before the test.",
+    casePostcondLabel: "Postconditions",
+    casePostcondPlaceholder: "Expected state after execution.",
+    caseSeverityLabel: "Severity",
+    stepsDesc: "Create the case with just a title and add step details only when needed.",
+    addStep: "Add step",
+    removeStep: "Remove step",
+    actionLabel: "Action",
+    actionPlaceholder: "What should be executed in this step.",
+    expectedResultLabel: "Expected result",
+    expectedResultPlaceholder: "What result should appear after the step.",
+    stepDataLabel: "Step data",
+    stepDataPlaceholder: "Data, test data or optional observation.",
+    noStepsManual: "This case has no steps yet. You can save with just the title and add details later.",
+    noAction: "No action described.",
+    appInFocus: "Application in focus:",
+    noApp: "No application",
+    cancel: "Cancel",
+    saving: "Saving...",
+    savePlan: "Save plan",
+    createPlan: "Create plan",
+    severityOptions: [
+      { value: "", label: "No severity" },
+      { value: "low", label: "Low" },
+      { value: "medium", label: "Medium" },
+      { value: "high", label: "High" },
+      { value: "critical", label: "Critical" },
+    ],
+    errLoadApps: "Could not load the company applications.",
+    errLoadPlans: "Could not query test plans.",
+    errOpenPlan: "Could not open the selected plan.",
+    errDeletePlan: "Could not remove the plan.",
+    errSelectApp: "Select a specific application to save a plan.",
+    errTitle: "Please enter the plan title.",
+    errCaseTitle: (id: string) => `Please enter the title for manual case ${id}.`,
+    errMinQaseCase: "Please provide at least one numeric case ID for the Qase plan.",
+    errSavePlan: "Could not save the plan.",
+    errNoAppQase: "No application with a linked Qase project is available to create the plan.",
+    errNoApp: "No application available to create the plan.",
+    errAddQaseIds: "Please provide at least one numeric case ID to add to the Qase plan.",
+    errNoValidIds: "No valid numeric case ID was found.",
+    errLoadCase: "Could not load the Qase case.",
+    errLoadApp: "Failed to load applications",
+    errLoadPlan: "Failed to load plans",
+    errOpenPlanShort: "Failed to open plan",
+    errDeletePlanShort: "Failed to remove plan",
+    errSavePlanShort: "Failed to save plan",
+    errLoadCaseShort: "Failed to load case",
+    caseQaseLabel: (id: string) => `Qase case ${id}`,
+    caseManualLabel: (n: number) => `Manual case ${n}`,
+    collapseCase: "Collapse",
+    expandCase: "Expand",
+    caseDetailsAria: (action: string, title: string) => `${action} case details for ${title}`,
+    planDetailsAria: (title: string) => `Open plan details for ${title}`,
+  },
+} as const;
+
+type CopyType = (typeof COPY)["pt-BR"];
 
 type ApplicationItem = {
   id: string;
@@ -64,18 +344,10 @@ const EMPTY_DRAFT: PlanDraft = {
   cases: [],
 };
 
-const MANUAL_SEVERITY_OPTIONS = [
-  { value: "", label: "Sem severidade" },
-  { value: "low", label: "Baixa" },
-  { value: "medium", label: "Media" },
-  { value: "high", label: "Alta" },
-  { value: "critical", label: "Critica" },
-];
-
-function formatDate(value?: string | null) {
-  if (!value) return "Sem data";
+function formatDate(value?: string | null, noDateLabel = "Sem data") {
+  if (!value) return noDateLabel;
   const time = Date.parse(value);
-  if (!Number.isFinite(time)) return "Sem data";
+  if (!Number.isFinite(time)) return noDateLabel;
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",
@@ -101,15 +373,15 @@ function hasLoadedCaseDetails(testCase: TestPlanCase) {
   );
 }
 
-function formatCaseTitle(testCase: TestPlanCase, source: "manual" | "qase", index: number) {
+function formatCaseTitle(testCase: TestPlanCase, source: "manual" | "qase", index: number, copy: CopyType) {
   if (trimText(testCase.title)) return trimText(testCase.title) as string;
-  return source === "qase" ? `Caso Qase ${testCase.id}` : `Caso manual ${index + 1}`;
+  return source === "qase" ? copy.caseQaseLabel(testCase.id) : copy.caseManualLabel(index + 1);
 }
 
-function formatCaseMeta(testCase: TestPlanCase) {
+function formatCaseMeta(testCase: TestPlanCase, copy: CopyType) {
   const parts = [
-    trimText(testCase.severity) ? `Severidade ${trimText(testCase.severity)}` : null,
-    Array.isArray(testCase.steps) && testCase.steps.length ? `${testCase.steps.length} passos` : null,
+    trimText(testCase.severity) ? `${copy.severityLabel} ${trimText(testCase.severity)}` : null,
+    Array.isArray(testCase.steps) && testCase.steps.length ? `${testCase.steps.length} ${copy.stepsLabel.toLowerCase()}` : null,
   ].filter((item): item is string => Boolean(item));
   return parts.join(" | ");
 }
@@ -155,6 +427,8 @@ function normalizeCasesForSave(source: "manual" | "qase", cases: TestPlanCase[])
 
 export default function TestPlansPage() {
   const { slug } = useParams<{ slug: string }>();
+  const { language } = useI18n();
+  const copy = COPY[language] ?? COPY["pt-BR"];
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string>("");
   const [plans, setPlans] = useState<TestPlanItem[]>([]);
@@ -184,13 +458,13 @@ export default function TestPlansPage() {
       try {
         const response = await fetchApi(`/api/applications?companySlug=${encodeURIComponent(slug)}`);
         const payload = await response.json().catch(() => null);
-        if (!response.ok) throw new Error("Erro ao carregar aplicacoes");
+        if (!response.ok) throw new Error(copy.errLoadApp);
         const items = Array.isArray(payload?.items) ? (payload.items as ApplicationItem[]) : [];
         if (canceled) return;
         setApplications(items);
         setSelectedApplicationId("");
       } catch {
-        if (!canceled) setError("Nao foi possivel carregar as aplicacoes da empresa.");
+        if (!canceled) setError(copy.errLoadApps);
       } finally {
         if (!canceled) setLoadingApplications(false);
       }
@@ -241,7 +515,7 @@ export default function TestPlansPage() {
       const payload = await response.json().catch(() => null);
 
       if (!response.ok && !payload?.warning) {
-        throw new Error("Erro ao carregar planos");
+        throw new Error(copy.errLoadPlan);
       }
 
       setPlans(Array.isArray(payload?.plans) ? payload.plans : []);
@@ -253,7 +527,7 @@ export default function TestPlansPage() {
       setProjectCode(null);
       setTotalTests(0);
       setWarning(null);
-      setError("Nao foi possivel consultar os planos de teste.");
+      setError(copy.errLoadPlans);
     } finally {
       setLoadingPlans(false);
     }
@@ -302,26 +576,26 @@ export default function TestPlansPage() {
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-2xl border border-white/16 bg-white/10 px-4 py-3 backdrop-blur">
             <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/68">
-              Total
+              {copy.coverTotal}
             </div>
             <div className="mt-2 text-3xl font-black text-white">{totals.total}</div>
           </div>
           <div className="rounded-2xl border border-white/16 bg-white/10 px-4 py-3 backdrop-blur">
             <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/68">
-              Qase
+              {copy.coverQase}
             </div>
             <div className="mt-2 text-3xl font-black text-white">{totals.qase}</div>
           </div>
           <div className="rounded-2xl border border-white/16 bg-white/10 px-4 py-3 backdrop-blur">
             <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/68">
-              Casos
+              {copy.coverCases}
             </div>
             <div className="mt-2 text-3xl font-black text-white">{totalTests}</div>
           </div>
         </div>
       </div>
     ),
-    [totalTests, totals.qase, totals.total],
+    [totalTests, totals.qase, totals.total, copy],
   );
 
   useAppShellCoverSlot(coverContent);
@@ -351,8 +625,8 @@ export default function TestPlansPage() {
     if (!nextApplicationId) {
       setError(
         source === "qase"
-          ? "Nenhuma aplicacao com projeto Qase vinculado esta disponivel para criar o plano."
-          : "Nenhuma aplicacao disponivel para criar o plano.",
+          ? copy.errNoAppQase
+          : copy.errNoApp,
       );
       return;
     }
@@ -399,7 +673,7 @@ export default function TestPlansPage() {
       const response = await fetchApi(`/api/test-plans?${query.toString()}`);
       const payload = await response.json().catch(() => null);
       if (!response.ok || !payload?.plan) {
-        throw new Error("Erro ao abrir plano");
+        throw new Error(copy.errOpenPlanShort);
       }
       const fullPlan = payload.plan as TestPlanItem;
       const nextCases = Array.isArray(fullPlan.cases) ? fullPlan.cases : [];
@@ -413,7 +687,7 @@ export default function TestPlansPage() {
       });
       setExpandedCaseId(nextCases[0]?.id ?? null);
     } catch {
-      setError("Nao foi possivel abrir o plano selecionado.");
+      setError(copy.errOpenPlan);
       closeModal();
     } finally {
       setLoadingPlanDetail(false);
@@ -423,7 +697,7 @@ export default function TestPlansPage() {
   async function handleDelete(plan: TestPlanItem) {
     if (!slug) return;
     const confirmed =
-      typeof window === "undefined" ? true : window.confirm(`Remover o plano "${plan.title}"?`);
+      typeof window === "undefined" ? true : window.confirm(copy.confirmDelete(plan.title));
     if (!confirmed) return;
 
     setError(null);
@@ -441,24 +715,24 @@ export default function TestPlansPage() {
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(typeof payload?.error === "string" ? payload.error : "Erro ao remover plano");
+        throw new Error(typeof payload?.error === "string" ? payload.error : copy.errDeletePlanShort);
       }
       await loadPlans();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Nao foi possivel remover o plano.");
+      setError(cause instanceof Error ? cause.message : copy.errDeletePlan);
     }
   }
 
   async function handleSave() {
     const effectiveApplicationId = draft.applicationId ?? selectedApplication?.id ?? null;
     if (!slug || !effectiveApplicationId) {
-      setError("Selecione uma aplicacao especifica para salvar um plano.");
+      setError(copy.errSelectApp);
       return;
     }
 
     const title = draft.title.trim();
     if (!title) {
-      setError("Informe o titulo do plano.");
+      setError(copy.errTitle);
       return;
     }
 
@@ -467,14 +741,14 @@ export default function TestPlansPage() {
         (testCase) => !isCaseEffectivelyEmpty(testCase) && !trimText(testCase.title),
       );
       if (untitledCase) {
-        setError(`Informe o titulo do caso manual ${untitledCase.id}.`);
+        setError(copy.errCaseTitle(untitledCase.id));
         return;
       }
     }
 
     const casesPayload = normalizeCasesForSave(draft.source, draft.cases);
     if (draft.source === "qase" && !casesPayload.length) {
-      setError("Informe ao menos um case ID numerico para o plano do Qase.");
+      setError(copy.errMinQaseCase);
       return;
     }
 
@@ -498,12 +772,12 @@ export default function TestPlansPage() {
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(typeof payload?.error === "string" ? payload.error : "Erro ao salvar plano");
+        throw new Error(typeof payload?.error === "string" ? payload.error : copy.errSavePlanShort);
       }
       closeModal();
       await loadPlans();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Nao foi possivel salvar o plano.");
+      setError(cause instanceof Error ? cause.message : copy.errSavePlan);
     } finally {
       setSaving(false);
     }
@@ -575,7 +849,7 @@ export default function TestPlansPage() {
 
   function handleAddQaseCases() {
     if (!trimText(qaseCaseIdsInput)) {
-      setError("Informe pelo menos um case ID numerico para adicionar ao plano do Qase.");
+      setError(copy.errAddQaseIds);
       return;
     }
 
@@ -588,7 +862,7 @@ export default function TestPlansPage() {
     }));
 
     if (!nextCases.length) {
-      setError("Nenhum case ID numerico valido foi encontrado.");
+      setError(copy.errNoValidIds);
       return;
     }
 
@@ -624,7 +898,7 @@ export default function TestPlansPage() {
       const response = await fetchApi(`/api/test-plans/cases?${query.toString()}`);
       const payload = await response.json().catch(() => null);
       if (!response.ok || !payload?.case) {
-        throw new Error(typeof payload?.error === "string" ? payload.error : "Erro ao carregar caso");
+        throw new Error(typeof payload?.error === "string" ? payload.error : copy.errLoadCaseShort);
       }
 
       const detailedCase = payload.case as TestPlanCase;
@@ -640,7 +914,7 @@ export default function TestPlansPage() {
     } catch (cause) {
       setCaseErrors((current) => ({
         ...current,
-        [caseId]: cause instanceof Error ? cause.message : "Nao foi possivel carregar o caso do Qase.",
+        [caseId]: cause instanceof Error ? cause.message : copy.errLoadCase,
       }));
     } finally {
       setLoadingCaseDetails((current) => ({ ...current, [caseId]: false }));
@@ -658,16 +932,16 @@ export default function TestPlansPage() {
   return (
     <div className="min-h-screen bg-(--page-bg,#f5f6fa) px-4 py-8 text-(--page-text,#0b1a3c) sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-none space-y-6">
-        <section className="rounded-3xl border border-[#d7deea] bg-[linear-gradient(180deg,#ffffff_0%,#fbfcff_100%)] p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[#121b2d] dark:shadow-none">
+        <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-[linear-gradient(180deg,var(--tc-surface-filter-1,#ffffff)_0%,var(--tc-surface-filter-2,#fbfcff)_100%)] p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:shadow-none">
           <div className="grid gap-4 xl:grid-cols-[minmax(0,280px)_minmax(0,1fr)_auto] xl:items-end">
             <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-              Aplicacao
+              {copy.filterApp}
               <select
                 value={selectedApplicationId}
                 onChange={(event) => setSelectedApplicationId(event.target.value)}
                 className="mt-2 w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
               >
-                <option value="">Todas</option>
+                <option value="">{copy.filterAll}</option>
                 {applications.map((application) => (
                   <option key={application.id} value={application.id}>
                     {application.name}
@@ -678,11 +952,11 @@ export default function TestPlansPage() {
             </label>
 
             <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-              Buscar
+              {copy.filterSearch}
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Titulo, descricao, projeto ou origem"
+                placeholder={copy.searchPlaceholder}
                 className="mt-2 w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
               />
             </label>
@@ -694,7 +968,7 @@ export default function TestPlansPage() {
                 className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a)"
               >
                 <FiRefreshCcw className="h-4 w-4" />
-                Atualizar
+                {copy.refresh}
               </button>
               <button
                 type="button"
@@ -703,29 +977,29 @@ export default function TestPlansPage() {
                 className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a)"
               >
                 <FiPlus className="h-4 w-4" />
-                Novo plano
+                {copy.newPlan}
               </button>
             </div>
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
             <span className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1.5">
-              Projeto:{" "}
+              {copy.projectLabel}{" "}
               {projectCode ??
                 selectedApplication?.qaseProjectCode ??
-                (isAllApplicationsSelected ? "Todos" : "Sem Qase")}
+                (isAllApplicationsSelected ? copy.projectAll : copy.projectNone)}
             </span>
             <span className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1.5">
-              Manual: {totals.manual}
+              {copy.manualLabel} {totals.manual}
             </span>
             <span className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1.5">
-              Integrado: {totals.qase}
+              {copy.integratedLabel} {totals.qase}
             </span>
           </div>
         </section>
 
         {error ? (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-100">
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {error}
           </div>
         ) : null}
@@ -736,30 +1010,30 @@ export default function TestPlansPage() {
           </div>
         ) : null}
 
-        <section className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#121b2d]">
+        <section>
           {loadingApplications ? (
-            <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando aplicacoes...</p>
+            <p className="text-sm text-(--tc-text-muted,#6b7280)">{copy.loadingApps}</p>
           ) : loadingPlans ? (
-            <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando planos de teste...</p>
+            <p className="text-sm text-(--tc-text-muted,#6b7280)">{copy.loadingPlans}</p>
           ) : filteredPlans.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-(--tc-border,#d8dee9) bg-(--tc-surface,#f9fafb) p-10 text-center dark:border-white/10 dark:bg-[#0f172a]">
+            <div className="rounded-2xl border border-dashed border-(--tc-border,#d8dee9) bg-(--tc-surface,#f9fafb) p-10 text-center">
               <FiClipboard size={30} className="mx-auto text-(--tc-text-muted,#6b7280)" />
               <p className="mt-3 text-sm text-(--tc-text-secondary,#4b5563)">
-                Nenhum plano encontrado para os filtros atuais.
+                {copy.emptyPlans}
               </p>
             </div>
           ) : (
-            <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {filteredPlans.map((plan) => (
                 <article
                   key={`${plan.source}:${plan.id}`}
-                  className="rounded-3xl border border-[#d7deea] bg-[linear-gradient(180deg,#f7f9fd_0%,#ffffff_100%)] p-5 shadow-[0_16px_40px_rgba(15,23,42,0.05)] transition hover:border-[rgba(239,0,1,0.28)] hover:shadow-[0_18px_44px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[#0f172a] dark:shadow-none"
+                  className="rounded-3xl border border-(--tc-border,#d7deea) bg-[linear-gradient(180deg,var(--tc-surface-card-1,#f7f9fd)_0%,var(--tc-surface-card-2,#ffffff)_100%)] p-5 shadow-[0_16px_40px_rgba(15,23,42,0.05)] transition hover:border-[rgba(239,0,1,0.28)] hover:shadow-[0_18px_44px_rgba(15,23,42,0.08)] dark:shadow-none"
                 >
                   <button
                     type="button"
                     onClick={() => void openEdit(plan)}
-                    className="block w-full text-left text-[#10234d] dark:text-white"
-                    aria-label={`Abrir detalhes do plano ${plan.title}`}
+                    className="block w-full text-left text-[#10234d]"
+                    aria-label={copy.planDetailsAria(plan.title)}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -767,67 +1041,67 @@ export default function TestPlansPage() {
                           <span
                             className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] ${
                               plan.source === "qase"
-                                ? "border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-400/10 dark:text-emerald-100"
-                                : "border border-slate-200 bg-slate-100 text-slate-700 dark:border-white/15 dark:bg-white/10 dark:text-white/85"
+                                ? "border border-emerald-600/30 bg-emerald-100 text-emerald-800"
+                                : "border border-slate-300 bg-slate-200 text-slate-800"
                             }`}
                           >
-                            {plan.source === "qase" ? "Qase" : "Manual"}
+                            {plan.source === "qase" ? copy.sourceQase : copy.sourceManual}
                           </span>
                           {plan.projectCode ? (
-                            <span className="rounded-full border border-[#d7deea] bg-[#f5f8ff] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#55657f] dark:border-white/10 dark:bg-transparent dark:text-(--tc-text-muted,#6b7280)">
+                            <span className="rounded-full border border-[#d7deea] bg-[#f5f8ff] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#55657f]">
                               {plan.projectCode}
                             </span>
                           ) : null}
                         </div>
-                        <h2 className="mt-3 text-lg font-extrabold text-[#10234d] dark:text-white">
+                        <h2 className="mt-3 text-lg font-extrabold text-[#10234d]">
                           {plan.title}
                         </h2>
-                        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#44536c] dark:text-(--tc-text-muted,#6b7280)">
-                          {plan.applicationName ?? "Aplicacao nao identificada"}
+                        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#44536c]">
+                          {plan.applicationName ?? copy.unknownApp}
                         </p>
                       </div>
 
-                      <div className="inline-flex items-center gap-2 rounded-full border border-[#d7deea] bg-[#f5f8ff] px-3 py-1.5 text-xs font-semibold text-[#10234d] dark:border-white/10 dark:bg-[#182235] dark:text-white">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-[#d7deea] bg-[#f5f8ff] px-3 py-1.5 text-xs font-semibold text-[#10234d]">
                         <FiLayers className="h-3.5 w-3.5" />
-                        {plan.casesCount} casos
+                        {copy.casesCount(plan.casesCount)}
                       </div>
                     </div>
 
-                    <p className="mt-4 min-h-18 text-sm leading-6 text-[#5a6984] dark:text-white/74">
-                      {plan.description?.trim() || "Plano sem descricao detalhada."}
+                    <p className="mt-4 min-h-18 text-sm leading-6 text-[#5a6984]">
+                      {plan.description?.trim() || copy.noDescription}
                     </p>
 
-                    <div className="mt-4 text-xs text-[#55657f] dark:text-(--tc-text-muted,#6b7280)">
-                      Criado: {formatDate(plan.createdAt)} | Atualizado: {formatDate(plan.updatedAt)}
+                    <div className="mt-4 text-xs text-[#55657f]">
+                      {copy.createdLabel} {formatDate(plan.createdAt, copy.noDate)} | {copy.updatedLabel} {formatDate(plan.updatedAt, copy.noDate)}
                     </div>
 
                     <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#44536c] dark:text-(--tc-text-muted,#6b7280)">
-                        Clique para ver casos e detalhes
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#44536c]">
+                        {copy.clickToDetails}
                       </p>
-                      <span className="inline-flex items-center gap-2 rounded-xl border border-[#d7deea] bg-[#f8fbff] px-3 py-2 text-xs font-semibold text-[#10234d] dark:border-white/10 dark:bg-[#182235] dark:text-white">
+                      <span className="inline-flex items-center gap-2 rounded-xl border border-[#d7deea] bg-[#f8fbff] px-3 py-2 text-xs font-semibold text-[#10234d]">
                         <FiEdit2 className="h-3.5 w-3.5" />
-                        Abrir
+                        {copy.open}
                       </span>
                     </div>
                   </button>
 
-                  <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-[#d7deea] pt-4 dark:border-white/10">
+                  <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-[#d7deea] pt-4">
                     <button
                       type="button"
                       onClick={() => void openEdit(plan)}
-                      className="inline-flex items-center gap-2 rounded-xl border border-[#d7deea] bg-[#f8fbff] px-3 py-2 text-xs font-semibold text-[#10234d] dark:border-white/10 dark:bg-[#182235] dark:text-white"
+                      className="inline-flex items-center gap-2 rounded-xl border border-[#d7deea] bg-[#f8fbff] px-3 py-2 text-xs font-semibold text-[#10234d]"
                     >
                       <FiEdit2 className="h-3.5 w-3.5" />
-                      Editar
+                      {copy.edit}
                     </button>
                     <button
                       type="button"
                       onClick={() => void handleDelete(plan)}
-                      className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:border-rose-400/25 dark:bg-rose-500/10 dark:text-rose-100"
+                      className="inline-flex items-center gap-2 rounded-xl border border-rose-300 bg-rose-100 px-3 py-2 text-xs font-semibold text-rose-800"
                     >
                       <FiTrash2 className="h-3.5 w-3.5" />
-                      Excluir
+                      {copy.deletePlan}
                     </button>
                   </div>
                 </article>
@@ -846,27 +1120,27 @@ export default function TestPlansPage() {
             }
           }}
         >
-          <div className="max-h-[calc(100dvh-2rem)] w-full max-w-6xl overflow-y-auto rounded-4xl border border-white/20 bg-white shadow-[0_30px_120px_rgba(15,23,42,0.42)] dark:bg-[#101827]">
-            <div className="bg-[linear-gradient(135deg,#011848_0%,#21438f_48%,#ef0001_100%)] px-6 py-5 text-white">
+          <div className="max-h-[calc(100dvh-2rem)] w-full max-w-6xl overflow-y-auto rounded-4xl border border-(--tc-border) bg-white shadow-[0_30px_120px_rgba(15,23,42,0.42)]">
+            <div className="bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-6 py-5 text-white">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-white/70">
-                    {draft.id ? "Editar plano" : "Novo plano"}
+                    {draft.id ? copy.modalEditLabel : copy.modalNewLabel}
                   </p>
                   <h2 className="mt-2 text-3xl font-black tracking-[-0.04em]">
-                    {draft.source === "qase" ? "Plano integrado Qase" : "Plano manual"}
+                    {draft.source === "qase" ? copy.modalQaseTitle : copy.modalManualTitle}
                   </h2>
                   <p className="mt-2 text-sm text-white/82">
                     {draft.source === "qase"
-                      ? "Visualize os casos vinculados, adicione novos IDs e expanda cada item para consultar os detalhes do Qase."
-                      : "Os casos manuais ficam visiveis no proprio plano, com titulo rapido e campos completos para detalhamento."}
+                      ? copy.modalQaseDesc
+                      : copy.modalManualDesc}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={closeModal}
                   className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white"
-                  aria-label="Fechar modal"
+                  aria-label={copy.closeModalAria}
                 >
                   <FiX className="h-5 w-5" />
                 </button>
@@ -877,19 +1151,19 @@ export default function TestPlansPage() {
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_260px_220px]">
                 <label className="space-y-2">
                   <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                    Titulo
+                    {copy.titleLabel}
                   </span>
                   <input
                     value={draft.title}
                     onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
                     className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
-                    placeholder="Ex: Regressao sprint 32"
+                    placeholder={copy.titlePlaceholder}
                   />
                 </label>
 
                 <label className="space-y-2">
                   <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                    Aplicacao
+                    {copy.appLabel}
                   </span>
                   <select
                     value={draft.applicationId ?? ""}
@@ -913,7 +1187,7 @@ export default function TestPlansPage() {
                     disabled={Boolean(draft.id)}
                     className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001) disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    <option value="">Selecione</option>
+                    <option value="">{copy.selectApp}</option>
                     {applications.map((application) => (
                       <option key={application.id} value={application.id}>
                         {application.name}
@@ -925,7 +1199,7 @@ export default function TestPlansPage() {
 
                 <label className="space-y-2">
                   <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                    Origem
+                    {copy.sourceLabel}
                   </span>
                   <select
                     value={draft.source}
@@ -959,44 +1233,44 @@ export default function TestPlansPage() {
                     disabled={Boolean(draft.id)}
                     className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001) disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    <option value="manual">Manual local</option>
-                    {draftCanUseQase ? <option value="qase">Qase</option> : null}
+                    <option value="manual">{copy.sourceManual}</option>
+                    {draftCanUseQase ? <option value="qase">{copy.sourceQase}</option> : null}
                   </select>
                 </label>
               </div>
 
               {!draft.id && !draftCanUseQase ? (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-100">
-                  A aplicacao escolhida nao possui projeto Qase vinculado. Para criar no Qase, selecione uma aplicacao com codigo de projeto.
+                  {copy.noQaseWarning}
                 </div>
               ) : null}
 
               <label className="space-y-2">
                 <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                  Descricao do plano
+                  {copy.descLabel}
                 </span>
                 <textarea
                   value={draft.description}
                   onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
                   rows={4}
                   className="w-full rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
-                  placeholder="Contexto, objetivo e recorte do plano."
+                  placeholder={copy.descPlaceholder}
                 />
               </label>
 
-              <section className="rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f9fafb) p-5 dark:border-white/10 dark:bg-[#0f172a]">
+              <section className="rounded-3xl border border-(--tc-border,#dfe5f1) bg-[#f5f7fb] p-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
-                      Casos do plano
+                      {copy.casesSection}
                     </p>
-                    <h3 className="mt-2 text-2xl font-black text-(--tc-text,#0f172a) dark:text-white">
-                      {draft.cases.length} caso{draft.cases.length === 1 ? "" : "s"} vinculado{draft.cases.length === 1 ? "" : "s"}
+                    <h3 className="mt-2 text-2xl font-black text-(--tc-text,#0f172a)">
+                      {copy.casesLinked(draft.cases.length)}
                     </h3>
-                    <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563) dark:text-white/72">
+                    <p className="mt-2 text-sm text-(--tc-text-muted,#4b5563)">
                       {draft.source === "qase"
-                        ? "Cada caso mostra ID, titulo, link direto e expande os detalhes sob demanda."
-                        : "No manual, cada caso pode ser criado so com titulo e ganhar detalhes completos quando voce expandir."}
+                        ? copy.casesQaseDesc
+                        : copy.casesManualDesc}
                     </p>
                   </div>
 
@@ -1007,24 +1281,24 @@ export default function TestPlansPage() {
                       className="inline-flex items-center gap-2 rounded-2xl bg-(--tc-accent,#ef0001) px-4 py-3 text-sm font-semibold text-white shadow-sm"
                     >
                       <FiPlus className="h-4 w-4" />
-                      Adicionar caso manual
+                      {copy.addManualCase}
                     </button>
                   ) : null}
                 </div>
 
                 {draft.source === "qase" ? (
-                  <div className="mt-5 rounded-3xl border border-(--tc-border,#dfe5f1) bg-white p-4 dark:border-white/10 dark:bg-[#101827]">
+                  <div className="mt-5 rounded-3xl border border-(--tc-border,#dfe5f1) bg-white p-4">
                     <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
                       <label className="space-y-2">
                         <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                          IDs dos casos Qase
+                          {copy.qaseIdsLabel}
                         </span>
                         <textarea
                           value={qaseCaseIdsInput}
                           onChange={(event) => setQaseCaseIdsInput(event.target.value)}
                           rows={3}
                           className="w-full rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
-                          placeholder="IDs numericos separados por linha ou virgula. Ex: 101, 102, 103"
+                          placeholder={copy.qaseIdsPlaceholder}
                         />
                       </label>
                       <button
@@ -1033,37 +1307,37 @@ export default function TestPlansPage() {
                         className="inline-flex items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a)"
                       >
                         <FiPlus className="h-4 w-4" />
-                        Vincular casos
+                        {copy.linkCases}
                       </button>
                     </div>
                     <p className="mt-3 text-xs text-(--tc-text-muted,#6b7280)">
-                      O plano do Qase aceita apenas case IDs numericos. Ao expandir um item, a tela consulta descricao, pre-condicoes, pos-condicoes, severidade e passos do caso.
+                      {copy.qaseIdsNote}
                     </p>
                   </div>
                 ) : null}
 
                 <div className="mt-5 space-y-3">
                   {loadingPlanDetail ? (
-                    <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-white px-4 py-4 text-sm text-(--tc-text-secondary,#4b5563) dark:border-white/10 dark:bg-[#101827] dark:text-white/72">
-                      Carregando detalhes do plano...
+                    <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-white px-4 py-4 text-sm text-(--tc-text-muted,#6b7280)">
+                      {copy.loadingPlanDetail}
                     </div>
                   ) : draft.cases.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-(--tc-border,#dfe5f1) bg-white px-4 py-6 text-center text-sm text-(--tc-text-secondary,#4b5563) dark:border-white/10 dark:bg-[#101827] dark:text-white/72">
+                    <div className="rounded-2xl border border-dashed border-(--tc-border,#dfe5f1) bg-white px-4 py-6 text-center text-sm text-(--tc-text-muted,#6b7280)">
                       {draft.source === "qase"
-                        ? "Adicione IDs de casos do Qase para visualizar a lista."
-                        : "Adicione um caso manual para montar titulo, passos e criterios do plano."}
+                        ? copy.emptyQaseCases
+                        : copy.emptyManualCases}
                     </div>
                   ) : (
                     draft.cases.map((testCase, index) => {
                       const isExpanded = expandedCaseId === testCase.id;
                       const detailError = caseErrors[testCase.id];
                       const detailLoading = Boolean(loadingCaseDetails[testCase.id]);
-                      const meta = formatCaseMeta(testCase);
+                      const meta = formatCaseMeta(testCase, copy);
 
                       return (
                         <div
                           key={`${draft.source}:${testCase.id}:${index}`}
-                          className="overflow-hidden rounded-3xl border border-(--tc-border,#dfe5f1) bg-white shadow-sm dark:border-white/10 dark:bg-[#101827]"
+                          className="overflow-hidden rounded-3xl border border-(--tc-border,#dfe5f1) bg-white shadow-sm"
                         >
                           <div className="flex items-stretch gap-3 px-4 py-4">
                             <div className="min-w-0 flex-1">
@@ -1071,11 +1345,11 @@ export default function TestPlansPage() {
                                 <span
                                   className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] ${
                                     draft.source === "qase"
-                                      ? "border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-400/10 dark:text-emerald-100"
-                                      : "border border-slate-200 bg-slate-100 text-slate-700 dark:border-white/15 dark:bg-white/10 dark:text-white/85"
+                                      ? "border border-emerald-600/30 bg-emerald-100 text-emerald-800"
+                                      : "border border-slate-300 bg-slate-200 text-slate-800"
                                   }`}
                                 >
-                                  {draft.source === "qase" ? "Qase" : "Manual"}
+                                  {draft.source === "qase" ? copy.sourceQase : copy.sourceManual}
                                 </span>
                                 <span className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                                   ID {testCase.id}
@@ -1085,9 +1359,9 @@ export default function TestPlansPage() {
                                     href={testCase.link}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="inline-flex items-center gap-1 rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-(--tc-text,#0f172a) dark:border-white/10 dark:text-white/80"
+                                    className="inline-flex items-center gap-1 rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-(--tc-text,#0f172a)"
                                   >
-                                    Abrir link
+                                    {copy.openLink}
                                     <FiExternalLink className="h-3 w-3" />
                                   </a>
                                 ) : null}
@@ -1096,13 +1370,13 @@ export default function TestPlansPage() {
                               <button
                                 type="button"
                                 onClick={() => void toggleCase(testCase.id)}
-                                aria-label={`${isExpanded ? "Recolher" : "Expandir"} detalhes do caso ${formatCaseTitle(testCase, draft.source, index)}`}
+                                aria-label={copy.caseDetailsAria(isExpanded ? copy.collapseCase : copy.expandCase, formatCaseTitle(testCase, draft.source, index, copy))}
                                 data-expanded={isExpanded ? "true" : "false"}
                                 className="mt-3 flex w-full items-start justify-between gap-4 text-left"
                               >
                                 <div className="min-w-0">
-                                  <h4 className="truncate text-base font-bold text-(--tc-text,#0f172a) dark:text-white">
-                                    {formatCaseTitle(testCase, draft.source, index)}
+                                  <h4 className="truncate text-base font-bold text-(--tc-text,#0f172a)">
+                                    {formatCaseTitle(testCase, draft.source, index, copy)}
                                   </h4>
                                   {meta ? (
                                     <p className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted,#6b7280)">
@@ -1124,9 +1398,9 @@ export default function TestPlansPage() {
                             <button
                               type="button"
                               onClick={() => handleRemoveCase(testCase.id)}
-                              className="self-start rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:border-rose-400/25 dark:bg-rose-500/10 dark:text-rose-100"
+                              className="self-start rounded-2xl border border-rose-300 bg-rose-100 px-3 py-2 text-xs font-semibold text-rose-800"
                             >
-                              Remover
+                              {copy.removeCase}
                             </button>
                           </div>
 
@@ -1140,72 +1414,72 @@ export default function TestPlansPage() {
                             <div className="border-t border-(--tc-border,#e5e7eb) px-4 py-4 dark:border-white/10">
                               {draft.source === "qase" ? (
                                 detailLoading ? (
-                                  <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-4 text-sm text-(--tc-text-secondary,#4b5563) dark:border-white/10 dark:bg-[#0f172a] dark:text-white/72">
-                                    Carregando detalhes do caso do Qase...
+                                  <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) px-4 py-4 text-sm text-(--tc-text-muted,#6b7280)">
+                                    {copy.loadingCaseDetail}
                                   </div>
                                 ) : (
                                   <div className="space-y-4">
                                     <div className="grid gap-4 xl:grid-cols-2">
-                                      <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) p-4 dark:border-white/10 dark:bg-[#0f172a]">
+                                      <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) p-4">
                                         <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
-                                          Descricao
+                                          {copy.descriptionLabel}
                                         </p>
-                                        <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-(--tc-text-secondary,#4b5563) dark:text-white/76">
-                                          {trimText(testCase.description) ?? "Sem descricao detalhada no Qase."}
+                                        <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-(--tc-text-muted,#4b5563)">
+                                          {trimText(testCase.description) ?? copy.noQaseDescription}
                                         </p>
                                       </div>
                                       <div className="grid gap-4">
-                                        <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) p-4 dark:border-white/10 dark:bg-[#0f172a]">
+                                        <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) p-4">
                                           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
-                                            Pre-condicoes
+                                            {copy.preconditionsLabel}
                                           </p>
-                                          <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-(--tc-text-secondary,#4b5563) dark:text-white/76">
-                                            {trimText(testCase.preconditions) ?? "Sem pre-condicoes cadastradas."}
+                                          <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-(--tc-text-muted,#4b5563)">
+                                            {trimText(testCase.preconditions) ?? copy.noPreconditions}
                                           </p>
                                         </div>
-                                        <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) p-4 dark:border-white/10 dark:bg-[#0f172a]">
+                                        <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) p-4">
                                           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
-                                            Pos-condicoes e severidade
+                                            {copy.postconditionsLabel}
                                           </p>
-                                          <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-(--tc-text-secondary,#4b5563) dark:text-white/76">
-                                            {trimText(testCase.postconditions) ?? "Sem pos-condicoes cadastradas."}
+                                          <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-(--tc-text-muted,#4b5563)">
+                                            {trimText(testCase.postconditions) ?? copy.noPostconditions}
                                           </p>
                                           <p className="mt-3 text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                                            Severidade: {trimText(testCase.severity) ?? "Nao informada"}
+                                            {copy.severityLabel} {trimText(testCase.severity) ?? copy.severityNotSet}
                                           </p>
                                         </div>
                                       </div>
                                     </div>
 
-                                    <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) p-4 dark:border-white/10 dark:bg-[#0f172a]">
+                                    <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) p-4">
                                       <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
-                                        Passos
+                                        {copy.stepsLabel}
                                       </p>
                                       {Array.isArray(testCase.steps) && testCase.steps.length ? (
                                         <div className="mt-4 space-y-3">
                                           {testCase.steps.map((step, stepIndex) => (
                                             <div
                                               key={`${testCase.id}:${step.id}:${stepIndex}`}
-                                              className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-white p-4 dark:border-white/10 dark:bg-[#101827]"
+                                              className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-white p-4"
                                             >
                                               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                                                Passo {stepIndex + 1}
+                                                {copy.stepLabel(stepIndex + 1)}
                                               </p>
-                                              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-(--tc-text,#0f172a) dark:text-white/85">
-                                                {trimText(step.action) ?? "Sem acao descrita."}
+                                              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-(--tc-text,#0f172a)">
+                                                {trimText(step.action) ?? copy.noAction}
                                               </p>
                                               <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                                                Resultado esperado
+                                                {copy.expectedResult}
                                               </p>
-                                              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-(--tc-text-secondary,#4b5563) dark:text-white/76">
-                                                {trimText(step.expectedResult) ?? "Nao informado."}
+                                              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-(--tc-text-muted,#4b5563)">
+                                                {trimText(step.expectedResult) ?? copy.notSpecified}
                                               </p>
                                               {trimText(step.data) ? (
                                                 <>
                                                   <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                                                    Dados
+                                                    {copy.dataLabel}
                                                   </p>
-                                                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-(--tc-text-secondary,#4b5563) dark:text-white/76">
+                                                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-(--tc-text-muted,#4b5563)">
                                                     {trimText(step.data)}
                                                   </p>
                                                 </>
@@ -1214,8 +1488,8 @@ export default function TestPlansPage() {
                                           ))}
                                         </div>
                                       ) : (
-                                        <p className="mt-3 text-sm text-(--tc-text-secondary,#4b5563) dark:text-white/76">
-                                          O caso do Qase nao retornou passos estruturados.
+                                        <p className="mt-3 text-sm text-(--tc-text-muted,#4b5563)">
+                                          {copy.noSteps}
                                         </p>
                                       )}
                                     </div>
@@ -1226,7 +1500,7 @@ export default function TestPlansPage() {
                                   <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)]">
                                     <label className="space-y-2">
                                       <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                                        ID do caso
+                                        {copy.caseIdLabel}
                                       </span>
                                       <input
                                         value={testCase.id}
@@ -1237,7 +1511,7 @@ export default function TestPlansPage() {
 
                                     <label className="space-y-2">
                                       <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                                        Titulo do caso
+                                        {copy.caseTitleLabel}
                                       </span>
                                       <input
                                         value={testCase.title ?? ""}
@@ -1248,7 +1522,7 @@ export default function TestPlansPage() {
                                           }))
                                         }
                                         className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
-                                        placeholder="Ex: Login com operador"
+                                        placeholder={copy.caseTitlePlaceholder}
                                       />
                                     </label>
                                   </div>
@@ -1256,7 +1530,7 @@ export default function TestPlansPage() {
                                   <div className="grid gap-4 xl:grid-cols-2">
                                     <label className="space-y-2">
                                       <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                                        Descricao
+                                        {copy.caseDescLabel}
                                       </span>
                                       <textarea
                                         value={testCase.description ?? ""}
@@ -1268,14 +1542,14 @@ export default function TestPlansPage() {
                                         }
                                         rows={4}
                                         className="w-full rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
-                                        placeholder="Descreva o objetivo e o contexto do caso."
+                                        placeholder={copy.caseDescPlaceholder}
                                       />
                                     </label>
 
                                     <div className="grid gap-4">
                                       <label className="space-y-2">
                                         <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                                          Pre-condicoes
+                                          {copy.casePrecondLabel}
                                         </span>
                                         <textarea
                                           value={testCase.preconditions ?? ""}
@@ -1287,14 +1561,14 @@ export default function TestPlansPage() {
                                           }
                                           rows={3}
                                           className="w-full rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
-                                          placeholder="Estado inicial necessario antes do teste."
+                                          placeholder={copy.casePrecondPlaceholder}
                                         />
                                       </label>
 
                                       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px]">
                                         <label className="space-y-2">
                                           <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                                            Pos-condicoes
+                                            {copy.casePostcondLabel}
                                           </span>
                                           <textarea
                                             value={testCase.postconditions ?? ""}
@@ -1306,13 +1580,13 @@ export default function TestPlansPage() {
                                             }
                                             rows={3}
                                             className="w-full rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
-                                            placeholder="Estado esperado apos a execucao."
+                                            placeholder={copy.casePostcondPlaceholder}
                                           />
                                         </label>
 
                                         <label className="space-y-2">
                                           <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                                            Severidade
+                                            {copy.caseSeverityLabel}
                                           </span>
                                           <select
                                             value={testCase.severity ?? ""}
@@ -1324,7 +1598,7 @@ export default function TestPlansPage() {
                                             }
                                             className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
                                           >
-                                            {MANUAL_SEVERITY_OPTIONS.map((option) => (
+                                            {copy.severityOptions.map((option) => (
                                               <option key={option.value || "none"} value={option.value}>
                                                 {option.label}
                                               </option>
@@ -1335,23 +1609,23 @@ export default function TestPlansPage() {
                                     </div>
                                   </div>
 
-                                  <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) p-4 dark:border-white/10 dark:bg-[#0f172a]">
+                                  <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) p-4">
                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                       <div>
                                         <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
-                                          Passos
+                                          {copy.stepsLabel}
                                         </p>
-                                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563) dark:text-white/72">
-                                          Crie o caso so com titulo e detalhe os passos apenas quando precisar.
+                                        <p className="mt-2 text-sm text-(--tc-text-muted,#4b5563)">
+                                          {copy.stepsDesc}
                                         </p>
                                       </div>
                                       <button
                                         type="button"
                                         onClick={() => handleAddManualStep(testCase.id)}
-                                        className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-white px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a) dark:border-white/10 dark:bg-[#101827] dark:text-white"
+                                        className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-white px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a)"
                                       >
                                         <FiPlus className="h-4 w-4" />
-                                        Adicionar passo
+                                        {copy.addStep}
                                       </button>
                                     </div>
 
@@ -1364,21 +1638,21 @@ export default function TestPlansPage() {
                                           >
                                             <div className="flex flex-wrap items-center justify-between gap-3">
                                               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                                                Passo {stepIndex + 1}
+                                                {copy.stepLabel(stepIndex + 1)}
                                               </p>
                                               <button
                                                 type="button"
                                                 onClick={() => handleRemoveManualStep(testCase.id, step.id)}
-                                                className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:border-rose-400/25 dark:bg-rose-500/10 dark:text-rose-100"
+                                                className="rounded-xl border border-rose-300 bg-rose-100 px-3 py-2 text-xs font-semibold text-rose-800"
                                               >
-                                                Remover passo
+                                                {copy.removeStep}
                                               </button>
                                             </div>
 
                                             <div className="mt-4 grid gap-4 xl:grid-cols-2">
                                               <label className="space-y-2">
                                                 <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                                                  Acao
+                                                  {copy.actionLabel}
                                                 </span>
                                                 <textarea
                                                   value={step.action ?? ""}
@@ -1392,13 +1666,13 @@ export default function TestPlansPage() {
                                                   }
                                                   rows={3}
                                                   className="w-full rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
-                                                  placeholder="O que deve ser executado neste passo."
+                                                  placeholder={copy.actionPlaceholder}
                                                 />
                                               </label>
 
                                               <label className="space-y-2">
                                                 <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                                                  Resultado esperado
+                                                  {copy.expectedResultLabel}
                                                 </span>
                                                 <textarea
                                                   value={step.expectedResult ?? ""}
@@ -1412,14 +1686,14 @@ export default function TestPlansPage() {
                                                   }
                                                   rows={3}
                                                   className="w-full rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
-                                                  placeholder="Qual resultado deve aparecer apos o passo."
+                                                  placeholder={copy.expectedResultPlaceholder}
                                                 />
                                               </label>
                                             </div>
 
                                             <label className="mt-4 block space-y-2">
                                               <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                                                Dados do passo
+                                                {copy.stepDataLabel}
                                               </span>
                                               <input
                                                 value={step.data ?? ""}
@@ -1432,15 +1706,15 @@ export default function TestPlansPage() {
                                                   )
                                                 }
                                                 className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
-                                                placeholder="Dados, massa ou observacao opcional."
+                                                placeholder={copy.stepDataPlaceholder}
                                               />
                                             </label>
                                           </div>
                                         ))}
                                       </div>
                                     ) : (
-                                      <div className="mt-4 rounded-2xl border border-dashed border-(--tc-border,#dfe5f1) bg-white px-4 py-5 text-sm text-(--tc-text-secondary,#4b5563) dark:border-white/10 dark:bg-[#101827] dark:text-white/72">
-                                        Este caso ainda nao tem passos. Se quiser, pode salvar apenas com o titulo e detalhar depois.
+                                      <div className="mt-4 rounded-2xl border border-dashed border-(--tc-border,#dfe5f1) bg-white px-4 py-5 text-sm text-(--tc-text-muted,#4b5563)">
+                                        {copy.noStepsManual}
                                       </div>
                                     )}
                                   </div>
@@ -1457,9 +1731,9 @@ export default function TestPlansPage() {
 
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-(--tc-border,#e5e7eb) pt-4">
                 <div className="text-xs text-(--tc-text-muted,#6b7280)">
-                  Aplicacao em foco:{" "}
+                  {copy.appInFocus}{" "}
                   <span className="font-semibold text-(--tc-text,#0f172a)">
-                    {draftApplication?.name ?? "Sem aplicacao"}
+                    {draftApplication?.name ?? copy.noApp}
                   </span>
                   {draftApplication?.qaseProjectCode ? ` | Qase ${draftApplication.qaseProjectCode}` : ""}
                 </div>
@@ -1469,7 +1743,7 @@ export default function TestPlansPage() {
                     onClick={closeModal}
                     className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a)"
                   >
-                    Cancelar
+                    {copy.cancel}
                   </button>
                   <button
                     type="button"
@@ -1477,7 +1751,7 @@ export default function TestPlansPage() {
                     disabled={saving || loadingPlanDetail}
                     className="rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
                   >
-                    {saving ? "Salvando..." : draft.id ? "Salvar plano" : "Criar plano"}
+                    {saving ? copy.saving : draft.id ? copy.savePlan : copy.createPlan}
                   </button>
                 </div>
               </div>

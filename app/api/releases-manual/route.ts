@@ -46,9 +46,9 @@ export async function GET(req: Request) {
   const mockRole = await getMockRole();
   const effectiveAuthUser: AuthUser | null =
     authUser ??
-    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "admin" } : null);
+    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "leader_tc" } : null);
   if (!effectiveAuthUser) {
-    return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
   const releases = await readManualReleases();
@@ -96,8 +96,8 @@ export async function POST(req: Request) {
   const mockRole = await getMockRole();
   const effectiveAuthUser: AuthUser | null =
     authUser ??
-    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "admin" } : null);
-  if (!effectiveAuthUser) return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
+    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "leader_tc" } : null);
+  if (!effectiveAuthUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   try {
     const body = await req.json();
     const name = (body.name ?? "").toString().trim();
@@ -121,7 +121,7 @@ export async function POST(req: Request) {
     const closedAt = resolveClosedAt(status, requestedClosedAt, shouldCloseFromStats(stats) ? now : null);
 
     if (!name) {
-      return NextResponse.json({ message: "Nome obrigatorio" }, { status: 400 });
+      return NextResponse.json({ message: "Nome obrigatório" }, { status: 400 });
     }
 
     const release: Release = {
@@ -179,7 +179,7 @@ export async function POST(req: Request) {
       try {
         await notifyManualRunCreated(release);
       } catch (err) {
-        console.error("Falha ao enviar notificacoes de run", err);
+        console.error("Falha ao enviar notificações de run", err);
       }
     }
     if (kind === "defect") {
@@ -194,7 +194,7 @@ export async function POST(req: Request) {
           note: release.name ?? null,
         });
       } catch (err) {
-        console.warn("Falha ao registrar historico do defeito:", err);
+        console.warn("Falha ao registrar histórico do defeito:", err);
       }
     }
 

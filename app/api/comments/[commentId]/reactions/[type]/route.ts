@@ -5,7 +5,7 @@ import { removeReaction } from "@/lib/ticketReactionsStore";
 export async function DELETE(req: Request, context: { params: Promise<{ commentId: string; type: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const { commentId, type } = await context.params;

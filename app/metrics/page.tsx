@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -29,6 +31,7 @@ export default function MetricasPage() {
         null,
       companyCount: clients.length,
       clientSlug: activeClientSlug ?? user?.clientSlug ?? null,
+      defaultClientSlug: user?.defaultClientSlug ?? null,
     }),
     [activeClientSlug, clients.length, user],
   );

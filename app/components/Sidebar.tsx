@@ -16,7 +16,7 @@ import {
   FiHome,
   FiList,
   FiShield,
-  
+  FiCpu,
   FiUserPlus,
   FiUsers,
 } from "react-icons/fi";
@@ -25,6 +25,7 @@ import { useClientContext } from "@/context/ClientContext";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
 const debugSidebar = process.env.NEXT_PUBLIC_DEBUG_SIDEBAR === "true";
@@ -67,9 +68,11 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     (user?.isGlobalAdmin === true ||
       legacyUser?.is_global_admin === true ||
       normalizedRole === SYSTEM_ROLES.LEADER_TC);
+  const isInstitutionalCompany = isInstitutionalCompanyAccount(user ?? null);
 
   const appRole = useMemo<AppRole | null>(() => {
     if (!user) return null;
+    if (isInstitutionalCompany) return "client";
     const role =
       normalizeLegacyRole(typeof user.permissionRole === "string" ? user.permissionRole : null) ??
       normalizeLegacyRole(typeof user.role === "string" ? user.role : null) ??
@@ -79,7 +82,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     if (role === SYSTEM_ROLES.EMPRESA || role === SYSTEM_ROLES.COMPANY_USER) return "client";
     if (role === SYSTEM_ROLES.TESTING_COMPANY_USER) return "user";
     return "user";
-  }, [user, isGlobalAdmin]);
+  }, [user, isGlobalAdmin, isInstitutionalCompany]);
 
   if (debugSidebar) {
     try {
@@ -124,7 +127,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   }, [activeClientSlug]);
 
   const logoHref = useMemo(() => {
-    if (isGlobalAdmin) return "/admin/home";
+    if (isGlobalAdmin) return "/admin/dashboard";
     if (companySlug) return buildCompanyPathForAccess(companySlug, "home", companyRouteInput);
     return "/";
   }, [isGlobalAdmin, companySlug, companyRouteInput]);
@@ -138,36 +141,20 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     [t]
   );
 
-  const adminNav: NavItem[] = useMemo(() => {
-    const companyTarget = activeClientSlug ? adminCompanyHref : "/empresas";
-    const items: NavItem[] = [
-      { label: t("nav.dashboard"), icon: FiCompass, href: "/admin/home" },
-      { label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric" },
-      { label: t("nav.runs"), icon: FiList, href: "/admin/runs" },
-      { label: t("nav.defects"), icon: FiAlertTriangle, href: "/admin/defeitos" },
-      { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
-    ];
-
-    if (activeClientSlug) {
-      items.push(
-        { label: t("nav.apps"), icon: FiBriefcase, href: `${companyTarget}/aplicacoes` },
-        { label: t("nav.runs"), icon: FiList, href: `${companyTarget}/runs` },
-        { label: t("nav.defects"), icon: FiAlertTriangle, href: `${companyTarget}/defeitos` },
-      );
-    }
-
-    items.push(
-      { label: t("nav.support"), icon: FiColumns, href: "/admin/support" },
-      { label: t("nav.management"), icon: FiShield, href: "/admin/users/permissions" },
-      { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
-      { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
-    );
-
-    return items;
-  }, [t, activeClientSlug, adminCompanyHref]);
+  const adminNav: NavItem[] = useMemo(() => [
+    { label: t("nav.dashboard"), icon: FiCompass, href: "/admin/dashboard" },
+    { label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric" },
+    { label: t("nav.runs"), icon: FiList, href: "/admin/runs" },
+    { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
+    { label: t("nav.support"), icon: FiColumns, href: "/admin/support" },
+    { label: t("nav.management"), icon: FiShield, href: "/admin/users/permissions" },
+    { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
+    { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
+    { label: "Brain", icon: FiCpu, href: "/admin/brain" },
+  ], [t]);
 
   const supportNav: NavItem[] = useMemo(() => {
-    return adminNav.filter((item) => item.href !== "/admin/home" || item.label === t("nav.dashboard"));
+    return adminNav.filter((item) => item.href !== "/admin/dashboard" || item.label === t("nav.dashboard"));
   }, [adminNav, t]);
 
   const companyNav: NavItem[] = useMemo(
@@ -190,13 +177,22 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   const navigation = useMemo(() => {
     if (loading) return [];
     if (!user) return publicNav;
-    // If the current path is inside a company, prefer the company navigation
-    if (pathname.startsWith("/empresas/") && companyNav.length) return companyNav;
+    // Company-scoped paths take priority for all roles
+    const isOnCompanyPage =
+      pathname.startsWith("/empresas/") ||
+      /^\/(suporte|lider-tc|user-tc)\/[^/]+/.test(pathname);
+    if (isOnCompanyPage && companyNav.length) return companyNav;
     if (appRole === "admin") return adminNav;
     if (appRole === "technical_support") return supportNav;
+    // testing_company_user not in company context → runs goes to /runs hub
+    if (appRole === "user" && companyNav.length && !isInstitutionalCompany) {
+      return companyNav.map((item) =>
+        /\/runs$/.test(item.href) ? { ...item, href: "/runs" } : item,
+      );
+    }
     if (companyNav.length) return companyNav;
     return publicNav;
-  }, [loading, user, appRole, adminNav, supportNav, companyNav, publicNav, pathname]);
+  }, [loading, user, appRole, adminNav, supportNav, companyNav, publicNav, pathname, isInstitutionalCompany]);
 
   function resolveModuleFromHref(href: string) {
     if (href === "/admin/users/permissions") return "permissions";
@@ -204,11 +200,13 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     if (href === "/meus-chamados") return "support";
     if (href === "/admin/support" || href === "/kanban-it") return "support";
     if (href === "/empresas" || href === "/admin/clients") return "applications";
-    if (href === "/admin/home") return "dashboard";
+    if (href === "/admin/dashboard") return "dashboard";
     if (href === "/admin/runs") return "runs";
+    if (href === "/runs") return null; // hub — bypass permission check
     if (href === "/admin/defeitos") return "defects";
     if (href === "/admin/access-requests") return "access_requests";
     if (href === "/admin/audit-logs") return "audit";
+    if (href === "/admin/brain") return null;
     if (/^\/empresas\/[^/]+\/(home|dashboard)$/.test(href)) return "dashboard";
     if (/^\/empresas\/[^/]+\/aplicacoes$/.test(href)) return "applications";
     if (/^\/empresas\/[^/]+\/runs$/.test(href)) return "runs";

@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { slugifyRelease } from "@/lib/slugifyRelease";
@@ -16,6 +18,8 @@ type AdminRun = {
   project?: string;
   radis?: string;
   source?: "API" | "MANUAL";
+  clientId?: string | null;
+  clientName?: string | null;
 };
 
 type ApplicationOption = {
@@ -24,6 +28,12 @@ type ApplicationOption = {
   slug: string;
   companySlug?: string | null;
   qaseProjectCode?: string | null;
+};
+
+type CompanyOption = {
+  id: string;
+  name: string;
+  slug: string;
 };
 
 const APP_COLOR_CLASS: Record<string, string> = {
@@ -35,16 +45,17 @@ const APP_COLOR_CLASS: Record<string, string> = {
   trust: "app-color-trust",
   "cidadao-smart": "app-color-cidadao",
   gmt: "app-color-gmt",
-  "mobile-griaule": "app-color-gmt",
+  gmt: "app-color-gmt",
 };
 
 export default function AdminRunsPage() {
   const { user } = useAuthUser();
   const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
-  const isAdmin = Boolean(user?.isGlobalAdmin || role === "admin");
-  const isCompany = role === "company";
+  const isAdmin = Boolean(user?.isGlobalAdmin || role === "leader_tc" || role === "technical_support");
+  const isCompany = role === "empresa";
   const canCreate = isAdmin || isCompany;
   const canDelete = isAdmin;
+  const canViewAllCompanies = isAdmin;
 
   const [title, setTitle] = useState("");
   const [runId, setRunId] = useState("");
@@ -53,9 +64,12 @@ export default function AdminRunsPage() {
   const [summary, setSummary] = useState("");
   const [items, setItems] = useState<AdminRun[]>([]);
   const [applications, setApplications] = useState<ApplicationOption[]>([]);
+  const [companies, setCompanies] = useState<CompanyOption[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<string>("");
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackType, setFeedbackType] = useState<"ok" | "error" | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
   const [saving, setSaving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -67,12 +81,14 @@ export default function AdminRunsPage() {
     [applications, app],
   );
 
-  const load = async () => {
+  const load = async (companySlug?: string) => {
     setLoading(true);
     try {
+      const companyParam = companySlug ? `?companySlug=${encodeURIComponent(companySlug)}` : "";
+      const clientParam = companySlug ? `?clientSlug=${encodeURIComponent(companySlug)}&kind=run` : "?kind=run";
       const [apiRes, manualRes] = await Promise.all([
-        fetch("/api/releases", { cache: "no-store" }),
-        fetch("/api/releases-manual", { cache: "no-store" }),
+        fetch(`/api/releases${companyParam}`, { cache: "no-store" }),
+        fetch(`/api/releases-manual${clientParam}`, { cache: "no-store" }),
       ]);
 
       const apiJson = await apiRes.json().catch(() => ({}));
@@ -95,7 +111,9 @@ export default function AdminRunsPage() {
               : "Run manual";
         const app = typeof r.app === "string" ? r.app : "SMART";
         const runId = typeof r.runId === "number" ? r.runId : undefined;
-        manualList.push({ slug, title: name, summary, app, runId, source: "MANUAL" });
+        const clientId = typeof r.clientSlug === "string" ? r.clientSlug : typeof r.clientId === "string" ? r.clientId : null;
+        const clientName = typeof r.clientName === "string" ? r.clientName : clientId;
+        manualList.push({ slug, title: name, summary, app, runId, source: "MANUAL", clientId, clientName });
       }
 
       const merged = new Map<string, AdminRun>();
@@ -108,9 +126,34 @@ export default function AdminRunsPage() {
     }
   };
 
+  const loadCompanies = async () => {
+    if (!canViewAllCompanies) return;
+    setLoadingCompanies(true);
+    try {
+      const res = await fetch("/api/clients", { cache: "no-store" });
+      const data = await res.json().catch(() => null);
+      const items = Array.isArray(data?.items) ? data.items : [];
+      setCompanies(
+        items.map((item: Record<string, unknown>) => ({
+          id: typeof item.id === "string" ? item.id : "",
+          name: typeof item.name === "string" ? item.name : typeof item.company_name === "string" ? item.company_name : "",
+          slug: typeof item.slug === "string" ? item.slug : "",
+        })),
+      );
+    } catch {
+      setCompanies([]);
+    } finally {
+      setLoadingCompanies(false);
+    }
+  };
+
   useEffect(() => {
-    load();
-  }, []);
+    load(selectedCompany || undefined);
+  }, [selectedCompany]);
+
+  useEffect(() => {
+    loadCompanies();
+  }, [canViewAllCompanies]);
 
   useEffect(() => {
     (async () => {
@@ -152,7 +195,7 @@ export default function AdminRunsPage() {
     const cleanedTitle = stripRunPrefix(trimmedTitle);
 
     if (!cleanedTitle || !trimmedRun || Number.isNaN(runNumber) || runNumber <= 0 || !trimmedApp) {
-      const msg = "Preencha nome, runId (numero) e selecione a aplicacao.";
+      const msg = "Preencha nome, runId (número) e selecione a aplicação.";
       setFeedback(msg);
       setFeedbackType("error");
       setToast({ message: msg, type: "error" });
@@ -241,7 +284,7 @@ export default function AdminRunsPage() {
               <p className="text-xs uppercase tracking-[0.45em] text-(--tc-accent,#ef0001)">Gestão de Runs</p>
               <h1 className="text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Gerenciar Runs</h1>
               <p className="text-(--tc-text-secondary,#4b5563) max-w-3xl">
-                Cadastre runs salvando em arquivo JSON do painel. Informe o nome, o ID da run no Qase e a aplicacao
+                Cadastre runs salvando em arquivo JSON do painel. Informe o nome, o ID da run no Qase e a aplicação
                 para gerar a URL e permitir buscar estatísticas automaticamente.
               </p>
             </div>
@@ -250,6 +293,41 @@ export default function AdminRunsPage() {
             </div>
           </div>
         </div>
+
+        {canViewAllCompanies && (
+          <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-(--tc-text-secondary,#4b5563)">Filtrar por empresa:</label>
+                <select
+                  aria-label="Selecionar empresa"
+                  value={selectedCompany}
+                  onChange={(e) => {
+                    setSelectedCompany(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  disabled={loadingCompanies}
+                  className="rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-2 text-(--tc-text-primary,#011848) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40 min-w-50"
+                >
+                  <option value="">Todas as empresas</option>
+                  {companies.map((company) => (
+                    <option key={company.id} value={company.slug}>
+                      {company.name}
+                    </option>
+                  ))}
+                </select>
+                {loadingCompanies && (
+                  <span className="text-xs text-(--tc-text-muted,#6b7280)">Carregando...</span>
+                )}
+              </div>
+              {selectedCompany && (
+                <span className="text-sm text-(--tc-accent,#ef0001)">
+                  Exibindo runs de: <strong>{companies.find(c => c.slug === selectedCompany)?.name || selectedCompany}</strong>
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {canCreate && (
         <form
@@ -284,14 +362,14 @@ export default function AdminRunsPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-(--tc-text-secondary,#4b5563)">Aplicacao</label>
+            <label className="text-sm text-(--tc-text-secondary,#4b5563)">Aplicação</label>
             <select
-              aria-label="Selecionar aplicacao"
+              aria-label="Selecionar aplicação"
               value={app}
               onChange={(e) => setApp(e.target.value)}
               className="w-full rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-(--tc-text-primary,#011848) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
             >
-              <option value="">Selecione a aplicacao</option>
+              <option value="">Selecione a aplicação</option>
               {applications.length > 0
                 ? applications.map((application) => (
                     <option key={application.id} value={application.slug}>
@@ -360,7 +438,7 @@ export default function AdminRunsPage() {
             <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Runs cadastradas</h2>
             <div className="flex items-center gap-2 text-sm text-(--tc-text-secondary,#4b5563)">
               <label className="flex items-center gap-1">
-                <span className="text-xs">por pagina</span>
+                <span className="text-xs">por página</span>
                 <select
                   value={pageSize}
                   onChange={(e) => {
@@ -419,6 +497,11 @@ export default function AdminRunsPage() {
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div className="flex flex-1 flex-wrap items-center gap-2 text-xs font-semibold">
                       <span className={`app-tag text-[12px] ${appTagClass}`}>{chipText}</span>
+                      {canViewAllCompanies && (item.clientName || item.clientId) && (
+                        <span className="rounded-full border border-blue-400/60 bg-blue-50 px-3 py-1 text-blue-700">
+                          {item.clientName || item.clientId}
+                        </span>
+                      )}
                       {item.radis && (
                         <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-3 py-1 uppercase text-(--page-text,#0b1a3c)">
                           RADIS: {item.radis}
@@ -468,6 +551,9 @@ export default function AdminRunsPage() {
                       <span>Slug: {item.slug}</span>
                       <span>Run ID: {item.runId ?? "--"}</span>
                       {item.radis && <span>RADIS: {item.radis}</span>}
+                      {canViewAllCompanies && (item.clientName || item.clientId) && (
+                        <span>Empresa: {item.clientName || item.clientId}</span>
+                      )}
                     </div>
                   </div>
                 </div>

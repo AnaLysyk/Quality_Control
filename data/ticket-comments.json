@@ -1,4 +1,4 @@
-{
+﻿{
   "items": [
     {
       "id": "21ecc9ad-7fed-4b99-9335-8c962a410d96",
@@ -13,9 +13,9 @@
     {
       "id": "cmt_001",
       "ticketId": "tck_001",
-      "authorUserId": "usr_user_griaule_test",
-      "authorName": "Usuario Griaule",
-      "body": "O erro começou hoje de manhã.",
+      "authorUserId": "usr_user_demo_test",
+      "authorName": "Usuario Demo",
+      "body": "O erro comeÃ§ou hoje de manhÃ£.",
       "createdAt": "2026-02-11T10:05:00.000Z",
       "updatedAt": "2026-02-11T10:05:00.000Z",
       "deletedAt": null

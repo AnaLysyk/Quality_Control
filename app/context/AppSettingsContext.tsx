@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import {
   APP_SETTINGS_COOKIE_MAX_AGE,
@@ -10,6 +10,7 @@ import {
 } from "@/lib/appSettingsCookies";
 import { getAccessToken } from "@/lib/api";
 import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
+import { useLanguage } from "@/context/LanguageContext";
 
 export type Theme = "light" | "dark" | "system";
 export type Language = Locale;
@@ -125,11 +126,22 @@ function resolveThemePreference(theme: Theme): ResolvedTheme {
   return "light";
 }
 
+function localeToLanguage(locale: "pt" | "en"): Language {
+  return locale === "en" ? "en-US" : "pt-BR";
+}
+
+function languageToLocale(language: Language): "pt" | "en" {
+  return language === "en-US" ? "en" : "pt";
+}
+
 export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuthUser();
+  const { locale, setLocale } = useLanguage();
   const [settings, setSettings] = useState<AppSettings>(() => readInitialSettings());
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => resolveThemePreference(readInitialSettings().theme));
   const [loading, setLoading] = useState(true);
+  // Guard to prevent infinite sync loops between LanguageContext and AppSettings
+  const syncingRef = useRef(false);
 
   const persistLocalSettings = useCallback(
     (next: AppSettings) => {
@@ -141,15 +153,39 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     [user],
   );
 
+  const persistSettingsToServer = useCallback(
+    (next: AppSettings) => {
+      if (!user) return;
+      getAccessToken()
+        .catch(() => null)
+        .then((token) => {
+          const headers: Record<string, string> = { "Content-Type": "application/json" };
+          if (token) headers.Authorization = `Bearer ${token}`;
+          return fetch("/api/user/settings", {
+            method: "PATCH",
+            headers,
+            credentials: "include",
+            body: JSON.stringify(normalizeSettings(next)),
+          });
+        })
+        .catch(() => {
+          /* best-effort */
+        });
+    },
+    [user],
+  );
+
   const setTheme = useCallback(
     (theme: Theme) => {
       setSettings((prev) => {
         const next = { ...prev, theme };
         persistLocalSettings(next);
+        // Fire-and-forget: persist theme to server so it survives reload
+        persistSettingsToServer(next);
         return next;
       });
     },
-    [persistLocalSettings],
+    [persistLocalSettings, persistSettingsToServer],
   );
 
   const setLanguage = useCallback(
@@ -157,10 +193,12 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
       setSettings((prev) => {
         const next = { ...prev, language };
         persistLocalSettings(next);
+        // Fire-and-forget: persist language to server so it survives reload
+        persistSettingsToServer(next);
         return next;
       });
     },
-    [persistLocalSettings],
+    [persistLocalSettings, persistSettingsToServer],
   );
 
   const refreshSettings = useCallback(async () => {
@@ -284,6 +322,22 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     applyTheme(settings.theme === "dark");
     return undefined;
   }, [settings.theme]);
+
+  // Sync LanguageContext → AppSettings when user toggles LanguageSelector
+  useEffect(() => {
+    const mapped = localeToLanguage(locale);
+    if (mapped !== settings.language) {
+      setLanguage(mapped);
+    }
+  }, [locale]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync AppSettings → LanguageContext when settings change (e.g. from server)
+  useEffect(() => {
+    const mapped = languageToLocale(settings.language);
+    if (mapped !== locale) {
+      setLocale(mapped);
+    }
+  }, [settings.language]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     document.documentElement.lang = settings.language;

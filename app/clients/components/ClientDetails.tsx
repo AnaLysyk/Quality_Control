@@ -32,14 +32,14 @@ export function ClientDetails({ client, isGlobalAdmin, onOpenCreateUser, onEditC
   }
 
   const infoFields = [
-    { label: "CNPJ", value: client.taxId ?? "Nao informado" },
-    { label: "CEP", value: client.zip ?? "Nao informado" },
-    { label: "Endereco", value: client.address ?? "Nao informado" },
-    { label: "Website", value: client.website ?? "Nao informado", isLink: true },
-    { label: "Telefone", value: client.phone ?? "Nao informado" },
-    { label: "Documentacao", value: client.docsLink ?? "Nao informado", isLink: true },
-    { label: "LinkedIn", value: client.linkedin ?? "Nao informado", isLink: true },
-    { label: "Descricao", value: client.description ?? "Sem descricao", full: true },
+    { label: "CNPJ", value: client.taxId ?? "Não informado" },
+    { label: "CEP", value: client.zip ?? "Não informado" },
+    { label: "Endereço", value: client.address ?? "Não informado" },
+    { label: "Website", value: client.website ?? "Não informado", isLink: true },
+    { label: "Telefone", value: client.phone ?? "Não informado" },
+    { label: "Documentação", value: client.docsLink ?? "Não informado", isLink: true },
+    { label: "LinkedIn", value: client.linkedin ?? "Não informado", isLink: true },
+    { label: "Descrição", value: client.description ?? "Sem descrição", full: true },
     { label: "Notas internas", value: client.notes ?? "Sem notas", full: true },
   ];
 
@@ -62,13 +62,13 @@ export function ClientDetails({ client, isGlobalAdmin, onOpenCreateUser, onEditC
 
       <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Informacoes gerais</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Informações gerais</h3>
           {isGlobalAdmin && (
             <button
               className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:border-indigo-300"
               onClick={onOpenCreateUser}
             >
-              + Cadastrar usuario
+              + Cadastrar usuário
             </button>
           )}
         </div>
@@ -89,7 +89,7 @@ export function ClientDetails({ client, isGlobalAdmin, onOpenCreateUser, onEditC
               className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:border-indigo-300"
               onClick={onOpenCreateUser}
             >
-              + Criar usuario
+              + Criar usuário
             </button>
           )}
         </div>
@@ -100,10 +100,10 @@ export function ClientDetails({ client, isGlobalAdmin, onOpenCreateUser, onEditC
 }
 
 function Field({ label, value, isLink, full }: { label: string; value: string; isLink?: boolean; full?: boolean }) {
-  const display = value ?? "Nao informado";
+  const display = value ?? "Não informado";
   const trimmed = display.trim();
   const isPlaceholder =
-    display === "Nao informado" || display === "Sem notas" || display === "Sem descricao";
+    display === "Não informado" || display === "Sem notas" || display === "Sem descrição";
   const isUrl = isLink && /^https?:\/\//i.test(trimmed);
   const content = isUrl ? (
     <a href={trimmed} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline break-all">

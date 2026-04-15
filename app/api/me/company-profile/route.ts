@@ -80,7 +80,7 @@ async function fetchAllQaseProjectCodes(input: {
 export async function GET(req: NextRequest) {
   const { company, status } = await resolveCurrentCompany(req);
   if (!company) {
-    const message = status === 401 ? "Nao autenticado" : status === 403 ? "Sem empresa vinculada" : "Empresa nao encontrada";
+    const message = status === 401 ? "Não autenticado" : status === 403 ? "Sem empresa vinculada" : "Empresa não encontrada";
     return NextResponse.json({ error: message }, { status });
   }
 
@@ -90,11 +90,11 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const { access, company: current, status } = await resolveCurrentCompany(req);
   if (!current || !access) {
-    const message = status === 401 ? "Nao autenticado" : status === 403 ? "Sem empresa vinculada" : "Empresa nao encontrada";
+    const message = status === 401 ? "Não autenticado" : status === 403 ? "Sem empresa vinculada" : "Empresa não encontrada";
     return NextResponse.json({ error: message }, { status });
   }
   if (!canManageInstitutionalCompanyAccess(access)) {
-    return NextResponse.json({ error: "Sem permissao para editar o perfil institucional da empresa" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão para editar o perfil institucional da empresa" }, { status: 403 });
   }
 
   const body = await req.json().catch(() => null);
@@ -114,7 +114,7 @@ export async function PATCH(req: NextRequest) {
   const companies = await listLocalCompanies();
   const nextName = (input.company_name ?? input.name ?? current.name ?? current.company_name ?? "").trim();
   if (!nextName) {
-    return NextResponse.json({ error: "Nome da empresa obrigatorio" }, { status: 400 });
+    return NextResponse.json({ error: "Nome da empresa obrigatório" }, { status: 400 });
   }
 
   const duplicateByName = companies.find(
@@ -123,7 +123,7 @@ export async function PATCH(req: NextRequest) {
       normalizeComparableName(company.name ?? company.company_name ?? "") === normalizeComparableName(nextName),
   );
   if (duplicateByName) {
-    return NextResponse.json({ error: "Empresa ja cadastrada com esse nome" }, { status: 409 });
+    return NextResponse.json({ error: "Empresa já cadastrada com esse nome" }, { status: 409 });
   }
 
   const nextTaxId = normalizeTaxId(
@@ -138,7 +138,7 @@ export async function PATCH(req: NextRequest) {
         )
       : null;
   if (duplicateByTaxId) {
-    return NextResponse.json({ error: "CNPJ ja cadastrado para outra empresa" }, { status: 409 });
+    return NextResponse.json({ error: "CNPJ já cadastrado para outra empresa" }, { status: 409 });
   }
   const qaseTouched =
     clearAllIntegrations ||
@@ -194,7 +194,7 @@ export async function PATCH(req: NextRequest) {
     if (hasNextQaseToken || hasNextQaseProjects) {
       if (!hasNextQaseToken || !hasNextQaseProjects) {
         return NextResponse.json(
-          { error: "A integracao da Qase so pode ser salva quando estiver ativa e valida, com token e projetos confirmados." },
+          { error: "A integração da Qase só pode ser salva quando estiver ativa e válida, com token e projetos confirmados." },
           { status: 400 },
         );
       }
@@ -221,7 +221,7 @@ export async function PATCH(req: NextRequest) {
         const message =
           error instanceof QaseError && (error.status === 401 || error.status === 403)
             ? "Token da Qase invalido ou sem acesso aos projetos selecionados."
-            : "Nao foi possivel validar a integracao da Qase. Busque os projetos novamente antes de salvar.";
+            : "Não foi possível validar a integração da Qase. Busque os projetos novamente antes de salvar.";
         return NextResponse.json({ error: message }, { status: 400 });
       }
     }
@@ -234,7 +234,7 @@ export async function PATCH(req: NextRequest) {
     if (hasAnyJiraConfig) {
       if (!normalizedNextJiraBaseUrl?.trim() || !normalizedNextJiraEmail?.trim() || !normalizedNextJiraApiToken?.trim()) {
         return NextResponse.json(
-          { error: "A integracao do Jira so pode ser salva quando estiver ativa e valida, com URL, e-mail tecnico e API token." },
+          { error: "A integração do Jira só pode ser salva quando estiver ativa e válida, com URL, e-mail técnico e API token." },
           { status: 400 },
         );
       }
@@ -267,7 +267,7 @@ export async function PATCH(req: NextRequest) {
   const updated = await updateLocalCompany(current.id, patch);
 
   if (!updated) {
-    return NextResponse.json({ error: "Empresa nao encontrada" }, { status: 404 });
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
   }
 
   const projectCodesChanged = !areProjectCodesEqual(currentProjectCodes, nextProjectCodes);

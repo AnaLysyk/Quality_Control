@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Papa from "papaparse";
-import { FiExternalLink } from "react-icons/fi";
+import { FiExternalLink, FiEye } from "react-icons/fi";
 import { KanbanData, KanbanItem } from "@/types/kanban";
 
 type DragInfo = { item: KanbanItem; from: keyof KanbanData };
@@ -55,6 +55,7 @@ type KanbanProps = {
   allowStatusChange?: boolean;
   allowLinkEdit?: boolean;
   onChange?: (data: KanbanData) => void;
+  onCardClick?: (item: KanbanItem, col: keyof KanbanData) => void;
 };
 
 export default function Kanban({
@@ -68,6 +69,7 @@ export default function Kanban({
   allowStatusChange = false,
   allowLinkEdit = false,
   onChange,
+  onCardClick,
 }: KanbanProps) {
   const [localData, setLocalData] = useState<KanbanData>(data);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -178,6 +180,14 @@ export default function Kanban({
     filteredCounts.pass + filteredCounts.fail + filteredCounts.blocked + filteredCounts.notRun;
   const hasFilteredItems = filteredTotal > 0;
   const showFilteredCount = Boolean(normalizedSearch || showOnlyMissingEvidence || showOnlyMissingBug);
+  const hasActiveFilter = Boolean(normalizedSearch || statusFilter !== "all" || showOnlyMissingEvidence || showOnlyMissingBug);
+
+  function clearFilters() {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setShowOnlyMissingEvidence(false);
+    setShowOnlyMissingBug(false);
+  }
 
   function openAddModal(defaultStatus: keyof KanbanData = "notRun") {
     setAddDraft({ id: "", title: "", status: defaultStatus, link: "", bug: "" });
@@ -657,86 +667,112 @@ export default function Kanban({
           </div>
         </div>
       )}
-      <div className="col-span-full flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-(--surface-border,#e5e7eb) bg-white px-4 py-3">
-        <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Resumo</p>
+      <div className="col-span-full rounded-2xl border border-(--surface-border,#e5e7eb) bg-white px-4 pt-3 pb-3 space-y-3">
+        {/* Row 1: summary pills + search */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full border border-slate-200 px-3 py-1 text-(--page-text,#0b1a3c)">
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-(--page-text,#0b1a3c)">
               Total: {totalCount}
             </span>
-            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700">
+            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-semibold text-emerald-700">
               Pass: {totals.pass}
             </span>
-            <span className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-rose-700">
+            <span className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 font-semibold text-rose-700">
               Fail: {totals.fail}
             </span>
-            <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-700">
+            <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 font-semibold text-amber-700">
               Blocked: {totals.blocked}
             </span>
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-700">
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-600">
               Not Run: {totals.notRun}
             </span>
-            <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-indigo-700">
+            <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 font-semibold text-indigo-700">
               Pass rate: {passRate}%
             </span>
           </div>
+          <div className="relative flex items-center">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar por ID, título, link ou bug"
+              className="w-64 max-w-full rounded-full border border-(--tc-border,#e5e7eb) bg-white px-4 py-1.5 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-(--tc-accent,#ef0001)"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm("")}
+                aria-label="Limpar busca"
+                className="absolute right-3 text-slate-400 hover:text-slate-600 text-base leading-none"
+              >
+                ×
+              </button>
+            )}
+          </div>
         </div>
+        {/* Row 2: status filter chips + evidence/bug toggle chips + clear */}
         <div className="flex flex-wrap items-center gap-2">
-          <input
-            type="search"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar por ID, título, link ou bug"
-            className="w-64 max-w-full rounded-full border border-(--tc-border,#e5e7eb) bg-white px-4 py-2 text-sm"
-          />
-          <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setStatusFilter("all")}
+            className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] transition ${
+              statusFilter === "all"
+                ? "bg-(--tc-accent,#ef0001) text-white shadow-sm"
+                : "border border-(--tc-border,#e5e7eb) text-(--tc-text-muted,#6b7280) hover:border-slate-400"
+            }`}
+          >
+            Todos ({totalCount})
+          </button>
+          {columns.map((column) => (
             <button
+              key={column.key}
               type="button"
-              onClick={() => setStatusFilter("all")}
-              className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${
-                statusFilter === "all"
-                  ? "bg-(--tc-accent,#ef0001) text-white"
-                  : "border border-(--tc-border,#e5e7eb) text-(--tc-text-muted,#6b7280)"
+              onClick={() => setStatusFilter(statusFilter === column.key ? "all" : column.key)}
+              className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] transition ${
+                statusFilter === column.key
+                  ? "bg-(--tc-primary-dark,#000f2e) text-white shadow-sm"
+                  : "border border-(--tc-border,#e5e7eb) text-(--tc-text-muted,#6b7280) hover:border-slate-400"
               }`}
             >
-              Todos
+              {column.label} ({totals[column.key]})
             </button>
-            {columns.map((column) => (
-              <button
-                key={column.key}
-                type="button"
-                onClick={() => setStatusFilter(column.key)}
-                className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${
-                  statusFilter === column.key
-                    ? "bg-(--tc-primary-dark,#000f2e) text-white"
-                    : "border border-(--tc-border,#e5e7eb) text-(--tc-text-muted,#6b7280)"
-                }`}
-              >
-                {column.label}
-              </button>
-            ))}
-          </div>
-          <label className="flex items-center gap-2 text-xs text-(--tc-text-muted,#6b7280)">
-            <input
-              type="checkbox"
-              checked={showOnlyMissingEvidence}
-              onChange={(e) => setShowOnlyMissingEvidence(e.target.checked)}
-            />
+          ))}
+          <button
+            type="button"
+            onClick={() => setShowOnlyMissingEvidence((v) => !v)}
+            className={`rounded-full px-3 py-1 text-xs font-semibold tracking-[0.15em] transition ${
+              showOnlyMissingEvidence
+                ? "bg-amber-500 text-white shadow-sm"
+                : "border border-(--tc-border,#e5e7eb) text-(--tc-text-muted,#6b7280) hover:border-amber-400 hover:text-amber-600"
+            }`}
+          >
             Sem evidência
-          </label>
-          <label className="flex items-center gap-2 text-xs text-(--tc-text-muted,#6b7280)">
-            <input
-              type="checkbox"
-              checked={showOnlyMissingBug}
-              onChange={(e) => setShowOnlyMissingBug(e.target.checked)}
-            />
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowOnlyMissingBug((v) => !v)}
+            className={`rounded-full px-3 py-1 text-xs font-semibold tracking-[0.15em] transition ${
+              showOnlyMissingBug
+                ? "bg-rose-500 text-white shadow-sm"
+                : "border border-(--tc-border,#e5e7eb) text-(--tc-text-muted,#6b7280) hover:border-rose-400 hover:text-rose-600"
+            }`}
+          >
             Sem bug
-          </label>
+          </button>
+          {hasActiveFilter && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-100 transition"
+            >
+              Limpar filtros
+            </button>
+          )}
         </div>
       </div>
       {!hasItems && (
         <div className="col-span-full text-sm text-(--page-text,#0b1a3c) bg-[#f8fafc] border border-(--surface-border,#e5e7eb) rounded-xl px-3 py-2">
-          Cases nao disponiveis para este run.
+          Cases não disponíveis para este run.
         </div>
       )}
       {hasItems && !hasFilteredItems && (
@@ -852,6 +888,19 @@ export default function Kanban({
                         aria-label="Excluir caso"
                       >
                         ×
+                      </button>
+                    )}
+
+                    {onCardClick && (
+                      <button
+                        type="button"
+                        data-hide-on-export="true"
+                        onClick={(e) => { e.stopPropagation(); onCardClick(item, column.key); }}
+                        className={`absolute top-3 text-slate-400 hover:text-(--tc-accent,#ef0001) transition ${editable && !item.fromApi ? "right-9" : "right-3"}`}
+                        aria-label="Ver detalhes do caso"
+                        title="Ver detalhes"
+                      >
+                        <FiEye size={14} />
                       </button>
                     )}
 

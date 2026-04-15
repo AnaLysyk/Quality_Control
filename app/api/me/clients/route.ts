@@ -8,7 +8,7 @@ export const revalidate = 0;
 export async function GET(req: Request) {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
   }
 
   const [links, companies] = await Promise.all([

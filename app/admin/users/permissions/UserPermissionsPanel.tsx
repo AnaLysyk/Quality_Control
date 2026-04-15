@@ -3,13 +3,16 @@
 import React, { useEffect, useState } from 'react';
 import PermissionGrid from './PermissionGrid';
 import styles from './styles.module.css';
+import { useI18n } from '@/lib/i18n';
 
 export default function UserPermissionsPanel({ user }: { user: any }) {
+  const { language } = useI18n();
+  const isPt = language === 'pt-BR';
   const [roleDefaults, setRoleDefaults] = useState<Record<string, string[]>>({});
   const [modules, setModules] = useState<any[]>([]);
   const [override, setOverride] = useState<any>({ allow: {}, deny: {} });
   const [pending, setPending] = useState(false);
-  const displayName = user?.fullName || user?.full_name || user?.name || user?.email || "Sem nome";
+  const displayName = user?.fullName || user?.full_name || user?.name || user?.email || (isPt ? 'Sem nome' : 'No name');
 
   useEffect(() => {
     async function load() {
@@ -26,7 +29,7 @@ export default function UserPermissionsPanel({ user }: { user: any }) {
     load();
   }, [user]);
 
-  if (!user) return <div className={styles.panelPlaceholder}>Selecione um usuário à esquerda.</div>;
+  if (!user) return <div className={styles.panelPlaceholder}>{isPt ? 'Selecione um usuário à esquerda.' : 'Select a user on the left.'}</div>;
 
   async function handleSave() {
     setPending(true);
@@ -50,8 +53,8 @@ export default function UserPermissionsPanel({ user }: { user: any }) {
           <div className={styles.userMeta}>{user.email} • {user.role}</div>
         </div>
         <div className={styles.buttons}>
-          <button onClick={() => window.location.reload()}>Cancelar</button>
-          <button onClick={handleSave} disabled={pending}>{pending ? 'Salvando...' : 'Salvar'}</button>
+          <button onClick={() => window.location.reload()}>{isPt ? 'Cancelar' : 'Cancel'}</button>
+          <button onClick={handleSave} disabled={pending}>{pending ? (isPt ? 'Salvando...' : 'Saving...') : (isPt ? 'Salvar' : 'Save')}</button>
         </div>
       </div>
 

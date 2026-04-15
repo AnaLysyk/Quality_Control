@@ -1,11 +1,11 @@
-import "../../scripts/loadEnv";
+﻿import "../../scripts/loadEnv";
 import { prisma } from "../../lib/prismaClient";
 
 async function main() {
-  const griaule = await prisma.company.upsert({
-    where: { slug: "griaule" },
+  const demo = await prisma.company.upsert({
+    where: { slug: "DEMO" },
     update: {},
-    create: { name: "Griaule", slug: "griaule" },
+    create: { name: "DEMO", slug: "DEMO" },
   });
   const testingCompany = await prisma.company.upsert({
     where: { slug: "testing-company" },
@@ -25,9 +25,9 @@ async function main() {
   });
 
   await prisma.userCompany.upsert({
-    where: { user_id_company_id: { user_id: admin.id, company_id: griaule.id } },
+    where: { user_id_company_id: { user_id: admin.id, company_id: demo.id } },
     update: { role: "admin" },
-    create: { user_id: admin.id, company_id: griaule.id, role: "admin" },
+    create: { user_id: admin.id, company_id: demo.id, role: "admin" },
   });
   await prisma.userCompany.upsert({
     where: { user_id_company_id: { user_id: admin.id, company_id: testingCompany.id } },
@@ -39,74 +39,74 @@ async function main() {
     {
       slug: "mttr-test-1",
       title: "Release MTTR Dashboard",
-      app: "GRIAULE",
+      app: "DEMO",
       status: "published",
       source: "MANUAL",
-      clientId: griaule.id,
-      clientName: "Griaule",
+      clientId: demo.id,
+      clientName: "DEMO",
     },
     {
       slug: "mttr-manual-unique",
       title: "Release MTTR Manual Unique",
-      app: "GRIAULE",
+      app: "DEMO",
       status: "published",
       source: "MANUAL",
-      clientId: griaule.id,
-      clientName: "Griaule",
+      clientId: demo.id,
+      clientName: "DEMO",
     },
     {
       slug: "mttr-risk-1",
       title: "Release MTTR Alto",
-      app: "GRIAULE",
+      app: "DEMO",
       status: "published",
       source: "MANUAL",
-      clientId: griaule.id,
-      clientName: "Griaule",
+      clientId: demo.id,
+      clientName: "DEMO",
     },
     {
       slug: "run-risk-1",
       title: "Release com Run Falha",
-      app: "GRIAULE",
+      app: "DEMO",
       status: "published",
       source: "MANUAL",
-      clientId: griaule.id,
-      clientName: "Griaule",
+      clientId: demo.id,
+      clientName: "DEMO",
     },
     {
       slug: "run-busca-1",
       title: "Run Busca Alpha",
-      app: "GRIAULE",
+      app: "DEMO",
       status: "published",
       source: "MANUAL",
-      clientId: griaule.id,
-      clientName: "Griaule",
+      clientId: demo.id,
+      clientName: "DEMO",
     },
     {
       slug: "run-busca-2",
       title: "Run Busca Beta",
-      app: "GRIAULE",
+      app: "DEMO",
       status: "published",
       source: "MANUAL",
-      clientId: griaule.id,
-      clientName: "Griaule",
+      clientId: demo.id,
+      clientName: "DEMO",
     },
     {
       slug: "run-quality-1",
       title: "Run Qualidade Alta",
-      app: "GRIAULE",
+      app: "DEMO",
       status: "published",
       source: "MANUAL",
-      clientId: griaule.id,
-      clientName: "Griaule",
+      clientId: demo.id,
+      clientName: "DEMO",
     },
     {
       slug: "run-defeito-1",
       title: "Run com Defeitos Unico",
-      app: "GRIAULE",
+      app: "DEMO",
       status: "published",
       source: "MANUAL",
-      clientId: griaule.id,
-      clientName: "Griaule",
+      clientId: demo.id,
+      clientName: "DEMO",
     },
     {
       slug: "run_g_benchmark",
@@ -114,8 +114,8 @@ async function main() {
       app: "SMART",
       status: "published",
       source: "MANUAL",
-      clientId: griaule.id,
-      clientName: "Griaule",
+      clientId: demo.id,
+      clientName: "DEMO",
     },
     {
       slug: "run_t_benchmark",
@@ -145,3 +145,4 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+

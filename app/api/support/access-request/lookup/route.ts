@@ -97,7 +97,7 @@ export async function GET(req: Request) {
   });
 
   if (!match) {
-    return NextResponse.json({ error: "Solicitacao nao encontrada." }, { status: 404, headers: NO_STORE_HEADERS });
+    return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404, headers: NO_STORE_HEADERS });
   }
 
   const parsed = parseAccessRequestMessage(String(match.message ?? ""), String(match.email ?? ""));

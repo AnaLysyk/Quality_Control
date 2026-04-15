@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 
 import CreateSupportTicketButton from "@/components/CreateSupportTicketButton";
+import LanguageSelector from "@/components/LanguageSelector";
 import { useI18n } from "@/hooks/useI18n";
 
 type Props = {
@@ -63,7 +64,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
 
   const displayName = loading ? t("profileMenu.loading") : user?.name || t("profileMenu.userFallback");
 
-  // Universal session fallback: redireciona para login se não há usuário e não está carregando
+  // Universal session fallback: redireciona para login se nÃ£o hÃ¡ usuÃ¡rio e nÃ£o estÃ¡ carregando
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/login");
@@ -97,7 +98,6 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
 
         {open && (
           <div
-            role="menu"
             className="absolute right-0 mt-2 w-full sm:w-[20rem] max-w-xs sm:max-w-sm md:max-w-md min-w-0 rounded-2xl border-2 border-(--tc-accent,#ef0001) bg-[#0f172a] text-white shadow-[0_16px_40px_rgba(15,23,42,0.18)]"
           >
           <div className="px-6 py-5 space-y-2">
@@ -180,8 +180,15 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
 
           <div className="border-t border-(--tc-border,#e5e7eb)/40" />
 
+          {/* Language selector */}
+          <div className="px-4 py-3 flex items-center justify-between">
+            <span className="text-sm text-white/70">{t("profileMenu.language") || "Idioma"}</span>
+            <LanguageSelector variant="full" />
+          </div>
+
+          <div className="border-t border-(--tc-border,#e5e7eb)/40" />
+
           <button
-            role="menuitem"
             onClick={handleLogout}
             className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10"
           >

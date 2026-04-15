@@ -15,7 +15,7 @@ function isRequestType(value: string | null): value is RequestType {
 export async function GET(request: Request) {
   const authUser = await authenticateRequest(request);
   if (!authUser) {
-    return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   const type = isRequestType(typeParam) ? typeParam : undefined;
   const scope = resolveSelfServiceRequestScope(authUser);
   if (!scope) {
-    return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
   }
 
   const items =

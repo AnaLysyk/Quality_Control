@@ -1,9 +1,12 @@
 import type { CompanyRole, Capability, GlobalRole, Permission, UserRole } from "./permissions.types";
+import { SYSTEM_ROLES } from "@/lib/auth/roles";
 
 const rolePermissions: Record<UserRole, Permission[]> = {
-  user: ["read_dashboard", "manage_tests"],
-  admin: ["read_dashboard", "manage_users", "manage_companies", "manage_releases", "manage_tests", "view_admin"],
-  "super-admin": [
+  [SYSTEM_ROLES.TESTING_COMPANY_USER]: ["read_dashboard", "manage_tests"],
+  [SYSTEM_ROLES.COMPANY_USER]: ["read_dashboard", "manage_tests"],
+  [SYSTEM_ROLES.EMPRESA]: ["read_dashboard", "manage_tests", "manage_releases"],
+  [SYSTEM_ROLES.LEADER_TC]: ["read_dashboard", "manage_users", "manage_companies", "manage_releases", "manage_tests", "view_admin"],
+  [SYSTEM_ROLES.TECHNICAL_SUPPORT]: [
     "read_dashboard",
     "manage_users",
     "manage_companies",
@@ -15,7 +18,7 @@ const rolePermissions: Record<UserRole, Permission[]> = {
 };
 
 const roleCapabilities: Record<CompanyRole, Capability[]> = {
-  company_admin: [
+  [SYSTEM_ROLES.EMPRESA]: [
     "company:read",
     "company:write",
     "user:read",
@@ -29,21 +32,35 @@ const roleCapabilities: Record<CompanyRole, Capability[]> = {
     "defect:read",
     "defect:write",
   ],
-  it_dev: [
+  [SYSTEM_ROLES.LEADER_TC]: [
+    "company:read",
+    "company:write",
+    "user:read",
+    "user:write",
+    "metrics:read",
+    "metrics:write",
+    "release:read",
+    "release:write",
+    "run:read",
+    "run:write",
+    "defect:read",
+    "defect:write",
+  ],
+  [SYSTEM_ROLES.TECHNICAL_SUPPORT]: [
     "company:read",
     "metrics:read",
     "release:read",
     "run:read",
     "defect:read",
   ],
-  user: [
+  [SYSTEM_ROLES.COMPANY_USER]: [
     "company:read",
     "metrics:read",
     "release:read",
     "run:read",
     "defect:read",
   ],
-  viewer: [
+  [SYSTEM_ROLES.TESTING_COMPANY_USER]: [
     "company:read",
     "metrics:read",
     "release:read",
@@ -64,8 +81,10 @@ export function requirePermission(userRole: UserRole, permission: Permission): v
 
 export function getUserRoleFromSession(session: unknown): UserRole {
   const role = (session as { role?: unknown } | null)?.role;
-  if (role === "admin" || role === "super-admin") return role;
-  return "user";
+  if (role === SYSTEM_ROLES.LEADER_TC || role === SYSTEM_ROLES.TECHNICAL_SUPPORT) return role;
+  if (role === SYSTEM_ROLES.EMPRESA) return role;
+  if (role === SYSTEM_ROLES.COMPANY_USER) return role;
+  return SYSTEM_ROLES.TESTING_COMPANY_USER;
 }
 
 export function resolveCapabilities(input: {
@@ -77,6 +96,6 @@ export function resolveCapabilities(input: {
   if (Array.isArray(input.membershipCapabilities) && input.membershipCapabilities.length) {
     return input.membershipCapabilities as Capability[];
   }
-  const role = input.companyRole ?? "viewer";
-  return roleCapabilities[role] ?? roleCapabilities.viewer;
+  const role = input.companyRole ?? SYSTEM_ROLES.TESTING_COMPANY_USER;
+  return roleCapabilities[role] ?? roleCapabilities[SYSTEM_ROLES.TESTING_COMPANY_USER];
 }

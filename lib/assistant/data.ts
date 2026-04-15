@@ -22,38 +22,38 @@ export { extractTicketReference };
 /* ──────────────────── User helpers ──────────────────── */
 
 export function displayRole(user: AuthUser) {
-  return user.permissionRole ?? user.role ?? user.companyRole ?? "usuario";
+  return user.permissionRole ?? user.role ?? user.companyRole ?? "usuário";
 }
 
 export function displayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
-  return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || "usuario";
+  return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || "usuário";
 }
 
 export function isSupportOperator(user: AuthUser) {
   const values = [user.permissionRole, user.role, user.companyRole]
     .map((v) => normalizeSearch(v ?? ""))
     .filter(Boolean);
-  return values.some((v) => v === "support" || v === "it_dev" || v === "dev" || v === "developer");
+  return values.some((v) => v === "support" || v === "it_dev" || v === "dev" || v === "developer" || v === "technical_support");
 }
 
 export function isAdminOperator(user: AuthUser) {
   const values = [user.permissionRole, user.role, user.companyRole]
     .map((v) => normalizeSearch(v ?? ""))
     .filter(Boolean);
-  return values.some((v) => v === "admin" || v === "company_admin");
+  return values.some((v) => v === "admin" || v === "company_admin" || v === "leader_tc" || v === "empresa");
 }
 
 export function isProtectedPlatformProfile(user: { globalRole?: string | null; role?: string | null }) {
-  if (normalizeSearch(user.globalRole ?? "") === "global_admin") return true;
+  if (normalizeSearch(user.globalRole ?? "") === "global_admin" || normalizeSearch(user.globalRole ?? "") === "leader_tc") return true;
   const r = normalizeSearch(user.role ?? "");
-  return r === "support" || r === "it_dev" || r === "dev" || r === "developer";
+  return r === "support" || r === "it_dev" || r === "dev" || r === "developer" || r === "technical_support";
 }
 
 /* ──────────────────── Permission helpers ──────────────────── */
 
 export function summarizePermissionMatrix(permissions: PermissionMatrix | null | undefined) {
   const entries = Object.entries(permissions ?? {}).filter(([, actions]) => Array.isArray(actions) && actions.length > 0);
-  if (!entries.length) return "sem modulos liberados";
+  if (!entries.length) return "sem módulos liberados";
   return entries
     .slice(0, 6)
     .map(([moduleId, actions]) => `${moduleId}: ${actions.join(", ")}`)
@@ -84,7 +84,7 @@ export function formatTicketCard(ticket: Awaited<ReturnType<typeof attachAssigne
   return [
     `${ticket.code} — ${ticket.title}`,
     `status: ${ticket.status} | prioridade: ${ticket.priority} | tipo: ${ticket.type}`,
-    `criador: ${ticket.createdByName ?? "nao identificado"} | responsavel: ${ticket.assignedToName ?? "nao definido"}`,
+    `criador: ${ticket.createdByName ?? "não identificado"} | responsável: ${ticket.assignedToName ?? "não definido"}`,
     `atualizado em: ${formatDateTime(ticket.updatedAt)}`,
   ].join("\n");
 }

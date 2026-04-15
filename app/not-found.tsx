@@ -19,7 +19,7 @@ export default function NotFoundPage() {
             Voltar para home
           </Link>
           <Link
-            href="/applications-hub"
+            href="/applications-panel"
             className="inline-flex items-center justify-center rounded-xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white shadow-(--tc-accent-soft,rgba(239,0,1,0.12)) transition hover:brightness-110"
           >
             Ver aplicações

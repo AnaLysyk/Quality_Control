@@ -166,9 +166,9 @@ function UserCard({
               {user.name}
             </p>
             <div className="mt-3 space-y-1">
-              <UserInlineField label="Usuario" value={getUserHandle(user)} valueClassName="break-all" />
+              <UserInlineField label="Usuário" value={getUserHandle(user)} valueClassName="break-all" />
               <UserInlineField label="E-mail" value={user.email} valueClassName="break-all" />
-              <UserInlineField label="Cargo" value={user.job_title || "Nao informado"} valueClassName="break-words" />
+              <UserInlineField label="Cargo" value={user.job_title || "Não informado"} valueClassName="break-words" />
               {showCompanyField && companyLabel ? <UserInlineField label="Empresa" value={companyLabel} valueClassName="break-words" /> : null}
             </div>
           </div>
@@ -284,7 +284,7 @@ export default function AdminUsersPage() {
       const companiesJson = (await companiesRes.json().catch(() => ([]))) as CompanyOption[] | { error?: string };
 
       if (!usersRes.ok) {
-        setError(usersJson.error || "Nao foi possivel carregar os usuarios.");
+        setError(usersJson.error || "Não foi possível carregar os usuários.");
         setUsers([]);
       } else {
         const items = Array.isArray(usersJson.items) ? usersJson.items : [];
@@ -299,7 +299,7 @@ export default function AdminUsersPage() {
     } catch (err) {
       setUsers([]);
       setCompanies([]);
-      setError(err instanceof Error ? err.message : "Nao foi possivel carregar os usuarios.");
+      setError(err instanceof Error ? err.message : "Não foi possível carregar os usuários.");
     } finally {
       setLoading(false);
     }
@@ -443,9 +443,9 @@ export default function AdminUsersPage() {
   const createModalConfig = useMemo<CreateModalConfig>(() => {
     if (activeTab === "company") {
       return {
-        title: "Criar usuario da empresa",
-        subtitle: "Selecione a empresa e cadastre o responsavel ja no contexto dela.",
-        submitLabel: "Criar usuario da empresa",
+        title: "Criar usuário da empresa",
+        subtitle: "Selecione a empresa e cadastre o responsável já no contexto dela.",
+        submitLabel: "Criar usuário da empresa",
         initialRole: "company_user",
         lockRole: true,
         showCompanyField: true,
@@ -469,9 +469,9 @@ export default function AdminUsersPage() {
 
     if (activeTab === "support") {
       return {
-        title: "Criar Suporte Tecnico",
+        title: "Criar Suporte Técnico",
         subtitle: "Cadastre contas tecnicas internas da Testing Company.",
-        submitLabel: "Criar Suporte Tecnico",
+        submitLabel: "Criar Suporte Técnico",
         initialRole: "technical_support",
         lockRole: true,
         showCompanyField: false,
@@ -481,9 +481,9 @@ export default function AdminUsersPage() {
     }
 
     return {
-        title: "Criar usuario TC",
-        subtitle: "Cadastre a pessoa da Testing Company e vincule a uma empresa quando necessario.",
-        submitLabel: "Criar usuario TC",
+        title: "Criar usuário TC",
+        subtitle: "Cadastre a pessoa da Testing Company e vincule a uma empresa quando necessário.",
+        submitLabel: "Criar usuário TC",
       initialRole: "testing_company_user",
       lockRole: true,
       showCompanyField: true,
@@ -507,19 +507,19 @@ export default function AdminUsersPage() {
       <div className="mx-auto flex w-full max-w-550 flex-col gap-4 px-0 py-0">
         <Breadcrumb
           items={[
-            { label: "Admin", href: "/admin/home" },
+            { label: "Admin", href: "/admin/dashboard" },
             { label: "Empresas", href: "/admin/clients" },
-            { label: "Gestao de usuarios" },
+            { label: "Gestao de usuários" },
           ]}
         />
 
-        <section className="overflow-hidden rounded-4xl border border-white/10 bg-[linear-gradient(135deg,#031843_0%,#082457_38%,#3a174f_72%,#9f1025_100%)] px-6 py-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:px-8">
+        <section className="overflow-hidden rounded-4xl border border-white/10 bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-6 py-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:px-8">
           <div className="flex flex-col gap-5">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Gestao de usuarios</p>
-              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Usuarios da plataforma</h1>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Gestao de usuários</p>
+              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Usuários da plataforma</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/82">
-                Gerencie usuarios por contexto: empresa, usuarios TC, lideranca e suporte tecnico.
+                Gerencie usuários por contexto: empresa, usuários TC, lideranca e suporte técnico.
               </p>
             </div>
             <div className="flex flex-wrap gap-3 text-sm">
@@ -552,16 +552,16 @@ export default function AdminUsersPage() {
               <div className="mt-4">
                 <TabsList className="grid w-full grid-cols-1 gap-2 rounded-[22px] bg-(--tc-surface-alt,#f8fafc) p-1.5 sm:grid-cols-2 xl:grid-cols-4">
                   <TabsTrigger value="company" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Empresa e usuarios da empresa
+                    Empresa e usuários da empresa
                   </TabsTrigger>
                   <TabsTrigger value="testing" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Usuarios TC
+                    Usuários TC
                   </TabsTrigger>
                   <TabsTrigger value="admin" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
                     Lider TC
                   </TabsTrigger>
                   <TabsTrigger value="support" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Suporte Tecnico
+                    Suporte Técnico
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -571,7 +571,7 @@ export default function AdminUsersPage() {
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Buscar por nome, usuario, e-mail ou empresa"
+                    placeholder="Buscar por nome, usuário, e-mail ou empresa"
                     className="w-full bg-transparent outline-none placeholder:text-(--tc-text-muted,#94a3b8)"
                   />
                 </label>
@@ -615,7 +615,7 @@ export default function AdminUsersPage() {
                       <FiUsers className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
                       <div>
                         <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum perfil da empresa encontrado</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual nao encontrou empresa institucional nem usuarios da empresa.</p>
+                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual não encontrou empresa institucional nem usuários da empresa.</p>
                       </div>
                     </div>
                   ) : (
@@ -665,14 +665,14 @@ export default function AdminUsersPage() {
                             </section>
                             <section className="space-y-4">
                               <div className="flex items-center justify-between">
-                                <h4 className="text-base font-bold text-(--tc-text-primary,#0b1a3c)">Usuarios da empresa</h4>
+                                <h4 className="text-base font-bold text-(--tc-text-primary,#0b1a3c)">Usuários da empresa</h4>
                                 <span className="rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text-primary,#0b1a3c)">
                                   {group.sections.reduce((total, section) => total + section.users.length, 0)}
                                 </span>
                               </div>
                               {group.sections.length === 0 ? (
                                 <div className="rounded-[18px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-6 text-sm text-(--tc-text-secondary,#4b5563)">
-                                  Nenhum usuario da empresa {group.id === "active" ? "ativo" : "inativo"} neste recorte.
+                                  Nenhum usuário da empresa {group.id === "active" ? "ativo" : "inativo"} neste recorte.
                                 </div>
                               ) : (
                                 group.sections.map((company) => (
@@ -692,8 +692,8 @@ export default function AdminUsersPage() {
                     <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
                       <FiUsers className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
                       <div>
-                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum usuario TC</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">Nao ha usuarios TC com os filtros atuais.</p>
+                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum usuário TC</h3>
+                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">Não há usuários TC com os filtros atuais.</p>
                       </div>
                     </div>
                   ) : (
@@ -703,13 +703,13 @@ export default function AdminUsersPage() {
                           id: "active",
                           title: "Ativos",
                           users: testingActiveUsers,
-                          emptyMessage: "Nenhum usuario ativo neste recorte.",
+                          emptyMessage: "Nenhum usuário ativo neste recorte.",
                         },
                         {
                           id: "inactive",
                           title: "Inativos",
                           users: testingInactiveUsers,
-                          emptyMessage: "Nenhum usuario inativo neste recorte.",
+                          emptyMessage: "Nenhum usuário inativo neste recorte.",
                         },
                       ].map((group) => (
                         <UserStatusSection
@@ -740,7 +740,7 @@ export default function AdminUsersPage() {
                       <FiShield className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
                       <div>
                         <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum Lider TC encontrado</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual nao encontrou Lider TC com esse status.</p>
+                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual não encontrou Lider TC com esse status.</p>
                       </div>
                     </div>
                   ) : (
@@ -781,8 +781,8 @@ export default function AdminUsersPage() {
                     <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
                       <FiTool className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
                       <div>
-                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum suporte tecnico encontrado</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual nao encontrou usuarios tecnicos com esse status.</p>
+                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum suporte técnico encontrado</h3>
+                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual não encontrou usuários técnicos com esse status.</p>
                       </div>
                     </div>
                   ) : (
@@ -792,13 +792,13 @@ export default function AdminUsersPage() {
                           id: "active",
                           title: "Ativos",
                           users: supportActiveUsers,
-                          emptyMessage: "Nenhum suporte tecnico ativo neste recorte.",
+                          emptyMessage: "Nenhum suporte técnico ativo neste recorte.",
                         },
                         {
                           id: "inactive",
                           title: "Inativos",
                           users: supportInactiveUsers,
-                          emptyMessage: "Nenhum suporte tecnico inativo neste recorte.",
+                          emptyMessage: "Nenhum suporte técnico inativo neste recorte.",
                         },
                       ].map((group) => (
                         <UserStatusSection

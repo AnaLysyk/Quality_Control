@@ -18,9 +18,9 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   const mockRole = await getMockRole();
   const effectiveAuthUser: AuthUser | null =
     authUser ??
-    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "admin" } : null);
+    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "leader_tc" } : null);
   if (!effectiveAuthUser) {
-    return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
   const { slug } = await context.params;
@@ -28,7 +28,7 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   const releases = await readManualReleases();
   const release = releases.find((r) => r.slug === targetSlug) ?? null;
   if (!release) {
-    return NextResponse.json({ message: "Nao encontrado", items: [] }, { status: 404 });
+    return NextResponse.json({ message: "Não encontrado", items: [] }, { status: 404 });
   }
 
   if (!effectiveAuthUser.isGlobalAdmin) {

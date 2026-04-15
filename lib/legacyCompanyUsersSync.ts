@@ -34,9 +34,14 @@ type LegacySyncResult = {
 const LEGACY_COMPANIES_DIR = path.join(process.cwd(), "data", "companies");
 const ROLE_WEIGHT: Record<string, number> = {
   viewer: 0,
+  testing_company_user: 0,
   user: 1,
+  company_user: 1,
   company_admin: 2,
+  empresa: 2,
   it_dev: 3,
+  technical_support: 3,
+  leader_tc: 4,
 };
 
 let lastSyncAt = 0;
@@ -64,15 +69,15 @@ function normalizeLegacyRole(input?: string | null) {
     value === "client_admin" ||
     value === "admin"
   ) {
-    return "company_admin";
+    return "empresa";
   }
-  if (value === "dev" || value === "it_dev" || value === "developer") {
-    return "it_dev";
+  if (value === "dev" || value === "it_dev" || value === "developer" || value === "technical_support") {
+    return "technical_support";
   }
-  if (value === "viewer" || value === "client_viewer" || value === "read_only") {
-    return "viewer";
+  if (value === "viewer" || value === "client_viewer" || value === "read_only" || value === "testing_company_user") {
+    return "testing_company_user";
   }
-  return "user";
+  return "company_user";
 }
 
 function makePlaceholderCompany(companyId: string, existingSlugs: Set<string>): LocalAuthCompany {
@@ -120,8 +125,8 @@ function updateRoleIfStronger(
   membership: LocalAuthMembership,
   nextRole: string,
 ) {
-  const currentWeight = ROLE_WEIGHT[normalizeLegacyRole(membership.role)] ?? ROLE_WEIGHT.user;
-  const nextWeight = ROLE_WEIGHT[nextRole] ?? ROLE_WEIGHT.user;
+  const currentWeight = ROLE_WEIGHT[normalizeLegacyRole(membership.role)] ?? ROLE_WEIGHT.company_user;
+  const nextWeight = ROLE_WEIGHT[nextRole] ?? ROLE_WEIGHT.company_user;
   if (nextWeight > currentWeight) {
     membership.role = nextRole;
     return true;
@@ -184,7 +189,7 @@ async function syncLegacyCompanyUsersInternal(): Promise<LegacySyncResult> {
           email,
           user: login || email,
           password_hash: hashPasswordSha256(`${companyId}:${email}:${randomUUID()}`),
-          role: "user",
+          role: "company_user",
           globalRole: null,
           status: entry.deletedAt ? "blocked" : "active",
           active: !entry.deletedAt,

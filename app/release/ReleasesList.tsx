@@ -31,7 +31,7 @@ const APP_COLOR_CLASS: Record<string, string> = {
   trust: "app-color-trust",
   "cidadao-smart": "app-color-cidadao",
   gmt: "app-color-gmt",
-  "mobile-griaule": "app-color-gmt",
+  gmt: "app-color-gmt",
 };
 
 export function ReleasesList({ className }: ReleasesListProps) {
@@ -67,7 +67,7 @@ export function ReleasesList({ className }: ReleasesListProps) {
         <div>
           <h2 className="text-2xl font-bold text-(--tc-text-inverse)">Runs monitoradas</h2>
           <p className="text-(--tc-text-secondary)">
-            Selecione a aplicacao para acessar a run desejada.
+            Selecione a aplicação para acessar a run desejada.
           </p>
         </div>
         <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
@@ -84,11 +84,11 @@ export function ReleasesList({ className }: ReleasesListProps) {
 
       {loading && <p className="mt-4 text-sm text-(--tc-text-muted)">Carregando runs...</p>}
       {!loading && error && (
-        <p className="mt-4 text-sm text-red-500">Nao foi possivel carregar as runs agora.</p>
+        <p className="mt-4 text-sm text-red-500">Não foi possível carregar as runs agora.</p>
       )}
       {!loading && !error && !filtered.length && (
         <p className="mt-4 text-sm text-(--tc-text-muted)">
-          Nenhum resultado encontrado. Ajuste a busca ou clique em uma aplicacao.
+          Nenhum resultado encontrado. Ajuste a busca ou clique em uma aplicação.
         </p>
       )}
 
@@ -106,10 +106,10 @@ export function ReleasesList({ className }: ReleasesListProps) {
                   {meta.label.toUpperCase()}
                 </span>
                 <Link
-                  href={`/applications-hub/${appKey}`}
+                  href={`/applications-panel/${appKey}`}
                   className="cursor-pointer text-sm font-semibold text-(--tc-accent) transition hover:brightness-110"
                 >
-                  {"Ver todas as runs desta aplicacao ->"}
+                  {"Ver todas as runs desta aplicação ->"}
                 </Link>
               </div>
 

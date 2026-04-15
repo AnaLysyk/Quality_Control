@@ -6,7 +6,7 @@ type ActiveCompanyLike = {
   logoUrl?: string | null;
 } | null;
 
-export type IdentityRoleKind = "global" | "admin" | "empresa" | "usuario";
+export type IdentityRoleKind = "global" | "leader_tc" | "empresa" | "usuario";
 
 export type ActiveIdentity = {
   kind: "user" | "company";
@@ -67,9 +67,9 @@ export function getAuthUserContextRole(user: AuthUser | null | undefined) {
   }
 
   if (
-    normalizeIdentityRole(permissionRole) === "admin" ||
-    normalizeIdentityRole(role) === "admin" ||
-    normalizeIdentityRole(companyRole) === "admin"
+    normalizeIdentityRole(permissionRole) === "leader_tc" ||
+    normalizeIdentityRole(role) === "leader_tc" ||
+    normalizeIdentityRole(companyRole) === "leader_tc"
   ) {
     return permissionRole ?? role ?? companyRole ?? "";
   }
@@ -78,7 +78,7 @@ export function getAuthUserContextRole(user: AuthUser | null | undefined) {
     if (normalizeIdentityRole(companyRole) === "empresa") return companyRole ?? "";
     if (normalizeIdentityRole(permissionRole) === "empresa") return permissionRole ?? "";
     if (normalizeIdentityRole(role) === "empresa") return role ?? "";
-    return "company_admin";
+    return "empresa";
   }
 
   if (
@@ -86,7 +86,7 @@ export function getAuthUserContextRole(user: AuthUser | null | undefined) {
     normalizeIdentityRole(permissionRole) === "empresa" ||
     normalizeIdentityRole(role) === "empresa"
   ) {
-    return "user";
+    return "company_user";
   }
 
   return permissionRole ?? role ?? companyRole ?? "";
@@ -105,8 +105,8 @@ export function normalizeIdentityRole(value?: string | null): IdentityRoleKind {
   ) {
     return "global";
   }
-  if (normalized === "admin" || normalized === "global_admin") return "admin";
-  if (normalized === "company" || normalized === "company_admin" || normalized === "client_admin") return "empresa";
+  if (normalized === "leader_tc" || normalized === "admin" || normalized === "global_admin") return "leader_tc";
+  if (normalized === "empresa" || normalized === "company" || normalized === "company_admin" || normalized === "client_admin") return "empresa";
   return "usuario";
 }
 

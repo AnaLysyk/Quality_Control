@@ -1,4 +1,4 @@
-import fs from "fs";
+﻿import fs from "fs";
 import path from "path";
 import { resolveSeedPath } from "./seed-paths";
 
@@ -22,9 +22,9 @@ export async function seedMTTRDashboard() {
       id: "mttr-test-1",
       slug: "mttr-test-1",
       name: "Release MTTR Dashboard",
-      app: "GRIAULE",
+      app: "DEMO",
       kind: "defect",
-      clientSlug: "griaule",
+      clientSlug: "DEMO",
       source: "MANUAL",
       status: "closed",
       stats: { pass: 1, fail: 0, blocked: 0, notRun: 0 },
@@ -38,9 +38,9 @@ export async function seedMTTRDashboard() {
       id: "mttr-manual-unique",
       slug: "mttr-manual-unique",
       name: "Release MTTR Manual Unique",
-      app: "GRIAULE",
+      app: "DEMO",
       kind: "defect",
-      clientSlug: "griaule",
+      clientSlug: "DEMO",
       source: "MANUAL",
       status: "closed",
       stats: { pass: 0, fail: 1, blocked: 0, notRun: 0 },
@@ -67,7 +67,7 @@ export async function seedQualityGoalStatus() {
   } catch {}
   const newMetas = [
     {
-      company_slug: "griaule",
+      company_slug: "DEMO",
       goal: "coverage",
       status: "violated",
       value: 60,
@@ -75,7 +75,7 @@ export async function seedQualityGoalStatus() {
       evaluated_at: new Date().toISOString()
     },
     {
-      company_slug: "griaule",
+      company_slug: "DEMO",
       goal: "mttr",
       status: "at_risk",
       value: 3,

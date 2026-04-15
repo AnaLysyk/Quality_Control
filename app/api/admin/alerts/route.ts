@@ -8,7 +8,7 @@ export const revalidate = 0;
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   const mockRole = await getMockRole();
-  const isAdmin = user?.isGlobalAdmin || mockRole === "admin";
+  const isAdmin = user?.isGlobalAdmin || mockRole === "leader_tc";
   if (!isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

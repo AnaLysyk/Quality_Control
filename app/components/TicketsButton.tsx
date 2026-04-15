@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiMessageSquare, FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiSearch } from "react-icons/fi";
+import ticketsStyles from "./TicketsButton.module.css";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import TicketDetailsModal from "@/components/TicketDetailsModal";
 import {
@@ -90,10 +91,9 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
   const [statusFilter, setStatusFilter] = useState<TicketFilterStatus>("all");
   const [priorityFilter, setPriorityFilter] = useState<TicketFilterPriority>("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [panelAnchor, setPanelAnchor] = useState<{ top: number; right: number } | null>(null);
-
   const boxRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const createCardRef = useRef<HTMLDivElement>(null);
   const createTitleInputRef = useRef<HTMLInputElement>(null);
   const canOpenSupport = canViewSupportBoard(user);
@@ -105,12 +105,10 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
 
   const syncPanelAnchor = useCallback(() => {
     const rect = triggerRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    if (!rect || !panelRef.current) return;
 
-    setPanelAnchor({
-      top: rect.bottom + 10,
-      right: Math.max(8, window.innerWidth - rect.right),
-    });
+    panelRef.current.style.top = `${rect.bottom + 10}px`;
+    panelRef.current.style.right = `${Math.max(8, window.innerWidth - rect.right)}px`;
   }, []);
 
   useEffect(() => {
@@ -309,7 +307,7 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
         const title = String(draft.title ?? "").trim();
         const description = String(draft.description ?? "").trim();
         if (!title && !description) {
-          setError("Informe titulo ou descricao");
+          setError("Informe título ou descrição");
           return;
         }
         const res = await fetch("/api/tickets", {
@@ -391,24 +389,8 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
 
       {open && (
         <div
-          className="tickets-widget notes-widget w-[min(30rem,calc(100vw-2rem))]"
-          style={
-            panelAnchor
-              ? {
-                  position: "fixed",
-                  top: panelAnchor.top,
-                  right: panelAnchor.right,
-                  zIndex: 10010,
-                  maxHeight: "calc(100vh - 5rem)",
-                }
-              : {
-                  position: "fixed",
-                  top: "4.5rem",
-                  right: "1rem",
-                  zIndex: 10010,
-                  maxHeight: "calc(100vh - 5rem)",
-                }
-          }
+          ref={panelRef}
+          className={`tickets-widget notes-widget w-[min(30rem,calc(100vw-2rem))] ${ticketsStyles.panel}`}
         >
           <div className="tickets-widget-header notes-widget-header">
             <div className="tickets-widget-header-main">
@@ -495,7 +477,7 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                   <input
                     ref={createTitleInputRef}
                     className="notes-input tickets-input"
-                    placeholder="Titulo"
+                    placeholder="Título"
                     value={draft.title}
                     onChange={(e) => setDraft((prev) => (prev ? { ...prev, title: e.target.value } : prev))}
                   />
@@ -581,7 +563,7 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                     className="tickets-ticket-trigger"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="tickets-ticket-title">{ticket.title || "Sem titulo"}</p>
+                      <p className="tickets-ticket-title">{ticket.title || "Sem título"}</p>
                       <p className="tickets-ticket-meta">
                         Atualizado em {new Date(ticket.updatedAt).toLocaleString("pt-BR")}
                       </p>
@@ -609,8 +591,8 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                           type="button"
                           onClick={isEditing ? cancelEdit : () => setExpandedId(null)}
                           className="notes-icon-action tickets-ticket-close"
-                          aria-label={isEditing ? "Fechar edicao" : "Fechar ticket"}
-                          title={isEditing ? "Fechar edicao" : "Fechar ticket"}
+                          aria-label={isEditing ? "Fechar edição" : "Fechar ticket"}
+                          title={isEditing ? "Fechar edição" : "Fechar ticket"}
                         >
                           <FiX size={15} />
                         </button>
@@ -619,8 +601,8 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                         <>
                           <input
                             className="notes-input tickets-input"
-                            placeholder="Titulo"
-                            aria-label="Editar titulo do ticket"
+                            placeholder="Título"
+                            aria-label="Editar título do ticket"
                             value={localDraft.title}
                             onChange={(e) =>
                               setDraft((prev) => (prev ? { ...prev, title: e.target.value } : prev))
@@ -658,7 +640,7 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                             rows={4}
                             className="notes-input notes-textarea tickets-textarea"
                             placeholder="Descreva o ticket..."
-                            aria-label="Editar descricao do ticket"
+                            aria-label="Editar descrição do ticket"
                             value={localDraft.description}
                             onChange={(e) =>
                               setDraft((prev) => (prev ? { ...prev, description: e.target.value } : prev))
@@ -698,11 +680,11 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                           </div>
                           {ticket.assignedToName || ticket.assignedToEmail ? (
                             <p className="tickets-ticket-meta">
-                              Responsavel: {ticket.assignedToName || ticket.assignedToEmail}
+                              Responsável: {ticket.assignedToName || ticket.assignedToEmail}
                             </p>
                           ) : null}
                           <p className="tickets-ticket-description">
-                            {ticket.description || "Sem descricao."}
+                            {ticket.description || "Sem descrição."}
                           </p>
                           <div className="tickets-card-actions">
                             {canEdit && (

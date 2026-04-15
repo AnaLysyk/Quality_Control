@@ -41,21 +41,21 @@ export default function DashboardClient() {
   }
 
   if (userLoading) {
-    return <div className="tc-empty-state min-h-[320px]">Carregando painel.</div>;
+    return <div className="tc-empty-state min-h-80">Carregando painel.</div>;
   }
 
   if (!user) {
-    return <div className="tc-empty-state min-h-[320px]">Redirecionando para login.</div>;
+    return <div className="tc-empty-state min-h-80">Redirecionando para login.</div>;
   }
 
   const safeUser: Partial<AuthUser> = user ?? {};
   const capabilities = (Array.isArray(safeUser.capabilities) ? safeUser.capabilities : []) as Capability[];
   const isGlobalAdmin = safeUser.isGlobalAdmin === true || safeUser.globalRole === "global_admin";
   const companySlug = typeof safeUser.companySlug === "string" ? safeUser.companySlug : null;
-  const roleLabel = typeof safeUser.role === "string" && safeUser.role.trim() ? safeUser.role : "usuario";
+  const roleLabel = typeof safeUser.role === "string" && safeUser.role.trim() ? safeUser.role : "usuário";
   const activeIdentity = resolveActiveIdentity({ user: user ?? null, activeCompany: activeClient });
   const isCompanyIdentity = activeIdentity.kind === "company";
-  const displayName = activeIdentity.displayName || safeUser.fullName?.trim() || safeUser.name || "Usuario";
+  const displayName = activeIdentity.displayName || safeUser.fullName?.trim() || safeUser.name || "Usuário";
   const displayUsername = activeIdentity.username || safeUser.username || safeUser.user || null;
   const displayAvatarUrl = activeIdentity.avatarUrl;
   const companyDisplayValue = isCompanyIdentity
@@ -74,13 +74,13 @@ export default function DashboardClient() {
     {
       title: isCompanyIdentity ? "Perfil da empresa" : "Minha conta",
       description: isCompanyIdentity
-        ? "Atualize os dados institucionais, login de acesso e integracao da empresa."
-        : "Atualize dados, senha e preferencias do usuario.",
+        ? "Atualize os dados institucionais, login de acesso e integração da empresa."
+        : "Atualize dados, senha e preferencias do usuário.",
       href: "/settings/profile",
       kicker: isCompanyIdentity ? "Empresa" : "Conta",
     },
     {
-      title: "Solicitacoes",
+      title: "Solicitações",
       description: "Abra pedidos de troca de e-mail ou empresa.",
       href: "/requests",
       kicker: "Fluxo",
@@ -96,7 +96,7 @@ export default function DashboardClient() {
   if (hasCapability(capabilities, "run:read")) {
     quickLinks.push({
       title: "Runs",
-      description: "Consulte execucoes recentes e acompanhe resultados.",
+      description: "Consulte execuções recentes e acompanhe resultados.",
       href: runsHref,
       kicker: "Qualidade",
     });
@@ -104,9 +104,9 @@ export default function DashboardClient() {
 
   if (isGlobalAdmin) {
     quickLinks.push({
-      title: "Administracao",
-      description: "Abra o painel para empresas, usuarios e gestao.",
-      href: "/admin/home",
+      title: "Administração",
+      description: "Abra o painel para empresas, usuários e gestao.",
+      href: "/admin/dashboard",
       kicker: "Admin",
     });
     quickLinks.push({
@@ -128,31 +128,31 @@ export default function DashboardClient() {
     {
       label: "Perfil",
       value: roleLabel,
-      note: isGlobalAdmin ? "Acesso administrativo ativo." : "Permissoes conforme o contexto atual.",
+      note: isGlobalAdmin ? "Acesso administrativo ativo." : "Permissões conforme o contexto atual.",
     },
     {
       label: "Empresa",
       value: companyDisplayValue,
-      note: companySlug ? "Contexto principal carregado na sessao." : "Sem vinculo ativo na sessao.",
+      note: companySlug ? "Contexto principal carregado na sessao." : "Sem vínculo ativo na sessao.",
     },
     {
-      label: "Usuarios",
+      label: "Usuários",
       value: metrics && isGlobalAdmin ? String(metrics.overview.totalUsers) : "--",
       note: "Base total visivel no painel.",
     },
     {
       label: "Runs 30d",
       value: metrics && isGlobalAdmin ? String(metrics.overview.totalTestRuns) : "--",
-      note: "Volume de execucoes no periodo.",
+      note: "Volume de execuções no periodo.",
     },
   ];
 
   const systemCards = metrics
     ? [
-        { label: "Usuarios", value: metrics.overview.totalUsers, note: "Contas cadastradas na plataforma." },
+        { label: "Usuários", value: metrics.overview.totalUsers, note: "Contas cadastradas na plataforma." },
         { label: "Empresas", value: metrics.overview.totalCompanies, note: "Empresas com cadastro ativo." },
-        { label: "Runs", value: metrics.overview.totalReleases, note: "Execucoes registradas no sistema." },
-        { label: "Testes 30d", value: metrics.overview.totalTestRuns, note: "Execucoes consideradas no recorte." },
+        { label: "Runs", value: metrics.overview.totalReleases, note: "Execuções registradas no sistema." },
+        { label: "Testes 30d", value: metrics.overview.totalTestRuns, note: "Execuções consideradas no recorte." },
         { label: "Sessoes", value: metrics.overview.activeSessions, note: "Sessoes autenticadas ativas." },
       ]
     : [];
@@ -177,11 +177,11 @@ export default function DashboardClient() {
 
                 <div className="tc-hero-copy">
                   <p className="tc-hero-kicker">Painel inicial</p>
-                  <h1 className="tc-hero-title">{isCompanyIdentity ? "Visao geral institucional" : "Visao geral do usuario"}</h1>
+                  <h1 className="tc-hero-title">{isCompanyIdentity ? "Visão geral institucional" : "Visão geral do usuário"}</h1>
                   <p className="tc-hero-description">
                     {isCompanyIdentity
-                      ? "Acesso institucional da empresa ativa, com foco no contexto da organizacao e nao em um usuario individual."
-                      : "Base inicial para navegar pela plataforma com o mesmo padrao visual das telas principais de administracao."}
+                      ? "Acesso institucional da empresa ativa, com foco no contexto da organização e não em um usuário individual."
+                      : "Base inicial para navegar pela plataforma com o mesmo padrão visual das telas principais de administração."}
                   </p>
                 </div>
               </div>
@@ -232,16 +232,16 @@ export default function DashboardClient() {
           <section className="tc-panel">
             <div className="tc-panel-header">
               <div>
-                <p className="tc-panel-kicker">Metricas do sistema</p>
+                <p className="tc-panel-kicker">Métricas do sistema</p>
                 <h2 className="tc-panel-title">Panorama administrativo</h2>
-                <p className="tc-panel-description">Leitura rapida dos principais numeros do sistema para o perfil global.</p>
+                <p className="tc-panel-description">Leitura rápida dos principais números do sistema para o perfil global.</p>
               </div>
             </div>
 
             <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
               {metricsLoading && !metrics
                 ? Array.from({ length: 5 }).map((_, index) => (
-                    <div key={index} className="tc-panel-muted min-h-[120px] animate-pulse" />
+                    <div key={index} className="tc-panel-muted min-h-30 animate-pulse" />
                   ))
                 : systemCards.map((card) => (
                     <div key={card.label} className="tc-kv">
@@ -267,12 +267,12 @@ export default function DashboardClient() {
                 <div className="tc-panel-muted">
                   <div className="tc-kv-label">Bloqueados</div>
                   <div className="tc-kv-value">{metrics.testStats.blocked}</div>
-                  <div className="tc-kv-note">Execucoes impedidas por dependencia.</div>
+                  <div className="tc-kv-note">Execuções impedidas por dependencia.</div>
                 </div>
                 <div className="tc-panel-muted">
-                  <div className="tc-kv-label">Nao executados</div>
+                  <div className="tc-kv-label">Não executados</div>
                   <div className="tc-kv-value">{metrics.testStats.skipped}</div>
-                  <div className="tc-kv-note">Itens fora da execucao no recorte.</div>
+                  <div className="tc-kv-note">Itens fora da execução no recorte.</div>
                 </div>
               </div>
             ) : null}
@@ -282,7 +282,7 @@ export default function DashboardClient() {
         <section className="tc-panel">
           <div className="tc-panel-header">
             <div>
-              <p className="tc-panel-kicker">Acoes</p>
+              <p className="tc-panel-kicker">Ações</p>
               <h2 className="tc-panel-title">Navegacao principal</h2>
               <p className="tc-panel-description">Entradas principais do sistema em cards mais limpos e consistentes com o resto do produto.</p>
             </div>

@@ -35,12 +35,12 @@ export async function PATCH(req: Request) {
 
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const user = await getLocalUserById(access.userId);
   if (!user) {
-    return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
   const currentHash = hashPasswordSha256(currentPassword);

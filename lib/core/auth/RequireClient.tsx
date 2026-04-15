@@ -18,7 +18,7 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
   const pathname = usePathname() || "/";
 
   const role = typeof user?.role === "string" ? user.role.toLowerCase() : null;
-  const isAdmin = role === "admin" || role === "global_admin" || user?.isGlobalAdmin === true;
+  const isAdmin = role === "leader_tc" || role === "technical_support" || user?.isGlobalAdmin === true;
   const loginHref =
     pathname.startsWith("/") && pathname !== "/login" ? `/login?next=${encodeURIComponent(pathname)}` : "/login";
   const shouldRedirectToLogin = !loading && !user;
@@ -51,6 +51,7 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
             (user as { user_origin?: string | null } | null)?.user_origin ??
             null,
           clientSlug: user.clientSlug,
+          defaultClientSlug: user.defaultClientSlug ?? null,
         }),
       );
     }

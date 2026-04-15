@@ -1,4 +1,4 @@
-import {
+﻿import {
   buildDefectComments,
   decodeDefectAssigneeNote,
   encodeDefectAssigneeNote,
@@ -11,7 +11,7 @@ describe("defectActivity", () => {
     const events: DefectHistoryEvent[] = [
       {
         id: "evt-3",
-        defectSlug: "qase-griaule-123",
+        defectSlug: "qase-demo-123",
         action: "comment_added",
         createdAt: "2026-04-08T13:00:00.000Z",
         actorId: "usr-support",
@@ -20,7 +20,7 @@ describe("defectActivity", () => {
       },
       {
         id: "evt-2",
-        defectSlug: "qase-griaule-123",
+        defectSlug: "qase-demo-123",
         action: "assignee_changed",
         createdAt: "2026-04-08T12:00:00.000Z",
         actorId: "usr-admin",
@@ -29,7 +29,7 @@ describe("defectActivity", () => {
       },
       {
         id: "evt-1",
-        defectSlug: "qase-griaule-123",
+        defectSlug: "qase-demo-123",
         action: "created",
         createdAt: "2026-04-08T11:00:00.000Z",
         note: "Defeito criado",
@@ -54,3 +54,4 @@ describe("defectActivity", () => {
     });
   });
 });
+

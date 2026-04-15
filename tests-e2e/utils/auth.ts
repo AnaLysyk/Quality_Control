@@ -1,12 +1,12 @@
-import type { Page } from "@playwright/test";
+﻿import type { Page } from "@playwright/test";
 
 const rawBaseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
 const baseURL = /^https?:\/\//i.test(rawBaseURL) ? rawBaseURL : `http://${rawBaseURL}`;
 
-const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || "admin@griaule.test";
-const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "Griaule@123";
-const USER_EMAIL = process.env.E2E_USER_EMAIL || "user@griaule.test";
-const USER_PASSWORD = process.env.E2E_USER_PASSWORD || "Griaule@123";
+const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || "admin@demo.test";
+const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "Demo@123";
+const USER_EMAIL = process.env.E2E_USER_EMAIL || "user@demo.test";
+const USER_PASSWORD = process.env.E2E_USER_PASSWORD || "Demo@123";
 
 type MockRole = "admin" | "client" | "user";
 
@@ -112,7 +112,7 @@ export async function login(page: Page, email: string, password: string) {
   }
 
   const role = (lastRole ?? creds.role) === "admin" ? "admin" : "user";
-  const companySlug = lastClientSlug || "griaule";
+  const companySlug = lastClientSlug || "DEMO";
   const defaultPath = role === "admin" ? "/admin/clients" : `/empresas/${companySlug}/dashboard`;
   await page.goto(defaultPath, { timeout: 120000, waitUntil: "domcontentloaded" });
   const authLoading = page.getByText(/Validando sessao/i);
@@ -120,3 +120,4 @@ export async function login(page: Page, email: string, password: string) {
     await authLoading.waitFor({ state: "hidden", timeout: 15000 }).catch(() => {});
   }
 }
+

@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { Formatter, NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
@@ -54,7 +56,7 @@ type AuditLogsResponse = {
   };
 };
 
-/* ── Translation layer ──────────────────────────────────── */
+/* â”€â”€ Translation layer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const ACTION_TITLES: Record<string, string> = {
   // Users
@@ -556,7 +558,7 @@ export default function AdminAuditLogsPage() {
           <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">{warning}</div>
         )}
 
-        {/* ── Card principal ─────────────────────────────────── */}
+        {/* â”€â”€ Card principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className={styles.card}>
 
           {/* Filtros rápidos por categoria */}
@@ -592,15 +594,15 @@ export default function AdminAuditLogsPage() {
               <div className={styles.summaryCard}>
                 <span className={styles.summaryLabel}>Erros / negados</span>
                 <strong className={styles.summaryValue}>{formatCount(summary.errorCount)}</strong>
-                <span className={styles.summaryHint}>Falhas, acessos negados e eventos sensÃ­veis.</span>
+                <span className={styles.summaryHint}>Falhas, acessos negados e eventos sensÃƒÂ­veis.</span>
               </div>
               <div className={styles.summaryCard}>
-                <span className={styles.summaryLabel}>AutenticaÃ§Ã£o</span>
+                <span className={styles.summaryLabel}>AutenticaÃƒÂ§ÃƒÂ£o</span>
                 <strong className={styles.summaryValue}>{formatCount(summary.authCount)}</strong>
                 <span className={styles.summaryHint}>Login, logout e senha na janela atual.</span>
               </div>
               <div className={styles.summaryCard}>
-                <span className={styles.summaryLabel}>Atores Ãºnicos</span>
+                <span className={styles.summaryLabel}>Atores Ãƒºnicos</span>
                 <strong className={styles.summaryValue}>{formatCount(summary.uniqueActors)}</strong>
                 <span className={styles.summaryHint}>Quem gerou eventos no recorte atual.</span>
               </div>
@@ -610,11 +612,11 @@ export default function AdminAuditLogsPage() {
               <section className={styles.monitorCard}>
                 <div className={styles.monitorHeader}>
                   <div>
-                    <p className={styles.monitorTitle}>TendÃªncia de eventos</p>
+                    <p className={styles.monitorTitle}>TendÃƒªncia de eventos</p>
                     <p className={styles.monitorSubtitle}>Volume total vs. erros/negados na consulta atual.</p>
                   </div>
                   <div className={styles.monitorMeta}>
-                    <span>{summary.lastEventAt ? `Ãšltimo evento ${formatDate(summary.lastEventAt)}` : "Sem eventos"}</span>
+                    <span>{summary.lastEventAt ? `ÃƒÅ¡ltimo evento ${formatDate(summary.lastEventAt)}` : "Sem eventos"}</span>
                   </div>
                 </div>
                 <div className={styles.monitorChart}>
@@ -636,7 +638,7 @@ export default function AdminAuditLogsPage() {
                         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#64748b" }} width={32} />
                         <Tooltip
                           formatter={renderTrendTooltip}
-                          labelFormatter={(value) => `PerÃ­odo ${String(value)}`}
+                          labelFormatter={(value) => `PerÃƒÂ­odo ${String(value)}`}
                           contentStyle={{
                             borderRadius: "12px",
                             border: "1px solid rgba(148,163,184,0.18)",
@@ -652,7 +654,7 @@ export default function AdminAuditLogsPage() {
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className={styles.monitorEmpty}>Sem eventos suficientes para montar a tendÃªncia.</div>
+                    <div className={styles.monitorEmpty}>Sem eventos suficientes para montar a tendÃƒªncia.</div>
                   )}
                 </div>
               </section>
@@ -661,10 +663,10 @@ export default function AdminAuditLogsPage() {
                 <div className={styles.monitorHeader}>
                   <div>
                     <p className={styles.monitorTitle}>Sinais mais frequentes</p>
-                    <p className={styles.monitorSubtitle}>AÃ§Ãµes com maior volume para o recorte atual.</p>
+                    <p className={styles.monitorSubtitle}>AÃƒÂ§ÃƒÂµes com maior volume para o recorte atual.</p>
                   </div>
                   <div className={styles.monitorMeta}>
-                    <span>{retentionDays ? `RetenÃ§Ã£o ${retentionDays} dias` : "Monitoramento ativo"}</span>
+                    <span>{retentionDays ? `RetenÃƒÂ§ÃƒÂ£o ${retentionDays} dias` : "Monitoramento ativo"}</span>
                   </div>
                 </div>
                 {topActions.length > 0 ? (
@@ -681,7 +683,7 @@ export default function AdminAuditLogsPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className={styles.monitorEmpty}>Nenhuma aÃ§Ã£o encontrada para os filtros atuais.</div>
+                  <div className={styles.monitorEmpty}>Nenhuma aÃƒÂ§ÃƒÂ£o encontrada para os filtros atuais.</div>
                 )}
               </section>
             </div>
@@ -815,7 +817,7 @@ export default function AdminAuditLogsPage() {
             </div>
           )}
 
-          {/* ── Event timeline ─────────────────────────────────── */}
+          {/* â”€â”€ Event timeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {!showSkeleton && total > 0 && (
             <div className={styles.listHeader}>
               <span className={styles.listHeaderLabel}>
@@ -825,7 +827,7 @@ export default function AdminAuditLogsPage() {
               <span className={styles.listHeaderCount}>{total} resultado{total !== 1 ? "s" : ""} · Página {currentPage} de {totalPages}</span>
             </div>
           )}
-          {/* ── Pagination ─────────────────────────────────── */}
+          {/* â”€â”€ Pagination â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {total > 0 && (
             <div className={styles.paginationBar}>
               <div className={styles.paginationInfo}>
@@ -887,7 +889,7 @@ export default function AdminAuditLogsPage() {
               // Split metadata into contextual (summary enrichment) and operation details
               const beforeData = (meta._before && typeof meta._before === "object" && !Array.isArray(meta._before)) ? meta._before as Record<string, unknown> : null;
               const operationEntries = Object.entries(meta).filter(([k, v]) => v !== undefined && v !== null && k !== "_before" && !SUMMARY_META_KEYS.has(k) && !TECHNICAL_META_KEYS.has(k));
-              // For diff: merge keys from _before and current operation entries for full before→after view
+              // For diff: merge keys from _before and current operation entries for full beforeâ†’after view
               const allDiffKeys = beforeData ? [...new Set([...Object.keys(beforeData).filter(k => k !== "_before" && k !== "_payload" && !TECHNICAL_META_KEYS.has(k)), ...operationEntries.map(([k]) => k)])] : [];
               const diffEntries = allDiffKeys.map((k) => {
                 const after = meta[k] ?? null;
@@ -938,10 +940,10 @@ export default function AdminAuditLogsPage() {
                     </div>
                   </button>
 
-                  {/* ── Expanded detail — 3 tiers ────────────────── */}
+                  {/* â”€â”€ Expanded detail — 3 tiers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
                   {isOpen && (
                     <div className={styles.expandedPanel}>
-                      {/* ── Tier 1: Resumo do evento ─────────────── */}
+                      {/* â”€â”€ Tier 1: Resumo do evento â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
                       <div className={styles.tier}>
                         <p className={styles.tierTitle}>Resumo do evento</p>
                         <div className={styles.tierContentGrid}>
@@ -977,12 +979,12 @@ export default function AdminAuditLogsPage() {
                         </div>
                       </div>
 
-                      {/* ── Tier 2: Detalhes da alteração ────────── */}
+                      {/* â”€â”€ Tier 2: Detalhes da alteração â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
                       {(diffEntries.length > 0 || regularEntries.length > 0) && (
                         <div className={styles.tier}>
                           <p className={styles.tierTitle}>Alterações</p>
                           <div className={styles.tierContent}>
-                            {/* Before → After diff table */}
+                            {/* Before â†’ After diff table */}
                             {diffEntries.length > 0 && (
                               <table className={styles.diffTable}>
                                 <thead>
@@ -1002,7 +1004,7 @@ export default function AdminAuditLogsPage() {
                                       <tr key={key} className={changed ? styles.diffRowChanged : styles.diffRow}>
                                         <td className={styles.diffCellLabel}>{METADATA_KEY_LABELS[key] ?? key}</td>
                                         <td className={styles.diffCellBefore}>{before}</td>
-                                        <td className={styles.diffCellArrow}>{changed ? "→" : "="}</td>
+                                        <td className={styles.diffCellArrow}>{changed ? "â†’" : "="}</td>
                                         <td className={changed ? styles.diffCellAfter : styles.diffCellSame}>{after}</td>
                                       </tr>
                                     );
@@ -1021,7 +1023,7 @@ export default function AdminAuditLogsPage() {
                         </div>
                       )}
 
-                      {/* ── Tier 3: Informações técnicas (collapsible) ── */}
+                      {/* â”€â”€ Tier 3: Informações técnicas (collapsible) â”€â”€ */}
                       <div className={styles.tier}>
                         <button
                           type="button"

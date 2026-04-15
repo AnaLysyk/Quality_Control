@@ -49,12 +49,17 @@ input[type="password"]::-ms-clear {
   /* BACKGROUND / SURFACE */
   --tc-bg: #011848;
   --tc-surface: #fff;
+  --tc-surface-rgb: 255 255 255;
   --tc-surface-2: #e9edf5;
   --tc-surface-alt: #f8fafc;
   --tc-surface-dark: #d1dbee;
   --tc-surface-darker: #c4d0e8;
   --tc-surface-muted: #cbd5e1;
   --tc-surface-hover: #eef3ff;
+  --tc-surface-card-1: #f7f9fd;
+  --tc-surface-card-2: #ffffff;
+  --tc-surface-filter-1: #ffffff;
+  --tc-surface-filter-2: #fbfcff;
 
   /* TEXT */
   --tc-text: #011848;
@@ -62,7 +67,7 @@ input[type="password"]::-ms-clear {
   --tc-text-secondary: #ef0001;
   --tc-text-muted: #4b5563;
   --tc-text-inverse: #ffffff;
-  --page-bg: #ffffff;
+  --page-bg: #f5f6fa;
   --page-text: #0b1a3c;
   --page-grad-1: #f7f9ff;
   --page-grad-2: #eef3ff;
@@ -83,7 +88,7 @@ input[type="password"]::-ms-clear {
   --shell-glass-bg: rgba(255, 255, 255, 0.82);
   --shell-glass-border: rgba(15, 23, 42, 0.12);
   --shell-glass-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
-  --shell-sidebar-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(246, 248, 253, 0.98) 50%, rgba(236, 226, 232, 0.98) 78%, rgba(239, 0, 1, 0.18) 100%);
+  --shell-sidebar-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(246, 248, 253, 0.98) 50%, rgba(236, 226, 232, 0.98) 78%, rgba(239, 0, 1, 0.32) 100%);
   --shell-sidebar-border: rgba(15, 23, 42, 0.08);
   --shell-sidebar-shadow: 0 20px 54px rgba(15, 23, 42, 0.14);
   --shell-sidebar-overlay-opacity: 0.2;
@@ -144,12 +149,17 @@ input[type="password"]::-ms-clear {
   --foreground: #f3f6fb;
   --tc-bg: #08111d;
   --tc-surface: #0f1725;
+  --tc-surface-rgb: 15 23 37;
   --tc-surface-2: #131d2d;
   --tc-surface-alt: #172233;
   --tc-surface-dark: #0b1320;
   --tc-surface-darker: #09111b;
   --tc-surface-muted: #22314a;
   --tc-surface-hover: #1b2940;
+  --tc-surface-card-1: #0f172a;
+  --tc-surface-card-2: #0f172a;
+  --tc-surface-filter-1: #121b2d;
+  --tc-surface-filter-2: #121b2d;
   --tc-text: #f3f6fb;
   --tc-text-primary: #f7f9fc;
   --tc-text-secondary: #c6d0de;
@@ -176,7 +186,7 @@ input[type="password"]::-ms-clear {
   --shell-glass-bg: rgba(15, 23, 37, 0.26);
   --shell-glass-border: rgba(255, 255, 255, 0.14);
   --shell-glass-shadow: 0 20px 42px rgba(0, 0, 0, 0.42);
-  --shell-sidebar-gradient: linear-gradient(180deg, rgba(4, 14, 38, 0.98) 0%, rgba(7, 24, 58, 0.97) 52%, rgba(111, 11, 33, 0.94) 100%);
+  --shell-sidebar-gradient: linear-gradient(180deg, rgba(4, 14, 38, 0.98) 0%, rgba(7, 24, 58, 0.97) 52%, rgba(239, 0, 1, 0.78) 100%);
   --shell-sidebar-border: rgba(148, 163, 184, 0.18);
   --shell-sidebar-shadow: 0 30px 84px rgba(0, 0, 0, 0.48);
   --shell-sidebar-overlay-opacity: 0.58;
@@ -230,11 +240,41 @@ input[type="password"]::-ms-clear {
 :root.dark .text-slate-900 { color: var(--tc-text-primary); }
 :root.dark .text-slate-800 { color: var(--tc-text-primary); }
 :root.dark .text-\[\#0b1a3c\] { color: var(--tc-text-primary); }
+:root.dark .text-\[\#011848\] { color: var(--tc-text-primary); }
+:root.dark .text-\[\#10234d\] { color: var(--tc-text-primary); }
+:root.dark .text-\[\#44536c\] { color: var(--tc-text-secondary); }
+:root.dark .text-\[\#55657f\] { color: var(--tc-text-secondary); }
 :root.dark .text-\[\#4b5563\] { color: var(--tc-text-secondary); }
+:root.dark .text-\[\#5a6984\] { color: var(--tc-text-secondary); }
+:root.dark .bg-\[\#f8fbff\] { background-color: var(--tc-input-bg); }
 :root.dark .border-gray-200 { border-color: var(--tc-border); }
 :root.dark .border-gray-300 { border-color: var(--tc-border); }
 :root.dark .border-slate-200 { border-color: var(--tc-border); }
+:root.dark .border-\[\#d7deea\] { border-color: var(--tc-border); }
 :root.dark .border-\[\#e5e7eb\] { border-color: var(--tc-border); }
+:root.dark .bg-\[\#f5f7fb\] { background-color: var(--tc-surface-2); }
+:root.dark .border-emerald-600\/30 { border-color: rgba(5,150,105,0.35); }
+:root.dark .bg-emerald-100 { background-color: rgba(5,150,105,0.12); }
+:root.dark .text-emerald-800 { color: #6ee7b7; }
+:root.dark .border-slate-300 { border-color: rgba(255,255,255,0.15); }
+:root.dark .bg-slate-200 { background-color: rgba(255,255,255,0.1); }
+:root.dark .text-slate-800 { color: var(--tc-text-primary); }
+:root.dark .border-rose-300 { border-color: rgba(244,63,94,0.35); }
+:root.dark .border-rose-200 { border-color: rgba(244,63,94,0.3); }
+:root.dark .bg-rose-100 { background-color: rgba(244,63,94,0.12); }
+:root.dark .bg-rose-50 { background-color: rgba(244,63,94,0.08); }
+:root.dark .text-rose-800 { color: #fda4af; }
+:root.dark .text-rose-700 { color: #fda4af; }
+:root.dark .border-blue-600\/30 { border-color: rgba(37,99,235,0.35); }
+:root.dark .bg-blue-100 { background-color: rgba(37,99,235,0.12); }
+:root.dark .text-blue-800 { color: #93c5fd; }
+:root.dark .border-violet-600\/30 { border-color: rgba(124,58,237,0.35); }
+:root.dark .bg-violet-100 { background-color: rgba(124,58,237,0.12); }
+:root.dark .text-violet-800 { color: #c4b5fd; }
+:root.dark .border-indigo-600\/30 { border-color: rgba(79,70,229,0.35); }
+:root.dark .bg-indigo-100 { background-color: rgba(79,70,229,0.12); }
+:root.dark .text-indigo-800 { color: #a5b4fc; }
+:root.dark .text-amber-800 { color: #fcd34d; }
 :root.dark .placeholder-gray-400::placeholder { color: var(--tc-text-muted); }
 :root.dark .placeholder-gray-500::placeholder { color: var(--tc-text-muted); }
 
@@ -269,7 +309,7 @@ body {
 }
 
 :root.dark body {
-  background: #ffffff;
+  background: var(--page-bg);
 }
 
 #__next {
@@ -9298,24 +9338,12 @@ video {
   box-shadow: var(--shell-cover-shadow);
 }
 
-.app-page-cover--leader-tc {
-  background: linear-gradient(135deg, #071746 0%, #173a8d 48%, #d3132d 100%);
-}
-
-.app-page-cover--technical-support {
-  background: linear-gradient(135deg, #071846 0%, #0b3d88 46%, #0ea5b7 100%);
-}
-
-.app-page-cover--empresa {
-  background: var(--tc-brand-gradient-strong);
-}
-
-.app-page-cover--company-user {
-  background: linear-gradient(135deg, #16234d 0%, #3a55a8 46%, #7c3aed 100%);
-}
-
+.app-page-cover--leader-tc,
+.app-page-cover--technical-support,
+.app-page-cover--empresa,
+.app-page-cover--company-user,
 .app-page-cover--testing-company-user {
-  background: linear-gradient(135deg, #122149 0%, #27457d 46%, #4b607d 100%);
+  background: var(--tc-brand-gradient-strong);
 }
 
 .app-page-cover::before,

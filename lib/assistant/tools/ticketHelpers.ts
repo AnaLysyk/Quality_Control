@@ -131,7 +131,7 @@ export function buildTicketDescription(message: string, context: AssistantScreen
     `Tela atual: ${context.screenLabel}`,
     `Rota: ${context.route}`,
     "",
-    "Descricao:",
+    "Descrição:",
     message.trim(),
   ].join("\n")).slice(0, 1900);
 }
@@ -143,8 +143,8 @@ export function buildStructuredTicketDescription(draft: StructuredTicketDraft, c
     `Tela atual: ${context.screenLabel}`,
     `Rota: ${context.route}`,
     "",
-    "Descricao:",
-    draft.description || "Nao informado.",
+    "Descrição:",
+    draft.description || "Não informado.",
     draft.impact ? `\nImpacto:\n${draft.impact}` : "",
     draft.currentBehavior ? `\nComportamento atual:\n${draft.currentBehavior}` : "",
     draft.expectedBehavior ? `\nComportamento esperado:\n${draft.expectedBehavior}` : "",
@@ -191,10 +191,10 @@ export function isTicketTemplateRequest(message: string) {
   return (
     n.includes("modelo de chamado") ||
     n.includes("modelo de ticket") ||
-    n.includes("titulo, descricao, impacto e comportamento esperado") ||
-    n.includes("titulo descricao impacto e comportamento esperado") ||
-    /quero criar .*chamado.*titulo.*descricao.*impacto/.test(n) ||
-    /quero criar .*ticket.*titulo.*descricao.*impacto/.test(n)
+    n.includes("título, descrição, impacto e comportamento esperado") ||
+    n.includes("título descrição impacto e comportamento esperado") ||
+    /quero criar .*chamado.*título.*descrição.*impacto/.test(n) ||
+    /quero criar .*ticket.*título.*descrição.*impacto/.test(n)
   );
 }
 

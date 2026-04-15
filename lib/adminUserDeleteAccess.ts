@@ -11,7 +11,12 @@ function normalizePermissionRole(input?: string | null): DeletablePermissionRole
 export function canManageInstitutionalProfiles(access: Pick<AccessContext, "role" | "companyRole"> | null | undefined) {
   const role = normalizeLegacyRole(access?.role);
   const companyRole = normalizeLegacyRole(access?.companyRole);
-  return role === SYSTEM_ROLES.LEADER_TC || companyRole === SYSTEM_ROLES.LEADER_TC;
+  return (
+    role === SYSTEM_ROLES.LEADER_TC ||
+    companyRole === SYSTEM_ROLES.LEADER_TC ||
+    role === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
+    companyRole === SYSTEM_ROLES.TECHNICAL_SUPPORT
+  );
 }
 
 export function canDeleteUserByProfile(

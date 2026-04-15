@@ -7,11 +7,11 @@ import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 export async function PATCH(req: NextRequest, context: { params: any }) {
   // Permite autenticação fake para testes E2E
   let testAdmin = false;
-  let testRole = 'admin';
+  let testRole = 'leader_tc';
   if (req.headers) {
     if (typeof req.headers.get === 'function') {
       testAdmin = req.headers.get('x-test-admin') === 'true';
-      testRole = req.headers.get('x-test-role') || 'admin';
+      testRole = req.headers.get('x-test-role') || 'leader_tc';
     } else if (typeof req.headers.entries === 'function') {
       for (const [key, value] of req.headers.entries()) {
         if (key.toLowerCase() === 'x-test-admin' && value === 'true') testAdmin = true;
@@ -31,7 +31,7 @@ export async function PATCH(req: NextRequest, context: { params: any }) {
     const { admin, status } = await requireGlobalAdminWithStatus(req);
     console.error('[PATCH][user][id] admin:', JSON.stringify(admin));
     if (!admin) {
-      return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+      return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
     }
   }
   const params = typeof context.params.then === "function" ? await context.params : context.params;
@@ -59,10 +59,10 @@ export async function PATCH(req: NextRequest, context: { params: any }) {
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
     if (code === "DUPLICATE_EMAIL") {
-      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
     }
     if (code === "DUPLICATE_USER") {
-      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
     }
     throw err;
   }

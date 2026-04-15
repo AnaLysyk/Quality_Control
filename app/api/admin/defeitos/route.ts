@@ -181,7 +181,7 @@ function aggregate(defects: QaseDefect[], projectCodeToSlug: Map<string, string>
   const timeline = new Map<string, number>();
 
   defects.forEach((d) => {
-    const app = d.projectCode || d.tags?.[0] || "Sem aplicacao";
+    const app = d.projectCode || d.tags?.[0] || "Sem aplicação";
     byApplication.set(app, (byApplication.get(app) ?? 0) + 1);
 
     const runKey = d.run_id ? String(d.run_id) : "sem-run";
@@ -217,7 +217,7 @@ function aggregate(defects: QaseDefect[], projectCodeToSlug: Map<string, string>
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    const msg = status === 401 ? "Nao autenticado" : "Sem permissao";
+    const msg = status === 401 ? "Não autenticado" : "Sem permissão";
     return apiFail(req, msg, { status, code: status === 401 ? "AUTH_REQUIRED" : "FORBIDDEN", extra: { error: msg } });
   }
 
@@ -241,7 +241,7 @@ export async function GET(req: NextRequest) {
   );
   const hadRawMap = !!rawMap;
   const legacyCode = normalizeString(process.env.QASE_PROJECT_CODE || process.env.QASE_PROJECT || "");
-  const legacy = legacyCode ? ([{ slug: "griaule", projectCode: legacyCode }] satisfies ProjectEntry[]) : [];
+  const legacy = legacyCode ? ([{ slug: "default", projectCode: legacyCode }] satisfies ProjectEntry[]) : [];
   const projectMap = [...envMap, ...legacy];
   const envProjectCodes = parseProjectCodesFromEnv();
 
@@ -275,7 +275,7 @@ export async function GET(req: NextRequest) {
 
   if (!uniqueProjects.length) {
     const error = hadRawMap && !envMap.length
-      ? "QASE_PROJECT_MAP definido, mas nao foi possivel interpretar. Use slug:CODE ou JSON."
+      ? "QASE_PROJECT_MAP definido, mas não foi possível interpretar. Use slug:CODE ou JSON."
       : "Nenhum projeto Qase configurado. Defina QASE_PROJECT_MAP ou QASE_PROJECT_CODES.";
 
     const payload = {

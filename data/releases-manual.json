@@ -1,4 +1,4 @@
-[
+﻿[
   {
     "id": "d077354d-b18e-4d48-b05b-1fc1587a3692",
     "slug": "run_gate_e2e",
@@ -6,7 +6,7 @@
     "app": "SMART",
     "kind": "run",
     "environments": [],
-    "clientSlug": "griaule",
+    "clientSlug": "DEMO",
     "source": "MANUAL",
     "status": "open",
     "stats": {
@@ -26,7 +26,7 @@
     "app": "SMART",
     "kind": "defect",
     "environments": [],
-    "clientSlug": "griaule",
+    "clientSlug": "DEMO",
     "runSlug": "run_e2e_negocio",
     "source": "MANUAL",
     "status": "open",
@@ -47,7 +47,7 @@
     "app": "SMART",
     "kind": "run",
     "environments": [],
-    "clientSlug": "griaule",
+    "clientSlug": "DEMO",
     "source": "MANUAL",
     "status": "done",
     "stats": {
@@ -87,7 +87,7 @@
     "app": "SMART",
     "kind": "run",
     "environments": [],
-    "clientSlug": "griaule",
+    "clientSlug": "DEMO",
     "source": "MANUAL",
     "status": "done",
     "stats": {
@@ -107,7 +107,7 @@
     "app": "SMART",
     "kind": "run",
     "environments": [],
-    "clientSlug": "griaule",
+    "clientSlug": "DEMO",
     "source": "MANUAL",
     "status": "open",
     "stats": {
@@ -127,7 +127,7 @@
     "app": "SMART",
     "kind": "run",
     "environments": [],
-    "clientSlug": "griaule",
+    "clientSlug": "DEMO",
     "source": "MANUAL",
     "status": "open",
     "stats": {
@@ -147,7 +147,7 @@
     "app": "SMART",
     "kind": "defect",
     "environments": [],
-    "clientSlug": "griaule",
+    "clientSlug": "DEMO",
     "source": "MANUAL",
     "status": "open",
     "stats": {
@@ -167,7 +167,7 @@
     "app": "SMART",
     "kind": "defect",
     "environments": [],
-    "clientSlug": "griaule",
+    "clientSlug": "DEMO",
     "source": "MANUAL",
     "status": "open",
     "stats": {
@@ -188,7 +188,7 @@
     "app": "SMART",
     "kind": "defect",
     "environments": [],
-    "clientSlug": "griaule",
+    "clientSlug": "DEMO",
     "source": "MANUAL",
     "status": "done",
     "stats": {
@@ -205,9 +205,9 @@
     "id": "dfc20183-d60d-4e31-b054-530f0c1ed3d2",
     "slug": "defeito_manual_admin",
     "name": "Defeito manual - admin",
-    "app": "GRIAULE",
+    "app": "DEMO",
     "environments": [],
-    "clientSlug": "griaule",
+    "clientSlug": "DEMO",
     "source": "MANUAL",
     "status": "open",
     "stats": {
@@ -225,9 +225,9 @@
     "id": "3e1b1278-cb09-4fce-824f-ca4dc35e2e54",
     "slug": "defeito_manual_company",
     "name": "Defeito manual - company",
-    "app": "GRIAULE",
+    "app": "DEMO",
     "environments": [],
-    "clientSlug": "griaule",
+    "clientSlug": "DEMO",
     "source": "MANUAL",
     "status": "open",
     "stats": {
@@ -245,9 +245,9 @@
     "id": "fc6ae1e9-8054-4178-8844-02800b2c3076",
     "slug": "erro_no_login",
     "name": "Erro no login",
-    "app": "GRIAULE",
+    "app": "DEMO",
     "environments": [],
-    "clientSlug": "griaule",
+    "clientSlug": "DEMO",
     "source": "MANUAL",
     "status": "open",
     "stats": {
@@ -265,9 +265,9 @@
     "id": "mttr-test-1",
     "slug": "mttr-test-1",
     "name": "Release MTTR Dashboard",
-    "app": "GRIAULE",
+    "app": "DEMO",
     "kind": "defect",
-    "clientSlug": "griaule",
+    "clientSlug": "DEMO",
     "source": "MANUAL",
     "status": "closed",
     "stats": {
@@ -286,9 +286,9 @@
     "id": "mttr-manual-unique",
     "slug": "mttr-manual-unique",
     "name": "Release MTTR Manual Unique",
-    "app": "GRIAULE",
+    "app": "DEMO",
     "kind": "defect",
-    "clientSlug": "griaule",
+    "clientSlug": "DEMO",
     "source": "MANUAL",
     "status": "closed",
     "stats": {

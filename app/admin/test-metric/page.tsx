@@ -1,10 +1,14 @@
-﻿"use client";
+"use client";
+
+export const dynamic = "force-dynamic";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-const CompanyMetricsCard = dynamic(
+import dynamicImport from "next/dynamic";
+import { useAuthUser } from "@/hooks/useAuthUser";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+const CompanyMetricsCard = dynamicImport(
   () => import("@/components/CompanyMetricsCard").then((mod) => mod.CompanyMetricsCard),
   { ssr: false, loading: () => <div>Carregando métricas...</div> }
 );
@@ -115,8 +119,8 @@ function formatDate(iso?: string) {
 }
 
 function gateLabel(status: GateStatus) {
-  if (status === "approved") return "Estavel";
-  if (status === "warning") return "Atencao";
+  if (status === "approved") return "Estável";
+  if (status === "warning") return "Atenção";
   if (status === "failed") return "Risco";
   return "Sem dados";
 }
@@ -145,17 +149,18 @@ function GlobalTrendSparkline({ points }: { points: TrendPoint[] }) {
   }
 
   const QUALITY_TARGET = 85;
-  const w = 780;
-  const h = 180;
-  const left = 42;
-  const right = 72;
-  const top = 12;
-  const bottom = 30;
+  const w = 820;
+  const h = 230;
+  const left = 46;
+  const right = 84;
+  const top = 18;
+  const bottom = 34;
   const plotRight = w - right;
   const plotW = w - left - right;
   const plotH = h - top - bottom;
   const displayPoints = validPoints;
   const ticks = [100, 85, 70, 50, 0];
+
   const toX = (i: number) => {
     if (displayPoints.length <= 1) return left + plotW / 2;
     return left + (i * plotW) / (displayPoints.length - 1);
@@ -169,99 +174,141 @@ function GlobalTrendSparkline({ points }: { points: TrendPoint[] }) {
     })
     .filter((entry): entry is { point: TrendPoint; x: number; y: number } => Boolean(entry));
 
-  const path = coords
-    .map((entry, index) => `${index === 0 ? "M" : "L"}${entry.x.toFixed(1)} ${entry.y.toFixed(1)}`)
-    .join(" ");
+  function smoothPath(pts: { x: number; y: number }[]): string {
+    if (pts.length < 2) return pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+    const tension = 0.28;
+    let d = `M${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+    for (let i = 1; i < pts.length; i++) {
+      const p0 = pts[i - 2] ?? pts[0];
+      const p1 = pts[i - 1];
+      const p2 = pts[i];
+      const p3 = pts[i + 1] ?? p2;
+      const cp1x = p1.x + (p2.x - p0.x) * tension;
+      const cp1y = p1.y + (p2.y - p0.y) * tension;
+      const cp2x = p2.x - (p3.x - p1.x) * tension;
+      const cp2y = p2.y - (p3.y - p1.y) * tension;
+      d += ` C${cp1x.toFixed(1)} ${cp1y.toFixed(1)} ${cp2x.toFixed(1)} ${cp2y.toFixed(1)} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+    }
+    return d;
+  }
 
+  const path = smoothPath(coords);
+  const plotBottom = top + plotH;
   const area = coords.length
-    ? `${path} L${coords[coords.length - 1].x.toFixed(1)} ${(top + plotH).toFixed(1)} L${coords[0].x.toFixed(1)} ${(top + plotH).toFixed(1)} Z`
+    ? `${path} L${coords[coords.length - 1].x.toFixed(1)} ${plotBottom.toFixed(1)} L${coords[0].x.toFixed(1)} ${plotBottom.toFixed(1)} Z`
     : "";
 
-  const zoneY = {
-    healthy: toY(100),
-    attention: toY(85),
-    risk: toY(70),
-    floor: toY(0),
-  };
-  const zoneLabelDisplayX = plotRight - 10;
-  const zoneLabelY = {
+  const zoneY = { healthy: toY(100), attention: toY(85), risk: toY(70), floor: toY(0) };
+  const zoneMidY = {
     healthy: (zoneY.healthy + zoneY.attention) / 2,
     attention: (zoneY.attention + zoneY.risk) / 2,
     risk: (zoneY.risk + zoneY.floor) / 2,
   };
-  const currentPoint = coords[coords.length - 1] ?? null;
-  const currentTone =
-    !currentPoint || (currentPoint.point.value ?? 0) >= 85
-      ? "rgba(16,185,129,0.96)"
-      : (currentPoint.point.value ?? 0) >= 70
-        ? "rgba(245,158,11,0.96)"
-        : "rgba(239,68,68,0.96)";
+
+  const pointTone = (value: number | null) => {
+    if (value == null || value >= 85) return { fill: "rgba(52,211,153,0.96)", glow: "rgba(52,211,153,0.22)" };
+    if (value >= 70) return { fill: "rgba(251,191,36,0.96)", glow: "rgba(251,191,36,0.22)" };
+    return { fill: "rgba(248,113,113,0.96)", glow: "rgba(248,113,113,0.22)" };
+  };
+
+  const gradId = "spark-grad";
+  const lineColor = "rgba(147,197,253,0.96)";
+
+  // Show at most ~7 x-axis labels to avoid crowding
+  const xLabelStep = Math.max(1, Math.ceil(displayPoints.length / 7));
 
   return (
-    <div className="rounded-2xl border border-white/18 bg-[linear-gradient(180deg,rgba(255,255,255,0.10),rgba(255,255,255,0.03))] p-3">
-      <svg viewBox={`0 0 ${w} ${h}`} className="h-44 w-full">
-        <rect x={left} y={zoneY.healthy} width={plotW} height={zoneY.attention - zoneY.healthy} rx="12" fill="rgba(16,185,129,0.22)" />
-        <rect x={left} y={zoneY.attention} width={plotW} height={zoneY.risk - zoneY.attention} rx="12" fill="rgba(245,158,11,0.2)" />
-        <rect x={left} y={zoneY.risk} width={plotW} height={zoneY.floor - zoneY.risk} rx="12" fill="rgba(239,68,68,0.18)" />
+    <div className="rounded-2xl border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02))] overflow-hidden">
+      <svg viewBox={`0 0 ${w} ${h}`} className="h-56 w-full">
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="rgba(147,197,253,0.28)" />
+            <stop offset="100%" stopColor="rgba(147,197,253,0.02)" />
+          </linearGradient>
+        </defs>
 
-        <text x={zoneLabelDisplayX} y={zoneLabelY.healthy} textAnchor="end" dominantBaseline="middle" fontSize="11" fontWeight="700" fill="rgba(220,252,231,0.96)">Saudável</text>
-        <text x={zoneLabelDisplayX} y={zoneLabelY.attention} textAnchor="end" dominantBaseline="middle" fontSize="11" fontWeight="700" fill="rgba(254,243,199,0.96)">Atenção</text>
-        <text x={zoneLabelDisplayX} y={zoneLabelY.risk} textAnchor="end" dominantBaseline="middle" fontSize="11" fontWeight="700" fill="rgba(254,226,226,0.96)">Risco</text>
+        {/* Zone bands */}
+        <rect x={left} y={zoneY.healthy} width={plotW} height={zoneY.attention - zoneY.healthy} fill="rgba(16,185,129,0.16)" />
+        <rect x={left} y={zoneY.attention} width={plotW} height={zoneY.risk - zoneY.attention} fill="rgba(245,158,11,0.13)" />
+        <rect x={left} y={zoneY.risk} width={plotW} height={zoneY.floor - zoneY.risk} fill="rgba(239,68,68,0.12)" />
 
+        {/* Vertical grid per data point */}
+        {coords.map((entry, index) => (
+          <line key={`vg-${index}`} x1={entry.x} y1={top} x2={entry.x} y2={plotBottom} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+        ))}
+
+        {/* Horizontal ticks + Y labels */}
         {ticks.map((tick) => {
           const y = toY(tick);
+          const isTarget = tick === QUALITY_TARGET;
           return (
             <g key={tick}>
-              <line x1={left} y1={y} x2={plotRight} y2={y} stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
-              <text x={left - 8} y={y + 4} textAnchor="end" fontSize="11" fill="rgba(255,255,255,0.72)">
-                {tick}%
-              </text>
+              <line x1={left} y1={y} x2={plotRight} y2={y}
+                stroke={isTarget ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.1)"}
+                strokeWidth={isTarget ? "1.5" : "0.8"}
+                strokeDasharray={isTarget ? "6 3" : undefined}
+              />
+              <text x={left - 8} y={y + 4} textAnchor="end" fontSize="11" fill="rgba(255,255,255,0.6)">{tick}%</text>
             </g>
           );
         })}
 
-        <text x={left + 8} y={toY(QUALITY_TARGET) - 8} textAnchor="start" fontSize="11" fontWeight="700" fill="rgba(255,255,255,0.9)">
-          Meta 85%
-        </text>
+        {/* Meta 85% badge */}
+        <rect x={left + 4} y={toY(QUALITY_TARGET) - 13} width={58} height={15} rx="4" fill="rgba(255,255,255,0.16)" />
+        <text x={left + 8} y={toY(QUALITY_TARGET) - 2} fontSize="10" fontWeight="700" fill="rgba(255,255,255,0.92)">Meta {QUALITY_TARGET}%</text>
 
-        {area ? <path d={area} fill="rgba(255,255,255,0.12)" /> : null}
-        <path d={path} fill="none" stroke="rgba(219,234,254,0.98)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-
-        {coords.map((entry, index) => (
-          <g key={`${entry.x}-${entry.y}-${index}`}>
-            {index === coords.length - 1 ? (
-              <circle cx={entry.x} cy={entry.y} r="8" fill="rgba(255,255,255,0.18)" />
-            ) : null}
-            <circle
-              cx={entry.x}
-              cy={entry.y}
-              r={index === coords.length - 1 ? 5.5 : 4}
-              fill={index === coords.length - 1 ? currentTone : "var(--tc-accent,#ef0001)"}
-              stroke="rgba(255,255,255,0.96)"
-              strokeWidth={index === coords.length - 1 ? "2" : "1.5"}
-            />
-            <title>{`${entry.point.label} | pass rate ${entry.point.value ?? 0}% | runs ${entry.point.total} | falhas ${entry.point.failRate ?? 0}% | bloqueados ${entry.point.blockedRate ?? 0}%${entry.point.value === 0 ? " | sem aprovações nesta janela" : ""}`}</title>
+        {/* Zone pill badges on right */}
+        {([
+          { key: "healthy", label: "Saudável", bg: "rgba(16,185,129,0.28)", color: "rgba(167,243,208,0.96)" },
+          { key: "attention", label: "Atenção",  bg: "rgba(245,158,11,0.28)", color: "rgba(253,230,138,0.96)" },
+          { key: "risk",     label: "Risco",     bg: "rgba(239,68,68,0.28)",  color: "rgba(252,165,165,0.96)" },
+        ] as const).map(({ key, label, bg, color }) => (
+          <g key={key}>
+            <rect x={plotRight + 3} y={zoneMidY[key] - 9} width={right - 6} height={17} rx="5" fill={bg} />
+            <text x={plotRight + 3 + (right - 6) / 2} y={zoneMidY[key] + 4} textAnchor="middle" fontSize="10" fontWeight="700" fill={color}>{label}</text>
           </g>
         ))}
 
-        {displayPoints.map((point, index) => (
-          <text
-            key={`${point.label}-${index}`}
-            x={toX(index)}
-            y={h - 8}
-            textAnchor={index === 0 ? "start" : index === displayPoints.length - 1 ? "end" : "middle"}
-            fontSize="11"
-            fill="rgba(255,255,255,0.72)"
-          >
-            {point.label}
-          </text>
-        ))}
+        {/* Area fill */}
+        {area ? <path d={area} fill={`url(#${gradId})`} /> : null}
+
+        {/* Line */}
+        <path d={path} fill="none" stroke={lineColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+
+        {/* Data points */}
+        {coords.map((entry, index) => {
+          const isLast = index === coords.length - 1;
+          const tone = pointTone(entry.point.value);
+          return (
+            <g key={`pt-${index}`}>
+              {isLast && <circle cx={entry.x} cy={entry.y} r="14" fill={tone.glow} />}
+              {isLast && <circle cx={entry.x} cy={entry.y} r="9"  fill={tone.glow} />}
+              <circle cx={entry.x} cy={entry.y} r={isLast ? 5.5 : 3.5}
+                fill={tone.fill} stroke="rgba(255,255,255,0.9)" strokeWidth={isLast ? "2" : "1.5"} />
+              <title>{`${entry.point.label} | pass rate ${entry.point.value ?? 0}% | runs ${entry.point.total} | falhas ${entry.point.failRate ?? 0}% | bloqueados ${entry.point.blockedRate ?? 0}%`}</title>
+            </g>
+          );
+        })}
+
+        {/* X-axis labels */}
+        {displayPoints.map((point, index) => {
+          const isFirst = index === 0;
+          const isLast = index === displayPoints.length - 1;
+          if (!isFirst && !isLast && index % xLabelStep !== 0) return null;
+          return (
+            <text key={`xl-${index}`} x={toX(index)} y={h - 7}
+              textAnchor={isFirst ? "start" : isLast ? "end" : "middle"}
+              fontSize="11" fill="rgba(255,255,255,0.62)">
+              {point.label}
+            </text>
+          );
+        })}
       </svg>
-      <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-white/78">
-        <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-white" />Pass rate</span>
-        <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />Saudável</span>
-        <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-amber-300/80" />Atenção</span>
-        <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-red-400/80" />Risco</span>
+      <div className="flex flex-wrap gap-4 px-4 pb-3 text-[11px] text-white/72">
+        <span className="inline-flex items-center gap-1.5"><span className="h-0.5 w-5 rounded-full bg-[rgba(147,197,253,0.96)]" />Pass rate</span>
+        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />Saudável ≥85%</span>
+        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-amber-300/80" />Atenção 70–85%</span>
+        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-red-400/80" />Risco &lt;70%</span>
       </div>
     </div>
   );
@@ -269,6 +316,7 @@ function GlobalTrendSparkline({ points }: { points: TrendPoint[] }) {
 
 export default function TestMetricPage() {
   const router = useRouter();
+  const { user } = useAuthUser();
   const [overview, setOverview] = useState<OverviewResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -289,6 +337,16 @@ export default function TestMetricPage() {
     { loaded: false, criticalOpen: null, error: null }
   );
   const carouselRef = useRef<HTMLDivElement | null>(null);
+  const companyRouteInput = {
+    isGlobalAdmin: user?.isGlobalAdmin === true || user?.is_global_admin === true,
+    permissionRole: user?.permissionRole ?? null,
+    role: user?.role ?? null,
+    companyRole: user?.companyRole ?? null,
+    userOrigin: user?.userOrigin ?? user?.user_origin ?? null,
+    companyCount: Array.isArray(user?.clientSlugs) ? user.clientSlugs.length : 0,
+    clientSlug: user?.clientSlug ?? null,
+    defaultClientSlug: user?.defaultClientSlug ?? null,
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -313,7 +371,7 @@ export default function TestMetricPage() {
         setOverview(json);
         setActiveIndex(0);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro ao carregar metricas");
+        setError(err instanceof Error ? err.message : "Erro ao carregar métricas");
         setOverview(null);
       } finally {
         setLoading(false);
@@ -627,34 +685,28 @@ export default function TestMetricPage() {
               </div>
               <GlobalTrendSparkline points={overview?.trendPoints ?? []} />
               {globalTrendMeta ? (
-                <div className="grid gap-2 pt-1 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-white/12 bg-white/8 px-3 py-2">
-                    <div className="text-[10px] uppercase tracking-[0.22em] text-white/60">Primeira leitura</div>
-                    <div className="mt-1 text-sm font-semibold text-white">
-                      {`${globalTrendMeta.first.value ?? 0}%`}
-                    </div>
-                    <div className="text-[11px] text-white/68">
-                      {globalTrendMeta.first.label} · {globalTrendMeta.first.total} runs
-                    </div>
-                  </div>
-                  <div className="rounded-2xl border border-white/12 bg-white/8 px-3 py-2">
-                    <div className="text-[10px] uppercase tracking-[0.22em] text-white/60">Pior ponto do período</div>
-                    <div className="mt-1 text-sm font-semibold text-white">
-                      {`${globalTrendMeta.worst.value ?? 0}%`}
-                    </div>
-                    <div className="text-[11px] text-white/68">
-                      {globalTrendMeta.worst.label} · falhas {globalTrendMeta.worst.failRate ?? 0}% · bloqueados {globalTrendMeta.worst.blockedRate ?? 0}%
-                    </div>
-                  </div>
-                  <div className="rounded-2xl border border-white/12 bg-white/8 px-3 py-2">
-                    <div className="text-[10px] uppercase tracking-[0.22em] text-white/60">Última leitura</div>
-                    <div className="mt-1 text-sm font-semibold text-white">
-                      {`${globalTrendMeta.last.value ?? 0}%`}
-                    </div>
-                    <div className="text-[11px] text-white/68">
-                      {globalTrendMeta.last.label} · falhas {globalTrendMeta.last.failRate ?? 0}% · bloqueados {globalTrendMeta.last.blockedRate ?? 0}%
-                    </div>
-                  </div>
+                <div className="grid gap-3 pt-2 sm:grid-cols-3">
+                  {([
+                    { key: "first", label: "Primeira leitura",     data: globalTrendMeta.first, accent: "border-blue-400/40"    },
+                    { key: "worst", label: "Pior ponto do período", data: globalTrendMeta.worst, accent: "border-red-400/40"     },
+                    { key: "last",  label: "Última leitura",        data: globalTrendMeta.last,  accent: "border-emerald-400/40" },
+                  ] as const).map(({ key, label, data, accent }) => {
+                    const tone =
+                      (data.value ?? 0) >= 85 ? { text: "text-emerald-300", dot: "bg-emerald-400" }
+                      : (data.value ?? 0) >= 70 ? { text: "text-amber-300", dot: "bg-amber-400" }
+                      : { text: "text-red-300", dot: "bg-red-400" };
+                    return (
+                      <div key={key} className={`rounded-2xl border ${accent} bg-white/8 px-4 py-3 space-y-1`}>
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 rounded-full shrink-0 ${tone.dot}`} />
+                          <span className="text-[10px] uppercase tracking-[0.22em] text-white/56">{label}</span>
+                        </div>
+                        <div className={`text-2xl font-black tracking-tight ${tone.text}`}>{data.value ?? 0}%</div>
+                        <div className="text-[11px] text-white/60">{data.label} · {data.total} runs</div>
+                        <div className="text-[11px] text-white/48">falhas {data.failRate ?? 0}% · bloqueados {data.blockedRate ?? 0}%</div>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : null}
             </div>
@@ -735,7 +787,7 @@ export default function TestMetricPage() {
                           defects={defects}
                           focused={index === activeIndex}
                           activeApp={activeAppForCompany}
-                          onSelectApp={(app) => setActiveAppByCompany((prev) => ({ ...prev, [company.id]: app }))}
+                          onSelectApp={(app: string | null) => setActiveAppByCompany((prev) => ({ ...prev, [company.id]: app }))}
                         />
                       </div>
                     );
@@ -788,12 +840,12 @@ export default function TestMetricPage() {
                           </div>
                         </div>
                         {c.slug ? (
-                          <a
-                            href={`/empresas/${encodeURIComponent(c.slug)}/home`}
+                          <Link
+                            href={buildCompanyPathForAccess(c.slug, "home", companyRouteInput)}
                             className="shrink-0 rounded-xl bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold text-white hover:bg-(--tc-accent,#d30001)"
                           >
                             Abrir
-                          </a>
+                          </Link>
                         ) : (
                           <span className="text-xs text-(--tc-text-muted)">sem slug</span>
                         )}
@@ -827,12 +879,12 @@ export default function TestMetricPage() {
                           </div>
                         </div>
                         {company.slug ? (
-                          <a
-                            href={`/empresas/${encodeURIComponent(company.slug)}/releases`}
+                          <Link
+                            href={buildCompanyPathForAccess(company.slug, "runs", companyRouteInput)}
                             className="shrink-0 rounded-xl border border-(--tc-border)/60 bg-(--tc-surface) px-3 py-2 text-xs font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-2)"
                           >
                             Ver
-                          </a>
+                          </Link>
                         ) : null}
                       </div>
                     ))}

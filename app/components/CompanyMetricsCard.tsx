@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { FiFileText } from "react-icons/fi";
 import StatusChart from "@/components/StatusChart";
+import { useAuthUser } from "@/hooks/useAuthUser";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 import { formatRunTitle } from "@/lib/runPresentation";
 
 type Stats = { pass: number; fail: number; blocked: number; notRun: number };
@@ -181,8 +183,8 @@ function computePassRateFromStats(stats: Stats): number | null {
 }
 
 function toneFromGate(status: Gate["status"]) {
-  if (status === "approved") return { label: "Saudavel", className: "bg-emerald-50 text-emerald-700 border-emerald-200" };
-  if (status === "warning") return { label: "Atencao", className: "bg-amber-50 text-amber-700 border-amber-200" };
+  if (status === "approved") return { label: "Saudável", className: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  if (status === "warning") return { label: "Atenção", className: "bg-amber-50 text-amber-700 border-amber-200" };
   if (status === "failed") return { label: "Risco", className: "bg-red-50 text-red-700 border-red-200" };
   return { label: "Sem dados", className: "bg-slate-100 text-slate-700 border-slate-200" };
 }
@@ -321,6 +323,7 @@ export function CompanyMetricsCard(props: {
   focused?: boolean;
 }) {
   const { company, periodDays, activeApp, onSelectApp, defects, focused } = props;
+  const { user } = useAuthUser();
   const [exportingPdf, setExportingPdf] = useState(false);
 
   const isActiveApp = (value: string) => (activeApp ?? "").toLowerCase() === value.toLowerCase();
@@ -416,6 +419,18 @@ export function CompanyMetricsCard(props: {
 
   const tone = toneFromGate(company.gate.status);
   const companySlug = company.slug ?? null;
+  const routeInput = {
+    isGlobalAdmin: user?.isGlobalAdmin === true || user?.is_global_admin === true,
+    permissionRole: user?.permissionRole ?? null,
+    role: user?.role ?? null,
+    companyRole: user?.companyRole ?? null,
+    userOrigin: user?.userOrigin ?? user?.user_origin ?? null,
+    companyCount: Array.isArray(user?.clientSlugs) ? user.clientSlugs.length : 0,
+    clientSlug: user?.clientSlug ?? null,
+    defaultClientSlug: user?.defaultClientSlug ?? null,
+  };
+  const companyHomeHref = companySlug ? buildCompanyPathForAccess(companySlug, "home", routeInput) : null;
+  const companyRunsHref = companySlug ? buildCompanyPathForAccess(companySlug, "runs", routeInput) : null;
   const latestTitle = formatRunTitle(latest?.title ?? latest?.slug, latest?.slug ?? "--");
   const breakdown = [
     { label: "Pass", value: stats.pass, pct: percent(stats.pass, Math.max(total, 1)), tone: "text-emerald-600" },
@@ -564,7 +579,7 @@ export function CompanyMetricsCard(props: {
           <div className="shrink-0 text-right">
             <div className="text-[11px] uppercase tracking-[0.24em] text-(--tc-text-muted)">Pass rate</div>
             <div className="text-3xl font-extrabold text-(--tc-accent,#ef0001)">{passRate == null ? "--" : `${passRate}%`}</div>
-            <div className="mt-1 text-[11px] text-(--tc-text-muted)">{total > 0 ? `${total} casos analisados` : "Sem execucoes na janela"}</div>
+            <div className="mt-1 text-[11px] text-(--tc-text-muted)">{total > 0 ? `${total} casos analisados` : "Sem execuções na janela"}</div>
           </div>
         </div>
 
@@ -602,7 +617,7 @@ export function CompanyMetricsCard(props: {
           <div className="rounded-3xl border border-(--tc-border)/60 bg-linear-to-b from-(--tc-surface) to-(--tc-surface-2) p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Distribuicao real de execucao</h3>
+                <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Distribuicao real de execução</h3>
                 <p className="mt-1 text-[11px] text-(--tc-text-muted)">Grafico e contadores conectados aos resultados reais da empresa.</p>
               </div>
               <span className="rounded-full border border-(--tc-border)/60 bg-(--tc-surface) px-3 py-1 text-[11px] font-semibold text-(--tc-text-muted)">
@@ -611,7 +626,7 @@ export function CompanyMetricsCard(props: {
             </div>
 
             <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-center">
-              <StatusChart stats={stats} hasData={total > 0} emptyLabel="Sem execucoes" />
+              <StatusChart stats={stats} hasData={total > 0} emptyLabel="Sem execuções" />
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {breakdown.map((item) => (
@@ -622,17 +637,17 @@ export function CompanyMetricsCard(props: {
           </div>
 
           <div className="grid auto-rows-fr gap-2.5 sm:grid-cols-2 xl:grid-cols-1">
-            <SummaryStat label="Execucoes" value={releases.length} note="runs na janela selecionada" />
-            <SummaryStat label="Gate em risco" value={releasesAtRisk} note="execucoes com gate quebrado" />
+            <SummaryStat label="Execuções" value={releases.length} note="runs na janela selecionada" />
+            <SummaryStat label="Gate em risco" value={releasesAtRisk} note="execuções com gate quebrado" />
             <SummaryStat label="Defeitos abertos" value={openDefects == null ? "--" : openDefects} note={defects?.loaded ? "origem conectada" : "carregando dados"} />
-            <SummaryStat label="Ultima execucao" value={latestTitle} note={formatDate(latest?.createdAt)} />
+            <SummaryStat label="Última execução" value={latestTitle} note={formatDate(latest?.createdAt)} />
           </div>
         </div>
 
         <div className="rounded-3xl border border-(--tc-border)/60 bg-linear-to-b from-(--tc-surface) to-(--tc-surface-2) p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Qualidade das ultimas execucoes</h3>
+              <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Qualidade das últimas execuções</h3>
               <p className="mt-1 text-[11px] text-(--tc-text-muted)">Linha de pass rate com apoio de falha e bloqueio.</p>
             </div>
             <span className="text-[11px] text-(--tc-text-muted)">
@@ -672,13 +687,13 @@ export function CompanyMetricsCard(props: {
             {companySlug ? (
               <>
               <Link
-                href={`/empresas/${encodeURIComponent(companySlug)}/home`}
+                href={companyHomeHref ?? "/empresas"}
                 className="rounded-xl border border-(--tc-border)/60 bg-(--tc-surface) px-4 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-2)"
               >
                 Abrir empresa
               </Link>
               <Link
-                href={`/empresas/${encodeURIComponent(companySlug)}/releases`}
+                href={companyRunsHref ?? "/release"}
                 className="rounded-xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white hover:bg-(--tc-accent,#d30001)"
               >
                 Ver runs

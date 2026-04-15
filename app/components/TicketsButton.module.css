@@ -1,0 +1,7 @@
+.panel {
+  position: fixed;
+  z-index: 10010;
+  max-height: calc(100vh - 5rem);
+  top: 4.5rem;
+  right: 1rem;
+}

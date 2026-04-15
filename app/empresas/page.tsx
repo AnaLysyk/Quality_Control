@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -13,7 +15,7 @@ export default function EmpresasIndexPage() {
 
   const isAdmin = useMemo(() => {
     const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
-    return user?.isGlobalAdmin === true || role === "admin" || role === "global_admin";
+    return user?.isGlobalAdmin === true || role === "leader_tc" || role === "technical_support";
   }, [user]);
 
   useEffect(() => {
@@ -33,6 +35,7 @@ export default function EmpresasIndexPage() {
           (user as { user_origin?: string | null }).user_origin ??
           null,
         clientSlug: slug,
+        defaultClientSlug: user?.defaultClientSlug ?? null,
       }),
     );
   }, [loading, user, isAdmin, router]);
@@ -67,6 +70,7 @@ export default function EmpresasIndexPage() {
                   (user as { user_origin?: string | null } | null)?.user_origin ??
                   null,
                 clientSlug: company.clientSlug,
+                defaultClientSlug: user?.defaultClientSlug ?? null,
               })
             }
             ctaLabel={(company) => (company.role === "ADMIN" ? "Gerenciar" : "Entrar")}

@@ -35,6 +35,7 @@ type Client = {
   jiraBaseUrl?: string | null;
   jiraEmail?: string | null;
   jiraApiToken?: string | null;
+  notificationsFanoutEnabled?: boolean;
   active: boolean;
   createdAt?: string | null;
   updatedAt?: string | null;
@@ -158,6 +159,7 @@ function mapClient(row: Record<string, unknown>): Client {
     jiraBaseUrl: readNullableString(row.jira_base_url),
     jiraEmail: readNullableString(row.jira_email),
     jiraApiToken: null,
+    notificationsFanoutEnabled: typeof row.notifications_fanout_enabled === "boolean" ? row.notifications_fanout_enabled : true,
     // parse new integrations array when present
     ...(() => {
       const integrations = (row as any).integrations;
@@ -215,7 +217,7 @@ function AdminClientsPage() {
   const [projectsOpen, setProjectsOpen] = useState(false);
   const projectsRef = useRef<HTMLDivElement | null>(null);
   const [validatingProjects, setValidatingProjects] = useState(false);
-  const [activeTab, setActiveTab] = useState<"visao" | "pessoas">("visao");
+  const [activeTab, setActiveTab] = useState<"visão" | "pessoas">("visão");
   const [openCreate, setOpenCreate] = useState(false);
   const [companyAction, setCompanyAction] = useState<null | "activate" | "deactivate" | "delete">(null);
   const [logoUploading, setLogoUploading] = useState(false);
@@ -226,7 +228,7 @@ function AdminClientsPage() {
     if (logoInputRef.current) logoInputRef.current.value = "";
     if (!file || !selectedId) return;
     if (!file.type.startsWith("image/")) {
-      toast.error("Envie uma imagem valida (PNG, JPG, SVG…)");
+      toast.error("Envie uma imagem válida (PNG, JPG, SVG…)");
       return;
     }
     setLogoUploading(true);
@@ -240,7 +242,7 @@ function AdminClientsPage() {
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error((payload as { error?: string }).error || "Nao foi possivel enviar o logo");
+        toast.error((payload as { error?: string }).error || "Não foi possível enviar o logo");
         return;
       }
       const logoUrl = (payload as { logoUrl?: string }).logoUrl ?? "";
@@ -268,6 +270,12 @@ function AdminClientsPage() {
   const currentDescription = form.description ?? selected?.description ?? null;
   const currentNotes = form.notes ?? selected?.notes ?? null;
   const currentQaseProject = form.qaseProjectCode ?? selected?.qaseProjectCode ?? null;
+  const currentNotificationsFanoutEnabled =
+    typeof form.notificationsFanoutEnabled === "boolean"
+      ? form.notificationsFanoutEnabled
+      : typeof selected?.notificationsFanoutEnabled === "boolean"
+        ? selected.notificationsFanoutEnabled
+        : true;
   const currentQaseProjects =
     ((form.qaseProjectCodes !== undefined ? form.qaseProjectCodes : selected?.qaseProjectCodes) ?? null)?.join(", ") ?? null;
   const currentHasQaseToken = hasQaseTokenConfigured(form) || hasQaseTokenConfigured(selected);
@@ -324,7 +332,7 @@ function AdminClientsPage() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
-        const msg = extractMessageFromJson(err) || "Nao foi possivel atualizar o status da empresa";
+        const msg = extractMessageFromJson(err) || "Não foi possível atualizar o status da empresa";
         setMessage(msg);
         toast.error(msg);
         return;
@@ -367,7 +375,7 @@ function AdminClientsPage() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
-        const msg = extractMessageFromJson(err) || "Nao foi possivel excluir a empresa";
+        const msg = extractMessageFromJson(err) || "Não foi possível excluir a empresa";
         setMessage(msg);
         toast.error(msg);
         return;
@@ -388,7 +396,7 @@ function AdminClientsPage() {
   }
 
   const handleUnauthorized = useCallback(() => {
-    const msg = "SessÃ£o expirada. FaÃ§a login novamente.";
+    const msg = "Sessão expirada. Faça login novamente.";
     setMessage(msg);
     toast.error(msg);
     router.replace("/login");
@@ -450,7 +458,7 @@ function AdminClientsPage() {
           setForm(fallback);
           return;
         }
-        setMessage("Nao foi possivel carregar o cliente selecionado");
+        setMessage("Não foi possível carregar o cliente selecionado");
         return;
       }
       const raw = await res.json().catch(() => null);
@@ -471,7 +479,7 @@ function AdminClientsPage() {
     setSelectedId(null);
     setForm({});
     setIsEditing(false);
-    setActiveTab("visao");
+    setActiveTab("visão");
     setCompanyAction(null);
   }
 
@@ -499,10 +507,12 @@ function AdminClientsPage() {
         notes: form.notes || undefined,
         active: typeof form.active === "boolean" ? form.active : undefined,
         integration_mode: form.integrationMode || undefined,
-        // always include the explicit array so backend can detect an intentional clear vs omission
+        // always include the explicit array só backend can detect an intentional clear vs omission
         qase_project_codes: normalizedQaseProjectCodes,
         qase_project_code: normalizedQaseProjectCodes.length ? normalizedQaseProjectCodes[0] : null,
         qase_token: form.qaseToken && form.qaseToken.trim() ? form.qaseToken : undefined,
+        notifications_fanout_enabled:
+          typeof form.notificationsFanoutEnabled === "boolean" ? form.notificationsFanoutEnabled : undefined,
         jira_base_url: form.jiraBaseUrl || undefined,
         jira_email: form.jiraEmail || undefined,
         jira_api_token: form.jiraApiToken && form.jiraApiToken.trim() ? form.jiraApiToken : undefined,
@@ -567,6 +577,7 @@ function AdminClientsPage() {
         description: data.description,
         integration_mode: data.integrationMode,
         qase_token: data.qaseToken || undefined,
+        notifications_fanout_enabled: true,
         // send explicit array (can be empty) and derive legacy code from it
         qase_project_codes: normalizedCodes,
         qase_project_code: legacyProjectCode ?? null,
@@ -606,7 +617,7 @@ function AdminClientsPage() {
         await refreshUser();
         if (data.integrationMode === "manual") {
           setMessage(
-            "Empresa criada sem integraÃ§Ã£o. VocÃª pode configurar Qase depois (token + project code) ou seguir em modo manual.",
+            "Empresa criada sem integração. Você pode configurar Qase depois (token + project code) ou seguir em modo manual.",
           );
         }
         // Show richer feedback when Qase integration data was provided
@@ -656,9 +667,9 @@ function AdminClientsPage() {
   return (
     <div className="min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
       <div className="mx-auto w-full max-w-none px-2 py-4 sm:px-4 lg:px-6 xl:px-8 2xl:px-10 space-y-4">
-        <Breadcrumb items={[{ label: "Admin", href: "/admin/home" }, { label: "Empresas" }]} />
+        <Breadcrumb items={[{ label: "Admin", href: "/admin/dashboard" }, { label: "Empresas" }]} />
 
-        <section className="overflow-hidden rounded-[30px] border border-white/12 bg-[linear-gradient(135deg,#031843_0%,#082457_38%,#3a174f_72%,#9f1025_100%)] px-5 py-5 text-white shadow-[0_22px_60px_rgba(15,23,42,0.15)] sm:px-6 lg:px-7">
+        <section className="overflow-hidden rounded-[30px] border border-white/12 bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-5 py-5 text-white shadow-[0_22px_60px_rgba(15,23,42,0.15)] sm:px-6 lg:px-7">
           <div className="space-y-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-3xl space-y-2">
@@ -833,8 +844,8 @@ function AdminClientsPage() {
                     </div>
                     <div className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-2.5 py-2">
                       <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500">CNPJ</span>
-                      <span className="truncate text-sm font-medium text-slate-700" title={client.taxId || "Nao informado"}>
-                        {client.taxId || "Nao informado"}
+                      <span className="truncate text-sm font-medium text-slate-700" title={client.taxId || "Não informado"}>
+                        {client.taxId || "Não informado"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-2.5 py-2">
@@ -959,7 +970,10 @@ function AdminClientsPage() {
                       </button>
                     )}
                     {currentTaxId ? <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/90">CNPJ: {currentTaxId}</span> : null}
-                    <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/90">Integracao: {currentIntegrationMode}</span>
+                    <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/90">Integração: {currentIntegrationMode}</span>
+                    <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/90">
+                      Notificações: {currentNotificationsFanoutEnabled ? "Fan-out ligado" : "Fan-out desligado"}
+                    </span>
                     {currentWebsite ? (
                       <HeaderLinkTag href={currentWebsite} label="Website" external />
                     ) : null}
@@ -997,17 +1011,17 @@ function AdminClientsPage() {
             <div className="shrink-0 border-b border-(--tc-border) bg-(--tc-surface,#ffffff) px-6 py-3 md:px-7">
             {/* Tabs */}
             <div role="tablist" aria-label="Detalhes da empresa" className="flex items-center gap-3">
-              {activeTab === "visao" ? (
+              {activeTab === "visão" ? (
                 <button
                   type="button"
                   role="tab"
-                  aria-selected={activeTab === "visao"}
+                  aria-selected={activeTab === "visão"}
                   tabIndex={0}
-                  onClick={() => setActiveTab("visao")}
+                  onClick={() => setActiveTab("visão")}
                   className="border-b-2 border-(--tc-accent) px-3 py-2 text-sm font-semibold text-(--tc-text-primary) transition"
                   data-testid="tab-button"
                 >
-                  Visao geral
+                  Visão geral
                 </button>
               ) : (
                 <button
@@ -1015,11 +1029,11 @@ function AdminClientsPage() {
                   role="tab"
                   aria-selected={false}
                   tabIndex={-1}
-                  onClick={() => setActiveTab("visao")}
+                  onClick={() => setActiveTab("visão")}
                   className="border-b-2 border-transparent px-3 py-2 text-sm font-semibold text-(--tc-text-muted) transition hover:text-(--tc-text-primary)"
                   data-testid="tab-button"
                 >
-                  Visao geral
+                  Visão geral
                 </button>
               )}
               {activeTab === "pessoas" ? (
@@ -1053,12 +1067,12 @@ function AdminClientsPage() {
             <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-6 py-5 md:px-7 [scrollbar-gutter:stable]">
 
             {/* Tab content */}
-            {activeTab === "visao" && (
+            {activeTab === "visão" && (
               <div className="space-y-4">
                 <SectionCard
-                  eyebrow="Visao geral"
+                  eyebrow="Visão geral"
                   title="Dados principais"
-                  description="Dados essenciais da empresa em uma estrutura unica de formulario."
+                  description="Dados essenciais da empresa em uma estrutura única de formulario."
                 >
                   <div className="grid gap-3 md:grid-cols-2">
                     <DetailField
@@ -1074,7 +1088,7 @@ function AdminClientsPage() {
                       onChange={(v) => setForm((f) => ({ ...f, taxId: v }))}
                     />
                     <DetailField
-                      label="Endereco"
+                      label="Endereço"
                       value={isEditing ? form.address ?? "" : currentAddress ?? ""}
                       editable={isEditing}
                       onChange={(v) => setForm((f) => ({ ...f, address: v }))}
@@ -1139,13 +1153,46 @@ function AdminClientsPage() {
                         )}
                       </div>
                     </div>
+                    <div className="md:col-span-2 rounded-xl border border-(--tc-border) bg-(--tc-surface-2) p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-(--tc-text-primary)">Fan-out de notificações</p>
+                          <p className="text-xs text-(--tc-text-muted)">
+                            Quando ativo, mudanças no contexto da empresa notificam também usuários vinculados (empresa e TC vinculado).
+                          </p>
+                        </div>
+                        {isEditing ? (
+                          <button
+                            type="button"
+                            onClick={() => setForm((f) => ({ ...f, notificationsFanoutEnabled: !currentNotificationsFanoutEnabled }))}
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition ${
+                              currentNotificationsFanoutEnabled
+                                ? "border border-emerald-300 bg-emerald-100 text-emerald-800"
+                                : "border border-amber-300 bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {currentNotificationsFanoutEnabled ? "Ligado" : "Desligado"}
+                          </button>
+                        ) : (
+                          <span
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                              currentNotificationsFanoutEnabled
+                                ? "border border-emerald-300 bg-emerald-100 text-emerald-800"
+                                : "border border-amber-300 bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {currentNotificationsFanoutEnabled ? "Ligado" : "Desligado"}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </SectionCard>
 
                 <SectionCard
-                  eyebrow="Conexao"
-                  title="Integracao com Qase"
-                  description="A empresa guarda o contexto base da integracao para projetos e aplicacoes."
+                  eyebrow="Conexão"
+                  title="Integração com Qase"
+                  description="A empresa guarda o contexto base da integração para projetos e aplicações."
                 >
                   <div className="space-y-3">
                     {isEditing ? (
@@ -1319,13 +1366,13 @@ function AdminClientsPage() {
                 </SectionCard>
 
                 <SectionCard
-                  eyebrow="Observacoes"
-                  title="Descricao e notas"
+                  eyebrow="Observações"
+                  title="Descrição e notas"
                   description="Campos de contexto para leitura da lideranca e acompanhamento do cadastro."
                 >
                   <div className="grid gap-3">
                     <DetailTextArea
-                      label="Descricao"
+                      label="Descrição"
                       value={isEditing ? form.description ?? "" : currentDescription ?? ""}
                       editable={isEditing}
                       onChange={(v) => setForm((f) => ({ ...f, description: v }))}
@@ -1343,7 +1390,7 @@ function AdminClientsPage() {
 
             {activeTab === "pessoas" && (
               <SectionCard
-                eyebrow="Usuarios"
+                eyebrow="Usuários"
                 title="Usuários vinculados"
                 description="Vincule usuários já cadastrados a esta empresa."
               >
@@ -1406,7 +1453,7 @@ function AdminClientsPage() {
                       type="button"
                       className="px-4 py-2 rounded-lg bg-[#0b1e3c] text-white font-semibold shadow disabled:opacity-60"
                       onClick={() => {
-                        setActiveTab("visao");
+                        setActiveTab("visão");
                         setIsEditing(true);
                       }}
                     >
@@ -1973,10 +2020,10 @@ function CompanyUsers({ clientId, companyName, disabled = false }: CompanyUsersP
       }
       const json = await res.json().catch(() => null);
       if (!res.ok) {
-        toast.error(extractMessageFromJson(json) || "Nao foi possivel vincular o usuario");
+        toast.error(extractMessageFromJson(json) || "Não foi possível vincular o usuário");
         return;
       }
-      toast.success("Usuario vinculado");
+      toast.success("Usuário vinculado");
       setOpenLinkModal(false);
       setSelectedUserId("");
       setSearch("");
@@ -2000,10 +2047,10 @@ function CompanyUsers({ clientId, companyName, disabled = false }: CompanyUsersP
       }
       const json = await res.json().catch(() => null);
       if (!res.ok) {
-        toast.error(extractMessageFromJson(json) || "Nao foi possivel remover o vinculo");
+        toast.error(extractMessageFromJson(json) || "Não foi possível remover o vínculo");
         return;
       }
-      toast.success("Vinculo removido");
+      toast.success("Vínculo removido");
       await loadLinkedUsers();
     } finally {
       setRemovingId(null);

@@ -1,10 +1,13 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useMemo, useState, useCallback } from "react";
 import { useSWRRequests } from "./useSWRRequests";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import Breadcrumb from "@/components/Breadcrumb";
+import { useI18n } from "@/hooks/useI18n";
 
 type RequestRecord = {
   id: string;
@@ -15,37 +18,38 @@ type RequestRecord = {
   reviewNote?: string;
 };
 
-const REQUEST_TYPE_LABEL: Record<RequestRecord["type"], string> = {
-  EMAIL_CHANGE: "Troca de e-mail",
-  COMPANY_CHANGE: "Troca de empresa",
-  PASSWORD_RESET: "Reset de senha",
-  PROFILE_DELETION: "Exclusao de perfil",
-};
-
 const STATUS_TONE: Record<RequestRecord["status"], "warning" | "positive" | "danger"> = {
   PENDING: "warning",
   APPROVED: "positive",
   REJECTED: "danger",
 };
 
-const STATUS_LABEL: Record<RequestRecord["status"], string> = {
-  PENDING: "Pendente",
-  APPROVED: "Aprovada",
-  REJECTED: "Rejeitada",
-};
-
 export default function RequestsPage() {
   const router = useRouter();
+  const { t, language } = useI18n();
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
+  const REQUEST_TYPE_LABEL: Record<RequestRecord["type"], string> = {
+    EMAIL_CHANGE: t("requestsPage.typeEmailChange"),
+    COMPANY_CHANGE: t("requestsPage.typeCompanyChange"),
+    PASSWORD_RESET: t("requestsPage.typePasswordReset"),
+    PROFILE_DELETION: t("requestsPage.typeProfileDeletion"),
+  };
+
+  const STATUS_LABEL: Record<RequestRecord["status"], string> = {
+    PENDING: t("requestsPage.statusPending"),
+    APPROVED: t("requestsPage.statusApproved"),
+    REJECTED: t("requestsPage.statusRejected"),
+  };
+
   const handleUnauthorized = useCallback(() => {
-    const nextMessage = "Sessao expirada. Faca login novamente.";
+    const nextMessage = t("requestsPage.expiredSession");
     setMessage(nextMessage);
     toast.error(nextMessage);
     router.push("/login");
-  }, [router]);
+  }, [router, t]);
 
   const { requests, loading, error, refetch, scope } = useSWRRequests();
 
@@ -73,15 +77,15 @@ export default function RequestsPage() {
 
     if (!response.ok) {
       const payload = await response.json().catch(() => ({}));
-      const nextMessage = payload.message || "Erro ao enviar solicitacao.";
+      const nextMessage = payload.message || t("requestsPage.requestError");
       setMessage(nextMessage);
       toast.error(nextMessage);
       return;
     }
 
     setEmail("");
-    setMessage("Solicitacao de e-mail enviada.");
-    toast.success("Solicitacao de e-mail enviada.");
+    setMessage(t("requestsPage.emailSent"));
+    toast.success(t("requestsPage.emailSent"));
     void refetch();
   }
 
@@ -102,57 +106,57 @@ export default function RequestsPage() {
 
     if (!response.ok) {
       const payload = await response.json().catch(() => ({}));
-      const nextMessage = payload.message || "Erro ao enviar solicitacao.";
+      const nextMessage = payload.message || t("requestsPage.requestError");
       setMessage(nextMessage);
       toast.error(nextMessage);
       return;
     }
 
     setCompany("");
-    setMessage("Solicitacao de empresa enviada.");
-    toast.success("Solicitacao de empresa enviada.");
+    setMessage(t("requestsPage.companySent"));
+    toast.success(t("requestsPage.companySent"));
     void refetch();
   }
 
   return (
     <div className="min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
       <div className="tc-page-shell py-4 sm:py-6">
-        <Breadcrumb items={[{ label: "Conta", href: "/settings/profile" }, { label: "Solicitacoes" }]} />
+        <Breadcrumb items={[{ label: t("requestsPage.account"), href: "/settings/profile" }, { label: t("requestsPage.requests") }]} />
 
         <section className="tc-hero-panel">
           <div className="tc-hero-grid">
             <div className="space-y-5">
               <div className="tc-hero-copy">
-                <p className="tc-hero-kicker">{scope === "all" ? "Central de solicitacoes" : "Solicitacoes do usuario"}</p>
-                <h1 className="tc-hero-title">Ajustes de conta</h1>
+                <p className="tc-hero-kicker">{scope === "all" ? t("requestsPage.centerAll") : t("requestsPage.userRequests")}</p>
+                <h1 className="tc-hero-title">{t("requestsPage.title")}</h1>
                 <p className="tc-hero-description">
                   {scope === "all"
-                    ? "Suporte tecnico acompanha toda a fila e os demais perfis continuam vendo apenas os proprios registros."
-                    : "Abra pedidos de troca de e-mail ou empresa e acompanhe o retorno no mesmo fluxo."}
+                    ? t("requestsPage.allDescription")
+                    : t("requestsPage.userDescription")}
                 </p>
               </div>
             </div>
 
             <div className="tc-hero-stat-grid">
               <div className="tc-hero-stat">
-                <div className="tc-hero-stat-label">Solicitacoes</div>
+                <div className="tc-hero-stat-label">{t("requestsPage.totalRequests")}</div>
                 <div className="tc-hero-stat-value">{requests.length}</div>
-                <div className="tc-hero-stat-note">{scope === "all" ? "Total da fila visivel." : "Total de pedidos registrados."}</div>
+                <div className="tc-hero-stat-note">{scope === "all" ? t("requestsPage.totalQueue") : t("requestsPage.totalUser")}</div>
               </div>
               <div className="tc-hero-stat">
-                <div className="tc-hero-stat-label">Pendentes</div>
+                <div className="tc-hero-stat-label">{t("requestsPage.pending")}</div>
                 <div className="tc-hero-stat-value">{summary.pending}</div>
-                <div className="tc-hero-stat-note">Aguardando avaliacao.</div>
+                <div className="tc-hero-stat-note">{t("requestsPage.pendingNote")}</div>
               </div>
               <div className="tc-hero-stat">
-                <div className="tc-hero-stat-label">Aprovadas</div>
+                <div className="tc-hero-stat-label">{t("requestsPage.approved")}</div>
                 <div className="tc-hero-stat-value">{summary.approved}</div>
-                <div className="tc-hero-stat-note">Pedidos concluidos.</div>
+                <div className="tc-hero-stat-note">{t("requestsPage.approvedNote")}</div>
               </div>
               <div className="tc-hero-stat">
-                <div className="tc-hero-stat-label">Rejeitadas</div>
+                <div className="tc-hero-stat-label">{t("requestsPage.rejected")}</div>
                 <div className="tc-hero-stat-value">{summary.rejected}</div>
-                <div className="tc-hero-stat-note">Solicitacoes que precisaram de ajuste.</div>
+                <div className="tc-hero-stat-note">{t("requestsPage.rejectedNote")}</div>
               </div>
             </div>
           </div>
@@ -162,15 +166,15 @@ export default function RequestsPage() {
           <section className="tc-panel">
             <div className="tc-panel-header">
               <div>
-                <p className="tc-panel-kicker">E-mail</p>
-                <h2 className="tc-panel-title">Solicitar troca de e-mail</h2>
-                <p className="tc-panel-description">Envie um novo e-mail para revisao administrativa.</p>
+                <p className="tc-panel-kicker">{t("requestsPage.emailKicker")}</p>
+                <h2 className="tc-panel-title">{t("requestsPage.emailTitle")}</h2>
+                <p className="tc-panel-description">{t("requestsPage.emailDescription")}</p>
               </div>
             </div>
 
             <div className="mt-5 space-y-3">
               <label className="flex flex-col gap-2 text-sm text-(--tc-text-primary,#0b1a3c)">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Novo e-mail</span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{t("requestsPage.newEmail")}</span>
                 <input
                   type="email"
                   inputMode="email"
@@ -182,7 +186,7 @@ export default function RequestsPage() {
                 />
               </label>
               <button type="button" onClick={submitEmail} className="tc-button-primary" disabled={!email.trim()}>
-                Enviar solicitacao
+                {t("requestsPage.sendRequest")}
               </button>
             </div>
           </section>
@@ -190,26 +194,26 @@ export default function RequestsPage() {
           <section className="tc-panel">
             <div className="tc-panel-header">
               <div>
-                <p className="tc-panel-kicker">Empresa</p>
-                <h2 className="tc-panel-title">Solicitar troca de empresa</h2>
-                <p className="tc-panel-description">Peça a alteracao do contexto principal de empresa do usuario.</p>
+                <p className="tc-panel-kicker">{t("requestsPage.companyKicker")}</p>
+                <h2 className="tc-panel-title">{t("requestsPage.companyTitle")}</h2>
+                <p className="tc-panel-description">{t("requestsPage.companyDescription")}</p>
               </div>
             </div>
 
             <div className="mt-5 space-y-3">
               <label className="flex flex-col gap-2 text-sm text-(--tc-text-primary,#0b1a3c)">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Nova empresa</span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{t("requestsPage.newCompany")}</span>
                 <input
                   type="text"
                   autoComplete="organization"
                   value={company}
                   onChange={(event) => setCompany(event.target.value)}
-                  placeholder="Nome da empresa"
+                  placeholder={t("requestsPage.companyPlaceholder")}
                   className="form-control-user w-full rounded-xl px-4 py-3 text-sm"
                 />
               </label>
               <button type="button" onClick={submitCompany} className="tc-button-primary" disabled={!company.trim()}>
-                Enviar solicitacao
+                {t("requestsPage.sendRequest")}
               </button>
             </div>
           </section>
@@ -224,27 +228,27 @@ export default function RequestsPage() {
         <section className="tc-panel">
           <div className="tc-panel-header">
             <div>
-              <p className="tc-panel-kicker">Historico</p>
-              <h2 className="tc-panel-title">Status das solicitacoes</h2>
-              <p className="tc-panel-description">Leitura direta do que esta pendente, aprovado ou rejeitado.</p>
+              <p className="tc-panel-kicker">{t("requestsPage.historyKicker")}</p>
+              <h2 className="tc-panel-title">{t("requestsPage.historyTitle")}</h2>
+              <p className="tc-panel-description">{t("requestsPage.historyDescription")}</p>
             </div>
-            {loading ? <span className="text-sm font-medium text-(--tc-text-muted,#6b7280)">Carregando...</span> : null}
+            {loading ? <span className="text-sm font-medium text-(--tc-text-muted,#6b7280)">{t("requestsPage.loading")}</span> : null}
           </div>
 
           <div className="mt-5 space-y-3">
             {error ? (
-              <div className="tc-empty-state">Nao foi possivel carregar o historico agora.</div>
+              <div className="tc-empty-state">{t("requestsPage.loadError")}</div>
             ) : requests.length === 0 ? (
-              <div className="tc-empty-state">Nenhuma solicitacao registrada ate o momento.</div>
+              <div className="tc-empty-state">{t("requestsPage.empty")}</div>
             ) : (
               requests.map((request) => (
                 <article key={request.id} className="tc-panel-muted">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-base font-semibold text-(--tc-text-primary,#0b1a3c)">{REQUEST_TYPE_LABEL[request.type]}</p>
-                      <p className="mt-1 text-sm text-(--tc-text-muted,#6b7280)">Criada em {new Date(request.createdAt).toLocaleString("pt-BR")}</p>
+                      <p className="mt-1 text-sm text-(--tc-text-muted,#6b7280)">{t("requestsPage.createdAt", { date: new Date(request.createdAt).toLocaleString(language === "pt-BR" ? "pt-BR" : "en-US") })}</p>
                       {request.reviewNote ? (
-                        <p className="mt-3 text-sm text-(--tc-text-muted,#6b7280)">Observacao: {request.reviewNote}</p>
+                        <p className="mt-3 text-sm text-(--tc-text-muted,#6b7280)">{t("requestsPage.note", { note: request.reviewNote })}</p>
                       ) : null}
                     </div>
 

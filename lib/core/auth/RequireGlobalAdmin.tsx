@@ -18,8 +18,7 @@ export function RequireGlobalAdmin({ children, fallback }: RequireGlobalAdminPro
   const legacyUser = (user ?? null) as unknown as { is_global_admin?: boolean } | null;
   const normalizedRole = typeof user?.role === "string" ? user.role.toLowerCase() : null;
   const isAdmin =
-    normalizedRole === "admin" ||
-    normalizedRole === "global_admin" ||
+    normalizedRole === "leader_tc" ||
     user?.globalRole === "global_admin" ||
     user?.isGlobalAdmin === true ||
     legacyUser?.is_global_admin === true;

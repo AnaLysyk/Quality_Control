@@ -8,6 +8,7 @@ import { attachAssigneeInfo, attachAssigneeToTicket } from "@/lib/ticketsPresent
 import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
 import { canAccessGlobalTicketWorkspace } from "@/lib/rbac/tickets";
 import { canCreateSupportTickets, canViewSupportBoard } from "@/lib/supportAccess";
+import { brainOnTicketCreated } from "@/lib/brain/autoSync";
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
@@ -16,10 +17,10 @@ function resolveDisplayName(user: { full_name?: string | null; name?: string | n
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
   if (!canViewSupportBoard(user)) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   const url = new URL(req.url);
@@ -74,10 +75,10 @@ export async function POST(req: Request) {
   try {
     const user = await authenticateRequest(req);
     if (!user) {
-      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
     if (!canCreateSupportTickets(user)) {
-      return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
     }
     const body = await req.json().catch(() => ({}));
     const requestedCompanyId = typeof body?.companyId === "string" ? body.companyId : null;
@@ -112,7 +113,7 @@ export async function POST(req: Request) {
 
     if (!ticket) {
       console.warn("[tickets POST] createTicket returned null — body:", body);
-      return NextResponse.json({ error: "Informe titulo ou descricao" }, { status: 400 });
+      return NextResponse.json({ error: "Informe título ou descrição" }, { status: 400 });
     }
 
     appendTicketEvent({
@@ -127,6 +128,8 @@ export async function POST(req: Request) {
     notifyTicketCreated(ticket).catch((err) => {
       console.error("Falha ao notificar novo chamado:", err);
     });
+
+    brainOnTicketCreated(ticket).catch(() => {});
 
     const enriched = await attachAssigneeToTicket(ticket);
     return NextResponse.json({ item: enriched }, { status: 201 });

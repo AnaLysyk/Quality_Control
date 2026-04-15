@@ -28,10 +28,10 @@ type Props = {
 
 const ROLE_OPTIONS = [
   { value: "empresa", label: "Admin da empresa" },
-  { value: "company_user", label: "Usuario da empresa" },
-  { value: "testing_company_user", label: "Usuario TC" },
+  { value: "company_user", label: "Usuário da empresa" },
+  { value: "testing_company_user", label: "Usuário TC" },
   { value: "leader_tc", label: "Lider TC" },
-  { value: "technical_support", label: "Suporte Tecnico" },
+  { value: "technical_support", label: "Suporte Técnico" },
 ];
 const EMPTY_JOB_TITLE = "__empty_job_title__";
 
@@ -45,9 +45,9 @@ export function CreateUserModal({
   lockRole = false,
   showCompanyField = true,
   requireCompanySelection = false,
-  title = "Criar usuario",
-  subtitle = "Um convite sera enviado por email.",
-  submitLabel = "Criar usuario",
+  title = "Criar usuário",
+  subtitle = "Um convite será enviado por email.",
+  submitLabel = "Criar usuário",
 }: Props) {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -157,7 +157,7 @@ export function CreateUserModal({
         return;
       }
       if (!res.ok) {
-        const err = await readApiError(res, "Erro ao salvar usuario");
+        const err = await readApiError(res, "Erro ao salvar usuário");
         try {
           const bodyText = await res.text().catch(() => "");
           console.error(`[ADMIN-USERS-CLIENT][CREATE] non-ok status=${res.status} body=${bodyText}`);
@@ -166,7 +166,7 @@ export function CreateUserModal({
         toast.error(err.displayMessage);
         return;
       }
-      const okMsg = "Usuario criado. Convite enviado.";
+      const okMsg = "Usuário criado. Convite enviado.";
       setMessage(okMsg);
       toast.success(okMsg);
       console.error(`[ADMIN-USERS-CLIENT][CREATE] success name=${name} email=${email} clientId=${localClientId}`);
@@ -175,12 +175,12 @@ export function CreateUserModal({
       try {
         await onCreated?.();
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Erro ao atualizar lista de usuarios";
+        const msg = err instanceof Error ? err.message : "Erro ao atualizar lista de usuários";
         setError(msg);
         toast.error(msg);
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao salvar usuario";
+      const msg = err instanceof Error ? err.message : "Erro ao salvar usuário";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -208,7 +208,7 @@ export function CreateUserModal({
       <div className="my-auto w-full max-w-4xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-xl bg-white p-5 shadow-2xl">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <p className="text-xs uppercase text-indigo-600">Usuario</p>
+            <p className="text-xs uppercase text-indigo-600">Usuário</p>
             <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             <p className="text-sm text-gray-600">{subtitle}</p>
           </div>
@@ -218,7 +218,7 @@ export function CreateUserModal({
         </div>
 
         {requiresClient && !localClientId && (
-          <p className="text-sm text-red-600 mb-3">Selecione uma empresa para criar usuario.</p>
+          <p className="text-sm text-red-600 mb-3">Selecione uma empresa para criar usuário.</p>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -247,19 +247,19 @@ export function CreateUserModal({
                   className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Nome do usuario"
+                  placeholder="Nome do usuário"
                   required
                 />
               </label>
               <label className="block text-sm">
-                Usuario (login)
+                Usuário (login)
                 <input
                   className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                   value={login}
                   onChange={(e) => setLogin(e.target.value)}
                   placeholder="Se deixar em branco, o sistema gera"
                 />
-                <span className="mt-1 block text-xs text-gray-500">Unico no sistema. Voce pode informar manualmente ou deixar o sistema gerar.</span>
+                <span className="mt-1 block text-xs text-gray-500">Único no sistema. Você pode informar manualmente ou deixar o sistema gerar.</span>
               </label>
               {requiresPassword ? (
                 <label className="block text-sm">
@@ -270,10 +270,10 @@ export function CreateUserModal({
                     className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Minimo 8 caracteres"
+                    placeholder="Mínimo 8 caracteres"
                     required
                   />
-                  <span className="mt-1 block text-xs text-gray-500">Obrigatoria para criar Lider TC.</span>
+                  <span className="mt-1 block text-xs text-gray-500">Obrigatória para criar Lider TC.</span>
                 </label>
               ) : null}
               <label className="block text-sm">
@@ -295,10 +295,10 @@ export function CreateUserModal({
                     onValueChange={(value) => setJobTitle(value === EMPTY_JOB_TITLE ? "" : value)}
                   >
                     <SelectTrigger className="h-10.5 rounded-lg border-gray-200 bg-white px-3 py-2 text-sm focus-visible:ring-indigo-500/30">
-                      <SelectValue placeholder="Selecione uma profissao" />
+                      <SelectValue placeholder="Selecione uma profissão" />
                     </SelectTrigger>
                     <SelectContent className="max-h-80">
-                      <SelectItem value={EMPTY_JOB_TITLE}>Nao informado</SelectItem>
+                      <SelectItem value={EMPTY_JOB_TITLE}>Não informado</SelectItem>
                       {JOB_TITLE_OPTIONS.map((jobTitleOption) => (
                         <SelectItem key={jobTitleOption} value={jobTitleOption}>
                           {jobTitleOption}
@@ -330,7 +330,7 @@ export function CreateUserModal({
                   className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                   value={linkedin}
                   onChange={(e) => setLinkedin(e.target.value)}
-                  placeholder="https://www.linkedin.com/in/usuario"
+                  placeholder="https://www.linkedin.com/in/usuário"
                 />
               </label>
               <label className="block text-sm">

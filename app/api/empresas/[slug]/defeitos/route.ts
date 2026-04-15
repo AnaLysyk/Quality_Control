@@ -12,7 +12,7 @@ function normalizeKanbanStatus(status: "open" | "in_progress" | "done") {
 export async function GET(_req: Request, context: { params: Promise<{ slug?: string }> }) {
   const auth = await authenticateRequest(_req);
   if (!auth) {
-    return NextResponse.json({ error: "Nao autorizado", defects: [] }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado", defects: [] }, { status: 401 });
   }
   if (!auth.isGlobalAdmin && !isCompanyUser(auth)) {
     return NextResponse.json({ error: "Acesso proibido", defects: [] }, { status: 403 });
@@ -21,7 +21,7 @@ export async function GET(_req: Request, context: { params: Promise<{ slug?: str
   const { slug } = await context.params;
   const companySlug = typeof slug === "string" ? slug.trim() : "";
   if (!companySlug) {
-    return NextResponse.json({ error: "slug obrigatorio", defects: [] }, { status: 400 });
+    return NextResponse.json({ error: "slug obrigatório", defects: [] }, { status: 400 });
   }
 
   if (!auth.isGlobalAdmin) {

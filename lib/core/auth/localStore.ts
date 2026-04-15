@@ -5,6 +5,7 @@ import fs from "node:fs/promises";
 import { randomUUID } from "crypto";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
+import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import {
   assertUserCanLinkToCompany,
   normalizeUserOrigin,
@@ -234,19 +235,28 @@ function normalizeSlug(value: string) {
     .slice(0, 80);
 }
 
-function normalizeMembershipRole(role?: string | null) {
+function normalizeMembershipRole(role?: string | null): SystemRole {
   const normalized = (role ?? "").toLowerCase();
-  if (normalized === "company_admin" || normalized === "user" || normalized === "viewer") return normalized;
-  if (normalized === "it_dev" || normalized === "itdev" || normalized === "developer" || normalized === "dev") return "it_dev";
-  if (normalized === "technical_support" || normalized === "tech_support" || normalized === "support_tech") {
-    return "technical_support";
+  if (normalized === SYSTEM_ROLES.EMPRESA || normalized === "company_admin" || normalized === "admin" || normalized === "client_admin" || normalized === "company") {
+    return SYSTEM_ROLES.EMPRESA;
   }
-  if (normalized === "leader_tc" || normalized === "tc_leader" || normalized === "lider_tc") {
-    return "leader_tc";
+  if (normalized === SYSTEM_ROLES.COMPANY_USER || normalized === "user" || normalized === "company_user") {
+    return SYSTEM_ROLES.COMPANY_USER;
   }
-  if (normalized === "admin" || normalized === "client_admin" || normalized === "company") return "company_admin";
-  if (normalized === "read_only") return "viewer";
-  return "user";
+  if (normalized === SYSTEM_ROLES.TESTING_COMPANY_USER || normalized === "viewer" || normalized === "read_only") {
+    return SYSTEM_ROLES.TESTING_COMPANY_USER;
+  }
+  if (
+    normalized === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
+    normalized === "it_dev" || normalized === "itdev" || normalized === "developer" || normalized === "dev" ||
+    normalized === "tech_support" || normalized === "support_tech" || normalized === "support"
+  ) {
+    return SYSTEM_ROLES.TECHNICAL_SUPPORT;
+  }
+  if (normalized === SYSTEM_ROLES.LEADER_TC || normalized === "tc_leader" || normalized === "lider_tc") {
+    return SYSTEM_ROLES.LEADER_TC;
+  }
+  return SYSTEM_ROLES.TESTING_COMPANY_USER;
 }
 
 function normalizeMemberships(store: LocalAuthStore) {
@@ -922,7 +932,7 @@ export async function resolveUserCompanies(userId: string) {
     .filter((item) => item.company);
 }
 
-export function normalizeLocalRole(role?: string | null) {
+export function normalizeLocalRole(role?: string | null): SystemRole {
   return normalizeMembershipRole(role ?? null);
 }
 
@@ -932,11 +942,8 @@ export function normalizeGlobalRole(role?: string | null) {
   return null;
 }
 
-export function toLegacyRole(companyRole?: string | null, isGlobalAdmin?: boolean) {
+export function toLegacyRole(companyRole?: string | null, isGlobalAdmin?: boolean): SystemRole {
   const normalized = normalizeMembershipRole(companyRole ?? null);
-  if (normalized === "it_dev") return "it_dev";
-  if (normalized === "technical_support") return "technical_support";
-  if (isGlobalAdmin) return "admin";
-  if (normalized === "company_admin") return "company";
-  return "user";
+  if (isGlobalAdmin) return SYSTEM_ROLES.LEADER_TC;
+  return normalized;
 }

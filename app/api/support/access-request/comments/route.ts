@@ -142,20 +142,20 @@ export async function POST(req: Request) {
   const comment = sanitizeBody(body.comment ?? body.body ?? "");
 
   if (!name || !email || !comment) {
-    return NextResponse.json({ error: "Informe nome, e-mail e comentario." }, { status: 400 });
+    return NextResponse.json({ error: "Informe nome, e-mail e comentário." }, { status: 400 });
   }
 
   const request = requestId ? await findRequestById(requestId) : await findRequestByLookup(email, name);
   if (!request) {
-    return NextResponse.json({ error: "Solicitacao nao encontrada." }, { status: 404 });
+    return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404 });
   }
 
   const parsed = parseAccessRequestMessage(String(request.message ?? ""), String(request.email ?? ""));
   if (!matchesAccessRequestLookup({ lookupEmail: email, lookupName: name, parsed, storedEmail: request.email })) {
-    return NextResponse.json({ error: "Dados nao conferem com a solicitacao." }, { status: 403 });
+    return NextResponse.json({ error: "Dados não conferem com a solicitação." }, { status: 403 });
   }
   if (request.status === "rejected" || request.status === "closed") {
-    return NextResponse.json({ error: "Esta solicitacao ja foi finalizada e nao aceita novos comentarios." }, { status: 409 });
+    return NextResponse.json({ error: "Esta solicitação já foi finalizada e não aceita novos comentários." }, { status: 409 });
   }
 
   const authorName = parsed.fullName || parsed.name || name;
@@ -174,6 +174,7 @@ export async function POST(req: Request) {
     authorName,
     body: comment,
     reviewQueue: parsed.reviewQueue,
+    clientId: parsed.clientId,
   });
 
   return NextResponse.json({ item: record }, { status: 200 });

@@ -244,73 +244,81 @@ describe("B) Perfil 'company' (company_admin) — permissões bloqueadas", () =>
 // C) Perfil 'support' — módulos completamente ausentes
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("C) Perfil 'support' — módulos ausentes verificados", () => {
+describe("C) Perfil 'support' — mesma visão do lider_tc + tickets view_all", () => {
   const p = perm("technical_support");
 
-  test("C1. applications: view bloqueado (módulo ausente)", () => {
-    expect(hasPermissionAccess(p, "applications", "view")).toBe(false);
-    expect(hasPermissionAccess(p, "applications", "create")).toBe(false);
-    console.log("✅ C1. support: módulo applications ausente");
+  test("C1. applications: mesma visão do lider_tc", () => {
+    expect(hasPermissionAccess(p, "applications", "view")).toBe(true);
+    expect(hasPermissionAccess(p, "applications", "create")).toBe(true);
+    expect(hasPermissionAccess(p, "applications", "edit")).toBe(true);
+    console.log("✅ C1. support: applications visível (mesma visão lider_tc)");
   });
 
-  test("C2. releases: view bloqueado (módulo ausente)", () => {
-    expect(hasPermissionAccess(p, "releases", "view")).toBe(false);
-    expect(hasPermissionAccess(p, "releases", "create")).toBe(false);
-    console.log("✅ C2. support: módulo releases ausente");
+  test("C2. releases: view permitido", () => {
+    expect(hasPermissionAccess(p, "releases", "view")).toBe(true);
+    console.log("✅ C2. support: releases visível");
   });
 
-  test("C3. runs: view bloqueado (módulo ausente)", () => {
-    expect(hasPermissionAccess(p, "runs", "view")).toBe(false);
-    expect(hasPermissionAccess(p, "runs", "create")).toBe(false);
-    console.log("✅ C3. support: módulo runs ausente");
+  test("C3. runs: view permitido", () => {
+    expect(hasPermissionAccess(p, "runs", "view")).toBe(true);
+    console.log("✅ C3. support: runs visível");
   });
 
-  test("C4. defects: view bloqueado (módulo ausente)", () => {
-    expect(hasPermissionAccess(p, "defects", "view")).toBe(false);
-    console.log("✅ C4. support: módulo defects ausente");
+  test("C4. defects: view permitido", () => {
+    expect(hasPermissionAccess(p, "defects", "view")).toBe(true);
+    console.log("✅ C4. support: defects visível");
   });
 
-  test("C5. notes: view bloqueado (módulo ausente)", () => {
-    expect(hasPermissionAccess(p, "notes", "view")).toBe(false);
-    console.log("✅ C5. support: módulo notes ausente");
+  test("C5. notes: view/create permitidos", () => {
+    expect(hasPermissionAccess(p, "notes", "view")).toBe(true);
+    expect(hasPermissionAccess(p, "notes", "create")).toBe(true);
+    console.log("✅ C5. support: notes visível");
   });
 
-  test("C6. settings: view bloqueado (módulo ausente)", () => {
-    expect(hasPermissionAccess(p, "settings", "view")).toBe(false);
+  test("C6. settings: view permitido (edit bloqueado)", () => {
+    expect(hasPermissionAccess(p, "settings", "view")).toBe(true);
     expect(hasPermissionAccess(p, "settings", "edit")).toBe(false);
-    console.log("✅ C6. support: módulo settings ausente");
+    console.log("✅ C6. support: settings somente view");
   });
 
-  test("C7. audit: view bloqueado (módulo ausente)", () => {
+  test("C7. audit: view bloqueado (módulo vazio)", () => {
     expect(hasPermissionAccess(p, "audit", "view")).toBe(false);
-    console.log("✅ C7. support: módulo audit ausente");
+    console.log("✅ C7. support: módulo audit vazio (igual lider_tc)");
   });
 
-  test("C8. permissions: edit bloqueado (módulo ausente)", () => {
-    expect(hasPermissionAccess(p, "permissions", "view")).toBe(false);
+  test("C8. permissions: somente view (sem edit)", () => {
+    expect(hasPermissionAccess(p, "permissions", "view")).toBe(true);
     expect(hasPermissionAccess(p, "permissions", "edit")).toBe(false);
-    console.log("✅ C8. support: módulo permissions ausente");
+    console.log("✅ C8. support: permissions somente view (gestão exclusiva lider_tc)");
   });
 
-  test("C9. support possui tickets/suporte com permissões corretas", () => {
+  test("C9. support possui tickets/suporte com permissões corretas + view_all", () => {
     // O que support DEVE ter
     expect(hasPermissionAccess(p, "tickets", "view")).toBe(true);
     expect(hasPermissionAccess(p, "tickets", "assign")).toBe(true);
     expect(hasPermissionAccess(p, "tickets", "status")).toBe(true);
     expect(hasPermissionAccess(p, "support", "assign")).toBe(true);
     expect(hasPermissionAccess(p, "support", "status")).toBe(true);
+    // Support vê TODOS os tickets (view_all)
+    expect(hasPermissionAccess(p, "tickets", "view_all")).toBe(true);
     // O que support NÃO deve ter em tickets
-    expect(hasPermissionAccess(p, "tickets", "view_all")).toBe(false);
     expect(hasPermissionAccess(p, "tickets", "delete")).toBe(false);
-    console.log("✅ C9. support: tickets/suporte com escopo correto");
+    console.log("✅ C9. support: tickets/suporte com view_all");
   });
 
-  test("C10. support nao administra access_requests", () => {
-    expect(hasPermissionAccess(p, "access_requests", "view")).toBe(false);
+  test("C10. support v\u00ea access_requests mas n\u00e3o pode aprovar/rejeitar", () => {
+    expect(hasPermissionAccess(p, "access_requests", "view")).toBe(true);
     expect(hasPermissionAccess(p, "access_requests", "comment")).toBe(false);
     expect(hasPermissionAccess(p, "access_requests", "approve")).toBe(false);
     expect(hasPermissionAccess(p, "access_requests", "reject")).toBe(false);
-    console.log("C10. support: access_requests bloqueado para revisao institucional");
+    console.log("\u2705 C10. support: access_requests somente view (a\u00e7\u00f5es exclusivas lider_tc)");
+  });
+
+  test("C11. users: somente view (sem create/edit)", () => {
+    expect(hasPermissionAccess(p, "users", "view")).toBe(true);
+    expect(hasPermissionAccess(p, "users", "create")).toBe(false);
+    expect(hasPermissionAccess(p, "users", "edit")).toBe(false);
+    console.log("\u2705 C11. support: users somente view (gest\u00e3o exclusiva lider_tc)");
   });
 });
 
@@ -393,10 +401,10 @@ describe("D) Overrides de permissão (deny/allow)", () => {
     console.log(`✅ D7. getTicketViewScope: user → 'own'`);
   });
 
-  test("D8. getTicketViewScope retorna 'company' para suporte tecnico", () => {
+  test("D8. getTicketViewScope retorna 'all' para suporte tecnico", () => {
     const supportPerms = perm("technical_support");
-    expect(getTicketViewScope(supportPerms)).toBe("company");
-    console.log(`D8. getTicketViewScope: technical_support -> 'company'`);
+    expect(getTicketViewScope(supportPerms)).toBe("all");
+    console.log(`D8. getTicketViewScope: technical_support -> 'all'`);
   });
 });
 
@@ -526,7 +534,7 @@ describe("F) Integração DB — resolvePermissionAccessForUser", () => {
     console.log(`✅ F2. company_admin (DB) → roleKey=${access.roleKey} | users=${hasPermissionAccess(access.permissions,"users","view")} | releases.view=${hasPermissionAccess(access.permissions,"releases","view")}`);
   });
 
-  test("F3. Usuário it_dev → roleKey='technical_support', sem access_requests.approve", async () => {
+  test("F3. Usuário it_dev → roleKey='technical_support', mesma visão lider_tc + tickets view_all", async () => {
     const tag = uid();
     const user = await makeUser(`itdev-${tag}`, { role: "it_dev" });
     const company = await makeCompany(`dev-${tag}`);
@@ -535,15 +543,26 @@ describe("F) Integração DB — resolvePermissionAccessForUser", () => {
     const access = await resolvePermissionAccessForUser(user.id);
 
     expect(access.roleKey).toBe("technical_support");
+    // Tickets com view_all (vê todos os tickets)
+    expect(hasPermissionAccess(access.permissions, "tickets", "view_all")).toBe(true);
+    // M\u00f3dulos vis\u00edveis: applications, releases, runs, defects, users (view)
+    expect(hasPermissionAccess(access.permissions, "applications", "view")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "releases", "view")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "runs", "view")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "defects", "view")).toBe(true);
+    // users/access_requests somente view (navega\u00e7\u00e3o)
+    expect(hasPermissionAccess(access.permissions, "users", "view")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "users", "create")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "access_requests", "view")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "access_requests", "approve")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "access_requests", "reject")).toBe(false);
+    // Sem ações destrutivas
     expect(hasPermissionAccess(access.permissions, "releases", "delete")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "runs", "export")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "defects", "delete")).toBe(false);
-    expect(hasPermissionAccess(access.permissions, "users", "view")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "audit", "export")).toBe(false);
-    expect(hasPermissionAccess(access.permissions, "access_requests", "approve")).toBe(false);
-    expect(hasPermissionAccess(access.permissions, "access_requests", "reject")).toBe(false);
 
-    console.log(`✅ F3. it_dev (DB) → roleKey=${access.roleKey} | audit.export=${hasPermissionAccess(access.permissions,"audit","export")} | access_requests.approve=${hasPermissionAccess(access.permissions,"access_requests","approve")}`);
+    console.log(`✅ F3. it_dev (DB) → roleKey=${access.roleKey} | tickets.view_all=${hasPermissionAccess(access.permissions,"tickets","view_all")} | users.view=${hasPermissionAccess(access.permissions,"users","view")}`);
   });
 
   test("F4. Usuário global_admin → roleKey='admin', permissões completas", async () => {

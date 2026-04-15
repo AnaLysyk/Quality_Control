@@ -1,4 +1,6 @@
-﻿"use client";
+"use client";
+
+export const dynamic = "force-dynamic";
 
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import {
@@ -34,6 +36,7 @@ import {
   type PermissionMatrix,
   type PermissionOverride,
 } from "@/lib/permissionMatrix";
+import { useI18n } from "@/lib/i18n";
 
 type AdminUserItem = {
   id: string;
@@ -87,14 +90,16 @@ type ModuleSummaryItem = {
   actions: string[];
 };
 
-const ROLE_FILTERS: Array<{ value: RoleFilter; label: string; hint: string }> = [
-  { value: "all", label: "Todos", hint: "Todos os tipos de perfil" },
-  { value: "leader_tc", label: getFixedProfileLabel("leader_tc"), hint: getFixedProfileHint("leader_tc") },
-  { value: "technical_support", label: getFixedProfileLabel("technical_support"), hint: getFixedProfileHint("technical_support") },
-  { value: "empresa", label: getFixedProfileLabel("empresa", { short: true }), hint: getFixedProfileHint("empresa") },
-  { value: "company_user", label: getFixedProfileLabel("company_user"), hint: getFixedProfileHint("company_user") },
-  { value: "testing_company_user", label: getFixedProfileLabel("testing_company_user"), hint: getFixedProfileHint("testing_company_user") },
-];
+function getRoleFilters(isPt: boolean): Array<{ value: RoleFilter; label: string; hint: string }> {
+  return [
+    { value: "all", label: isPt ? "Todos" : "All", hint: isPt ? "Todos os tipos de perfil" : "All profile types" },
+    { value: "leader_tc", label: getFixedProfileLabel("leader_tc"), hint: getFixedProfileHint("leader_tc") },
+    { value: "technical_support", label: getFixedProfileLabel("technical_support"), hint: getFixedProfileHint("technical_support") },
+    { value: "empresa", label: getFixedProfileLabel("empresa", { short: true }), hint: getFixedProfileHint("empresa") },
+    { value: "company_user", label: getFixedProfileLabel("company_user"), hint: getFixedProfileHint("company_user") },
+    { value: "testing_company_user", label: getFixedProfileLabel("testing_company_user"), hint: getFixedProfileHint("testing_company_user") },
+  ];
+}
 
 const PROFILE_OPTIONS: Array<{ value: EditableProfileRole; label: string; hint: string }> = [
   { value: "leader_tc", label: getFixedProfileLabel("leader_tc"), hint: getFixedProfileHint("leader_tc") },
@@ -124,7 +129,7 @@ function normalizeRole(value?: string | null): EditableProfileRole {
 
 function roleLabel(value?: string | null) {
   const normalized = normalizeRole(value);
-  return getFixedProfileLabel(normalized);
+  return getFixedProfileLabel(normalized, { short: false });
 }
 
 function roleHint(role: EditableProfileRole) {
@@ -135,11 +140,11 @@ function roleNeedsCompany(role: EditableProfileRole) {
   return editableProfileNeedsCompany(role);
 }
 
-function statusLabel(value?: string | null) {
+function statusLabel(value?: string | null, isPt = true) {
   const normalized = (value ?? "").toLowerCase();
-  if (normalized === "inactive" || normalized === "blocked") return "Inativo";
-  if (normalized === "invited") return "Convidado";
-  return "Ativo";
+  if (normalized === "inactive" || normalized === "blocked") return isPt ? "Inativo" : "Inactive";
+  if (normalized === "invited") return isPt ? "Convidado" : "Invited";
+  return isPt ? "Ativo" : "Active";
 }
 
 function toneForOverride(state: "allow" | "deny" | "default") {
@@ -152,10 +157,10 @@ function toneForOverride(state: "allow" | "deny" | "default") {
   return "border-(--tc-border) bg-(--tc-surface-2) text-(--tc-text-muted)";
 }
 
-function badgeLabel(state: "allow" | "deny" | "default") {
-  if (state === "allow") return "Adicionado";
-  if (state === "deny") return "Removido";
-  return "Perfil base";
+function badgeLabel(state: "allow" | "deny" | "default", isPt = true) {
+  if (state === "allow") return isPt ? "Adicionado" : "Added";
+  if (state === "deny") return isPt ? "Removido" : "Removed";
+  return isPt ? "Perfil base" : "Base profile";
 }
 
 function profileKindForUser(user?: Pick<AdminUserItem, "profile_kind" | "permission_role" | "role" | "user_origin" | "company_count"> | null) {
@@ -200,8 +205,8 @@ function getInitials(name?: string | null) {
   return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
 }
 
-function getDisplayName(user?: Pick<AdminUserItem, "name" | "email"> | null) {
-  return user?.name?.trim() || user?.email?.trim() || "Sem nome";
+function getDisplayName(user?: Pick<AdminUserItem, "name" | "email"> | null, isPt = true) {
+  return user?.name?.trim() || user?.email?.trim() || (isPt ? "Sem nome" : "No name");
 }
 
 function getDisplayUserHandle(user?: Pick<AdminUserItem, "user"> | null) {
@@ -217,10 +222,11 @@ function AvatarIdentity(props: {
   user?: Pick<AdminUserItem, "name" | "email" | "avatar_key" | "avatar_url"> | null;
   selected?: boolean;
   size?: "sm" | "lg";
+  isPt?: boolean;
 }) {
-  const { user, selected = false, size = "sm" } = props;
+  const { user, selected = false, size = "sm", isPt = true } = props;
   const emoji = resolveAvatarEmoji(user?.avatar_key);
-  const fallback = getInitials(getDisplayName(user));
+  const fallback = getInitials(getDisplayName(user, isPt));
   const wrapperClass =
     size === "lg"
       ? "h-14 w-14 rounded-full text-2xl"
@@ -253,28 +259,37 @@ function isValidEmailAddress(value?: string | null) {
 function canManageInstitutionalProfiles(
   user?: { role?: string | null; permissionRole?: string | null; companyRole?: string | null } | null,
 ) {
+  const resolvedRole =
+    normalizeEditableProfileRole(user?.role);
+  const resolvedPermissionRole =
+    normalizeEditableProfileRole(user?.permissionRole);
+  const resolvedCompanyRole =
+    normalizeEditableProfileRole(user?.companyRole);
   return (
-    normalizeEditableProfileRole(user?.role) === "leader_tc" ||
-    normalizeEditableProfileRole(user?.permissionRole) === "leader_tc" ||
-    normalizeEditableProfileRole(user?.companyRole) === "leader_tc"
+    resolvedRole === "leader_tc" ||
+    resolvedPermissionRole === "leader_tc" ||
+    resolvedCompanyRole === "leader_tc" ||
+    resolvedRole === "technical_support" ||
+    resolvedPermissionRole === "technical_support" ||
+    resolvedCompanyRole === "technical_support"
   );
 }
 
-function companyLabel(user: AdminUserItem) {
+function companyLabel(user: AdminUserItem, isPt = true) {
   if (Array.isArray(user.company_names) && user.company_names.length > 1) {
     return `${user.company_names[0]} +${user.company_names.length - 1}`;
   }
   if (Array.isArray(user.company_names) && user.company_names.length === 1) {
     return user.company_names[0];
   }
-  return user.company_name || "Sem empresa";
+  return user.company_name || (isPt ? "Sem empresa" : "No company");
 }
 
-function companyTitle(user: AdminUserItem) {
+function companyTitle(user: AdminUserItem, isPt = true) {
   if (Array.isArray(user.company_names) && user.company_names.length > 0) {
     return user.company_names.join(", ");
   }
-  return user.company_name || "Sem empresa";
+  return user.company_name || (isPt ? "Sem empresa" : "No company");
 }
 
 function summarizeMatrixModules(matrix: PermissionMatrix) {
@@ -413,7 +428,7 @@ function SurfaceModal(props: {
     <div className="fixed inset-0 z-90 flex items-start justify-center overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
       <button
         type="button"
-        aria-label="Fechar modal"
+        aria-label={title}
         className="absolute inset-0 bg-[rgba(2,6,23,0.62)] backdrop-blur-[6px]"
         onClick={onClose}
       />
@@ -446,7 +461,7 @@ function SurfaceModal(props: {
             <button
               type="button"
               onClick={onClose}
-              aria-label="Fechar modal"
+              aria-label={title}
               className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface) text-(--tc-text-muted) transition hover:bg-(--tc-surface-2) hover:text-(--tc-text-primary) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(239,0,1,0.16)]"
             >
               <FiX size={18} />
@@ -463,6 +478,8 @@ function SurfaceModal(props: {
 }
 
 export default function PermissionsPage() {
+  const { language } = useI18n();
+  const isPt = language === "pt-BR";
   const { user: authUser, refreshUser } = useAuthUser();
   const [users, setUsers] = useState<AdminUserItem[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
@@ -506,13 +523,13 @@ export default function PermissionsPage() {
       const json = (await res.json().catch(() => ({}))) as { items?: AdminUserItem[]; error?: string };
       if (!res.ok) {
         setUsers([]);
-        setUsersError(json.error ?? "Não foi possível carregar os usuários.");
+        setUsersError(json.error ?? (isPt ? "Não foi possível carregar os usuários." : "Could not load users."));
         return;
       }
       setUsers(Array.isArray(json.items) ? json.items : []);
     } catch (error) {
       setUsers([]);
-      setUsersError(error instanceof Error ? error.message : "Não foi possível carregar os usuários.");
+      setUsersError(error instanceof Error ? error.message : (isPt ? "Não foi possível carregar os usuários." : "Could not load users."));
     } finally {
       setUsersLoading(false);
     }
@@ -531,15 +548,15 @@ export default function PermissionsPage() {
         setCompanies([]);
         setCompaniesError(
           typeof json === "object" && !Array.isArray(json)
-            ? json.error ?? "Não foi possível carregar as empresas."
-            : "Não foi possível carregar as empresas.",
+            ? json.error ?? (isPt ? "Não foi possível carregar as empresas." : "Could not load companies.")
+            : (isPt ? "Não foi possível carregar as empresas." : "Could not load companies."),
         );
         return;
       }
       setCompanies(Array.isArray(json) ? json : []);
     } catch (error) {
       setCompanies([]);
-      setCompaniesError(error instanceof Error ? error.message : "Não foi possível carregar as empresas.");
+      setCompaniesError(error instanceof Error ? error.message : (isPt ? "Não foi possível carregar as empresas." : "Could not load companies."));
     } finally {
       setCompaniesLoading(false);
     }
@@ -558,14 +575,14 @@ export default function PermissionsPage() {
       if (!res.ok) {
         setPermissionData(null);
         setDraftOverride(emptyOverride());
-        setPanelError(json.error ?? "Não foi possível carregar as permissões.");
+        setPanelError(json.error ?? (isPt ? "Não foi possível carregar as permissões." : "Could not load permissions."));
         return;
       }
       setPermissionData(json);
     } catch (error) {
       setPermissionData(null);
       setDraftOverride(emptyOverride());
-      setPanelError(error instanceof Error ? error.message : "Não foi possível carregar as permissões.");
+      setPanelError(error instanceof Error ? error.message : (isPt ? "Não foi possível carregar as permissões." : "Could not load permissions."));
     } finally {
       setPanelLoading(false);
     }
@@ -615,6 +632,8 @@ export default function PermissionsPage() {
 
     return counts;
   }, [users]);
+
+  const roleFilters = useMemo(() => getRoleFilters(isPt), [isPt]);
 
   const availableProfileOptions = useMemo(() => {
     if (canManageProfiles) return PROFILE_OPTIONS;
@@ -694,10 +713,10 @@ export default function PermissionsPage() {
   );
 
   const draftCompanyLabel = useMemo(() => {
-    if (!selectedUser) return "Sem empresa";
+    if (!selectedUser) return isPt ? "Sem empresa" : "No company";
     const matched = filteredCompanies.find((company) => company.id === companyDraft);
-    return matched?.name ?? companyLabel(selectedUser);
-  }, [companyDraft, filteredCompanies, selectedUser]);
+    return matched?.name ?? companyLabel(selectedUser, isPt);
+  }, [companyDraft, filteredCompanies, isPt, selectedUser]);
 
   const customAllowCount = useMemo(
     () => Object.values(normalizePermissionMatrix(draftOverride.allow)).reduce((sum, actions) => sum + actions.length, 0),
@@ -731,7 +750,7 @@ export default function PermissionsPage() {
     >();
 
     effectiveModuleSummary.forEach((module) => {
-      const category = getPermissionModule(module.id)?.category ?? "Outros";
+      const category = getPermissionModule(module.id)?.category ?? (isPt ? "Outros" : "Others");
       const current = groups.get(category);
       if (current) {
         current.modules.push(module);
@@ -747,7 +766,7 @@ export default function PermissionsPage() {
     });
 
     return Array.from(groups.values());
-  }, [effectiveModuleSummary]);
+  }, [effectiveModuleSummary, isPt]);
 
   const hasPermissionChanges = useMemo(
     () => serializeOverride(permissionData?.override) !== serializeOverride(draftOverride),
@@ -812,14 +831,14 @@ export default function PermissionsPage() {
 
   const resetTargetModules = useMemo(() => summarizeMatrixModules(resetTargetPermissions), [resetTargetPermissions]);
   const resetCurrentCompanyLabel = useMemo(() => {
-    if (!roleNeedsCompany(profileDraft)) return "Sem empresa principal";
+    if (!roleNeedsCompany(profileDraft)) return isPt ? "Sem empresa principal" : "No primary company";
     return draftCompanyLabel;
-  }, [draftCompanyLabel, profileDraft]);
+  }, [draftCompanyLabel, isPt, profileDraft]);
   const resetTargetCompanyLabel = useMemo(() => {
-    if (!roleNeedsCompany(originalRole)) return "Sem empresa principal";
+    if (!roleNeedsCompany(originalRole)) return isPt ? "Sem empresa principal" : "No primary company";
     const matched = filteredCompanies.find((company) => company.id === originalCompanyId);
     return matched?.name ?? draftCompanyLabel;
-  }, [draftCompanyLabel, filteredCompanies, originalCompanyId, originalRole]);
+  }, [draftCompanyLabel, filteredCompanies, isPt, originalCompanyId, originalRole]);
   const resetWillChangeRole = profileDraft !== originalRole;
   const resetWillChangeCompany = resetCurrentCompanyLabel !== resetTargetCompanyLabel;
 
@@ -829,15 +848,15 @@ export default function PermissionsPage() {
     return profileModalCompany || companyDraft || selectedUser?.client_id || selectedUser?.companies?.[0]?.id || "";
   }, [companyDraft, nextRoleNeedsExtraData, profileModalCompany, selectedUser]);
   const profileCandidateCompanyLabel = useMemo(() => {
-    if (!nextRoleNeedsExtraData) return "Não exige empresa principal";
-    if (!profileCandidateCompanyId) return "Empresa ainda não definida";
+    if (!nextRoleNeedsExtraData) return isPt ? "Não exige empresa principal" : "No primary company required";
+    if (!profileCandidateCompanyId) return isPt ? "Empresa ainda não definida" : "Company not defined yet";
 
     const matchedCompany =
       filteredCompanies.find((company) => company.id === profileCandidateCompanyId) ??
       selectedUser?.companies?.find((company) => company.id === profileCandidateCompanyId);
 
-    return matchedCompany?.name ?? draftCompanyLabel ?? "Empresa vinculada reaproveitada";
-  }, [draftCompanyLabel, filteredCompanies, nextRoleNeedsExtraData, profileCandidateCompanyId, selectedUser]);
+    return matchedCompany?.name ?? draftCompanyLabel ?? (isPt ? "Empresa vinculada reaproveitada" : "Reused linked company");
+  }, [draftCompanyLabel, filteredCompanies, isPt, nextRoleNeedsExtraData, profileCandidateCompanyId, selectedUser]);
 
   function applyProfileDraft(nextRole: EditableProfileRole, nextCompanyId?: string) {
     const fallbackCompanyId = companyDraft || selectedUser?.client_id || selectedUser?.companies?.[0]?.id || "";
@@ -846,7 +865,7 @@ export default function PermissionsPage() {
       : "";
 
     if (roleNeedsCompany(nextRole) && !resolvedCompanyId) {
-      setPanelError("Selecione uma empresa para aplicar este perfil.");
+      setPanelError(isPt ? "Selecione uma empresa para aplicar este perfil." : "Select a company to apply this profile.");
       return;
     }
 
@@ -863,12 +882,16 @@ export default function PermissionsPage() {
     setPanelError(null);
 
     if (roleChanged) {
-      setMessage(`Perfil base ajustado para ${roleLabel(nextRole)} na edição atual. Revise o módulo desejado e salve para aplicar.`);
+      setMessage(
+        isPt
+          ? `Perfil base ajustado para ${roleLabel(nextRole)} na edição atual. Revise o módulo desejado e salve para aplicar.`
+          : `Base profile adjusted to ${roleLabel(nextRole)} in the current draft. Review the target module and save to apply.`,
+      );
       return;
     }
 
     if (companyChanged) {
-      setMessage("Empresa principal da edição atual atualizada. Salve para aplicar.");
+      setMessage(isPt ? "Empresa principal da edição atual atualizada. Salve para aplicar." : "Primary company updated in the current draft. Save to apply.");
     }
   }
 
@@ -901,7 +924,7 @@ export default function PermissionsPage() {
 
   function confirmProfileRequirements() {
     if (nextRoleNeedsExtraData && !profileModalCompany) {
-      setPanelError("Selecione uma empresa para concluir a mudança de perfil.");
+      setPanelError(isPt ? "Selecione uma empresa para concluir a mudança de perfil." : "Select a company to complete the profile change.");
       return;
     }
     setPanelError(null);
@@ -922,27 +945,27 @@ export default function PermissionsPage() {
     const password = createGlobalDraft.password;
 
     if (!fullName) {
-      setCreateGlobalError("Informe o nome completo.");
+      setCreateGlobalError(isPt ? "Informe o nome completo." : "Enter the full name.");
       return;
     }
     if (!user) {
-      setCreateGlobalError("Informe o usuario.");
+      setCreateGlobalError(isPt ? "Informe o usuário." : "Enter the username.");
       return;
     }
     if (!email) {
-      setCreateGlobalError("Informe o e-mail.");
+      setCreateGlobalError(isPt ? "Informe o e-mail." : "Enter the email." );
       return;
     }
     if (!isValidEmailAddress(email)) {
-      setCreateGlobalError("Informe um e-mail valido.");
+      setCreateGlobalError(isPt ? "Informe um e-mail válido." : "Enter a valid email.");
       return;
     }
     if (!password.trim()) {
-      setCreateGlobalError("Informe a senha.");
+      setCreateGlobalError(isPt ? "Informe a senha." : "Enter the password.");
       return;
     }
     if (password.trim().length < 8) {
-      setCreateGlobalError("A senha deve ter pelo menos 8 caracteres.");
+      setCreateGlobalError(isPt ? "A senha deve ter pelo menos 8 caracteres." : "Password must have at least 8 characters.");
       return;
     }
 
@@ -977,7 +1000,7 @@ export default function PermissionsPage() {
         });
 
         if (!refreshed.ok) {
-          setCreateGlobalError("Sessao expirada. Entre novamente para continuar.");
+          setCreateGlobalError(isPt ? "Sessao expirada. Entre novamente para continuar." : "Session expired. Sign in again to continue.");
           return;
         }
 
@@ -990,7 +1013,9 @@ export default function PermissionsPage() {
         setCreateGlobalError(
           friendlyUiError(
             json.error,
-            res.status === 401 ? "Sessao expirada. Entre novamente para continuar." : "Nao foi possivel criar o perfil de Suporte Tecnico agora.",
+            res.status === 401
+              ? (isPt ? "Sessao expirada. Entre novamente para continuar." : "Session expired. Sign in again to continue.")
+              : (isPt ? "Não foi possível criar o perfil de Suporte Técnico agora." : "Could not create the Technical Support profile right now."),
           ),
         );
         return;
@@ -1005,9 +1030,13 @@ export default function PermissionsPage() {
         setSelectedUserId(json.item.id);
       }
       setPanelError(null);
-      setMessage(`Perfil de Suporte Tecnico criado para ${fullName}. Revise as permissoes e os ajustes de perfil, se necessario.`);
+      setMessage(
+        isPt
+          ? `Perfil de Suporte Tecnico criado para ${fullName}. Revise as permissoes e os ajustes de perfil, se necessario.`
+          : `Technical Support profile created for ${fullName}. Review permissions and profile settings if needed.`,
+      );
     } catch (error) {
-      setCreateGlobalError(error instanceof Error ? error.message : "Nao foi possivel criar o perfil de Suporte Tecnico agora.");
+      setCreateGlobalError(error instanceof Error ? error.message : (isPt ? "Não foi possível criar o perfil de Suporte Técnico agora." : "Could not create the Technical Support profile right now."));
     } finally {
       setCreateGlobalLoading(false);
     }
@@ -1018,10 +1047,10 @@ export default function PermissionsPage() {
     try {
       await navigator.clipboard.writeText(selectedUser.email);
       setPanelError(null);
-      setMessage("E-mail copiado.");
+      setMessage(isPt ? "E-mail copiado." : "Email copied.");
     } catch (error) {
       setMessage(null);
-      setPanelError(error instanceof Error ? error.message : "Não foi possível copiar o e-mail.");
+      setPanelError(error instanceof Error ? error.message : (isPt ? "Não foi possível copiar o e-mail." : "Could not copy email."));
     }
   }
 
@@ -1029,7 +1058,7 @@ export default function PermissionsPage() {
     if (!selectedUserId || !selectedUser) return;
 
     if (roleNeedsCompany(profileDraft) && !companyDraft) {
-      setPanelError("Selecione uma empresa para aplicar esse perfil.");
+      setPanelError(isPt ? "Selecione uma empresa para aplicar esse perfil." : "Select a company to apply this profile.");
       return;
     }
 
@@ -1049,7 +1078,7 @@ export default function PermissionsPage() {
         });
         const userJson = (await userRes.json().catch(() => ({}))) as { error?: string };
         if (!userRes.ok) {
-          setPanelError(userJson.error ?? "Não foi possível atualizar o perfil do usuário.");
+          setPanelError(userJson.error ?? (isPt ? "Não foi possível atualizar o perfil do usuário." : "Could not update the user profile."));
           return;
         }
       }
@@ -1068,7 +1097,7 @@ export default function PermissionsPage() {
         });
         const json = (await res.json().catch(() => ({}))) as { error?: string };
         if (!res.ok) {
-          setPanelError(json.error ?? "Não foi possível salvar as permissões.");
+          setPanelError(json.error ?? (isPt ? "Não foi possível salvar as permissões." : "Could not save permissions."));
           return;
         }
       }
@@ -1078,9 +1107,13 @@ export default function PermissionsPage() {
       if (authUser?.id && authUser.id === selectedUserId) {
         await refreshUser();
       }
-      setMessage(profileMetaChanged ? "Perfil, empresa e permissões atualizados." : "Permissões salvas.");
+      setMessage(
+        profileMetaChanged
+          ? (isPt ? "Perfil, empresa e permissões atualizados." : "Profile, company, and permissions updated.")
+          : (isPt ? "Permissões salvas." : "Permissions saved."),
+      );
     } catch (error) {
-      setPanelError(error instanceof Error ? error.message : "Não foi possível salvar as permissões.");
+      setPanelError(error instanceof Error ? error.message : (isPt ? "Não foi possível salvar as permissões." : "Could not save permissions."));
     } finally {
       setSaving(false);
     }
@@ -1096,7 +1129,9 @@ export default function PermissionsPage() {
     setDraftOverride(emptyOverride());
     setRestoreModalOpen(false);
     setMessage(
-      `Edição atual restaurada para o padrão de ${roleLabel(originalRole)}. Revise os módulos e salve para aplicar.`,
+      isPt
+        ? `Edição atual restaurada para o padrão de ${roleLabel(originalRole)}. Revise os módulos e salve para aplicar.`
+        : `Current draft restored to the ${roleLabel(originalRole)} baseline. Review modules and save to apply.`,
     );
   }
 
@@ -1118,10 +1153,12 @@ export default function PermissionsPage() {
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="max-w-5xl space-y-2">
               <h1 className="text-[30px] font-semibold tracking-tight text-white [text-shadow:0_12px_35px_rgba(1,24,72,0.28)] sm:text-[40px]">
-                Gestão de permissões por usuário
+                {isPt ? "Gestão de permissões por usuário" : "User Permission Management"}
               </h1>
               <p className="max-w-3xl text-sm leading-6 text-white/88 sm:text-[15px]">
-                Filtre usuários, ajuste o perfil base e gerencie os módulos e ações em um único painel.
+                {isPt
+                  ? "Filtre usuários, ajuste o perfil base e gerencie os módulos e ações em um único painel."
+                  : "Filter users, adjust the base profile, and manage modules and actions in a single panel."}
               </p>
             </div>
             {canManageProfiles ? (
@@ -1134,7 +1171,7 @@ export default function PermissionsPage() {
                 className="inline-flex items-center justify-center gap-2 rounded-[18px] border border-white/18 bg-white/12 px-4 py-3 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(1,24,72,0.18)] backdrop-blur-sm transition hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
               >
                 <FiPlus size={16} />
-                Criar Suporte Tecnico
+                {isPt ? "Criar Suporte Técnico" : "Create Technical Support"}
               </button>
             ) : null}
           </div>
@@ -1171,31 +1208,31 @@ export default function PermissionsPage() {
           <div className="border-b border-(--tc-border) p-4 sm:p-5 [background:linear-gradient(180deg,rgba(1,24,72,0.08),transparent)]">
             <div className="space-y-4">
               <div className="space-y-1">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-accent)">Usuários</p>
-                <h2 className="text-[20px] font-semibold tracking-tight text-(--tc-text-primary)">Selecione um usuário para editar permissões</h2>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-accent)">{isPt ? "Usuários" : "Users"}</p>
+                <h2 className="text-[20px] font-semibold tracking-tight text-(--tc-text-primary)">{isPt ? "Selecione um usuário para editar permissões" : "Select a user to edit permissions"}</h2>
               </div>
 
               <label className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Busca</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">{isPt ? "Busca" : "Search"}</span>
                 <div className="flex items-center gap-3 rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2.5 focus-within:border-(--tc-accent) focus-within:ring-2 focus-within:ring-[rgba(239,0,1,0.14)]">
                   <FiSearch className="text-(--tc-accent)" />
                   <input
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Buscar por nome, usuário, e-mail ou empresa"
+                    placeholder={isPt ? "Buscar por nome, usuário, e-mail ou empresa" : "Search by name, username, email, or company"}
                     className="w-full bg-transparent text-sm text-(--tc-text-primary) outline-none placeholder:text-(--tc-text-muted)"
                   />
                 </div>
               </label>
 
               <label className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Tipo de perfil</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">{isPt ? "Tipo de perfil" : "Profile type"}</span>
                 <Select value={roleFilter} onValueChange={(value) => setRoleFilter(value as RoleFilter)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecionar tipo de perfil" />
+                    <SelectValue placeholder={isPt ? "Selecionar tipo de perfil" : "Select profile type"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {ROLE_FILTERS.map((option) => (
+                    {roleFilters.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label} ({roleCounts[option.value as RoleFilter] ?? 0})
                       </SelectItem>
@@ -1206,7 +1243,7 @@ export default function PermissionsPage() {
 
               {query.trim() ? (
                 <div className="text-sm font-medium text-(--tc-text-secondary)">
-                  {filteredUsers.length} {filteredUsers.length === 1 ? "resultado" : "resultados"}
+                  {filteredUsers.length} {filteredUsers.length === 1 ? (isPt ? "resultado" : "result") : (isPt ? "resultados" : "results")}
                 </div>
               ) : null}
             </div>
@@ -1214,15 +1251,17 @@ export default function PermissionsPage() {
 
           <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-5 pt-3 [scrollbar-gutter:stable]">
             <div className="min-w-0 pr-2">
-            {usersLoading && <p className="px-2 py-4 text-sm text-(--tc-text-muted)">Carregando usuários...</p>}
+            {usersLoading && <p className="px-2 py-4 text-sm text-(--tc-text-muted)">{isPt ? "Carregando usuários..." : "Loading users..."}</p>}
             {usersError && !usersLoading && (
               <p className="rounded-2xl border border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.08)] px-4 py-3 text-sm text-(--tc-accent)">
-                {friendlyUiError(usersError, "Não foi possível carregar a lista de usuários agora.")}
+                {friendlyUiError(usersError, isPt ? "Não foi possível carregar a lista de usuários agora." : "Could not load the user list right now.")}
               </p>
             )}
             {!usersLoading && !usersError && filteredUsers.length === 0 && (
               <p className="px-2 py-4 text-sm text-(--tc-text-muted)">
-                Nenhum usuário encontrado para a combinação atual de busca e perfil.
+                {isPt
+                  ? "Nenhum usuário encontrado para a combinação atual de busca e perfil."
+                  : "No users found for the current search and profile filters."}
               </p>
             )}
 
@@ -1241,12 +1280,12 @@ export default function PermissionsPage() {
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <AvatarIdentity user={user} selected={selected} />
+                      <AvatarIdentity user={user} selected={selected} isPt={isPt} />
 
                       <div className="min-w-0 flex-1 space-y-2.5">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold">{getDisplayName(user)}</p>
+                            <p className="truncate text-sm font-semibold">{getDisplayName(user, isPt)}</p>
                             {getUserSecondaryLabel(user) ? (
                               <p className={`truncate text-[11px] ${selected ? "text-white/76" : "text-(--tc-text-secondary)"}`}>
                                 {getUserSecondaryLabel(user)}
@@ -1260,14 +1299,14 @@ export default function PermissionsPage() {
 
                         <div className="flex items-center gap-2 text-[10px]">
                           <span className={`rounded-full px-2.5 py-1 ${statusTone(user.status, selected)}`}>
-                            {statusLabel(user.status)}
+                            {statusLabel(user.status, isPt)}
                           </span>
                           {selected && (
                             <span
-                              title={companyTitle(user)}
+                              title={companyTitle(user, isPt)}
                               className="truncate text-[11px] text-white/74"
                             >
-                              {companyLabel(user)}
+                              {companyLabel(user, isPt)}
                             </span>
                           )}
                         </div>
@@ -1292,9 +1331,11 @@ export default function PermissionsPage() {
                 >
                   <FiUsers size={24} />
                 </div>
-                <h2 className="text-xl font-semibold text-(--tc-text-primary)">Selecione um usuário</h2>
+                <h2 className="text-xl font-semibold text-(--tc-text-primary)">{isPt ? "Selecione um usuário" : "Select a user"}</h2>
                 <p className="text-sm leading-6 text-(--tc-text-muted)">
-                  Escolha um usuário na coluna da esquerda para revisar o perfil base, ajustar permissões e salvar as alterações.
+                  {isPt
+                    ? "Escolha um usuário na coluna da esquerda para revisar o perfil base, ajustar permissões e salvar as alterações."
+                    : "Choose a user from the left column to review the base profile, adjust permissions, and save changes."}
                 </p>
               </div>
             </div>
@@ -1311,12 +1352,12 @@ export default function PermissionsPage() {
                 <div className="relative flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                   <div className="min-w-0 space-y-2">
                     <div className="flex items-start gap-3">
-                      <AvatarIdentity user={selectedUser} selected size="lg" />
+                      <AvatarIdentity user={selectedUser} selected size="lg" isPt={isPt} />
                       <div className="min-w-0 space-y-2">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/72">Usuário selecionado</div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/72">{isPt ? "Usuário selecionado" : "Selected user"}</div>
                         <div className="flex flex-wrap items-center gap-2.5">
                           <h2 className="min-w-0 truncate text-[22px] font-semibold tracking-tight text-white [text-shadow:0_10px_24px_rgba(1,24,72,0.24)] sm:text-[26px]">
-                            {getDisplayName(selectedUser)}
+                            {getDisplayName(selectedUser, isPt)}
                           </h2>
                           <span
                             className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-medium ${
@@ -1326,7 +1367,7 @@ export default function PermissionsPage() {
                             }`}
                           >
                             <span className={`h-2 w-2 rounded-full ${isUserActive(selectedUser) ? "bg-emerald-300" : "bg-red-300"}`} />
-                            {statusLabel(selectedUser.status)}
+                            {statusLabel(selectedUser.status, isPt)}
                           </span>
                         </div>
                         {getDisplayUserHandle(selectedUser) ? (
@@ -1341,7 +1382,7 @@ export default function PermissionsPage() {
                               className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white transition hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
                             >
                               <FiCopy size={12} />
-                              Copiar e-mail
+                              {isPt ? "Copiar e-mail" : "Copy email"}
                             </button>
                           </div>
                         ) : null}
@@ -1353,7 +1394,7 @@ export default function PermissionsPage() {
                     {canEditProfileBase ? (
                       <Select value={profileDraft} onValueChange={(value) => startProfileComparison(normalizeRole(value))}>
                         <SelectTrigger className="h-auto min-w-52.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white shadow-none focus-visible:ring-white/60 data-placeholder:text-white/72">
-                          Perfil de origem: {roleLabel(profileDraft)}
+                          {isPt ? "Perfil de origem" : "Source profile"}: {roleLabel(profileDraft)}
                         </SelectTrigger>
                         <SelectContent className="min-w-[18rem]">
                           {availableProfileOptions.map((option) => (
@@ -1369,9 +1410,11 @@ export default function PermissionsPage() {
                     ) : (
                       <div
                         className="inline-flex min-w-52.5 items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/88"
-                        title="Somente perfis tecnicos privilegiados podem alterar ou criar perfis privilegiados."
+                        title={isPt
+                          ? "Somente perfis técnicos privilegiados podem alterar ou criar perfis privilegiados."
+                          : "Only privileged technical profiles can change or create privileged profiles."}
                       >
-                        Perfil de origem: {roleLabel(profileDraft)}
+                        {isPt ? "Perfil de origem" : "Source profile"}: {roleLabel(profileDraft)}
                       </div>
                     )}
                     <button
@@ -1379,7 +1422,7 @@ export default function PermissionsPage() {
                       onClick={() => setPermissionsViewerOpen(true)}
                       className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 font-medium text-white transition hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
                     >
-                      Permissões ativas: {totalActiveActions}
+                      {isPt ? "Permissões ativas" : "Active permissions"}: {totalActiveActions}
                     </button>
                     <button
                       type="button"
@@ -1387,16 +1430,16 @@ export default function PermissionsPage() {
                       className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/10 px-3 py-1.5 font-medium text-white transition hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
                     >
                       <FiRotateCcw size={14} />
-                      Restaurar padrão
+                      {isPt ? "Restaurar padrão" : "Restore default"}
                     </button>
                   </div>
                 </div>
               </header>
 
-              {panelLoading && <p className="text-sm text-(--tc-text-muted)">Carregando permissões...</p>}
+              {panelLoading && <p className="text-sm text-(--tc-text-muted)">{isPt ? "Carregando permissões..." : "Loading permissions..."}</p>}
               {panelError && (
                 <p className="rounded-[22px] border border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.08)] px-4 py-3 text-sm text-(--tc-accent)">
-                  {friendlyUiError(panelError, "Não foi possível carregar ou salvar as permissões agora.")}
+                  {friendlyUiError(panelError, isPt ? "Não foi possível carregar ou salvar as permissões agora." : "Could not load or save permissions right now.")}
                 </p>
               )}
               {message && (
@@ -1410,11 +1453,11 @@ export default function PermissionsPage() {
                   <div className="border-b border-(--tc-border) px-5 py-5 sm:px-6">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                       <div className="space-y-1">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-accent)">Permissões por módulo</p>
-                        <h3 className="text-lg font-semibold text-(--tc-text-primary)">Selecione um módulo e ajuste as ações ao lado</h3>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-accent)">{isPt ? "Permissões por módulo" : "Permissions by module"}</p>
+                        <h3 className="text-lg font-semibold text-(--tc-text-primary)">{isPt ? "Selecione um módulo e ajuste as ações ao lado" : "Select a module and adjust actions on the right"}</h3>
                       </div>
                       <div className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1.5 text-xs font-semibold text-(--tc-text-muted)">
-                        {PERMISSION_MODULES.length} módulos cadastrados
+                        {PERMISSION_MODULES.length} {isPt ? "módulos cadastrados" : "registered modules"}
                       </div>
                     </div>
                   </div>
@@ -1462,7 +1505,7 @@ export default function PermissionsPage() {
                                 </div>
                                 {customCount > 0 ? (
                                   <div className="mt-1 text-[10px] font-semibold text-(--tc-accent)">
-                                    {customCount} ajustes
+                                    {customCount} {isPt ? "ajustes" : "overrides"}
                                   </div>
                                 ) : null}
                               </button>
@@ -1486,10 +1529,10 @@ export default function PermissionsPage() {
 
                             <div className="flex flex-wrap gap-2 text-[11px] font-semibold">
                               <span className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1 text-(--tc-text-muted)">
-                                {(effectivePermissions[activeModule.id] ?? []).length} ativas
+                                {(effectivePermissions[activeModule.id] ?? []).length} {isPt ? "ativas" : "active"}
                               </span>
                               <span className="rounded-full border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.06)] px-3 py-1 text-(--tc-primary)">
-                                {activeModule.actions.length} ações
+                                {activeModule.actions.length} {isPt ? "ações" : "actions"}
                               </span>
                             </div>
                           </div>
@@ -1515,7 +1558,7 @@ export default function PermissionsPage() {
                                       <span className={`h-2.5 w-2.5 rounded-full ${checked ? "bg-(--tc-accent)" : "bg-(--tc-border)"}`} />
                                       <span className="text-sm font-medium text-(--tc-text-primary)">{getActionLabel(action)}</span>
                                       <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${toneForOverride(overrideState)}`}>
-                                        {badgeLabel(overrideState)}
+                                        {badgeLabel(overrideState, isPt)}
                                       </span>
                                     </div>
                                     <p className="mt-1 text-xs leading-5 text-(--tc-text-secondary)">
@@ -1550,7 +1593,13 @@ export default function PermissionsPage() {
                             : "border border-[rgba(16,185,129,0.22)] bg-[rgba(16,185,129,0.12)] text-[#047857]"
                         }`}
                       >
-                        {hasDraftChanges ? `${customAllowCount} permissões adicionadas e ${customDenyCount} removidas na edição atual` : "Sem alterações pendentes"}
+                        {hasDraftChanges
+                          ? isPt
+                            ? `${customAllowCount} permissões adicionadas e ${customDenyCount} removidas na edição atual`
+                            : `${customAllowCount} permissions added and ${customDenyCount} removed in the current draft`
+                          : isPt
+                            ? "Sem alterações pendentes"
+                            : "No pending changes"}
                       </div>
                       <button
                         type="button"
@@ -1559,7 +1608,7 @@ export default function PermissionsPage() {
                         className="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-medium text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(239,0,1,0.18)] disabled:opacity-60 [background:linear-gradient(135deg,var(--tc-accent)_0%,var(--tc-accent-hover)_100%)]"
                       >
                         <FiSave size={16} />
-                        {saving ? "Salvando..." : "Salvar alterações"}
+                        {saving ? (isPt ? "Salvando..." : "Saving...") : (isPt ? "Salvar alterações" : "Save changes")}
                       </button>
                     </div>
                   </div>
@@ -1572,7 +1621,7 @@ export default function PermissionsPage() {
 
       <SurfaceModal
         open={createGlobalOpen}
-        title="Criar Suporte Tecnico"
+        title={isPt ? "Criar Suporte Técnico" : "Create Technical Support"}
         onClose={() => {
           setCreateGlobalOpen(false);
           resetCreateGlobalForm();
@@ -1587,7 +1636,7 @@ export default function PermissionsPage() {
               }}
               className="inline-flex items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 py-2.5 text-sm font-medium text-(--tc-text-primary) transition hover:bg-(--tc-surface)"
             >
-              Cancelar
+              {isPt ? "Cancelar" : "Cancel"}
             </button>
             <button
               type="button"
@@ -1595,23 +1644,23 @@ export default function PermissionsPage() {
               disabled={createGlobalLoading}
               className="inline-flex items-center justify-center rounded-2xl bg-(--tc-accent) px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
             >
-              {createGlobalLoading ? "Criando..." : "Criar Suporte Tecnico"}
+              {createGlobalLoading ? (isPt ? "Criando..." : "Creating...") : (isPt ? "Criar Suporte Técnico" : "Create Technical Support")}
             </button>
           </>
         }
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="space-y-2 sm:col-span-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Nome completo</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">{isPt ? "Nome completo" : "Full name"}</span>
             <input
               value={createGlobalDraft.fullName}
               onChange={(event) => setCreateGlobalDraft((current) => ({ ...current, fullName: event.target.value }))}
               className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2.5 text-sm text-(--tc-text-primary) outline-none focus:border-(--tc-accent)"
-              placeholder="Nome completo"
+              placeholder={isPt ? "Nome completo" : "Full name"}
             />
           </label>
           <label className="space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Usuario</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">{isPt ? "Usuário" : "Username"}</span>
             <input
               value={createGlobalDraft.user}
               onChange={(event) => setCreateGlobalDraft((current) => ({ ...current, user: event.target.value }))}
@@ -1620,7 +1669,7 @@ export default function PermissionsPage() {
             />
           </label>
           <label className="space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">E-mail</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">{isPt ? "E-mail" : "Email"}</span>
             <input
               type="email"
               value={createGlobalDraft.email}
@@ -1630,7 +1679,7 @@ export default function PermissionsPage() {
             />
           </label>
           <label className="space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Telefone</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">{isPt ? "Telefone" : "Phone"}</span>
             <input
               value={createGlobalDraft.phone}
               onChange={(event) => setCreateGlobalDraft((current) => ({ ...current, phone: event.target.value }))}
@@ -1639,13 +1688,13 @@ export default function PermissionsPage() {
             />
           </label>
           <label className="space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Senha</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">{isPt ? "Senha" : "Password"}</span>
             <input
               type="password"
               value={createGlobalDraft.password}
               onChange={(event) => setCreateGlobalDraft((current) => ({ ...current, password: event.target.value }))}
               className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2.5 text-sm text-(--tc-text-primary) outline-none focus:border-(--tc-accent)"
-              placeholder="Minimo 8 caracteres"
+              placeholder={isPt ? "Mínimo 8 caracteres" : "Minimum 8 characters"}
               autoComplete="new-password"
             />
           </label>
@@ -1660,8 +1709,10 @@ export default function PermissionsPage() {
 
       <SurfaceModal
         open={profileComparisonOpen}
-        title="Atenção"
-        description="Ao confirmar, o perfil selecionado substitui a base atual do usuário. Revise o impacto por módulo antes de continuar."
+        title={isPt ? "Atenção" : "Attention"}
+        description={isPt
+          ? "Ao confirmar, o perfil selecionado substitui a base atual do usuário. Revise o impacto por módulo antes de continuar."
+          : "By confirming, the selected profile replaces the user's current baseline. Review the impact by module before continuing."}
         onClose={() => setProfileComparisonOpen(false)}
         size="wide"
         tone="alert"
@@ -1673,14 +1724,14 @@ export default function PermissionsPage() {
               onClick={() => setProfileComparisonOpen(false)}
               className="inline-flex items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 py-2.5 text-sm font-medium text-(--tc-text-primary) transition hover:bg-(--tc-surface)"
             >
-              Cancelar
+              {isPt ? "Cancelar" : "Cancel"}
             </button>
             <button
               type="button"
               onClick={confirmProfileChange}
               className="inline-flex items-center justify-center rounded-2xl bg-(--tc-accent) px-4 py-2.5 text-sm font-semibold text-white"
             >
-              Confirmar alteração
+              {isPt ? "Confirmar alteração" : "Confirm change"}
             </button>
           </>
         }
@@ -1688,29 +1739,31 @@ export default function PermissionsPage() {
         <div
           className="rounded-3xl border border-[rgba(239,0,1,0.18)] px-5 py-4 [background:linear-gradient(135deg,rgba(239,0,1,0.08),rgba(1,24,72,0.04))]"
         >
-          <div className="text-lg font-semibold text-(--tc-text-primary)">A troca de perfil redefine a base do usuário.</div>
+          <div className="text-lg font-semibold text-(--tc-text-primary)">{isPt ? "A troca de perfil redefine a base do usuário." : "Changing profile redefines the user's baseline."}</div>
           <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary)">
-            Ao confirmar esta alteração, o perfil selecionado substituirá o perfil atual. Permissões e dados vinculados ao perfil de origem podem deixar de existir ou não ser recuperáveis.
+            {isPt
+              ? "Ao confirmar esta alteração, o perfil selecionado substituirá o perfil atual. Permissões e dados vinculados ao perfil de origem podem deixar de existir ou não ser recuperáveis."
+              : "When you confirm this change, the selected profile replaces the current profile. Permissions and data tied to the previous baseline may no longer be available or recoverable."}
           </p>
         </div>
 
         <div className="grid gap-3 lg:grid-cols-[220px_220px_minmax(0,1fr)_minmax(0,1fr)]">
           <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Perfil atual</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Perfil atual" : "Current profile"}</div>
             <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{roleLabel(profileDraft)}</div>
           </div>
           <div className="rounded-[20px] border border-[rgba(239,0,1,0.14)] bg-[rgba(239,0,1,0.06)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Novo perfil</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Novo perfil" : "New profile"}</div>
             <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{roleLabel(profileModalRole)}</div>
           </div>
           <div className="rounded-[20px] border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.05)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Permissões atuais</div>
-            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{profileChangePreview.currentCount} permissões</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Permissões atuais" : "Current permissions"}</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{profileChangePreview.currentCount} {isPt ? "permissões" : "permissions"}</div>
             <div className="mt-1 text-xs leading-5 text-(--tc-text-secondary)">{roleHint(profileDraft)}</div>
           </div>
           <div className="rounded-[20px] border border-[rgba(239,0,1,0.14)] bg-[rgba(239,0,1,0.06)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Permissões do novo perfil</div>
-            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{profileChangePreview.nextCount} permissões</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Permissões do novo perfil" : "New profile permissions"}</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{profileChangePreview.nextCount} {isPt ? "permissões" : "permissions"}</div>
             <div className="mt-1 text-xs leading-5 text-(--tc-text-secondary)">{roleHint(profileModalRole)}</div>
           </div>
         </div>
@@ -1718,7 +1771,7 @@ export default function PermissionsPage() {
         <div className="grid gap-4 xl:grid-cols-2">
           <section className="rounded-3xl border border-[rgba(1,24,72,0.12)] bg-[rgba(1,24,72,0.04)]">
             <div className="border-b border-[rgba(1,24,72,0.08)] px-5 py-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Perfil atual</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Perfil atual" : "Current profile"}</div>
               <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{roleLabel(profileDraft)}</div>
             </div>
             <ScrollArea className="max-h-[44vh]" viewportClassName="p-4 pr-5 pb-5">
@@ -1742,7 +1795,7 @@ export default function PermissionsPage() {
 
           <section className="rounded-3xl border border-[rgba(239,0,1,0.14)] bg-[rgba(239,0,1,0.05)]">
             <div className="border-b border-[rgba(239,0,1,0.08)] px-5 py-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Novo perfil</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Novo perfil" : "New profile"}</div>
               <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{roleLabel(profileModalRole)}</div>
             </div>
             <ScrollArea className="max-h-[44vh]" viewportClassName="p-4 pr-5 pb-5">
@@ -1767,27 +1820,33 @@ export default function PermissionsPage() {
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Perde na troca</div>
-            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{profileChangePreview.lostCount} permissões</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Perde na troca" : "Loses on change"}</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{profileChangePreview.lostCount} {isPt ? "permissões" : "permissions"}</div>
             {profileChangePreview.lostPreview.length > 0 && (
               <div className="mt-2 text-xs leading-5 text-(--tc-text-secondary)">{profileChangePreview.lostPreview.join(" | ")}</div>
             )}
           </div>
           <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Ganha na troca</div>
-            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{profileChangePreview.gainedCount} permissões</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Ganha na troca" : "Gains on change"}</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{profileChangePreview.gainedCount} {isPt ? "permissões" : "permissions"}</div>
             {profileChangePreview.gainedPreview.length > 0 && (
               <div className="mt-2 text-xs leading-5 text-(--tc-text-secondary)">{profileChangePreview.gainedPreview.join(" | ")}</div>
             )}
           </div>
           <div className="rounded-[20px] border border-[rgba(245,158,11,0.28)] bg-[rgba(245,158,11,0.12)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#92400e]">Aviso</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#92400e]">{isPt ? "Aviso" : "Warning"}</div>
             <div className="mt-2 text-sm leading-6 text-[#a16207]">
               {nextRoleNeedsExtraData
                 ? profileCandidateCompanyId
-                  ? `Empresa compatível reaproveitada: ${profileCandidateCompanyLabel}. Ao confirmar, esse vínculo seguirá para o novo perfil sem abrir a segunda etapa.`
-                  : `O perfil ${roleLabel(profileModalRole)} exige empresa vinculada. Como esse campo ainda não existe, a próxima etapa solicitará apenas esse dado faltante.`
-                : "A mudança atualiza a base do usuário na edição atual. Depois, salve para aplicar no sistema."}
+                  ? isPt
+                    ? `Empresa compatível reaproveitada: ${profileCandidateCompanyLabel}. Ao confirmar, esse vínculo seguirá para o novo perfil sem abrir a segunda etapa.`
+                    : `Compatible company reused: ${profileCandidateCompanyLabel}. On confirmation, this link will carry over to the new profile without opening the second step.`
+                  : isPt
+                    ? `O perfil ${roleLabel(profileModalRole)} exige empresa vinculada. Como esse campo ainda não existe, a próxima etapa solicitará apenas esse dado faltante.`
+                    : `The ${roleLabel(profileModalRole)} profile requires a linked company. Since this field is still missing, the next step will request only that missing data.`
+                : isPt
+                  ? "A mudança atualiza a base do usuário na edição atual. Depois, salve para aplicar no sistema."
+                  : "This change updates the user's baseline in the current draft. Then save to apply in the system."}
             </div>
           </div>
         </div>
@@ -1795,8 +1854,10 @@ export default function PermissionsPage() {
 
       <SurfaceModal
         open={profileRequirementsOpen}
-        title="Completar dados obrigatórios"
-        description="O novo perfil depende de dados adicionais para concluir a troca. Defina o vínculo exigido antes de aplicar a nova base."
+        title={isPt ? "Completar dados obrigatórios" : "Complete required data"}
+        description={isPt
+          ? "O novo perfil depende de dados adicionais para concluir a troca. Defina o vínculo exigido antes de aplicar a nova base."
+          : "The new profile depends on additional data to complete the change. Define the required linkage before applying the new baseline."}
         onClose={() => {
           setProfileRequirementsOpen(false);
           setProfileComparisonOpen(true);
@@ -1811,7 +1872,7 @@ export default function PermissionsPage() {
               }}
               className="inline-flex items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 py-2.5 text-sm font-medium text-(--tc-text-primary) transition hover:bg-(--tc-surface)"
             >
-              Voltar
+              {isPt ? "Voltar" : "Back"}
             </button>
             <button
               type="button"
@@ -1819,31 +1880,33 @@ export default function PermissionsPage() {
               disabled={!profileModalCompany}
               className="inline-flex items-center justify-center rounded-2xl bg-(--tc-accent) px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
             >
-              Concluir mudança
+              {isPt ? "Concluir mudança" : "Finish change"}
             </button>
           </>
         }
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Perfil atual</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Perfil atual" : "Current profile"}</div>
             <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{roleLabel(profileDraft)}</div>
           </div>
           <div className="rounded-[20px] border border-[rgba(239,0,1,0.14)] bg-[rgba(239,0,1,0.06)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Novo perfil</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Novo perfil" : "New profile"}</div>
             <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{roleLabel(profileModalRole)}</div>
           </div>
         </div>
 
         <div className="rounded-[20px] border border-[rgba(245,158,11,0.28)] bg-[rgba(245,158,11,0.12)] px-4 py-3 text-sm leading-6 text-[#a16207]">
-          Este perfil exige uma empresa principal para concluir a alteração. Sem esse vínculo, o usuário fica sem contexto operacional válido.
+          {isPt
+            ? "Este perfil exige uma empresa principal para concluir a alteração. Sem esse vínculo, o usuário fica sem contexto operacional válido."
+            : "This profile requires a primary company to complete the change. Without this linkage, the user has no valid operational context."}
         </div>
 
         <label className="space-y-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">Empresa principal</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">{isPt ? "Empresa principal" : "Primary company"}</span>
           <Select value={profileModalCompany} onValueChange={setProfileModalCompany}>
             <SelectTrigger>
-              <SelectValue placeholder="Selecione a empresa obrigatória" />
+              <SelectValue placeholder={isPt ? "Selecione a empresa obrigatória" : "Select the required company"} />
             </SelectTrigger>
             <SelectContent>
               {filteredCompanies.map((company) => (
@@ -1855,14 +1918,14 @@ export default function PermissionsPage() {
           </Select>
         </label>
 
-        {companiesLoading && <p className="text-xs text-(--tc-text-muted)">Carregando empresas...</p>}
-        {companiesError && <p className="text-xs text-(--tc-accent)">{friendlyUiError(companiesError, "Não foi possível carregar as empresas agora.")}</p>}
+        {companiesLoading && <p className="text-xs text-(--tc-text-muted)">{isPt ? "Carregando empresas..." : "Loading companies..."}</p>}
+        {companiesError && <p className="text-xs text-(--tc-accent)">{friendlyUiError(companiesError, isPt ? "Não foi possível carregar as empresas agora." : "Could not load companies right now.")}</p>}
       </SurfaceModal>
 
       <SurfaceModal
         open={permissionsViewerOpen}
-        title="Permissões ativas"
-        description="Resumo do acesso atual do usuário."
+        title={isPt ? "Permissões ativas" : "Active permissions"}
+        description={isPt ? "Resumo do acesso atual do usuário." : "Summary of the user's current access."}
         onClose={() => setPermissionsViewerOpen(false)}
         size="wide"
         icon={<FiShield size={20} />}
@@ -1872,7 +1935,7 @@ export default function PermissionsPage() {
             onClick={() => setPermissionsViewerOpen(false)}
             className="inline-flex items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 py-2.5 text-sm font-medium text-(--tc-text-primary) transition hover:bg-(--tc-surface)"
           >
-            Fechar
+            {isPt ? "Fechar" : "Close"}
           </button>
         }
       >
@@ -1881,10 +1944,10 @@ export default function PermissionsPage() {
             className="rounded-[26px] border border-(--tc-border) px-5 py-5 sm:px-6 [background:linear-gradient(135deg,rgba(1,24,72,0.06),rgba(1,24,72,0.02))]"
           >
             <div className="flex items-start gap-4">
-              <AvatarIdentity user={selectedUser} size="lg" />
+              <AvatarIdentity user={selectedUser} size="lg" isPt={isPt} />
               <div className="min-w-0">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Usuario</div>
-                <div className="mt-1 text-xl font-semibold text-(--tc-text-primary)">{getDisplayName(selectedUser)}</div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Usuário" : "User"}</div>
+                <div className="mt-1 text-xl font-semibold text-(--tc-text-primary)">{getDisplayName(selectedUser, isPt)}</div>
                 {getUserSecondaryLabel(selectedUser) ? (
                   <div className="mt-1 text-sm text-(--tc-text-secondary)">{getUserSecondaryLabel(selectedUser)}</div>
                 ) : null}
@@ -1907,22 +1970,24 @@ export default function PermissionsPage() {
             <div className="rounded-[22px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-4">
               <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">
                 <FiGrid size={13} />
-                Modulos
+                {isPt ? "Modulos" : "Modules"}
               </div>
               <div className="mt-3 text-2xl font-semibold text-(--tc-text-primary)">{totalActiveModules}</div>
             </div>
             <div className="rounded-[22px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-4">
               <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">
                 <FiShield size={13} />
-                Permissoes
+                {isPt ? "Permissões" : "Permissions"}
               </div>
               <div className="mt-3 text-2xl font-semibold text-(--tc-text-primary)">{totalActiveActions}</div>
             </div>
             <div className="rounded-[22px] border border-[rgba(1,24,72,0.14)] bg-(--tc-surface) px-4 py-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Ajustes manuais</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">{isPt ? "Ajustes manuais" : "Manual overrides"}</div>
               <div className="mt-3 text-2xl font-semibold text-(--tc-text-primary)">{customAllowCount + customDenyCount}</div>
               <div className="mt-2 text-xs font-medium text-(--tc-text-secondary)">
-                +{customAllowCount} liberadas / -{customDenyCount} bloqueadas
+                {isPt
+                  ? `+${customAllowCount} liberadas / -${customDenyCount} bloqueadas`
+                  : `+${customAllowCount} granted / -${customDenyCount} blocked`}
               </div>
             </div>
           </div>
@@ -1931,8 +1996,8 @@ export default function PermissionsPage() {
         <section className="rounded-[26px] border border-(--tc-border) bg-(--tc-surface)">
           <div className="flex flex-col gap-3 border-b border-(--tc-border) px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <div>
-              <div className="text-lg font-semibold text-(--tc-text-primary)">Acessos por modulo</div>
-              <div className="mt-1 text-sm text-(--tc-text-secondary)">Leitura direta dos modulos liberados no estado atual.</div>
+              <div className="text-lg font-semibold text-(--tc-text-primary)">{isPt ? "Acessos por modulo" : "Access by module"}</div>
+              <div className="mt-1 text-sm text-(--tc-text-secondary)">{isPt ? "Leitura direta dos modulos liberados no estado atual." : "Direct view of modules enabled in the current state."}</div>
             </div>
             <div className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1.5 text-xs font-semibold text-(--tc-text-muted)">
               {effectiveModuleGroups.length} categorias
@@ -1946,7 +2011,7 @@ export default function PermissionsPage() {
                     <div className="flex items-center justify-between gap-3">
                       <div className="text-base font-semibold text-(--tc-text-primary)">{group.category}</div>
                       <div className="rounded-full border border-[rgba(1,24,72,0.1)] bg-[rgba(1,24,72,0.05)] px-3 py-1.5 text-xs font-semibold text-(--tc-primary)">
-                        {group.actionsCount} permissoes
+                        {group.actionsCount} {isPt ? "permissões" : "permissions"}
                       </div>
                     </div>
 
@@ -1984,7 +2049,9 @@ export default function PermissionsPage() {
               <div className="rounded-[22px] border border-dashed border-(--tc-border) bg-(--tc-surface-2) px-4 py-8 text-center">
                 <div className="text-base font-semibold text-(--tc-text-primary)">Nenhuma permissão ativa encontrada</div>
                 <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary)">
-                  Revise o perfil base e as personalizações aplicadas para liberar acesso a algum módulo.
+                  {isPt
+                    ? "Revise o perfil base e as personalizações aplicadas para liberar acesso a algum módulo."
+                    : "Review the base profile and applied customizations to grant access to a module."}
                 </p>
               </div>
             )}
@@ -1994,8 +2061,10 @@ export default function PermissionsPage() {
 
       <SurfaceModal
         open={restoreModalOpen}
-        title="Atenção"
-        description="Revise o impacto antes de restaurar a edição atual. A origem salva do usuário volta a ser a base e personalizações fora dela deixam de valer."
+        title={isPt ? "Atenção" : "Attention"}
+        description={isPt
+          ? "Revise o impacto antes de restaurar a edição atual. A origem salva do usuário volta a ser a base e personalizações fora dela deixam de valer."
+          : "Review impact before restoring the current draft. The user's saved origin becomes the baseline again and external customizations stop applying."}
         onClose={() => setRestoreModalOpen(false)}
         size="wide"
         tone="alert"
@@ -2007,14 +2076,14 @@ export default function PermissionsPage() {
               onClick={() => setRestoreModalOpen(false)}
               className="inline-flex items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 py-2.5 text-sm font-medium text-(--tc-text-primary) transition hover:bg-(--tc-surface)"
             >
-              Cancelar
+              {isPt ? "Cancelar" : "Cancel"}
             </button>
             <button
               type="button"
               onClick={handleResetDraft}
               className="inline-flex items-center justify-center rounded-2xl bg-(--tc-accent) px-4 py-2.5 text-sm font-semibold text-white"
             >
-              Confirmar restauração
+              {isPt ? "Confirmar restauração" : "Confirm restore"}
             </button>
           </>
         }
@@ -2022,59 +2091,73 @@ export default function PermissionsPage() {
         <div
           className="rounded-3xl border border-[rgba(239,0,1,0.18)] px-5 py-4 [background:linear-gradient(135deg,rgba(239,0,1,0.08),rgba(1,24,72,0.04))]"
         >
-          <div className="text-lg font-semibold text-(--tc-text-primary)">A restauração substitui o estado atual da edição.</div>
+          <div className="text-lg font-semibold text-(--tc-text-primary)">{isPt ? "A restauração substitui o estado atual da edição." : "Restore replaces the current draft state."}</div>
           <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary)">
-            Ao confirmar, o sistema remove personalizações que não pertencem ao perfil de origem salvo e recalcula o contexto operacional do usuário. Revise o impacto em perfil, vínculo e permissões antes de continuar.
+            {isPt
+              ? "Ao confirmar, o sistema remove personalizações que não pertencem ao perfil de origem salvo e recalcula o contexto operacional do usuário. Revise o impacto em perfil, vínculo e permissões antes de continuar."
+              : "When confirmed, the system removes customizations outside the saved origin profile and recalculates the user's operational context. Review profile, link, and permission impact before continuing."}
           </p>
         </div>
 
         <div className="grid gap-3 lg:grid-cols-[220px_220px_minmax(0,1fr)_minmax(0,1fr)]">
           <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Perfil atual</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Perfil atual" : "Current profile"}</div>
             <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{roleLabel(profileDraft)}</div>
           </div>
           <div className="rounded-[20px] border border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.08)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Após restaurar</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Após restaurar" : "After restore"}</div>
             <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{roleLabel(originalRole)}</div>
           </div>
           <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Vínculo atual</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Vínculo atual" : "Current link"}</div>
             <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">
               {resetCurrentCompanyLabel}
             </div>
           </div>
           <div className="rounded-[20px] border border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.08)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Vínculo restaurado</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Vínculo restaurado" : "Restored link"}</div>
             <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{resetTargetCompanyLabel}</div>
           </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-[20px] border border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.08)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Base atual</div>
-            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{resetPreview.currentCount} permissões ativas</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Base atual" : "Current baseline"}</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{resetPreview.currentCount} {isPt ? "permissões ativas" : "active permissions"}</div>
             <div className="mt-1 text-xs leading-5 text-(--tc-text-secondary)">
               {resetWillChangeRole
-                ? `A edição atual está operando como ${roleLabel(profileDraft)}.`
-                : `A edição atual segue a base ${roleLabel(profileDraft)}.`}
+                ? isPt
+                  ? `A edição atual está operando como ${roleLabel(profileDraft)}.`
+                  : `The current draft is operating as ${roleLabel(profileDraft)}.`
+                : isPt
+                  ? `A edição atual segue a base ${roleLabel(profileDraft)}.`
+                  : `The current draft follows the ${roleLabel(profileDraft)} baseline.`}
             </div>
           </div>
           <div className="rounded-[20px] border border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.08)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Origem restaurada</div>
-            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{resetPreview.nextCount} permissões padrão</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Origem restaurada" : "Restored origin"}</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{resetPreview.nextCount} {isPt ? "permissões padrão" : "default permissions"}</div>
             <div className="mt-1 text-xs leading-5 text-(--tc-text-secondary)">
-              {`A base salva volta para ${roleLabel(originalRole)} sem personalizações manuais.`}
+              {isPt
+                ? `A base salva volta para ${roleLabel(originalRole)} sem personalizações manuais.`
+                : `Saved baseline returns to ${roleLabel(originalRole)} without manual overrides.`}
             </div>
           </div>
           <div className="rounded-[20px] border border-[rgba(245,158,11,0.28)] bg-[rgba(245,158,11,0.12)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#92400e]">Impacto da restauração</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#92400e]">{isPt ? "Impacto da restauração" : "Restore impact"}</div>
             <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">
-              {resetWillChangeRole || resetWillChangeCompany ? "Perfil ou vínculo serão alterados" : "Base e vínculo já estão alinhados"}
+              {resetWillChangeRole || resetWillChangeCompany
+                ? (isPt ? "Perfil ou vínculo serão alterados" : "Profile or link will change")
+                : (isPt ? "Base e vínculo já estão alinhados" : "Baseline and link are already aligned")}
             </div>
             <div className="mt-1 text-xs leading-5 text-[#a16207]">
               {resetWillChangeCompany
-                ? `O vínculo principal volta para ${resetTargetCompanyLabel}.`
-                : "O vínculo principal permanece no mesmo contexto salvo."}
+                ? isPt
+                  ? `O vínculo principal volta para ${resetTargetCompanyLabel}.`
+                  : `Primary link returns to ${resetTargetCompanyLabel}.`
+                : isPt
+                  ? "O vínculo principal permanece no mesmo contexto salvo."
+                  : "Primary link remains in the same saved context."}
             </div>
           </div>
         </div>
@@ -2082,7 +2165,7 @@ export default function PermissionsPage() {
         <div className="grid gap-4 xl:grid-cols-2">
           <section className="rounded-3xl border border-[rgba(239,0,1,0.14)] bg-[rgba(239,0,1,0.05)]">
             <div className="border-b border-[rgba(239,0,1,0.08)] px-5 py-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Atual</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Atual" : "Current"}</div>
               <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{roleLabel(profileDraft)}</div>
             </div>
             <ScrollArea className="max-h-[38vh]" viewportClassName="p-4 pr-5 pb-5">
@@ -2105,7 +2188,7 @@ export default function PermissionsPage() {
 
           <section className="rounded-3xl border border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.06)]">
             <div className="border-b border-[rgba(16,185,129,0.12)] px-5 py-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Padrão restaurado</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Padrão restaurado" : "Restored default"}</div>
               <div className="mt-2 text-base font-semibold text-(--tc-text-primary)">{roleLabel(originalRole)}</div>
             </div>
             <ScrollArea className="max-h-[38vh]" viewportClassName="p-4 pr-5 pb-5">
@@ -2129,27 +2212,29 @@ export default function PermissionsPage() {
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-[20px] border border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.08)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Em vermelho: será removido</div>
-            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{resetPreview.lostCount} permissões</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Em vermelho: será removido" : "In red: will be removed"}</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{resetPreview.lostCount} {isPt ? "permissões" : "permissions"}</div>
             {resetPreview.lostPreview.length > 0 ? (
               <div className="mt-2 text-xs leading-5 text-(--tc-text-secondary)">{resetPreview.lostPreview.join(" | ")}</div>
             ) : (
-              <div className="mt-2 text-xs leading-5 text-(--tc-text-secondary)">Nenhuma permissão fora da origem atual será perdida.</div>
+              <div className="mt-2 text-xs leading-5 text-(--tc-text-secondary)">{isPt ? "Nenhuma permissão fora da origem atual será perdida." : "No permissions outside the current origin will be lost."}</div>
             )}
           </div>
           <div className="rounded-[20px] border border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.08)] px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">Em verde: volta ao padrão</div>
-            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{resetPreview.gainedCount} permissões</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted)">{isPt ? "Em verde: volta ao padrão" : "In green: returns to default"}</div>
+            <div className="mt-2 text-sm font-semibold text-(--tc-text-primary)">{resetPreview.gainedCount} {isPt ? "permissões" : "permissions"}</div>
             {resetPreview.gainedPreview.length > 0 ? (
               <div className="mt-2 text-xs leading-5 text-(--tc-text-secondary)">{resetPreview.gainedPreview.join(" | ")}</div>
             ) : (
-              <div className="mt-2 text-xs leading-5 text-(--tc-text-secondary)">O padrão já está alinhado com o que a origem exige.</div>
+              <div className="mt-2 text-xs leading-5 text-(--tc-text-secondary)">{isPt ? "O padrão já está alinhado com o que a origem exige." : "The default is already aligned with what the origin requires."}</div>
             )}
           </div>
         </div>
 
         <div className="rounded-[20px] border border-[rgba(245,158,11,0.28)] bg-[rgba(245,158,11,0.12)] px-4 py-3 text-sm leading-6 text-[#a16207]">
-          Restaurar o padrão recalcula a base do perfil salvo e pode remover permissões e vínculos que não fazem parte da origem atual deste usuário. A restauração acontece na edição atual; depois disso, use salvar alterações para aplicar no sistema.
+          {isPt
+            ? "Restaurar o padrão recalcula a base do perfil salvo e pode remover permissões e vínculos que não fazem parte da origem atual deste usuário. A restauração acontece na edição atual; depois disso, use salvar alterações para aplicar no sistema."
+            : "Restoring default recalculates the saved profile baseline and may remove permissions and links that are not part of this user's current origin. Restore happens in the current draft; after that, use save changes to apply in the system."}
         </div>
       </SurfaceModal>
     </div>

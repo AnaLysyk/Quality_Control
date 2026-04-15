@@ -14,12 +14,12 @@ export function EditReleaseButton({ slug, currentTitle, currentRunId }: EditRele
   const [loading, setLoading] = useState(false);
 
   const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
-  const canEdit = Boolean(user?.isGlobalAdmin || role === "admin" || role === "company");
+  const canEdit = Boolean(user?.isGlobalAdmin || role === "leader_tc" || role === "technical_support" || role === "empresa");
 
   if (authLoading || !canEdit) return null;
 
   const handleEdit = async () => {
-    const nextTitle = prompt("Novo titulo da run:", currentTitle ?? "");
+    const nextTitle = prompt("Novo título da run:", currentTitle ?? "");
     const nextRun = prompt("Novo runId (Qase):", currentRunId ? String(currentRunId) : "");
     if (!nextTitle && !nextRun) return;
     setLoading(true);

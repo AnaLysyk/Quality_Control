@@ -16,13 +16,13 @@ export async function POST(req: Request) {
 
   const authUser = await authenticateRequest(req);
   if (!authUser) {
-    return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
   if (
     !hasPermissionAccess(authUser.permissions, "ai", "view") ||
     !hasPermissionAccess(authUser.permissions, "ai", "use")
   ) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   try {

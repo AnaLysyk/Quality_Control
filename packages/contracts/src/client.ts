@@ -48,6 +48,7 @@ export const ClientSchema = z
     jira_account_name: z.string().optional().nullable(),
     integration_mode: z.enum(["none", "qase", "jira", "manual", "other"]).optional().nullable(),
     integration_type: z.enum(["none", "qase", "jira", "manual", "other"]).optional().nullable(),
+    notifications_fanout_enabled: z.boolean().optional(),
     integrations: z
       .array(
         z.object({
@@ -103,6 +104,7 @@ export const ClientCreateRequestSchema = z
     clear_jira_api_token: z.boolean().optional(),
     clear_all_integrations: z.boolean().optional(),
     integration_mode: z.enum(["none", "qase", "jira", "manual", "other"]).optional(),
+    notifications_fanout_enabled: z.boolean().optional(),
     integrations: z
       .array(
         z.object({

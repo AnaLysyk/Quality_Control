@@ -16,7 +16,7 @@ async function getPrisma() {
 export type AccessRequestComment = {
   id: string;
   requestId: string;
-  authorRole: "admin" | "requester";
+  authorRole: "admin" | "requester" | "leader_tc";
   authorName: string;
   authorEmail?: string | null;
   authorId?: string | null;
@@ -115,7 +115,7 @@ export async function listAccessRequestComments(requestId: string) {
       where: { requestId },
       orderBy: { createdAt: "asc" },
     });
-    return rows.map((r) => ({ id: r.id, requestId: r.requestId, authorRole: r.authorRole as "admin" | "requester", authorName: r.authorName, authorEmail: r.authorEmail ?? null, authorId: r.authorId ?? null, body: r.body, createdAt: r.createdAt.toISOString() }));
+    return rows.map((r) => ({ id: r.id, requestId: r.requestId, authorRole: r.authorRole as "admin" | "requester" | "leader_tc", authorName: r.authorName, authorEmail: r.authorEmail ?? null, authorId: r.authorId ?? null, body: r.body, createdAt: r.createdAt.toISOString() }));
   }
   const store = await readStore();
   return store.items
@@ -125,7 +125,7 @@ export async function listAccessRequestComments(requestId: string) {
 
 export async function createAccessRequestComment(input: {
   requestId: string;
-  authorRole: "admin" | "requester";
+  authorRole: "admin" | "requester" | "leader_tc";
   authorName: string;
   authorEmail?: string | null;
   authorId?: string | null;
@@ -136,7 +136,7 @@ export async function createAccessRequestComment(input: {
     const r = await prisma.accessRequestComment.create({
       data: { requestId: input.requestId, authorRole: input.authorRole, authorName: input.authorName.trim() || "Usuario", authorEmail: input.authorEmail ?? null, authorId: input.authorId ?? null, body: input.body.trim() },
     });
-    return { id: r.id, requestId: r.requestId, authorRole: r.authorRole as "admin" | "requester", authorName: r.authorName, authorEmail: r.authorEmail ?? null, authorId: r.authorId ?? null, body: r.body, createdAt: r.createdAt.toISOString() };
+    return { id: r.id, requestId: r.requestId, authorRole: r.authorRole as "admin" | "requester" | "leader_tc", authorName: r.authorName, authorEmail: r.authorEmail ?? null, authorId: r.authorId ?? null, body: r.body, createdAt: r.createdAt.toISOString() };
   }
   const now = new Date().toISOString();
   const record: AccessRequestComment = {

@@ -31,7 +31,6 @@ const APP_COLOR_CLASS: Record<string, string> = {
   trust: "app-color-trust",
   "cidadao-smart": "app-color-cidadao",
   gmt: "app-color-gmt",
-  gmt: "app-color-gmt",
 };
 
 export function ReleasesList({ className }: ReleasesListProps) {

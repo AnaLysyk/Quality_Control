@@ -34,7 +34,6 @@ const APP_COLOR_CLASS: Record<string, string> = {
   cds: "app-color-cds",
   "cidadao-smart": "app-color-cidadao",
   gmt: "app-color-gmt",
-  gmt: "app-color-gmt",
 };
 
 export function ApplicationsList({ className }: ApplicationsListProps) {

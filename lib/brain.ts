@@ -1116,12 +1116,12 @@ export async function mergeNodes(
 
     // Atualizar arestas saindo de source
     for (const edge of sourceOutgoing) {
-      await connectNodes(targetId, edge.toId, edge.type, edge.metadata, userId)
+      await connectNodes(targetId, edge.toId, edge.type, edge.metadata ?? undefined, userId)
     }
 
     // Atualizar arestas entrando em source
     for (const edge of sourceIncoming) {
-      await connectNodes(edge.fromId, targetId, edge.type, edge.metadata, userId)
+      await connectNodes(edge.fromId, targetId, edge.type, edge.metadata ?? undefined, userId)
     }
 
     // Mesclar metadados

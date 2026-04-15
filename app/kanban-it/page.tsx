@@ -1585,7 +1585,7 @@ export default function KanbanItPage() {
                     >
                       {PRIORITY_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
-                          {ui.priorityLabels[(opt.value ?? "medium").toLowerCase()] ?? ui.priorityLabels.medium}
+                          {ui.priorityLabels[(opt.value ?? "medium").toLowerCase() as keyof typeof ui.priorityLabels] ?? ui.priorityLabels.medium}
                         </option>
                       ))}
                     </select>

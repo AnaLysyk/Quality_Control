@@ -671,12 +671,13 @@ export async function getRelatedMemories(
     const allNodeIds = [nodeId, ...subgraph.nodes.map(n => n.id)]
 
     const memories = await prisma.brainMemory.findMany({
-      where: {
-        relatedNodeIds: {
-          hasSome: allNodeIds,
-        },
-      },
       orderBy: { importance: 'desc' },
+    })
+
+    return memories.filter(m => {
+      if (!m.relatedNodeIds) return false;
+      const ids = Array.isArray(m.relatedNodeIds) ? m.relatedNodeIds : [];
+      return (ids as unknown[]).some((id) => allNodeIds.includes(String(id)));
     })
 
     return memories

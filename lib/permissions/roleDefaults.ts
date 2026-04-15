@@ -84,7 +84,7 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     access_requests: ["view"],
     notes: ["view", "create"],
     notifications: ["view"],
-    audit: [],
+    audit: ["view"],
     settings: ["view"],
     ai: ["view", "use"],
   },

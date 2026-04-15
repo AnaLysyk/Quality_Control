@@ -154,7 +154,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   ], [t]);
 
   const supportNav: NavItem[] = useMemo(() => {
-    return adminNav.filter((item) => item.href !== "/admin/brain" && item.href !== "/admin/users/permissions");
+    return adminNav;
   }, [adminNav]);
 
   const companyNav: NavItem[] = useMemo(

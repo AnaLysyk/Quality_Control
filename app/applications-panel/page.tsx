@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { CompanySelector } from "../components/CompanySelector";
@@ -23,6 +25,7 @@ export default function HomePage() {
         null,
       companyCount: clients.length,
       clientSlug: activeClientSlug ?? user?.clientSlug ?? null,
+      defaultClientSlug: user?.defaultClientSlug ?? null,
     }),
     [activeClientSlug, clients.length, user],
   );
@@ -39,7 +42,7 @@ export default function HomePage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-10 py-8 md:py-10 space-y-8">
         <CompanySelector
           title="Empresas vinculadas"
-          description="Selecione a empresa para abrir a visao de aplicacoes e releases."
+          description="Selecione a empresa para abrir a visão de aplicações e releases."
           buildHref={(company) =>
             buildCompanyPathForAccess(company.clientSlug, "aplicacoes", {
               ...routeInput,

@@ -116,10 +116,10 @@ export default function CreateSupportTicketButton() {
               </div>
               {supportOperators.length > 0 && (
                 <div>
-                  <label className="text-sm font-semibold text-(--tc-text-muted)">Atribuir ao suporte tecnico</label>
+                  <label className="text-sm font-semibold text-(--tc-text-muted)">Atribuir ao suporte técnico</label>
                   <select
                     id="create-support-assignee"
-                    aria-label="Atribuir ao suporte tecnico"
+                    aria-label="Atribuir ao suporte técnico"
                     className="w-full rounded-xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent)"
                     value={assignedTo ?? ""}
                     onChange={(e) => setAssignedTo(e.target.value || null)}

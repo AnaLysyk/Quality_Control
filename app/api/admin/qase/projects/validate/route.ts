@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) return NextResponse.json({ error: "Sem permissao" }, { status });
+  if (!admin) return NextResponse.json({ error: "Sem permissão" }, { status });
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   const requestedToken = typeof body?.token === "string" ? body.token.trim() : "";
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ valid: true, project: data.result ?? null }, { status: 200 });
   } catch (err) {
     const statusCode = err instanceof QaseError ? err.status : 500;
-    if (statusCode === 404) return NextResponse.json({ valid: false, error: "Projeto nao encontrado" }, { status: 404 });
+    if (statusCode === 404) return NextResponse.json({ valid: false, error: "Projeto não encontrado" }, { status: 404 });
     if (statusCode === 401 || statusCode === 403) return NextResponse.json({ valid: false, error: "Token invalido ou sem acesso" }, { status: statusCode });
     return NextResponse.json({ valid: false, error: "Erro ao validar projeto" }, { status: statusCode });
   }

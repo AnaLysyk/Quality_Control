@@ -44,12 +44,12 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => null);
     const login = typeof body?.login === "string" ? body.login.trim() : "";
     const userInput = typeof body?.user === "string" ? body.user.trim() : "";
-    const usuarioInput = typeof body?.usuario === "string" ? body.usuario.trim() : "";
+    const usuarioInput = typeof body?.usuário === "string" ? body.usuário.trim() : "";
     const password = typeof body?.password === "string" ? body.password : "";
     const identifier = userInput || usuarioInput || login;
 
     if (!identifier || !password) {
-      return NextResponse.json({ error: "Usuario e senha obrigatorios" }, { status: 400 });
+      return NextResponse.json({ error: "Usuário e senha obrigatorios" }, { status: 400 });
     }
 
     const user = await findLocalUserByEmailOrId(identifier);
@@ -142,7 +142,7 @@ export async function POST(req: Request) {
         secureCookies,
       );
     } else {
-      // Limpa o contexto salvo quando o login nao especifica empresa.
+      // Limpa o contexto salvo quando o login não especifica empresa.
       res.cookies.set("active_company_slug", "", {
         httpOnly: true,
         sameSite: "lax",

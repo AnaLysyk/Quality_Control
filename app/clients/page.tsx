@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ClientSearchBar } from "./components/ClientSearchBar";
@@ -119,17 +121,15 @@ function ClientsPage() {
             id: typeof item.id === "string" ? item.id : String(item.id ?? ""),
             name: typeof item.name === "string" ? item.name : "",
             role:
-              role === "global_admin"
-                ? "Admin global"
-                : role === "client_admin"
+              role === "global_admin" || role === "leader_tc"
+                ? "Lider TC"
+                : role === "client_admin" || role === "empresa"
                   ? "Admin"
-                  : role === "it_dev"
-                    ? "Dev / IT"
-                    : role === "leader_tc"
-                      ? "Lider TC"
-                      : role === "technical_support"
-                        ? "Suporte Tecnico"
-                        : "Usuario",
+                  : role === "it_dev" || role === "technical_support"
+                    ? "Suporte Técnico"
+                    : role === "company_user"
+                      ? "Usuário da empresa"
+                      : "Usuário",
             avatarUrl: typeof item.avatar_url === "string" ? item.avatar_url : null,
           };
         });

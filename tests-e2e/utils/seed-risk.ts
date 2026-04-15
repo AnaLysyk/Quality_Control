@@ -1,4 +1,4 @@
-import fs from "fs";
+﻿import fs from "fs";
 import { resolveSeedPath } from "./seed-paths";
 
 type ManualRelease = {
@@ -15,9 +15,9 @@ export async function seedReleaseWithHighMTTR() {
     id: "mttr-risk-1",
     slug: "mttr-risk-1",
     name: "Release MTTR Alto",
-    app: "GRIAULE",
+    app: "DEMO",
     kind: "defect",
-    clientSlug: "griaule",
+    clientSlug: "DEMO",
     source: "MANUAL",
     status: "closed",
     stats: { pass: 1, fail: 0, blocked: 0, notRun: 0 },
@@ -42,9 +42,9 @@ export async function seedReleaseWithFailedRun() {
     id: "run-risk-1",
     slug: "run-risk-1",
     name: "Release com Run Falha",
-    app: "GRIAULE",
+    app: "DEMO",
     kind: "run",
-    clientSlug: "griaule",
+    clientSlug: "DEMO",
     source: "MANUAL",
     status: "closed",
     stats: { pass: 0, fail: 1, blocked: 0, notRun: 0 },

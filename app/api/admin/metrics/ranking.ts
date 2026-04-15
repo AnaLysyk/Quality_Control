@@ -3,7 +3,7 @@ import { listClients } from "@/data/clientsRepository";
 import { getAccessContext } from "@/lib/auth/session";
 
 const MOCK_CLIENTS = [
-  { slug: "griaule", name: "Griaule" },
+  { slug: "demo", name: "Demo" },
   { slug: "testing-company", name: "Testing Company" },
   { slug: "cliente-x", name: "Cliente X" },
 ];
@@ -23,7 +23,7 @@ export async function GET(req: Request) {
   // RBAC: only admin
   const access = await getAccessContext(req);
   const role = typeof access?.role === "string" ? access.role.toLowerCase() : "";
-  const isAdmin = Boolean(access?.isGlobalAdmin || role === "admin");
+  const isAdmin = Boolean(access?.isGlobalAdmin || role === "leader_tc" || role === "technical_support");
   if (!isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

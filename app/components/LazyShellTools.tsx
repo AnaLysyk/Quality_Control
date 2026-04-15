@@ -7,6 +7,7 @@ import type { IconType } from "react-icons";
 import { FiBell, FiEdit3, FiMessageSquare, FiMoon, FiSun } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
+import NotificationsButton from "@/components/NotificationsButton";
 import UserAvatar from "@/components/UserAvatar";
 import { useAppSettings } from "@/context/AppSettingsContext";
 import { useClientContext } from "@/context/ClientContext";
@@ -76,11 +77,6 @@ function ChatLoadingBubble() {
 const LazyNotesButtonInner = dynamic<ToolComponentProps>(() => import("./NotesButton"), {
   ssr: false,
   loading: () => <ToolbarLoadingBubble icon={FiEdit3} ariaLabel="Carregando bloco de notas" />,
-});
-
-const LazyNotificationsButtonInner = dynamic<NotificationsToolComponentProps>(() => import("./NotificationsButton"), {
-  ssr: false,
-  loading: () => <ToolbarLoadingBubble icon={FiBell} ariaLabel="Carregando notificacoes" />,
 });
 
 const LazyTicketsButtonInner = dynamic<ToolComponentProps>(() => import("./TicketsButton"), {
@@ -217,15 +213,15 @@ export function DeferredNotificationsButton() {
 
   if (!user) return null;
   if (mounted) {
-    return <LazyNotificationsButtonInner defaultOpen={defaultOpen} initialUnreadCount={unreadCount} />;
+    return <NotificationsButton defaultOpen={defaultOpen} initialUnreadCount={unreadCount} />;
   }
 
   return (
     <span className="relative shrink-0">
       <ToolbarGhostButton
-        ariaLabel="Abrir notificacoes"
+        ariaLabel="Abrir notificações"
         icon={FiBell}
-        loadingLabel="Carregando notificacoes"
+        loadingLabel="Carregando notificações"
         mounted={mounted}
         onOpen={open}
         onPrime={prime}
@@ -262,10 +258,16 @@ export function ThemeToggleButton() {
   const { resolvedTheme, setTheme } = useAppSettings();
   const { t } = useI18n();
   const resolvedDark = resolvedTheme === "dark";
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const nextTheme = resolvedDark ? "light" : "dark";
-  const ariaLabel = resolvedDark ? t("themeToggle.switchToLight") : t("themeToggle.switchToDark");
-  const Icon = resolvedDark ? FiSun : FiMoon;
+  const ariaLabel = mounted
+    ? resolvedDark
+      ? t("themeToggle.switchToLight")
+      : t("themeToggle.switchToDark")
+    : t("themeToggle.toggle");
+  const Icon = mounted ? (resolvedDark ? FiSun : FiMoon) : FiSun;
 
   const handleToggle = useCallback(() => {
     setTheme(nextTheme);

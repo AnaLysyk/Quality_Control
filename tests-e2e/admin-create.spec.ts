@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures/test";
+﻿import { test, expect } from "./fixtures/test";
 import { login, setMockUser } from "./utils/auth";
 
 test.setTimeout(120000);
@@ -10,7 +10,7 @@ test("admin cria empresa e usuario", async ({ page }) => {
   const suffix = Date.now().toString().slice(-6);
   const companyName = `Empresa E2E ${suffix}`;
   const userName = `Usuario E2E ${suffix}`;
-  const userEmail = `e2e.user.${suffix}@griaule.test`;
+  const userEmail = `e2e.user.${suffix}@demo.test`;
 
   await page.goto("/admin/clients", { waitUntil: "domcontentloaded" });
 
@@ -53,3 +53,5 @@ test("admin cria empresa e usuario", async ({ page }) => {
   await filterSelect.selectOption("");
   await expect(page.getByText(userEmail)).toBeVisible({ timeout: 20000 });
 });
+
+

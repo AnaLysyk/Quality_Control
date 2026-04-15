@@ -3,24 +3,24 @@ import { hashPasswordSha256 } from "../lib/passwordHash";
 import { prisma } from "../lib/prismaClient";
 
 const COMPANY = {
-  name: "Griaule",
-  slug: "griaule",
+  name: "Demo",
+  slug: "demo",
 };
 
 const USERS = {
   admin: {
-    email: "admin@griaule.test",
-    name: "Griaule Admin",
+    email: "admin@demo.test",
+    name: "Demo Admin",
     role: "admin",
   },
   user: {
-    email: "user@griaule.test",
-    name: "Griaule User",
+    email: "user@demo.test",
+    name: "Demo User",
     role: "user",
   },
 };
 
-const PASSWORD = "Griaule@123";
+const PASSWORD = "Demo@123";
 
 async function upsertUser(email: string, name: string, passwordHash: string) {
   return prisma.user.upsert({
@@ -53,7 +53,7 @@ async function main() {
   await upsertLink(adminUser.id, company.id, USERS.admin.role);
   await upsertLink(normalUser.id, company.id, USERS.user.role);
 
-  console.log("Seed Griaule ok:", {
+  console.log("Seed Demo ok:", {
     company: COMPANY.slug,
     admin: USERS.admin.email,
     user: USERS.user.email,
@@ -62,7 +62,7 @@ async function main() {
 
 main()
   .catch((err) => {
-    console.error("Seed Griaule failed:", err);
+    console.error("Seed Demo failed:", err);
     process.exit(1);
   })
   .finally(async () => {

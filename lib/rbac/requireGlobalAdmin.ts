@@ -158,11 +158,13 @@ export async function requireGlobalAdmin(
 
   const role = session.role ?? null;
   const normalizedRole = normalizeLegacyRole(role);
-  const hasTechnicalSupportIdentity = normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
   const isGlobalAdmin =
-    !hasTechnicalSupportIdentity &&
-    (session.isGlobalAdmin === true || (session.globalRole ?? "").toLowerCase() === "global_admin");
-  if (!isGlobalAdmin && normalizedRole !== SYSTEM_ROLES.LEADER_TC) return null;
+    session.isGlobalAdmin === true || (session.globalRole ?? "").toLowerCase() === "global_admin";
+  if (
+    !isGlobalAdmin &&
+    normalizedRole !== SYSTEM_ROLES.LEADER_TC &&
+    normalizedRole !== SYSTEM_ROLES.TECHNICAL_SUPPORT
+  ) return null;
 
   return {
     id: session.userId ?? session.id ?? "",

@@ -6,10 +6,10 @@ import { isItDev } from "@/lib/rbac/tickets";
 export async function POST(req: Request, context: { params: Promise<{ name: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
   if (!isItDev(user)) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   const { name } = await context.params;
@@ -17,7 +17,7 @@ export async function POST(req: Request, context: { params: Promise<{ name: stri
     await restoreVersion(name);
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Erro ao restaurar versao";
+    const message = err instanceof Error ? err.message : "Erro ao restaurar versão";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

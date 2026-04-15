@@ -12,11 +12,11 @@
       "tags": ["login", "auth"],
       "createdAt": "2026-02-11T10:00:00.000Z",
       "updatedAt": "2026-02-11T10:00:00.000Z",
-      "createdBy": "usr_user_griaule_test",
-      "createdByName": "Usuario Griaule",
-      "createdByEmail": "user@griaule.test",
-      "companySlug": "griaule",
-      "companyId": "griaule",
+      "createdBy": "usr_user_demo_test",
+      "createdByName": "Usuario Demo",
+      "createdByEmail": "user@demo.test",
+      "companySlug": "demo",
+      "companyId": "demo",
       "assignedToUserId": null,
       "timeline": []
     },
@@ -31,13 +31,14 @@
       "tags": ["relatorio", "exportacao"],
       "createdAt": "2026-02-11T11:20:00.000Z",
       "updatedAt": "2026-02-11T11:45:00.000Z",
-      "createdBy": "usr_user_griaule_test",
-      "createdByName": "Usuario Griaule",
-      "createdByEmail": "user@griaule.test",
-      "companySlug": "griaule",
-      "companyId": "griaule",
+      "createdBy": "usr_user_demo_test",
+      "createdByName": "Usuario Demo",
+      "createdByEmail": "user@demo.test",
+      "companySlug": "demo",
+      "companyId": "demo",
       "assignedToUserId": "usr_itdev",
       "timeline": []
     }
   ]
 }
+

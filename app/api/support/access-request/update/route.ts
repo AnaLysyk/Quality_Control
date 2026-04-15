@@ -106,21 +106,21 @@ function buildAdjustmentDiff(previous: AdjustmentSnapshot, next: AdjustmentSnaps
     { field: "companyPhone", label: "Telefone da empresa", previous: previous.companyPhone, next: next.companyPhone },
     { field: "companyWebsite", label: "Website", previous: previous.companyWebsite, next: next.companyWebsite },
     { field: "companyLinkedin", label: "LinkedIn", previous: previous.companyLinkedin, next: next.companyLinkedin },
-    { field: "companyDescription", label: "Descricao da empresa", previous: previous.companyDescription, next: next.companyDescription },
+    { field: "companyDescription", label: "Descrição da empresa", previous: previous.companyDescription, next: next.companyDescription },
     { field: "companyNotes", label: "Observacoes da empresa", previous: previous.companyNotes, next: next.companyNotes },
     { field: "fullName", label: "Nome completo", previous: previous.fullName, next: next.fullName },
-    { field: "username", label: "Usuario/login", previous: previous.username, next: next.username },
+    { field: "username", label: "Usuário/login", previous: previous.username, next: next.username },
     { field: "email", label: "E-mail", previous: previous.email, next: next.email },
     { field: "phone", label: "Telefone", previous: previous.phone, next: next.phone },
     { field: "jobRole", label: "Cargo", previous: previous.jobRole, next: next.jobRole },
-    { field: "title", label: "Titulo", previous: previous.title, next: next.title },
-    { field: "description", label: "Descricao", previous: previous.description, next: next.description },
+    { field: "title", label: "Título", previous: previous.title, next: next.title },
+    { field: "description", label: "Descrição", previous: previous.description, next: next.description },
     { field: "notes", label: "Observacoes", previous: previous.notes, next: next.notes },
     {
       field: "password",
       label: "Senha",
-      previous: previous.passwordHash ? "Definida" : "Nao definida",
-      next: next.passwordHash ? "Definida" : "Nao definida",
+      previous: previous.passwordHash ? "Definida" : "Não definida",
+      next: next.passwordHash ? "Definida" : "Não definida",
     },
   ];
 
@@ -129,17 +129,17 @@ function buildAdjustmentDiff(previous: AdjustmentSnapshot, next: AdjustmentSnaps
     .map((entry) => ({
       field: entry.field,
       label: entry.label,
-      previous: entry.previous || "Nao informado",
-      next: entry.next || "Nao informado",
+      previous: entry.previous || "Não informado",
+      next: entry.next || "Não informado",
     }));
 }
 
 function buildAdjustmentComment(diff: AccessRequestAdjustmentEntry[]) {
   if (!diff.length) {
-    return "Solicitante reenviou a solicitacao sem alterar os dados informados.";
+    return "Solicitante reenviou a solicitação sem alterar os dados informados.";
   }
   const lines = [
-    "Solicitante ajustou os dados da solicitacao e reenviou para revisao.",
+    "Solicitante ajustou os dados da solicitação e reenviou para revisao.",
     ...diff.map((entry) => `- ${entry.label}: ${entry.previous} -> ${entry.next}`),
   ];
   return lines.join("\n");
@@ -269,16 +269,16 @@ export async function PATCH(req: Request) {
 
   const request = requestId ? await findRequestById(requestId) : await findRequestByLookup(lookupEmail, lookupName);
   if (!request) {
-    return NextResponse.json({ error: "Solicitacao nao encontrada." }, { status: 404 });
+    return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404 });
   }
 
   const parsed = parseAccessRequestMessage(String(request.message ?? ""), String(request.email ?? ""));
   if (!matchesAccessRequestLookup({ lookupEmail, lookupName, parsed, storedEmail: request.email })) {
-    return NextResponse.json({ error: "Dados nao conferem com a solicitacao." }, { status: 403 });
+    return NextResponse.json({ error: "Dados não conferem com a solicitação." }, { status: 403 });
   }
 
   if (request.status === "closed" || request.status === "rejected") {
-    return NextResponse.json({ error: "Esta solicitacao ja foi finalizada e nao aceita ajustes." }, { status: 409 });
+    return NextResponse.json({ error: "Esta solicitação já foi finalizada e não aceita ajustes." }, { status: 409 });
   }
 
   const email = sanitize(body.email, 255).toLowerCase();
@@ -318,12 +318,12 @@ export async function PATCH(req: Request) {
     null;
 
   if (!email || !fullName || !role || !phone || !title || !description || !profileType || !accessType) {
-    return NextResponse.json({ error: "Campos obrigatorios ausentes para atualizar a solicitacao." }, { status: 400 });
+    return NextResponse.json({ error: "Campos obrigatorios ausentes para atualizar a solicitação." }, { status: 400 });
   }
 
   const nextPasswordHash = password ? hashPasswordSha256(password) : parsed.passwordHash;
   if (!nextPasswordHash) {
-    return NextResponse.json({ error: "Defina uma senha para prosseguir com a solicitacao." }, { status: 400 });
+    return NextResponse.json({ error: "Defina uma senha para prosseguir com a solicitação." }, { status: 400 });
   }
 
   let resolvedCompanyName = company || parsed.company || "";
@@ -331,12 +331,12 @@ export async function PATCH(req: Request) {
 
   if (requestProfileTypeNeedsCompany(profileType)) {
     if (!resolvedClientId) {
-      return NextResponse.json({ error: "Selecione uma empresa cadastrada para vincular ao perfil Usuario." }, { status: 400 });
+      return NextResponse.json({ error: "Selecione uma empresa cadastrada para vincular ao perfil Usuário." }, { status: 400 });
     }
 
     const selectedCompany = await findLocalCompanyById(resolvedClientId);
     if (!selectedCompany) {
-      return NextResponse.json({ error: "Empresa selecionada nao encontrada." }, { status: 404 });
+      return NextResponse.json({ error: "Empresa selecionada não encontrada." }, { status: 404 });
     }
     resolvedCompanyName = (selectedCompany.name ?? selectedCompany.company_name ?? "").trim() || "Empresa";
   } else if (profileType === "company_user") {
@@ -347,7 +347,7 @@ export async function PATCH(req: Request) {
     resolvedCompanyName = companyProfile.companyName;
   } else {
     resolvedClientId = null;
-    resolvedCompanyName = "(nao informado)";
+    resolvedCompanyName = "(não informado)";
   }
 
   const previousSnapshot: AdjustmentSnapshot = {
@@ -425,7 +425,7 @@ export async function PATCH(req: Request) {
     phone,
     passwordHash: nextPasswordHash,
     role,
-    company: resolvedCompanyName || "(nao informado)",
+    company: resolvedCompanyName || "(não informado)",
     clientId: resolvedClientId,
     accessType: accessType as AccessType,
     profileType: profileType as RequestProfileType,
@@ -472,6 +472,7 @@ export async function PATCH(req: Request) {
       authorName: fullName || displayName,
       body: comment.body,
       reviewQueue: resolveReviewQueue(profileType as RequestProfileType),
+      clientId: resolvedClientId,
     });
 
     return NextResponse.json({
@@ -499,6 +500,7 @@ export async function PATCH(req: Request) {
       authorName: fullName || displayName,
       body: comment.body,
       reviewQueue: resolveReviewQueue(profileType as RequestProfileType),
+      clientId: resolvedClientId,
     });
 
     return NextResponse.json({
@@ -522,6 +524,7 @@ export async function PATCH(req: Request) {
       authorName: fullName || displayName,
       body: comment.body,
       reviewQueue: resolveReviewQueue(profileType as RequestProfileType),
+      clientId: resolvedClientId,
     });
 
     return NextResponse.json({

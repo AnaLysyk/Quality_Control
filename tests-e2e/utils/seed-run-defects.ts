@@ -1,4 +1,4 @@
-import fs from "fs";
+﻿import fs from "fs";
 import { resolveSeedPath } from "./seed-paths";
 
 type ManualRelease = {
@@ -18,9 +18,9 @@ export async function seedRunWithDefects() {
     id: "run-defeito-1",
     slug: "run-defeito-1",
     name: "Run com Defeitos Unico",
-    app: "GRIAULE",
+    app: "DEMO",
     kind: "run",
-    clientSlug: "griaule",
+    clientSlug: "DEMO",
     source: "MANUAL",
     status: "closed",
     stats: { pass: 1, fail: 1, blocked: 0, notRun: 0 },

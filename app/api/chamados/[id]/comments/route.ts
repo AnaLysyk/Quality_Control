@@ -22,18 +22,18 @@ function isRateLimited(lastCreatedAt?: string | null) {
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
   const { id } = await context.params;
   const ticket = await getTicketById(id);
   if (!ticket) {
     return NextResponse.json(
-      { error: "Chamado nao encontrado. Atualize a pagina e tente novamente." },
+      { error: "Chamado não encontrado. Atualize a página e tente novamente." },
       { status: 404 },
     );
   }
   if (!canCommentTicket(user, ticket)) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   const url = new URL(req.url);
@@ -69,18 +69,18 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
   const { id } = await context.params;
   const ticket = await getTicketById(id);
   if (!ticket) {
     return NextResponse.json(
-      { error: "Chamado nao encontrado. Atualize a pagina e tente novamente." },
+      { error: "Chamado não encontrado. Atualize a página e tente novamente." },
       { status: 404 },
     );
   }
   if (!canCommentTicket(user, ticket)) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   const body = await req.json().catch(() => ({}));
@@ -99,7 +99,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   });
 
   if (!comment) {
-    return NextResponse.json({ error: "Comentario invalido" }, { status: 400 });
+    return NextResponse.json({ error: "Comentário invalido" }, { status: 400 });
   }
 
   touchTicket(id, user.id).catch(() => null);
@@ -109,14 +109,14 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     type: "COMMENT_ADDED",
     actorUserId: user.id,
     payload: { commentId: comment.id },
-  }).catch((err) => console.error("Falha ao registrar comentario:", err));
+  }).catch((err) => console.error("Falha ao registrar comentário:", err));
 
   notifyTicketCommentAdded({
     ticket,
     comment,
     actorId: user.id,
     actorName: resolveDisplayName(localUser),
-  }).catch((err) => console.error("Falha ao notificar comentario:", err));
+  }).catch((err) => console.error("Falha ao notificar comentário:", err));
 
   return NextResponse.json({ item: comment }, { status: 201 });
 }

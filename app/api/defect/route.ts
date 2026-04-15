@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 // Importa o cliente Prisma para acesso ao banco de dados
 import { prisma } from "../../../lib/prismaClient";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
+import { brainOnDefectCreated } from "@/lib/brain/autoSync";
 
 // POST: Cria um novo defeito para uma empresa e release manual
 // Espera receber no corpo: title, description, companyId, releaseManualId
@@ -10,7 +11,7 @@ export async function POST(req: NextRequest) {
   // Lê os dados enviados na requisição
   const data = await req.json();
   const { title, description, companyId, releaseManualId } = data;
-  // Valida se os campos obrigatórios foram enviados
+  // Válida se os campos obrigatórios foram enviados
   if (!title || !companyId) {
     return NextResponse.json({ error: "title e companyId são obrigatórios" }, { status: 400 });
   }
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
   });
 
   // Retorna o defeito criado com status 201 (Created)
+  brainOnDefectCreated(defect).catch(() => {});
   return NextResponse.json(defect, { status: 201 });
 }
 
@@ -37,7 +39,7 @@ export async function GET(req: NextRequest) {
   // Obtém o companyId e releaseManualId dos parâmetros da URL
   const companyId = req.nextUrl.searchParams.get("companyId");
   const releaseManualId = req.nextUrl.searchParams.get("releaseManualId");
-  // Valida se o companyId foi informado
+  // Válida se o companyId foi informado
   if (!companyId) {
     return NextResponse.json({ error: "companyId é obrigatório" }, { status: 400 });
   }

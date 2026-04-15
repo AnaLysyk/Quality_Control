@@ -1,4 +1,4 @@
-
+﻿
 import fs from "fs";
 import path from "path";
 import { resolveSeedPath } from "./seed-paths";
@@ -48,9 +48,9 @@ export async function seedRunsForSearch() {
       id: "run-busca-1",
       slug: "run-busca-1",
       name: "Run Busca Alpha",
-      app: "GRIAULE",
+      app: "DEMO",
       kind: "run",
-      clientSlug: "griaule",
+      clientSlug: "DEMO",
       source: "MANUAL",
       status: "closed",
       stats: { pass: 1, fail: 0, blocked: 0, notRun: 0 },
@@ -64,9 +64,9 @@ export async function seedRunsForSearch() {
       id: "run-busca-2",
       slug: "run-busca-2",
       name: "Run Busca Beta",
-      app: "GRIAULE",
+      app: "DEMO",
       kind: "run",
-      clientSlug: "griaule",
+      clientSlug: "DEMO",
       source: "MANUAL",
       status: "closed",
       stats: { pass: 1, fail: 0, blocked: 0, notRun: 0 },
@@ -101,9 +101,9 @@ export async function seedRunsWithQuality() {
       id: "run-quality-1",
       slug: "run-quality-1",
       name: "Run Qualidade Alta",
-      app: "GRIAULE",
+      app: "DEMO",
       kind: "run",
-      clientSlug: "griaule",
+      clientSlug: "DEMO",
       source: "MANUAL",
       status: "closed",
       stats: { pass: 2, fail: 0, blocked: 0, notRun: 0 },
@@ -128,7 +128,7 @@ export async function seedDefectsOutOfSLA() {
     alerts = JSON.parse(await fs.promises.readFile(file, "utf8")) as QualityAlert[];
   } catch {}
   const newAlert = {
-    companySlug: "griaule",
+    companySlug: "DEMO",
     type: "sla",
     severity: "critical",
     message: "Defeitos fora do SLA: 2",

@@ -1,5 +1,7 @@
-export type UserRole = "user" | "admin" | "super-admin";
-export type CompanyRole = "company_admin" | "it_dev" | "user" | "viewer";
+import type { SystemRole } from "@/lib/auth/roles";
+
+export type UserRole = SystemRole;
+export type CompanyRole = SystemRole;
 export type GlobalRole = "global_admin";
 export type Capability =
   | "company:read"

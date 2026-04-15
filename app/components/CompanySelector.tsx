@@ -137,7 +137,7 @@ export function CompanySelector({
                 )}
                 <div className="space-y-2">
                   <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-muted">
-                    {company.role === "ADMIN" ? "Admin" : "Usuario"}
+                    {company.role === "ADMIN" ? "Admin" : "Usuário"}
                     {!company.clientActive && (
                       <span className="rounded-full bg-surface2 px-2 py-0.5 text-[10px] font-semibold text-muted">
                         Inativo

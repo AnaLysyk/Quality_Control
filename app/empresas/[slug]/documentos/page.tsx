@@ -1,9 +1,12 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FiCopy,
+  FiEdit2,
   FiExternalLink,
   FiFileText,
   FiFolder,
@@ -14,9 +17,180 @@ import {
   FiUploadCloud,
 } from "react-icons/fi";
 
-import Breadcrumb from "@/components/Breadcrumb";
+import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
+import DocumentViewer from "@/components/DocumentViewer";
 import { useClientContext } from "@/context/ClientContext";
 import { fetchApi } from "@/lib/api";
+import { useI18n } from "@/hooks/useI18n";
+
+const COPY = {
+  "pt-BR": {
+    forbiddenKicker: "Documentos",
+    forbiddenTitle: "Acesso negado",
+    forbiddenDesc: "Você não tem permissão para consultar os documentos desta empresa.",
+    breadcrumbDocs: "Documentos",
+    headerKicker: "Documentação da empresa",
+    headerDesc: "Repositório de arquivos, links e materiais de apoio da operação desta empresa.",
+    itemsRegistered: (n: number) => `${n} itens cadastrados`,
+    filesCount: (n: number) => `${n} arquivos`,
+    linksCount: (n: number) => `${n} links`,
+    addFile: "Adicionar arquivo",
+    addLink: "Adicionar link",
+    linkCopied: "Link copiado.",
+    copyFailed: "Não foi possível copiar o link.",
+    fileKicker: "Arquivo da empresa",
+    fileTitle: "Adicionar arquivo",
+    fileDesc: "Envie um arquivo para manter materiais de apoio e referencias desta empresa em um único lugar.",
+    close: "Fechar",
+    labelTitle: "Título",
+    labelFile: "Arquivo",
+    labelDescription: "Descrição",
+    placeholderFileTitle: "Ex.: Plano de testes da empresa",
+    placeholderFileDesc: "Descreva o conteúdo ou a finalidade deste documento.",
+    cancel: "Cancelar",
+    submittingFile: "Enviando...",
+    saveFile: "Salvar arquivo",
+    linkKicker: "Link da empresa",
+    linkTitle: "Adicionar link",
+    linkDesc: "Cadastre links de referencia, páginas internas, materiais de apoio e documentação util para esta empresa.",
+    labelUrl: "URL",
+    placeholderLinkTitle: "Ex.: Guia de operação no Qase",
+    placeholderLinkDesc: "Explique o contexto deste link e quando ele deve ser utilizado.",
+    submittingLink: "Salvando...",
+    saveLink: "Salvar link",
+    repoKicker: "Repositório da empresa",
+    repoTitle: "Documentos cadastrados",
+    repoDesc: "Arquivos, links e referencias disponíveis para os usuários vinculados a esta empresa.",
+    itemsLabel: (n: number) => `${n} itens`,
+    fileLabel: "Arquivo",
+    linkLabel: "Link",
+    noDescDoc: "Sem descrição complementar.",
+    addedAt: "Adicionado em",
+    addedBy: "Adicionado por",
+    systemUser: "Sistema",
+    fileField: "Arquivo",
+    sizeField: "Tamanho",
+    destinationField: "Destino",
+    openLink: "Abrir link",
+    openFile: "Abrir arquivo",
+    copyLink: "Copiar link",
+    deleteBtn: "Excluir",
+    emptyTitle: "Nenhum documento cadastrado",
+    emptyDescManage: "Adicione arquivos ou links para montar a base de referencia desta empresa.",
+    emptyDescView: "Ainda não existem documentos disponíveis para esta empresa.",
+    confirmDelete: "Deseja excluir este documento da empresa?",
+    deletedMsg: "Documento excluido.",
+    fileAdded: "Arquivo adicionado com sucesso.",
+    linkAdded: "Link adicionado com sucesso.",
+    errAccessDenied: "Acesso negado",
+    errLoadDocs: "Não foi possível carregar os documentos desta empresa.",
+    errSelectFile: "Selecione um arquivo para continuar.",
+    errSendFile: "Não foi possível enviar o arquivo.",
+    errLinkUrl: "Informe a URL do link.",
+    errSaveLink: "Não foi possível salvar o link.",
+    errDeleteDoc: "Não foi possível excluir o documento.",
+    deleteModalTitle: "Excluir documento",
+    deleteModalDesc: "Esta ação é permanente e não pode ser desfeita. Deseja continuar?",
+    deleteModalConfirm: "Excluir permanentemente",
+    deleteModalCancel: "Cancelar",
+    defaultCompany: "Empresa",
+    defaultLinkTitle: "Link da empresa",
+    editBtn: "Editar",
+    editKicker: "Editar documento",
+    editTitle: "Editar",
+    saveEdit: "Salvar alterações",
+    savingEdit: "Salvando...",
+    editSuccess: "Documento atualizado.",
+    errEditDoc: "Não foi possível atualizar o documento.",
+    previewLink: "Testar link",
+  },
+  "en-US": {
+    forbiddenKicker: "Documents",
+    forbiddenTitle: "Access denied",
+    forbiddenDesc: "You do not have permission to view documents for this company.",
+    breadcrumbDocs: "Documents",
+    headerKicker: "Company documentation",
+    headerDesc: "Repository of files, links and support materials for this company's operations.",
+    itemsRegistered: (n: number) => `${n} items registered`,
+    filesCount: (n: number) => `${n} files`,
+    linksCount: (n: number) => `${n} links`,
+    addFile: "Add file",
+    addLink: "Add link",
+    linkCopied: "Link copied.",
+    copyFailed: "Could not copy the link.",
+    fileKicker: "Company file",
+    fileTitle: "Add file",
+    fileDesc: "Upload a file to keep support materials and references for this company in one place.",
+    close: "Close",
+    labelTitle: "Title",
+    labelFile: "File",
+    labelDescription: "Description",
+    placeholderFileTitle: "E.g.: Company test plan",
+    placeholderFileDesc: "Describe the content or purpose of this document.",
+    cancel: "Cancel",
+    submittingFile: "Uploading...",
+    saveFile: "Save file",
+    linkKicker: "Company link",
+    linkTitle: "Add link",
+    linkDesc: "Register reference links, internal pages, support materials and useful documentation for this company.",
+    labelUrl: "URL",
+    placeholderLinkTitle: "E.g.: Qase operation guide",
+    placeholderLinkDesc: "Explain the context of this link and when it should be used.",
+    submittingLink: "Saving...",
+    saveLink: "Save link",
+    repoKicker: "Company repository",
+    repoTitle: "Registered documents",
+    repoDesc: "Files, links and references available to users linked to this company.",
+    itemsLabel: (n: number) => `${n} items`,
+    fileLabel: "File",
+    linkLabel: "Link",
+    noDescDoc: "No additional description.",
+    addedAt: "Added on",
+    addedBy: "Added by",
+    systemUser: "System",
+    fileField: "File",
+    sizeField: "Size",
+    destinationField: "Destination",
+    openLink: "Open link",
+    openFile: "Open file",
+    copyLink: "Copy link",
+    deleteBtn: "Delete",
+    emptyTitle: "No documents registered",
+    emptyDescManage: "Add files or links to build the reference base for this company.",
+    emptyDescView: "There are no documents available for this company yet.",
+    confirmDelete: "Do you want to delete this company document?",
+    deletedMsg: "Document deleted.",
+    fileAdded: "File added successfully.",
+    linkAdded: "Link added successfully.",
+    errAccessDenied: "Access denied",
+    errLoadDocs: "Could not load documents for this company.",
+    errSelectFile: "Select a file to continue.",
+    errSendFile: "Could not upload the file.",
+    errLinkUrl: "Please enter the link URL.",
+    errSaveLink: "Could not save the link.",
+    errDeleteDoc: "Could not delete the document.",
+    deleteModalTitle: "Delete document",
+    deleteModalDesc: "This action is permanent and cannot be undone. Do you want to continue?",
+    deleteModalConfirm: "Delete permanently",
+    deleteModalCancel: "Cancel",
+    defaultCompany: "Company",
+    defaultLinkTitle: "Company link",
+    editBtn: "Edit",
+    editKicker: "Edit document",
+    editTitle: "Edit",
+    saveEdit: "Save changes",
+    savingEdit: "Saving...",
+    editSuccess: "Document updated.",
+    errEditDoc: "Could not update the document.",
+    previewLink: "Test link",
+    viewerTitle: "Document viewer",
+    viewerClose: "Close viewer",
+    viewerPage: "Page",
+    viewerOf: "of",
+    viewerZoom: "Zoom",
+    viewerDownload: "Download",
+  },
+} as const;
 
 type DocumentItem = {
   id: string;
@@ -69,11 +243,18 @@ function isLinkDocument(item: DocumentItem) {
   return item.kind === "link" && typeof item.url === "string" && item.url.trim().length > 0;
 }
 
+function safeHref(url: string) {
+  if (!url || url === "#") return "#";
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
 export default function CompanyDocumentsPage() {
   const params = useParams();
   const slugParam = params?.slug;
   const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam || "";
   const { clients, loading: clientsLoading } = useClientContext();
+  const { language } = useI18n();
+  const copy = COPY[language] ?? COPY["pt-BR"];
 
   const hasAccess = useMemo(() => {
     if (!slug) return false;
@@ -82,7 +263,7 @@ export default function CompanyDocumentsPage() {
   }, [clients, clientsLoading, slug]);
 
   const company = useMemo(() => clients.find((client) => client.slug === slug) ?? null, [clients, slug]);
-  const companyName = company?.name || slug || "Empresa";
+  const companyName = company?.name || slug || copy.defaultCompany;
 
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -100,9 +281,20 @@ export default function CompanyDocumentsPage() {
   const [linkTitle, setLinkTitle] = useState("");
   const [linkDescription, setLinkDescription] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerItem, setViewerItem] = useState<DocumentItem | null>(null);
+
+  const [editing, setEditing] = useState<DocumentItem | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [editUrl, setEditUrl] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
 
   const fileCount = useMemo(() => documents.filter((item) => item.kind === "file").length, [documents]);
   const linkCount = useMemo(() => documents.filter((item) => item.kind === "link").length, [documents]);
+
+  useAppShellCoverSlot(null);
 
   const load = useCallback(async () => {
     if (!slug) return;
@@ -118,7 +310,7 @@ export default function CompanyDocumentsPage() {
         if (res.status === 401 || res.status === 403) {
           setForbidden(true);
         }
-        setError(json.error || "Nao foi possivel carregar os documentos desta empresa.");
+        setError(json.error || copy.errLoadDocs);
         return;
       }
 
@@ -128,7 +320,7 @@ export default function CompanyDocumentsPage() {
     } catch (err) {
       setDocuments([]);
       setCanManage(false);
-      setError(err instanceof Error ? err.message : "Nao foi possivel carregar os documentos desta empresa.");
+      setError(err instanceof Error ? err.message : copy.errLoadDocs);
     } finally {
       setLoading(false);
     }
@@ -141,7 +333,7 @@ export default function CompanyDocumentsPage() {
       setCanManage(false);
       setForbidden(true);
       setLoading(false);
-      setError("Acesso negado");
+      setError(copy.errAccessDenied);
       return;
     }
     load();
@@ -150,10 +342,10 @@ export default function CompanyDocumentsPage() {
   async function handleCopyLink(url: string) {
     try {
       await navigator.clipboard.writeText(url);
-      setMessage("Link copiado.");
+      setMessage(copy.linkCopied);
       setError(null);
     } catch {
-      setError("Nao foi possivel copiar o link.");
+      setError(copy.copyFailed);
     }
   }
 
@@ -169,7 +361,7 @@ export default function CompanyDocumentsPage() {
     }
 
     if (!file) {
-      setError("Selecione um arquivo para continuar.");
+      setError(copy.errSelectFile);
       return;
     }
 
@@ -187,7 +379,7 @@ export default function CompanyDocumentsPage() {
       });
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setError(json.error || "Nao foi possivel enviar o arquivo.");
+        setError(json.error || copy.errSendFile);
         return;
       }
 
@@ -201,10 +393,10 @@ export default function CompanyDocumentsPage() {
         /* ignore */
       }
       setComposer(null);
-      setMessage("Arquivo adicionado com sucesso.");
+      setMessage(copy.fileAdded);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Nao foi possivel enviar o arquivo.");
+      setError(err instanceof Error ? err.message : copy.errSendFile);
     } finally {
       setSubmitting(false);
     }
@@ -216,7 +408,7 @@ export default function CompanyDocumentsPage() {
     setMessage(null);
 
     if (!linkUrl.trim()) {
-      setError("Informe a URL do link.");
+      setError(copy.errLinkUrl);
       return;
     }
 
@@ -228,14 +420,14 @@ export default function CompanyDocumentsPage() {
         body: JSON.stringify({
           slug,
           kind: "link",
-          title: (linkTitle.trim() || "Link da empresa").slice(0, 120),
+          title: (linkTitle.trim() || copy.defaultLinkTitle).slice(0, 120),
           description: linkDescription.trim(),
           url: linkUrl.trim(),
         }),
       });
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setError(json.error || "Nao foi possivel salvar o link.");
+        setError(json.error || copy.errSaveLink);
         return;
       }
 
@@ -243,10 +435,45 @@ export default function CompanyDocumentsPage() {
       setLinkDescription("");
       setLinkUrl("");
       setComposer(null);
-      setMessage("Link adicionado com sucesso.");
+      setMessage(copy.linkAdded);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Nao foi possivel salvar o link.");
+      setError(err instanceof Error ? err.message : copy.errSaveLink);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function submitEdit() {
+    if (!slug || !editing) return;
+    setError(null);
+    setMessage(null);
+    setSubmitting(true);
+    try {
+      const body: Record<string, unknown> = {
+        slug,
+        id: editing.id,
+        title: editTitle.trim() || editing.title,
+        description: editDesc.trim(),
+      };
+      if (editing.kind === "link") {
+        body.url = editUrl.trim() || editing.url;
+      }
+      const res = await fetchApi("/api/company-documents", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setError(json.error || copy.errEditDoc);
+        return;
+      }
+      setEditing(null);
+      setMessage(copy.editSuccess);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : copy.errEditDoc);
     } finally {
       setSubmitting(false);
     }
@@ -254,9 +481,7 @@ export default function CompanyDocumentsPage() {
 
   async function deleteDocument(id: string) {
     if (!slug) return;
-    const confirmed = window.confirm("Deseja excluir este documento da empresa?");
-    if (!confirmed) return;
-
+    setDeletingId(null);
     setError(null);
     setMessage(null);
     try {
@@ -265,13 +490,13 @@ export default function CompanyDocumentsPage() {
       });
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setError(json.error || "Nao foi possivel excluir o documento.");
+        setError(json.error || copy.errDeleteDoc);
         return;
       }
-      setMessage("Documento excluido.");
+      setMessage(copy.deletedMsg);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Nao foi possivel excluir o documento.");
+      setError(err instanceof Error ? err.message : copy.errDeleteDoc);
     }
   }
 
@@ -280,10 +505,10 @@ export default function CompanyDocumentsPage() {
       <div className="min-h-screen bg-(--page-bg,#ffffff) px-6 py-10 text-(--page-text,#0b1a3c)">
         <div className="mx-auto flex min-h-[60vh] max-w-md items-center justify-center">
           <div className="w-full rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-8 text-center shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">Documentos</p>
-            <h1 className="mt-3 text-2xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Acesso negado</h1>
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">{copy.forbiddenKicker}</p>
+            <h1 className="mt-3 text-2xl font-extrabold text-(--tc-text-primary,#0b1a3c)">{copy.forbiddenTitle}</h1>
             <p className="mt-3 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
-              Voce nao tem permissao para consultar os documentos desta empresa.
+              {copy.forbiddenDesc}
             </p>
           </div>
         </div>
@@ -293,79 +518,7 @@ export default function CompanyDocumentsPage() {
 
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-10">
-        <Breadcrumb
-          items={[
-            { label: companyName, href: currentCompanyHref(company?.slug ?? slug) },
-            { label: "Documentos" },
-          ]}
-        />
-
-        <section className="overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,#031843_0%,#082457_38%,#3a174f_72%,#9f1025_100%)] px-6 py-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:px-8">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-xl font-bold shadow-inner">
-                  {getInitials(companyName)}
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Documentacao da empresa</p>
-                  <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-white">{companyName}</h1>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-white/82">
-                    Repositorio de arquivos, links e materiais de apoio da operacao desta empresa.
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-3 text-sm">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                  <FiFolder className="h-4 w-4" /> {documents.length} itens cadastrados
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                  <FiPaperclip className="h-4 w-4" /> {fileCount} arquivos
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                  <FiLink2 className="h-4 w-4" /> {linkCount} links
-                </span>
-              </div>
-            </div>
-
-            {canManage ? (
-              <div className="flex flex-wrap gap-3 lg:justify-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setComposer((current) => (current === "file" ? null : "file"));
-                    setMessage(null);
-                    setError(null);
-                  }}
-                  className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
-                    composer === "file"
-                      ? "border-white/30 bg-white text-(--tc-text-primary,#0b1a3c)"
-                      : "border-white/20 bg-white/8 text-white hover:bg-white/14"
-                  }`}
-                >
-                  <FiUploadCloud className="h-4 w-4" /> Adicionar arquivo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setComposer((current) => (current === "link" ? null : "link"));
-                    setMessage(null);
-                    setError(null);
-                  }}
-                  className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
-                    composer === "link"
-                      ? "border-white/30 bg-white text-(--tc-text-primary,#0b1a3c)"
-                      : "border-white/20 bg-white/8 text-white hover:bg-white/14"
-                  }`}
-                >
-                  <FiPlus className="h-4 w-4" /> Adicionar link
-                </button>
-              </div>
-            ) : null}
-          </div>
-        </section>
-
+      <div className="flex w-full flex-col gap-6 py-6">
         {message ? (
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
             {message}
@@ -379,10 +532,10 @@ export default function CompanyDocumentsPage() {
           <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">Arquivo da empresa</p>
-                <h2 className="mt-2 text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">Adicionar arquivo</h2>
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">{copy.fileKicker}</p>
+                <h2 className="mt-2 text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">{copy.fileTitle}</h2>
                 <p className="mt-2 max-w-2xl text-sm text-(--tc-text-secondary,#4b5563)">
-                  Envie um arquivo para manter materiais de apoio e referencias desta empresa em um unico lugar.
+                  {copy.fileDesc}
                 </p>
               </div>
               <button
@@ -390,22 +543,22 @@ export default function CompanyDocumentsPage() {
                 onClick={() => setComposer(null)}
                 className="inline-flex items-center rounded-xl border border-(--tc-border,#d7deea) px-3 py-2 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
               >
-                Fechar
+                {copy.close}
               </button>
             </div>
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
               <label className="space-y-2">
-                <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Titulo</span>
+                <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelTitle}</span>
                 <input
                   data-testid="doc-file-title"
                   value={fileTitle}
                   onChange={(event) => setFileTitle(event.target.value)}
-                  placeholder="Ex.: Plano de testes da empresa"
+                  placeholder={copy.placeholderFileTitle}
                   className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
                 />
               </label>
               <label className="space-y-2">
-                <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Arquivo</span>
+                <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelFile}</span>
                 <input
                   data-testid="doc-file-input"
                   type="file"
@@ -414,13 +567,13 @@ export default function CompanyDocumentsPage() {
                 />
               </label>
               <label className="space-y-2 lg:col-span-2">
-                <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Descricao</span>
+                <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelDescription}</span>
                 <textarea
                   data-testid="doc-file-description"
                   value={fileDescription}
                   onChange={(event) => setFileDescription(event.target.value)}
                   rows={4}
-                  placeholder="Descreva o conteudo ou a finalidade deste documento."
+                  placeholder={copy.placeholderFileDesc}
                   className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
                 />
               </label>
@@ -431,7 +584,7 @@ export default function CompanyDocumentsPage() {
                 onClick={() => setComposer(null)}
                 className="rounded-2xl border border-(--tc-border,#d7deea) px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
               >
-                Cancelar
+                {copy.cancel}
               </button>
               <button
                 data-testid="doc-file-submit"
@@ -440,7 +593,7 @@ export default function CompanyDocumentsPage() {
                 onClick={() => void submitFile()}
                 className="inline-flex items-center gap-2 rounded-2xl bg-[linear-gradient(90deg,#071e53_0%,#ef0001_100%)] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(239,0,1,0.18)] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <FiUploadCloud className="h-4 w-4" /> {submitting ? "Enviando..." : "Salvar arquivo"}
+                <FiUploadCloud className="h-4 w-4" /> {submitting ? copy.submittingFile : copy.saveFile}
               </button>
             </div>
           </section>
@@ -450,10 +603,10 @@ export default function CompanyDocumentsPage() {
           <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">Link da empresa</p>
-                <h2 className="mt-2 text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">Adicionar link</h2>
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">{copy.linkKicker}</p>
+                <h2 className="mt-2 text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">{copy.linkTitle}</h2>
                 <p className="mt-2 max-w-2xl text-sm text-(--tc-text-secondary,#4b5563)">
-                  Cadastre links de referencia, paginas internas, materiais de apoio e documentacao util para esta empresa.
+                  {copy.linkDesc}
                 </p>
               </div>
               <button
@@ -461,22 +614,22 @@ export default function CompanyDocumentsPage() {
                 onClick={() => setComposer(null)}
                 className="inline-flex items-center rounded-xl border border-(--tc-border,#d7deea) px-3 py-2 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
               >
-                Fechar
+                {copy.close}
               </button>
             </div>
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
               <label className="space-y-2">
-                <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Titulo</span>
+                <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelTitle}</span>
                 <input
                   data-testid="doc-link-title"
                   value={linkTitle}
                   onChange={(event) => setLinkTitle(event.target.value)}
-                  placeholder="Ex.: Guia de operacao no Qase"
+                  placeholder={copy.placeholderLinkTitle}
                   className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
                 />
               </label>
-              <label className="space-y-2">
-                <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">URL</span>
+              <div className="space-y-2">
+                <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelUrl}</span>
                 <input
                   data-testid="doc-link-url"
                   value={linkUrl}
@@ -484,15 +637,25 @@ export default function CompanyDocumentsPage() {
                   placeholder="https://..."
                   className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
                 />
-              </label>
+                {linkUrl.trim() ? (
+                  <a
+                    href={safeHref(linkUrl.trim())}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
+                  >
+                    <FiExternalLink className="h-3 w-3" /> {copy.previewLink}
+                  </a>
+                ) : null}
+              </div>
               <label className="space-y-2 lg:col-span-2">
-                <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Descricao</span>
+                <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelDescription}</span>
                 <textarea
                   data-testid="doc-link-description"
                   value={linkDescription}
                   onChange={(event) => setLinkDescription(event.target.value)}
                   rows={4}
-                  placeholder="Explique o contexto deste link e quando ele deve ser utilizado."
+                  placeholder={copy.placeholderLinkDesc}
                   className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
                 />
               </label>
@@ -503,7 +666,7 @@ export default function CompanyDocumentsPage() {
                 onClick={() => setComposer(null)}
                 className="rounded-2xl border border-(--tc-border,#d7deea) px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
               >
-                Cancelar
+                {copy.cancel}
               </button>
               <button
                 data-testid="doc-link-submit"
@@ -512,7 +675,82 @@ export default function CompanyDocumentsPage() {
                 onClick={() => void submitLink()}
                 className="inline-flex items-center gap-2 rounded-2xl bg-[linear-gradient(90deg,#071e53_0%,#ef0001_100%)] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(239,0,1,0.18)] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <FiLink2 className="h-4 w-4" /> {submitting ? "Salvando..." : "Salvar link"}
+                <FiLink2 className="h-4 w-4" /> {submitting ? copy.submittingLink : copy.saveLink}
+              </button>
+            </div>
+          </section>
+        ) : null}
+
+        {editing !== null ? (
+          <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">{copy.editKicker}</p>
+                <h2 className="mt-2 text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">{copy.editTitle} — {editing.title}</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditing(null)}
+                className="inline-flex items-center rounded-xl border border-(--tc-border,#d7deea) px-3 py-2 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+              >
+                {copy.close}
+              </button>
+            </div>
+            <div className="mt-6 grid gap-4 lg:grid-cols-2">
+              <label className={`space-y-2${editing.kind === "file" ? " lg:col-span-2" : ""}`}>
+                <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelTitle}</span>
+                <input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                />
+              </label>
+              {editing.kind === "link" ? (
+                <div className="space-y-2">
+                  <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelUrl}</span>
+                  <input
+                    aria-label={copy.labelUrl}
+                    value={editUrl}
+                    onChange={(e) => setEditUrl(e.target.value)}
+                    className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                  />
+                  {editUrl.trim() ? (
+                    <a
+                      href={safeHref(editUrl.trim())}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
+                    >
+                      <FiExternalLink className="h-3 w-3" /> {copy.previewLink}
+                    </a>
+                  ) : null}
+                </div>
+              ) : null}
+              <label className="space-y-2 lg:col-span-2">
+                <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelDescription}</span>
+                <textarea
+                  value={editDesc}
+                  onChange={(e) => setEditDesc(e.target.value)}
+                  rows={4}
+                  className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                />
+              </label>
+            </div>
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setEditing(null)}
+                className="rounded-2xl border border-(--tc-border,#d7deea) px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+              >
+                {copy.cancel}
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => void submitEdit()}
+                className="inline-flex items-center gap-2 rounded-2xl bg-[linear-gradient(90deg,#071e53_0%,#ef0001_100%)] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(239,0,1,0.18)] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <FiEdit2 className="h-4 w-4" /> {submitting ? copy.savingEdit : copy.saveEdit}
               </button>
             </div>
           </section>
@@ -521,21 +759,57 @@ export default function CompanyDocumentsPage() {
         <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
           <div className="flex flex-col gap-4 border-b border-(--tc-border,#d7deea) pb-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">Repositorio da empresa</p>
-              <h2 className="mt-2 text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">Documentos cadastrados</h2>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">{copy.repoKicker}</p>
+              <h2 className="mt-2 text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">{copy.repoTitle}</h2>
               <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
-                Arquivos, links e referencias disponiveis para os usuarios vinculados a esta empresa.
+                {copy.repoDesc}
               </p>
+              {canManage ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditing(null);
+                      setComposer((current) => (current === "file" ? null : "file"));
+                      setMessage(null);
+                      setError(null);
+                    }}
+                    className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition ${
+                      composer === "file"
+                        ? "border-(--tc-accent,#ef0001) bg-(--tc-accent,#ef0001) text-white"
+                        : "border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) text-(--tc-text-primary,#0b1a3c) hover:border-(--tc-accent,#ef0001)"
+                    }`}
+                  >
+                    <FiUploadCloud className="h-4 w-4" /> {copy.addFile}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditing(null);
+                      setComposer((current) => (current === "link" ? null : "link"));
+                      setMessage(null);
+                      setError(null);
+                    }}
+                    className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition ${
+                      composer === "link"
+                        ? "border-(--tc-accent,#ef0001) bg-(--tc-accent,#ef0001) text-white"
+                        : "border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) text-(--tc-text-primary,#0b1a3c) hover:border-(--tc-accent,#ef0001)"
+                    }`}
+                  >
+                    <FiPlus className="h-4 w-4" /> {copy.addLink}
+                  </button>
+                </div>
+              ) : null}
             </div>
             <div className="flex flex-wrap gap-2 text-sm">
               <span className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-3 py-2 font-semibold text-(--tc-text-secondary,#4b5563)">
-                {documents.length} itens
+                {copy.itemsLabel(documents.length)}
               </span>
               <span className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-3 py-2 font-semibold text-(--tc-text-secondary,#4b5563)">
-                {fileCount} arquivos
+                {copy.filesCount(fileCount)}
               </span>
               <span className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-3 py-2 font-semibold text-(--tc-text-secondary,#4b5563)">
-                {linkCount} links
+                {copy.linksCount(linkCount)}
               </span>
             </div>
           </div>
@@ -543,7 +817,7 @@ export default function CompanyDocumentsPage() {
           {loading ? (
             <div className="grid gap-4 pt-6 md:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 3 }).map((_, index) => (
-                <div key={index} className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5">
+                <div key={index} className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5">
                   <div className="h-4 w-24 animate-pulse rounded-full bg-slate-200" />
                   <div className="mt-4 h-6 w-2/3 animate-pulse rounded-full bg-slate-200" />
                   <div className="mt-3 h-4 w-full animate-pulse rounded-full bg-slate-200" />
@@ -552,16 +826,16 @@ export default function CompanyDocumentsPage() {
               ))}
             </div>
           ) : documents.length === 0 ? (
-            <div className="flex min-h-[260px] flex-col items-center justify-center gap-4 py-10 text-center">
+            <div className="flex min-h-65 flex-col items-center justify-center gap-4 py-10 text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) text-(--tc-text-muted,#6b7280)">
                 <FiFileText className="h-7 w-7" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum documento cadastrado</h3>
+                <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">{copy.emptyTitle}</h3>
                 <p className="max-w-xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
                   {canManage
-                    ? "Adicione arquivos ou links para montar a base de referencia desta empresa."
-                    : "Ainda nao existem documentos disponiveis para esta empresa."}
+                    ? copy.emptyDescManage
+                    : copy.emptyDescView}
                 </p>
               </div>
             </div>
@@ -569,11 +843,11 @@ export default function CompanyDocumentsPage() {
             <div data-testid="document-list" className="grid gap-4 pt-6 md:grid-cols-2 xl:grid-cols-3">
               {documents.map((item) => {
                 const external = isLinkDocument(item);
-                const href = item.url || "#";
+                const href = safeHref(item.url || "");
                 return (
                   <article
                     key={item.id}
-                    className="flex h-full flex-col rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5 shadow-[0_12px_30px_rgba(15,23,42,0.04)]"
+                    className="flex h-full flex-col rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5 shadow-[0_12px_30px_rgba(15,23,42,0.04)]"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="space-y-3">
@@ -585,72 +859,97 @@ export default function CompanyDocumentsPage() {
                           }`}
                         >
                           {item.kind === "file" ? <FiPaperclip className="h-3.5 w-3.5" /> : <FiLink2 className="h-3.5 w-3.5" />}
-                          {item.kind === "file" ? "Arquivo" : "Link"}
+                          {item.kind === "file" ? copy.fileLabel : copy.linkLabel}
                         </span>
                         <div>
                           <h3 className="text-lg font-bold leading-6 text-(--tc-text-primary,#0b1a3c)">{item.title}</h3>
                           {item.description ? (
                             <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{item.description}</p>
                           ) : (
-                            <p className="mt-2 text-sm leading-6 text-(--tc-text-muted,#6b7280)">Sem descricao complementar.</p>
+                            <p className="mt-2 text-sm leading-6 text-(--tc-text-muted,#6b7280)">{copy.noDescDoc}</p>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-5 grid gap-3 rounded-2xl border border-(--tc-border,#d7deea) bg-white p-4 text-sm text-(--tc-text-secondary,#4b5563)">
-                      <div className="flex items-start justify-between gap-3">
-                        <span className="font-semibold text-(--tc-text-primary,#0b1a3c)">Adicionado em</span>
-                        <span className="text-right">{formatDate(item.createdAt)}</span>
-                      </div>
-                      <div className="flex items-start justify-between gap-3">
-                        <span className="font-semibold text-(--tc-text-primary,#0b1a3c)">Adicionado por</span>
-                        <span className="text-right">{item.createdByName || "Sistema"}</span>
-                      </div>
+                    <div className="mt-5 grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 rounded-2xl border border-(--tc-border,#d7deea) bg-white p-4 text-sm text-(--tc-text-secondary,#4b5563)">
+                      <span className="whitespace-nowrap font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.addedAt}</span>
+                      <span className="text-right">{formatDate(item.createdAt)}</span>
+
+                      <span className="whitespace-nowrap font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.addedBy}</span>
+                      <span className="text-right">{item.createdByName || copy.systemUser}</span>
+
                       {item.kind === "file" ? (
                         <>
-                          <div className="flex items-start justify-between gap-3">
-                            <span className="font-semibold text-(--tc-text-primary,#0b1a3c)">Arquivo</span>
-                            <span className="text-right break-all">{item.fileName || "Arquivo"}</span>
-                          </div>
-                          <div className="flex items-start justify-between gap-3">
-                            <span className="font-semibold text-(--tc-text-primary,#0b1a3c)">Tamanho</span>
-                            <span>{formatBytes(item.sizeBytes)}</span>
-                          </div>
+                          <span className="whitespace-nowrap font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.fileField}</span>
+                          <span className="min-w-0 wrap-break-word text-right">{item.fileName || copy.fileLabel}</span>
+
+                          <span className="whitespace-nowrap font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.sizeField}</span>
+                          <span className="text-right">{formatBytes(item.sizeBytes)}</span>
                         </>
                       ) : (
-                        <div className="flex items-start justify-between gap-3">
-                          <span className="font-semibold text-(--tc-text-primary,#0b1a3c)">Destino</span>
-                          <span className="text-right break-all">{item.url}</span>
-                        </div>
+                        <>
+                          <span className="whitespace-nowrap font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.destinationField}</span>
+                          <span className="min-w-0 wrap-break-word text-right">{item.url}</span>
+                        </>
                       )}
                     </div>
 
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      <a
-                        href={href}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
-                      >
-                        <FiExternalLink className="h-4 w-4" /> {external ? "Abrir link" : "Abrir arquivo"}
-                      </a>
+                    <div className="mt-5 flex flex-wrap items-center gap-2">
+                      {external ? (
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                        >
+                          <FiExternalLink className="h-4 w-4" /> {copy.openLink}
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setViewerItem(item);
+                            setViewerOpen(true);
+                          }}
+                          className="inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                        >
+                          <FiExternalLink className="h-4 w-4" /> {copy.openFile}
+                        </button>
+                      )}
                       {external ? (
                         <button
                           type="button"
                           onClick={() => void handleCopyLink(item.url || "")}
                           className="inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
                         >
-                          <FiCopy className="h-4 w-4" /> Copiar link
+                          <FiCopy className="h-4 w-4" /> {copy.copyLink}
                         </button>
                       ) : null}
                       {canManage ? (
                         <button
                           type="button"
-                          onClick={() => void deleteDocument(item.id)}
-                          className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 transition hover:border-red-300 hover:bg-red-100"
+                          onClick={() => {
+                            setComposer(null);
+                            setEditing(item);
+                            setEditTitle(item.title);
+                            setEditDesc(item.description ?? "");
+                            setEditUrl(item.url ?? "");
+                          }}
+                          className="inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
                         >
-                          <FiTrash2 className="h-4 w-4" /> Excluir
+                          <FiEdit2 className="h-4 w-4" /> {copy.editBtn}
+                        </button>
+                      ) : null}
+                      {canManage ? (
+                        <button
+                          type="button"
+                          title={copy.deleteBtn}
+                          aria-label={copy.deleteBtn}
+                          onClick={() => setDeletingId(item.id)}
+                          className="inline-flex items-center justify-center rounded-xl border border-red-200 bg-red-50 p-2 text-red-600 transition hover:border-red-300 hover:bg-red-100"
+                        >
+                          <FiTrash2 className="h-4 w-4" />
                         </button>
                       ) : null}
                     </div>
@@ -660,6 +959,48 @@ export default function CompanyDocumentsPage() {
             </div>
           )}
         </section>
+
+        <DocumentViewer
+          open={viewerOpen}
+          item={viewerItem}
+          slug={slug}
+          onClose={() => setViewerOpen(false)}
+          copy={copy}
+        />
+
+        {deletingId !== null ? (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-modal-title"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm"
+            onClick={(e) => { if (e.target === e.currentTarget) setDeletingId(null); }}
+          >
+            <div className="w-full max-w-sm rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-6 shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-red-100 bg-red-50 text-red-600">
+                <FiTrash2 className="h-5 w-5" />
+              </div>
+              <h2 id="delete-modal-title" className="mt-4 text-xl font-bold text-(--tc-text-primary,#0b1a3c)">{copy.deleteModalTitle}</h2>
+              <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{copy.deleteModalDesc}</p>
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDeletingId(null)}
+                  className="rounded-2xl border border-(--tc-border,#d7deea) px-4 py-2.5 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                >
+                  {copy.deleteModalCancel}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void deleteDocument(deletingId)}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-red-300 bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
+                >
+                  <FiTrash2 className="h-4 w-4" /> {copy.deleteModalConfirm}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -667,7 +1008,7 @@ export default function CompanyDocumentsPage() {
 
 function currentCompanyHref(slug: string) {
   const normalized = slug.trim();
-  return normalized ? `/empresas/${encodeURIComponent(normalized)}/home` : "/admin/clients";
+  return normalized ? "../home" : "/admin/clients";
 }
 
 function getInitials(value: string) {

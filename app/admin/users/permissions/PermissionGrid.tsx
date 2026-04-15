@@ -2,6 +2,7 @@
 
 import React from 'react';
 import styles from './styles.module.css';
+import { useI18n } from '@/lib/i18n';
 
 type Props = {
   modules: { id: string; label: string; actions: string[] }[];
@@ -11,6 +12,8 @@ type Props = {
 };
 
 export default function PermissionGrid({ modules, roleDefaults, override, onChange }: Props) {
+  const { language } = useI18n();
+  const isPt = language === 'pt-BR';
   const allow = override?.allow || {};
   const deny = override?.deny || {};
 
@@ -47,8 +50,8 @@ export default function PermissionGrid({ modules, roleDefaults, override, onChan
                 <label key={a} className={styles.actionLabel}>
                   <input type="checkbox" checked={isAllowed} onChange={e => toggle(m.id, a, e.target.checked)} />
                   <span className={styles.actionText}>{a}</span>
-                  {!roleHas && (allow[m.id] || []).includes(a) ? <span className={styles.overrideAllow}>override</span> : null}
-                  {roleHas && (deny[m.id] || []).includes(a) ? <span className={styles.overrideDeny}>override</span> : null}
+                  {!roleHas && (allow[m.id] || []).includes(a) ? <span className={styles.overrideAllow}>{isPt ? 'sobrescrito' : 'overridden'}</span> : null}
+                  {roleHas && (deny[m.id] || []).includes(a) ? <span className={styles.overrideDeny}>{isPt ? 'sobrescrito' : 'overridden'}</span> : null}
                 </label>
               );
             })}

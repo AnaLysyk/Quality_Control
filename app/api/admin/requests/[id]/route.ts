@@ -16,7 +16,7 @@ function isFinalStatus(value: string | null): value is Exclude<RequestStatus, "P
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   const authUser = await authenticateRequest(req);
   if (!authUser) {
-    return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
   }
 
   const body = (await req.json().catch(() => null)) as { status?: string; reviewNote?: string } | null;
@@ -29,13 +29,13 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   const { id } = await context.params;
   const requestRecord = await getRequestById(id);
   if (!requestRecord) {
-    return NextResponse.json({ message: "Solicitacao nao encontrada" }, { status: 404 });
+    return NextResponse.json({ message: "Solicitação não encontrada" }, { status: 404 });
   }
   if (!canAccessSelfServiceRequest(authUser, requestRecord)) {
-    return NextResponse.json({ message: "Sem permissao para esta solicitacao" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissão para esta solicitação" }, { status: 403 });
   }
   if (!canReviewSelfServiceRequests(authUser)) {
-    return NextResponse.json({ message: "Sem permissao para revisar solicitacoes" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissão para revisar solicitações" }, { status: 403 });
   }
   if (requestRecord.status !== "PENDING") {
     return NextResponse.json({ item: requestRecord });
@@ -44,14 +44,14 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   if (nextStatus === "APPROVED" && requestRecord.type === "PASSWORD_RESET") {
     const user = await getLocalUserById(requestRecord.userId);
     if (!user) {
-      return NextResponse.json({ message: "Usuario nao encontrado" }, { status: 404 });
+      return NextResponse.json({ message: "Usuário não encontrado" }, { status: 404 });
     }
     const token = randomUUID();
     const redis = getRedis();
     await redis.set(`reset:${token}`, user.id, { ex: 15 * 60 });
     const targetEmail = user.email || requestRecord.userEmail;
     if (!targetEmail) {
-      return NextResponse.json({ message: "Email do usuario nao encontrado" }, { status: 400 });
+      return NextResponse.json({ message: "Email do usuário não encontrado" }, { status: 400 });
     }
     const emailSent = await emailService.sendPasswordResetEmail(targetEmail, token);
     if (!emailSent) {
@@ -62,14 +62,14 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   if (nextStatus === "APPROVED" && requestRecord.type === "PROFILE_DELETION") {
     const user = await getLocalUserById(requestRecord.userId);
     if (!user) {
-      return NextResponse.json({ message: "Usuario nao encontrado" }, { status: 404 });
+      return NextResponse.json({ message: "Usuário não encontrado" }, { status: 404 });
     }
     const updatedUser = await updateLocalUser(user.id, {
       active: false,
       status: "blocked",
     });
     if (!updatedUser) {
-      return NextResponse.json({ message: "Nao foi possivel desativar o perfil" }, { status: 500 });
+      return NextResponse.json({ message: "Não foi possível desativar o perfil" }, { status: 500 });
     }
   }
 
@@ -85,7 +85,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     try {
       await notifyProfileDeletionStatus(updated, nextStatus);
     } catch (err) {
-      console.error("Falha ao notificar status de exclusao de perfil", err);
+      console.error("Falha ao notificar status de exclusão de perfil", err);
     }
   }
 

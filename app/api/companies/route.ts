@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     body = {};
   }
   if (!body.name) {
-    return NextResponse.json({ error: "Campo 'name' obrigatorio" }, { status: 400 });
+    return NextResponse.json({ error: "Campo 'name' obrigatório" }, { status: 400 });
   }
   const slug = body.slug || body.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   // build integrations from legacy fields if integrations array not provided
@@ -56,30 +56,30 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(_req: Request) {
-  return NextResponse.json({ error: "PATCH nao implementado" }, { status: 501 });
+  return NextResponse.json({ error: "PATCH não implementado" }, { status: 501 });
 }
 
 export async function DELETE(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
 
   const url = new URL(req.url, "http://localhost");
   const id = url.searchParams.get("id");
   if (!id) {
-    return NextResponse.json({ error: "ID da empresa e obrigatorio" }, { status: 400 });
+    return NextResponse.json({ error: "ID da empresa e obrigatório" }, { status: 400 });
   }
 
   const companies = await listLocalCompanies();
   const target = companies.find((company) => company.id === id) ?? null;
   if (!target) {
-    return NextResponse.json({ error: "Empresa nao encontrada" }, { status: 404 });
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
   }
 
   const deleted = await deleteLocalCompany(id);
   if (!deleted) {
-    return NextResponse.json({ error: "Empresa nao encontrada" }, { status: 404 });
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
   }
 
   await addAuditLogSafe({

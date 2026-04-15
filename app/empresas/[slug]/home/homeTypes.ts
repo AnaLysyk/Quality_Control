@@ -22,6 +22,7 @@ export type HomeRunStats = {
 export type HomeRunItem = {
   id: string;
   slug: string;
+  runId: number | null;
   title: string;
   href: string;
   applicationKey: string;

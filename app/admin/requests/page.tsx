@@ -139,7 +139,7 @@ function AdminRequestsPage() {
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
       <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-10 space-y-4">
-        <Breadcrumb items={[{ label: "Admin", href: "/admin/home" }, { label: "Solicitações" }]} />
+        <Breadcrumb items={[{ label: "Admin", href: "/admin/dashboard" }, { label: "Solicitações" }]} />
 
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">

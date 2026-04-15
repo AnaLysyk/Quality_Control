@@ -1,14 +1,14 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
 test("dashboard indica defeitos fora do SLA", async ({ page, context }) => {
   await mockAuth(context, {
     role: "company",
-    companies: ["griaule"],
-    clientSlug: "griaule",
+    companies: ["DEMO"],
+    clientSlug: "DEMO",
   });
 
-  await page.goto("/empresas/griaule/dashboard", {
+  await page.goto("/empresas/demo/dashboard", {
     waitUntil: "networkidle",
   });
 
@@ -16,3 +16,4 @@ test("dashboard indica defeitos fora do SLA", async ({ page, context }) => {
   await page.waitForTimeout(300);
   await expect(slaCard).toBeVisible({ timeout: 10000 });
 });
+

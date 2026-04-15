@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 
 export default function AdminDocsPage() {
@@ -73,7 +75,7 @@ export default function AdminDocsPage() {
             <h2 className="text-lg font-semibold text-(--tc-text)">Referência rápida</h2>
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               <div className="rounded-xl border border-(--tc-border) bg-(--tc-surface-2) p-4">
-                <p className="text-sm font-semibold text-(--tc-text)">Empresa → Qase</p>
+                <p className="text-sm font-semibold text-(--tc-text)">Empresa â†’ Qase</p>
                 <p className="mt-1 text-sm text-(--tc-text-muted)">
                   Campos usados pela app para resolver configuração: token + project code (ver helper de config).
                 </p>

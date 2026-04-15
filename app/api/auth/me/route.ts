@@ -14,12 +14,12 @@ function errorResponse(status: number, code: string, message: string) {
 export async function GET(req: Request) {
   const access = await getAccessContext(req);
   if (!access) {
-    return errorResponse(401, "NO_SESSION", "Nao autorizado");
+    return errorResponse(401, "NO_SESSION", "Não autorizado");
   }
 
   const user = await getLocalUserById(access.userId);
   if (!user) {
-    return errorResponse(401, "USER_NOT_FOUND", "Usuario nao encontrado");
+    return errorResponse(401, "USER_NOT_FOUND", "Usuário não encontrado");
   }
 
   const displayName =

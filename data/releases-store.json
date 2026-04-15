@@ -1,15 +1,15 @@
-[
+﻿[
   {
     "slug": "release_1_teste_quality_control_ace",
     "title": "Release 1 Teste Quality Control - Aceitacao",
-    "summary": "Execucao do Quality Control - Griaule Mobile (run: https://app.qase.io/run/GMT/dashboard/1) - Aceitacao",
+    "summary": "Execucao do Quality Control - GMT Mobile (run: https://app.qase.io/run/GMT/dashboard/1) - Aceitacao",
     "runId": 1,
-    "project": "mobile-griaule",
-    "app": "mobile-griaule",
+    "project": "gmt",
+    "app": "gmt",
     "qaseProject": "GMT",
     "radis": "RADIS_1",
     "order": [
-      "mobile-griaule"
+      "gmt"
     ]
   },
   {
@@ -40,8 +40,8 @@
     "createdAt": "2025-11-19T00:00:00.000Z",
     "status": "ACTIVE",
     "source": "API",
-    "clientId": "griaule",
-    "clientName": "Griaule"
+    "clientId": "demo",
+    "clientName": "demo"
   },
   {
     "slug": "run_proibida",

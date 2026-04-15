@@ -16,15 +16,15 @@ export async function POST(req: Request) {
   const rawProfileType = typeof body?.profile_type === "string" ? body.profile_type : "";
 
   if (!login || !email) {
-    return NextResponse.json({ error: "Usuario e email obrigatorios" }, { status: 400 });
+    return NextResponse.json({ error: "Usuário e email obrigatorios" }, { status: 400 });
   }
 
   const user = await findLocalUserByEmailOrId(login);
   if (!user) {
-    return NextResponse.json({ error: "Usuario e email nao conferem" }, { status: 400 });
+    return NextResponse.json({ error: "Usuário e email não conferem" }, { status: 400 });
   }
   if ((user.email ?? "").toLowerCase() !== email) {
-    return NextResponse.json({ error: "Usuario e email nao conferem" }, { status: 400 });
+    return NextResponse.json({ error: "Usuário e email não conferem" }, { status: 400 });
   }
 
   const profileType =
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
     if (code !== "DUPLICATE") {
-      return NextResponse.json({ error: "Erro ao registrar solicitacao" }, { status: 500 });
+      return NextResponse.json({ error: "Erro ao registrar solicitação" }, { status: 500 });
     }
   }
 
@@ -91,5 +91,5 @@ export async function POST(req: Request) {
     metadata: { method: "forgot_password", companyLabel: preferredCompanyName ?? null },
   });
 
-  return NextResponse.json({ ok: true, message: "Solicitacao enviada. O Suporte tecnico sera notificado." });
+  return NextResponse.json({ ok: true, message: "Solicitação enviada. O Suporte técnico será notificado." });
 }

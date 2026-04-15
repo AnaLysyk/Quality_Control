@@ -67,7 +67,7 @@ test("admin compara metricas entre empresas", async ({ page, context }) => {
     notRun: 0,
   });
 
-  await page.goto("/admin/home", { waitUntil: "domcontentloaded" });
+  await page.goto("/admin/dashboard", { waitUntil: "domcontentloaded" });
   await waitForAuth(page);
 
   const griauleRow = page.getByTestId("benchmark-row-griaule");

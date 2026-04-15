@@ -1,15 +1,15 @@
 {
   "users": [
     {
-      "id": "usr_company_griaule",
-      "name": "Empresa Griaule",
-      "email": "griaule",
-      "user": "griaule",
+      "id": "usr_company_demo",
+      "name": "Empresa Demo",
+      "email": "demo",
+      "user": "demo",
       "password_hash": "25d47285ed99bf5cdc04b4b7288323219fcb20cfba498a7a9cc7ff9d96a66121",
       "globalRole": null,
       "status": "active",
       "active": true,
-      "default_company_slug": "griaule",
+      "default_company_slug": "demo",
       "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
@@ -21,7 +21,7 @@
       "globalRole": null,
       "status": "active",
       "active": true,
-      "default_company_slug": "griaule",
+      "default_company_slug": "demo",
       "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
@@ -33,50 +33,50 @@
       "globalRole": "global_admin",
       "status": "active",
       "active": true,
-      "default_company_slug": "griaule",
+      "default_company_slug": "demo",
       "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
-      "id": "usr_admin_griaule_test",
-      "name": "Admin Griaule",
-      "email": "admin@griaule.test",
-      "user": "admin@griaule.test",
+      "id": "usr_admin_demo_test",
+      "name": "Admin Demo",
+      "email": "admin@demo.test",
+      "user": "admin@demo.test",
       "password_hash": "b6c2a07c100217bd484cdd0940fb19c05e6ac2c425f32c35ac88b19f78be92d4",
       "globalRole": "global_admin",
       "status": "active",
       "active": true,
-      "default_company_slug": "griaule",
+      "default_company_slug": "demo",
       "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
-      "id": "usr_user_griaule_test",
-      "name": "Usuario Griaule",
-      "email": "user@griaule.test",
-      "user": "user@griaule.test",
+      "id": "usr_user_demo_test",
+      "name": "Usuario Demo",
+      "email": "user@demo.test",
+      "user": "user@demo.test",
       "password_hash": "b6c2a07c100217bd484cdd0940fb19c05e6ac2c425f32c35ac88b19f78be92d4",
       "globalRole": null,
       "status": "active",
       "active": true,
-      "default_company_slug": "griaule",
+      "default_company_slug": "demo",
       "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
-      "id": "usr_company_griaule_test",
-      "name": "Company Griaule",
-      "email": "company@griaule.test",
-      "user": "company@griaule.test",
+      "id": "usr_company_demo_test",
+      "name": "Company Demo",
+      "email": "company@demo.test",
+      "user": "company@demo.test",
       "password_hash": "b6c2a07c100217bd484cdd0940fb19c05e6ac2c425f32c35ac88b19f78be92d4",
       "globalRole": null,
       "status": "active",
       "active": true,
-      "default_company_slug": "griaule",
+      "default_company_slug": "demo",
       "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
       "id": "usr_user_nocompany_test",
       "name": "Usuario Sem Empresa",
-      "email": "nocompany@griaule.test",
-      "user": "nocompany@griaule.test",
+      "email": "nocompany@demo.test",
+      "user": "nocompany@demo.test",
       "password_hash": "b6c2a07c100217bd484cdd0940fb19c05e6ac2c425f32c35ac88b19f78be92d4",
       "globalRole": null,
       "status": "active",
@@ -96,7 +96,7 @@
       "status": "active",
       "active": true,
       "is_global_admin": true,
-      "default_company_slug": "griaule",
+      "default_company_slug": "demo",
       "job_title": "Analista de Testes",
       "createdAt": "2026-02-03T00:00:00Z"
     },
@@ -111,7 +111,7 @@
       "status": "active",
       "active": true,
       "is_global_admin": false,
-      "default_company_slug": "griaule",
+      "default_company_slug": "demo",
       "createdAt": "2026-02-11T00:00:00.000Z"
     },
     {
@@ -123,7 +123,7 @@
       "globalRole": null,
       "status": "active",
       "active": true,
-      "default_company_slug": "griaule",
+      "default_company_slug": "demo",
       "createdAt": "2026-02-10T00:00:00.000Z"
     },
     {
@@ -135,16 +135,17 @@
       "globalRole": "global_admin",
       "status": "active",
       "active": true,
-      "default_company_slug": "griaule",
+      "default_company_slug": "demo",
       "createdAt": "2026-02-10T00:00:00.000Z"
     }
   ],
   "companies": [
     {
-      "id": "griaule",
-      "name": "Griaule",
-      "company_name": "Griaule",
-      "slug": "griaule",
+      "id": "demo",
+      "name": "Demo",
+      "company_name": "Demo",
+      "slug": "demo",
+      "notifications_fanout_enabled": true,
       "integration_mode": "manual",
       "integration_type": "manual",
       "status": "active",
@@ -157,6 +158,7 @@
       "name": "Testing Company",
       "company_name": "Testing Company",
       "slug": "testing-company",
+      "notifications_fanout_enabled": true,
       "integration_mode": "manual",
       "integration_type": "manual",
       "status": "active",
@@ -167,72 +169,72 @@
   ],
   "memberships": [
     {
-      "id": "mbr_company_griaule",
-      "userId": "usr_company_griaule",
-      "companyId": "griaule",
+      "id": "mbr_company_demo",
+      "userId": "usr_company_demo",
+      "companyId": "demo",
       "role": "company_admin",
       "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
-      "id": "mbr_anapaula_griaule",
+      "id": "mbr_anapaula_demo",
       "userId": "usr_anapaula",
-      "companyId": "griaule",
+      "companyId": "demo",
       "role": "user",
       "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
-      "id": "mbr_admin_ana1_griaule",
+      "id": "mbr_admin_ana1_demo",
       "userId": "usr_admin_ana1",
-      "companyId": "griaule",
+      "companyId": "demo",
       "role": "company_admin",
       "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
-      "id": "mbr_admin_griaule_test",
-      "userId": "usr_admin_griaule_test",
-      "companyId": "griaule",
+      "id": "mbr_admin_demo_test",
+      "userId": "usr_admin_demo_test",
+      "companyId": "demo",
       "role": "company_admin",
       "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
-      "id": "mbr_itdev_griaule",
+      "id": "mbr_itdev_demo",
       "userId": "usr_itdev",
-      "companyId": "griaule",
+      "companyId": "demo",
       "role": "it_dev",
       "createdAt": "2026-02-11T00:00:00.000Z"
     },
     {
-      "id": "mbr_user_griaule_test",
-      "userId": "usr_user_griaule_test",
-      "companyId": "griaule",
+      "id": "mbr_user_demo_test",
+      "userId": "usr_user_demo_test",
+      "companyId": "demo",
       "role": "user",
       "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
-      "id": "mbr_usr_user_griaule_test_testing-company",
-      "userId": "usr_user_griaule_test",
+      "id": "mbr_usr_user_demo_test_testing-company",
+      "userId": "usr_user_demo_test",
       "companyId": "testing-company",
       "role": "user",
       "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
-      "id": "mbr_usr_company_griaule_test_griaule",
-      "userId": "usr_company_griaule_test",
-      "companyId": "griaule",
+      "id": "mbr_usr_company_demo_test_demo",
+      "userId": "usr_company_demo_test",
+      "companyId": "demo",
       "role": "company_admin",
       "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
-      "id": "mbr_usr_admin_griaule_test_testing-company",
-      "userId": "usr_admin_griaule_test",
+      "id": "mbr_usr_admin_demo_test_testing-company",
+      "userId": "usr_admin_demo_test",
       "companyId": "testing-company",
       "role": "company_admin",
       "createdAt": "2026-02-03T00:00:00.000Z"
     },
     {
-      "id": "mbr_analysyk_griaule",
+      "id": "mbr_analysyk_demo",
       "userId": "usr_analysyk",
-      "companyId": "griaule",
+      "companyId": "demo",
       "role": "user",
       "createdAt": "2026-02-10T00:00:00.000Z"
     }

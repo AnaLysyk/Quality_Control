@@ -3,9 +3,7 @@ export function formatCompanyDisplayName(slug: string): string {
   if (!raw) return "";
 
   const lower = raw.toLowerCase();
-  const specialCases: Record<string, string> = {
-    griaule: "Griaule",
-  };
+  const specialCases: Record<string, string> = {};
 
   const special = specialCases[lower];
   if (special) return special;

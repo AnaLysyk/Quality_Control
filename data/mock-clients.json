@@ -1,4 +1,4 @@
-[
+﻿[
     {
         "id":  "d1f7fb1b-d6a5-4d04-b82a-edf6aff407a1",
         "company_name":  "zdvzxv",
@@ -20,9 +20,9 @@
         "created_by":  "mock-uid"
     },
     {
-        "id":  "griaule",
-        "company_name":  "Griaule",
-        "slug":  "griaule",
+        "id":  "DEMO",
+        "company_name":  "DEMO",
+        "slug":  "DEMO",
         "tax_id":  "00.000.000/0000-00",
         "address":  "Rua Exemplo, 123",
         "phone":  "dfsdfdsgv",
@@ -36,7 +36,7 @@
         "status":  "active",
         "active":  true,
         "created_at":  "2026-01-12T00:00:00.000Z",
-        "name":  "Griaule",
+        "name":  "DEMO",
         "qase_project_codes":  null
     },
     {
@@ -60,3 +60,4 @@
         "created_by":  "seed"
     }
 ]
+

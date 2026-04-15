@@ -62,14 +62,14 @@ export default function ReleaseManualList({ companyId }: { companyId: string }) 
       <form onSubmit={handleSubmit} className="mb-6 space-y-2">
         <TcInput
           className="w-full"
-          placeholder="Titulo"
+          placeholder="Título"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
         />
         <TcTextarea
           className="w-full"
-          placeholder="Descricao"
+          placeholder="Descrição"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
@@ -86,7 +86,7 @@ export default function ReleaseManualList({ companyId }: { companyId: string }) 
         {releases.map((r) => (
           <li key={r.id} className="list-none">
             <TcCard className="rounded-xl p-3">
-              <div className="font-semibold">{r.title ?? "Sem titulo"}</div>
+              <div className="font-semibold">{r.title ?? "Sem título"}</div>
               <div className="text-sm text-muted">{r.description ?? ""}</div>
               <div className="text-xs text-muted">
                 Status: {r.status ?? "N/A"} | Criado em: {r.createdAt ? new Date(r.createdAt).toLocaleString() : "-"}

@@ -5,7 +5,7 @@ import { createUserNote, listUserNotes } from "@/lib/userNotesStore";
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const items = await listUserNotes(user.id);
@@ -15,7 +15,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const body = await req.json().catch(() => ({}));
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   });
 
   if (!note) {
-    return NextResponse.json({ error: "Informe titulo ou conteudo" }, { status: 400 });
+    return NextResponse.json({ error: "Informe título ou conteudo" }, { status: 400 });
   }
 
   return NextResponse.json({ item: note }, { status: 201 });

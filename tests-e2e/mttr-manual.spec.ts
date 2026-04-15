@@ -1,13 +1,13 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
-const DEFECTS_URL = "/empresas/griaule/defeitos";
+const DEFECTS_URL = "/empresas/demo/defeitos";
 
-test("MTTR é calculado ao fechar defeito manual", async ({ page, context }) => {
+test("MTTR Ã© calculado ao fechar defeito manual", async ({ page, context }) => {
   await mockAuth(context, {
     role: "company",
-    companies: ["griaule"],
-    clientSlug: "griaule",
+    companies: ["DEMO"],
+    clientSlug: "DEMO",
   });
   await page.goto(DEFECTS_URL, { waitUntil: "networkidle" });
   // cria defeito manual
@@ -23,8 +23,9 @@ test("MTTR é calculado ao fechar defeito manual", async ({ page, context }) => 
   await page.getByTestId("defect-save").click();
   // MTTR aparece
   const mttr = page.getByTestId("defect-mttr");
-  await expect(mttr).not.toHaveText("—");
-  // reload não perde MTTR
+  await expect(mttr).not.toHaveText("â€”");
+  // reload nÃ£o perde MTTR
   await page.reload();
-  await expect(mttr).not.toHaveText("—");
+  await expect(mttr).not.toHaveText("â€”");
 });
+

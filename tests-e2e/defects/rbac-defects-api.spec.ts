@@ -1,17 +1,17 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "../helpers/mockAuth";
 
 test.describe("rbac - api defeitos manuais", () => {
-  test("company não consegue deletar defeito manual via API (403)", async ({ page, context }) => {
+  test("company nÃ£o consegue deletar defeito manual via API (403)", async ({ page, context }) => {
     await mockAuth(context, {
       role: "company",
-      companies: ["griaule"],
-      clientSlug: "griaule",
+      companies: ["DEMO"],
+      clientSlug: "DEMO",
     });
 
-    await page.goto("/empresas/griaule/defeitos", { waitUntil: "networkidle" });
+    await page.goto("/empresas/demo/defeitos", { waitUntil: "networkidle" });
 
-    // cria um defeito manual para garantir slug previsível
+    // cria um defeito manual para garantir slug previsÃ­vel
     await page.getByTestId("defect-title").fill("Defeito proibido");
     await page.getByTestId("defect-create").click();
 
@@ -19,3 +19,4 @@ test.describe("rbac - api defeitos manuais", () => {
     expect(response.status()).toBe(403);
   });
 });
+

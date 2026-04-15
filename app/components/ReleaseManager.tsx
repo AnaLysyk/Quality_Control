@@ -106,7 +106,7 @@ export default function ReleaseManager() {
         </label>
 
         <label className="grid gap-1 text-sm">
-          <span>TÃ­tulo</span>
+          <span>Título</span>
           <input
             type="text"
             value={title}
@@ -117,7 +117,7 @@ export default function ReleaseManager() {
         </label>
 
         <label className="grid gap-1 text-sm">
-          <span>DescriÃ§Ã£o</span>
+          <span>Descrição</span>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -133,8 +133,8 @@ export default function ReleaseManager() {
             onChange={(e) => setType(e.target.value as "aceitacao" | "regressao")}
             className="w-full rounded-lg bg-[#0b1020] border border-white/10 px-3 py-2 text-white focus:border-[#7CD343] focus:outline-none"
           >
-            <option value="aceitacao">AceitaÃ§Ã£o</option>
-            <option value="regressao">RegressÃ£o</option>
+            <option value="aceitacao">Aceitação</option>
+            <option value="regressao">Regressão</option>
           </select>
         </label>
 

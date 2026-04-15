@@ -45,7 +45,7 @@ function slugifyLoginSeed(value?: string | null) {
     .replace(/^\.+|\.+$/g, "")
     .replace(/\.{2,}/g, ".");
 
-  return normalized || "usuario";
+  return normalized || "usuário";
 }
 
 function buildUniqueLogin(
@@ -78,10 +78,14 @@ function canManageInstitutionalProfiles(access: Awaited<ReturnType<typeof getAcc
 export async function GET(req: NextRequest) {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const isGlobalAdmin = access.isGlobalAdmin === true || normalizeLegacyRole(access.role) === SYSTEM_ROLES.LEADER_TC;
+  const resolvedRole = normalizeLegacyRole(access.role);
+  const isGlobalAdmin =
+    access.isGlobalAdmin === true ||
+    resolvedRole === SYSTEM_ROLES.LEADER_TC ||
+    resolvedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
   const { searchParams } = new URL(req.url);
   const clientId = searchParams.get("client_id");
 
@@ -106,7 +110,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
   const access = await getAccessContext(req);
   const canManageProfiles = canManageInstitutionalProfiles(access);
@@ -147,31 +151,31 @@ export async function POST(req: NextRequest) {
   if (clientId) {
     const selectedCompany = await findLocalCompanyById(clientId);
     if (!selectedCompany) {
-      return NextResponse.json({ error: "Empresa nao encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
     }
   }
   if (editableProfileNeedsCompany(profileRole) && !clientId) {
     console.error(`[ADMIN-USERS][POST] missing-client admin=${admin?.email ?? "-"} clientId=${clientId}`);
-    return NextResponse.json({ error: "Empresa obrigatoria para este perfil" }, { status: 400 });
+    return NextResponse.json({ error: "Empresa obrigatória para este perfil" }, { status: 400 });
   }
   if (wantsGlobalAdmin && (!password || password.trim().length < 8)) {
-    return NextResponse.json({ error: "Senha obrigatoria com pelo menos 8 caracteres para criar Lider TC" }, { status: 400 });
+    return NextResponse.json({ error: "Senha obrigatória com pelo menos 8 caracteres para criar Lider TC" }, { status: 400 });
   }
 
   const users = await listLocalUsers();
   const login = buildUniqueLogin(
     users,
     rawLogin,
-    fullName || name || email.split("@")[0] || "usuario",
+    fullName || name || email.split("@")[0] || "usuário",
   );
 
   if (users.some((user) => normalizeLogin(user.email) === email)) {
     console.error(`[ADMIN-USERS][POST] duplicate-email admin=${admin?.email ?? "-"} email=${email}`);
-    return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+    return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
   }
   if (users.some((user) => normalizeLogin(user.user ?? user.email) === login)) {
     console.error(`[ADMIN-USERS][POST] duplicate-user admin=${admin?.email ?? "-"} login=${login}`);
-    return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+    return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
   }
 
   const tempPassword = hashPasswordSha256(`${Date.now()}-${randomUUID()}`);
@@ -198,10 +202,10 @@ export async function POST(req: NextRequest) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
     console.error(`[ADMIN-USERS][POST] createLocalUser error admin=${admin?.email ?? "-"} code=${code} err=${String(err)}`);
     if (code === "DUPLICATE_EMAIL") {
-      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
     }
     if (code === "DUPLICATE_USER") {
-      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
     }
     throw err;
   }
@@ -235,7 +239,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
   const access = await getAccessContext(req);
   const canManageProfiles = canManageInstitutionalProfiles(access);
@@ -243,7 +247,7 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const userId = typeof body?.id === "string" ? body.id : "";
   if (!userId) {
-    return NextResponse.json({ error: "id obrigatorio" }, { status: 400 });
+    return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
   }
 
   const name = typeof body?.name === "string" ? body.name.trim() : null;
@@ -280,21 +284,21 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Somente Lider TC pode promover perfis privilegiados" }, { status: 403 });
   }
   if (clientId && !selectedCompany) {
-    return NextResponse.json({ error: "Empresa nao encontrada" }, { status: 404 });
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
   }
 
   const existingLinks = rawRole ? await listLocalLinksForUser(userId) : [];
   if (rawRole && editableProfileNeedsCompany(profileRole) && !clientId && existingLinks.length === 0) {
-    return NextResponse.json({ error: "Empresa obrigatoria para este perfil" }, { status: 400 });
+    return NextResponse.json({ error: "Empresa obrigatória para este perfil" }, { status: 400 });
   }
 
   if (email || login) {
     const users = await listLocalUsers();
     if (email && users.some((user) => user.id !== userId && normalizeLogin(user.email) === email)) {
-      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
     }
     if (login && users.some((user) => user.id !== userId && normalizeLogin(user.user ?? user.email) === login)) {
-      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
     }
   }
   let updated = null;
@@ -324,16 +328,16 @@ export async function PATCH(req: NextRequest) {
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
     if (code === "DUPLICATE_EMAIL") {
-      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
     }
     if (code === "DUPLICATE_USER") {
-      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
     }
     throw err;
   }
 
   if (!updated) {
-    return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
   if (rawRole && !editableProfileNeedsCompany(profileRole) && existingLinks.length > 0) {

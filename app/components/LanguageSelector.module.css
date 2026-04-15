@@ -1,0 +1,164 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Language Selector — Global Toggle Button (Testing Company Branding)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.iconButton {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(1, 24, 72, 0.15);
+  background: linear-gradient(135deg, rgba(1, 24, 72, 0.05) 0%, rgba(1, 24, 72, 0.02) 100%);
+  color: var(--tc-text-primary, #1a202c);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Dark mode */
+:global(.dark) .iconButton {
+  border-color: rgba(239, 0, 1, 0.25);
+  background: linear-gradient(135deg, rgba(239, 0, 1, 0.1) 0%, rgba(239, 0, 1, 0.03) 100%);
+  color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 0 20px rgba(239, 0, 1, 0.1);
+}
+
+.iconButton:hover {
+  border-color: var(--tc-accent, #ef0001);
+  background: linear-gradient(135deg, rgba(239, 0, 1, 0.12) 0%, rgba(239, 0, 1, 0.05) 100%);
+  transform: scale(1.08);
+  box-shadow: 0 4px 16px rgba(239, 0, 1, 0.2);
+}
+
+:global(.dark) .iconButton:hover {
+  border-color: var(--tc-accent, #ef0001);
+  background: linear-gradient(135deg, rgba(239, 0, 1, 0.2) 0%, rgba(239, 0, 1, 0.08) 100%);
+  box-shadow: 0 4px 20px rgba(239, 0, 1, 0.35), 0 0 30px rgba(239, 0, 1, 0.15);
+}
+
+.iconButton:active {
+  transform: scale(0.95);
+}
+
+.flagIcon {
+  font-size: 1.25rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+  transition: transform 0.3s ease;
+}
+
+.iconButton:hover .flagIcon {
+  transform: scale(1.1);
+}
+
+/* Hide the lang code in icon mode - only flag shows */
+.langCode {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Text Button Variant
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.textButton {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(1, 24, 72, 0.15);
+  background: transparent;
+  color: var(--tc-text-primary, #1a202c);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+:global(.dark) .textButton {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.textButton:hover {
+  background: rgba(239, 0, 1, 0.1);
+  border-color: var(--tc-accent, #ef0001);
+  color: var(--tc-accent, #ef0001);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Full Selector Variant (PT | EN toggle)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.selector {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  border-radius: 10px;
+  background: rgba(1, 24, 72, 0.05);
+  border: 1px solid rgba(1, 24, 72, 0.15);
+}
+
+:global(.dark) .selector {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.currentLang {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: rgba(1, 24, 72, 0.6);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+:global(.dark) .currentLang {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.currentLang:hover {
+  color: rgba(1, 24, 72, 0.9);
+  background: rgba(1, 24, 72, 0.08);
+}
+
+:global(.dark) .currentLang:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.currentLang.active {
+  color: var(--tc-accent, #ef0001);
+  background: rgba(239, 0, 1, 0.15);
+  font-weight: 700;
+}
+
+.divider {
+  color: rgba(1, 24, 72, 0.25);
+  font-size: 0.7rem;
+}
+
+:global(.dark) .divider {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+:global(.light-theme) .iconButton:hover,
+:global([data-theme="light"]) .iconButton:hover {
+  background: rgba(0, 122, 255, 0.1);
+  border-color: rgba(0, 122, 255, 0.3);
+  color: #007aff;
+}

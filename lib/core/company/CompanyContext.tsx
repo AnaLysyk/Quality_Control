@@ -92,7 +92,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(authLoading);
   const [error, setError] = useState<string | null>(null);
   const isGlobalAdmin =
-    user?.isGlobalAdmin === true || (typeof user?.role === "string" && user.role.toLowerCase() === "admin");
+    user?.isGlobalAdmin === true || (typeof user?.role === "string" && (user.role.toLowerCase() === "admin" || user.role.toLowerCase() === "leader_tc"));
 
   const normalizedClients = useMemo(
     () =>

@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
 function slugify(value: string) {
@@ -16,24 +16,24 @@ test.setTimeout(120000);
 test("empresa cria run e defeito com vinculo basico", async ({ page, context }) => {
   await mockAuth(context, {
     role: "company",
-    companies: ["griaule"],
-    clientSlug: "griaule",
+    companies: ["DEMO"],
+    clientSlug: "DEMO",
   });
 
   const runTitle = "Run E2E Negocio";
   const runSlug = slugify(runTitle);
   const defectTitle = "Defeito encontrado na run";
 
-  await page.goto("/empresas/griaule/runs", { waitUntil: "domcontentloaded" });
+  await page.goto("/empresas/demo/runs", { waitUntil: "domcontentloaded" });
 
   await page.getByTestId("run-create").click();
   await page.getByTestId("run-title").fill(runTitle);
   await page.getByTestId("run-submit").click();
 
-  await page.waitForURL(new RegExp(`/empresas/griaule/runs/${runSlug}`), { timeout: 60000 });
+  await page.waitForURL(new RegExp(`/empresas/demo/runs/${runSlug}`), { timeout: 60000 });
   await expect(page.getByText(runTitle)).toBeVisible();
 
-  await page.goto("/empresas/griaule/defeitos", { waitUntil: "domcontentloaded" });
+  await page.goto("/empresas/demo/defeitos", { waitUntil: "domcontentloaded" });
 
   await expect(page.getByTestId("defect-title")).toBeVisible({ timeout: 20000 });
   await page.getByTestId("defect-title").fill(defectTitle);
@@ -48,3 +48,4 @@ test("empresa cria run e defeito com vinculo basico", async ({ page, context }) 
   await page.reload();
   await expect(defectItem).toBeVisible();
 });
+

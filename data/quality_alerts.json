@@ -1,6 +1,6 @@
-[
+﻿[
   {
-    "companySlug": "griaule",
+    "companySlug": "DEMO",
     "type": "sla",
     "severity": "critical",
     "message": "Defeitos fora do SLA: 1",
@@ -10,7 +10,7 @@
     "timestamp": "2026-02-03T08:27:56.362Z"
   },
   {
-    "companySlug": "griaule",
+    "companySlug": "DEMO",
     "type": "quality_score",
     "severity": "critical",
     "message": "Quality Score critico: 40",
@@ -20,7 +20,7 @@
     "timestamp": "2026-02-12T15:56:51.417Z"
   },
   {
-    "companySlug": "griaule",
+    "companySlug": "DEMO",
     "type": "sla",
     "severity": "critical",
     "message": "Defeitos fora do SLA: 6",
@@ -30,7 +30,7 @@
     "timestamp": "2026-02-12T15:56:51.586Z"
   },
   {
-    "companySlug": "griaule",
+    "companySlug": "DEMO",
     "type": "quality_score",
     "severity": "critical",
     "message": "Quality Score critico: 30",
@@ -40,7 +40,7 @@
     "timestamp": "2026-03-24T22:53:13.031Z"
   },
   {
-    "companySlug": "griaule",
+    "companySlug": "DEMO",
     "type": "sla",
     "severity": "critical",
     "message": "Defeitos fora do SLA: 7",

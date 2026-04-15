@@ -13,17 +13,18 @@ import type {
 import { normalizeRequestProfileType, requestProfileTypeNeedsCompany, type RequestProfileType } from "@/lib/requestRouting";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useI18n } from "@/hooks/useI18n";
 
 const ACCESS_OPTIONS = [
   {
     value: "testing_company_user",
-    label: "Usuario TC",
-    hint: "Usuario interno da Testing Company.",
+    label: "Usuário TC",
+    hint: "Usuário interno da Testing Company.",
   },
   {
     value: "company_user",
-    label: "Usuario da empresa",
-    hint: "Usuario vinculado ao contexto da empresa.",
+    label: "Usuário da empresa",
+    hint: "Usuário vinculado ao contexto da empresa.",
   },
   {
     value: "leader_tc",
@@ -32,7 +33,7 @@ const ACCESS_OPTIONS = [
   },
   {
     value: "technical_support",
-    label: "Suporte Tecnico",
+    label: "Suporte Técnico",
     hint: "Atuacao tecnica e operacional da Testing Company.",
   },
 ];
@@ -86,7 +87,7 @@ type LookupItem = {
 
 type AccessRequestComment = {
   id: string;
-  authorRole: "admin" | "requester";
+  authorRole: "leader_tc" | "requester";
   authorName: string;
   body: string;
   createdAt: string;
@@ -94,7 +95,7 @@ type AccessRequestComment = {
 
 type RequestTimelineEntry = {
   id: string;
-  authorRole: "admin" | "requester";
+  authorRole: "leader_tc" | "requester";
   authorName: string;
   body: string;
   createdAt: string;
@@ -173,6 +174,7 @@ function adjustmentFieldLabel(field: AccessRequestAdjustmentField, fallback = "C
 }
 
 export default function AccessRequestClient() {
+  const { t, language } = useI18n();
   const [fullName, setFullName] = useState("");
   const [requestedUser, setRequestedUser] = useState("");
   const [email, setEmail] = useState("");
@@ -181,8 +183,8 @@ export default function AccessRequestClient() {
   const [companyDraft, setCompanyDraft] = useState<CompanyRequestDraft>(emptyCompanyRequestDraft);
   const [role, setRole] = useState("");
   const [accessType, setAccessType] = useState<RequestProfileType>("testing_company_user");
-  const [titulo, setTitulo] = useState("");
-  const [descricao, setDescricao] = useState("");
+  const [título, setTitulo] = useState("");
+  const [descrição, setDescricao] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -248,7 +250,7 @@ export default function AccessRequestClient() {
       .then(async (response) => {
         const json = (await response.json().catch(() => null)) as { items?: CompanyOption[] } | null;
         if (!response.ok) {
-          throw new Error("Nao foi possivel carregar as empresas cadastradas.");
+          throw new Error(t("accessRequest.loadCompaniesError"));
         }
         if (!mounted) return;
         const items = Array.isArray(json?.items) ? json.items : [];
@@ -257,7 +259,7 @@ export default function AccessRequestClient() {
       .catch((err) => {
         if (!mounted) return;
         setCompanyOptions([]);
-        setCompaniesError(err instanceof Error ? err.message : "Nao foi possivel carregar as empresas cadastradas.");
+        setCompaniesError(err instanceof Error ? err.message : t("accessRequest.loadCompaniesError"));
       })
       .finally(() => {
         if (!mounted) return;
@@ -267,7 +269,7 @@ export default function AccessRequestClient() {
     return () => {
       mounted = false;
     };
-  }, [isRequestOpen]);
+  }, [isRequestOpen, t]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -303,21 +305,21 @@ export default function AccessRequestClient() {
       !normalizedDescription ||
       !normalizedPassword
     ) {
-      setError("Preencha nome completo, e-mail, telefone, cargo, título, descrição e senha.");
+      setError(t("accessRequest.formError"));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(normalizedEmail)) {
-      setError("E-mail inválido.");
+      setError(t("accessRequest.invalidEmail"));
       return;
     }
     if (normalizedPassword.length < 8) {
-      setError("A senha precisa ter pelo menos 8 caracteres.");
+      setError(t("accessRequest.minPassword"));
       return;
     }
     if (accessType === "technical_support" && !normalizedRequestedUser) {
-      setError("Informe o usuario/login para o perfil Suporte Tecnico.");
+      setError(t("accessRequest.supportLoginRequired"));
       return;
     }
 
@@ -328,16 +330,16 @@ export default function AccessRequestClient() {
     const isCompanyProfile = accessType === "company_user";
 
     if (requiresCompany && !normalizedClientId) {
-      setError("Selecione uma empresa para realizar a solicitacao.");
+      setError(t("accessRequest.companyRequired"));
       return;
     }
 
     if (requiresCompany && !selectedCompany) {
-      setError("Selecione uma empresa cadastrada valida para continuar.");
+      setError(t("accessRequest.validCompanyRequired"));
       return;
     }
     if (isCompanyProfile && !normalizedCompanyDraft.companyName) {
-      setError("Preencha o nome ou razao social da empresa.");
+      setError(t("accessRequest.companyNameRequired"));
       return;
     }
 
@@ -375,10 +377,10 @@ export default function AccessRequestClient() {
 
       const data = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(data?.message || "Erro ao registrar solicitação.");
+        throw new Error(data?.message || t("accessRequest.submitFailed"));
       }
 
-      setSuccess("Solicitação enviada. Use a opção Consultar solicitação para acompanhar o andamento e as respostas.");
+      setSuccess(t("accessRequest.submittedSuccessDesc"));
       setFullName("");
       setRequestedUser("");
       setEmail("");
@@ -391,7 +393,7 @@ export default function AccessRequestClient() {
       setPassword("");
       setAccessType("testing_company_user");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      const message = err instanceof Error ? err.message : t("login.unexpectedError");
       setError(message);
     } finally {
       setLoading(false);
@@ -399,10 +401,10 @@ export default function AccessRequestClient() {
   };
 
   const statusLabel = (status: string) => {
-    if (status === "closed") return "Aprovada";
-    if (status === "rejected") return "Rejeitada";
-    if (status === "in_progress") return "Em análise";
-    return "Aberta";
+    if (status === "closed") return t("accessRequest.statusApproved");
+    if (status === "rejected") return t("accessRequest.statusRejected");
+    if (status === "in_progress") return t("accessRequest.underReview");
+    return t("accessRequest.statusOpen");
   };
 
   const statusTone = (status: string) => {
@@ -424,7 +426,7 @@ export default function AccessRequestClient() {
     const normalizedName = lookupName.trim();
 
     if (!normalizedName || !normalizedEmail) {
-      setLookupError("Informe nome e e-mail para consultar.");
+      setLookupError(t("accessRequest.lookupNameEmailRequired"));
       return;
     }
 
@@ -442,7 +444,7 @@ export default function AccessRequestClient() {
         error?: string;
       };
       if (!res.ok) {
-        setLookupError(json?.error || "Solicitação não encontrada.");
+        setLookupError(json?.error || t("accessRequest.lookupNotFound"));
         return;
       }
       setLookupItem(json.item ?? null);
@@ -469,7 +471,7 @@ export default function AccessRequestClient() {
       );
       setLookupComments(Array.isArray(json.comments) ? json.comments : []);
     } catch (err) {
-      setLookupError(err instanceof Error ? err.message : "Erro ao consultar solicitação.");
+      setLookupError(err instanceof Error ? err.message : t("accessRequest.lookupError"));
     } finally {
       setLookupLoading(false);
     }
@@ -496,7 +498,7 @@ export default function AccessRequestClient() {
       });
       const json = (await res.json().catch(() => null)) as { item?: AccessRequestComment; error?: string };
       if (!res.ok) {
-        setLookupError(json?.error || "Falha ao enviar comentário.");
+        setLookupError(json?.error || t("accessRequest.commentSendFailed"));
         return;
       }
       if (json.item) {
@@ -504,7 +506,7 @@ export default function AccessRequestClient() {
       }
       setCommentDraft("");
     } catch (err) {
-      setLookupError(err instanceof Error ? err.message : "Erro ao enviar comentário.");
+      setLookupError(err instanceof Error ? err.message : t("accessRequest.commentSendError"));
     } finally {
       setCommentSubmitting(false);
     }
@@ -532,14 +534,14 @@ export default function AccessRequestClient() {
     const hasAdminNoteInComments =
       Boolean(adminNote) &&
       lookupComments.some(
-        (comment) => comment.authorRole === "admin" && comment.body.trim() === adminNote,
+        (comment) => comment.authorRole === "leader_tc" && comment.body.trim() === adminNote,
       );
 
     if (adminNote && !hasAdminNoteInComments) {
       entries.push({
         id: `${lookupItem.id}-admin-note`,
-        authorRole: "admin",
-        authorName: "Admin",
+        authorRole: "leader_tc",
+        authorName: t("accessRequest.adminAuthor"),
         body: adminNote,
         createdAt: lookupItem.updatedAt || lookupItem.createdAt,
       });
@@ -549,14 +551,16 @@ export default function AccessRequestClient() {
       entries.push({
         id: comment.id,
         authorRole: comment.authorRole,
-        authorName: comment.authorName?.trim() || (comment.authorRole === "admin" ? "Admin" : "Solicitante"),
+        authorName:
+          comment.authorName?.trim() ||
+          (comment.authorRole === "leader_tc" ? t("accessRequest.adminAuthor") : t("accessRequest.requesterAuthor")),
         body: comment.body,
         createdAt: comment.createdAt,
       });
     }
 
     return entries.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-  }, [adminNote, lookupComments, lookupItem]);
+  }, [adminNote, lookupComments, lookupItem, t]);
 
   const inputBase =
     "form-control-user w-full rounded-xl border border-[#011848]/15 bg-white px-4 py-3 text-sm text-[#011848] placeholder:text-[#94a3b8] focus:ring-2 focus:ring-[#ef0001]/40 focus:border-[#ef0001]/60 transition-all duration-200";
@@ -624,13 +628,13 @@ export default function AccessRequestClient() {
       !normalizedTitle ||
       !normalizedDescription
     ) {
-      setLookupError("Preencha os campos obrigatorios para reenviar a solicitacao.");
+      setLookupError(t("accessRequest.lookupRequiredFields"));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(normalizedEmail)) {
-      setLookupError("E-mail invalido.");
+      setLookupError(t("accessRequest.invalidEmail"));
       return;
     }
 
@@ -638,23 +642,23 @@ export default function AccessRequestClient() {
     const selectedCompany = companyOptions.find((item) => item.id === normalizedClientId) ?? null;
     const isCompanyProfile = lookupDraft.accessType === "company_user";
     if (requiresCompany && !normalizedClientId) {
-      setLookupError("Selecione uma empresa para reenviar a solicitacao.");
+      setLookupError(t("accessRequest.lookupCompanyRequired"));
       return;
     }
     if (requiresCompany && !selectedCompany) {
-      setLookupError("Selecione uma empresa cadastrada valida para continuar.");
+      setLookupError(t("accessRequest.validCompanyRequired"));
       return;
     }
     if (isCompanyProfile && !normalizedCompanyDraft.companyName) {
-      setLookupError("Preencha o nome ou razao social da empresa.");
+      setLookupError(t("accessRequest.companyNameRequired"));
       return;
     }
     if (lookupDraft.accessType === "technical_support" && !lookupDraft.user.trim()) {
-      setLookupError("Informe o usuario/login para o perfil Suporte tecnico.");
+      setLookupError(t("accessRequest.supportLoginRequired"));
       return;
     }
     if (normalizedPassword && normalizedPassword.length < 8) {
-      setLookupError("A nova senha precisa ter pelo menos 8 caracteres.");
+      setLookupError(t("accessRequest.lookupNewPasswordMin"));
       return;
     }
 
@@ -696,14 +700,14 @@ export default function AccessRequestClient() {
 
       const json = (await response.json().catch(() => null)) as { error?: string } | null;
       if (!response.ok) {
-        setLookupError(json?.error || "Nao foi possivel atualizar a solicitacao.");
+        setLookupError(json?.error || t("accessRequest.lookupUpdateFailed"));
         return;
       }
 
       setLookupDraft((current) => (current ? { ...current, password: "" } : current));
       await handleLookup(new Event("submit") as unknown as FormEvent<HTMLFormElement>);
     } catch (err) {
-      setLookupError(err instanceof Error ? err.message : "Erro ao atualizar solicitacao.");
+      setLookupError(err instanceof Error ? err.message : t("accessRequest.lookupUpdateError"));
     } finally {
       setLookupSaving(false);
     }
@@ -729,10 +733,10 @@ export default function AccessRequestClient() {
       <div className="relative z-10 w-full max-w-3xl space-y-8 sm:space-y-10 md:max-w-4xl">
         <div className={`text-center ${styles.introBase} ${styles.introDelay1}`}>
           <h2 className="text-3xl font-bold leading-tight text-[#011848] drop-shadow-sm sm:text-4xl">
-            Solicitações de acesso
+            {t("accessRequest.title")}
           </h2>
           <p className="text-[#0b1a3c] font-medium">
-            Consulte uma solicitação existente ou envie um novo pedido de acesso ao painel.
+            {t("accessRequest.subtitle")}
           </p>
         </div>
 
@@ -743,9 +747,9 @@ export default function AccessRequestClient() {
             } ${styles.introDelay2}`}
           >
             <div>
-              <h3 className="text-lg font-semibold text-[#011848]">Consultar solicitação</h3>
+              <h3 className="text-lg font-semibold text-[#011848]">{t("accessRequest.lookupTitle")}</h3>
               <p className="text-sm text-[#475569]">
-                Acompanhe o status e os comentários da sua solicitação em tempo real.
+                {t("accessRequest.lookupSubtitle")}
               </p>
             </div>
             <button
@@ -755,10 +759,10 @@ export default function AccessRequestClient() {
                 setIsRequestOpen(false);
                 setLookupError(null);
               }}
-              title="Consultar agora"
+              title={t("accessRequest.lookupNow")}
               className="inline-flex items-center justify-center rounded-xl border border-[#011848]/15 bg-white px-5 py-2 text-sm font-semibold text-[#011848] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#011848]/5 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/50"
             >
-              Consultar agora
+              {t("accessRequest.lookupNow")}
             </button>
           </div>
 
@@ -768,9 +772,9 @@ export default function AccessRequestClient() {
             } ${styles.introDelay3}`}
           >
             <div>
-              <h3 className="text-lg font-semibold text-[#011848]">Solicitar acesso</h3>
+              <h3 className="text-lg font-semibold text-[#011848]">{t("accessRequest.createTitle")}</h3>
               <p className="text-sm text-[#475569]">
-                Envie um novo pedido de acesso e nossa equipe vai orientar o próximo passo.
+                {t("accessRequest.createSubtitle")}
               </p>
             </div>
             <button
@@ -781,17 +785,17 @@ export default function AccessRequestClient() {
                 setError(null);
                 setSuccess(null);
               }}
-              title="Solicitar acesso"
+              title={t("accessRequest.createTitle")}
               className="inline-flex items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60"
             >
-              Solicitar acesso
+              {t("accessRequest.createTitle")}
             </button>
           </div>
         </div>
 
         <div className="text-center text-sm text-[#475569]">
           <Link href="/login" className="font-semibold text-[#011848]/80 hover:text-[#011848]">
-            Voltar ao login
+            {t("forgotPassword.backToLogin")}
           </Link>
         </div>
       </div>
@@ -816,17 +820,17 @@ export default function AccessRequestClient() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h3 id="request-title" className="text-xl font-semibold text-[#011848]">
-                  Solicitar acesso
+                  {t("accessRequest.createTitle")}
                 </h3>
                 <p className="text-sm text-[#475569]">
-                  Preencha os dados abaixo para abrir uma nova solicitação.
+                  {t("accessRequest.createSubtitle")}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsRequestOpen(false)}
                 className="rounded-full border border-[#011848]/10 bg-white p-2 text-[#475569] transition hover:text-[#011848]"
-                aria-label="Fechar modal"
+                aria-label={t("accessRequest.closeModal")}
               >
                 <span className="text-lg leading-none">×</span>
               </button>
@@ -843,7 +847,7 @@ export default function AccessRequestClient() {
                     ✓
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-emerald-900">Solicitação enviada com sucesso</p>
+                    <p className="text-sm font-semibold text-emerald-900">{t("accessRequest.submittedSuccessTitle")}</p>
                     <p className="mt-1 text-sm leading-6 text-emerald-800">{success}</p>
                   </div>
                 </div>
@@ -912,7 +916,7 @@ export default function AccessRequestClient() {
                       <p className="text-xs font-medium text-rose-600">{companiesError}</p>
                     ) : companyOptions.length === 0 && !companiesLoading ? (
                       <p className="text-xs font-medium text-rose-600">
-                        Nenhuma empresa cadastrada disponivel para selecionar.
+                        Nenhuma empresa cadastrada disponível para selecionar.
                       </p>
                     ) : null}
                   </label>
@@ -923,13 +927,13 @@ export default function AccessRequestClient() {
                     <div className="space-y-1">
                       <p className="text-sm font-semibold text-[#011848]">Dados da empresa</p>
                       <p className="text-xs text-[#64748b]">
-                        Esse perfil segue o cadastro institucional da empresa, entao os campos abaixo precisam refletir o formulario real de criacao.
+                        Esse perfil segue o cadastro institucional da empresa, então os campos abaixo precisam refletir o formulário real de criação.
                       </p>
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className={labelClass}>
-                        Nome / razao social
+                        Nome / razão social
                         <input
                           type="text"
                           value={companyDraft.companyName}
@@ -970,13 +974,13 @@ export default function AccessRequestClient() {
                         />
                       </label>
                       <label className={labelClass + " sm:col-span-2"}>
-                        Endereco
+                        Endereço
                         <input
                           type="text"
                           value={companyDraft.companyAddress}
                           onChange={(event) => setCompanyDraft((current) => ({ ...current, companyAddress: event.target.value }))}
                           className={inputBase}
-                          placeholder="Rua, numero, bairro, cidade"
+                          placeholder="Rua, número, bairro, cidade"
                         />
                       </label>
                       <label className={labelClass}>
@@ -1000,23 +1004,23 @@ export default function AccessRequestClient() {
                         />
                       </label>
                       <label className={labelClass + " sm:col-span-2"}>
-                        Descricao da empresa
+                        Descrição da empresa
                         <textarea
                           rows={3}
                           value={companyDraft.companyDescription}
                           onChange={(event) => setCompanyDraft((current) => ({ ...current, companyDescription: event.target.value }))}
                           className={textareaBase}
-                          placeholder="Descreva rapidamente a empresa e o contexto da solicitacao."
+                          placeholder="Descreva rapidamente a empresa e o contexto da solicitação."
                         />
                       </label>
                       <label className={labelClass + " sm:col-span-2"}>
-                        Observacoes da empresa
+                        Observações da empresa
                         <textarea
                           rows={3}
                           value={companyDraft.companyNotes}
                           onChange={(event) => setCompanyDraft((current) => ({ ...current, companyNotes: event.target.value }))}
                           className={textareaBase}
-                          placeholder="Observacoes adicionais sobre a empresa."
+                          placeholder="Observações adicionais sobre a empresa."
                         />
                       </label>
                     </div>
@@ -1038,7 +1042,7 @@ export default function AccessRequestClient() {
                   </label>
                   {isTechnicalSupportRequest ? (
                     <label className={labelClass}>
-                      Usuario/login
+                      Usuário/login
                       <input
                         type="text"
                         value={requestedUser}
@@ -1048,7 +1052,7 @@ export default function AccessRequestClient() {
                         placeholder="login.global"
                       />
                       <p className="text-xs font-medium text-[#64748b]">
-                        Obrigatorio para o perfil Suporte Tecnico.
+                        Obrigatório para o perfil Suporte Técnico.
                       </p>
                     </label>
                   ) : null}
@@ -1060,7 +1064,7 @@ export default function AccessRequestClient() {
                       onChange={(event) => setEmail(event.target.value)}
                       required
                       className={inputBase}
-                      placeholder="voce@empresa.com"
+                      placeholder="você@empresa.com"
                     />
                   </label>
                   <label className={labelClass}>
@@ -1077,14 +1081,14 @@ export default function AccessRequestClient() {
                 </div>
 
                 <label className={labelClass}>
-                  {isCompanyAccessRequest ? "Cargo do responsavel" : "Cargo ou funcao"}
+                  {isCompanyAccessRequest ? "Cargo do responsável" : "Cargo ou função"}
                   <div>
                     <Select value={role || EMPTY_JOB_TITLE} onValueChange={(value) => setRole(value === EMPTY_JOB_TITLE ? "" : value)}>
                       <SelectTrigger className="h-12.5 rounded-xl border-[#011848]/15 bg-white px-4 py-3 text-sm text-[#011848] focus-visible:ring-[#ef0001]/40">
-                        <SelectValue placeholder="Selecione uma profissao" />
+                        <SelectValue placeholder="Selecione uma profissão" />
                       </SelectTrigger>
                       <SelectContent className="max-h-80">
-                        <SelectItem value={EMPTY_JOB_TITLE}>Selecione uma profissao</SelectItem>
+                        <SelectItem value={EMPTY_JOB_TITLE}>Selecione uma profissão</SelectItem>
                         {JOB_TITLE_OPTIONS.map((jobTitleOption) => (
                           <SelectItem key={jobTitleOption} value={jobTitleOption}>
                             {jobTitleOption}
@@ -1096,10 +1100,10 @@ export default function AccessRequestClient() {
                 </label>
 
                 <label className={labelClass}>
-                  Titulo da solicitacao
+                  Título da solicitação
                   <input
                     type="text"
-                    value={titulo}
+                    value={título}
                     onChange={(event) => setTitulo(event.target.value)}
                     required
                     className={inputBase}
@@ -1108,9 +1112,9 @@ export default function AccessRequestClient() {
                 </label>
 
                 <label className={labelClass}>
-                  Descricao detalhada
+                  Descrição detalhada
                   <textarea
-                    value={descricao}
+                    value={descrição}
                     onChange={(event) => setDescricao(event.target.value)}
                     required
                     rows={4}
@@ -1128,7 +1132,7 @@ export default function AccessRequestClient() {
                     required
                     minLength={8}
                     className={inputBase}
-                    placeholder="Minimo 8 caracteres"
+                    placeholder="Mínimo 8 caracteres"
                   />
                 </label>
               </div>
@@ -1136,11 +1140,11 @@ export default function AccessRequestClient() {
               <div className="pt-4">
                 <button
                   type="submit"
-                  title="Enviar solicitação"
+                  title={t("accessRequest.sendRequest")}
                   disabled={loading}
                   className="flex w-full items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {loading ? "Enviando..." : "Enviar solicitação"}
+                  {loading ? t("accessRequest.sending") : t("accessRequest.sendRequest")}
                 </button>
               </div>
             </form>
@@ -1168,17 +1172,17 @@ export default function AccessRequestClient() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h3 id="lookup-title" className="text-xl font-semibold text-[#011848]">
-                  Consultar solicitação
+                  {t("accessRequest.lookupTitle")}
                 </h3>
                 <p className="text-sm text-[#475569]">
-                  Informe nome e e-mail para ver o andamento e os comentários.
+                  {t("accessRequest.lookupNameEmailRequired")}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsLookupOpen(false)}
                 className="rounded-full border border-[#011848]/10 bg-white p-2 text-[#475569] transition hover:text-[#011848]"
-                aria-label="Fechar modal"
+                aria-label={t("accessRequest.closeModal")}
               >
                 <span className="text-lg leading-none">×</span>
               </button>
@@ -1213,18 +1217,18 @@ export default function AccessRequestClient() {
                       onChange={(event) => setLookupEmail(event.target.value)}
                       required
                       className={inputBase}
-                      placeholder="voce@empresa.com"
+                      placeholder="você@empresa.com"
                     />
                   </label>
                 </div>
 
                 <button
                   type="submit"
-                  title="Consultar solicitação"
+                  title={t("accessRequest.lookupTitle")}
                   disabled={lookupLoading}
                   className="flex w-full items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {lookupLoading ? "Consultando..." : "Consultar solicitação"}
+                  {lookupLoading ? t("accessRequest.lookupLoading") : t("accessRequest.lookupTitle")}
                 </button>
               </form>
 
@@ -1232,9 +1236,9 @@ export default function AccessRequestClient() {
                 <div className="mt-6 space-y-5 rounded-2xl border border-[#e5e7eb] bg-[#f8fafc] p-4 sm:p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-[#011848]">Solicitação encontrada</p>
+                    <p className="text-sm font-semibold text-[#011848]">{t("accessRequest.lookupFound")}</p>
                     <p className="text-xs text-[#64748b]">
-                      Criada em {new Date(lookupItem.createdAt).toLocaleString("pt-BR")}
+                      {t("accessRequest.createdAt", { date: new Date(lookupItem.createdAt).toLocaleString(language === "pt-BR" ? "pt-BR" : "en-US") })}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -1326,7 +1330,7 @@ export default function AccessRequestClient() {
                       <div className="space-y-1">
                         <p className="text-sm font-semibold text-[#011848]">Base original enviada</p>
                         <p className="text-xs text-[#64748b]">
-                          Referencia bloqueada para comparar o envio inicial com a versao devolvida para ajuste.
+                          Referência bloqueada para comparar o envio inicial com a versão devolvida para ajuste.
                         </p>
                       </div>
                       <div className="grid gap-4 sm:grid-cols-2">
@@ -1338,7 +1342,7 @@ export default function AccessRequestClient() {
                             className={inputBase}
                             value={textOrFallback(
                               ACCESS_OPTIONS.find((option) => option.value === (lookupItem.originalRequest?.profileType ?? "testing_company_user"))?.label,
-                              "Nao informado",
+                              "Não informado",
                             )}
                           />
                         </label>
@@ -1351,7 +1355,7 @@ export default function AccessRequestClient() {
                           <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest?.fullName || lookupItem.originalRequest?.name)} />
                         </label>
                         <label className={labelClass}>
-                          Usuario/login
+                          Usuário/login
                           <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest?.username)} />
                         </label>
                         <label className={labelClass}>
@@ -1368,18 +1372,18 @@ export default function AccessRequestClient() {
                         </label>
                         <label className={labelClass}>
                           Senha informada
-                          <input type="text" readOnly className={inputBase} value={lookupItem.originalRequest?.passwordHash ? "Preenchida" : "Nao informada"} />
+                          <input type="text" readOnly className={inputBase} value={lookupItem.originalRequest?.passwordHash ? "Preenchida" : "Não informada"} />
                         </label>
                         <label className={labelClass + " sm:col-span-2"}>
-                          Titulo da solicitacao
-                          <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest?.title, "Sem titulo")} />
+                          Título da solicitação
+                          <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest?.title, "Sem título")} />
                         </label>
                         <label className={labelClass + " sm:col-span-2"}>
-                          Descricao detalhada
+                          Descrição detalhada
                           <textarea readOnly rows={4} className={textareaBase} value={textOrFallback(lookupItem.originalRequest?.description)} />
                         </label>
                         <label className={labelClass + " sm:col-span-2"}>
-                          Observacoes
+                          Observações
                           <textarea readOnly rows={3} className={textareaBase} value={textOrFallback(lookupItem.originalRequest?.notes)} />
                         </label>
                       </div>
@@ -1388,11 +1392,11 @@ export default function AccessRequestClient() {
                         <div className="rounded-xl border border-[#011848]/10 bg-[#f8fafc] px-4 py-4">
                           <div className="space-y-1">
                             <p className="text-sm font-semibold text-[#011848]">Base original da empresa</p>
-                            <p className="text-xs text-[#64748b]">Dados institucionais enviados na solicitacao inicial.</p>
+                            <p className="text-xs text-[#64748b]">Dados institucionais enviados na solicitação inicial.</p>
                           </div>
                           <div className="mt-4 grid gap-4 sm:grid-cols-2">
                             <label className={labelClass}>
-                              Razao social
+                              Razão social
                               <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest.companyProfile.companyName)} />
                             </label>
                             <label className={labelClass}>
@@ -1408,7 +1412,7 @@ export default function AccessRequestClient() {
                               <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest.companyProfile.companyPhone)} />
                             </label>
                             <label className={labelClass + " sm:col-span-2"}>
-                              Endereco
+                              Endereço
                               <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest.companyProfile.companyAddress)} />
                             </label>
                             <label className={labelClass}>
@@ -1420,11 +1424,11 @@ export default function AccessRequestClient() {
                               <input type="text" readOnly className={inputBase} value={textOrFallback(lookupItem.originalRequest.companyProfile.companyLinkedin)} />
                             </label>
                             <label className={labelClass + " sm:col-span-2"}>
-                              Descricao da empresa
+                              Descrição da empresa
                               <textarea readOnly rows={3} className={textareaBase} value={textOrFallback(lookupItem.originalRequest.companyProfile.companyDescription)} />
                             </label>
                             <label className={labelClass + " sm:col-span-2"}>
-                              Observacoes da empresa
+                              Observações da empresa
                               <textarea readOnly rows={3} className={textareaBase} value={textOrFallback(lookupItem.originalRequest.companyProfile.companyNotes)} />
                             </label>
                           </div>
@@ -1435,9 +1439,9 @@ export default function AccessRequestClient() {
                     {lookupDraft ? (
                       <div className="flex h-full flex-col space-y-4 rounded-xl border border-[#011848]/10 bg-white px-4 py-4">
                         <div className="space-y-1">
-                          <p className="text-sm font-semibold text-[#011848]">Ajustar dados da solicitacao</p>
+                          <p className="text-sm font-semibold text-[#011848]">Ajustar dados da solicitação</p>
                           <p className="text-xs text-[#64748b]">
-                            Se a equipe pediu ajuste, corrija os dados abaixo e reenvi e a solicitacao para revisao.
+                            Se a equipe pediu ajuste, corrija os dados abaixo e reenvi e a solicitação para revisão.
                           </p>
                         </div>
 
@@ -1516,13 +1520,13 @@ export default function AccessRequestClient() {
                             <div className="space-y-1">
                               <p className="text-sm font-semibold text-[#011848]">Dados da empresa devolvida</p>
                               <p className="text-xs text-[#64748b]">
-                                Campos em vermelho sao os que a equipe devolveu para correcao nesta rodada.
+                                Campos em vermelho sao os que a equipe devolveu para correção nesta rodada.
                               </p>
                             </div>
 
                             <div className="grid gap-4 sm:grid-cols-2">
                               <label className={labelClass}>
-                                Nome / razao social
+                                Nome / razão social
                                 <input
                                   type="text"
                                   value={lookupDraft.companyProfile.companyName}
@@ -1606,7 +1610,7 @@ export default function AccessRequestClient() {
                                 {requestedLookupFields.has("companyPhone") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                               </label>
                               <label className={labelClass + " sm:col-span-2"}>
-                                Endereco
+                                Endereço
                                 <input
                                   type="text"
                                   value={lookupDraft.companyProfile.companyAddress}
@@ -1669,7 +1673,7 @@ export default function AccessRequestClient() {
                                 {requestedLookupFields.has("companyLinkedin") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                               </label>
                               <label className={labelClass + " sm:col-span-2"}>
-                                Descricao da empresa
+                                Descrição da empresa
                                 <textarea
                                   rows={3}
                                   value={lookupDraft.companyProfile.companyDescription}
@@ -1690,7 +1694,7 @@ export default function AccessRequestClient() {
                                 {requestedLookupFields.has("companyDescription") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                               </label>
                               <label className={labelClass + " sm:col-span-2"}>
-                                Observacoes da empresa
+                                Observações da empresa
                                 <textarea
                                   rows={3}
                                   value={lookupDraft.companyProfile.companyNotes}
@@ -1731,7 +1735,7 @@ export default function AccessRequestClient() {
                           </label>
                           {isLookupTechnicalSupportRequest ? (
                             <label className={labelClass}>
-                              Usuario/login
+                              Usuário/login
                               <input
                                 type="text"
                                 value={lookupDraft.user}
@@ -1775,7 +1779,7 @@ export default function AccessRequestClient() {
                             {requestedLookupFields.has("phone") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                           </label>
                           <label className={labelClass}>
-                            {isLookupCompanyAccessRequest ? "Cargo do responsavel" : "Cargo ou funcao"}
+                            {isLookupCompanyAccessRequest ? "Cargo do responsável" : "Cargo ou função"}
                             <div>
                               <Select
                                 value={lookupDraft.role || EMPTY_JOB_TITLE}
@@ -1787,10 +1791,10 @@ export default function AccessRequestClient() {
                                 disabled={!isLookupFieldEditable("jobRole")}
                               >
                                 <SelectTrigger className={`h-12.5 rounded-xl px-4 py-3 text-sm text-[#011848] focus-visible:ring-[#ef0001]/40 ${requestedLookupFields.has("jobRole") ? "border-rose-300 bg-rose-50 text-rose-700" : "border-[#011848]/15 bg-white"}`}>
-                                  <SelectValue placeholder="Selecione uma profissao" />
+                                  <SelectValue placeholder="Selecione uma profissão" />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-80">
-                                  <SelectItem value={EMPTY_JOB_TITLE}>Selecione uma profissao</SelectItem>
+                                  <SelectItem value={EMPTY_JOB_TITLE}>Selecione uma profissão</SelectItem>
                                   {JOB_TITLE_OPTIONS.map((jobTitleOption) => (
                                     <SelectItem key={jobTitleOption} value={jobTitleOption}>
                                       {jobTitleOption}
@@ -1804,7 +1808,7 @@ export default function AccessRequestClient() {
                         </div>
 
                         <label className={labelClass}>
-                          Titulo da solicitacao
+                          Título da solicitação
                           <input
                             type="text"
                             value={lookupDraft.title}
@@ -1819,7 +1823,7 @@ export default function AccessRequestClient() {
                         </label>
 
                         <label className={labelClass}>
-                          Descricao detalhada
+                          Descrição detalhada
                           <textarea
                             rows={4}
                             value={lookupDraft.description}
@@ -1834,7 +1838,7 @@ export default function AccessRequestClient() {
                         </label>
 
                         <label className={labelClass}>
-                          Observacoes
+                          Observações
                           <textarea
                             rows={3}
                             value={lookupDraft.notes}
@@ -1864,7 +1868,7 @@ export default function AccessRequestClient() {
                           <p className="text-xs font-medium text-[#64748b]">
                             {requestedLookupFields.has("password")
                               ? "Corrija este campo."
-                              : "Se quiser trocar a senha informada na solicitacao, preencha aqui."}
+                              : "Se quiser trocar a senha informada na solicitação, preencha aqui."}
                           </p>
                         </label>
 
@@ -1875,7 +1879,7 @@ export default function AccessRequestClient() {
                             disabled={lookupSaving}
                             className="flex w-full items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:cursor-not-allowed disabled:opacity-60"
                           >
-                            {lookupSaving ? "Enviando..." : lookupItem.status === "in_progress" ? "Enviar ajuste" : "Atualizar solicitacao"}
+                            {lookupSaving ? "Enviando..." : lookupItem.status === "in_progress" ? "Enviar ajuste" : "Atualizar solicitação"}
                           </button>
                         ) : null}
                       </div>
@@ -1885,7 +1889,7 @@ export default function AccessRequestClient() {
                     <div className="space-y-1">
                       <p className="text-sm font-semibold text-[#011848]">Conversa e justificativas</p>
                       <p className="text-xs text-[#64748b]">
-                        A mensagem do admin explica o ajuste. Sua resposta fica registrada como conversa e nao altera os campos automaticamente.
+                        A mensagem do admin explica o ajuste. Sua resposta fica registrada como conversa e não altera os campos automaticamente.
                       </p>
                     </div>
                     <div className="comments-chat">
@@ -1901,11 +1905,11 @@ export default function AccessRequestClient() {
                                 className={`comments-chat-message ${mine ? "mine" : "other"}`}
                               >
                                 <div className="comments-chat-author">
-                                  {entry.authorRole === "admin" ? "Admin" : "Solicitante"}: {entry.authorName}
+                                  {entry.authorRole === "leader_tc" ? t("accessRequest.adminAuthor") : t("accessRequest.requesterAuthor")}: {entry.authorName}
                                 </div>
                                 <div className="comments-chat-bubble whitespace-pre-wrap">{entry.body}</div>
                                 <div className="comments-chat-meta">
-                                  {new Date(entry.createdAt).toLocaleString("pt-BR")}
+                                  {new Date(entry.createdAt).toLocaleString(language === "pt-BR" ? "pt-BR" : "en-US")}
                                 </div>
                               </div>
                             );
@@ -1919,8 +1923,8 @@ export default function AccessRequestClient() {
                           rows={3}
                           placeholder={
                             lookupItem.status === "closed" || lookupItem.status === "rejected"
-                              ? "Solicitacao finalizada"
-                              : "Adicionar comentario"
+                              ? "Solicitação finalizada"
+                              : "Adicionar comentário"
                           }
                           value={commentDraft}
                           onChange={(event) => setCommentDraft(event.target.value)}
@@ -1936,10 +1940,10 @@ export default function AccessRequestClient() {
                               lookupItem.status === "closed" ||
                               lookupItem.status === "rejected"
                             }
-                            title="Enviar comentário"
+                            title={t("accessRequest.sendComment")}
                             className="rounded-xl border border-[#011848]/15 bg-white px-4 py-2 text-xs font-semibold text-[#011848] transition hover:bg-[#011848]/5 disabled:opacity-60"
                           >
-                            {commentSubmitting ? "Enviando..." : "Enviar comentário"}
+                            {commentSubmitting ? t("accessRequest.sending") : t("accessRequest.sendComment")}
                           </button>
                         </div>
                       </div>
@@ -1954,3 +1958,4 @@ export default function AccessRequestClient() {
     </div>
   );
 }
+

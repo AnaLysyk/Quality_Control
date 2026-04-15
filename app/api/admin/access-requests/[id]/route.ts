@@ -35,7 +35,7 @@ type AccessRequestBody = {
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
 
   const body = (await req.json().catch(() => null)) as AccessRequestBody | null;
@@ -65,13 +65,13 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   if (shouldUseJsonStore()) {
     const existing = await getAccessRequestById(id);
     if (!existing) {
-      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
     }
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
     }
     if (!isGlobalReviewer(admin) && resolveReviewQueue(profileType) === "global_only") {
-      return NextResponse.json({ error: "Somente Global pode encaminhar solicitacoes tecnicas" }, { status: 403 });
+      return NextResponse.json({ error: "Somente Global pode encaminhar solicitações tecnicas" }, { status: 403 });
     }
 
     const parsed = parseAccessRequestMessage(existing.message, existing.email);
@@ -84,7 +84,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       phone: phone || parsed.phone,
       passwordHash: parsed.passwordHash,
       role: role || parsed.jobRole,
-      company: company || parsed.company || "(nao informado)",
+      company: company || parsed.company || "(não informado)",
       clientId: clientId ?? parsed.clientId,
       accessType,
       profileType,
@@ -107,7 +107,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     });
 
     if (!updated) {
-      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -124,13 +124,13 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   try {
     const existing = await prisma.supportRequest.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
     }
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
     }
     if (!isGlobalReviewer(admin) && resolveReviewQueue(profileType) === "global_only") {
-      return NextResponse.json({ error: "Somente Global pode encaminhar solicitacoes tecnicas" }, { status: 403 });
+      return NextResponse.json({ error: "Somente Global pode encaminhar solicitações tecnicas" }, { status: 403 });
     }
 
     const parsed = parseAccessRequestMessage(existing.message, existing.email);
@@ -143,7 +143,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       phone: phone || parsed.phone,
       passwordHash: parsed.passwordHash,
       role: role || parsed.jobRole,
-      company: company || parsed.company || "(nao informado)",
+      company: company || parsed.company || "(não informado)",
       clientId: clientId ?? parsed.clientId,
       accessType,
       profileType,
@@ -181,13 +181,13 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     console.error("[ACCESS-REQUESTS][PATCH][PRISMA_FALLBACK]", error);
     const existing = await getAccessRequestById(id);
     if (!existing) {
-      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
     }
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
     }
     if (!isGlobalReviewer(admin) && resolveReviewQueue(profileType) === "global_only") {
-      return NextResponse.json({ error: "Somente Global pode encaminhar solicitacoes tecnicas" }, { status: 403 });
+      return NextResponse.json({ error: "Somente Global pode encaminhar solicitações tecnicas" }, { status: 403 });
     }
 
     const parsed = parseAccessRequestMessage(existing.message, existing.email);
@@ -199,7 +199,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       phone: phone || parsed.phone,
       passwordHash: parsed.passwordHash,
       role: role || parsed.jobRole,
-      company: company || parsed.company || "(nao informado)",
+      company: company || parsed.company || "(não informado)",
       clientId: clientId ?? parsed.clientId,
       accessType,
       profileType,

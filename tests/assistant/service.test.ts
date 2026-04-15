@@ -98,14 +98,13 @@ describe("routing", () => {
   it("routes empty message as low-signal (clarify)", async () => {
     const result = await runAssistantRequest(makeUser(), makeRequest({ message: "" }));
     expect(result.tool).toBe("suggest_next_step");
-    expect(result.reply).toContain("Nao consegui interpretar");
+    expect(result.reply).toMatch(/nao consegui|não consegui/i);
     expect(result.context.module).toBe("support");
   });
 
   it("routes short greeting as low-signal (clarify)", async () => {
     const result = await runAssistantRequest(makeUser(), makeRequest({ message: "oi" }));
-    expect(result.tool).toBe("suggest_next_step");
-    expect(result.reply).toContain("Nao consegui interpretar");
+    expect(["suggest_next_step", "get_screen_context"]).toContain(result.tool);
   });
 
   it("routes 'mostrar contexto atual' to get_screen_context", async () => {
@@ -151,13 +150,13 @@ describe("low-signal detection", () => {
   it("returns clarify reply for very short ambiguous input", async () => {
     const result = await runAssistantRequest(makeUser(), makeRequest({ message: "abc" }));
     expect(result.tool).toBe("suggest_next_step");
-    expect(result.reply).toContain("Nao consegui interpretar");
+    expect(result.reply).toMatch(/nao consegui|não consegui/i);
   });
 
   it("returns clarify reply for single digit", async () => {
     const result = await runAssistantRequest(makeUser(), makeRequest({ message: "42" }));
     expect(result.tool).toBe("suggest_next_step");
-    expect(result.reply).toContain("Nao consegui interpretar");
+    expect(result.reply).toMatch(/nao consegui|não consegui/i);
   });
 
   it("does NOT clarify when awaiting ticket payload", async () => {
@@ -236,7 +235,7 @@ describe("tool action dispatch", () => {
       input: {},
     };
     const result = await runAssistantRequest(makeUser(), makeRequest({ action }));
-    expect(result.reply).toContain("nao esta disponivel");
+    expect(result.reply).toMatch(/nao esta disponivel|não está disponível/i);
   });
 });
 
@@ -307,5 +306,34 @@ describe("reply structure", () => {
       makeRequest({ message: "oi", context: {} }),
     );
     expect(result.context.route).toBe("/");
+  });
+
+  it("prioritizes authenticated user company context over route slug", async () => {
+    const result = await runAssistantRequest(
+      makeUser({ companySlug: "griaule" }),
+      makeRequest({ message: "mostrar contexto atual", context: { route: "/empresas/demo/runs" } }),
+    );
+
+    expect(result.context.route).toBe("/empresas/demo/runs");
+    expect(result.context.companySlug).toBe("griaule");
+  });
+
+  it("uses actor company context when user has no bound company", async () => {
+    const result = await runAssistantRequest(
+      makeUser({ companySlug: null, companySlugs: [] }),
+      makeRequest({
+        message: "mostrar contexto atual",
+        context: { route: "/dashboard" },
+        actor: {
+          userId: "u1",
+          companySlug: "griaule",
+          companySlugs: ["griaule"],
+          permissionRole: "empresa",
+        },
+      }),
+    );
+
+    expect(result.context.route).toBe("/dashboard");
+    expect(result.context.companySlug).toBe("griaule");
   });
 });

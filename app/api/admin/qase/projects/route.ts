@@ -14,7 +14,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 export async function POST(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: "Sem permissao" }, { status });
+    return NextResponse.json({ error: "Sem permissão" }, { status });
   }
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
     const message =
       statusCode === 401 || statusCode === 403
         ? "Token da Qase invalido ou sem acesso aos projetos."
-        : "Nao foi possivel consultar os projetos na Qase.";
+        : "Não foi possível consultar os projetos na Qase.";
     return NextResponse.json({ error: message }, { status: statusCode });
   }
 }

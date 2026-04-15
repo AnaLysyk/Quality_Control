@@ -4,11 +4,13 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import loginStyles from "../LoginClient.module.css";
+import { useI18n } from "@/hooks/useI18n";
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 128;
 
 export default function ResetPasswordClient() {
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -23,30 +25,30 @@ export default function ResetPasswordClient() {
 
   useEffect(() => {
     if (!token) {
-      setError("Token de redefinicao invalido ou ausente.");
+      setError(t("resetPassword.invalidTokenMissing"));
     }
-  }, [token]);
+  }, [token, t]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!token) {
-      setError("Token de redefinicao invalido.");
+      setError(t("resetPassword.invalidToken"));
       return;
     }
 
     if (newPassword.length < MIN_PASSWORD_LENGTH) {
-      setError(`A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`);
+      setError(t("resetPassword.minChars"));
       return;
     }
 
     if (newPassword.length > MAX_PASSWORD_LENGTH) {
-      setError(`A senha deve ter no maximo ${MAX_PASSWORD_LENGTH} caracteres.`);
+      setError(t("resetPassword.maxChars"));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("As senhas nao coincidem.");
+      setError(t("resetPassword.passwordMismatch"));
       return;
     }
 
@@ -68,16 +70,16 @@ export default function ResetPasswordClient() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Erro ao redefinir senha.");
+        throw new Error(data.error || t("resetPassword.resetFailed"));
       }
 
-      setSuccess("Senha redefinida com sucesso! Voce sera redirecionado para o login.");
+      setSuccess(t("resetPassword.success"));
 
       setTimeout(() => {
         router.push("/login");
       }, 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro desconhecido.");
+      setError(err instanceof Error ? err.message : t("resetPassword.unknownError"));
     } finally {
       setLoading(false);
     }
@@ -93,19 +95,19 @@ export default function ResetPasswordClient() {
       <div className={containerClass}>
         <div className="relative z-10 w-full max-w-sm">
           <div className="rounded-2xl border border-[#011848]/10 bg-white/90 p-6 shadow-2xl backdrop-blur-sm sm:p-8">
-            <h2 className="mb-2 text-2xl font-bold text-[#011848]">Link invalido</h2>
+            <h2 className="mb-2 text-2xl font-bold text-[#011848]">{t("resetPassword.invalidLinkTitle")}</h2>
             <p className="mb-6 text-sm text-[#4b5563]">
-              Este link de redefinicao de senha e invalido ou expirou.
+              {t("resetPassword.invalidLink")}
             </p>
             <Link
               href="/login/forgot-password"
               className="block w-full rounded-lg bg-linear-to-r from-[#011848] to-[#ef0001] py-3 px-4 text-center font-medium text-white hover:from-[#011848]/90 hover:to-[#ef0001]/90 transition-all duration-200"
             >
-              Solicitar novo link
+              {t("resetPassword.requestNewLink")}
             </Link>
             <div className="mt-4 text-center">
               <Link href="/login" className="text-sm font-medium text-[#011848] hover:text-[#ef0001]">
-                Voltar ao login
+                {t("resetPassword.backToLogin")}
               </Link>
             </div>
           </div>
@@ -123,8 +125,8 @@ export default function ResetPasswordClient() {
 
       <div className="relative z-10 w-full max-w-sm space-y-5 sm:max-w-md sm:space-y-6">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-[#011848] drop-shadow-sm">Redefinir senha</h2>
-          <p className="mt-1 font-medium text-[#011848]">Digite e confirme sua nova senha.</p>
+          <h2 className="text-3xl font-bold text-[#011848] drop-shadow-sm">{t("resetPassword.title")}</h2>
+          <p className="mt-1 font-medium text-[#011848]">{t("resetPassword.subtitle")}</p>
         </div>
 
         <form
@@ -146,7 +148,7 @@ export default function ResetPasswordClient() {
           <div className="space-y-4">
             <div>
               <label htmlFor="new-password" className="mb-1 block text-sm font-semibold text-[#011848]">
-                Nova senha
+                {t("resetPassword.newPassword")}
               </label>
               <input
                 id="new-password"
@@ -155,14 +157,14 @@ export default function ResetPasswordClient() {
                 autoComplete="new-password"
                 required
                 className="form-control-user w-full rounded-lg border border-[#011848]/20 bg-white px-4 py-3 text-[#011848] caret-[#ef0001] placeholder:text-[#9aa3b2] focus:border-transparent focus:ring-2 focus:ring-[#ef0001] transition-all duration-200"
-                placeholder="Minimo 8 caracteres"
+                placeholder={t("resetPassword.newPasswordPlaceholder")}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
               />
             </div>
             <div>
               <label htmlFor="confirm-password" className="mb-1 block text-sm font-semibold text-[#011848]">
-                Confirmar nova senha
+                {t("resetPassword.confirmPassword")}
               </label>
               <input
                 id="confirm-password"
@@ -171,7 +173,7 @@ export default function ResetPasswordClient() {
                 autoComplete="new-password"
                 required
                 className="form-control-user w-full rounded-lg border border-[#011848]/20 bg-white px-4 py-3 text-[#011848] caret-[#ef0001] placeholder:text-[#9aa3b2] focus:border-transparent focus:ring-2 focus:ring-[#ef0001] transition-all duration-200"
-                placeholder="Repita a nova senha"
+                placeholder={t("resetPassword.confirmPasswordPlaceholder")}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
@@ -183,12 +185,12 @@ export default function ResetPasswordClient() {
             disabled={loading}
             className="mt-6 w-full rounded-lg bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 font-medium text-white transition-all duration-200 hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:ring-2 focus:ring-[#ef0001] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Redefinindo..." : "Redefinir senha"}
+            {loading ? t("resetPassword.resetting") : t("resetPassword.submit")}
           </button>
 
           <div className="mt-6 text-center">
             <Link href="/login" className="text-sm font-medium text-[#011848] hover:text-[#ef0001]">
-              Voltar ao login
+              {t("resetPassword.backToLogin")}
             </Link>
           </div>
         </form>

@@ -98,7 +98,7 @@ function getAuthorLabel(ticket: TicketShape | null | undefined) {
 }
 
 function getAssigneeLabel(ticket: TicketShape | null | undefined) {
-  return ticket?.assignedToName || ticket?.assignedToEmail || (ticket?.assignedToUserId ? "Responsavel vinculado" : "Aguardando atendimento");
+  return ticket?.assignedToName || ticket?.assignedToEmail || (ticket?.assignedToUserId ? "Responsável vinculado" : "Aguardando atendimento");
 }
 
 function sortComments(items: TicketComment[]) {
@@ -108,7 +108,7 @@ function sortComments(items: TicketComment[]) {
 }
 
 function getCommentInitials(entry: TicketComment, mine: boolean) {
-  const source = entry.authorName || entry.authorLogin || entry.authorEmail || (mine ? "Voce" : "Suporte");
+  const source = entry.authorName || entry.authorLogin || entry.authorEmail || (mine ? "Você" : "Suporte");
   return source
     .split(/\s+/)
     .filter(Boolean)
@@ -355,11 +355,11 @@ export default function TicketDetailsModal({
       });
       const json = (await res.json().catch(() => ({}))) as { items?: TicketComment[]; error?: string };
       if (!res.ok) {
-        throw new Error(json?.error || "Erro ao carregar comentarios");
+        throw new Error(json?.error || "Erro ao carregar comentários");
       }
       setComments(sortComments(Array.isArray(json.items) ? json.items : []));
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao carregar comentarios";
+      const message = err instanceof Error ? err.message : "Erro ao carregar comentários";
       setError(message);
     } finally {
       setCommentsLoading(false);
@@ -411,7 +411,7 @@ export default function TicketDetailsModal({
     [currentTicket?.description, currentTicket?.body],
   );
   const description = useMemo(
-    () => parsedDescription.text || "Sem descricao.",
+    () => parsedDescription.text || "Sem descrição.",
     [parsedDescription.text],
   );
   const canEditContent = capabilities.canEditContent;
@@ -525,14 +525,14 @@ export default function TicketDetailsModal({
       });
       const json = (await res.json().catch(() => ({}))) as { item?: TicketShape; error?: string };
       if (!res.ok || !json.item) {
-        throw new Error(json?.error || "Erro ao salvar responsavel");
+        throw new Error(json?.error || "Erro ao salvar responsável");
       }
       setCurrentTicket(json.item);
       setAssigneeDraft(json.item.assignedToUserId ?? "");
       setEditingAssignee(false);
       onTicketUpdated?.(json.item);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao salvar responsavel";
+      const message = err instanceof Error ? err.message : "Erro ao salvar responsável";
       setError(message);
     } finally {
       setSavingAssignee(false);
@@ -583,7 +583,7 @@ export default function TicketDetailsModal({
       });
       const json = (await res.json().catch(() => ({}))) as { item?: TicketComment; error?: string };
       if (!res.ok || !json.item) {
-        throw new Error(json?.error || "Erro ao enviar comentario");
+        throw new Error(json?.error || "Erro ao enviar comentário");
       }
       setComments((current) => sortComments([...current, json.item as TicketComment]));
       setCommentDraft("");
@@ -591,7 +591,7 @@ export default function TicketDetailsModal({
       if (evidenceInputRef.current) evidenceInputRef.current.value = "";
       await loadTicket();
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao enviar comentario";
+      const message = err instanceof Error ? err.message : "Erro ao enviar comentário";
       setError(message);
     } finally {
       setSendingComment(false);
@@ -620,7 +620,7 @@ export default function TicketDetailsModal({
               <p className="tc-panel-kicker">Atendimento</p>
               <h2 className="tc-panel-title">Ticket em acompanhamento</h2>
               <p className="tc-panel-description">
-              Dados do ticket na esquerda e conversa ativa com o suporte na direita. Quem abriu o chamado pode corrigir o proprio ticket e anexar evidencia ao responder.
+              Dados do ticket na esquerda e conversa ativa com o suporte na direita. Quem abriu o chamado pode corrigir o próprio ticket e anexar evidencia ao responder.
               </p>
             </div>
           </div>
@@ -697,12 +697,12 @@ export default function TicketDetailsModal({
                 {canEditContent ? (
                   <>
                     <div className="ticket-detail-field-shell">
-                      <p className="tc-kv-label">Titulo</p>
+                      <p className="tc-kv-label">Título</p>
                       <input
                         value={draft.title}
                         onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
                         className="ticket-detail-input"
-                        placeholder="Titulo do ticket"
+                        placeholder="Título do ticket"
                       />
                     </div>
 
@@ -770,11 +770,13 @@ export default function TicketDetailsModal({
                     </div>
 
                     <div className="ticket-detail-field-shell">
-                      <p className="tc-kv-label">Descricao</p>
+                      <p className="tc-kv-label">Descrição</p>
                       <input
                         ref={editEvidenceInputRef}
                         type="file"
                         className="sr-only"
+                        aria-label="Anexar evidência ao ticket"
+                        title="Anexar evidência ao ticket"
                         accept="image/*,.pdf,.txt,.log,.json,.zip,.csv,.xlsx,.doc,.docx"
                         onChange={(event) => setEditEvidenceFile(event.target.files?.[0] ?? null)}
                       />
@@ -840,11 +842,11 @@ export default function TicketDetailsModal({
                 ) : (
                   <>
                     <div className="ticket-detail-field-shell ticket-detail-field-shell-readonly ticket-detail-field-inline">
-                      <p className="tc-kv-label">Titulo</p>
+                      <p className="tc-kv-label">Título</p>
                       <p className="ticket-detail-main-title">{title}</p>
                     </div>
                     <div className="ticket-detail-field-shell ticket-detail-field-shell-readonly ticket-detail-field-inline">
-                      <p className="tc-kv-label">Descricao</p>
+                      <p className="tc-kv-label">Descrição</p>
                       <div className="ticket-detail-copy-card whitespace-pre-wrap">
                         {description}
                       </div>
@@ -871,7 +873,7 @@ export default function TicketDetailsModal({
 
                 <div className="ticket-detail-inline-meta">
                   <span><strong>Solicitante:</strong> {getAuthorLabel(currentTicket)}</span>
-                  <span><strong>Responsavel:</strong> {getAssigneeLabel(currentTicket)}</span>
+                  <span><strong>Responsável:</strong> {getAssigneeLabel(currentTicket)}</span>
                   {loadingTicket ? <span>Atualizando dados...</span> : null}
                 </div>
 
@@ -895,7 +897,7 @@ export default function TicketDetailsModal({
                       className="ticket-detail-primary-btn"
                     >
                       <FiSave size={14} />
-                      {savingDraft ? "Salvando..." : "Salvar alteracoes"}
+                      {savingDraft ? "Salvando..." : "Salvar alterações"}
                     </button>
                   </div>
                 ) : null}
@@ -906,15 +908,15 @@ export default function TicketDetailsModal({
                   {!editingAssignee && hasAssigneeSaved ? (
                     <div className="ticket-detail-assignee-readonly">
                       <div className="ticket-detail-assignee-copy">
-                        <p className="tc-kv-label">Responsavel</p>
+                        <p className="tc-kv-label">Responsável</p>
                         <p className="ticket-detail-assignee-name">{getAssigneeLabel(currentTicket)}</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => setEditingAssignee(true)}
                         className="ticket-detail-icon-btn"
-                        aria-label="Editar responsavel"
-                        title="Editar responsavel"
+                        aria-label="Editar responsável"
+                        title="Editar responsável"
                       >
                         <FiEdit2 size={16} />
                       </button>
@@ -922,15 +924,15 @@ export default function TicketDetailsModal({
                   ) : (
                     <div className="ticket-detail-assign-grid">
                       <div className="flex-1">
-                        <p className="tc-kv-label">Selecionar responsavel</p>
+                        <p className="tc-kv-label">Selecionar responsável</p>
                         <select
                           value={assigneeDraft}
                           onChange={(event) => setAssigneeDraft(event.target.value)}
                           className="ticket-detail-select"
-                          aria-label="Selecionar responsavel pelo ticket"
-                          title="Selecionar responsavel pelo ticket"
+                          aria-label="Selecionar responsável pelo ticket"
+                          title="Selecionar responsável pelo ticket"
                         >
-                          <option value="">Selecione um responsavel</option>
+                          <option value="">Selecione um responsável</option>
                           {assigneeOptions.map((option) => (
                             <option key={option.id} value={option.id}>
                               {option.label}
@@ -945,12 +947,12 @@ export default function TicketDetailsModal({
                         disabled={!canSaveAssignee}
                         className="ticket-detail-primary-btn"
                       >
-                        {savingAssignee ? "Salvando..." : "Salvar responsavel"}
+                        {savingAssignee ? "Salvando..." : "Salvar responsável"}
                       </button>
                     </div>
                   )}
                   <p className="ticket-detail-note">
-                    O ticket so pode ser movido no kanban depois que o responsavel estiver salvo.
+                    O ticket só pode ser movido no kanban depois que o responsável estiver salvo.
                   </p>
                 </div>
               ) : null}
@@ -963,7 +965,7 @@ export default function TicketDetailsModal({
                 <FiMessageSquare size={18} />
               </div>
               <div>
-                <p className="ticket-detail-chat-title">Comentarios do ticket</p>
+                <p className="ticket-detail-chat-title">Comentários do ticket</p>
                 <p className="ticket-detail-chat-description">
                   O time de suporte acompanha todos. Os demais perfis acompanham, comentam e podem anexar evidencia apenas nos proprios tickets.
                 </p>
@@ -979,7 +981,7 @@ export default function TicketDetailsModal({
                 {commentsLoading ? (
                   <p className="comments-chat-empty">Carregando conversa...</p>
                 ) : comments.length === 0 ? (
-                  <p className="comments-chat-empty">Nenhum comentario ainda.</p>
+                  <p className="comments-chat-empty">Nenhum comentário ainda.</p>
                 ) : (
                   comments.map((entry) => {
                     const mine = entry.authorUserId === user?.id;
@@ -997,7 +999,7 @@ export default function TicketDetailsModal({
                           </div>
                           <div className="comments-chat-author-stack">
                             <div className="comments-chat-author">
-                              {entry.authorName || (mine ? "Voce" : "Atendimento")}
+                              {entry.authorName || (mine ? "Você" : "Atendimento")}
                             </div>
                             {handle ? (
                               <div className="comments-chat-handle">
@@ -1019,6 +1021,8 @@ export default function TicketDetailsModal({
                   ref={evidenceInputRef}
                   type="file"
                   className="sr-only"
+                  aria-label="Anexar evidência ao comentário"
+                  title="Anexar evidência ao comentário"
                   accept="image/*,.pdf,.txt,.log,.json,.zip,.csv,.xlsx,.doc,.docx"
                   onChange={(event) => setEvidenceFile(event.target.files?.[0] ?? null)}
                 />
@@ -1028,7 +1032,7 @@ export default function TicketDetailsModal({
                   className="ticket-detail-textarea"
                   rows={4}
                   maxLength={COMMENT_MAX_LENGTH}
-                  placeholder="Escreva uma resposta ou atualizacao para este ticket"
+                  placeholder="Escreva uma resposta ou atualização para este ticket"
                 />
                 <div className="ticket-detail-evidence-bar">
                   <button

@@ -73,13 +73,14 @@ function pgToRecord(r: { id: string; companyId?: string | null; companySlug?: st
 export async function listApplications(filter?: { companySlug?: string }): Promise<AppRecord[]> {
   if (USE_POSTGRES) {
     const prisma = await getPrisma();
-    const rows = await prisma.application.findMany({ where: filter?.companySlug ? { companySlug: filter.companySlug } : undefined });
+    const rows = await prisma.application.findMany({ where: filter?.companySlug ? { companySlug: { equals: filter.companySlug, mode: "insensitive" } } : undefined });
     return rows.map(pgToRecord);
   }
   const db = readFile();
   let items: AppRecord[] = db.items || [];
   if (filter?.companySlug) {
-    items = items.filter((i) => i.companySlug === filter.companySlug);
+    const slug = filter.companySlug.toLowerCase();
+    items = items.filter((i) => i.companySlug?.toLowerCase() === slug);
   }
   return items;
 }

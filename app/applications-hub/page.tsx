@@ -1,4 +1,6 @@
-﻿"use client";
+"use client";
+
+export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -23,6 +25,7 @@ export default function ApplicationsPage() {
         null,
       companyCount: clients.length,
       clientSlug: activeClientSlug ?? user?.clientSlug ?? null,
+      defaultClientSlug: user?.defaultClientSlug ?? null,
     }),
     [activeClientSlug, clients.length, user],
   );

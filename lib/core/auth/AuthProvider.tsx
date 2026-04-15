@@ -16,7 +16,7 @@ type AuthContextValue = {
   companies: AuthCompany[];
   loading: boolean;
   error: string | null;
-  refreshUser: () => Promise<void>;
+  refreshUser: (showSpinner?: boolean) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -122,33 +122,75 @@ async function fetchMe(): Promise<MeResult> {
   return parsed ?? { user: null, companies: [] };
 }
 
+const AUTH_CACHE_KEY = "qc:auth_me:v1";
+const AUTH_CACHE_TTL_MS = 60_000; // 60 seconds
+
+type AuthCache = {
+  user: AuthUser | null;
+  companies: AuthCompany[];
+  cachedAt: number;
+};
+
+function readAuthCache(): AuthCache | null {
+  try {
+    const raw = sessionStorage.getItem(AUTH_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as AuthCache;
+    if (Date.now() - parsed.cachedAt > AUTH_CACHE_TTL_MS) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeAuthCache(user: AuthUser | null, companies: AuthCompany[]) {
+  try {
+    const cache: AuthCache = { user, companies, cachedAt: Date.now() };
+    sessionStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    /* ignore */
+  }
+}
+
+function clearAuthCache() {
+  try {
+    sessionStorage.removeItem(AUTH_CACHE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [companies, setCompanies] = useState<AuthCompany[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cached = typeof window !== "undefined" ? readAuthCache() : null;
+  const [user, setUser] = useState<AuthUser | null>(cached?.user ?? null);
+  const [companies, setCompanies] = useState<AuthCompany[]>(cached?.companies ?? []);
+  const [loading, setLoading] = useState(cached === null); // skip spinner if cache hit
   const [error, setError] = useState<string | null>(null);
 
-  const refreshUser = useCallback(async () => {
-    setLoading(true);
+  const refreshUser = useCallback(async (showSpinner = true) => {
+    if (showSpinner) setLoading(true);
     setError(null);
     try {
       const me = await fetchMe();
       setUser(me.user);
       setCompanies(me.companies);
+      writeAuthCache(me.user, me.companies);
       publishAuthUser(me.user);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao carregar usuario";
       setError(msg);
       setUser(null);
       setCompanies([]);
+      clearAuthCache();
       publishAuthUser(null);
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   }, []);
 
   const logout = useCallback(async () => {
     bootstrapAttempts.clear();
+    clearAuthCache();
     try {
       await fetch("/api/auth/logout", {
         method: "POST",
@@ -171,8 +213,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    void refreshUser();
-  }, [refreshUser]);
+    // If we had a cache hit on mount, revalidate silently in background
+    const hadCache = cached !== null;
+    void refreshUser(!hadCache);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     return subscribeAuthUserSync((nextUser) => {

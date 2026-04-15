@@ -1,11 +1,12 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import {
+  canonicalizeCompanyPathnameForAccess,
   COMPANY_ROUTE_MODE_COOKIE,
   LONG_COMPANY_ROUTE_MODE,
   rewriteShortCompanyPathname,
   SHORT_COMPANY_ROUTE_MODE,
   shortenCompanyPathname,
+  shouldUseShortCompanyRoutes,
 } from "@/lib/companyRoutes";
 
 function normalizeValue(value?: string | null) {
@@ -36,6 +37,9 @@ function readJwtPayload(request: NextRequest) {
     const payload = JSON.parse(decodeBase64Url(parts[1])) as {
       role?: unknown;
       companyRole?: unknown;
+      companySlug?: unknown;
+      defaultCompanySlug?: unknown;
+      default_company_slug?: unknown;
       userOrigin?: unknown;
       user_origin?: unknown;
       isGlobalAdmin?: unknown;
@@ -48,48 +52,32 @@ function readJwtPayload(request: NextRequest) {
 }
 
 type CompanyRouteAccessDecision = {
-  useShort: boolean;
+  usePublicRoutes: boolean;
   source: "cookie" | "jwt" | "default";
   routeModeCookie: string;
   role: string;
   companyRole: string;
+  companySlug: string;
+  defaultCompanySlug: string;
   userOrigin: string;
   isGlobalAdmin: boolean;
 };
 
 function resolveCompanyRouteAccessForRequest(request: NextRequest): CompanyRouteAccessDecision {
   const routeModeCookie = normalizeValue(request.cookies.get(COMPANY_ROUTE_MODE_COOKIE)?.value ?? null);
-  if (routeModeCookie === SHORT_COMPANY_ROUTE_MODE) {
-    return {
-      useShort: true,
-      source: "cookie",
-      routeModeCookie,
-      role: "",
-      companyRole: "",
-      userOrigin: "",
-      isGlobalAdmin: false,
-    };
-  }
-  if (routeModeCookie === LONG_COMPANY_ROUTE_MODE) {
-    return {
-      useShort: false,
-      source: "cookie",
-      routeModeCookie,
-      role: "",
-      companyRole: "",
-      userOrigin: "",
-      isGlobalAdmin: false,
-    };
-  }
-
   const payload = readJwtPayload(request);
   if (!payload) {
     return {
-      useShort: false,
-      source: "default",
+      usePublicRoutes: false,
+      source:
+        routeModeCookie === SHORT_COMPANY_ROUTE_MODE || routeModeCookie === LONG_COMPANY_ROUTE_MODE
+          ? "cookie"
+          : "default",
       routeModeCookie,
       role: "",
       companyRole: "",
+      companySlug: "",
+      defaultCompanySlug: "",
       userOrigin: "",
       isGlobalAdmin: false,
     };
@@ -97,6 +85,14 @@ function resolveCompanyRouteAccessForRequest(request: NextRequest): CompanyRoute
 
   const normalizedRole = normalizeValue(typeof payload.role === "string" ? payload.role : null);
   const normalizedCompanyRole = normalizeValue(typeof payload.companyRole === "string" ? payload.companyRole : null);
+  const normalizedCompanySlug = normalizeValue(typeof payload.companySlug === "string" ? payload.companySlug : null);
+  const normalizedDefaultCompanySlug = normalizeValue(
+    typeof payload.defaultCompanySlug === "string"
+      ? payload.defaultCompanySlug
+      : typeof payload.default_company_slug === "string"
+        ? payload.default_company_slug
+        : null,
+  );
   const normalizedOrigin = normalizeValue(
     typeof payload.userOrigin === "string"
       ? payload.userOrigin
@@ -108,21 +104,23 @@ function resolveCompanyRouteAccessForRequest(request: NextRequest): CompanyRoute
     payload.isGlobalAdmin === true ||
     normalizeValue(typeof payload.globalRole === "string" ? payload.globalRole : null) === "global_admin";
 
-  const useShort =
-    !isGlobalAdmin &&
-    (
-    normalizedRole === "company" ||
-    normalizedCompanyRole === "company_admin" ||
-    normalizedCompanyRole === "client_admin" ||
-    normalizedOrigin === "client_company"
-  );
+  const usePublicRoutes = shouldUseShortCompanyRoutes({
+    isGlobalAdmin,
+    role: normalizedRole || null,
+    companyRole: normalizedCompanyRole || null,
+    userOrigin: normalizedOrigin || null,
+    clientSlug: normalizedCompanySlug || null,
+    defaultClientSlug: normalizedDefaultCompanySlug || null,
+  });
 
   return {
-    useShort,
+    usePublicRoutes,
     source: "jwt",
     routeModeCookie,
     role: normalizedRole,
     companyRole: normalizedCompanyRole,
+    companySlug: normalizedCompanySlug,
+    defaultCompanySlug: normalizedDefaultCompanySlug,
     userOrigin: normalizedOrigin,
     isGlobalAdmin,
   };
@@ -138,6 +136,7 @@ function debugCompanyRouteDecision(
 
   const sourcePath = request.nextUrl.pathname;
   const isRelevantPath =
+    sourcePath.startsWith("/empresas/") ||
     Boolean(shortenCompanyPathname(sourcePath)) ||
     Boolean(rewriteShortCompanyPathname(sourcePath)) ||
     sourcePath.startsWith("/login");
@@ -148,11 +147,13 @@ function debugCompanyRouteDecision(
     `action=${action}`,
     `source=${sourcePath}`,
     `target=${targetPath ?? "-"}`,
-    `useShort=${access.useShort}`,
+    `usePublicRoutes=${access.usePublicRoutes}`,
     `decisionSource=${access.source}`,
     `modeCookie=${access.routeModeCookie || "-"}`,
     `role=${access.role || "-"}`,
     `companyRole=${access.companyRole || "-"}`,
+    `companySlug=${access.companySlug || "-"}`,
+    `defaultCompanySlug=${access.defaultCompanySlug || "-"}`,
     `userOrigin=${access.userOrigin || "-"}`,
     `global=${access.isGlobalAdmin}`,
   ];
@@ -160,8 +161,7 @@ function debugCompanyRouteDecision(
   console.info(`[company-routes] ${details.join(" ")}`);
 }
 
-export function middleware(request: NextRequest) {
-  // RBAC mock: se mock_role=admin, injeta user admin no request
+export function proxy(request: NextRequest) {
   const mockRole = request.cookies.get("mock_role")?.value;
   const reqWithUser = request as NextRequest & { user?: { role: string; email: string } };
   const globalScope = globalThis as { user?: { role: string; email: string } };
@@ -174,11 +174,20 @@ export function middleware(request: NextRequest) {
   }
 
   const routeAccess = resolveCompanyRouteAccessForRequest(request);
-  const shortPath = shortenCompanyPathname(request.nextUrl.pathname);
-  if (shortPath && routeAccess.useShort && shortPath !== request.nextUrl.pathname) {
-    debugCompanyRouteDecision(request, routeAccess, "redirect", shortPath);
+  const canonicalPath = routeAccess.usePublicRoutes
+    ? canonicalizeCompanyPathnameForAccess(request.nextUrl.pathname, {
+        isGlobalAdmin: routeAccess.isGlobalAdmin,
+        role: routeAccess.role || null,
+        companyRole: routeAccess.companyRole || null,
+        userOrigin: routeAccess.userOrigin || null,
+        clientSlug: routeAccess.companySlug || null,
+        defaultClientSlug: routeAccess.defaultCompanySlug || null,
+      })
+    : null;
+  if (canonicalPath && canonicalPath !== request.nextUrl.pathname) {
+    debugCompanyRouteDecision(request, routeAccess, "redirect", canonicalPath);
     const nextUrl = request.nextUrl.clone();
-    nextUrl.pathname = shortPath;
+    nextUrl.pathname = canonicalPath;
     return NextResponse.redirect(nextUrl);
   }
 

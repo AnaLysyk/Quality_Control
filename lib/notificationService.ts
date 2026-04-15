@@ -47,6 +47,34 @@ function describePermissionRole(role?: string | null) {
   return "Usuario";
 }
 
+function normalizeCompanySlug(value?: string | null) {
+  return (value ?? "").trim().toLowerCase();
+}
+
+function parseBooleanFlag(value: unknown) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "true" || normalized === "1" || normalized === "yes") return true;
+    if (normalized === "false" || normalized === "0" || normalized === "no") return false;
+  }
+  return null;
+}
+
+function isCompanyLinkedNotificationFanoutEnabled(company: Record<string, unknown>) {
+  const candidates = [
+    company.notifications_fanout_enabled,
+    company.notificationsFanoutEnabled,
+    company.notify_linked_users_on_change,
+    company.notifyLinkedUsersOnChange,
+  ];
+  for (const candidate of candidates) {
+    const parsed = parseBooleanFlag(candidate);
+    if (parsed !== null) return parsed;
+  }
+  return true;
+}
+
 async function resolveAdminUserIds() {
   const users = await listLocalUsers();
   return users.filter(isAdminUser).map((user) => user.id);
@@ -89,11 +117,47 @@ async function resolveCompanyUserIds(companySlug?: string | null) {
   const adminIds = await resolveAdminUserIds();
   if (!companySlug) return adminIds;
   const companies = await listLocalCompanies();
-  const company = companies.find((item) => item.slug === companySlug);
+  const normalizedSlug = normalizeCompanySlug(companySlug);
+  const company = companies.find((item) => normalizeCompanySlug(item.slug) === normalizedSlug);
   if (!company) return adminIds;
   const links = await listLocalLinksForCompany(company.id);
   const memberIds = links.map((link) => link.userId);
   return Array.from(new Set([...adminIds, ...memberIds]));
+}
+
+async function resolveCompanyLinkedUserIds(companySlug?: string | null) {
+  if (!companySlug) return [] as string[];
+  const companies = await listLocalCompanies();
+  const normalizedSlug = normalizeCompanySlug(companySlug);
+  const company = companies.find((item) => normalizeCompanySlug(item.slug) === normalizedSlug);
+  if (!company) return [] as string[];
+  if (!isCompanyLinkedNotificationFanoutEnabled(company as Record<string, unknown>)) {
+    return [] as string[];
+  }
+  const links = await listLocalLinksForCompany(company.id);
+  return Array.from(new Set(links.map((link) => link.userId).filter(Boolean)));
+}
+
+async function resolveCompanySlugFromClientId(clientId?: string | null) {
+  if (!clientId) return null;
+  const normalizedClientId = clientId.trim();
+  if (!normalizedClientId) return null;
+  const companies = await listLocalCompanies();
+  const byId = companies.find((item) => item.id === normalizedClientId);
+  return byId?.slug ?? null;
+}
+
+async function resolveAccessRequestRecipientIds(input: {
+  reviewQueue: ReviewQueue;
+  companySlug?: string | null;
+  clientId?: string | null;
+}) {
+  const reviewerIds = await resolveRequestReviewerIds(input.reviewQueue);
+  const resolvedCompanySlug =
+    normalizeCompanySlug(input.companySlug) ||
+    normalizeCompanySlug(await resolveCompanySlugFromClientId(input.clientId));
+  const companyLinkedIds = await resolveCompanyLinkedUserIds(resolvedCompanySlug || null);
+  return Array.from(new Set([...reviewerIds, ...companyLinkedIds]));
 }
 
 function buildDefectLink(companySlug?: string | null, defectSlug?: string | null) {
@@ -395,7 +459,13 @@ async function resolveCompanySlugForIntegration(
 }
 
 export async function notifySuporteCreated(suporte: SuporteRecord) {
-  const recipients = Array.from(new Set([...(await resolveAdminUserIds()), ...(await resolveTechnicalSupportUserIds())]));
+  const recipients = Array.from(
+    new Set([
+      ...(await resolveAdminUserIds()),
+      ...(await resolveTechnicalSupportUserIds()),
+      ...(await resolveCompanyLinkedUserIds(suporte.companySlug ?? null)),
+    ]),
+  );
   if (!recipients.length) return;
   const requester = suporte.createdByName || suporte.createdByEmail || "Usuario";
   const companyLabel = suporte.companySlug ? ` (${suporte.companySlug})` : "";
@@ -420,6 +490,10 @@ export async function notifySuporteStatusChanged(input: {
   reason?: string | null;
 }) {
   const recipients = new Set<string>();
+  const companyRecipients = await resolveCompanyLinkedUserIds(input.suporte.companySlug ?? null);
+  companyRecipients
+    .filter((id) => id !== input.actorId)
+    .forEach((id) => recipients.add(id));
   if (input.suporte.createdBy && input.suporte.createdBy !== input.actorId) {
     recipients.add(input.suporte.createdBy);
   }
@@ -448,6 +522,10 @@ export async function notifySuporteCommentAdded(input: {
   actorName?: string | null;
 }) {
   const recipients = new Set<string>();
+  const companyRecipients = await resolveCompanyLinkedUserIds(input.suporte.companySlug ?? null);
+  companyRecipients
+    .filter((id) => id !== input.actorId)
+    .forEach((id) => recipients.add(id));
   if (input.suporte.createdBy && input.suporte.createdBy !== input.actorId) {
     recipients.add(input.suporte.createdBy);
   }
@@ -476,8 +554,16 @@ export async function notifySuporteReactionAdded(input: {
   comment: TicketCommentRecord;
   actorId: string;
 }) {
-  if (input.comment.authorUserId === input.actorId) return;
-  await createNotificationsForUsers([input.comment.authorUserId], {
+  const recipients = new Set<string>();
+  const companyRecipients = await resolveCompanyLinkedUserIds(input.suporte.companySlug ?? null);
+  companyRecipients
+    .filter((id) => id !== input.actorId)
+    .forEach((id) => recipients.add(id));
+  if (input.comment.authorUserId && input.comment.authorUserId !== input.actorId) {
+    recipients.add(input.comment.authorUserId);
+  }
+  if (!recipients.size) return;
+  await createNotificationsForUsers(Array.from(recipients), {
     type: "TICKET_REACTION_ADDED",
     title: "Curtiram seu comentario",
     description: "Uma reacao foi adicionada ao seu comentario.",
@@ -493,8 +579,16 @@ export async function notifySuporteAssigned(input: {
   assigneeId: string;
   actorId: string;
 }) {
-  if (!input.assigneeId || input.assigneeId === input.actorId) return;
-  await createNotificationsForUsers([input.assigneeId], {
+  const recipients = new Set<string>();
+  const companyRecipients = await resolveCompanyLinkedUserIds(input.suporte.companySlug ?? null);
+  companyRecipients
+    .filter((id) => id !== input.actorId)
+    .forEach((id) => recipients.add(id));
+  if (input.assigneeId && input.assigneeId !== input.actorId) {
+    recipients.add(input.assigneeId);
+  }
+  if (!recipients.size) return;
+  await createNotificationsForUsers(Array.from(recipients), {
     type: "TICKET_ASSIGNED",
     title: "Suporte atribuido",
     description: `Voce foi atribuido ao suporte ${input.suporte.title}.`,
@@ -511,16 +605,23 @@ export async function notifyAccessRequestComment(input: {
   authorName: string;
   body: string;
   reviewQueue?: ReviewQueue | null;
+  companySlug?: string | null;
+  clientId?: string | null;
 }) {
-  const reviewerIds = await resolveRequestReviewerIds(input.reviewQueue ?? "admin_and_global");
-  if (!reviewerIds.length) return;
+  const recipients = await resolveAccessRequestRecipientIds({
+    reviewQueue: input.reviewQueue ?? "admin_and_global",
+    companySlug: input.companySlug ?? null,
+    clientId: input.clientId ?? null,
+  });
+  if (!recipients.length) return;
   const preview = input.body.length > 160 ? `${input.body.slice(0, 160)}...` : input.body;
-  await createNotificationsForUsers(reviewerIds, {
+  await createNotificationsForUsers(recipients, {
     type: "ACCESS_REQUEST_COMMENT",
     title: "Novo comentario em solicitacao de acesso",
     description: `${input.authorName}: ${preview}`,
     requestId: input.requestId,
     link: "/admin/access-requests",
+    companySlug: input.companySlug ?? null,
     dedupeKey: `access-request:${input.requestId}:comment:${input.commentId}`,
   });
 }
@@ -530,15 +631,22 @@ export async function notifyAccessRequestCreated(input: {
   requesterName: string;
   profileType: RequestProfileType;
   reviewQueue: ReviewQueue;
+  companySlug?: string | null;
+  clientId?: string | null;
 }) {
-  const reviewerIds = await resolveRequestReviewerIds(input.reviewQueue);
-  if (!reviewerIds.length) return;
-  await createNotificationsForUsers(reviewerIds, {
+  const recipients = await resolveAccessRequestRecipientIds({
+    reviewQueue: input.reviewQueue,
+    companySlug: input.companySlug ?? null,
+    clientId: input.clientId ?? null,
+  });
+  if (!recipients.length) return;
+  await createNotificationsForUsers(recipients, {
     type: "ACCESS_REQUEST_CREATED",
     title: "Nova solicitacao de acesso",
     description: `${input.requesterName} solicitou ${toRequestProfileTypeLabel(input.profileType)}.`,
     requestId: input.requestId,
     link: "/admin/access-requests",
+    companySlug: input.companySlug ?? null,
     dedupeKey: `access-request:${input.requestId}:created`,
   });
 }
@@ -549,15 +657,22 @@ export async function notifyAccessRequestAccepted(input: {
   approverName: string;
   profileType: RequestProfileType;
   reviewQueue: ReviewQueue;
+  companySlug?: string | null;
+  clientId?: string | null;
 }) {
-  const reviewerIds = await resolveRequestReviewerIds(input.reviewQueue);
-  if (!reviewerIds.length) return;
-  await createNotificationsForUsers(reviewerIds, {
+  const recipients = await resolveAccessRequestRecipientIds({
+    reviewQueue: input.reviewQueue,
+    companySlug: input.companySlug ?? null,
+    clientId: input.clientId ?? null,
+  });
+  if (!recipients.length) return;
+  await createNotificationsForUsers(recipients, {
     type: "ACCESS_REQUEST_ACCEPTED",
     title: "Solicitacao de acesso aprovada",
     description: `${input.approverName} aprovou a solicitacao de ${input.requesterName} (${toRequestProfileTypeLabel(input.profileType)}).`,
     requestId: input.requestId,
     link: "/admin/access-requests",
+    companySlug: input.companySlug ?? null,
     dedupeKey: `access-request:${input.requestId}:accepted`,
   });
 }
@@ -569,16 +684,23 @@ export async function notifyAccessRequestRejected(input: {
   profileType: RequestProfileType;
   reviewQueue: ReviewQueue;
   reason?: string | null;
+  companySlug?: string | null;
+  clientId?: string | null;
 }) {
-  const reviewerIds = await resolveRequestReviewerIds(input.reviewQueue);
-  if (!reviewerIds.length) return;
+  const recipients = await resolveAccessRequestRecipientIds({
+    reviewQueue: input.reviewQueue,
+    companySlug: input.companySlug ?? null,
+    clientId: input.clientId ?? null,
+  });
+  if (!recipients.length) return;
   const reasonSuffix = input.reason ? ` Motivo: ${input.reason}` : "";
-  await createNotificationsForUsers(reviewerIds, {
+  await createNotificationsForUsers(recipients, {
     type: "ACCESS_REQUEST_REJECTED",
     title: "Solicitacao de acesso recusada",
     description: `${input.rejectorName} recusou a solicitacao de ${input.requesterName} (${toRequestProfileTypeLabel(input.profileType)}).${reasonSuffix}`,
     requestId: input.requestId,
     link: "/admin/access-requests",
+    companySlug: input.companySlug ?? null,
     dedupeKey: `access-request:${input.requestId}:rejected`,
   });
 }

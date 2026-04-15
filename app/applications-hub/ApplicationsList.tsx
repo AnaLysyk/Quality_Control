@@ -22,7 +22,7 @@ const fallbackApps: AppInfo[] = [
   { slug: "booking", name: "BOOKING", tag: "BOOKING" },
   { slug: "trust", name: "TRUST", tag: "TRUST" },
   { slug: "cidadao-smart", name: "CIDADAO SMART", tag: "CIDADAO" },
-  { slug: "mobile-griaule", name: "GRIAULE MOBILE", tag: "MOBILE" },
+  { slug: "gmt", name: "GMT MOBILE", tag: "MOBILE" },
 ];
 
 const APP_COLOR_CLASS: Record<string, string> = {
@@ -34,7 +34,7 @@ const APP_COLOR_CLASS: Record<string, string> = {
   cds: "app-color-cds",
   "cidadao-smart": "app-color-cidadao",
   gmt: "app-color-gmt",
-  "mobile-griaule": "app-color-gmt",
+  gmt: "app-color-gmt",
 };
 
 export function ApplicationsList({ className }: ApplicationsListProps) {
@@ -56,7 +56,7 @@ export function ApplicationsList({ className }: ApplicationsListProps) {
 
         const mapped: AppInfo[] = rawList.map((app) => ({
           slug: app.slug ?? app.name?.toLowerCase()?.replace(/\s+/g, "-") ?? "",
-          name: app.name ?? "Aplicacao",
+          name: app.name ?? "Aplicação",
           tag: app.tag ?? app.name?.toUpperCase() ?? "APP",
         }));
 
@@ -80,7 +80,7 @@ export function ApplicationsList({ className }: ApplicationsListProps) {
         <FiSearch className="absolute left-3 top-3 text-gray-500 text-lg" />
         <input
           type="text"
-          placeholder="Buscar aplicacao..."
+          placeholder="Buscar aplicação..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="w-full rounded-xl bg-white border border-(--surface-border,#e5e7eb) py-2 pl-10 pr-4 text-sm text-(--page-text,#0b1a3c) placeholder-gray-500 shadow-sm focus:outline-none focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/20"
@@ -89,7 +89,7 @@ export function ApplicationsList({ className }: ApplicationsListProps) {
 
       {filteredApps.length === 0 && (
         <div className="mt-6 rounded-2xl border border-(--surface-border,#e5e7eb) bg-white p-6 md:p-10 text-center text-(--page-text,#0b1a3c) space-y-4 shadow-sm">
-          <p className="text-lg font-semibold">Nenhuma aplicacao encontrada.</p>
+          <p className="text-lg font-semibold">Nenhuma aplicação encontrada.</p>
         </div>
       )}
 
@@ -101,7 +101,7 @@ export function ApplicationsList({ className }: ApplicationsListProps) {
             return (
               <Link
                 key={app.slug}
-                href={`/applications-hub/${app.slug}`}
+                href={`/applications-panel/${app.slug}`}
                 className="rounded-2xl border border-(--surface-border,#e5e7eb) bg-white p-6 shadow-lg shadow-black/10 transition hover:border-(--tc-accent)/60 text-(--page-text,#0b1a3c)"
               >
                 <div className="space-y-3">

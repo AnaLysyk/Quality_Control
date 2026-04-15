@@ -17,15 +17,15 @@ function normalizeSource(value: unknown) {
 function resolveCaseError(error: unknown) {
   const status = error instanceof QaseError ? error.status : 500;
   if (status === 401 || status === 403) {
-    return "Qase recusou a autenticacao deste projeto.";
+    return "Qase recusou a autenticação deste projeto.";
   }
   if (status === 404) {
-    return "Caso de teste nao encontrado no Qase.";
+    return "Caso de teste não encontrado no Qase.";
   }
   if (status === 422) {
     return "Qase recusou a consulta do caso informado.";
   }
-  return "Nao foi possivel consultar o caso de teste no Qase.";
+  return "Não foi possível consultar o caso de teste no Qase.";
 }
 
 export async function GET(request: Request) {

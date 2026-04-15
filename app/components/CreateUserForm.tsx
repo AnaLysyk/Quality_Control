@@ -29,7 +29,7 @@ export default function CreateUserForm({
         body: JSON.stringify({ user: login, email, name, password, companyId }),
       });
       if (!res.ok) {
-        let msg = "Erro ao criar usuario";
+        let msg = "Erro ao criar usuário";
         try {
           const data = await res.json();
           if (data?.error) msg = data.error;
@@ -44,7 +44,7 @@ export default function CreateUserForm({
       setSuccess(true);
       if (onCreated) onCreated();
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Erro ao criar usuario";
+      const msg = e instanceof Error ? e.message : "Erro ao criar usuário";
       setError(msg);
     } finally {
       setLoading(false);
@@ -53,7 +53,7 @@ export default function CreateUserForm({
 
   return (
     <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 space-y-2">
-      <h2 className="text-lg font-bold mb-2">Criar novo usuario</h2>
+      <h2 className="text-lg font-bold mb-2">Criar novo usuário</h2>
       <label className="block">
         <span className="text-sm">E-mail</span>
         <input
@@ -67,10 +67,10 @@ export default function CreateUserForm({
         />
       </label>
       <label className="block">
-        <span className="text-sm">Usuario (login)</span>
+        <span className="text-sm">Usuário (login)</span>
         <input
           className="form-control-user border rounded px-2 py-1 w-full mt-1"
-          placeholder="usuario"
+          placeholder="usuário"
           value={login}
           onChange={e => setLogin(e.target.value)}
           required
@@ -121,7 +121,7 @@ export default function CreateUserForm({
         disabled={loading || !email || !login || !name || !password || !companyId}
         role="button"
       >
-        {loading ? <span className="animate-pulse">Salvando...</span> : "Criar Usuario"}
+        {loading ? <span className="animate-pulse">Salvando...</span> : "Criar Usuário"}
       </button>
       {error && (
         <div className="text-red-600" role="alert">
@@ -130,7 +130,7 @@ export default function CreateUserForm({
       )}
       {success && (
         <div className="text-green-600" role="status">
-          Usuario criado com sucesso!
+          Usuário criado com sucesso!
         </div>
       )}
     </form>

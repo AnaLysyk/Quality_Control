@@ -1,0 +1,7 @@
+.elevatedSurface {
+  background: linear-gradient(180deg, var(--tc-surface) 0%, var(--tc-surface-alt) 100%);
+}
+
+.subtleSurface {
+  background: linear-gradient(180deg, var(--tc-surface-alt) 0%, var(--tc-surface) 100%);
+}

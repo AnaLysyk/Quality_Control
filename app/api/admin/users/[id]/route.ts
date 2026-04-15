@@ -51,7 +51,7 @@ function membershipRoleFromPermissionRole(role: PermissionRole) {
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(_req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
 
   const { id } = await params;
@@ -65,7 +65,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
   const access = await getAccessContext(req);
   const canManageProfiles = canManageInstitutionalProfiles(access);
@@ -117,7 +117,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const selectedCompany = clientId ? await findLocalCompanyById(clientId) : null;
   if (clientId && !selectedCompany) {
-    return NextResponse.json({ error: "Empresa nao encontrada" }, { status: 404 });
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
   }
 
   const existingLinks = effectiveProfileRole ? await listLocalLinksForUser(id) : [];
@@ -141,10 +141,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (email || login) {
     const users = await listLocalUsers();
     if (email && users.some((user) => user.id !== id && normalizeLogin(user.email) === email)) {
-      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
     }
     if (login && users.some((user) => user.id !== id && normalizeLogin(user.user ?? user.email) === login)) {
-      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
     }
   }
 
@@ -173,10 +173,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
     if (code === "DUPLICATE_EMAIL") {
-      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
     }
     if (code === "DUPLICATE_USER") {
-      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
     }
     throw err;
   }
@@ -247,7 +247,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
 
   const access = await getAccessContext(req);
@@ -255,11 +255,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const target = await getAdminUserItem(id);
 
   if (!target) {
-    return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
   if (!canDeleteUserByProfile(access, target.permission_role)) {
-    return NextResponse.json({ error: "Sem permissao para excluir este perfil" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão para excluir este perfil" }, { status: 403 });
   }
 
   const updated = await updateLocalUser(id, {
@@ -268,7 +268,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   });
 
   if (!updated) {
-    return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
   await addAuditLogSafe({

@@ -1,4 +1,6 @@
-﻿"use client";
+"use client";
+
+export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -7,6 +9,7 @@ import { FiChevronLeft, FiChevronRight, FiEdit2, FiLifeBuoy, FiPaperclip, FiPlus
 import { useAuth } from "@/context/AuthContext";
 import { useClientContext } from "@/context/ClientContext";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
+import { useI18n } from "@/hooks/useI18n";
 import { useSuporteKanbanColumns } from "@/hooks/useSuporteKanbanColumns";
 import { canAccessGlobalSupportScope, canCreateSupportTickets, canManageSupportWorkflow, canViewSupportBoard } from "@/lib/supportAccess";
 import {
@@ -80,18 +83,18 @@ const KNOWN_SUPPORT_ROUTE_ROOTS = new Set([
 ]);
 const SUPPORT_EVIDENCE_PATTERN = /\[([^\]]+)\]\(([^)\s]+)\)/g;
 
-function shortText(value?: string | null, max = 120) {
-  if (!value) return "Sem descricao.";
+function shortText(value?: string | null, max = 120, fallback = "Sem descrição.") {
+  if (!value) return fallback;
   const trimmed = value.trim();
   if (trimmed.length <= max) return trimmed;
   return `${trimmed.slice(0, Math.max(0, max - 3))}...`;
 }
 
-function formatDate(iso?: string | null) {
+function formatDate(iso?: string | null, locale: "pt-BR" | "en-US" = "pt-BR") {
   if (!iso) return "-";
   const time = Date.parse(iso);
   if (!Number.isFinite(time)) return "-";
-  return new Date(time).toLocaleDateString("pt-BR");
+  return new Date(time).toLocaleDateString(locale);
 }
 
 function hasMeaningfulContent(value: string) {
@@ -106,14 +109,14 @@ function hasMeaningfulContent(value: string) {
   return true;
 }
 
-function getSupportTypeLabel(value?: string | null) {
+function getSupportTypeLabel(value: string | null | undefined, labels: Record<string, string>) {
   const normalized = (value ?? "tarefa").toLowerCase();
-  return TYPE_OPTIONS.find((option) => option.value === normalized)?.label ?? "Tarefa";
+  return labels[normalized] ?? labels.tarefa;
 }
 
-function getSupportPriorityLabel(value?: string | null) {
+function getSupportPriorityLabel(value: string | null | undefined, labels: Record<string, string>) {
   const normalized = (value ?? "medium").toLowerCase();
-  return PRIORITY_OPTIONS.find((option) => option.value === normalized)?.label ?? "Média";
+  return labels[normalized] ?? labels.medium;
 }
 
 function normalizeTicketLookup(value?: string | null) {
@@ -255,6 +258,220 @@ function shouldUseNativeImageTag(src: string) {
 }
 
 export default function KanbanItPage() {
+  const { language } = useI18n();
+  const isPt = language === "pt-BR";
+  const locale = isPt ? "pt-BR" : "en-US";
+  const ui = useMemo(
+    () =>
+      isPt
+        ? {
+            loading: "Carregando...",
+            restricted: "Acesso restrito.",
+            support: "Suporte",
+            createSupport: "Criar suporte",
+            newSupport: "Novo suporte",
+            boardKicker: "Painel de atendimento",
+            boardTitleGlobal: "Kanban de suporte",
+            boardTitlePersonal: "Seus tickets",
+            boardSubtitleGlobal: "Organize colunas, acompanhe responsáveis e abra o detalhamento do ticket.",
+            boardSubtitlePersonal: "Acompanhe seus tickets, responda e consulte o histórico.",
+            heroSubtitleGlobal: "Acompanhe os tickets do atendimento técnico em um fluxo direto.",
+            heroSubtitleCompany: "Acompanhe os tickets visiveis de {company} no fluxo de suporte.",
+            heroSubtitlePersonal: "Acompanhe apenas os tickets criados por você no fluxo de suporte.",
+            searchLabel: "Busca",
+            searchPlaceholder: "ID ou codigo do ticket",
+            searchAria: "Buscar ticket por ID",
+            boardMetaAria: "Informações do painel",
+            oneColumn: "coluna ativa",
+            manyColumns: "colunas ativas",
+            movementInProgress: "Movimentacao em andamento",
+            noResults: "Nenhum ticket encontrado para",
+            noResultsHint: "Verifique o ID ou codigo e tente novamente.",
+            loadError: "Erro ao carregar suportes",
+            assignBeforeMove: "Selecione e salve um responsável antes de mover o ticket.",
+            updateStatusError: "Falha ao atualizar status",
+            removeColumnGuard: "Crie outra coluna antes de remover esta, para não perder os tickets.",
+            moveColumnError: "Falha ao mover tickets da coluna",
+            createTitleRequired: "O título não pode ser vazio.",
+            createTitleInvalid: "O título deve conter pelo menos uma letra ou número válido.",
+            createDescriptionInvalid: "A descrição deve conter pelo menos uma letra ou número válido.",
+            uploadEvidenceError: "Erro ao anexar evidencia",
+            createError: "Erro ao criar suporte",
+            creator: "Criador",
+            assignee: "Responsável",
+            notDefined: "Não definido",
+            createdAt: "Criado",
+            updatedAt: "Atualizado",
+            moveTo: "Mover para",
+            supportOnlyChange: "Apenas o time de suporte pode alterar status e responsável.",
+            emptyColumnTitle: "Sem tickets nesta etapa",
+            emptyColumnCopy: "Novos tickets aparecerao aqui quando entrarem neste fluxo.",
+            createModalKicker: "SUPORTE",
+            createModalTitle: "Novo suporte",
+            createModalSubtitle: "Abra um ticket com título, descrição, tipo e prioridade.",
+            closeCreateModal: "Fechar modal de novo suporte",
+            close: "Fechar",
+            title: "Título",
+            titlePlaceholder: "Digite o título do suporte",
+            description: "Descrição",
+            descriptionPlaceholder: "Descreva o suporte...",
+            type: "Tipo",
+            priority: "Prioridade",
+            attachEvidence: "Anexar evidencia",
+            replaceEvidence: "Trocar evidencia",
+            removeEvidence: "Remover evidencia",
+            cancel: "Cancelar",
+            creating: "Criando...",
+            create: "Criar",
+            noDescription: "Sem descrição.",
+            oneEvidence: "1 evidencia",
+            manyEvidence: "{count} evidencias",
+            ticketsPanel: "Tickets no painel",
+            ticketsPanelGlobalCopy: "Tickets ativos no fluxo global de atendimento.",
+            ticketsPanelPersonalCopy: "Tickets visiveis no seu painel pessoal de atendimento.",
+            inProgress: "Em andamento",
+            inProgressGlobalCopy: "Tickets em atendimento ou revisão pelo time de suporte.",
+            inProgressPersonalCopy: "Seus tickets em atendimento ou revisão no momento.",
+            withOwner: "Com responsável",
+            withOwnerGlobalCopy: "Tickets já vinculados ao time de suporte.",
+            withOwnerPersonalCopy: "Seus tickets que já possuem responsável definido.",
+            completed: "Concluidos",
+            completedGlobalCopy: "Tickets finalizados dentro do fluxo de suporte.",
+            completedPersonalCopy: "Tickets seus que já foram finalizados no fluxo de suporte.",
+            companyKickerPrefix: "EMPRESA",
+            addColumn: "Nova coluna",
+            columnNamePlaceholder: "Nome da coluna",
+            ticketsLoading: "Carregando tickets...",
+            columnsNavigation: "Navegacao das colunas",
+            previousColumns: "Ver colunas anteriores",
+            nextColumns: "Ver proximas colunas",
+            dragColumnHelp: "Segure e arraste para mover a coluna {column}",
+            columnKicker: "Coluna",
+            editColumnName: "Editar nome da coluna",
+            oneTicketInStage: "ticket nesta etapa",
+            manyTicketsInStage: "tickets nesta etapa",
+            editColumn: "Editar coluna",
+            removeColumn: "Remover coluna",
+            untitled: "Sem título",
+            supportStatus: "Status do suporte",
+            supportTypeAria: "Tipo do suporte",
+            supportPriorityAria: "Prioridade do suporte",
+            typeLabels: {
+              tarefa: "Tarefa",
+              bug: "Bug",
+              melhoria: "Melhoria",
+            },
+            priorityLabels: {
+              high: "Alta",
+              medium: "Media",
+              low: "Baixa",
+            },
+          }
+        : {
+            loading: "Loading...",
+            restricted: "Restricted access.",
+            support: "Support",
+            createSupport: "Create support ticket",
+            newSupport: "New support",
+            boardKicker: "Service board",
+            boardTitleGlobal: "Support kanban",
+            boardTitlePersonal: "Your tickets",
+            boardSubtitleGlobal: "Organize columns, track owners, and open ticket details.",
+            boardSubtitlePersonal: "Track your tickets, reply, and review history.",
+            heroSubtitleGlobal: "Track technical support tickets in a direct workflow.",
+            heroSubtitleCompany: "Track visible tickets from {company} in the support workflow.",
+            heroSubtitlePersonal: "Track only tickets created by you in the support workflow.",
+            searchLabel: "Search",
+            searchPlaceholder: "Ticket ID or code",
+            searchAria: "Search ticket by ID",
+            boardMetaAria: "Board information",
+            oneColumn: "active column",
+            manyColumns: "active columns",
+            movementInProgress: "Move in progress",
+            noResults: "No ticket found for",
+            noResultsHint: "Check the ID or code and try again.",
+            loadError: "Failed to load tickets",
+            assignBeforeMove: "Select and save an owner before moving this ticket.",
+            updateStatusError: "Failed to update status",
+            removeColumnGuard: "Create another column before removing this one to avoid losing tickets.",
+            moveColumnError: "Failed to move tickets from the column",
+            createTitleRequired: "Title cannot be empty.",
+            createTitleInvalid: "Title must contain at least one valid letter or number.",
+            createDescriptionInvalid: "Description must contain at least one valid letter or number.",
+            uploadEvidenceError: "Error attaching evidence",
+            createError: "Error creating support ticket",
+            creator: "Creator",
+            assignee: "Owner",
+            notDefined: "Not defined",
+            createdAt: "Created",
+            updatedAt: "Updated",
+            moveTo: "Move to",
+            supportOnlyChange: "Only the support team can change status and owner.",
+            emptyColumnTitle: "No tickets in this stage",
+            emptyColumnCopy: "New tickets will appear here when they enter this flow.",
+            createModalKicker: "SUPPORT",
+            createModalTitle: "New support",
+            createModalSubtitle: "Open a ticket with title, description, type, and priority.",
+            closeCreateModal: "Close new support modal",
+            close: "Close",
+            title: "Title",
+            titlePlaceholder: "Enter support title",
+            description: "Description",
+            descriptionPlaceholder: "Describe the support request...",
+            type: "Type",
+            priority: "Priority",
+            attachEvidence: "Attach evidence",
+            replaceEvidence: "Replace evidence",
+            removeEvidence: "Remove evidence",
+            cancel: "Cancel",
+            creating: "Creating...",
+            create: "Create",
+            noDescription: "No description.",
+            oneEvidence: "1 evidence",
+            manyEvidence: "{count} evidence files",
+            ticketsPanel: "Tickets on board",
+            ticketsPanelGlobalCopy: "Active tickets in the global support workflow.",
+            ticketsPanelPersonalCopy: "Tickets visible in your personal support board.",
+            inProgress: "In progress",
+            inProgressGlobalCopy: "Tickets under handling or review by the support team.",
+            inProgressPersonalCopy: "Your tickets currently under handling or review.",
+            withOwner: "With owner",
+            withOwnerGlobalCopy: "Tickets already assigned to the support team.",
+            withOwnerPersonalCopy: "Your tickets that already have an assigned owner.",
+            completed: "Completed",
+            completedGlobalCopy: "Tickets completed in the support workflow.",
+            completedPersonalCopy: "Your tickets that were already completed in the support workflow.",
+            companyKickerPrefix: "COMPANY",
+            addColumn: "New column",
+            columnNamePlaceholder: "Column name",
+            ticketsLoading: "Loading tickets...",
+            columnsNavigation: "Column navigation",
+            previousColumns: "View previous columns",
+            nextColumns: "View next columns",
+            dragColumnHelp: "Hold and drag to move column {column}",
+            columnKicker: "Column",
+            editColumnName: "Edit column name",
+            oneTicketInStage: "ticket in this stage",
+            manyTicketsInStage: "tickets in this stage",
+            editColumn: "Edit column",
+            removeColumn: "Remove column",
+            untitled: "Untitled",
+            supportStatus: "Support status",
+            supportTypeAria: "Support type",
+            supportPriorityAria: "Support priority",
+            typeLabels: {
+              tarefa: "Task",
+              bug: "Bug",
+              melhoria: "Improvement",
+            },
+            priorityLabels: {
+              high: "High",
+              medium: "Medium",
+              low: "Low",
+            },
+          },
+    [isPt],
+  );
   const pathname = usePathname() || "";
   const { user, loading } = usePermissionAccess();
   const { companies } = useAuth();
@@ -304,9 +521,11 @@ export default function KanbanItPage() {
       (typeof user?.defaultClientSlug === "string" ? user.defaultClientSlug : null) ??
       null;
 
-    const matchedCompany =
-      (preferredSlug ? companies.find((company) => company.slug === preferredSlug) ?? null : null) ??
-      (activeClient && activeClient.slug === preferredSlug ? activeClient : null);
+    const foundCompany = preferredSlug
+      ? companies.find((company) => company.slug === preferredSlug) ?? null
+      : null;
+    const matchedCompany = foundCompany
+      ?? (preferredSlug && activeClient && activeClient.slug === preferredSlug ? activeClient : null);
 
     const companyName = matchedCompany?.name ?? (preferredSlug ? preferredSlug.replace(/[-_]+/g, " ") : null);
     const logoSrc =
@@ -369,35 +588,35 @@ export default function KanbanItPage() {
 
     return [
       {
-        label: "Tickets no painel",
+        label: ui.ticketsPanel,
         value: filteredSuportes.length,
         copy: hasGlobalScope
-          ? "Tickets ativos no fluxo global de atendimento."
-          : "Tickets visiveis no seu painel pessoal de atendimento.",
+          ? ui.ticketsPanelGlobalCopy
+          : ui.ticketsPanelPersonalCopy,
       },
       {
-        label: "Em andamento",
+        label: ui.inProgress,
         value: inProgressCount,
         copy: hasGlobalScope
-          ? "Tickets em atendimento ou revisao pelo time de suporte."
-          : "Seus tickets em atendimento ou revisao no momento.",
+          ? ui.inProgressGlobalCopy
+          : ui.inProgressPersonalCopy,
       },
       {
-        label: "Com responsavel",
+        label: ui.withOwner,
         value: assignedCount,
         copy: hasGlobalScope
-          ? "Tickets ja vinculados ao time de suporte."
-          : "Seus tickets que ja possuem responsavel definido.",
+          ? ui.withOwnerGlobalCopy
+          : ui.withOwnerPersonalCopy,
       },
       {
-        label: "Concluidos",
+        label: ui.completed,
         value: completedCount,
         copy: hasGlobalScope
-          ? "Tickets finalizados dentro do fluxo de suporte."
-          : "Tickets seus que ja foram finalizados no fluxo de suporte.",
+          ? ui.completedGlobalCopy
+          : ui.completedPersonalCopy,
       },
     ];
-  }, [filteredSuportes, hasGlobalScope]);
+  }, [filteredSuportes, hasGlobalScope, ui]);
 
   const updateColumnsRailState = useCallback(() => {
     const rail = columnsRailRef.current;
@@ -423,17 +642,17 @@ export default function KanbanItPage() {
       const json = (await res.json().catch(() => ({}))) as { items?: SuporteItem[]; error?: string };
       if (!res.ok) {
         setSuportes([]);
-        setError(json?.error || "Erro ao carregar suportes");
+        setError(json?.error || ui.loadError);
         return;
       }
       setSuportes(Array.isArray(json.items) ? json.items : []);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao carregar suportes";
+      const msg = err instanceof Error ? err.message : ui.loadError;
       setError(msg);
     } finally {
       setLoadingSuportes(false);
     }
-  }, []);
+  }, [ui.loadError]);
 
   useEffect(() => {
     loadSuportes();
@@ -483,7 +702,7 @@ export default function KanbanItPage() {
     const currentSuporte = suportes.find((suporte) => suporte.id === suporteId) ?? null;
     if (!currentSuporte) return;
     if (hasGlobalScope && !currentSuporte.assignedToUserId) {
-      setError("Selecione e salve um responsavel antes de mover o ticket.");
+      setError(ui.assignBeforeMove);
       setSelectedSuporte(currentSuporte);
       return;
     }
@@ -502,7 +721,7 @@ export default function KanbanItPage() {
       const json = (await res.json().catch(() => ({}))) as { item?: SuporteItem; error?: string };
       if (!res.ok || !json.item) {
         setSuportes(previous);
-        setError(json?.error || "Falha ao atualizar status");
+        setError(json?.error || ui.updateStatusError);
         return;
       }
       const updatedItem = json.item;
@@ -512,7 +731,7 @@ export default function KanbanItPage() {
       setSelectedSuporte((current) => (current?.id === updatedItem.id ? updatedItem : current));
     } catch {
       setSuportes(previous);
-      setError("Falha ao atualizar status");
+      setError(ui.updateStatusError);
     }
   }
 
@@ -565,7 +784,7 @@ export default function KanbanItPage() {
     const columnItems = grouped[columnKey] ?? [];
 
     if (columnItems.length > 0 && !fallbackColumn) {
-      setError("Crie outra coluna antes de remover esta, para nao perder os tickets.");
+      setError(ui.removeColumnGuard);
       return;
     }
 
@@ -590,7 +809,7 @@ export default function KanbanItPage() {
           });
           const json = (await res.json().catch(() => ({}))) as { item?: SuporteItem; error?: string };
           if (!res.ok || !json.item) {
-            throw new Error(json?.error || "Falha ao mover tickets da coluna");
+            throw new Error(json?.error || ui.moveColumnError);
           }
           return json.item;
         }));
@@ -600,7 +819,7 @@ export default function KanbanItPage() {
         setSelectedSuporte((current) => (current ? movedMap.get(current.id) ?? current : current));
       } catch (err) {
         setSuportes(previous);
-        setError(err instanceof Error ? err.message : "Falha ao mover tickets da coluna");
+        setError(err instanceof Error ? err.message : ui.moveColumnError);
         return;
       }
     }
@@ -619,18 +838,18 @@ export default function KanbanItPage() {
 
     const titleTrimmed = createDraft.title.trim();
     if (!titleTrimmed) {
-      setCreateError("O titulo nao pode ser vazio.");
+      setCreateError(ui.createTitleRequired);
       setCreating(false);
       return;
     }
     if (!hasMeaningfulContent(titleTrimmed)) {
-      setCreateError("O titulo deve conter pelo menos uma letra ou numero valido.");
+      setCreateError(ui.createTitleInvalid);
       setCreating(false);
       return;
     }
     const descTrimmed = createDraft.description.trim();
     if (descTrimmed && !hasMeaningfulContent(descTrimmed)) {
-      setCreateError("A descricao deve conter pelo menos uma letra ou numero valido.");
+      setCreateError(ui.createDescriptionInvalid);
       setCreating(false);
       return;
     }
@@ -650,7 +869,7 @@ export default function KanbanItPage() {
         });
         const uploadJson = (await uploadRes.json().catch(() => ({}))) as { ok?: boolean; key?: string; error?: string };
         if (!uploadRes.ok || !uploadJson.ok || !uploadJson.key) {
-          setCreateError(uploadJson?.error || "Erro ao anexar evidencia");
+          setCreateError(uploadJson?.error || ui.uploadEvidenceError);
           setCreating(false);
           return;
         }
@@ -675,7 +894,7 @@ export default function KanbanItPage() {
       });
       const json = (await res.json().catch(() => ({}))) as { item?: SuporteItem; error?: string };
       if (!res.ok || !json.item) {
-        setCreateError(json?.error || "Erro ao criar suporte");
+        setCreateError(json?.error || ui.createError);
         return;
       }
       setCreateOpen(false);
@@ -684,7 +903,7 @@ export default function KanbanItPage() {
       if (createEvidenceInputRef.current) createEvidenceInputRef.current.value = "";
       setSuportes((current) => [json.item as SuporteItem, ...current]);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao criar suporte";
+      const msg = err instanceof Error ? err.message : ui.createError;
       setCreateError(msg);
     } finally {
       setCreating(false);
@@ -798,11 +1017,11 @@ export default function KanbanItPage() {
   }
 
   if (loading) {
-    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Carregando...</div>;
+    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">{ui.loading}</div>;
   }
 
   if (!canOpenBoard) {
-    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Acesso restrito.</div>;
+    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">{ui.restricted}</div>;
   }
 
   return (
@@ -841,8 +1060,8 @@ export default function KanbanItPage() {
             )}
           </div>
           <div className="min-w-0">
-            {supportBrand.companyName ? <p className="support-board-kicker">EMPRESA {supportBrand.companyName.toUpperCase()}</p> : null}
-            <h1 className="support-board-title">Suporte</h1>
+            {supportBrand.companyName ? <p className="support-board-kicker">{ui.companyKickerPrefix} {supportBrand.companyName.toUpperCase()}</p> : null}
+            <h1 className="support-board-title">{ui.support}</h1>
           </div>
         </div>
 
@@ -850,10 +1069,10 @@ export default function KanbanItPage() {
           <div className="support-board-hero-copy">
             <p className="support-board-subtitle">
               {hasGlobalScope
-                ? "Acompanhe os tickets do atendimento tecnico em um fluxo direto."
+                ? ui.heroSubtitleGlobal
                 : supportBrand.companyName
-                  ? `Acompanhe os tickets visiveis de ${supportBrand.companyName} no fluxo de suporte.`
-                  : "Acompanhe apenas os tickets criados por voce no fluxo de suporte."}
+                  ? ui.heroSubtitleCompany.replace("{company}", supportBrand.companyName)
+                  : ui.heroSubtitlePersonal}
             </p>
           </div>
 
@@ -863,10 +1082,10 @@ export default function KanbanItPage() {
                 type="button"
                 onClick={() => setCreateOpen(true)}
                 className="support-board-accent-btn"
-                aria-label="Criar suporte"
+                aria-label={ui.createSupport}
               >
                 <FiPlus size={18} />
-                Novo suporte
+                {ui.newSupport}
               </button>
             </div>
           ) : null}
@@ -886,14 +1105,14 @@ export default function KanbanItPage() {
       <section className="support-board-workspace">
         <div className="support-board-workspace-head">
           <div className="support-board-workspace-copy">
-            <p className="support-board-section-kicker">Painel de atendimento</p>
+            <p className="support-board-section-kicker">{ui.boardKicker}</p>
             <h2 className="support-board-section-title">
-              {hasGlobalScope ? "Kanban de suporte" : "Seus tickets"}
+              {hasGlobalScope ? ui.boardTitleGlobal : ui.boardTitlePersonal}
             </h2>
             <p className="support-board-section-description">
               {hasGlobalScope
-                ? "Organize colunas, acompanhe responsaveis e abra o detalhamento do ticket."
-                : "Acompanhe seus tickets, responda e consulte o historico."}
+                ? ui.boardSubtitleGlobal
+                : ui.boardSubtitlePersonal}
             </p>
           </div>
 
@@ -908,7 +1127,7 @@ export default function KanbanItPage() {
                       className="support-board-toolbar-btn"
                     >
                       <FiPlus size={13} />
-                      Nova coluna
+                      {ui.addColumn}
                     </button>
                   )}
                   {addingColumn && (
@@ -929,7 +1148,7 @@ export default function KanbanItPage() {
                         }
                       }}
                       className="support-board-column-input"
-                      placeholder="Nome da coluna"
+                      placeholder={ui.columnNamePlaceholder}
                     />
                   )}
                 </>
@@ -937,7 +1156,7 @@ export default function KanbanItPage() {
             </div>
 
             <div className="support-board-search-card">
-              <div className="support-board-search-label">Busca</div>
+              <div className="support-board-search-label">{ui.searchLabel}</div>
               <div className="support-board-search-field">
                 <FiSearch size={15} className="support-board-search-icon" />
                 <input
@@ -945,38 +1164,38 @@ export default function KanbanItPage() {
                   value={ticketSearch}
                   onChange={(event) => setTicketSearch(event.target.value)}
                   className="support-board-search-input"
-                  placeholder="ID ou codigo do ticket"
-                  aria-label="Buscar ticket por ID"
+                  placeholder={ui.searchPlaceholder}
+                  aria-label={ui.searchAria}
                 />
               </div>
-              <div className="support-board-meta-row" aria-label="Informacoes do painel">
+              <div className="support-board-meta-row" aria-label={ui.boardMetaAria}>
                 <span className="support-board-meta-item">
-                  {columns.length} {columns.length === 1 ? "coluna ativa" : "colunas ativas"}
+                  {columns.length} {columns.length === 1 ? ui.oneColumn : ui.manyColumns}
                 </span>
-                {dragging ? <span className="support-board-meta-item support-board-meta-item-accent">Movimentacao em andamento</span> : null}
+                {dragging ? <span className="support-board-meta-item support-board-meta-item-accent">{ui.movementInProgress}</span> : null}
               </div>
             </div>
           </div>
         </div>
 
         {error ? <p className="support-board-alert support-board-alert-error">{error}</p> : null}
-        {loadingSuportes ? <p className="support-board-alert">Carregando tickets...</p> : null}
+        {loadingSuportes ? <p className="support-board-alert">{ui.ticketsLoading}</p> : null}
         {ticketSearch.trim() && filteredSuportes.length === 0 && !loadingSuportes ? (
           <div className="support-board-no-results">
             <FiSearch size={18} className="support-board-no-results-icon" />
-            <span>Nenhum ticket encontrado para <strong>&ldquo;{ticketSearch.trim()}&rdquo;</strong>. Verifique o ID ou codigo e tente novamente.</span>
+            <span>{ui.noResults} <strong>&ldquo;{ticketSearch.trim()}&rdquo;</strong>. {ui.noResultsHint}</span>
           </div>
         ) : null}
 
         <div className="support-board-columns-stage">
-          <div className="support-board-carousel-controls support-board-carousel-controls-side" aria-label="Navegacao das colunas">
+          <div className="support-board-carousel-controls support-board-carousel-controls-side" aria-label={ui.columnsNavigation}>
             <button
               type="button"
               className="support-board-carousel-btn support-board-carousel-btn-side support-board-carousel-btn-prev"
               onClick={() => scrollColumnsRail("prev")}
               disabled={!canScrollColumnsPrev}
-              aria-label="Ver colunas anteriores"
-              title="Ver colunas anteriores"
+              aria-label={ui.previousColumns}
+              title={ui.previousColumns}
             >
               <FiChevronLeft size={16} />
             </button>
@@ -985,8 +1204,8 @@ export default function KanbanItPage() {
               className="support-board-carousel-btn support-board-carousel-btn-side support-board-carousel-btn-next"
               onClick={() => scrollColumnsRail("next")}
               disabled={!canScrollColumnsNext}
-              aria-label="Ver proximas colunas"
-              title="Ver proximas colunas"
+              aria-label={ui.nextColumns}
+              title={ui.nextColumns}
             >
               <FiChevronRight size={16} />
             </button>
@@ -1044,10 +1263,10 @@ export default function KanbanItPage() {
                       handleColumnDragStart(column.key);
                     } : undefined}
                     onDragEnd={isPrivileged ? handleColumnDragEnd : undefined}
-                    title={isPrivileged ? `Segure e arraste para mover a coluna ${column.label}` : undefined}
+                    title={isPrivileged ? ui.dragColumnHelp.replace("{column}", column.label) : undefined}
                   >
                     <div className="support-board-column-head-copy">
-                      <p className="support-board-column-kicker">Coluna</p>
+                      <p className="support-board-column-kicker">{ui.columnKicker}</p>
                       {editingColumnKey === column.key ? (
                         <input
                           value={editingColumnLabel}
@@ -1064,9 +1283,9 @@ export default function KanbanItPage() {
                               cancelEditColumn();
                             }
                           }}
-                          placeholder="Nome da coluna"
-                          title="Editar nome da coluna"
-                          aria-label="Editar nome da coluna"
+                          placeholder={ui.columnNamePlaceholder}
+                          title={ui.editColumnName}
+                          aria-label={ui.editColumnName}
                           className="support-board-column-title-input"
                         />
                       ) : isPrivileged ? (
@@ -1082,7 +1301,7 @@ export default function KanbanItPage() {
                         <span className="support-board-column-title support-board-column-title-static">{column.label}</span>
                       )}
                       <p className="support-board-column-description">
-                        {columnItems.length} {columnItems.length === 1 ? "ticket nesta etapa" : "tickets nesta etapa"}
+                        {columnItems.length} {columnItems.length === 1 ? ui.oneTicketInStage : ui.manyTicketsInStage}
                       </p>
                     </div>
                     <div className="support-board-column-head-side">
@@ -1095,8 +1314,8 @@ export default function KanbanItPage() {
                         type="button"
                         className="support-board-column-tool"
                         onClick={() => startEditColumn(column.key, column.label)}
-                        aria-label={`Editar coluna ${column.label}`}
-                        title="Editar coluna"
+                        aria-label={`${ui.editColumn} ${column.label}`}
+                        title={ui.editColumn}
                       >
                         <FiEdit2 size={13} />
                       </button>
@@ -1104,8 +1323,8 @@ export default function KanbanItPage() {
                         type="button"
                         className="support-board-column-tool support-board-column-tool-danger"
                         onClick={() => handleRemoveColumn(column.key)}
-                        aria-label={`Remover coluna ${column.label}`}
-                        title="Remover coluna"
+                        aria-label={`${ui.removeColumn} ${column.label}`}
+                        title={ui.removeColumn}
                       >
                         <FiTrash2 size={13} />
                       </button>
@@ -1116,7 +1335,7 @@ export default function KanbanItPage() {
                 <div className="support-board-column-list">
                   {columnItems.map((suporte) => {
                     const creatorLabel = suporte.createdByName || suporte.createdByEmail || suporte.createdBy || "-";
-                    const assigneeLabel = suporte.assignedToName || suporte.assignedToEmail || "Nao definido";
+                    const assigneeLabel = suporte.assignedToName || suporte.assignedToEmail || ui.notDefined;
                     const canManageSuporte = isPrivileged;
                     const parsedDescription = parseSupportDescription(suporte.description);
 
@@ -1147,17 +1366,17 @@ export default function KanbanItPage() {
                             </span>
                           </div>
 
-                          <p className="support-board-card-title">{suporte.title || "Sem titulo"}</p>
+                          <p className="support-board-card-title">{suporte.title || ui.untitled}</p>
                           <p className="support-board-card-description">
-                            {shortText(parsedDescription.text, 108)}
+                            {shortText(parsedDescription.text, 108, ui.noDescription)}
                           </p>
                           {parsedDescription.evidence.length > 0 ? (
                             <div className="support-board-card-evidence">
                               <FiPaperclip size={12} />
                               <span>
                                 {parsedDescription.evidence.length === 1
-                                  ? "1 evidencia"
-                                  : `${parsedDescription.evidence.length} evidencias`}
+                                  ? ui.oneEvidence
+                                  : ui.manyEvidence.replace("{count}", String(parsedDescription.evidence.length))}
                               </span>
                             </div>
                           ) : null}
@@ -1168,42 +1387,42 @@ export default function KanbanItPage() {
                               data-kind="type"
                               data-value={(suporte.type ?? "tarefa").toLowerCase()}
                             >
-                              {getSupportTypeLabel(suporte.type)}
+                              {getSupportTypeLabel(suporte.type, ui.typeLabels)}
                             </span>
                             <span
                               className="support-board-badge"
                               data-kind="priority"
                               data-value={(suporte.priority ?? "medium").toLowerCase()}
                             >
-                              {getSupportPriorityLabel(suporte.priority)}
+                              {getSupportPriorityLabel(suporte.priority, ui.priorityLabels)}
                             </span>
                           </div>
 
                           <div className="support-board-kv-grid">
                             <div className="support-board-kv">
-                              <span>Criador</span>
+                              <span>{ui.creator}</span>
                               <strong title={creatorLabel}>{creatorLabel}</strong>
                             </div>
                             <div className="support-board-kv">
-                              <span>Responsavel</span>
+                              <span>{ui.assignee}</span>
                               <strong title={assigneeLabel}>{assigneeLabel}</strong>
                             </div>
                           </div>
 
                           <div className="support-board-card-footer">
-                            <span>Criado {formatDate(suporte.createdAt)}</span>
-                            <span>Atualizado {formatDate(suporte.updatedAt)}</span>
+                            <span>{ui.createdAt} {formatDate(suporte.createdAt, locale)}</span>
+                            <span>{ui.updatedAt} {formatDate(suporte.updatedAt, locale)}</span>
                           </div>
                         </button>
 
                         <div className="support-board-card-controls">
                           <label className="support-board-card-control" htmlFor={`status-${suporte.id}`}>
-                            <span className="support-board-card-control-label">Mover para</span>
+                            <span className="support-board-card-control-label">{ui.moveTo}</span>
                             {canManageSuporte ? (
                               <select
                                 id={`status-${suporte.id}`}
-                                aria-label="Status do suporte"
-                                title="Status do suporte"
+                                aria-label={ui.supportStatus}
+                                title={ui.supportStatus}
                                 className="support-board-card-select"
                                 value={normalizeKanbanStatus(suporte.status)}
                                 onChange={(e) => updateStatus(suporte.id, e.target.value as SuporteStatus)}
@@ -1217,8 +1436,8 @@ export default function KanbanItPage() {
                             ) : (
                               <select
                                 id={`status-${suporte.id}`}
-                                aria-label="Status do suporte"
-                                title="Status do suporte"
+                                aria-label={ui.supportStatus}
+                                title={ui.supportStatus}
                                 className="support-board-card-select"
                                 value={normalizeKanbanStatus(suporte.status)}
                                 disabled
@@ -1233,7 +1452,7 @@ export default function KanbanItPage() {
 
                           {!canManageSuporte ? (
                             <p className="support-board-card-warning">
-                              Apenas o time de suporte pode alterar status e responsavel.
+                              {ui.supportOnlyChange}
                             </p>
                           ) : null}
                         </div>
@@ -1243,9 +1462,9 @@ export default function KanbanItPage() {
 
                   {columnItems.length === 0 ? (
                     <div className="support-board-column-empty">
-                      <p className="support-board-column-empty-title">Sem tickets nesta etapa</p>
+                      <p className="support-board-column-empty-title">{ui.emptyColumnTitle}</p>
                       <p className="support-board-column-empty-copy">
-                        Novos tickets aparecerao aqui quando entrarem neste fluxo.
+                        {ui.emptyColumnCopy}
                       </p>
                     </div>
                   ) : null}
@@ -1290,12 +1509,12 @@ export default function KanbanItPage() {
                   <FiLifeBuoy size={18} />
                 </span>
                 <div className="support-create-modal-heading-copy">
-                  <p className="support-create-modal-kicker">SUPORTE</p>
+                  <p className="support-create-modal-kicker">{ui.createModalKicker}</p>
                   <h2 id="support-create-modal-title" className="support-create-modal-title">
-                    Novo suporte
+                    {ui.createModalTitle}
                   </h2>
                   <p className="support-create-modal-subtitle">
-                    Abra um ticket com titulo, descricao, tipo e prioridade.
+                    {ui.createModalSubtitle}
                   </p>
                 </div>
               </div>
@@ -1303,8 +1522,8 @@ export default function KanbanItPage() {
                 type="button"
                 onClick={closeCreateModal}
                 className="support-create-modal-close"
-                aria-label="Fechar modal de novo suporte"
-                title="Fechar"
+                aria-label={ui.closeCreateModal}
+                title={ui.close}
               >
                 <FiX size={16} />
               </button>
@@ -1313,23 +1532,23 @@ export default function KanbanItPage() {
             <div className="support-create-modal-body">
               <div className="support-create-modal-form">
                 <label className="support-create-modal-field" htmlFor="kanban-create-suporte-title">
-                  <span className="support-create-modal-label">Titulo</span>
+                  <span className="support-create-modal-label">{ui.title}</span>
                   <input
                     id="kanban-create-suporte-title"
                     className="support-create-modal-input"
-                    placeholder="Digite o titulo do suporte"
+                    placeholder={ui.titlePlaceholder}
                     value={createDraft.title}
                     onChange={(e) => setCreateDraft((prev) => ({ ...prev, title: e.target.value }))}
                   />
                 </label>
 
                 <label className="support-create-modal-field" htmlFor="kanban-create-suporte-description">
-                  <span className="support-create-modal-label">Descricao</span>
+                  <span className="support-create-modal-label">{ui.description}</span>
                   <textarea
                     id="kanban-create-suporte-description"
                     rows={5}
                     className="support-create-modal-textarea"
-                    placeholder="Descreva o suporte..."
+                    placeholder={ui.descriptionPlaceholder}
                     value={createDraft.description}
                     onChange={(e) => setCreateDraft((prev) => ({ ...prev, description: e.target.value }))}
                   />
@@ -1337,36 +1556,36 @@ export default function KanbanItPage() {
 
                 <div className="support-create-modal-select-grid">
                   <label className="support-create-modal-field" htmlFor="kanban-create-suporte-type">
-                    <span className="support-create-modal-label">Tipo</span>
+                    <span className="support-create-modal-label">{ui.type}</span>
                     <select
                       id="kanban-create-suporte-type"
-                      aria-label="Tipo do suporte"
-                      title="Tipo do suporte"
+                      aria-label={ui.supportTypeAria}
+                      title={ui.supportTypeAria}
                       className="support-create-modal-select"
                       value={createDraft.type}
                       onChange={(e) => setCreateDraft((prev) => ({ ...prev, type: e.target.value }))}
                     >
                       {TYPE_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
-                          {opt.label}
+                          {ui.typeLabels[(opt.value ?? "tarefa").toLowerCase()] ?? ui.typeLabels.tarefa}
                         </option>
                       ))}
                     </select>
                   </label>
 
                   <label className="support-create-modal-field" htmlFor="kanban-create-suporte-priority">
-                    <span className="support-create-modal-label">Prioridade</span>
+                    <span className="support-create-modal-label">{ui.priority}</span>
                     <select
                       id="kanban-create-suporte-priority"
-                      aria-label="Prioridade do suporte"
-                      title="Prioridade do suporte"
+                      aria-label={ui.supportPriorityAria}
+                      title={ui.supportPriorityAria}
                       className="support-create-modal-select"
                       value={createDraft.priority}
                       onChange={(e) => setCreateDraft((prev) => ({ ...prev, priority: e.target.value }))}
                     >
                       {PRIORITY_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
-                          {opt.label}
+                          {ui.priorityLabels[(opt.value ?? "medium").toLowerCase()] ?? ui.priorityLabels.medium}
                         </option>
                       ))}
                     </select>
@@ -1382,6 +1601,8 @@ export default function KanbanItPage() {
                 ref={createEvidenceInputRef}
                 type="file"
                 className="sr-only"
+                aria-label={ui.attachEvidence}
+                title={ui.attachEvidence}
                 accept="image/*,.pdf,.txt,.log,.json,.zip,.csv,.xlsx,.doc,.docx"
                 onChange={(event) => setCreateEvidenceFile(event.target.files?.[0] ?? null)}
               />
@@ -1390,8 +1611,8 @@ export default function KanbanItPage() {
                   type="button"
                   onClick={() => createEvidenceInputRef.current?.click()}
                   className="support-create-modal-attach"
-                  aria-label={createEvidenceFile ? "Trocar evidencia" : "Anexar evidencia"}
-                  title={createEvidenceFile ? "Trocar evidencia" : "Anexar evidencia"}
+                  aria-label={createEvidenceFile ? ui.replaceEvidence : ui.attachEvidence}
+                  title={createEvidenceFile ? ui.replaceEvidence : ui.attachEvidence}
                 >
                   <FiPaperclip size={16} />
                 </button>
@@ -1407,8 +1628,8 @@ export default function KanbanItPage() {
                         setCreateEvidenceFile(null);
                         if (createEvidenceInputRef.current) createEvidenceInputRef.current.value = "";
                       }}
-                      aria-label="Remover evidencia"
-                      title="Remover evidencia"
+                      aria-label={ui.removeEvidence}
+                      title={ui.removeEvidence}
                     >
                       <FiX size={12} />
                     </button>
@@ -1420,7 +1641,7 @@ export default function KanbanItPage() {
                 onClick={closeCreateModal}
                 className="support-create-modal-secondary"
               >
-                Cancelar
+                {ui.cancel}
               </button>
               <button
                 type="button"
@@ -1429,7 +1650,7 @@ export default function KanbanItPage() {
                 className="support-create-modal-primary"
               >
                 <FiPlus size={14} />
-                {creating ? "Criando..." : "Criar"}
+                {creating ? ui.creating : ui.create}
               </button>
             </div>
           </div>

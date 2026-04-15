@@ -13,7 +13,7 @@ export function ManualStatsForm({ slug, initialStats }: ManualStatsFormProps) {
   const { user, loading: authLoading } = useAuthUser();
   const router = useRouter();
   const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
-  const canEdit = Boolean(user?.isGlobalAdmin || role === "admin" || role === "company");
+  const canEdit = Boolean(user?.isGlobalAdmin || role === "leader_tc" || role === "technical_support" || role === "empresa");
   const [stats, setStats] = useState(initialStats);
   const [saving, setSaving] = useState(false);
 

@@ -1,4 +1,4 @@
-{
+﻿{
   "items": [
     {
       "id": "req_sample_email",
@@ -16,9 +16,9 @@
     },
     {
       "id": "0589be4e-89c2-4d49-b72d-5123f2ae4137",
-      "userId": "usr_user_griaule_test",
-      "userName": "user@griaule.test",
-      "userEmail": "user@griaule.test",
+      "userId": "usr_user_demo_test",
+      "userName": "user@demo.test",
+      "userEmail": "user@demo.test",
       "companyId": "",
       "companyName": "",
       "type": "COMPANY_CHANGE",
@@ -27,14 +27,14 @@
       },
       "status": "APPROVED",
       "createdAt": "2026-02-03T21:55:21.299Z",
-      "reviewedBy": "usr_admin_griaule_test",
+      "reviewedBy": "usr_admin_demo_test",
       "reviewedAt": "2026-02-03T22:13:26.310Z"
     },
     {
       "id": "b007dfcf-af00-479d-9471-8dd5bf46827f",
-      "userId": "usr_user_griaule_test",
-      "userName": "user@griaule.test",
-      "userEmail": "user@griaule.test",
+      "userId": "usr_user_demo_test",
+      "userName": "user@demo.test",
+      "userEmail": "user@demo.test",
       "companyId": "",
       "companyName": "",
       "type": "COMPANY_CHANGE",

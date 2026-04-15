@@ -35,12 +35,12 @@ function errorResponse(status: number, code: string, message: string) {
 export async function GET(req: Request) {
   const access = await getAccessContext(req);
   if (!access) {
-    return errorResponse(401, "NO_SESSION", "Nao autorizado");
+    return errorResponse(401, "NO_SESSION", "Não autorizado");
   }
 
   const user = await getLocalUserById(access.userId);
   if (!user) {
-    return errorResponse(401, "USER_NOT_FOUND", "Usuario nao encontrado");
+    return errorResponse(401, "USER_NOT_FOUND", "Usuário não encontrado");
   }
 
   const [links, companies] = await Promise.all([
@@ -208,7 +208,7 @@ export async function PATCH(req: Request) {
   try {
     const access = await getAccessContext(req);
     if (!access) {
-      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
     const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
@@ -261,7 +261,7 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Nome invalido" }, { status: 400 });
     }
     if (hasEmail && !email) {
-      return NextResponse.json({ error: "E-mail obrigatorio" }, { status: 400 });
+      return NextResponse.json({ error: "E-mail obrigatório" }, { status: 400 });
     }
     if (hasFullName && !fullName) {
       return NextResponse.json({ error: "Nome completo invalido" }, { status: 400 });
@@ -270,12 +270,12 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Avatar invalido" }, { status: 400 });
     }
     if (!name && !email && !hasUser && !hasPhone && !hasFullName && !hasAvatarKey && !hasAvatarUrl && !hasJobTitle && !hasLinkedinUrl) {
-      return NextResponse.json({ error: "Nenhuma alteracao informada" }, { status: 400 });
+      return NextResponse.json({ error: "Nenhuma alteração informada" }, { status: 400 });
     }
 
     const user = await getLocalUserById(access.userId);
     if (!user) {
-      return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
     }
 
     const previousAvatarKey = extractObjectKey(user.avatar_url);
@@ -283,13 +283,13 @@ export async function PATCH(req: Request) {
     if (email && email !== user.email) {
       const existing = await findLocalUserByEmailOrId(email);
       if (existing && existing.id !== user.id) {
-        return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+        return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
       }
     }
     if (login && login !== (user.user ?? user.email)) {
       const users = await listLocalUsers();
       if (users.some((item) => item.id !== user.id && (item.user ?? item.email) === login)) {
-        return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+        return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
       }
     }
 
@@ -310,16 +310,16 @@ export async function PATCH(req: Request) {
     } catch (error) {
       const code = error && typeof error === "object" ? (error as { code?: string }).code : null;
       if (code === "DUPLICATE_EMAIL") {
-        return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+        return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
       }
       if (code === "DUPLICATE_USER") {
-        return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+        return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
       }
       throw error;
     }
 
     if (!updated) {
-      return NextResponse.json({ error: "Nao foi possivel atualizar" }, { status: 500 });
+      return NextResponse.json({ error: "Não foi possível atualizar" }, { status: 500 });
     }
 
     addAuditLogSafe({
@@ -385,7 +385,7 @@ export async function PATCH(req: Request) {
       { status: 200 },
     );
   } catch (error) {
-    const message = error instanceof Error && error.message.trim() ? error.message.trim() : "Nao foi possivel atualizar os dados";
+    const message = error instanceof Error && error.message.trim() ? error.message.trim() : "Não foi possível atualizar os dados";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -394,7 +394,7 @@ export async function DELETE(req: Request) {
   try {
     const access = await getAccessContext(req);
     if (!access) {
-      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
     const normalizedRole = normalizeLegacyRole(access.role);
@@ -405,12 +405,12 @@ export async function DELETE(req: Request) {
       normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
       normalizedCompanyRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
     if (!canDeleteDirectly) {
-      return NextResponse.json({ error: "Somente lider TC ou suporte tecnico podem deletar o perfil diretamente" }, { status: 403 });
+      return NextResponse.json({ error: "Somente lider TC ou suporte técnico podem deletar o perfil diretamente" }, { status: 403 });
     }
 
     const user = await getLocalUserById(access.userId);
     if (!user) {
-      return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
     }
 
     const updated = await updateLocalUser(user.id, {
@@ -419,12 +419,12 @@ export async function DELETE(req: Request) {
     });
 
     if (!updated) {
-      return NextResponse.json({ error: "Nao foi possivel deletar o usuario" }, { status: 500 });
+      return NextResponse.json({ error: "Não foi possível deletar o usuário" }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {
-    const message = error instanceof Error && error.message.trim() ? error.message.trim() : "Nao foi possivel deletar o usuario";
+    const message = error instanceof Error && error.message.trim() ? error.message.trim() : "Não foi possível deletar o usuário";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

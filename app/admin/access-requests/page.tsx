@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./AccessRequests.module.css";
@@ -13,6 +15,7 @@ import type {
   AccessRequestAdjustmentField,
   AccessRequestAdjustmentRound,
   AccessRequestSnapshot,
+  AccessType,
 } from "@/lib/accessRequestMessage";
 import { parseAccessRequestMessage } from "@/lib/accessRequestMessage";
 import {
@@ -73,7 +76,7 @@ type UserLoginCandidate = {
 type AccessRequestComment = {
   id: string;
   requestId: string;
-  authorRole: "admin" | "requester";
+  authorRole: "leader_tc" | "requester";
   authorName: string;
   authorEmail?: string | null;
   body: string;
@@ -118,7 +121,7 @@ function slugifyUsernamePart(value: string) {
 }
 
 function buildUniqueUsername(source: string, existingLogins: string[], currentValue?: string | null) {
-  const base = slugifyUsernamePart(source) || "usuario";
+  const base = slugifyUsernamePart(source) || "usuário";
   const current = (currentValue ?? "").trim().toLowerCase();
   const taken = new Set(
     existingLogins.map((item) => item.trim().toLowerCase()).filter((item) => item && item !== current),
@@ -140,7 +143,7 @@ async function fetchWithToken(url: string, init?: RequestInit) {
   return fetch(url, { ...init, headers, credentials: "include", cache: "no-store" });
 }
 
-function toAcceptAccessType(label: AccessTypeLabel): "admin" | "company" | "user" | "global" {
+function toAcceptAccessType(label: AccessTypeLabel): AccessType {
   return toInternalAccessType(normalizeRequestProfileType(label) ?? "company_user");
 }
 
@@ -165,9 +168,9 @@ function statusBadgeClass(status: string) {
 }
 
 function accessTypeBadgeClass(accessType: AccessTypeLabel) {
-  if (accessType === "Suporte Tecnico") return "border border-violet-300 bg-violet-100 text-violet-800";
+  if (accessType === "Suporte Técnico") return "border border-violet-300 bg-violet-100 text-violet-800";
   if (accessType === "Lider TC") return "border border-rose-300 bg-rose-100 text-rose-800";
-  if (accessType === "Usuario da empresa") return "border border-amber-300 bg-amber-100 text-amber-800";
+  if (accessType === "Usuário da empresa") return "border border-amber-300 bg-amber-100 text-amber-800";
   return "border border-slate-300 bg-slate-100 text-slate-800";
 }
 
@@ -175,7 +178,7 @@ function formatDateTime(value: string) {
   return new Date(value).toLocaleString("pt-BR");
 }
 
-function textOrFallback(value: string | null | undefined, fallback = "Nao informado") {
+function textOrFallback(value: string | null | undefined, fallback = "Não informado") {
   return value && value.trim() ? value : fallback;
 }
 
@@ -183,13 +186,13 @@ function adjustmentFieldLabel(field: AccessRequestAdjustmentEntry["field"], fall
   if (field === "profileType") return "Perfil";
   if (field === "company") return "Empresa";
   if (field === "fullName") return "Nome completo";
-  if (field === "username") return "Usuario";
+  if (field === "username") return "Usuário";
   if (field === "email") return "E-mail";
   if (field === "phone") return "Telefone";
   if (field === "jobRole") return "Cargo";
-  if (field === "title") return "Titulo";
-  if (field === "description") return "Descricao";
-  if (field === "notes") return "Observacoes";
+  if (field === "title") return "Título";
+  if (field === "description") return "Descrição";
+  if (field === "notes") return "Observações";
   if (field === "password") return "Senha";
   return fallback || "Campo";
 }
@@ -217,26 +220,26 @@ const BASE_ADJUSTMENT_FIELD_OPTIONS: AdjustmentFieldOption[] = [
   { field: "profileType", label: "Perfil", hint: "Perfil ou tipo de acesso" },
   { field: "company", label: "Empresa", hint: "Empresa vinculada ou selecionada" },
   { field: "fullName", label: "Nome completo", hint: "Nome principal do solicitante" },
-  { field: "username", label: "Usuario sugerido", hint: "Login/usuario sugerido" },
-  { field: "email", label: "E-mail", hint: "Endereco de e-mail" },
+  { field: "username", label: "Usuário sugerido", hint: "Login/usuário sugerido" },
+  { field: "email", label: "E-mail", hint: "Endereço de e-mail" },
   { field: "phone", label: "Telefone", hint: "Telefone de contato" },
-  { field: "jobRole", label: "Cargo", hint: "Cargo ou funcao" },
-  { field: "title", label: "Titulo", hint: "Titulo da solicitacao" },
-  { field: "description", label: "Descricao", hint: "Descricao detalhada" },
-  { field: "notes", label: "Observacoes", hint: "Observacoes complementares" },
-  { field: "password", label: "Senha", hint: "Senha informada na solicitacao" },
+  { field: "jobRole", label: "Cargo", hint: "Cargo ou função" },
+  { field: "title", label: "Título", hint: "Título da solicitação" },
+  { field: "description", label: "Descrição", hint: "Descrição detalhada" },
+  { field: "notes", label: "Observações", hint: "Observações complementares" },
+  { field: "password", label: "Senha", hint: "Senha informada na solicitação" },
 ];
 
 const COMPANY_ADJUSTMENT_FIELD_OPTIONS: AdjustmentFieldOption[] = [
-  { field: "companyName", label: "Razao social", hint: "Nome da empresa" },
+  { field: "companyName", label: "Razão social", hint: "Nome da empresa" },
   { field: "companyTaxId", label: "CNPJ", hint: "Documento principal da empresa" },
   { field: "companyZip", label: "CEP", hint: "CEP cadastrado" },
-  { field: "companyAddress", label: "Endereco", hint: "Endereco principal" },
+  { field: "companyAddress", label: "Endereço", hint: "Endereço principal" },
   { field: "companyPhone", label: "Telefone da empresa", hint: "Telefone institucional" },
   { field: "companyWebsite", label: "Website", hint: "Website oficial" },
   { field: "companyLinkedin", label: "LinkedIn", hint: "LinkedIn institucional" },
-  { field: "companyDescription", label: "Descricao da empresa", hint: "Descricao institucional" },
-  { field: "companyNotes", label: "Observacoes da empresa", hint: "Observacoes da empresa" },
+  { field: "companyDescription", label: "Descrição da empresa", hint: "Descrição institucional" },
+  { field: "companyNotes", label: "Observações da empresa", hint: "Observações da empresa" },
 ];
 
 const inputBase =
@@ -282,10 +285,10 @@ function AccessRequestsPage() {
       normalizeRequestProfileType(role) ??
       normalizeRequestProfileType(companyRole);
 
-    if (normalizedRole === "technical_support") return "Suporte tecnico";
+    if (normalizedRole === "technical_support") return "Suporte técnico";
     if (normalizedRole === "leader_tc") return "Lider TC";
     if (normalizedRole === "empresa") return "Empresa";
-    if (normalizedRole === "company_user") return "Usuario da empresa";
+    if (normalizedRole === "company_user") return "Usuário da empresa";
     return "Painel institucional";
   }, [user?.companyRole, user?.permissionRole, user?.role]);
 
@@ -363,7 +366,7 @@ function AccessRequestsPage() {
     );
   }, [draft, existingLogins, selected]);
   const draftProfileType =
-    normalizeRequestProfileType((draft?.accessType ?? "Usuario Testing Company") as string) ?? "company_user";
+    normalizeRequestProfileType((draft?.accessType ?? "Usuário Testing Company") as string) ?? "company_user";
   const requiresCompany = requestProfileTypeNeedsCompany(draftProfileType);
   const commentsLocked = selected?.status === "closed" || selected?.status === "rejected";
   const missingRequiredFields =
@@ -413,7 +416,7 @@ function AccessRequestsPage() {
           username: typeof parsedMsg.username === "string" ? parsedMsg.username : null,
           phone: String(parsedMsg.phone ?? ""),
           jobRole: String(parsedMsg.jobRole ?? ""),
-          accessType: (parsedMsg.accessType as AccessTypeLabel) ?? "Usuario Testing Company",
+          accessType: (parsedMsg.accessType as AccessTypeLabel) ?? "Usuário Testing Company",
           clientId: parsedMsg.clientId ?? null,
           company: String(parsedMsg.company ?? ""),
           companyProfile: parsedMsg.companyProfile ?? null,
@@ -514,13 +517,13 @@ function AccessRequestsPage() {
         const res = await fetchWithToken(`/api/admin/access-requests/${id}/comments`);
         const json = (await res.json().catch(() => ({}))) as { items?: AccessRequestComment[]; error?: string };
         if (!res.ok) {
-          setCommentError(json?.error || "Falha ao carregar comentarios");
+          setCommentError(json?.error || "Falha ao carregar comentários");
           setComments([]);
           return;
         }
         setComments(Array.isArray(json.items) ? json.items : []);
       } catch (err) {
-        setCommentError(err instanceof Error ? err.message : "Erro ao carregar comentarios");
+        setCommentError(err instanceof Error ? err.message : "Erro ao carregar comentários");
         setComments([]);
       } finally {
         setCommentLoading(false);
@@ -552,7 +555,7 @@ function AccessRequestsPage() {
     }
   }, [existingLogins, selected]);
 
-  // Reset the touched flag when the user picks a different row so
+  // Reset the touched flag when the user picks a different row só
   // the draft initializes fresh for the new selection.
   useEffect(() => {
     draftTouchedRef.current = false;
@@ -573,7 +576,7 @@ function AccessRequestsPage() {
   async function copy(text: string) {
     try {
       await navigator.clipboard.writeText(text);
-      setSuccessMessage("Conteudo copiado.");
+      setSuccessMessage("Conteúdo copiado.");
     } catch {
       // ignore
     }
@@ -608,12 +611,12 @@ function AccessRequestsPage() {
 
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       if (!res.ok) {
-        setError((json.error as string) || (json.message as string) || "Falha ao salvar analise");
+        setError((json.error as string) || (json.message as string) || "Falha ao salvar análise");
         return;
       }
 
       draftTouchedRef.current = false;
-      setSuccessMessage("Analise salva com sucesso.");
+      setSuccessMessage("Análise salva com sucesso.");
       await load();
       await loadComments(selected.id);
     } finally {
@@ -648,7 +651,7 @@ function AccessRequestsPage() {
       setCommentDraft("");
       setAdjustmentFieldsDraft([]);
       draftTouchedRef.current = false;
-      setSuccessMessage("Solicitacao enviada para ajuste.");
+      setSuccessMessage("Solicitação enviada para ajuste.");
       await load();
       await loadComments(selected.id);
     } finally {
@@ -675,7 +678,7 @@ function AccessRequestsPage() {
           client_id: draft.clientId,
           comment: commentDraft.trim(),
           admin_notes: commentDraft.trim(),
-          access_type: toAcceptAccessType((draft.accessType ?? "Usuario Testing Company") as AccessTypeLabel),
+          access_type: toAcceptAccessType((draft.accessType ?? "Usuário Testing Company") as AccessTypeLabel),
         }),
       });
 
@@ -689,10 +692,10 @@ function AccessRequestsPage() {
         return;
       }
 
-      // Reset before reload so the [selected] effect can set draft from fresh data.
+      // Reset before reload só the [selected] effect can set draft from fresh data.
       draftTouchedRef.current = false;
       setCommentDraft("");
-      setSuccessMessage("Solicitacao aprovada.");
+      setSuccessMessage("Solicitação aprovada.");
       await load();
       await loadComments(selected.id);
     } finally {
@@ -725,10 +728,10 @@ function AccessRequestsPage() {
         return;
       }
 
-      // Reset before reload so the [selected] effect can set draft from fresh data.
+      // Reset before reload só the [selected] effect can set draft from fresh data.
       draftTouchedRef.current = false;
       setCommentDraft("");
-      setSuccessMessage("Solicitacao recusada.");
+      setSuccessMessage("Solicitação recusada.");
       await load();
       await loadComments(selected.id);
     } finally {
@@ -759,9 +762,9 @@ function AccessRequestsPage() {
 
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/72">{viewerProfileLabel}</p>
-                <h1 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Solicitacoes de acesso</h1>
+                <h1 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Solicitações de acesso</h1>
                 <p className="mt-2 max-w-2xl text-sm text-white/84">
-                  Central de triagem para revisar o que foi enviado pelo solicitante, decidir perfil, empresa e concluir a aprovacao.
+                  Central de triagem para revisar o que foi enviado pelo solicitante, decidir perfil, empresa e concluir a aprovação.
                 </p>
               </div>
             </div>
@@ -788,7 +791,7 @@ function AccessRequestsPage() {
 
             <div className="rounded-[22px] border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/72">Em analise</span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/72">Em análise</span>
                 <FiRefreshCw className="h-4 w-4 text-white/72" />
               </div>
               <div className="mt-3 text-3xl font-semibold text-white">{statusCounters.inReview}</div>
@@ -819,7 +822,7 @@ function AccessRequestsPage() {
                 <FiSlash className="h-4 w-4 text-white/72" />
               </div>
               <div className="mt-3 text-3xl font-semibold text-white">{statusCounters.rejected}</div>
-              <p className="mt-1 text-sm text-white/76">Encerradas sem liberacao.</p>
+              <p className="mt-1 text-sm text-white/76">Encerradas sem liberação.</p>
             </div>
           </div>
         </section>
@@ -841,7 +844,7 @@ function AccessRequestsPage() {
             <div className={`border-b border-(--tc-border) p-5 ${styles.asideHeader}`}>
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-[20px] font-semibold tracking-tight text-(--tc-text-primary)">{filteredItems.length} em revisao</h2>
+                  <h2 className="text-[20px] font-semibold tracking-tight text-(--tc-text-primary)">{filteredItems.length} em revisão</h2>
                 </div>
                 <div className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1.5 text-xs font-semibold text-(--tc-text-muted)">
                   {statusCounters.total} total
@@ -887,10 +890,10 @@ function AccessRequestsPage() {
 
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 pr-3 [scrollbar-width:none] sm:p-5 sm:pr-4 [&::-webkit-scrollbar]:hidden">
               {loading ? (
-                <div className={`${sectionMuted} text-sm text-(--tc-text-muted)`}>Carregando solicitacoes...</div>
+                <div className={`${sectionMuted} text-sm text-(--tc-text-muted)`}>Carregando solicitações...</div>
               ) : filteredItems.length === 0 ? (
                 <div className={`${sectionMuted} text-sm text-(--tc-text-muted)`}>
-                  Nenhuma solicitacao encontrada para o filtro atual.
+                  Nenhuma solicitação encontrada para o filtro atual.
                 </div>
               ) : (
                 filteredItems.map((it) => {
@@ -928,7 +931,7 @@ function AccessRequestsPage() {
                               <p className={`wrap-break-word pr-1 font-medium leading-5 ${selectedRow ? "text-white" : "text-(--tc-text-primary)"}`}>{it.company || "Sem empresa"}</p>
                             </div>
                             <div>
-                              <p className={`wrap-break-word pr-1 font-medium leading-5 ${selectedRow ? "text-white/74" : "text-(--tc-text-secondary)"}`}>{it.jobRole || "Cargo nao informado"}</p>
+                              <p className={`wrap-break-word pr-1 font-medium leading-5 ${selectedRow ? "text-white/74" : "text-(--tc-text-secondary)"}`}>{it.jobRole || "Cargo não informado"}</p>
                             </div>
                           </div>
                         </div>
@@ -964,11 +967,11 @@ function AccessRequestsPage() {
                   </div>
                   <div className="mt-5 space-y-2">
                     <h3 className="text-[1.6rem] font-black tracking-[-0.04em] text-(--tc-text-primary)">
-                      Selecione uma solicitacao
+                      Selecione uma solicitação
                     </h3>
                     <p className="max-w-2xl text-sm leading-7 text-(--tc-text-muted)">
                       Escolha um item na coluna da esquerda para abrir a triagem, comparar os dados enviados,
-                      revisar ajustes e decidir a aprovacao com contexto completo.
+                      revisar ajustes e decidir a aprovação com contexto completo.
                     </p>
                   </div>
 
@@ -976,17 +979,17 @@ function AccessRequestsPage() {
                     <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface) px-4 py-4 text-left shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
                       <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Abertas</div>
                       <div className="mt-2 text-3xl font-black text-(--tc-text-primary)">{statusCounters.open}</div>
-                      <div className="mt-2 text-sm text-(--tc-text-muted)">Solicitacoes aguardando primeira leitura.</div>
+                      <div className="mt-2 text-sm text-(--tc-text-muted)">Solicitações aguardando primeira leitura.</div>
                     </div>
                     <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface) px-4 py-4 text-left shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Em analise</div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Em análise</div>
                       <div className="mt-2 text-3xl font-black text-(--tc-text-primary)">{statusCounters.inReview}</div>
-                      <div className="mt-2 text-sm text-(--tc-text-muted)">Fila administrativa ativa para validacao.</div>
+                      <div className="mt-2 text-sm text-(--tc-text-muted)">Fila administrativa ativa para válidação.</div>
                     </div>
                     <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface) px-4 py-4 text-left shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
                       <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Ajustes</div>
                       <div className="mt-2 text-3xl font-black text-(--tc-text-primary)">{statusCounters.inProgress}</div>
-                      <div className="mt-2 text-sm text-(--tc-text-muted)">Retornos esperando correcao do solicitante.</div>
+                      <div className="mt-2 text-sm text-(--tc-text-muted)">Retornos esperando correção do solicitante.</div>
                     </div>
                   </div>
                 </div>
@@ -1009,13 +1012,13 @@ function AccessRequestsPage() {
                           {selected.accessType}
                         </span>
                       </div>
-                      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.32em] text-white/74">Solicitacao selecionada</p>
+                      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.32em] text-white/74">Solicitação selecionada</p>
                       <h2 className="mt-2 text-3xl font-semibold tracking-tight text-white">
                         {selected.fullName || selected.name || "(sem nome)"}
                       </h2>
                       <p className="mt-2 text-base font-medium text-white/82">{selected.email}</p>
                       <p className="mt-3 max-w-2xl text-sm leading-6 text-white/80">
-                        Revise o que o solicitante enviou, confirme o perfil final e conclua a aprovacao sem perder o historico da conversa.
+                        Revise o que o solicitante enviou, confirme o perfil final e conclua a aprovação sem perder o histórico da conversa.
                       </p>
                     </div>
 
@@ -1029,12 +1032,12 @@ function AccessRequestsPage() {
                         <p className="mt-2 text-base font-semibold text-white">{formatDateTime(selected.createdAt)}</p>
                       </div>
                       <div className="rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/74">Usuario sugerido</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/74">Usuário sugerido</p>
                         <p className="mt-2 text-base font-semibold text-white">{draft.username || "A definir"}</p>
                       </div>
                       <div className="rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/74">Ultima interacao</p>
-                        <p className="mt-2 text-base font-semibold text-white">{comments.length > 0 ? formatDateTime(comments[comments.length - 1]!.createdAt) : "Sem historico"}</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/74">Última interação</p>
+                        <p className="mt-2 text-base font-semibold text-white">{comments.length > 0 ? formatDateTime(comments[comments.length - 1]!.createdAt) : "Sem histórico"}</p>
                       </div>
                     </div>
                   </div>
@@ -1046,14 +1049,14 @@ function AccessRequestsPage() {
                       <div>
                         <p className="text-sm font-semibold text-amber-900">Solicitação reenviada com ajustes</p>
                         <p className="mt-1 text-sm text-amber-800">
-                          Ultimo reenvio em{" "}
+                          Último reenvio em{" "}
                           <span suppressHydrationWarning={true}>
                             {selected?.lastAdjustmentAt ? formatDateTime(selected.lastAdjustmentAt) : "-"}
                           </span>
                         </p>
                       </div>
                       <span className="rounded-full border border-amber-300 bg-white px-3 py-1 text-xs font-semibold text-amber-700">
-                        {selectedAdjustmentDiff.length} alteracoes
+                        {selectedAdjustmentDiff.length} alterações
                       </span>
                     </div>
 
@@ -1092,9 +1095,9 @@ function AccessRequestsPage() {
                   <section className={`${sectionMuted} flex h-full flex-col`}>
                     <div className="space-y-2">
                       <p className={labelBase}>Dados enviados pelo solicitante</p>
-                      <h3 className="text-lg font-semibold text-(--tc-text-primary)">Base original da solicitacao</h3>
+                      <h3 className="text-lg font-semibold text-(--tc-text-primary)">Base original da solicitação</h3>
                       <p className="text-sm text-(--tc-text-secondary)">
-                        Estes campos sao somente leitura e mostram exatamente o que foi enviado antes da decisao administrativa.
+                        Estes campos são somente leitura e mostram exatamente o que foi enviado antes da decisão administrativa.
                       </p>
                     </div>
 
@@ -1135,17 +1138,17 @@ function AccessRequestsPage() {
                       </label>
 
                       <label className="block md:col-span-2">
-                        <span className={labelBase}>Titulo da solicitacao</span>
-                        <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal?.title, "Sem titulo")} readOnly />
+                        <span className={labelBase}>Título da solicitação</span>
+                        <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal?.title, "Sem título")} readOnly />
                       </label>
 
                       <label className="block md:col-span-2">
-                        <span className={labelBase}>Descricao detalhada</span>
+                        <span className={labelBase}>Descrição detalhada</span>
                         <textarea className={readOnlyInputBase} rows={5} value={textOrFallback(selectedOriginal?.description)} readOnly />
                       </label>
 
                       <label className="block md:col-span-2">
-                        <span className={labelBase}>Observacoes do solicitante</span>
+                            <span className={labelBase}>Observações do solicitante</span>
                         <textarea className={readOnlyInputBase} rows={4} value={textOrFallback(selectedOriginal?.notes)} readOnly />
                       </label>
                     </div>
@@ -1156,7 +1159,7 @@ function AccessRequestsPage() {
                           <div>
                             <p className={labelBase}>Cadastro institucional original</p>
                             <p className="mt-2 text-sm text-(--tc-text-secondary)">
-                              Dados corporativos enviados junto da solicitacao.
+                              Dados corporativos enviados junto da solicitação.
                             </p>
                           </div>
                           <span className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1 text-xs font-semibold text-(--tc-text-secondary)">
@@ -1165,7 +1168,7 @@ function AccessRequestsPage() {
                         </div>
                         <div className="mt-4 grid gap-4 md:grid-cols-2">
                           <label className="block">
-                            <span className={labelBase}>Razao social</span>
+                            <span className={labelBase}>Razão social</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyName)} readOnly />
                           </label>
                           <label className="block">
@@ -1181,7 +1184,7 @@ function AccessRequestsPage() {
                             <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyPhone)} readOnly />
                           </label>
                           <label className="block md:col-span-2">
-                            <span className={labelBase}>Endereco</span>
+                            <span className={labelBase}>Endereço</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyAddress)} readOnly />
                           </label>
                           <label className="block">
@@ -1193,11 +1196,11 @@ function AccessRequestsPage() {
                             <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyLinkedin)} readOnly />
                           </label>
                           <label className="block md:col-span-2">
-                            <span className={labelBase}>Descricao da empresa</span>
+                            <span className={labelBase}>Descrição da empresa</span>
                             <textarea className={readOnlyInputBase} rows={3} value={textOrFallback(selectedOriginal.companyProfile.companyDescription)} readOnly />
                           </label>
                           <label className="block md:col-span-2">
-                            <span className={labelBase}>Observacoes da empresa</span>
+                            <span className={labelBase}>Observações da empresa</span>
                             <textarea className={readOnlyInputBase} rows={3} value={textOrFallback(selectedOriginal.companyProfile.companyNotes)} readOnly />
                           </label>
                         </div>
@@ -1206,13 +1209,13 @@ function AccessRequestsPage() {
 
                     <div className="mt-4 rounded-[20px] border border-(--tc-border) bg-(--tc-surface) px-4 py-3 text-sm shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                       <div className="flex flex-wrap items-center justify-between gap-3">
-                        <span className="font-semibold text-(--tc-text-primary)">Senha informada na solicitacao</span>
+                        <span className="font-semibold text-(--tc-text-primary)">Senha informada na solicitação</span>
                         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${draft.passwordProvided ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
                           {draft.passwordProvided ? "Preenchida" : "Ausente"}
                         </span>
                       </div>
                       <p className="mt-2 text-xs text-(--tc-text-secondary)">
-                        A aprovacao so pode seguir quando a solicitacao ja tiver uma senha definida pelo solicitante.
+                        A aprovação só pode seguir quando a solicitação já tiver uma senha definida pelo solicitante.
                       </p>
                     </div>
                     </div>
@@ -1221,9 +1224,9 @@ function AccessRequestsPage() {
                   <section className={`${sectionCard} flex h-full flex-col`}>
                     <div className="space-y-2">
                       <p className={labelBase}>Base administrativa e devolvida</p>
-                      <h3 className="text-lg font-semibold text-(--tc-text-primary)">Versao atual da triagem</h3>
+                      <h3 className="text-lg font-semibold text-(--tc-text-primary)">Versão atual da triagem</h3>
                       <p className="text-sm text-(--tc-text-secondary)">
-                        Edite o que precisa ser aprovado e acompanhe a versao que voltou do solicitante para nova analise.
+                        Edite o que precisa ser aprovado e acompanhe a versão que voltou do solicitante para nova análise.
                       </p>
                     </div>
 
@@ -1258,7 +1261,7 @@ function AccessRequestsPage() {
                         <span className={labelBase}>Tipo de perfil</span>
                         <select
                           className={inputBase}
-                          value={(draft.accessType ?? "Usuario Testing Company") as AccessTypeLabel}
+                          value={(draft.accessType ?? "Usuário Testing Company") as AccessTypeLabel}
                           onChange={(e) => {
                             draftTouchedRef.current = true;
                             const v = e.target.value as AccessTypeLabel;
@@ -1270,15 +1273,15 @@ function AccessRequestsPage() {
                           aria-label="Tipo de perfil"
                           title="Tipo de perfil"
                         >
-                          <option value="Usuario Testing Company">Usuario Testing Company</option>
-                          <option value="Usuario da empresa">Usuario da empresa</option>
+                          <option value="Usuário Testing Company">Usuário Testing Company</option>
+                          <option value="Usuário da empresa">Usuário da empresa</option>
                           <option value="Lider TC">Lider TC</option>
-                          <option value="Suporte Tecnico">Suporte Tecnico</option>
+                          <option value="Suporte Técnico">Suporte Técnico</option>
                         </select>
                       </label>
 
                       <label className="block">
-                        <span className={labelBase}>Usuario gerado</span>
+                        <span className={labelBase}>Usuário gerado</span>
                         <input
                           className={inputBase}
                           value={draft.username ?? ""}
@@ -1336,7 +1339,7 @@ function AccessRequestsPage() {
                       </label>
 
                       {requestProfileTypeNeedsCompany(
-                        normalizeRequestProfileType((draft.accessType ?? "Usuario Testing Company") as string) ?? "company_user",
+                        normalizeRequestProfileType((draft.accessType ?? "Usuário Testing Company") as string) ?? "company_user",
                       ) ? (
                         <label className="block">
                           <span className={labelBase}>Empresa final</span>
@@ -1378,7 +1381,7 @@ function AccessRequestsPage() {
                       </label>
 
                       <label className="block md:col-span-2">
-                        <span className={labelBase}>Titulo da solicitacao</span>
+                        <span className={labelBase}>Título da solicitação</span>
                         <input
                           className={inputBase}
                           value={draft.title ?? ""}
@@ -1390,7 +1393,7 @@ function AccessRequestsPage() {
                       </label>
 
                       <label className="block md:col-span-2">
-                        <span className={labelBase}>Descricao final</span>
+                        <span className={labelBase}>Descrição final</span>
                         <textarea
                           className={inputBase}
                           rows={5}
@@ -1403,7 +1406,7 @@ function AccessRequestsPage() {
                       </label>
 
                       <label className="block md:col-span-2">
-                        <span className={labelBase}>Observacao interna</span>
+                            <span className={labelBase}>Observação interna</span>
                         <textarea
                           className={inputBase}
                           rows={4}
@@ -1422,7 +1425,7 @@ function AccessRequestsPage() {
                           <div>
                             <p className={labelBase}>Base devolvida / ajustada</p>
                             <p className="mt-2 text-sm text-(--tc-text-secondary)">
-                              Versao atual dos dados institucionais que seguem junto da solicitacao.
+                              Versão atual dos dados institucionais que seguem junto da solicitação.
                             </p>
                           </div>
                           <span className="rounded-full border border-(--tc-border) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text-secondary)">
@@ -1431,7 +1434,7 @@ function AccessRequestsPage() {
                         </div>
                         <div className="mt-4 grid gap-4 md:grid-cols-2">
                           <label className="block">
-                            <span className={labelBase}>Razao social</span>
+                            <span className={labelBase}>Razão social</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyName)} readOnly />
                           </label>
                           <label className="block">
@@ -1447,7 +1450,7 @@ function AccessRequestsPage() {
                             <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyPhone)} readOnly />
                           </label>
                           <label className="block md:col-span-2">
-                            <span className={labelBase}>Endereco</span>
+                            <span className={labelBase}>Endereço</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyAddress)} readOnly />
                           </label>
                           <label className="block">
@@ -1459,11 +1462,11 @@ function AccessRequestsPage() {
                             <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyLinkedin)} readOnly />
                           </label>
                           <label className="block md:col-span-2">
-                            <span className={labelBase}>Descricao da empresa</span>
+                            <span className={labelBase}>Descrição da empresa</span>
                             <textarea className={readOnlyInputBase} rows={3} value={textOrFallback(selected.companyProfile.companyDescription)} readOnly />
                           </label>
                           <label className="block md:col-span-2">
-                            <span className={labelBase}>Observacoes da empresa</span>
+                            <span className={labelBase}>Observações da empresa</span>
                             <textarea className={readOnlyInputBase} rows={3} value={textOrFallback(selected.companyProfile.companyNotes)} readOnly />
                           </label>
                         </div>
@@ -1475,10 +1478,10 @@ function AccessRequestsPage() {
                 <section className={sectionMuted}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-(--tc-accent)">Historico e observacoes</p>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-(--tc-accent)">Histórico e observações</p>
                       <h3 className="mt-2 text-lg font-semibold text-(--tc-text-primary)">Conversa com o solicitante</h3>
                       <p className="mt-1 text-sm text-(--tc-text-secondary)">
-                        Use esse bloco para pedir complemento ou registrar a decisao tomada.
+                        Use esse bloco para pedir complemento ou registrar a decisão tomada.
                       </p>
                     </div>
                     {commentLoading ? <span className="text-sm font-medium text-(--tc-text-muted)">Carregando...</span> : null}
@@ -1496,7 +1499,7 @@ function AccessRequestsPage() {
                         <div>
                           <p className={labelBase}>Rodadas de ajuste</p>
                           <p className="mt-2 text-sm text-(--tc-text-secondary)">
-                            Historico de devolucoes, retorno do solicitante e campos marcados por rodada.
+                            Histórico de devoluções, retorno do solicitante e campos marcados por rodada.
                           </p>
                         </div>
                         <span className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1 text-xs font-semibold text-(--tc-text-secondary)">
@@ -1540,14 +1543,14 @@ function AccessRequestsPage() {
                   <div className="mt-5 comments-chat">
                     <div className="comments-chat-list" aria-live="polite">
                       {comments.length === 0 ? (
-                        <p className="comments-chat-empty">Nenhuma interacao registrada ainda.</p>
+                        <p className="comments-chat-empty">Nenhuma interação registrada ainda.</p>
                       ) : (
                         comments.map((comment) => {
-                          const mine = comment.authorRole === "admin";
+                          const mine = comment.authorRole === "leader_tc";
                           return (
                             <div key={comment.id} className={`comments-chat-message ${mine ? "mine" : "other"}`}>
                               <div className="comments-chat-author">
-                                {comment.authorRole === "admin" ? "Admin" : "Solicitante"}: {comment.authorName}
+                                {comment.authorRole === "leader_tc" ? "Admin" : "Solicitante"}: {comment.authorName}
                               </div>
                               <div className="comments-chat-bubble whitespace-pre-wrap">{comment.body}</div>
                               <div className="comments-chat-meta">{formatDateTime(comment.createdAt)}</div>
@@ -1561,7 +1564,7 @@ function AccessRequestsPage() {
                       <textarea
                         className={`${inputBase} mt-0 min-h-30 resize-none`}
                         rows={4}
-                        placeholder={commentsLocked ? "Solicitacao finalizada" : "Descreva o ajuste, a observacao interna ou o motivo da decisao"}
+                        placeholder={commentsLocked ? "Solicitação finalizada" : "Descreva o ajuste, a observação interna ou o motivo da decisão"}
                         value={commentDraft}
                         onChange={(e) => setCommentDraft(e.target.value)}
                         disabled={commentsLocked}
@@ -1573,7 +1576,7 @@ function AccessRequestsPage() {
                     <div className="mt-4 rounded-[20px] border border-(--tc-border) bg-white px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                          <p className={labelBase}>Campos para correcao</p>
+                          <p className={labelBase}>Campos para correção</p>
                           <p className="mt-2 text-sm text-(--tc-text-secondary)">
                             Ao solicitar ajuste, marque os campos que o solicitante pode corrigir. Os demais permanecem somente leitura.
                           </p>
@@ -1614,11 +1617,11 @@ function AccessRequestsPage() {
                   <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-(--tc-border) pt-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={`inline-flex rounded-full px-3 py-1.5 text-xs font-semibold ${draft.passwordProvided ? "border border-emerald-300 bg-emerald-100 text-emerald-800" : "border border-rose-300 bg-rose-100 text-rose-800"}`}>
-                        {draft.passwordProvided ? "Senha valida" : "Senha ausente"}
+                        {draft.passwordProvided ? "Senha válida" : "Senha ausente"}
                       </span>
                       {requiresCompany && !draft.clientId ? (
                         <span className="inline-flex rounded-full border border-amber-300 bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-800">
-                          Empresa obrigatoria
+                          Empresa obrigatória
                         </span>
                       ) : null}
                     </div>
@@ -1630,7 +1633,7 @@ function AccessRequestsPage() {
                       disabled={saving || !dirty}
                       className="rounded-full border border-(--tc-primary) bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.28em] text-(--tc-primary) transition hover:-translate-y-0.5 hover:bg-(--tc-primary) hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {saving ? "Salvando..." : dirty ? "Salvar analise" : "Sem alteracoes"}
+                      {saving ? "Salvando..." : dirty ? "Salvar análise" : "Sem alterações"}
                     </button>
 
                     <button
@@ -1645,7 +1648,7 @@ function AccessRequestsPage() {
                     <button
                       type="button"
                       onClick={rejectRequest}
-                      aria-label="Recusar solicitacao"
+                      aria-label="Recusar solicitação"
                       disabled={accepting || !commentDraft.trim()}
                       className="rounded-full border border-rose-400 bg-rose-50 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.28em] text-rose-700 transition hover:-translate-y-0.5 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                     >
@@ -1655,7 +1658,7 @@ function AccessRequestsPage() {
                     <button
                       type="button"
                       onClick={acceptRequest}
-                      aria-label="Aprovar solicitacao"
+                      aria-label="Aprovar solicitação"
                       disabled={acceptDisabled}
                       className="rounded-full bg-(--tc-primary) px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.28em] text-white shadow-[0_14px_30px_rgba(1,24,72,0.2)] transition hover:-translate-y-0.5 hover:bg-[rgba(1,24,72,0.88)] disabled:cursor-not-allowed disabled:opacity-60"
                     >

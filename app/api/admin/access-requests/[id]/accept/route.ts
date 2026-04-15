@@ -70,7 +70,7 @@ function buildUniqueUsername(source: string, takenValues: string[], preferred?: 
     return preferredCandidate;
   }
 
-  const base = slugifyUsernamePart(source) || "usuario";
+  const base = slugifyUsernamePart(source) || "usuário";
   if (!taken.has(base)) return base;
 
   let counter = 2;
@@ -103,7 +103,7 @@ async function prepareAcceptanceMessage(
   const accessType = normalizeAccessType(body.access_type) ?? parsed.accessType ?? toInternalAccessType(profileType);
 
   if (!parsed.passwordHash) {
-    const error = new Error("Solicitacao sem senha informada pelo solicitante") as Error & { code?: string };
+    const error = new Error("Solicitação sem senha informada pelo solicitante") as Error & { code?: string };
     error.code = "MISSING_PASSWORD";
     throw error;
   }
@@ -123,7 +123,7 @@ async function prepareAcceptanceMessage(
   let company =
     (typeof body.company === "string" ? body.company.trim() : "") ||
     parsed.company ||
-    "(nao informado)";
+    "(não informado)";
 
   if (requestProfileTypeNeedsCompany(profileType) && !clientId) {
     clientId = await resolveTestingCompanyId();
@@ -131,22 +131,22 @@ async function prepareAcceptanceMessage(
 
   if (requestProfileTypeNeedsCompany(profileType)) {
     if (!clientId) {
-      const error = new Error("Empresa obrigatoria para Usuario") as Error & { code?: string };
+      const error = new Error("Empresa obrigatória para Usuário") as Error & { code?: string };
       error.code = "MISSING_COMPANY";
       throw error;
     }
     const selectedCompany = await findLocalCompanyById(clientId);
     if (!selectedCompany) {
-      const error = new Error("Empresa selecionada nao encontrada") as Error & { code?: string };
+      const error = new Error("Empresa selecionada não encontrada") as Error & { code?: string };
       error.code = "MISSING_COMPANY";
       throw error;
     }
     company = (selectedCompany.name ?? selectedCompany.company_name ?? "").trim() || company;
   } else if (profileType === "company_user") {
-    company = parsed.companyProfile?.companyName?.trim() || company || "(nao informado)";
+    company = parsed.companyProfile?.companyName?.trim() || company || "(não informado)";
   } else {
     clientId = null;
-    company = "(nao informado)";
+    company = "(não informado)";
   }
 
   const users = await listLocalUsers();
@@ -200,12 +200,12 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
   }
 
   if (!parsed.passwordHash) {
-    const error = new Error("Solicitacao sem senha informada pelo solicitante") as Error & { code?: string };
+    const error = new Error("Solicitação sem senha informada pelo solicitante") as Error & { code?: string };
     error.code = "MISSING_PASSWORD";
     throw error;
   }
 
-  if (accessType === "global") {
+  if (accessType === "technical_support") {
     return {
       email,
       login,
@@ -221,7 +221,7 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
     };
   }
 
-  if (accessType === "admin") {
+  if (accessType === "leader_tc") {
     return {
       email,
       login,
@@ -237,10 +237,10 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
     };
   }
 
-  if (accessType === "company") {
+  if (accessType === "empresa") {
     const companyName = parsed.companyProfile?.companyName?.trim() || parsed.company?.trim() || "";
     if (!companyName) {
-      const error = new Error("Nome da empresa obrigatorio") as Error & { code?: string };
+      const error = new Error("Nome da empresa obrigatório") as Error & { code?: string };
       error.code = "MISSING_COMPANY_NAME";
       throw error;
     }
@@ -260,7 +260,7 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
       status: "active",
       created_at: new Date().toISOString(),
     });
-    const membershipRole = profileType === "company_user" ? "user" : "company_admin";
+    const membershipRole = profileType === "company_user" ? "company_user" : "empresa";
     return {
       email,
       login,
@@ -277,7 +277,7 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
   }
 
   if (!companyId) {
-    const error = new Error("Empresa obrigatoria para Usuario") as Error & { code?: string };
+    const error = new Error("Empresa obrigatória para Usuário") as Error & { code?: string };
     error.code = "MISSING_COMPANY";
     throw error;
   }
@@ -288,11 +288,11 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
     fullName,
     displayName,
     profileRole: "testing_company_user" as EditableProfileRole,
-    role: "user" as const,
+    role: "testing_company_user" as const,
     globalRole: null,
     isGlobalAdmin: false,
     linkCompanyId: companyId,
-    membershipRole: "user" as const,
+    membershipRole: "testing_company_user" as const,
     passwordHash: parsed.passwordHash,
   };
 }
@@ -326,22 +326,22 @@ async function ensureLocalUser(message: string, fallbackEmail: string) {
 
 function toCreateUserError(error: unknown) {
   const code = error && typeof error === "object" ? (error as { code?: string }).code : null;
-  if (code === "MISSING_COMPANY") return { status: 400, error: "Empresa obrigatoria para este perfil" };
-  if (code === "MISSING_COMPANY_NAME") return { status: 400, error: "Nome da empresa obrigatorio para este perfil" };
-  if (code === "MISSING_PASSWORD") return { status: 400, error: "A solicitacao precisa ter uma senha definida para ser aprovada" };
-  if (code === "DUPLICATE_EMAIL") return { status: 409, error: "E-mail ja cadastrado" };
-  if (code === "DUPLICATE_USER") return { status: 409, error: "Usuario ja cadastrado" };
-  if (code === "USER_SCOPE_LOCKED") return { status: 409, error: "Usuario com escopo fechado nao pode ser vinculado a outra empresa." };
-  if (code === "DUPLICATE_COMPANY_NAME") return { status: 409, error: "Empresa ja cadastrada com esse nome" };
-  if (code === "DUPLICATE_COMPANY_TAX_ID") return { status: 409, error: "CNPJ ja cadastrado para outra empresa" };
+  if (code === "MISSING_COMPANY") return { status: 400, error: "Empresa obrigatória para este perfil" };
+  if (code === "MISSING_COMPANY_NAME") return { status: 400, error: "Nome da empresa obrigatório para este perfil" };
+  if (code === "MISSING_PASSWORD") return { status: 400, error: "A solicitação precisa ter uma senha definida para ser aprovada" };
+  if (code === "DUPLICATE_EMAIL") return { status: 409, error: "E-mail já cadastrado" };
+  if (code === "DUPLICATE_USER") return { status: 409, error: "Usuário já cadastrado" };
+  if (code === "USER_SCOPE_LOCKED") return { status: 409, error: "Usuário com escopo fechado não pode ser vinculado a outra empresa." };
+  if (code === "DUPLICATE_COMPANY_NAME") return { status: 409, error: "Empresa já cadastrada com esse nome" };
+  if (code === "DUPLICATE_COMPANY_TAX_ID") return { status: 409, error: "CNPJ já cadastrado para outra empresa" };
   return null;
 }
 
 function buildApprovalComment(generatedUsername: string, adminComment: string) {
   const lines = [
-    "Solicitacao aceita.",
-    `Seu usuario e ${generatedUsername}.`,
-    "Use a senha que voce criou ao solicitar acesso para entrar na plataforma.",
+    "Solicitação aceita.",
+    `Seu usuário e ${generatedUsername}.`,
+    "Use a senha que você criou ao solicitar acesso para entrar na plataforma.",
   ];
   if (adminComment) {
     lines.push(`Observacao do aprovador: ${adminComment}`);
@@ -353,7 +353,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   try {
     const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
     if (!admin) {
-      return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+      return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
     }
 
     const body = (await req.json().catch(() => null)) as AcceptBody | null;
@@ -363,10 +363,10 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     if (shouldUseJsonStore()) {
       const existing = await getAccessRequestById(id);
       if (!existing) {
-        return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+        return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
       }
       if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-        return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+        return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
       }
 
       const prepared = await prepareAcceptanceMessage(existing.message, existing.email, body ?? {});
@@ -379,7 +379,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
 
       await createAccessRequestComment({
         requestId: id,
-        authorRole: "admin",
+        authorRole: "leader_tc",
         authorName: admin.email || "Global",
         authorEmail: admin.email || null,
         authorId: admin.id || null,
@@ -393,6 +393,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         approverName: admin.email || "Admin",
         profileType: parsedNotif.profileType,
         reviewQueue: resolveReviewQueue(parsedNotif.profileType),
+        clientId: parsedNotif.clientId,
       }).catch(() => null);
 
       addAuditLogSafe({
@@ -418,10 +419,10 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     try {
       const existing = await prisma.supportRequest.findUnique({ where: { id } });
       if (!existing) {
-        return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+        return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
       }
       if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-        return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+        return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
       }
 
       const prepared = await prepareAcceptanceMessage(existing.message, existing.email, body ?? {});
@@ -438,7 +439,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
 
       await createAccessRequestComment({
         requestId: id,
-        authorRole: "admin",
+        authorRole: "leader_tc",
         authorName: admin.email || "Global",
         authorEmail: admin.email || null,
         authorId: admin.id || null,
@@ -452,6 +453,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         approverName: admin.email || "Admin",
         profileType: parsedNotif2.profileType,
         reviewQueue: resolveReviewQueue(parsedNotif2.profileType),
+        clientId: parsedNotif2.clientId,
       }).catch(() => null);
 
       addAuditLogSafe({
@@ -476,10 +478,10 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       console.error("[ACCESS-REQUESTS][ACCEPT][PRISMA_FALLBACK]", error);
       const existing = await getAccessRequestById(id);
       if (!existing) {
-        return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+        return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
       }
       if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-        return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+        return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
       }
 
       const prepared = await prepareAcceptanceMessage(existing.message, existing.email, body ?? {});
@@ -492,7 +494,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
 
       await createAccessRequestComment({
         requestId: id,
-        authorRole: "admin",
+        authorRole: "leader_tc",
         authorName: admin.email || "Global",
         authorEmail: admin.email || null,
         authorId: admin.id || null,
@@ -506,6 +508,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         approverName: admin.email || "Admin",
         profileType: parsedNotif3.profileType,
         reviewQueue: resolveReviewQueue(parsedNotif3.profileType),
+        clientId: parsedNotif3.clientId,
       }).catch(() => null);
 
       addAuditLogSafe({

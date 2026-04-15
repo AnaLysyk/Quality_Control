@@ -3,7 +3,7 @@ import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { createLocalUser, listLocalUsers, upsertLocalLink } from "@/lib/auth/localStore";
 import { isUserScopeLockedError } from "@/lib/companyUserScope";
 
-// POST: Cria um novo usuario e vincula a uma empresa
+// POST: Cria um novo usuário e vincula a uma empresa
 export async function POST(req: NextRequest) {
   const data = await req.json().catch(() => null);
   const email = typeof data?.email === "string" ? data.email.trim().toLowerCase() : "";
@@ -18,10 +18,10 @@ export async function POST(req: NextRequest) {
 
   const users = await listLocalUsers();
   if (users.some((user) => user.email.toLowerCase() === email)) {
-    return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+    return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
   }
   if (users.some((user) => (user.user ?? user.email).toLowerCase() === login)) {
-    return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+    return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
   }
 
   const hash = hashPasswordSha256(password);
@@ -34,20 +34,20 @@ export async function POST(req: NextRequest) {
       name,
       password_hash: hash,
       active: true,
-      role: "user",
+      role: "company_user",
     });
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
     if (code === "DUPLICATE_EMAIL") {
-      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
     }
     if (code === "DUPLICATE_USER") {
-      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
     }
     throw err;
   }
   try {
-    await upsertLocalLink({ userId: user.id, companyId, role: "user" });
+    await upsertLocalLink({ userId: user.id, companyId, role: "company_user" });
   } catch (error) {
     if (isUserScopeLockedError(error)) {
       return NextResponse.json({ error: error.message }, { status: 409 });

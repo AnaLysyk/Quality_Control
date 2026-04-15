@@ -30,14 +30,15 @@ function normalizeMembershipRole(input?: string | null) {
     value === "company" ||
     value === "company_admin" ||
     value === "client_admin" ||
-    value === "admin"
+    value === "admin" ||
+    value === "empresa"
   ) {
-    return "company_admin" as const;
+    return "empresa" as const;
   }
-  if (value === "viewer" || value === "client_viewer") {
-    return "viewer" as const;
+  if (value === "viewer" || value === "client_viewer" || value === "testing_company_user") {
+    return "testing_company_user" as const;
   }
-  return "user" as const;
+  return "company_user" as const;
 }
 
 function canManageCompanyUsers(
@@ -50,10 +51,10 @@ export async function GET(req: NextRequest) {
   const access = await getAccessContext(req);
   const { company, status } = await resolveCurrentCompanyFromAccess(access);
   if (!access) {
-    return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
   if (!company) {
-    const message = status === 403 ? "Sem empresa vinculada" : "Empresa nao encontrada";
+    const message = status === 403 ? "Sem empresa vinculada" : "Empresa não encontrada";
     return NextResponse.json({ error: message }, { status });
   }
 
@@ -66,7 +67,7 @@ export async function GET(req: NextRequest) {
     hasPermissionAccess(permissionAccess.permissions, "users", "view_all") ||
     hasPermissionAccess(permissionAccess.permissions, "users", "create");
   if ((!canViewUsers || !canViewCompanyUsersByScope(scopePolicy)) && !institutionalManager) {
-    return NextResponse.json({ error: "Sem permissao para visualizar usuarios da empresa" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão para visualizar usuários da empresa" }, { status: 403 });
   }
 
   const items = await listAdminUserItems({ companyId: company.id });
@@ -78,7 +79,7 @@ export async function GET(req: NextRequest) {
         name: item.name,
         email: item.email,
         user: item.user ?? "",
-        permission_role: item.permission_role ?? "user",
+        permission_role: item.permission_role ?? "company_user",
         active: item.active !== false,
         status: item.status ?? (item.active === false ? "inactive" : "active"),
         avatar_url: item.avatar_url ?? null,
@@ -96,14 +97,14 @@ export async function POST(req: NextRequest) {
   const access = await getAccessContext(req);
   const { company, status } = await resolveCurrentCompanyFromAccess(access);
   if (!access) {
-    return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
   if (!company || !access.companySlug) {
-    const message = status === 403 ? "Sem empresa ativa" : "Empresa nao encontrada";
+    const message = status === 403 ? "Sem empresa ativa" : "Empresa não encontrada";
     return NextResponse.json({ error: message }, { status });
   }
   if (!canManageCompanyUsers(access)) {
-    return NextResponse.json({ error: "Sem permissao para criar usuarios da empresa" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão para criar usuários da empresa" }, { status: 403 });
   }
 
   const permissionAccess = await resolvePermissionAccessForUser(access.userId);
@@ -116,7 +117,7 @@ export async function POST(req: NextRequest) {
     ) &&
     !institutionalManager
   ) {
-    return NextResponse.json({ error: "Sem permissao para criar usuarios da empresa" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão para criar usuários da empresa" }, { status: 403 });
   }
 
   const body = await req.json().catch(() => null);
@@ -134,14 +135,14 @@ export async function POST(req: NextRequest) {
       ? body.permission_role
       : typeof body?.role === "string"
         ? body.role
-        : "user";
+        : "company_user";
   const membershipRole = normalizeMembershipRole(permissionRole);
 
   if (!name || !email) {
     return NextResponse.json({ error: "Nome e e-mail sao obrigatorios" }, { status: 400 });
   }
   if (password.length < 8) {
-    return NextResponse.json({ error: "Senha obrigatoria com pelo menos 8 caracteres" }, { status: 400 });
+    return NextResponse.json({ error: "Senha obrigatória com pelo menos 8 caracteres" }, { status: 400 });
   }
 
   try {
@@ -152,7 +153,7 @@ export async function POST(req: NextRequest) {
       ...(login ? { user: login } : {}),
       password_hash: hashPasswordSha256(password),
       active: true,
-      role: "user",
+      role: "company_user",
       globalRole: null,
       is_global_admin: false,
       default_company_slug: access.companySlug,
@@ -211,10 +212,10 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     const code = error && typeof error === "object" ? (error as { code?: string }).code : null;
     if (code === "DUPLICATE_EMAIL") {
-      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
     }
     if (code === "DUPLICATE_USER") {
-      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
     }
     if (isUserScopeLockedError(error)) {
       return NextResponse.json({ error: error.message }, { status: 409 });
@@ -223,7 +224,7 @@ export async function POST(req: NextRequest) {
     const message =
       error instanceof Error && error.message.trim()
         ? error.message.trim()
-        : "Nao foi possivel criar o usuario da empresa";
+        : "Não foi possível criar o usuário da empresa";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

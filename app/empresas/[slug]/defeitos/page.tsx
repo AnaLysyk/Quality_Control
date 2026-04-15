@@ -2730,28 +2730,25 @@ export default function CompanyDefectsPage() {
                   </div>
                 )}
               </div>
-            </section>
 
-            <section className="rounded-4xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) p-6 text-(--tc-text-primary,#0b1a3c) shadow-[0_18px_50px_rgba(15,23,42,0.06)]" data-testid="defects-list">
-              <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#64748b)">{copy.list.kicker}</p>
-              <h2 className="mt-2 text-xl font-bold">{copy.list.title}</h2>
-              <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">{copy.list.subtitle}</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-(--tc-text-secondary,#4b5563)">
-                {interpolate(copy.list.cardsCount, { count: filteredDefects.length })}
-              </span>
-              <button
-                type="button"
-                onClick={() => loadOverview({ preserveActiveSlug: activeDefect?.slug ?? null, forceRefresh: true })}
-                className="rounded-full border border-(--tc-border,#e5e7eb) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
-              >
-                {copy.list.reload}
-              </button>
-            </div>
-          </div>
+              <div className="mt-6 flex items-center justify-between gap-3 border-t border-(--tc-border,#e5e7eb) pt-5" data-testid="defects-list">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#64748b)">{copy.list.kicker}</p>
+                  <h2 className="mt-1 text-xl font-bold">{copy.list.title}</h2>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-(--tc-text-secondary,#4b5563)">
+                    {interpolate(copy.list.cardsCount, { count: filteredDefects.length })}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => loadOverview({ preserveActiveSlug: activeDefect?.slug ?? null, forceRefresh: true })}
+                    className="rounded-full border border-(--tc-border,#e5e7eb) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                  >
+                    {copy.list.reload}
+                  </button>
+                </div>
+              </div>
 
           {loading && <p className="mt-5 text-sm text-(--tc-text-muted)">{copy.list.loading}</p>}
           {!loading && defects.length === 0 && (

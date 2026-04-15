@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
     const period = [7, 30, 90].includes(periodParam) ? periodParam : 30;
     const { admin, status } = await requireGlobalAdminWithStatus(request);
     if (!admin) {
-      const msg = status === 401 ? "Nao autenticado" : "Sem permissao";
+      const msg = status === 401 ? "Não autenticado" : "Sem permissão";
       return apiFail(request, msg, { status, code: status === 401 ? "UNAUTHENTICATED" : "FORBIDDEN" });
     }
 

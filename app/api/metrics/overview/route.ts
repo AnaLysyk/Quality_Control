@@ -66,6 +66,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Error fetching metrics:", error);
-    return NextResponse.json({ error: "Erro ao buscar metricas" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao buscar métricas" }, { status: 500 });
   }
 }

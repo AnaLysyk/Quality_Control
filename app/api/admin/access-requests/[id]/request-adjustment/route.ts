@@ -25,7 +25,7 @@ function isFinalStatus(status: string | null | undefined) {
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
 
   const body = (await req.json().catch(() => null)) as AdjustmentBody | null;
@@ -45,13 +45,13 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   if (shouldUseJsonStore()) {
     const existing = await getAccessRequestById(id);
     if (!existing) {
-      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
     }
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
     }
     if (isFinalStatus(existing.status)) {
-      return NextResponse.json({ error: "Solicitacao finalizada nao aceita ajustes" }, { status: 409 });
+      return NextResponse.json({ error: "Solicitação finalizada não aceita ajustes" }, { status: 409 });
     }
 
     const parsed = parseAccessRequestMessage(existing.message, existing.email);
@@ -91,7 +91,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     const updated = await updateAccessRequest(id, { status: "in_progress", message });
     await createAccessRequestComment({
       requestId: id,
-      authorRole: "admin",
+      authorRole: "leader_tc",
       authorName: admin.email || "Admin",
       authorEmail: admin.email || null,
       authorId: admin.id || null,
@@ -110,13 +110,13 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   try {
     const existing = await prisma.supportRequest.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
     }
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
     }
     if (isFinalStatus(existing.status)) {
-      return NextResponse.json({ error: "Solicitacao finalizada nao aceita ajustes" }, { status: 409 });
+      return NextResponse.json({ error: "Solicitação finalizada não aceita ajustes" }, { status: 409 });
     }
 
     const parsed = parseAccessRequestMessage(existing.message, existing.email);
@@ -160,7 +160,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
 
     await createAccessRequestComment({
       requestId: id,
-      authorRole: "admin",
+      authorRole: "leader_tc",
       authorName: admin.email || "Admin",
       authorEmail: admin.email || null,
       authorId: admin.id || null,
@@ -178,13 +178,13 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     console.error("[ACCESS-REQUESTS][REQUEST-ADJUSTMENT][PRISMA_FALLBACK]", error);
     const existing = await getAccessRequestById(id);
     if (!existing) {
-      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
     }
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
     }
     if (isFinalStatus(existing.status)) {
-      return NextResponse.json({ error: "Solicitacao finalizada nao aceita ajustes" }, { status: 409 });
+      return NextResponse.json({ error: "Solicitação finalizada não aceita ajustes" }, { status: 409 });
     }
 
     const parsed = parseAccessRequestMessage(existing.message, existing.email);
@@ -224,7 +224,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     const updated = await updateAccessRequest(id, { status: "in_progress", message });
     await createAccessRequestComment({
       requestId: id,
-      authorRole: "admin",
+      authorRole: "leader_tc",
       authorName: admin.email || "Admin",
       authorEmail: admin.email || null,
       authorId: admin.id || null,

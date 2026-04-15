@@ -33,7 +33,7 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
   const data =
     hasValidData && chartEntries.length
       ? chartEntries
-      : [{ name: "Sem execucoes", value: 1, color: "var(--tc-border,#94a3b8)" }];
+      : [{ name: "Sem execuções", value: 1, color: "var(--tc-border,#94a3b8)" }];
 
   const pct = (value: number) => (total > 0 ? Math.round((value / total) * 100) : 0);
   const passPct = total > 0 ? Math.round((stats.pass / total) * 100) : 0;
@@ -163,7 +163,7 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
               {hasValidData ? `${passPct}%` : "-"}
             </span>
             <span className="text-[11px] uppercase tracking-[0.22em] text-[#475569] mt-1">
-              {hasValidData ? "Pass" : emptyLabel ?? "Sem execucoes"}
+              {hasValidData ? "Pass" : emptyLabel ?? "Sem execuções"}
             </span>
             <span className="text-xs text-(--tc-chart-subtext,#475569)">Total {hasValidData ? total : 0}</span>
           </div>

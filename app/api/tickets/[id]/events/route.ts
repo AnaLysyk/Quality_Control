@@ -12,16 +12,16 @@ function resolveDisplayName(user: { full_name?: string | null; name?: string | n
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const { id } = await context.params;
   const ticket = await getTicketById(id);
   if (!ticket) {
-    return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
   }
   if (!canViewTicket(user, ticket)) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   const url = new URL(req.url);

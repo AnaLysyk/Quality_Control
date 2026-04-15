@@ -20,7 +20,7 @@ const publicRoutes = [
 ];
 
 const adminRoutes = [
-  "/admin/home",
+  "/admin/dashboard",
   "/admin/clients",
   "/admin/runs",
   "/admin/test-metric",

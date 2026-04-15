@@ -14,14 +14,14 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 export async function POST(request: Request) {
   const authUser = await authenticateRequest(request);
   if (!authUser) {
-    return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
   }
 
   const body = (await request.json().catch(() => null)) as unknown;
   const rec = asRecord(body);
   const reason = typeof rec?.reason === "string" ? rec.reason.trim() : "";
   if (!reason) {
-    return NextResponse.json({ message: "Motivo obrigatorio" }, { status: 400 });
+    return NextResponse.json({ message: "Motivo obrigatório" }, { status: 400 });
   }
 
   const localUser = await getLocalUserById(authUser.id);
@@ -61,8 +61,8 @@ export async function POST(request: Request) {
   } catch (err: unknown) {
     const code = asRecord(err)?.code;
     if (code === "DUPLICATE") {
-      return NextResponse.json({ message: "Ja existe uma solicitacao pendente" }, { status: 409 });
+      return NextResponse.json({ message: "Já existe uma solicitação pendente" }, { status: 409 });
     }
-    return NextResponse.json({ message: "Erro ao criar solicitacao" }, { status: 500 });
+    return NextResponse.json({ message: "Erro ao criar solicitação" }, { status: 500 });
   }
 }

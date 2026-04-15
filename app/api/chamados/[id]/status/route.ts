@@ -26,7 +26,7 @@ export async function PATCH(
 ) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
   // Next.js App Router: context.params pode ser Promise
   const params = (context.params && typeof (context.params as any).then === 'function')
@@ -39,27 +39,27 @@ export async function PATCH(
 
   const current = await getTicketById(id);
   if (!current) {
-    return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
   }
   if (!canMoveTicket(user, current)) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
   if (canAccessGlobalTicketWorkspace(user) && !current.assignedToUserId) {
     return NextResponse.json(
-      { error: "Selecione e salve um responsavel antes de mover o ticket" },
+      { error: "Selecione e salve um responsável antes de mover o ticket" },
       { status: 400 },
     );
   }
 
 
-  // Valida transição de status
+  // Válida transição de status
   const fromStatus = String(current.status);
   const toStatus = String(nextStatus);
   if (!isValidTransition(fromStatus, toStatus)) {
     return NextResponse.json({ error: `Transição não permitida: ${getTicketStatusLabel(fromStatus)} → ${getTicketStatusLabel(toStatus)}` }, { status: 400 });
   }
 
-  // Regra: nao pode ir para DONE sem comentario do operador responsavel.
+  // Regra: não pode ir para DONE sem comentário do operador responsável.
   if (toStatus === "done") {
     // Busca comentários do ticket
     const commentsRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/chamados/${id}/comments`, { headers: { "Content-Type": "application/json" }, credentials: "include" });

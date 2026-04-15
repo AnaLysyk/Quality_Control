@@ -8,6 +8,7 @@ import ToasterProvider from "@/components/ToasterProvider";
 import { AuthProvider } from "@/context/AuthContext";
 import { AppSettingsProvider } from "@/context/AppSettingsContext";
 import { ClientProvider } from "@/context/ClientContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import {
   THEME_PREFERENCE_COOKIE,
   THEME_RESOLVED_COOKIE,
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
   title: "Quality Control",
   description: "Monitoramento inteligente de qualidade em tempo real.",
 };
-// Add default icons so browsers show the app logo in the tab
+// Add default icons só browsers show the app logo in the tab
 metadata.icons = {
   icon: [
     { url: "/images/tc.png", type: "image/png" }
@@ -127,23 +128,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       data-theme-preference={initialThemePreference}
       data-theme-resolved={initialResolvedTheme}
     >
-      <head>
-        <Script id="migrate-storage" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: migrateStorageScript }} />
-        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-      </head>
       <body
         suppressHydrationWarning
         className={`min-h-screen w-full overflow-y-auto ${poppins.variable} ${geistMono.variable} antialiased`}
       >
+        <Script id="migrate-storage" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: migrateStorageScript }} />
+        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <AuthProvider>
-          <AppSettingsProvider>
-            <ClientProvider>
-              <AppShell>
-                {children}
-                <ToasterProvider />
-              </AppShell>
-            </ClientProvider>
-          </AppSettingsProvider>
+          <LanguageProvider>
+            <AppSettingsProvider>
+              <ClientProvider>
+                <AppShell>
+                  {children}
+                  <ToasterProvider />
+                </AppShell>
+              </ClientProvider>
+            </AppSettingsProvider>
+          </LanguageProvider>
         </AuthProvider>
       </body>
     </html>

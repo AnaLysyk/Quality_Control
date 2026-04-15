@@ -70,6 +70,16 @@ export type AssistantConversationTurn = {
 export type AssistantClientRequest = {
   message?: string;
   context?: Partial<AssistantScreenContext> | null;
+  actor?: {
+    userId?: string | null;
+    permissionRole?: string | null;
+    role?: string | null;
+    companyRole?: string | null;
+    companySlug?: string | null;
+    companySlugs?: string[] | null;
+    userOrigin?: string | null;
+    isGlobalAdmin?: boolean;
+  } | null;
   action?: AssistantToolAction | null;
   history?: AssistantConversationTurn[] | null;
 };

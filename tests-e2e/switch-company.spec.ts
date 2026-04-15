@@ -1,11 +1,11 @@
-import { test } from "@playwright/test";
+﻿import { test } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
 test("admin troca empresa ativa", async ({ page, context }) => {
   await mockAuth(context, {
     role: "admin",
-    companies: ["griaule", "testing-company"],
-    clientSlug: "griaule",
+    companies: ["DEMO", "testing-company"],
+    clientSlug: "DEMO",
   });
 
   await page.goto("/admin", { waitUntil: "networkidle" });
@@ -14,3 +14,4 @@ test("admin troca empresa ativa", async ({ page, context }) => {
   await page.waitForTimeout(500);
   await page.waitForURL(/\/empresas\/testing-company\/home/, { timeout: 10000 });
 });
+

@@ -36,53 +36,53 @@ async function getRequestForReview(id: string): Promise<{ email: string; message
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status, headers: NO_STORE_HEADERS });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status, headers: NO_STORE_HEADERS });
   }
 
   const { id } = await context.params;
   const request = await getRequestForReview(id);
   if (!request) {
-    return NextResponse.json({ error: "Solicitacao nao encontrada." }, { status: 404, headers: NO_STORE_HEADERS });
+    return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404, headers: NO_STORE_HEADERS });
   }
   if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(request.message, request.email))) {
-    return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403, headers: NO_STORE_HEADERS });
+    return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403, headers: NO_STORE_HEADERS });
   }
   try {
     const comments = await listAccessRequestComments(id);
     return NextResponse.json({ items: comments }, { status: 200, headers: NO_STORE_HEADERS });
   } catch (error) {
-    console.error("Falha ao carregar comentarios (access-requests):", error);
-    return NextResponse.json({ items: [], error: "Falha ao carregar comentarios" }, { status: 200, headers: NO_STORE_HEADERS });
+    console.error("Falha ao carregar comentários (access-requests):", error);
+    return NextResponse.json({ items: [], error: "Falha ao carregar comentários" }, { status: 200, headers: NO_STORE_HEADERS });
   }
 }
 
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
 
   const { id } = await context.params;
   const body = (await req.json().catch(() => null)) as { body?: string; comment?: string } | null;
   const comment = sanitizeBody(body?.comment ?? body?.body ?? "");
   if (!comment) {
-    return NextResponse.json({ error: "Comentario obrigatorio." }, { status: 400 });
+    return NextResponse.json({ error: "Comentário obrigatório." }, { status: 400 });
   }
 
   const request = await getRequestForReview(id);
   if (!request) {
-    return NextResponse.json({ error: "Solicitacao nao encontrada." }, { status: 404 });
+    return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404 });
   }
   if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(request.message, request.email))) {
-    return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
   }
   if (request.status === "rejected" || request.status === "closed") {
-    return NextResponse.json({ error: "Esta solicitacao ja foi finalizada e nao aceita novos comentarios." }, { status: 409 });
+    return NextResponse.json({ error: "Esta solicitação já foi finalizada e não aceita novos comentários." }, { status: 409 });
   }
 
   const record = await createAccessRequestComment({
     requestId: id,
-    authorRole: "admin",
+    authorRole: "leader_tc",
     authorName: admin.email || "Admin",
     authorEmail: admin.email || null,
     authorId: admin.id || null,

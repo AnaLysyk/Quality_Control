@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { CompanySelector } from "../components/CompanySelector";
 import { ReleasesList } from "./ReleasesList";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -20,6 +22,7 @@ export default function ReleasesPage() {
       null,
     companyCount: clients.length,
     clientSlug: user?.clientSlug ?? null,
+    defaultClientSlug: user?.defaultClientSlug ?? null,
   };
 
   return (

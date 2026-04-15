@@ -1,3 +1,100 @@
+// ============================================
+// BRAIN MODELS - Grafo de Conhecimento
+// ============================================
+
+model BrainNode {
+  id          String   @id @default(cuid())
+  type        String   // "Company", "Application", "Module", "Screen", "Ticket", "Defect", "TestRun", "User", "Note", "Release", "Integration", "AuditEvent", "Route"
+  label       String   // nome ou identificador legível
+  description String?  // resumo do que é
+
+  refType     String?  // nome do modelo original (ex: "Company", "Application")
+  refId       String?  // ID no modelo original
+
+  metadata    Json?    // custom fields: {severity, status, owner, tags, etc}
+
+  outgoing    BrainEdge[] @relation("OutgoingEdges")
+  incoming    BrainEdge[] @relation("IncomingEdges")
+
+  memories    BrainMemory[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([refType, refId])
+  @@index([label])
+}
+
+model BrainEdge {
+  id        String   @id @default(cuid())
+  fromId    String
+  toId      String
+
+  type      String   // "HAS_APPLICATION", "HAS_MODULE", "HAS_SCREEN", "CREATED_BY", "ASSIGNED_TO", "BLOCKS", "BELONGS_TO", "USES_INTEGRATION", "RELATES_TO", "GENERATED_EVENT", "IMPACTED_BY", "HAS_ROUTE", "MEMBER_OF", "FOUND_IN", "RELEASED_IN"
+
+  weight    Float?   // importância 0-1, opcional
+  metadata  Json?    // custom fields
+
+  from      BrainNode @relation("OutgoingEdges", fields: [fromId], references: [id], onDelete: Cascade)
+  to        BrainNode @relation("IncomingEdges", fields: [toId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([fromId, toId, type])
+  @@index([type])
+  @@index([fromId])
+  @@index([toId])
+}
+
+model BrainMemory {
+  id          String   @id @default(cuid())
+
+  title       String   // "Decisão: usar mock em testes", "Regra: validar email antes", etc
+  summary     String   // resumo em 1-3 frases
+  memoryType  String   // "DECISION", "RULE", "PATTERN", "CONTEXT", "EXCEPTION", "TECHNICAL_NOTE"
+
+  importance  Int      @default(1)  // 1-5 stars
+
+  relatedNodeIds Json?  // lista de IDs de nós conectados: ["node1", "node2"]
+
+  sourceType  String?  // "CONVERSATION", "TICKET", "DEFECT", "MANUAL"
+  sourceId    String?  // ID da fonte
+
+  status      String   @default("ACTIVE")  // "ACTIVE", "ARCHIVED", "INVALID"
+
+  metadata    Json?    // tags, autor, validação_status, etc
+
+  node        BrainNode? @relation(fields: [nodeId], references: [id])
+  nodeId      String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([memoryType])
+  @@index([importance])
+  @@index([status])
+}
+
+model BrainAuditLog {
+  id        String   @id @default(cuid())
+
+  action    String   // "CREATE_NODE", "UPDATE_NODE", "DELETE_NODE", "CREATE_EDGE", "DELETE_EDGE", "ADD_MEMORY", "UPDATE_MEMORY", "INITIAL_SYNC"
+  entityType String  // "BrainNode", "BrainEdge", "BrainMemory"
+  entityId  String
+
+  before    Json?    // estado anterior (para delete/update)
+  after     Json?    // estado novo
+
+  userId    String?  // quem fez (se disponível)
+  reason    String?  // por quê
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+}
 // Prisma Schema — Quality Control
 // Provider: PostgreSQL (Render)
 // Gerado automaticamente com base nos tipos do projeto

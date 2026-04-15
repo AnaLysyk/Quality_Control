@@ -215,9 +215,9 @@ export async function GET(request: Request) {
   const requestedCompanySlug = normalizeString(url.searchParams.get("companySlug")) || null;
 
   const auth = await authenticateRequest(request);
-  if (!auth) return NextResponse.json({ success: false, error: { message: "Nao autorizado" } }, { status: 401 });
+  if (!auth) return NextResponse.json({ success: false, error: { message: "Não autorizado" } }, { status: 401 });
   if (!auth.isGlobalAdmin && !isCompanyUser(auth)) {
-    return NextResponse.json({ success: false, error: { message: "Sem permissao" } }, { status: 403 });
+    return NextResponse.json({ success: false, error: { message: "Sem permissão" } }, { status: 403 });
   }
   if (requestedCompanySlug && !auth.isGlobalAdmin) {
     const allowedSlugs = Array.isArray(auth.companySlugs) ? auth.companySlugs : [];

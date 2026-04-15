@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+
+type JsPDFType = InstanceType<typeof import("jspdf").default>;
 
 const UNSUPPORTED_COLOR_PATTERN = /okl(?:ab|ch)|\blab\(|\blch\(|color-mix\(/i;
 const UNSUPPORTED_COLOR_FUNCTION = /(oklch?|color-mix|lab|lch)\([^)]*\)/gi;
@@ -104,7 +104,7 @@ export default function ExportPDFButton({ fileName, targetId = "pdf-summary" }: 
     setExported(false);
     setExporting(true);
 
-    const triggerDownload = (pdf: jsPDF) => {
+    const triggerDownload = (pdf: JsPDFType) => {
       const blob = pdf.output("blob");
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -126,7 +126,8 @@ export default function ExportPDFButton({ fileName, targetId = "pdf-summary" }: 
       link.remove();
     };
 
-    const exportSimplePdf = () => {
+    const exportSimplePdf = async () => {
+      const { default: jsPDF } = await import("jspdf");
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -134,7 +135,7 @@ export default function ExportPDFButton({ fileName, targetId = "pdf-summary" }: 
         compress: true,
       });
       pdf.setFontSize(14);
-      pdf.text(`Relatorio ${fileName}`, 20, 30);
+      pdf.text(`Relatório ${fileName}`, 20, 30);
       pdf.setFontSize(11);
       const details = [
         "Export gerado em modo simplificado.",
@@ -143,10 +144,10 @@ export default function ExportPDFButton({ fileName, targetId = "pdf-summary" }: 
         "- Qualidade consolidada",
         "- Indicadores principais",
         "",
-        "Observacao: Conteudo gerado automaticamente para garantir estabilidade no modo automatizado.",
+        "Observação: Conteúdo gerado automaticamente para garantir estabilidade no modo automatizado.",
       ];
       pdf.text(details, 20, 40);
-      // Adiciona conteudo extra para gerar um arquivo com tamanho consistente.
+      // Adiciona conteúdo extra para gerar um arquivo com tamanho consistente.
       const filler = Array.from({ length: 20 }, (_, idx) => `Linha auxiliar ${idx + 1}: dados resumidos.`);
       pdf.text(filler, 20, 90);
       triggerDownload(pdf);
@@ -161,6 +162,7 @@ export default function ExportPDFButton({ fileName, targetId = "pdf-summary" }: 
         triggerServerDownload();
         setExported(true);
       } else {
+        const { default: html2canvas } = await import("html2canvas");
         const canvas = await html2canvas(area, {
           scale: 2,
           useCORS: true,
@@ -188,6 +190,7 @@ export default function ExportPDFButton({ fileName, targetId = "pdf-summary" }: 
         }
 
         const imgData = paddedCanvas.toDataURL("image/png");
+        const { default: jsPDF } = await import("jspdf");
         const pdf = new jsPDF({
           orientation: "portrait",
           unit: "mm",
@@ -215,7 +218,7 @@ export default function ExportPDFButton({ fileName, targetId = "pdf-summary" }: 
       }
     } catch (error) {
       console.error("Erro ao gerar PDF", error);
-      exportSimplePdf();
+      await exportSimplePdf();
     } finally {
       setExporting(false);
       area.style.overflow = previousOverflow;

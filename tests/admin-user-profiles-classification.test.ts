@@ -1,4 +1,4 @@
-import {
+﻿import {
   buildAdminUserItem,
   resolveAdminUserProfileKind,
   resolvePermissionRoleForUser,
@@ -21,7 +21,7 @@ function makeUser(overrides: Partial<LocalAuthUser> = {}): LocalAuthUser {
     user_origin: "testing_company",
     user_scope: "shared",
     allow_multi_company_link: true,
-    default_company_slug: "griaule",
+    default_company_slug: "demo",
     created_by_company_id: null,
     home_company_id: null,
     avatar_key: null,
@@ -32,7 +32,7 @@ function makeUser(overrides: Partial<LocalAuthUser> = {}): LocalAuthUser {
   };
 }
 
-function makeLink(role: string, companyId = "griaule"): LocalAuthMembership {
+function makeLink(role: string, companyId = "Demo"): LocalAuthMembership {
   return {
     id: `membership-${role}-${companyId}`,
     userId: "user-1",
@@ -44,9 +44,9 @@ function makeLink(role: string, companyId = "griaule"): LocalAuthMembership {
 
 function makeCompany(role = "user") {
   return {
-    id: "griaule",
-    name: "Griaule",
-    slug: "griaule",
+    id: "Demo",
+    name: "Demo",
+    slug: "Demo",
     role,
   };
 }
@@ -54,16 +54,16 @@ function makeCompany(role = "user") {
 describe("admin user profile classification", () => {
   it("classifies the institutional company account as Empresa", () => {
     const user = makeUser({
-      name: "Griaule",
-      full_name: "Griaule",
-      email: "griaule",
-      user: "griaule",
+      name: "Demo",
+      full_name: "Demo",
+      email: "Demo",
+      user: "Demo",
       role: "company_admin",
       user_origin: "client_company",
       user_scope: "company_only",
       allow_multi_company_link: false,
-      created_by_company_id: "griaule",
-      home_company_id: "griaule",
+      created_by_company_id: "Demo",
+      home_company_id: "Demo",
     });
     const links = [makeLink("company_admin")];
 
@@ -74,7 +74,7 @@ describe("admin user profile classification", () => {
         user,
         links,
         new Map<string, LocalAuthCompany>([
-          ["griaule", { id: "griaule", name: "Griaule", slug: "griaule" } as LocalAuthCompany],
+          ["Demo", { id: "Demo", name: "Demo", slug: "Demo" } as LocalAuthCompany],
         ]),
       ).profile_kind,
     ).toBe("empresa");
@@ -84,13 +84,13 @@ describe("admin user profile classification", () => {
     const user = makeUser({
       name: "Ana da Empresa",
       full_name: "Ana da Empresa",
-      email: "ana.empresa@griaule.test",
+      email: "ana.empresa@demo.test",
       user: "ana.empresa",
       user_origin: "client_company",
       user_scope: "company_only",
       allow_multi_company_link: false,
-      created_by_company_id: "griaule",
-      home_company_id: "griaule",
+      created_by_company_id: "Demo",
+      home_company_id: "Demo",
     });
     const links = [makeLink("user")];
 
@@ -140,3 +140,4 @@ describe("admin user profile classification", () => {
     expect(resolveAdminUserProfileKind(user, links, makeCompany("technical_support"))).toBe("technical_support");
   });
 });
+

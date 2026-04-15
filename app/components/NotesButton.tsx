@@ -119,7 +119,7 @@ const NOTE_PRIORITY_OPTIONS: NoteOption<NotePriority>[] = [
 ];
 
 const EDITOR_TOOLS: EditorTool[] = [
-  { id: "h1", label: "H1", title: "Titulo", group: "structure" },
+  { id: "h1", label: "H1", title: "Título", group: "structure" },
   { id: "h2", label: "H2", title: "Subtitulo", group: "structure" },
   { id: "h3", label: "H3", title: "Secao", group: "structure" },
   { id: "list", label: "Lista", title: "Lista com marcadores", group: "structure" },
@@ -130,29 +130,29 @@ const EDITOR_TOOLS: EditorTool[] = [
   { id: "bold", label: "Negrito", title: "Negrito", group: "style" },
   { id: "italic", label: "Italico", title: "Italico", group: "style" },
   { id: "highlight", label: "Grifo", title: "Destaque", group: "style" },
-  { id: "code", label: "</>", title: "Bloco de codigo", group: "style" },
+  { id: "code", label: "</>", title: "Bloco de código", group: "style" },
   { id: "json", label: "{ }", title: "JSON formatado", group: "style" },
-  { id: "link", label: "Link", title: "Link clicavel", group: "style" },
+  { id: "link", label: "Link", title: "Link clicável", group: "style" },
 ];
 
 const NOTE_SNIPPETS: NoteSnippet[] = [
   {
     id: "decision",
-    label: "Decisao",
-    title: "Inserir bloco de decisao",
-    text: "## Decisao\n- Contexto:\n- Definicao:\n- Impacto:\n",
+    label: "Decisão",
+    title: "Inserir bloco de decisão",
+    text: "## Decisão\n- Contexto:\n- Definição:\n- Impacto:\n",
   },
   {
     id: "nextSteps",
-    label: "Proximos passos",
-    title: "Inserir bloco de proximos passos",
-    text: "## Proximos passos\n- [ ] Item 1\n- [ ] Item 2\n- [ ] Item 3\n",
+    label: "Próximos passos",
+    title: "Inserir bloco de próximos passos",
+    text: "## Próximos passos\n- [ ] Item 1\n- [ ] Item 2\n- [ ] Item 3\n",
   },
   {
     id: "risk",
     label: "Risco",
     title: "Inserir bloco de risco",
-    text: "## Risco\n- Descricao:\n- Impacto:\n- Mitigacao:\n",
+    text: "## Risco\n- Descrição:\n- Impacto:\n- Mitigacao:\n",
   },
   {
     id: "context",
@@ -162,15 +162,15 @@ const NOTE_SNIPPETS: NoteSnippet[] = [
   },
   {
     id: "linkBlock",
-    label: "Referencias",
-    title: "Inserir bloco de referencias",
-    text: "## Referencias\n- [Link principal](https://exemplo.com)\n",
+    label: "Referências",
+    title: "Inserir bloco de referências",
+    text: "## Referências\n- [Link principal](https://exemplo.com)\n",
   },
   {
     id: "codeBlock",
-    label: "Codigo",
-    title: "Inserir bloco de codigo",
-    text: "```ts\n// observacao tecnica\n```\n",
+    label: "Código",
+    title: "Inserir bloco de código",
+    text: "```ts\n// observação técnica\n```\n",
   },
 ];
 
@@ -358,7 +358,7 @@ function normalizeTags(value: unknown) {
 function normalizeNoteItem(note: Partial<NoteItem> | null | undefined): NoteItem {
   return {
     id: typeof note?.id === "string" && note.id.trim() ? note.id : crypto.randomUUID(),
-    title: typeof note?.title === "string" && note.title.trim() ? note.title.trim().slice(0, 120) : "Sem titulo",
+    title: typeof note?.title === "string" && note.title.trim() ? note.title.trim().slice(0, 120) : "Sem título",
     content: typeof note?.content === "string" ? note.content.trim().slice(0, 12000) : "",
     color: normalizeColor(note?.color),
     status: normalizeStatus(note?.status),
@@ -390,11 +390,11 @@ function getPriorityOption(priority: NotePriority) {
 function getEditorToolFeedback(toolId: EditorTool["id"]) {
   switch (toolId) {
     case "h1":
-      return "Titulo principal aplicado na linha atual.";
+      return "Título principal aplicado na linha atual.";
     case "h2":
       return "Subtitulo aplicado na linha atual.";
     case "h3":
-      return "Secao inserida para organizar o conteudo.";
+      return "Seção inserida para organizar o conteúdo.";
     case "list":
       return "Lista com marcadores aplicada.";
     case "orderedList":
@@ -406,13 +406,13 @@ function getEditorToolFeedback(toolId: EditorTool["id"]) {
     case "divider":
       return "Divisor inserido no texto.";
     case "bold":
-      return "Negrito aplicado na selecao.";
+      return "Negrito aplicado na seleção.";
     case "italic":
-      return "Italico aplicado na selecao.";
+      return "Itálico aplicado na seleção.";
     case "highlight":
-      return "Destaque aplicado na selecao.";
+      return "Destaque aplicado na seleção.";
     case "code":
-      return "Bloco de codigo inserido.";
+      return "Bloco de código inserido.";
     case "json":
       return "JSON formatado ou modelo inserido.";
     case "link":
@@ -507,7 +507,7 @@ function stripNoteFormatting(content: string) {
 
 function getNotePreview(content: string, maxLength = 112) {
   const plain = stripNoteFormatting(content);
-  if (!plain) return "Abra a nota para escrever checklist, links, codigo ou observacoes mais completas.";
+  if (!plain) return "Abra a nota para escrever checklist, links, código ou observações mais completas.";
   if (plain.length <= maxLength) return plain;
   return `${plain.slice(0, maxLength - 3).trim()}...`;
 }
@@ -516,13 +516,13 @@ function formatNoteForClipboard(note: Pick<NoteItem, "title" | "content" | "stat
   return [
     "Quality Control | Bloco de notas",
     "",
-    `Titulo: ${note.title || "Sem titulo"}`,
+    `Título: ${note.title || "Sem título"}`,
     `Data: ${formatNoteDateFull(note.updatedAt || note.createdAt)}`,
     `Status: ${getStatusOption(note.status).label}`,
     `Prioridade: ${getPriorityOption(note.priority).label}`,
     "",
-    "Descricao:",
-    getPlainNoteContent(note.content) || "Sem descricao.",
+    "Descrição:",
+    getPlainNoteContent(note.content) || "Sem descrição.",
   ].join("\n");
 }
 
@@ -681,7 +681,7 @@ function renderCodeBlock(language: string, code: string, key: string) {
 
 function renderRichContent(content: string) {
   if (!content.trim()) {
-    return <p className="notes-rich-empty">Sem conteudo ainda. Use titulos, checklist, links ou codigo para estruturar melhor a nota.</p>;
+    return <p className="notes-rich-empty">Sem conteúdo ainda. Use títulos, checklist, links ou código para estruturar melhor a nota.</p>;
   }
 
   const standaloneJson = prettifyJson(content);
@@ -995,7 +995,7 @@ function formatJsonTransform(context: TextTransformContext): TextTransformResult
     };
   }
 
-  return wrapFencedBlock(context, "json", '{\n  "titulo": "Nova nota",\n  "status": "rascunho"\n}');
+  return wrapFencedBlock(context, "json", '{\n  "título": "Nova nota",\n  "status": "rascunho"\n}');
 }
 
 function NoteEditor({
@@ -1055,7 +1055,7 @@ function NoteEditor({
         <input
           autoFocus
           className="notes-input notes-title-input"
-          placeholder="Titulo da nota"
+          placeholder="Título da nota"
           value={draft.title}
           onChange={(event) => onTitleChange(event.target.value)}
         />
@@ -1208,7 +1208,7 @@ function NoteEditor({
                   onChange={(event) => onContentChange(event.target.value)}
                 />
                 <div className="notes-editor-meta notes-editor-meta-modern">
-                  <span className="notes-card-inline-label">Conteudo</span>
+                  <span className="notes-card-inline-label">Conteúdo</span>
                   <span className="notes-card-counter">{draft.content.length} caracteres</span>
                 </div>
               </div>
@@ -1216,7 +1216,7 @@ function NoteEditor({
               {activePanel === "preview" ? (
                 <div className="notes-editor-modern-preview">
                   <div className="notes-editor-live-header">
-                    <span className="notes-card-inline-label">Visualizacao</span>
+                    <span className="notes-card-inline-label">Visualização</span>
                     <span className="notes-card-counter">Renderizacao atual da nota</span>
                   </div>
                   <div className="notes-editor-preview-surface notes-editor-preview-surface-modern">{renderRichContent(draft.content)}</div>
@@ -1709,8 +1709,8 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
       });
 
       if (!applied && toolId === "json") {
-        setError("Selecione um JSON valido para formatar ou use o bloco JSON como modelo.");
-        setEditorLastAction("Nao foi possivel formatar o JSON selecionado.");
+        setError("Selecione um JSON válido para formatar ou use o bloco JSON como modelo.");
+        setEditorLastAction("Não foi possível formatar o JSON selecionado.");
         setEditorActiveTool(toolId);
         setEditorActiveMarker(null);
         return;
@@ -1841,7 +1841,7 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
 
       setMessage("Nota copiada com sucesso.");
     } catch (copyError) {
-      setError(copyError instanceof Error ? copyError.message : "Nao foi possivel copiar a nota");
+      setError(copyError instanceof Error ? copyError.message : "Não foi possível copiar a nota");
     }
   }
 
@@ -1872,7 +1872,7 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
         doc.text("Gerado por Testing Company", marginX, footerY - 12);
         doc.text("Quality Control | Painel QA", marginX, footerY);
         doc.text(`Exportado em ${exportTimestamp}`, pageWidth - marginX, footerY - 12, { align: "right" });
-        doc.text(`Pagina ${pageNumber}`, pageWidth - marginX, footerY, { align: "right" });
+        doc.text(`Página ${pageNumber}`, pageWidth - marginX, footerY, { align: "right" });
       };
 
       if (logoDataUrl) {
@@ -1898,7 +1898,7 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(20);
       doc.setTextColor(15, 23, 42);
-      const titleLines = doc.splitTextToSize(note.title || "Sem titulo", contentWidth);
+      const titleLines = doc.splitTextToSize(note.title || "Sem título", contentWidth);
       doc.text(titleLines, marginX, cursorY);
       cursorY += titleLines.length * 24 + 8;
 
@@ -1925,10 +1925,10 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11.5);
       doc.setTextColor(11, 26, 60);
-      doc.text("Descricao", marginX, cursorY);
+      doc.text("Descrição", marginX, cursorY);
       cursorY += 18;
 
-      const contentLines = doc.splitTextToSize(getPlainNoteContent(note.content) || "Sem descricao.", contentWidth - 32);
+      const contentLines = doc.splitTextToSize(getPlainNoteContent(note.content) || "Sem descrição.", contentWidth - 32);
       const lineHeight = 16;
       let lineIndex = 0;
 
@@ -1939,7 +1939,7 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
           doc.setFont("helvetica", "bold");
           doc.setFontSize(11.5);
           doc.setTextColor(11, 26, 60);
-          doc.text("Descricao (continua)", marginX, cursorY);
+          doc.text("Descrição (continua)", marginX, cursorY);
           cursorY += 18;
         }
 
@@ -1965,7 +1965,7 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
           doc.setFont("helvetica", "bold");
           doc.setFontSize(11.5);
           doc.setTextColor(11, 26, 60);
-          doc.text("Descricao (continua)", marginX, cursorY);
+          doc.text("Descrição (continua)", marginX, cursorY);
           cursorY += 18;
         }
       }
@@ -1984,7 +1984,7 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
       doc.save(`${fileNameBase || "nota"}-quality-control.pdf`);
       setMessage("PDF exportado com sucesso.");
     } catch (exportError) {
-      setError(exportError instanceof Error ? exportError.message : "Nao foi possivel exportar a nota em PDF");
+      setError(exportError instanceof Error ? exportError.message : "Não foi possível exportar a nota em PDF");
     }
   }
 
@@ -2087,7 +2087,7 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
   if (!user) return null;
 
   const activeToast = error
-    ? { tone: "error" as const, title: "Atencao", text: error }
+    ? { tone: "error" as const, title: "Atenção", text: error }
     : message
       ? { tone: "success" as const, title: "Confirmado", text: message }
       : null;
@@ -2188,7 +2188,7 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
                           <FiSearch size={15} className="notes-search-icon" />
                           <input
                             type="text"
-                            placeholder="Buscar titulo, descricao, conteudo, status, prioridade ou cor"
+                            placeholder="Buscar título, descrição, conteúdo, status, prioridade ou cor"
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
                             className="notes-search-input"
@@ -2369,7 +2369,7 @@ export default function NotesButton({ defaultOpen = false }: NotesButtonProps) {
                                     <span className="notes-card-emoji">{noteEmoji}</span>
                                   </span>
                                   <div className="min-w-0 flex-1">
-                                    <p className="notes-card-title">{liveNote.title || "Sem titulo"}</p>
+                                    <p className="notes-card-title">{liveNote.title || "Sem título"}</p>
                                     <div className="notes-card-meta">
                                       <span className="notes-card-date">{isExpanded ? formatNoteDateFull(note.updatedAt) : formatNoteDate(note.updatedAt)}</span>
                                     </div>

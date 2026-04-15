@@ -21,24 +21,24 @@ const jsonError = (message: string, status: number) =>
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) return jsonError(status === 401 ? "Nao autenticado" : "Sem permissao", status);
+  if (!admin) return jsonError(status === 401 ? "Não autenticado" : "Sem permissão", status);
 
   const { id } = await context.params;
   const companies = await listLocalCompanies();
   const company = companies.find((item) => item.id === id);
-  if (!company) return jsonError("Empresa nao encontrada", 404);
+  if (!company) return jsonError("Empresa não encontrada", 404);
 
   return NextResponse.json(ClientSchema.parse(mapCompanyRecord(company)), { status: 200 });
 }
 
 export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) return jsonError(status === 401 ? "Nao autenticado" : "Sem permissao", status);
+  if (!admin) return jsonError(status === 401 ? "Não autenticado" : "Sem permissão", status);
 
   const { id } = await context.params;
   const companies = await listLocalCompanies();
   const current = companies.find((item) => item.id === id);
-  if (!current) return jsonError("Empresa nao encontrada", 404);
+  if (!current) return jsonError("Empresa não encontrada", 404);
 
   const body = await req.json().catch(() => null);
   const parsed = ClientCreateRequestSchema.partial().safeParse(body);
@@ -46,14 +46,14 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
 
   const input = parsed.data;
   const nextName = (input.company_name ?? input.name ?? current.name ?? current.company_name ?? "").trim();
-  if (!nextName) return jsonError("Nome da empresa obrigatorio", 400);
+  if (!nextName) return jsonError("Nome da empresa obrigatório", 400);
 
   const duplicateByName = companies.find(
     (company) =>
       company.id !== id &&
       normalizeComparableName(company.name ?? company.company_name ?? "") === normalizeComparableName(nextName),
   );
-  if (duplicateByName) return jsonError("Empresa ja cadastrada com esse nome", 409);
+  if (duplicateByName) return jsonError("Empresa já cadastrada com esse nome", 409);
 
   const nextTaxId = normalizeTaxId(
     typeof input.tax_id === "string" ? input.tax_id : typeof current.tax_id === "string" ? current.tax_id : null,
@@ -66,12 +66,12 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
             normalizeTaxId(typeof company.tax_id === "string" ? company.tax_id : null) === nextTaxId,
         )
       : null;
-  if (duplicateByTaxId) return jsonError("CNPJ ja cadastrado para outra empresa", 409);
+  if (duplicateByTaxId) return jsonError("CNPJ já cadastrado para outra empresa", 409);
 
   const { nextProjectCodes, patch } = buildCompanyUpdatePatch(input, current);
   const updated = await updateLocalCompany(id, patch);
 
-  if (!updated) return jsonError("Empresa nao encontrada", 404);
+  if (!updated) return jsonError("Empresa não encontrada", 404);
 
   if (Array.isArray((input as { qase_projects?: unknown[] }).qase_projects) && (input as { qase_projects?: unknown[] }).qase_projects?.length) {
     const projects = ((input as { qase_projects?: unknown[] }).qase_projects ?? [])
@@ -124,15 +124,15 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
 
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) return jsonError(status === 401 ? "Nao autenticado" : "Sem permissao", status);
+  if (!admin) return jsonError(status === 401 ? "Não autenticado" : "Sem permissão", status);
 
   const { id } = await context.params;
   const companies = await listLocalCompanies();
   const current = companies.find((item) => item.id === id);
-  if (!current) return jsonError("Empresa nao encontrada", 404);
+  if (!current) return jsonError("Empresa não encontrada", 404);
 
   const deleted = await deleteLocalCompany(id);
-  if (!deleted) return jsonError("Empresa nao encontrada", 404);
+  if (!deleted) return jsonError("Empresa não encontrada", 404);
 
   await addAuditLogSafe({
     actorUserId: admin.id,

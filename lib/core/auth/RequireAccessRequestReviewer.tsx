@@ -32,7 +32,7 @@ export function RequireAccessRequestReviewer({ children, fallback }: RequireAcce
 
   const allowed = isReviewerUser(user);
   const clientSlug = typeof (user as { clientSlug?: string | null } | null)?.clientSlug === "string" ? String((user as { clientSlug?: string | null }).clientSlug) : null;
-  const nonGlobalRedirect = user?.isGlobalAdmin ? "/admin/home" : clientSlug ? `/empresas/${encodeURIComponent(clientSlug)}/home` : "/empresas";
+  const nonGlobalRedirect = user?.isGlobalAdmin ? "/admin/dashboard" : clientSlug ? `/empresas/${encodeURIComponent(clientSlug)}/home` : "/empresas";
 
   useEffect(() => {
     if (loading) return;

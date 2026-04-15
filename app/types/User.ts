@@ -7,12 +7,14 @@ export type AppCompany = {
   roleAtCompany?: string | null;
 };
 
+import type { SystemRole } from "@/lib/auth/roles";
+
 export type AppUser = {
   id: string;
   email: string;
   name: string;
   avatarKey?: string | null;
-  roleGlobal: "ADMIN" | "USER" | "CLIENT";
+  roleGlobal: SystemRole;
   status: "active" | "inactive";
   company: AppCompany | null;
 };

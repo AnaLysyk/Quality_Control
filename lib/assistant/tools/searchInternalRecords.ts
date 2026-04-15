@@ -28,6 +28,43 @@ function extractSearchText(message: string) {
     .trim();
 }
 
+function getPriorityEmoji(priority: string): string {
+  switch (priority?.toLowerCase()) {
+    case "high":
+    case "alta":
+      return "🔴";
+    case "medium":
+    case "media":
+    case "média":
+      return "🟠";
+    case "low":
+    case "baixa":
+      return "🟢";
+    default:
+      return "⚪";
+  }
+}
+
+function getStatusEmoji(status: string): string {
+  switch (status?.toLowerCase()) {
+    case "open":
+    case "backlog":
+      return "📬";
+    case "in_progress":
+    case "andamento":
+      return "⚙️";
+    case "review":
+    case "revisao":
+      return "👁️";
+    case "done":
+    case "closed":
+    case "concluido":
+      return "✅";
+    default:
+      return "📋";
+  }
+}
+
 export async function toolSearchInternalRecords(user: AuthUser, context: AssistantScreenContext, message: string): Promise<AssistantExecutorResult> {
   const visibleTickets = await getVisibleTickets(user);
   const normalized = normalizeSearch(message);
@@ -57,24 +94,43 @@ export async function toolSearchInternalRecords(user: AuthUser, context: Assista
       .map((i) => i.ticket);
   }
 
+  // ─── Busca sem filtros: mostrar overview ───
   if (!reference && !query && !hasExplicitFilters) {
     const latest = tickets.slice(0, MAX_RESULTS);
+    
+    // Estatísticas rápidas
+    const highPriority = visibleTickets.filter((t) => t.priority === "high").length;
+    const unassigned = visibleTickets.filter((t) => !t.assignedToUserId).length;
+    const openCount = visibleTickets.filter((t) => t.status === "open" || t.status === "backlog").length;
+
+    const statsLine = `📊 **Visão geral:** ${visibleTickets.length} tickets | ${openCount} abertos | ${highPriority} alta prioridade | ${unassigned} sem responsável`;
+
     return {
       tool: "search_internal_records",
       success: true,
-      summary: latest.length ? `${latest.length} chamados recentes visiveis` : "nenhum chamado visivel",
+      summary: latest.length ? `${latest.length} chamados recentes` : "nenhum chamado visível",
       actions: [
-        { kind: "prompt", label: "Buscar chamado por ID", prompt: "Buscar o chamado SP-000001" },
-        { kind: "prompt", label: "Alta sem responsavel", prompt: "Buscar tickets com prioridade alta sem responsavel" },
-        { kind: "prompt", label: "Transformar nota em chamado", prompt: "Transformar este texto em chamado estruturado" },
+        { kind: "prompt", label: "🔍 Buscar por ID", prompt: "Buscar o chamado SP-000001" },
+        { kind: "prompt", label: "🔴 Alta prioridade", prompt: "Buscar tickets com prioridade alta" },
+        { kind: "prompt", label: "⚠️ Sem responsável", prompt: "Buscar tickets sem responsável" },
+        { kind: "prompt", label: "✏️ Criar chamado", prompt: "Transformar este texto em chamado" },
       ],
       reply: latest.length
         ? [
-            "Posso buscar por ID, status, prioridade, empresa ou usuario. Tambem consigo usar seu contexto atual para transformar texto ou nota em chamado. Enquanto isso, aqui estao alguns chamados visiveis no seu escopo:",
+            "## 🔍 Busca de Registros",
             "",
-            ...latest.map((t) => `- ${t.code} | ${t.title} | ${t.status} | prioridade ${t.priority}`),
+            statsLine,
+            "",
+            "### Chamados Recentes:",
+            "",
+            "| Código | Título | Status | Prioridade |",
+            "|--------|--------|--------|------------|",
+            ...latest.map((t) => `| **${t.code}** | ${t.title.slice(0, 40)}${t.title.length > 40 ? "..." : ""} | ${getStatusEmoji(t.status)} ${t.status} | ${getPriorityEmoji(t.priority)} ${t.priority} |`),
+            "",
+            "---",
+            "💡 Refine por **ID**, **status**, **prioridade** ou **responsável**",
           ].join("\n")
-        : "Nao encontrei chamados visiveis neste escopo agora. Se quiser, me informe um ID como `SP-000027` ou um filtro mais especifico.",
+        : "Não encontrei chamados visíveis neste escopo. Informe um **ID** como `SP-000027` ou um filtro mais específico.",
     };
   }
 
@@ -102,44 +158,84 @@ export async function toolSearchInternalRecords(user: AuthUser, context: Assista
           .slice(0, MAX_RESULTS)
       : [];
 
-  const sections: string[] = [];
+  const sections: string[] = ["## 🔍 Resultados da Busca", ""];
+
+  // ─── Tickets encontrados ───
   if (tickets.length) {
+    const ticketList = tickets.slice(0, MAX_RESULTS);
     sections.push(
-      "Chamados encontrados:",
-      ...tickets.slice(0, MAX_RESULTS).map((t) => `- ${t.code} | ${t.title} | ${t.status} | prioridade ${t.priority}`),
+      `### 🎫 Chamados (${ticketList.length}${tickets.length > MAX_RESULTS ? `/${tickets.length}` : ""})`,
+      "",
+      "| Código | Título | Status | Prioridade |",
+      "|--------|--------|--------|------------|",
+      ...ticketList.map((t) => 
+        `| **${t.code}** | ${t.title.slice(0, 35)}${t.title.length > 35 ? "..." : ""} | ${getStatusEmoji(t.status)} ${t.status} | ${getPriorityEmoji(t.priority)} ${t.priority} |`
+      ),
     );
   }
+
+  // ─── Usuários encontrados ───
   if (users.length) {
-    sections.push("", "Usuarios encontrados:", ...users.map((u) => `- ${u.name} | ${u.login} | ${u.email}`));
-  }
-  if (companies.length) {
-    sections.push("", "Empresas encontradas:", ...companies.map((c) => `- ${c.name} | slug ${c.slug}`));
+    sections.push(
+      "",
+      `### 👤 Usuários (${users.length})`,
+      "",
+      "| Nome | Login | Email |",
+      "|------|-------|-------|",
+      ...users.map((u) => `| ${u.name} | ${u.login ?? "-"} | ${u.email ?? "-"} |`),
+    );
   }
 
-  if (!sections.length) {
+  // ─── Empresas encontradas ───
+  if (companies.length) {
+    sections.push(
+      "",
+      `### 🏢 Empresas (${companies.length})`,
+      "",
+      "| Nome | Slug |",
+      "|------|------|",
+      ...companies.map((c) => `| ${c.name} | ${c.slug} |`),
+    );
+  }
+
+  if (sections.length <= 2) {
     return {
       tool: "search_internal_records",
       success: true,
       summary: "nenhum registro encontrado",
       actions: [
-        { kind: "prompt", label: "Explicar meu escopo", prompt: "Explicar meu escopo de acesso" },
-        { kind: "prompt", label: "Resumir esta tela", prompt: "Resumir esta tela" },
-        { kind: "prompt", label: "Transformar texto em chamado", prompt: "Transformar texto ou nota em chamado" },
+        { kind: "prompt", label: "🔐 Explicar meu escopo", prompt: "Explicar meu escopo de acesso" },
+        { kind: "prompt", label: "📍 Resumir esta tela", prompt: "Resumir esta tela" },
+        { kind: "prompt", label: "✏️ Criar chamado", prompt: "Criar chamado a partir de texto" },
       ],
-      reply: "Nao encontrei registros visiveis para esse criterio dentro do seu escopo atual. Posso tentar por ID do chamado, nome, status, prioridade ou empresa.",
+      reply: [
+        "## 🔍 Nenhum resultado encontrado",
+        "",
+        "Não encontrei registros para esse critério no seu escopo.",
+        "",
+        "**Tente:**",
+        "- Buscar por ID do chamado (ex: `SP-000027`)",
+        "- Filtrar por status: `abertos`, `em andamento`, `concluídos`",
+        "- Filtrar por prioridade: `alta`, `média`, `baixa`",
+        "- Buscar por empresa ou usuário específico",
+      ].join("\n"),
     };
   }
+
+  // ─── Ações sugeridas ───
+  const suggestedActions = tickets[0]
+    ? [
+        { kind: "prompt" as const, label: `📋 Resumir ${tickets[0].code}`, prompt: `Resumir o chamado ${tickets[0].code}` },
+        { kind: "prompt" as const, label: "🧪 Gerar caso de teste", prompt: `Gerar caso de teste para ${tickets[0].code}` },
+        { kind: "prompt" as const, label: "💬 Montar comentário", prompt: `Montar comentário para ${tickets[0].code}` },
+      ]
+    : buildPromptActions(context);
 
   return {
     tool: "search_internal_records",
     success: true,
-    summary: `tickets ${tickets.length} | usuarios ${users.length} | empresas ${companies.length}`,
-    actions: tickets[0]
-      ? [
-          { kind: "prompt", label: "Resumir primeiro chamado", prompt: `Resumir o chamado ${tickets[0].code}` },
-          { kind: "prompt", label: "Sugerir proximo passo", prompt: `Qual o proximo passo para o chamado ${tickets[0].code}?` },
-        ]
-      : buildPromptActions(context),
+    summary: `🎫 ${tickets.length} | 👤 ${users.length} | 🏢 ${companies.length}`,
+    actions: suggestedActions,
     reply: sections.join("\n"),
   };
 }

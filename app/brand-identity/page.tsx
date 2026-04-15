@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import Image from "next/image";
 import styles from "./page.module.css";
 
@@ -132,7 +134,7 @@ export default function BrandIdentityPage() {
             <div>
               <h3 className="text-xl font-semibold text-[#011848] mb-4">Qualidade</h3>
               <p className="text-[#4b5563]">
-                Compromisso com excelência e precisão em todos os processos de teste e validação.
+                Compromisso com excelência e precisão em todos os processos de teste e válidação.
               </p>
             </div>
             <div>

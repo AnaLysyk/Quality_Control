@@ -14,7 +14,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 export async function POST(req: NextRequest) {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
   if (!access.companyId && !access.companySlug) {
     return NextResponse.json({ error: "Sem empresa vinculada" }, { status: 403 });
@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     const message =
       statusCode === 401 || statusCode === 403
         ? "Token da Qase invalido ou sem acesso aos projetos."
-        : "Nao foi possivel consultar os projetos na Qase.";
+        : "Não foi possível consultar os projetos na Qase.";
     return NextResponse.json({ error: message }, { status: statusCode });
   }
 }

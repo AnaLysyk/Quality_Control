@@ -1,15 +1,15 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "../helpers/mockAuth";
 
 test.describe("runs - busca", () => {
   test("user filtra runs pela busca", async ({ page, context }) => {
     await mockAuth(context, {
       role: "user",
-      companies: ["griaule"],
-      clientSlug: "griaule",
+      companies: ["DEMO"],
+      clientSlug: "DEMO",
     });
 
-    await page.goto("/empresas/griaule/runs", { waitUntil: "networkidle" });
+    await page.goto("/empresas/demo/runs", { waitUntil: "networkidle" });
 
     const search = page.getByTestId("runs-search");
     await expect(search).toBeVisible();
@@ -19,3 +19,4 @@ test.describe("runs - busca", () => {
     await expect(page.getByTestId("runs-list")).toBeVisible({ timeout: 10000 });
   });
 });
+

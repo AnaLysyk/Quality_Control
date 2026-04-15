@@ -8,7 +8,14 @@ import { useAuth } from "@/context/AuthContext";
 import { useClientContext } from "@/context/ClientContext";
 import { useI18n } from "@/hooks/useI18n";
 import { hasFailedImageSrc, markFailedImageSrc } from "@/lib/failedImageSrc";
-import { shortenCompanyPathname, shouldUseShortCompanyRoutes } from "@/lib/companyRoutes";
+import {
+  canonicalizeCompanyPathnameForAccess,
+  getCompanyRouteSection,
+  getCompanyRouteTargetSlug,
+  isCompanyHomePathname,
+  isCompanyRoutePathname,
+  parseCompanyRoutePathname,
+} from "@/lib/companyRoutes";
 import { normalizeLocale, type Locale } from "@/lib/i18n";
 import {
   resolveFixedProfileKind,
@@ -56,32 +63,32 @@ const APP_SHELL_COPY = {
     sections: {
       home: "Home",
       dashboard: "Dashboard",
-      metrics: "Metricas",
-      apps: "Aplicacoes",
+      metrics: "Métricas",
+      apps: "Aplicações",
       runs: "Runs",
       defects: "Defeitos",
       support: "Suporte",
       testPlans: "Planos de teste",
       profile: "Perfil",
-      settings: "Configuracoes",
+      settings: "Configurações",
       commandCenter: "Command Center",
-      requests: "Solicitacoes",
+      requests: "Solicitações",
       documents: "Documentos",
-      users: "Usuarios",
+      users: "Usuários",
       companies: "Empresas",
       brandIdentity: "Identidade visual",
     },
     notes: {
-      dashboard: "Leitura operacional da empresa, com sinais de execucao, risco e desempenho.",
-      runs: "Acompanhe as execucoes manuais e integradas com contexto claro e leitura rapida.",
-      apps: "Catalogo visual das aplicacoes monitoradas, integracoes conectadas e projetos vinculados.",
-      defects: "Triagem dos defeitos e pontos de atencao que precisam de resposta do time.",
-      support: "Painel unificado de suporte para abrir tickets, acompanhar comentarios e consultar o andamento.",
-      testPlans: "Panorama dos planos, campanhas e vinculos com as aplicacoes da empresa.",
-      profile: "Cadastro institucional, identidade visual, usuarios e configuracoes do contexto atual.",
-      home: "Entrada institucional da empresa, com contexto salvo, aplicacoes e navegacao principal.",
-      commandCenter: "Visao executiva do ambiente administrativo, com acesso rapido aos modulos centrais.",
-      default: "Contexto visual da pagina com a assinatura da Testing Company e leitura imediata do modulo.",
+      dashboard: "Leitura operacional da empresa, com sinais de execução, risco e desempenho.",
+      runs: "Acompanhe as execuções manuais e integradas com contexto claro e leitura rápida.",
+      apps: "Catálogo visual das aplicações monitoradas, integrações conectadas e projetos vinculados.",
+      defects: "Triagem dos defeitos e pontos de atenção que precisam de resposta do time.",
+      support: "Painel unificado de suporte para abrir tickets, acompanhar comentários e consultar o andamento.",
+      testPlans: "Panorama dos planos, campanhas e vínculos com as aplicações da empresa.",
+      profile: "Cadastro institucional, identidade visual, usuários e configurações do contexto atual.",
+      home: "Entrada institucional da empresa, com contexto salvo, aplicações e navegação principal.",
+      commandCenter: "Visão executiva do ambiente administrativo, com acesso rápido aos módulos centrais.",
+      default: "Contexto visual da página com a assinatura da Testing Company e leitura imediata do módulo.",
     },
     badges: {
       platform: "Plataforma",
@@ -89,7 +96,7 @@ const APP_SHELL_COPY = {
     },
     aria: {
       openMenu: "Abrir menu",
-      pageCover: "Capa da pagina {title}",
+      pageCover: "Capa da página {title}",
       companyLogo: "Logo da empresa {name}",
       companyIdentity: "Identidade da empresa {name}",
       platformLogo: "Logo Testing Company",
@@ -99,17 +106,17 @@ const APP_SHELL_COPY = {
       admin: "Testing Company Admin",
       company: "Empresa {name}",
       companyProfile: "Perfil empresa • {name}",
-      companyUser: "Usuario da empresa • {name}",
+      companyUser: "Usuário da empresa • {name}",
       leader: "Lider TC • Testing Company",
-      support: "Suporte tecnico • Testing Company",
-      tcUser: "Usuario TC • Testing Company",
+      support: "Suporte técnico • Testing Company",
+      tcUser: "Usuário TC • Testing Company",
     },
     profiles: {
       empresa: "Empresa",
-      company_user: "Usuario da empresa",
-      testing_company_user: "Usuario TC",
+      company_user: "Usuário da empresa",
+      testing_company_user: "Usuário TC",
       leader_tc: "Lider TC",
-      technical_support: "Suporte tecnico",
+      technical_support: "Suporte técnico",
     },
   },
   "en-US": {
@@ -194,17 +201,17 @@ function replaceName(template: string, name: string) {
 
 function normalizeSectionKey(value: string) {
   const normalized = value.trim().toLowerCase();
-  if (normalized === "aplicacoes") return "apps";
+  if (normalized === "aplicacoes" || normalized === "aplicações") return "apps";
   if (normalized === "defeitos") return "defects";
   if (normalized === "suporte" || normalized === "chamados" || normalized === "meus chamados" || normalized === "support") return "support";
   if (normalized === "planos de teste" || normalized === "planos-de-teste") return "testPlans";
   if (normalized === "perfil" || normalized === "profile") return "profile";
-  if (normalized === "configuracoes" || normalized === "settings") return "settings";
+  if (normalized === "configurações" || normalized === "settings") return "settings";
   if (normalized === "command center") return "commandCenter";
-  if (normalized === "metricas" || normalized === "metrics") return "metrics";
-  if (normalized === "usuarios" || normalized === "users") return "users";
+  if (normalized === "métricas" || normalized === "metrics") return "metrics";
+  if (normalized === "usuários" || normalized === "users") return "users";
   if (normalized === "documentos" || normalized === "documents") return "documents";
-  if (normalized === "solicitacoes" || normalized === "requests") return "requests";
+  if (normalized === "solicitações" || normalized === "requests") return "requests";
   if (normalized === "empresas" || normalized === "companies") return "companies";
   if (normalized === "identidade visual" || normalized === "brand identity" || normalized === "brand-identity") return "brandIdentity";
   if (normalized === "home" || normalized === "dashboard" || normalized === "runs") return normalized as "home" | "dashboard" | "runs";
@@ -227,45 +234,17 @@ function resolveShortCompanyIdentity(
   pathname: string,
   copy: AppShellCopy,
 ): Omit<ShellIdentity, "profileLabel" | "coverClassName" | "logoSrc" | "logoAlt" | "logoFallbackText"> | null {
-  const parts = pathname.split("/").filter(Boolean);
-  if (parts.length < 2) return null;
+  const parsed = parseCompanyRoutePathname(pathname);
+  if (!parsed || parsed.kind === "internal") return null;
 
-  const rootSegment = parts[0] ?? "";
-  const knownRoots = new Set([
-    "admin",
-    "api",
-    "login",
-    "settings",
-    "me",
-    "profile",
-    "home",
-    "empresas",
-    "dashboard",
-    "runs",
-    "release",
-    "requests",
-    "docs",
-    "documentos",
-    "chamados",
-    "meus-chamados",
-    "clients",
-    "clients-list",
-    "integrations",
-    "issues",
-    "metrics",
-    "brand-identity",
-  ]);
-
-  if (knownRoots.has(rootSegment)) return null;
-
-  const rawSection = humanizeSegment(parts[1] ?? "home");
+  const rawSection = humanizeSegment(parsed.route.split("/")[0] ?? "home");
   const section = resolveSectionLabel(rawSection, copy);
 
   return {
-    kicker: replaceName(copy.kickers.company, humanizeSegment(rootSegment)),
-    title: normalizeSectionKey(rawSection) === "home" ? humanizeSegment(rootSegment) : section,
+    kicker: replaceName(copy.kickers.company, humanizeSegment(parsed.targetSlug)),
+    title: normalizeSectionKey(rawSection) === "home" ? humanizeSegment(parsed.targetSlug) : section,
     note: resolveSectionNote(rawSection, copy),
-    badge: parts[1] ? section : copy.badges.company,
+    badge: parsed.route !== "home" ? section : copy.badges.company,
   };
 }
 
@@ -425,37 +404,7 @@ function profileLogo(
 }
 
 function resolveRouteCompanySlug(pathname: string) {
-  const parts = pathname.split("/").filter(Boolean);
-  if (parts[0] === "empresas" && parts[1]) return decodeURIComponent(parts[1]);
-
-  const knownRoots = new Set([
-    "admin",
-    "api",
-    "login",
-    "settings",
-    "me",
-    "profile",
-    "home",
-    "dashboard",
-    "runs",
-    "release",
-    "requests",
-    "docs",
-    "documentos",
-    "chamados",
-    "meus-chamados",
-    "clients",
-    "clients-list",
-    "integrations",
-    "issues",
-    "metrics",
-    "brand-identity",
-    "empresas",
-  ]);
-
-  const rootSegment = parts[0] ?? "";
-  if (!rootSegment || knownRoots.has(rootSegment)) return null;
-  return decodeURIComponent(rootSegment);
+  return getCompanyRouteTargetSlug(pathname);
 }
 
 function isSupportRoute(pathname: string) {
@@ -469,40 +418,32 @@ function isSupportRoute(pathname: string) {
     return true;
   }
 
-  if (/^\/empresas\/[^/]+\/chamados(?:\/.*)?$/.test(pathname)) {
-    return true;
-  }
-
-  const parts = pathname.split("/").filter(Boolean);
-  return parts.length >= 2 && parts[1] === "chamados" && resolveRouteCompanySlug(pathname) !== null;
+  return getCompanyRouteSection(pathname) === "chamados";
 }
 
 function isCompanyDefectsRoute(pathname: string) {
-  if (/^\/empresas\/[^/]+\/defeitos(?:\/.*)?$/.test(pathname)) {
-    return true;
-  }
-
-  const parts = pathname.split("/").filter(Boolean);
-  return parts.length >= 2 && parts[1] === "defeitos" && resolveRouteCompanySlug(pathname) !== null;
+  return getCompanyRouteSection(pathname) === "defeitos";
 }
 
 function isCompanyAppsRoute(pathname: string) {
-  if (/^\/empresas\/[^/]+\/aplicacoes(?:\/.*)?$/.test(pathname)) {
-    return true;
-  }
+  const section = getCompanyRouteSection(pathname);
+  return section === "aplicacoes" || section === "aplicações";
+}
 
-  const parts = pathname.split("/").filter(Boolean);
-  return parts.length >= 2 && parts[1] === "aplicacoes" && resolveRouteCompanySlug(pathname) !== null;
+function isCompanyRunDetailRoute(pathname: string) {
+  // /empresas/[slug]/runs/[runSlug] or /empresas/[slug]/releases/[releaseSlug]
+  return /^\/empresas\/[^\/]+\/(runs|releases)\/[^\/]+/.test(pathname);
 }
 
 function shouldHideShellCover(pathname: string) {
-  const hasAdminHeroCover = /^\/admin\/(?:home|test-metric|users|clients|support|access-requests)(?:\/.*)?$/.test(pathname);
+  const hasAdminHeroCover = /^\/admin\/(?:home|dashboard|test-metric|users|clients|support|access-requests)(?:\/.*)?$/.test(pathname);
   return (
     pathname.startsWith("/settings/profile") ||
     pathname.startsWith("/requests") ||
     pathname.startsWith("/dashboard") ||
     isCompanyAppsRoute(pathname) ||
     isCompanyDefectsRoute(pathname) ||
+    isCompanyRunDetailRoute(pathname) ||
     isSupportRoute(pathname) ||
     hasAdminHeroCover
   );
@@ -522,8 +463,8 @@ export default function AppShell({ children }: AppShellProps) {
   const { activeClient, activeClientSlug } = useClientContext();
   const isLoginRoute = pathname.startsWith("/login");
   const useMinimalShell = pathname.length === 0 || isLoginRoute;
-  const isCompanyRoute = /^\/empresas\/[^/]+(?:\/.*)?$/.test(pathname);
-  const isCompanyHomeRoute = /^\/empresas\/[^/]+\/home(?:\/.*)?$/.test(pathname);
+  const isCompanyRoute = isCompanyRoutePathname(pathname);
+  const isCompanyHomeRoute = isCompanyHomePathname(pathname);
   const isHomeRoute = pathname === "/" || pathname === "/home" || /\/home$/.test(pathname);
   const hideShellCover = shouldHideShellCover(pathname);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -650,12 +591,7 @@ export default function AppShell({ children }: AppShellProps) {
   }
 
   useEffect(() => {
-    if (!pathname.startsWith("/empresas/")) return;
-
-    const nextPath = shortenCompanyPathname(pathname);
-    if (!nextPath) return;
-
-    const shouldCanonicalize = shouldUseShortCompanyRoutes({
+    const nextPath = canonicalizeCompanyPathnameForAccess(pathname, {
       isGlobalAdmin: user?.isGlobalAdmin === true,
       permissionRole: typeof user?.permissionRole === "string" ? user.permissionRole : null,
       role: typeof user?.role === "string" ? user.role : null,
@@ -668,9 +604,10 @@ export default function AppShell({ children }: AppShellProps) {
             : null,
       companyCount: companies.length,
       clientSlug: typeof user?.clientSlug === "string" ? user.clientSlug : null,
+      defaultClientSlug: typeof user?.defaultClientSlug === "string" ? user.defaultClientSlug : null,
     });
-
-    if (!shouldCanonicalize || nextPath === pathname) return;
+    if (!nextPath) return;
+    if (nextPath === pathname) return;
     router.replace(nextPath);
   }, [pathname, router, user, companies.length]);
 

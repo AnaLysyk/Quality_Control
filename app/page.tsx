@@ -1,3 +1,5 @@
+﻿export const dynamic = "force-dynamic";
+
 
 import HomeContent from "./home/HomeContent";
 import { redirect } from "next/navigation";
@@ -25,17 +27,9 @@ export default async function Page() {
   if (!access) redirect("/login");
   const user = await getLocalUserById(access.userId);
 
-  const isAdmin = access.isGlobalAdmin || access.role === "admin";
-  if (isAdmin) {
-    const requestedCompany =
-      activeCompanyCookie && access.companySlugs.includes(activeCompanyCookie) ? activeCompanyCookie : null;
-    if (requestedCompany) {
-      redirect(`/empresas/${requestedCompany}/home`);
-    }
-    redirect("/admin");
-  }
-
-  const companySlug = access.companySlug ?? access.companySlugs[0] ?? null;
+  const requestedCompany =
+    activeCompanyCookie && access.companySlugs.includes(activeCompanyCookie) ? activeCompanyCookie : null;
+  const companySlug = requestedCompany ?? access.companySlug ?? user?.default_company_slug ?? access.companySlugs[0] ?? null;
   if (companySlug) {
     redirect(
       buildCompanyPathForAccess(companySlug, "home", {
@@ -46,8 +40,14 @@ export default async function Page() {
         userOrigin: user?.user_origin ?? null,
         companyCount: access.companySlugs.length,
         clientSlug: companySlug,
+        defaultClientSlug: user?.default_company_slug ?? null,
       }),
     );
+  }
+
+  const isAdmin = access.isGlobalAdmin || access.role === "leader_tc" || access.role === "technical_support";
+  if (isAdmin) {
+    redirect("/admin");
   }
 
   return <HomeContent />;

@@ -4,12 +4,13 @@ import {
   listLocalCompanies,
   type LocalAuthCompany,
 } from "@/lib/auth/localStore";
+import { SYSTEM_ROLES } from "@/lib/auth/roles";
 
 export function canManageInstitutionalCompanyAccess(access: AccessContext | null | undefined) {
   if (!access) return false;
   return (
-    access.companyRole === "company_admin" ||
-    access.role === "company" ||
+    access.companyRole === SYSTEM_ROLES.EMPRESA ||
+    access.role === SYSTEM_ROLES.EMPRESA ||
     Boolean(access.companyId || access.companySlug)
   );
 }

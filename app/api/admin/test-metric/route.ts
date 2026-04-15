@@ -75,7 +75,7 @@ function mapManualRelease(release: ManualRelease): ReleaseEntry {
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    const legacy = { error: status === 401 ? "Nao autenticado" : "Sem permissao" };
+    const legacy = { error: status === 401 ? "Não autenticado" : "Sem permissão" };
     return apiFail(req, legacy.error, {
       status,
       code: status === 401 ? "UNAUTHENTICATED" : "FORBIDDEN",

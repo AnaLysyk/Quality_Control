@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { admin, status } = await requireGlobalAdminWithStatus(req);
     if (!admin) {
-      return NextResponse.json({ error: status === 401 ? 'Nao autenticado' : 'Sem permissao' }, { status });
+      return NextResponse.json({ error: status === 401 ? 'Não autenticado' : 'Sem permissão' }, { status });
     }
     const p = await params;
     const userId = p.id;
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     });
   } catch (e: any) {
     console.error("[admin.users.permissions.get]", e);
-    return NextResponse.json({ error: "Nao foi possivel carregar permissoes agora." }, { status: 500 });
+    return NextResponse.json({ error: "Não foi possível carregar permissões agora." }, { status: 500 });
   }
 }
 
@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const { admin, status } = await requireGlobalAdminWithStatus(req);
     if (!admin) {
-      return NextResponse.json({ error: status === 401 ? 'Nao autenticado' : 'Sem permissao' }, { status });
+      return NextResponse.json({ error: status === 401 ? 'Não autenticado' : 'Sem permissão' }, { status });
     }
     const p = await params;
     const userId = p.id;
@@ -80,7 +80,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ ok: true, saved, permissions: resolved.permissions });
   } catch (e: any) {
     console.error("[admin.users.permissions.patch]", e);
-    return NextResponse.json({ error: "Nao foi possivel salvar permissoes agora." }, { status: 500 });
+    return NextResponse.json({ error: "Não foi possível salvar permissões agora." }, { status: 500 });
   }
 }
 
@@ -88,7 +88,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   try {
     const { admin, status } = await requireGlobalAdminWithStatus(req);
     if (!admin) {
-      return NextResponse.json({ error: status === 401 ? 'Nao autenticado' : 'Sem permissao' }, { status });
+      return NextResponse.json({ error: status === 401 ? 'Não autenticado' : 'Sem permissão' }, { status });
     }
     const body = await req.json().catch(() => null);
     const restored = body?.reason === "restored";
@@ -127,7 +127,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     return NextResponse.json({ ok: true, permissions: resolved.permissions });
   } catch (e: any) {
     console.error("[admin.users.permissions.delete]", e);
-    return NextResponse.json({ error: "Nao foi possivel restaurar permissoes agora." }, { status: 500 });
+    return NextResponse.json({ error: "Não foi possível restaurar permissões agora." }, { status: 500 });
   }
 }
 

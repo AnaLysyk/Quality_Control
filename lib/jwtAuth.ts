@@ -62,13 +62,10 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   const isGlobalAdmin =
     (user as { is_global_admin?: boolean; globalRole?: string | null }).is_global_admin === true ||
     (user as { globalRole?: string | null }).globalRole === "global_admin";
-  const hasLegacyTechnicalSupportRole =
-    normalizeLocalRole((user as { role?: string | null }).role ?? null) === "it_dev" ||
-    links.some((link) => normalizeLocalRole(link.role ?? null) === "it_dev");
   const hasTechnicalSupportRole =
     normalizeLocalRole((user as { role?: string | null }).role ?? null) === "technical_support" ||
     links.some((link) => normalizeLocalRole(link.role ?? null) === "technical_support");
-  const hasFullCompanyAccess = isGlobalAdmin || hasLegacyTechnicalSupportRole || hasTechnicalSupportRole;
+  const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole;
   const shouldBindCompanyContext = !hasFullCompanyAccess;
   const allowedCompanies = hasFullCompanyAccess
     ? companies
@@ -85,14 +82,7 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   const effectiveRole = toLegacyRole(companyRole, isGlobalAdmin);
   const capabilities = resolveCapabilities({
     globalRole: isGlobalAdmin ? "global_admin" : null,
-    companyRole:
-      companyRole === "company_admin"
-        ? "company_admin"
-        : companyRole === "it_dev"
-          ? "it_dev"
-          : companyRole === "viewer"
-            ? "viewer"
-            : "user",
+    companyRole,
     membershipCapabilities: primaryLink?.capabilities ?? null,
   });
   const permissionAccess = await resolvePermissionAccessForUser(user.id);

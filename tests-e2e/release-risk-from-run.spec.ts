@@ -1,13 +1,13 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
-const DASHBOARD = "/empresas/griaule/dashboard";
+const DASHBOARD = "/empresas/demo/dashboard";
 
 test("run falha coloca release em risco", async ({ page, context }) => {
   await mockAuth(context, {
     role: "company",
-    companies: ["griaule"],
-    clientSlug: "griaule",
+    companies: ["DEMO"],
+    clientSlug: "DEMO",
   });
 
   await page.goto(DASHBOARD, { waitUntil: "networkidle" });
@@ -25,3 +25,4 @@ test("run falha coloca release em risco", async ({ page, context }) => {
   await expect(release.getByTestId("release-status")).toHaveText(/risk|risco/i, { timeout: 10000 });
   await expect(release.getByTestId("release-risk")).toBeVisible({ timeout: 10000 });
 });
+

@@ -1,0 +1,53 @@
+.imageStage {
+  display: flex;
+  min-height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.viewerImage {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transform-origin: center center;
+  transition: transform 0.2s ease-in-out;
+}
+
+.viewerFrame {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border: 0;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.zoom50 {
+  transform: scale(0.5);
+}
+
+.zoom75 {
+  transform: scale(0.75);
+}
+
+.zoom100 {
+  transform: scale(1);
+}
+
+.zoom125 {
+  transform: scale(1.25);
+}
+
+.zoom150 {
+  transform: scale(1.5);
+}
+
+.zoom175 {
+  transform: scale(1.75);
+}
+
+.zoom200 {
+  transform: scale(2);
+}

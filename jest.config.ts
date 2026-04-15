@@ -5,6 +5,7 @@ const config: JestConfigWithTsJest = {
   testEnvironment: "node",
   moduleNameMapper: {
     "^@/contracts/(.*)$": "<rootDir>/packages/contracts/src/$1",
+    "^@/lib/prisma$": "<rootDir>/lib/prismaClient.ts",
     "^@/lib/(.*)$": "<rootDir>/lib/$1",
     "^@/core/(.*)$": "<rootDir>/lib/core/$1",
     "^@/data/(.*)$": ["<rootDir>/data/$1", "<rootDir>/app/data/$1"],

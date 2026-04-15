@@ -98,16 +98,16 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     screenLabel: "Empresas e contexto da conta",
     screenSummary: [
       "Você está em: Empresas e contexto da conta.",
-      "Aqui você troca contexto de empresa e consulta vínculos/registros.",
-      "Dica: diga o slug/empresa para contextualizar ações."
+      "Aqui você acompanha status, chamados, defeitos e planos de teste da empresa.",
+      "Dica: pergunte sobre defeitos ativos, chamados abertos ou métricas de qualidade."
     ].join(" "),
     entityType: "company",
     entityId: (slug) => slug,
     suggestedPrompts: [
-      "Resumir esta empresa",
-      "Buscar chamados desta empresa",
-      "Listar registros vinculados",
-      "Trocar para outra empresa"
+      "Resumir status atual da empresa",
+      "Buscar chamados abertos desta empresa",
+      "Ver defeitos e bugs ativos",
+      "Consultar planos de teste em andamento"
     ],
   },
   {

@@ -3,7 +3,7 @@ import "server-only";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import type { AuthUser } from "@/lib/jwtAuth";
 import { compactMultiline } from "../helpers";
-import { buildPromptActions, displayName, displayRole, summarizePermissionMatrix } from "../data";
+import { buildPromptActions, displayName, displayRole, summarizePermissionMatrix, isEmpresaUser } from "../data";
 import type { AssistantScreenContext } from "../types";
 import type { AssistantExecutorResult } from "./types";
 
@@ -21,7 +21,7 @@ function getModuleEmoji(module: string): string {
   }
 }
 
-function buildImmediateActions(context: AssistantScreenContext): Array<{ emoji: string; text: string }> {
+function buildImmediateActions(context: AssistantScreenContext, user: AuthUser): Array<{ emoji: string; text: string }> {
   switch (context.module) {
     case "support":
       return [
@@ -37,10 +37,19 @@ function buildImmediateActions(context: AssistantScreenContext): Array<{ emoji: 
         { emoji: "⚙️", text: "Apontar ajustes para liberar ou restringir acesso" },
       ];
     case "company":
+      if (isEmpresaUser(user)) {
+        return [
+          { emoji: "🏢", text: "Resumir status atual da empresa" },
+          { emoji: "🐛", text: "Ver defeitos e bugs ativos no projeto" },
+          { emoji: "🧪", text: "Consultar planos de teste em andamento" },
+          { emoji: "📊", text: "Analisar métricas de qualidade dos testes" },
+        ];
+      }
       return [
         { emoji: "📋", text: "Resumir a empresa atual e registros vinculados" },
         { emoji: "🔍", text: "Buscar chamados ou usuários desta empresa" },
         { emoji: "📊", text: "Analisar métricas de atendimento" },
+        { emoji: "🔗", text: "Listar integrações ativas" },
       ];
     case "test_plans":
       return [
@@ -91,7 +100,7 @@ function buildPermissionLine(user: AuthUser) {
 
 export async function toolGetScreenContext(user: AuthUser, context: AssistantScreenContext): Promise<AssistantExecutorResult> {
   const currentUser = await getLocalUserById(user.id);
-  const actions = buildImmediateActions(context);
+  const actions = buildImmediateActions(context, user);
   const moduleEmoji = getModuleEmoji(context.module);
   const prompts = context.suggestedPrompts.slice(0, 4);
 

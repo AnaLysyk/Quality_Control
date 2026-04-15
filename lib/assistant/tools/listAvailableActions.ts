@@ -4,7 +4,7 @@ import type { AuthUser } from "@/lib/jwtAuth";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import type { AssistantScreenContext } from "../types";
 import { compactMultiline } from "../helpers";
-import { buildPromptActions, displayRole } from "../data";
+import { buildPromptActions, displayRole, isEmpresaUser } from "../data";
 import type { AssistantExecutorResult } from "./types";
 
 type ActionItem = {
@@ -37,9 +37,23 @@ export async function toolListAvailableActions(user: AuthUser, context: Assistan
   if (context.module === "test_plans" || hasPermissionAccess(user.permissions, "test_plans", "create")) {
     actions.push({ emoji: "🧪", text: "Gerar caso de teste estruturado", category: "analyze" });
   }
-  
+
   if (context.module === "permissions" || hasPermissionAccess(user.permissions, "permissions", "view")) {
     actions.push({ emoji: "🔐", text: "Explicar permissões e escopos de acesso", category: "analyze" });
+  }
+
+  if (context.module === "company") {
+    if (isEmpresaUser(user)) {
+      actions.push({ emoji: "🏢", text: "Resumir status atual da empresa", category: "read" });
+      actions.push({ emoji: "🐛", text: "Listar defeitos e bugs ativos no projeto", category: "read" });
+      actions.push({ emoji: "🚀", text: "Ver status dos planos de release", category: "read" });
+      actions.push({ emoji: "📊", text: "Analisar métricas de qualidade dos testes", category: "analyze" });
+    } else {
+      actions.push({ emoji: "🏢", text: "Resumir perfil da empresa", category: "read" });
+      actions.push({ emoji: "📊", text: "Analisar métricas de atendimento", category: "analyze" });
+      actions.push({ emoji: "🔗", text: "Listar integrações ativas", category: "read" });
+      actions.push({ emoji: "👥", text: "Ver usuários vinculados à empresa", category: "read" });
+    }
   }
 
   actions.push({ emoji: "📊", text: "Analisar métricas e indicadores", category: "analyze" });

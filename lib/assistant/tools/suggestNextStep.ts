@@ -4,6 +4,7 @@ import type { AuthUser } from "@/lib/jwtAuth";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { prisma } from "@/lib/prismaClient";
 import type { AssistantScreenContext } from "../types";
+import { isEmpresaUser } from "../data";
 import type { AssistantExecutorResult } from "./types";
 
 /**
@@ -76,10 +77,18 @@ export async function toolSuggestNextStep(user: AuthUser, context: AssistantScre
     suggestions.push("📋 Gerar relatório de qualidade da versão");
   }
 
-  if (context.module === "companies") {
-    suggestions.push("🏢 Resumir perfil da empresa atual");
-    suggestions.push("📊 Analisar métricas de atendimento do cliente");
-    suggestions.push("📋 Listar integrações ativas");
+  if (context.module === "company") {
+    if (isEmpresaUser(user)) {
+      suggestions.push("🏢 Resumir status atual da minha empresa");
+      suggestions.push("🐛 Listar defeitos e bugs ativos no projeto");
+      suggestions.push("📊 Ver métricas de qualidade dos testes");
+      suggestions.push("🚀 Checar status dos planos de release");
+    } else {
+      suggestions.push("🏢 Resumir perfil da empresa");
+      suggestions.push("📊 Analisar métricas de atendimento do cliente");
+      suggestions.push("📋 Listar integrações ativas");
+      suggestions.push("👥 Ver usuários vinculados à empresa");
+    }
   }
 
   // Sugestões genéricas se não há contexto específico

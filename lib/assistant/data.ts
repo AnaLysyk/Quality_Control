@@ -43,6 +43,21 @@ export function isAdminOperator(user: AuthUser) {
   return values.some((v) => v === "admin" || v === "company_admin" || v === "leader_tc" || v === "empresa");
 }
 
+/**
+ * Returns true for empresa/company-side users (not TC staff).
+ * An empresa user has empresa or company_user role but is NOT a TC leader or support.
+ */
+export function isEmpresaUser(user: AuthUser) {
+  if (user.isGlobalAdmin) return false;
+  const values = [user.permissionRole, user.role, user.companyRole]
+    .map((v) => normalizeSearch(v ?? ""))
+    .filter(Boolean);
+  return (
+    values.some((v) => v === "empresa" || v === "company_user") &&
+    !values.some((v) => v === "leader_tc" || v === "technical_support")
+  );
+}
+
 export function isProtectedPlatformProfile(user: { globalRole?: string | null; role?: string | null }) {
   if (normalizeSearch(user.globalRole ?? "") === "global_admin" || normalizeSearch(user.globalRole ?? "") === "leader_tc") return true;
   const r = normalizeSearch(user.role ?? "");

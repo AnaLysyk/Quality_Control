@@ -9,6 +9,7 @@ import {
   formatMessageWithRequestId,
   unwrapEnvelopeData,
 } from "@/lib/apiEnvelope";
+import type { AccessType } from "@/lib/accessRequestMessage";
 import { normalizeRequestProfileType, requestProfileTypeNeedsCompany, toInternalAccessType } from "@/lib/requestRouting";
 
 import type { AccessRequestItem, AccessTypeLabel, ClientOption, RawSupportRequest } from "./shared";
@@ -28,7 +29,7 @@ function computeDirty(a: AccessRequestItem, b: Partial<AccessRequestItem>) {
   return fields.some((f) => b[f] !== a[f]);
 }
 
-function toAcceptAccessType(label: AccessTypeLabel): "admin" | "company" | "user" | "global" {
+function toAcceptAccessType(label: AccessTypeLabel): AccessType {
   return toInternalAccessType(normalizeRequestProfileType(label) ?? "company_user");
 }
 

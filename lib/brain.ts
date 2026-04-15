@@ -1126,8 +1126,8 @@ export async function mergeNodes(
 
     // Mesclar metadados
     const mergedMetadata = {
-      ...target.metadata,
-      ...source.metadata,
+      ...(target.metadata !== null && typeof target.metadata === 'object' && !Array.isArray(target.metadata) ? target.metadata as Record<string, unknown> : {}),
+      ...(source.metadata !== null && typeof source.metadata === 'object' && !Array.isArray(source.metadata) ? source.metadata as Record<string, unknown> : {}),
       mergedFrom: sourceId,
       mergedAt: new Date().toISOString(),
     }

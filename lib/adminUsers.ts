@@ -153,7 +153,7 @@ export function resolvePermissionRoleForUser(
   if (strongest === "leader_tc") return SYSTEM_ROLES.LEADER_TC;
   if (strongest === "technical_support" || strongest === "it_dev") return SYSTEM_ROLES.TECHNICAL_SUPPORT;
   if (user?.globalRole === "global_admin" || user?.is_global_admin === true) return SYSTEM_ROLES.LEADER_TC;
-  if (strongest === "company_admin" || strongest === "empresa") return SYSTEM_ROLES.EMPRESA;
+  if (strongest === "empresa") return SYSTEM_ROLES.EMPRESA;
   if (origin === "client_company" || scope === "company_only" || allowMultiCompanyLink === false) {
     return SYSTEM_ROLES.COMPANY_USER;
   }
@@ -181,7 +181,6 @@ function isInstitutionalCompanyProfile(
     origin === "client_company" ||
     Boolean(companySlug) ||
     Boolean(companyName) ||
-    companyRole === "company_admin" ||
     companyRole === "empresa";
 
   if (!hasCompanyScopedSignal) return false;

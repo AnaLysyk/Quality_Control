@@ -54,7 +54,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     });
   }
 
-  const role = auth ? await resolveRunRole(effectiveAuth) : mockRole ?? "user";
+  const role = auth ? await resolveRunRole(effectiveAuth) : mockRole ?? "testing_company_user";
   if (!canEditRun(role)) {
     return apiFail(request, "Acesso proibido", {
       status: 403,

@@ -445,7 +445,7 @@ export async function POST(request: Request) {
       extra: { error: { message: "Acesso proibido" } },
     });
   }
-  const role = auth ? await resolveRunRole(effectiveAuth) : mockRole ?? "user";
+  const role = auth ? await resolveRunRole(effectiveAuth) : mockRole ?? "testing_company_user";
   if (!canCreateRun(role)) {
     return apiFail(request, "Acesso proibido", {
       status: 403,

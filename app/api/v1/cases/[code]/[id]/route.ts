@@ -89,7 +89,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     return apiFail(request, "Acesso proibido", { status: 403, code: "FORBIDDEN", extra: { error: { message: "Acesso proibido" } } });
   }
 
-  const role = auth ? await resolveRunRole(effectiveAuth) : mockRole ?? "user";
+  const role = auth ? await resolveRunRole(effectiveAuth) : mockRole ?? "testing_company_user";
   if (!canEditRun(role)) {
     return apiFail(request, "Acesso proibido", { status: 403, code: "FORBIDDEN", extra: { error: { message: "Acesso proibido" } } });
   }
@@ -141,7 +141,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     return apiFail(request, "Acesso proibido", { status: 403, code: "FORBIDDEN", extra: { error: { message: "Acesso proibido" } } });
   }
 
-  const role = auth ? await resolveRunRole(effectiveAuth) : mockRole ?? "user";
+  const role = auth ? await resolveRunRole(effectiveAuth) : mockRole ?? "testing_company_user";
   if (!canDeleteRun(role)) {
     return apiFail(request, "Acesso proibido", { status: 403, code: "FORBIDDEN", extra: { error: { message: "Acesso proibido" } } });
   }

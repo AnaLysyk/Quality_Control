@@ -151,7 +151,7 @@ export function resolvePermissionRoleForUser(
       ? userRole
       : strongestFromLinks;
   if (strongest === "leader_tc") return SYSTEM_ROLES.LEADER_TC;
-  if (strongest === "technical_support" || strongest === "it_dev") return SYSTEM_ROLES.TECHNICAL_SUPPORT;
+  if (strongest === "technical_support") return SYSTEM_ROLES.TECHNICAL_SUPPORT;
   if (user?.globalRole === "global_admin" || user?.is_global_admin === true) return SYSTEM_ROLES.LEADER_TC;
   if (strongest === "empresa") return SYSTEM_ROLES.EMPRESA;
   if (origin === "client_company" || scope === "company_only" || allowMultiCompanyLink === false) {
@@ -215,9 +215,7 @@ export function resolveAdminUserProfileKind(
   }
 
   if (
-    normalizedUserRole === "it_dev" ||
     normalizedUserRole === "technical_support" ||
-    normalizedLinkRoles.includes("it_dev") ||
     normalizedLinkRoles.includes("technical_support")
   ) {
     return SYSTEM_ROLES.TECHNICAL_SUPPORT;

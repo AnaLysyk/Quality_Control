@@ -4,6 +4,7 @@ export type AssistantModule =
   | "company"
   | "test_plans"
   | "dashboard"
+  | "releases"
   | "general";
 
 export type AssistantContextEntityType =

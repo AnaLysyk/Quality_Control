@@ -90,6 +90,7 @@ export function normalizeRequestProfileType(value: string | null | undefined): R
 }
 
 export function toInternalAccessType(profileType: RequestProfileType): AccessType {
+  if (profileType === "company_user") return "empresa";
   return profileType;
 }
 

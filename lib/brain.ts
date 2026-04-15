@@ -1630,7 +1630,7 @@ export async function updateBulkMetadata(
         const currentMetadata = (node.metadata as Record<string, unknown>) || {}
         const newMetadata = { ...currentMetadata, ...metadataUpdates }
 
-        await updateNodeMetadata(nodeId, newMetadata, userId)
+        await updateNodeMetadata(nodeId, newMetadata as Prisma.InputJsonValue, userId)
         updated++
       } catch (error) {
         console.error(`Failed to update ${nodeId}:`, error)

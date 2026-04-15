@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import PermissionGrid from './PermissionGrid';
 import styles from './styles.module.css';
-import { useI18n } from '@/lib/i18n';
+import { useI18n } from '@/hooks/useI18n';
 
 export default function UserPermissionsPanel({ user }: { user: any }) {
   const { language } = useI18n();

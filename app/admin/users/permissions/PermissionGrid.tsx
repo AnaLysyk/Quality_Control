@@ -2,7 +2,7 @@
 
 import React from 'react';
 import styles from './styles.module.css';
-import { useI18n } from '@/lib/i18n';
+import { useI18n } from '@/hooks/useI18n';
 
 type Props = {
   modules: { id: string; label: string; actions: string[] }[];

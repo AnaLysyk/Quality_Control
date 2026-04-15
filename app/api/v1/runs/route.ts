@@ -258,7 +258,7 @@ export async function GET(request: Request) {
       extra: { error: { message: "Acesso proibido" } },
     });
   }
-  if (!auth && mockRole && mockRole !== "company") {
+  if (!auth && mockRole && mockRole !== "empresa") {
     return apiFail(request, "Acesso proibido", {
       status: 403,
       code: "FORBIDDEN",
@@ -438,7 +438,7 @@ export async function POST(request: Request) {
       extra: { error: { message: "Acesso proibido" } },
     });
   }
-  if (!auth && mockRole && mockRole !== "company") {
+  if (!auth && mockRole && mockRole !== "empresa") {
     return apiFail(request, "Acesso proibido", {
       status: 403,
       code: "FORBIDDEN",

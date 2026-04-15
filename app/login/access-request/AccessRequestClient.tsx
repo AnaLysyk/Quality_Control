@@ -282,8 +282,8 @@ export default function AccessRequestClient() {
     const normalizedPhone = phone.trim();
     const normalizedRole = role.trim();
     const normalizedPassword = password.trim();
-    const normalizedTitle = titulo.trim();
-    const normalizedDescription = descricao.trim();
+    const normalizedTitle = título.trim();
+    const normalizedDescription = descrição.trim();
     const normalizedCompanyDraft = {
       companyName: companyDraft.companyName.trim(),
       companyTaxId: companyDraft.companyTaxId.trim(),

@@ -1567,7 +1567,7 @@ export default function KanbanItPage() {
                     >
                       {TYPE_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
-                          {ui.typeLabels[(opt.value ?? "tarefa").toLowerCase()] ?? ui.typeLabels.tarefa}
+                          {ui.typeLabels[(opt.value ?? "tarefa").toLowerCase() as keyof typeof ui.typeLabels] ?? ui.typeLabels.tarefa}
                         </option>
                       ))}
                     </select>

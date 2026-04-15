@@ -109,7 +109,7 @@ export async function toolSummarizeEntity(user: AuthUser, context: AssistantScre
       replyParts.push(
         "",
         "### 💬 Últimos comentários:",
-        ...comments.slice(0, 3).map((c) => `- **${c.authorName ?? "Anônimo"}**: ${c.content?.slice(0, 100)}${(c.content?.length ?? 0) > 100 ? "..." : ""}`)
+        ...comments.slice(0, 3).map((c) => `- **${c.authorName ?? "Anônimo"}**: ${c.body?.slice(0, 100)}${(c.body?.length ?? 0) > 100 ? "..." : ""}`)
       );
     }
 

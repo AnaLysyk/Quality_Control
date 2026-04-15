@@ -7,6 +7,7 @@ import { FiArrowRight, FiCompass, FiLogOut, FiSettings } from "react-icons/fi";
 import { useAuthUser, type AuthUser } from "@/hooks/useAuthUser";
 import { hasCapability, type Capability } from "@/lib/permissions";
 import { useSystemMetrics } from "@/hooks/useSystemMetrics";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import Breadcrumb from "@/components/Breadcrumb";
 import { useClientContext } from "@/context/ClientContext";
 import { resolveActiveIdentity } from "@/lib/activeIdentity";
@@ -51,6 +52,10 @@ export default function DashboardClient() {
   const safeUser: Partial<AuthUser> = user ?? {};
   const capabilities = (Array.isArray(safeUser.capabilities) ? safeUser.capabilities : []) as Capability[];
   const isGlobalAdmin = safeUser.isGlobalAdmin === true || safeUser.globalRole === "global_admin";
+  const normalizedRole = normalizeLegacyRole(
+    typeof safeUser.permissionRole === "string" ? safeUser.permissionRole : null,
+  ) ?? normalizeLegacyRole(typeof safeUser.role === "string" ? safeUser.role : null);
+  const canViewSystemMetrics = isGlobalAdmin || normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
   const companySlug = typeof safeUser.companySlug === "string" ? safeUser.companySlug : null;
   const roleLabel = typeof safeUser.role === "string" && safeUser.role.trim() ? safeUser.role : "usuário";
   const activeIdentity = resolveActiveIdentity({ user: user ?? null, activeCompany: activeClient });
@@ -102,7 +107,7 @@ export default function DashboardClient() {
     });
   }
 
-  if (isGlobalAdmin) {
+  if (canViewSystemMetrics) {
     quickLinks.push({
       title: "Administração",
       description: "Abra o painel para empresas, usuários e gestao.",
@@ -128,7 +133,7 @@ export default function DashboardClient() {
     {
       label: "Perfil",
       value: roleLabel,
-      note: isGlobalAdmin ? "Acesso administrativo ativo." : "Permissões conforme o contexto atual.",
+      note: canViewSystemMetrics ? "Acesso administrativo ativo." : "Permissões conforme o contexto atual.",
     },
     {
       label: "Empresa",
@@ -137,12 +142,12 @@ export default function DashboardClient() {
     },
     {
       label: "Usuários",
-      value: metrics && isGlobalAdmin ? String(metrics.overview.totalUsers) : "--",
+      value: metrics && canViewSystemMetrics ? String(metrics.overview.totalUsers) : "--",
       note: "Base total visivel no painel.",
     },
     {
       label: "Runs 30d",
-      value: metrics && isGlobalAdmin ? String(metrics.overview.totalTestRuns) : "--",
+      value: metrics && canViewSystemMetrics ? String(metrics.overview.totalTestRuns) : "--",
       note: "Volume de execuções no periodo.",
     },
   ];
@@ -228,7 +233,7 @@ export default function DashboardClient() {
           <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">{metricsError}</div>
         ) : null}
 
-        {isGlobalAdmin ? (
+        {canViewSystemMetrics ? (
           <section className="tc-panel">
             <div className="tc-panel-header">
               <div>

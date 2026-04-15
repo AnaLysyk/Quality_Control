@@ -85,7 +85,7 @@ export default function CompanyKanbanPage() {
   const companySlug = Array.isArray(slugParam) ? slugParam[0] : slugParam;
   const { user } = useAuthUser();
   const { language } = useI18n();
-  const copy = COPY[language] ?? COPY["pt-BR"];
+  const copy = (COPY[language] ?? COPY["pt-BR"]) as CopyType;
 
   const [runs, setRuns] = useState<ManualRun[]>([]);
   const [selectedRun, setSelectedRun] = useState<string | null>(null);

@@ -417,7 +417,7 @@ function ApplicationModal({
 export default function CompanyAppsPage() {
   const { slug } = useParams<{ slug: string }>();
   const { language } = useI18n();
-  const copy = COPY[language] ?? COPY["pt-BR"];
+  const copy = (COPY[language] ?? COPY["pt-BR"]) as CopyType;
   const [apps, setApps] = useState<AppItem[]>([]);
   const [blockedApps, setBlockedApps] = useState<BlockedAppItem[]>([]);
   const [loading, setLoading] = useState(true);

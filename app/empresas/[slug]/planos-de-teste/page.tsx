@@ -428,7 +428,7 @@ function normalizeCasesForSave(source: "manual" | "qase", cases: TestPlanCase[])
 export default function TestPlansPage() {
   const { slug } = useParams<{ slug: string }>();
   const { language } = useI18n();
-  const copy = COPY[language] ?? COPY["pt-BR"];
+  const copy = (COPY[language] ?? COPY["pt-BR"]) as CopyType;
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string>("");
   const [plans, setPlans] = useState<TestPlanItem[]>([]);

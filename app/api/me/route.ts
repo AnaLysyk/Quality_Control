@@ -71,7 +71,7 @@ export async function GET(req: Request) {
   const companiesResponse: AuthCompany[] = allowedCompanies.map((company) => {
     const link = links.find((item) => item.companyId === company.id);
     const rawRole = normalizeLocalRole(link?.role ?? null);
-    const role = hasPrivilegedAccess || rawRole === "company_admin" ? "ADMIN" : "USER";
+    const role = hasPrivilegedAccess || rawRole === "empresa" ? "ADMIN" : "USER";
     const createdAt =
       (typeof (company as { createdAt?: string | null }).createdAt === "string"
         ? (company as { createdAt?: string | null }).createdAt

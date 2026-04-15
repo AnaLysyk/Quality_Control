@@ -4,7 +4,7 @@ import { findLocalUserByEmailOrId } from "@/lib/auth/localStore";
 import type { AuthUser } from "@/lib/jwtAuth";
 import { hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
 import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
-import type { AssistantScreenContext } from "../types";
+import type { AssistantAction, AssistantScreenContext } from "../types";
 import { compactMultiline, normalizeText, sanitizeRoute } from "../helpers";
 import { buildPromptActions, displayName, summarizePermissionMatrix } from "../data";
 import type { AssistantExecutorResult } from "./types";
@@ -147,7 +147,7 @@ export async function toolExplainPermission(user: AuthUser, context: AssistantSc
   }
 
   // Sugestões
-  const actions = [
+  const actions: AssistantAction[] = [
     { kind: "prompt" as const, label: "🔍 Comparar perfis", prompt: "Comparar meu acesso com outro perfil" },
   ];
 

@@ -44,7 +44,7 @@ export default function RequestsPage() {
     PENDING: t("requestsPage.statusPending"),
     APPROVED: t("requestsPage.statusApproved"),
     REJECTED: t("requestsPage.statusRejected"),
-    NEEDS_REVISION: language === "en" ? "Needs revision" : "Aguardando ajuste",
+    NEEDS_REVISION: language === "en-US" ? "Needs revision" : "Aguardando ajuste",
   };
 
   const handleUnauthorized = useCallback(() => {

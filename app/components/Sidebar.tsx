@@ -349,6 +349,13 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         </div>
       </nav>
 
+      <div className="sidebar-footer px-4 py-4">
+        <div className="sidebar-footer-divider h-px w-full bg-white/10" aria-hidden />
+        <div className="sidebar-footer-note pt-3 text-[0.82rem] font-light italic tracking-[0.02em] text-white/46">
+          Testing Company Platform
+        </div>
+      </div>
+
     </aside>
   );
 
@@ -405,8 +412,11 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             </div>
           </nav>
 
-          <div className="p-4 border-t border-white/10">
-            <div className="sidebar-footer-note text-sm text-white/46">Testing Company Platform</div>
+          <div className="sidebar-footer p-4">
+            <div className="sidebar-footer-divider h-px w-full bg-white/10" aria-hidden />
+            <div className="sidebar-footer-note pt-3 text-[0.82rem] font-light italic tracking-[0.02em] text-white/46">
+              Testing Company Platform
+            </div>
           </div>
         </aside>
       </div>

@@ -325,9 +325,19 @@ export default function NotificationsButton({
                       <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">{item.description}</p>
                     )}
                   </div>
-                  <span className="text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                    {item.status === "closed" ? "Fechada" : "Nova"}
-                  </span>
+                  {item.status === "closed" ? (
+                    <span
+                      className="inline-flex h-7 shrink-0 items-center justify-center self-start rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) px-2.5 text-[10px] leading-none font-medium uppercase tracking-[0.14em] whitespace-nowrap text-(--tc-text-muted,#6b7280)"
+                      aria-label="Lida"
+                      title="Lida"
+                    >
+                      Lida
+                    </span>
+                  ) : (
+                    <span className="text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                      Nova
+                    </span>
+                  )}
                 </div>
                 <p className="mt-2 text-[11px] text-(--tc-text-muted,#6b7280)">
                   {new Date(item.createdAt).toLocaleString("pt-BR")}

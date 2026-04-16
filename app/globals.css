@@ -5725,13 +5725,15 @@ video {
   }
   .app-shell .sidebar-shell:not(:hover) .sidebar-label,
   .app-shell .sidebar-shell:not(:hover) .sidebar-brand,
-  .app-shell .sidebar-shell:not(:hover) .sidebar-divider {
+  .app-shell .sidebar-shell:not(:hover) .sidebar-divider,
+  .app-shell .sidebar-shell:not(:hover) .sidebar-footer {
     opacity: 0;
     transform: translateX(-6px);
     pointer-events: none;
   }
   .app-shell .sidebar-shell:not(:hover) .sidebar-label,
-  .app-shell .sidebar-shell:not(:hover) .sidebar-brand {
+  .app-shell .sidebar-shell:not(:hover) .sidebar-brand,
+  .app-shell .sidebar-shell:not(:hover) .sidebar-footer {
     flex: 0 0 0;
     width: 0;
     max-width: 0;
@@ -9457,6 +9459,10 @@ video {
   box-shadow: var(--shell-glass-shadow);
 }
 
+.sidebar-footer {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
 .theme-light .sidebar-shell-theme,
 .theme-light .sidebar-mobile-theme {
   color: var(--tc-text-primary);
@@ -9469,6 +9475,16 @@ video {
 .theme-light .sidebar-mobile-theme .sidebar-nav-caption,
 .theme-light .sidebar-mobile-theme .sidebar-footer-note {
   color: var(--tc-text-primary);
+}
+
+.theme-light .sidebar-shell-theme .sidebar-footer-note,
+.theme-light .sidebar-mobile-theme .sidebar-footer-note {
+  color: #4f4f57;
+}
+
+.theme-light .sidebar-shell-theme .sidebar-footer-divider,
+.theme-light .sidebar-mobile-theme .sidebar-footer-divider {
+  background: rgba(15, 23, 42, 0.12);
 }
 
 .theme-light .sidebar-shell-theme .sidebar-brand-title,

@@ -65,7 +65,10 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   const hasTechnicalSupportRole =
     normalizeLocalRole((user as { role?: string | null }).role ?? null) === "technical_support" ||
     links.some((link) => normalizeLocalRole(link.role ?? null) === "technical_support");
-  const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole;
+  const hasLeaderTcRole =
+    normalizeLocalRole((user as { role?: string | null }).role ?? null) === "leader_tc" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc");
+  const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
   const shouldBindCompanyContext = !hasFullCompanyAccess;
   const allowedCompanies = hasFullCompanyAccess
     ? companies

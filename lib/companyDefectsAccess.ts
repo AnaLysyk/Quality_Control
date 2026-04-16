@@ -5,6 +5,15 @@ import { getCompanyDefects, type CompanyDefectRecord } from "@/lib/companyDefect
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { resolveLocalUserDisplayName } from "@/lib/manualReleaseResponsible";
 
+export function hasGlobalCompanyVisibility(user: AuthUser | null | undefined) {
+  if (!user) return false;
+  if (user.isGlobalAdmin) return true;
+  const roles = [user.role, user.companyRole, user.permissionRole]
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim().toLowerCase());
+  return roles.includes("leader_tc") || roles.includes("technical_support");
+}
+
 export function resolveAllowedCompanySlugs(user: AuthUser) {
   if (Array.isArray(user.companySlugs) && user.companySlugs.length) return user.companySlugs;
   if (user.companySlug) return [user.companySlug];
@@ -13,7 +22,7 @@ export function resolveAllowedCompanySlugs(user: AuthUser) {
 
 export function canAccessCompanyDefects(user: AuthUser, companySlug: string) {
   if (!companySlug) return false;
-  if (user.isGlobalAdmin) return true;
+  if (hasGlobalCompanyVisibility(user)) return true;
   return resolveAllowedCompanySlugs(user).includes(companySlug);
 }
 

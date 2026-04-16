@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { isCompanyUser } from "@/lib/rbac/companyAccess";
 import { getCompanyDefects } from "@/lib/companyDefects";
+import { hasGlobalCompanyVisibility } from "@/lib/companyDefectsAccess";
 
 function normalizeKanbanStatus(status: "open" | "in_progress" | "done") {
   if (status === "done") return "aprovado";
@@ -14,7 +15,7 @@ export async function GET(_req: Request, context: { params: Promise<{ slug?: str
   if (!auth) {
     return NextResponse.json({ error: "Não autorizado", defects: [] }, { status: 401 });
   }
-  if (!auth.isGlobalAdmin && !isCompanyUser(auth)) {
+  if (!hasGlobalCompanyVisibility(auth) && !isCompanyUser(auth)) {
     return NextResponse.json({ error: "Acesso proibido", defects: [] }, { status: 403 });
   }
 
@@ -24,7 +25,7 @@ export async function GET(_req: Request, context: { params: Promise<{ slug?: str
     return NextResponse.json({ error: "slug obrigatório", defects: [] }, { status: 400 });
   }
 
-  if (!auth.isGlobalAdmin) {
+  if (!hasGlobalCompanyVisibility(auth)) {
     const allowed = Array.isArray(auth.companySlugs) ? auth.companySlugs : auth.companySlug ? [auth.companySlug] : [];
     if (!allowed.includes(companySlug)) {
       return NextResponse.json({ error: "Acesso proibido", defects: [] }, { status: 403 });

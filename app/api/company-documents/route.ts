@@ -55,6 +55,14 @@ type AuthContext = {
   permissionRole: string | null;
 };
 
+function hasGlobalCompanyAccess(auth: Pick<AuthContext, "isGlobalAdmin" | "role" | "companyRole" | "permissionRole">) {
+  if (auth.isGlobalAdmin) return true;
+  const roles = [auth.role, auth.companyRole, auth.permissionRole]
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim().toLowerCase());
+  return roles.includes("leader_tc") || roles.includes("technical_support");
+}
+
 const STORE_PATH = path.join(getJsonStoreDir(), "company-documents-store.json");
 const HISTORY_PATH = path.join(getJsonStoreDir(), "company-documents-history.json");
 const LOCAL_UPLOAD_ROOT = path.join(getJsonStoreDir(), "company-documents-files");
@@ -249,7 +257,15 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
           listLocalLinksForUser(userId),
           listLocalCompanies(),
         ]);
-        const allowed = isGlobalAdmin
+        const hasFullCompanyAccess =
+          isGlobalAdmin ||
+          role?.trim().toLowerCase() === "leader_tc" ||
+          role?.trim().toLowerCase() === "technical_support" ||
+          companyRole?.trim().toLowerCase() === "leader_tc" ||
+          companyRole?.trim().toLowerCase() === "technical_support" ||
+          permissionRole?.trim().toLowerCase() === "leader_tc" ||
+          permissionRole?.trim().toLowerCase() === "technical_support";
+        const allowed = hasFullCompanyAccess
           ? companies
           : companies.filter((company) => links.some((link) => link.companyId === company.id));
         return { userId, companySlugs: allowed.map((c) => c.slug), isGlobalAdmin, role, companyRole, permissionRole };
@@ -269,7 +285,15 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
         listLocalLinksForUser(userId),
         listLocalCompanies(),
       ]);
-      const allowed = isGlobalAdmin
+      const hasFullCompanyAccess =
+        isGlobalAdmin ||
+        role?.trim().toLowerCase() === "leader_tc" ||
+        role?.trim().toLowerCase() === "technical_support" ||
+        companyRole?.trim().toLowerCase() === "leader_tc" ||
+        companyRole?.trim().toLowerCase() === "technical_support" ||
+        permissionRole?.trim().toLowerCase() === "leader_tc" ||
+        permissionRole?.trim().toLowerCase() === "technical_support";
+      const allowed = hasFullCompanyAccess
         ? companies
         : companies.filter((company) => links.some((link) => link.companyId === company.id));
       return { userId, companySlugs: allowed.map((c) => c.slug), isGlobalAdmin, role, companyRole, permissionRole };
@@ -304,7 +328,15 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
       listLocalLinksForUser(userId),
       listLocalCompanies(),
     ]);
-    const allowed = isGlobalAdmin
+    const hasFullCompanyAccess =
+      isGlobalAdmin ||
+      role?.trim().toLowerCase() === "leader_tc" ||
+      role?.trim().toLowerCase() === "technical_support" ||
+      companyRole?.trim().toLowerCase() === "leader_tc" ||
+      companyRole?.trim().toLowerCase() === "technical_support" ||
+      permissionRole?.trim().toLowerCase() === "leader_tc" ||
+      permissionRole?.trim().toLowerCase() === "technical_support";
+    const allowed = hasFullCompanyAccess
       ? companies
       : companies.filter((company) => links.some((link) => link.companyId === company.id));
     return { userId, companySlugs: allowed.map((c) => c.slug), isGlobalAdmin, role, companyRole, permissionRole };
@@ -314,6 +346,7 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
 }
 
 function canAccessCompany(auth: AuthContext, companySlug: string) {
+  if (hasGlobalCompanyAccess(auth)) return true;
   return auth.companySlugs.includes(companySlug);
 }
 

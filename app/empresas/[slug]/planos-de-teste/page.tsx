@@ -1127,7 +1127,7 @@ export default function TestPlansPage() {
                   <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-white/70">
                     {draft.id ? copy.modalEditLabel : copy.modalNewLabel}
                   </p>
-                  <h2 className="mt-2 text-3xl font-black tracking-[-0.04em]">
+                  <h2 className="mt-2 text-3xl font-black tracking-[-0.04em] text-white">
                     {draft.source === "qase" ? copy.modalQaseTitle : copy.modalManualTitle}
                   </h2>
                   <p className="mt-2 text-sm text-white/82">

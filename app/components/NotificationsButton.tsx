@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiBell } from "react-icons/fi";
+import { FiBell, FiX } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { fetchApi } from "@/lib/api";
 import { getTicketStatusLabel, TICKET_STATUS_OPTIONS, type TicketStatus } from "@/lib/ticketsStatus";
@@ -351,9 +351,10 @@ export default function NotificationsButton({
               <button
                 type="button"
                 onClick={() => setDetailsOpen(false)}
-                className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#e5e7eb) text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                aria-label="Fechar"
               >
-                Fechar
+                <FiX className="h-5 w-5" />
               </button>
             </div>
             <div className="px-5 py-4 space-y-4">
@@ -404,7 +405,7 @@ export default function NotificationsButton({
                     setDetailsOpen(false);
                     setOpen(false);
                   }}
-                  className="inline-flex items-center gap-2 rounded-lg bg-(--tc-surface-dark,#0b1a3c) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
+                  className="inline-flex items-center gap-2 rounded-lg border-2 border-(--tc-accent,#ef0001) bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white shadow-sm transition hover:bg-(--tc-accent-hover,#d00001)"
                 >
                   Abrir link
                 </button>

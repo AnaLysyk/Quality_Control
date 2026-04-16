@@ -65,6 +65,9 @@ export async function POST(request: Request) {
     const qaseProjectRaw = (body.qaseProject ?? body.qase_project_code ?? body.projectCode ?? appRaw).toString();
     const summary = (body.summary ?? body.description ?? "Run cadastrada pelo painel.").toString();
     const radis = (body.radis ?? body.RADIS ?? "").toString() || undefined;
+    const clientSlug = (body.clientSlug ?? body.client_slug ?? "").toString() || undefined;
+    const clientId = (body.clientId ?? body.client_id ?? clientSlug ?? "").toString() || undefined;
+    const clientName = (body.clientName ?? body.client_name ?? "").toString() || undefined;
 
     if (!name || runIdRaw === undefined || runIdRaw === null) {
       return NextResponse.json({ error: "Informe nome e runId." }, { status: 400 });
@@ -87,6 +90,8 @@ export async function POST(request: Request) {
       project: app,
       qaseProject: qaseProjectRaw.trim().toUpperCase() || app.toUpperCase(),
       radis,
+      clientId: clientId ?? null,
+      clientName: clientName ?? null,
       source: "API",
     });
 

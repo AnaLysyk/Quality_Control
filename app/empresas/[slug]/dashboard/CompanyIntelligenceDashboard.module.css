@@ -19,3 +19,45 @@
   border-color: var(--app-border);
   background-color: var(--app-bg);
 }
+
+.chartContainer {
+  border-color: rgba(15, 23, 42, 0.06);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+:root.dark .chartContainer {
+  border-color: var(--tc-border, rgba(148, 163, 184, 0.24));
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.92) 0%, rgba(2, 6, 23, 0.92) 100%);
+}
+
+.chartBgRect {
+  fill: rgba(248, 250, 252, 0.58);
+}
+
+:root.dark .chartBgRect {
+  fill: rgba(30, 41, 59, 0.38);
+}
+
+.chartDotFill {
+  fill: #ffffff;
+}
+
+:root.dark .chartDotFill {
+  fill: var(--tc-surface, #0f172a);
+}
+
+.barTrack {
+  background-color: rgb(241 245 249);
+}
+
+:root.dark .barTrack {
+  background-color: rgb(30 41 59);
+}
+
+.barBg {
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.76) 0%, rgba(241, 245, 249, 0.92) 100%);
+}
+
+:root.dark .barBg {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.76) 0%, rgba(15, 23, 42, 0.92) 100%);
+}

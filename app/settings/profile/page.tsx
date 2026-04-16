@@ -541,9 +541,9 @@ function HeroMetric({
   );
 }
 
-const pageShellClass = "tc-page-shell relative z-10 px-2 py-4 sm:px-4 lg:px-6 xl:px-8 2xl:px-10";
-const heroClass = "tc-hero-panel";
-const surfaceClass = "tc-panel";
+const pageShellClass = "tc-page-shell relative z-10 max-w-none! gap-0! px-0 py-0";
+const heroClass = "tc-hero-panel rounded-none!";
+const surfaceClass = "tc-panel rounded-none!";
 const primaryButtonClass = "tc-button-primary";
 const secondaryButtonClass = "tc-button-secondary";
 const dangerButtonClass = "tc-button-danger";
@@ -711,6 +711,7 @@ export default function SettingsProfilePage() {
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const companyLogoInputRef = useRef<HTMLInputElement | null>(null);
   const jobTitleFieldRef = useRef<HTMLDivElement | null>(null);
+  const companyFieldsInitRef = useRef(false);
   const [jobTitleMenuOpen, setJobTitleMenuOpen] = useState(false);
   const router = useRouter();
 
@@ -1188,6 +1189,7 @@ export default function SettingsProfilePage() {
 
   useEffect(() => {
     if (!companyScopeKey) return;
+    companyFieldsInitRef.current = false;
     setActiveProfileTab("perfil");
     setCompanyUsersTabActivated(false);
     setCompanyUsers([]);
@@ -1226,7 +1228,7 @@ export default function SettingsProfilePage() {
 
   useEffect(() => {
     if (!companyProfile) return;
-    if (!companyDataFieldsDirty) {
+    if (!companyFieldsInitRef.current || !companyDataFieldsDirty) {
       setCompanyName((companyProfile.company_name ?? companyProfile.name ?? "").trim());
       setCompanyTaxId(companyProfile.tax_id ?? "");
       setCompanyCep(companyProfile.cep ?? "");
@@ -1237,6 +1239,7 @@ export default function SettingsProfilePage() {
       setCompanyDocsLink(companyProfile.docs_link ?? "");
       setCompanyLinkedinUrl(companyProfile.linkedin_url ?? "");
       setCompanyNotificationsFanoutEnabled(companyProfile.notifications_fanout_enabled ?? true);
+      companyFieldsInitRef.current = true;
     }
     if (!companyLogoHasChanges) {
       setCompanyLogoUrl(companyProfile.logo_url ?? "");
@@ -2042,11 +2045,13 @@ export default function SettingsProfilePage() {
     return (
       <div className="relative isolate min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
         <div className={pageShellClass}>
-          <Breadcrumb
-            items={[
-              { label: companyProfileBreadcrumbName },
-            ]}
-          />
+          <div className="px-4 pt-4 sm:px-6">
+            <Breadcrumb
+              items={[
+                { label: companyProfileBreadcrumbName },
+              ]}
+            />
+          </div>
 
           <section className={heroClass}>
             <div className="space-y-5">
@@ -2095,7 +2100,7 @@ export default function SettingsProfilePage() {
           <Tabs
             value={activeProfileTab}
             onValueChange={(value) => setActiveProfileTab(value === "usuários" && canViewCompanyUsersTab ? "usuários" : "perfil")}
-            className="space-y-5"
+            className="space-y-0"
           >
             <div className={`${surfaceClass} px-1 py-1`}>
               <TabsList className={`grid w-full ${canViewCompanyUsersTab ? "grid-cols-2" : "grid-cols-1"} rounded-[22px] bg-transparent p-0`}>
@@ -2104,9 +2109,9 @@ export default function SettingsProfilePage() {
               </TabsList>
             </div>
 
-            <TabsContent value="perfil" className="space-y-5">
-          <div className="space-y-5">
-            <div className="grid gap-5 2xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.55fr)]">
+            <TabsContent value="perfil" className="space-y-0">
+          <div className="space-y-0">
+            <div className="grid gap-0 2xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.55fr)]">
               <section className={`${surfaceClass} space-y-6`}>
                 <PanelHeader title="Dados da empresa" description="Campos do cadastro institucional da empresa. Descrição e notas ficam fora desta aba." />
                 <div className="grid gap-4 md:grid-cols-2">
@@ -2139,8 +2144,8 @@ export default function SettingsProfilePage() {
                         disabled={companyLoading || swrCompanyProfileLoading}
                         className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
                           companyNotificationsFanoutEnabled
-                            ? "border border-emerald-300 bg-emerald-100 text-emerald-800"
-                            : "border border-amber-300 bg-amber-100 text-amber-800"
+                            ? "border border-emerald-300 bg-emerald-100 text-emerald-800 dark:border-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-300"
+                            : "border border-red-300 bg-red-100 text-red-800 dark:border-red-500 dark:bg-red-900/40 dark:text-red-300"
                         }`}
                         aria-label="Alternar fan-out de notificações"
                         title="Alternar fan-out de notificações"
@@ -2246,23 +2251,23 @@ export default function SettingsProfilePage() {
               <FieldHint tone="strong">Baseado no nome da empresa e validado contra logins já existentes.</FieldHint>
               <Feedback message={profileError} tone="error" />
               <Feedback message={profileSuccess} tone="success" />
-            </section>
 
-            <section className={`${surfaceClass} flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`}>
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-(--tc-text-primary)">Salvar dados da empresa</p>
-                <p className="text-xs font-medium text-(--tc-text-muted)">
-                  Este botao salva a logo, os dados da empresa e o usuário institucional.
-                </p>
+              <div className="flex flex-col gap-3 border-t border-(--tc-border) pt-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-(--tc-text-primary)">Salvar dados da empresa</p>
+                  <p className="text-xs font-medium text-(--tc-text-muted)">
+                    Este botao salva a logo, os dados da empresa e o usuário institucional.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className={`${primaryButtonClass} w-full sm:w-auto`}
+                  disabled={companyLoading || companyLogoUploading || profileLoading || loading || !companyProfileSaveHasChanges}
+                  onClick={handleCompanyDetailsSaveRequest}
+                >
+                  {companyLoading || companyLogoUploading || profileLoading ? "Salvando..." : "Salvar"}
+                </button>
               </div>
-              <button
-                type="button"
-                className={`${primaryButtonClass} w-full sm:w-auto`}
-                disabled={companyLoading || companyLogoUploading || profileLoading || loading || !companyProfileSaveHasChanges}
-                onClick={handleCompanyDetailsSaveRequest}
-              >
-                {companyLoading || companyLogoUploading || profileLoading ? "Salvando..." : "Salvar"}
-              </button>
             </section>
 
             <section className={`${surfaceClass} space-y-6`}>
@@ -2745,7 +2750,7 @@ export default function SettingsProfilePage() {
             </TabsContent>
 
             {canViewCompanyUsersTab ? (
-            <TabsContent value="usuários" className="space-y-5">
+            <TabsContent value="usuários" className="space-y-0">
               <section className={`${surfaceClass} space-y-5`}>
                 <div className="flex flex-col gap-4 border-b border-(--tc-border) pb-4 lg:flex-row lg:items-center lg:justify-between">
                   <div className="space-y-1">

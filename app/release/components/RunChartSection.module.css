@@ -1,0 +1,8 @@
+.barSegment {
+  width: var(--segment-width);
+  background-color: var(--segment-color);
+}
+
+.statusDot {
+  background-color: var(--dot-color);
+}

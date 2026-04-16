@@ -6,6 +6,7 @@ import { shouldUseJsonStore } from "@/lib/storeMode";
 import { getAccessRequestById } from "@/data/accessRequestsStore";
 import { createAccessRequestComment, listAccessRequestComments } from "@/data/accessRequestCommentsStore";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
+import { notifyAccessRequestComment } from "@/lib/notificationService";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -88,6 +89,13 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     authorId: admin.id || null,
     body: comment,
   });
+
+  notifyAccessRequestComment({
+    requestId: id,
+    commentId: record.id,
+    authorName: admin.email || "Admin",
+    body: comment,
+  }).catch((err) => console.error("Falha ao notificar comentario:", err));
 
   return NextResponse.json({ item: record }, { status: 200 });
 }

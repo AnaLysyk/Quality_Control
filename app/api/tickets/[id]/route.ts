@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getTicketById, deleteTicketForUser, updateTicket } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
-import { notifyTicketAssigned } from "@/lib/notificationService";
+import { notifyTicketAssigned, notifyTicketUpdated } from "@/lib/notificationService";
 import { canAssignTicket, canEditTicketContent, canManageAllTickets, canMoveTicket, canViewTicket } from "@/lib/rbac/tickets";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 import { listAdminUserItems } from "@/lib/adminUsers";
@@ -142,6 +142,17 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
         tags: updated.tags,
       },
     }).catch((err) => console.error("Falha ao registrar atualização:", err));
+    const changedFields: string[] = [];
+    if (body?.title !== undefined && body.title !== item.title) changedFields.push("titulo");
+    if (body?.description !== undefined) changedFields.push("descricao");
+    if (body?.priority !== undefined && body.priority !== item.priority) changedFields.push("prioridade");
+    if (body?.type !== undefined && body.type !== item.type) changedFields.push("tipo");
+    notifyTicketUpdated({
+      ticket: updated,
+      actorId: user.id,
+      actorName: user.name ?? user.email ?? null,
+      changedFields,
+    }).catch((err) => console.error("Falha ao notificar atualizacao:", err));
   }
 
   const enriched = await attachAssigneeToTicket(updated);

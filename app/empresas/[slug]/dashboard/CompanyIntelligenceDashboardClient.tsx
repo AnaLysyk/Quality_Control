@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   FiActivity,
   FiAlertTriangle,
@@ -22,7 +22,7 @@ import { getAppMeta } from "@/lib/appMeta";
 import css from "./CompanyIntelligenceDashboard.module.css";
 import type { CompanyDashboardData } from "./companyDashboardData";
 
-type PeriodPreset = "7d" | "30d" | "90d" | "180d" | "custom";
+type PeriodPreset = "all" | "7d" | "30d" | "90d" | "180d" | "custom";
 type GroupBy = "day" | "week" | "month" | "release" | "application";
 type ChartMetric = "passRate" | "failRate" | "runs" | "blocked";
 type ChartView = "qualityTimeline" | "runsTimeline" | "applicationHealth" | "applicationDefects";
@@ -122,6 +122,7 @@ type ContextualFilterKey =
   | "statusFilter";
 
 const PERIOD_OPTIONS: Array<{ value: PeriodPreset; label: string }> = [
+  { value: "all", label: "Todo período" },
   { value: "7d", label: "7 dias" },
   { value: "30d", label: "30 dias" },
   { value: "90d", label: "90 dias" },
@@ -144,7 +145,7 @@ const CHART_VIEW_OPTIONS: Array<{ value: ChartView; label: string }> = [
 ];
 
 const DEFAULT_FILTERS: DashboardFilterState = {
-  periodPreset: "90d",
+  periodPreset: "all",
   groupBy: "month",
   chartView: "qualityTimeline",
   applicationFilter: "all",
@@ -304,17 +305,17 @@ function matchesStatusFilter(run: EnrichedRun, statusFilter: StatusFilter) {
 }
 
 function toneClasses(tone: "positive" | "warning" | "critical" | "neutral") {
-  if (tone === "positive") return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (tone === "warning") return "border-amber-200 bg-amber-50 text-amber-700";
-  if (tone === "critical") return "border-rose-200 bg-rose-50 text-rose-700";
-  return "border-slate-200 bg-slate-100 text-slate-700";
+  if (tone === "positive") return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
+  if (tone === "warning") return "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300";
+  if (tone === "critical") return "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300";
+  return "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";
 }
 
 function softInsightClasses(tone: "positive" | "warning" | "critical" | "neutral") {
-  if (tone === "positive") return "border-[rgba(16,185,129,0.16)] bg-[linear-gradient(180deg,rgba(236,253,245,0.72)_0%,rgba(255,255,255,0.98)_100%)]";
-  if (tone === "warning") return "border-[rgba(245,158,11,0.16)] bg-[linear-gradient(180deg,rgba(255,251,235,0.84)_0%,rgba(255,255,255,0.98)_100%)]";
-  if (tone === "critical") return "border-[rgba(244,63,94,0.16)] bg-[linear-gradient(180deg,rgba(255,241,242,0.82)_0%,rgba(255,255,255,0.98)_100%)]";
-  return "border-[rgba(15,23,42,0.08)] bg-[linear-gradient(180deg,rgba(248,250,252,0.92)_0%,rgba(255,255,255,0.98)_100%)]";
+  if (tone === "positive") return "border-[rgba(16,185,129,0.16)] bg-[linear-gradient(180deg,rgba(236,253,245,0.72)_0%,rgba(255,255,255,0.98)_100%)] dark:border-emerald-800/40 dark:bg-[linear-gradient(180deg,rgba(6,78,59,0.32)_0%,rgba(15,23,42,0.98)_100%)]";
+  if (tone === "warning") return "border-[rgba(245,158,11,0.16)] bg-[linear-gradient(180deg,rgba(255,251,235,0.84)_0%,rgba(255,255,255,0.98)_100%)] dark:border-amber-800/40 dark:bg-[linear-gradient(180deg,rgba(120,53,15,0.32)_0%,rgba(15,23,42,0.98)_100%)]";
+  if (tone === "critical") return "border-[rgba(244,63,94,0.16)] bg-[linear-gradient(180deg,rgba(255,241,242,0.82)_0%,rgba(255,255,255,0.98)_100%)] dark:border-rose-800/40 dark:bg-[linear-gradient(180deg,rgba(136,19,55,0.32)_0%,rgba(15,23,42,0.98)_100%)]";
+  return "border-[rgba(15,23,42,0.08)] bg-[linear-gradient(180deg,rgba(248,250,252,0.92)_0%,rgba(255,255,255,0.98)_100%)] dark:border-slate-700/40 dark:bg-[linear-gradient(180deg,rgba(30,41,59,0.72)_0%,rgba(15,23,42,0.98)_100%)]";
 }
 
 function softInsightAccent(tone: "positive" | "warning" | "critical" | "neutral") {
@@ -337,6 +338,10 @@ function riskTone(level: RiskLevel) {
 }
 
 function resolveRange(periodPreset: PeriodPreset, from: string, to: string): Range {
+  if (periodPreset === "all") {
+    return { start: null, end: null, durationMs: null };
+  }
+
   const now = Date.now();
   if (periodPreset === "custom") {
     const start = from ? startOfDay(Date.parse(from)) : null;
@@ -701,7 +706,7 @@ function Panel(props: {
 }) {
   const surfaceClassName =
     props.variant === "softGradient"
-      ? "border-[rgba(1,24,72,0.08)] [background:radial-gradient(circle_at_top_left,rgba(1,24,72,0.09)_0%,transparent_26%),radial-gradient(circle_at_bottom_right,rgba(239,0,1,0.1)_0%,transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.98)_0%,rgba(246,249,255,0.98)_56%,rgba(255,246,247,0.98)_100%)] dark:border-(--tc-border,#334155) dark:[background:linear-gradient(180deg,rgba(15,23,42,0.92)_0%,rgba(2,6,23,0.92)_100%)]"
+      ? "border-[rgba(1,24,72,0.08)] [background:radial-gradient(circle_at_top_left,rgba(1,24,72,0.09)_0%,transparent_26%),radial-gradient(circle_at_bottom_right,rgba(239,0,1,0.1)_0%,transparent_32%)] dark:border-(--tc-border,#334155) dark:[background:radial-gradient(circle_at_top_left,rgba(100,160,255,0.1)_0%,transparent_26%),radial-gradient(circle_at_bottom_right,rgba(239,0,1,0.08)_0%,transparent_32%)]"
       : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)";
 
   const eyebrowClassName =
@@ -753,13 +758,13 @@ function StatCard(props: {
     "text-(--tc-text,#0b1a3c)";
 
   return (
-    <div className="h-full min-h-43 rounded-[20px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-4">
+    <div className="h-full min-h-43 rounded-[20px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-4 dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">{props.label}</div>
           <div className={`mt-2 text-3xl font-extrabold tracking-[-0.04em] ${tone}`}>{props.value}</div>
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-(--tc-surface-2,#f1f5f9) text-(--tc-primary,#0b1a3c)">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-(--tc-surface-2,#f1f5f9) text-(--tc-primary,#0b1a3c) dark:bg-(--tc-surface-2,#1e293b) dark:text-(--tc-text,#e2e8f0)">
           {props.icon}
         </div>
       </div>
@@ -815,8 +820,8 @@ function MiniLineChart(props: { points: SeriesPoint[]; metric: Exclude<ChartMetr
   const periodEndLabel = props.points.at(-1)?.label ?? "-";
 
   return (
-    <div className="overflow-hidden rounded-[20px] border border-[rgba(15,23,42,0.06)] bg-[linear-gradient(180deg,#ffffff_0%,#fbfdff_100%)] p-5">
-      <div className="mb-4 flex flex-col gap-4 border-b border-[rgba(15,23,42,0.06)] pb-4 lg:flex-row lg:items-start lg:justify-between">
+    <div className={`overflow-hidden rounded-[20px] border p-5 ${css.chartContainer}`}>
+      <div className="mb-4 flex flex-col gap-4 border-b border-[rgba(15,23,42,0.06)] pb-4 dark:border-slate-700/30 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">
             {meta.label}
@@ -835,27 +840,27 @@ function MiniLineChart(props: { points: SeriesPoint[]; metric: Exclude<ChartMetr
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
           {meta.targetValue != null ? (
             <div>
-              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)]">Meta</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)] dark:text-slate-400">Meta</span>
               <span className="ml-2 font-bold text-[rgba(11,160,122,0.92)]">{metricFormatter(meta.targetValue)}</span>
             </div>
           ) : null}
           <div>
-              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)]">Período</span>
-            <span className="ml-2 font-medium text-[rgba(8,32,77,0.68)]">{periodStartLabel} a {periodEndLabel}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)] dark:text-slate-400">Período</span>
+            <span className="ml-2 font-medium text-[rgba(8,32,77,0.68)] dark:text-slate-300">{periodStartLabel} a {periodEndLabel}</span>
           </div>
         </div>
       </div>
 
       {props.points.length > 0 ? (
         <div className="grid gap-3 lg:grid-cols-[auto_1fr]">
-          <div className="hidden h-64 flex-col justify-between py-2 text-[11px] font-semibold text-[rgba(8,32,77,0.52)] lg:flex">
+          <div className="hidden h-64 flex-col justify-between py-2 text-[11px] font-semibold text-[rgba(8,32,77,0.52)] dark:text-slate-400 lg:flex">
             {displayTicks.map((tick) => (
               <div key={tick}>{metricFormatter(tick)}</div>
             ))}
           </div>
 
           <div>
-            <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-medium text-[rgba(8,32,77,0.58)]">
+            <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-medium text-[rgba(8,32,77,0.58)] dark:text-slate-400">
               <span className="inline-flex items-center gap-2">
                 <span className={`h-2.5 w-2.5 rounded-full ${css.seriesDot}`} {...{ style: { '--dot-color': meta.colors[1] } as React.CSSProperties }} />
                 Série: {meta.label}
@@ -884,7 +889,7 @@ function MiniLineChart(props: { points: SeriesPoint[]; metric: Exclude<ChartMetr
                 </filter>
               </defs>
 
-              <rect x="0" y={chartPadding} width="100" height={plotBottom - chartPadding} rx="3.5" fill="rgba(248,250,252,0.58)" />
+              <rect x="0" y={chartPadding} width="100" height={plotBottom - chartPadding} rx="3.5" className={css.chartBgRect} />
 
               {displayTicks.map((tick) => {
                 const y = chartValueToY(tick, scale.min, scale.max, chartHeight, 5);
@@ -924,7 +929,8 @@ function MiniLineChart(props: { points: SeriesPoint[]; metric: Exclude<ChartMetr
                     cx={point.x}
                     cy={point.y}
                     r={index === points.length - 1 ? "1.95" : "1.3"}
-                    fill={index === points.length - 1 ? meta.colors[1] : "#ffffff"}
+                    fill={index === points.length - 1 ? meta.colors[1] : undefined}
+                    className={index === points.length - 1 ? undefined : css.chartDotFill}
                     stroke={meta.colors[1]}
                     strokeWidth={index === points.length - 1 ? "1.35" : "1.05"}
                   />
@@ -932,7 +938,7 @@ function MiniLineChart(props: { points: SeriesPoint[]; metric: Exclude<ChartMetr
               ))}
             </svg>
 
-            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] text-[rgba(8,32,77,0.56)] sm:grid-cols-3 lg:grid-cols-5">
+            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] text-[rgba(8,32,77,0.56)] dark:text-slate-400 sm:grid-cols-3 lg:grid-cols-5">
               {xAxisLabels.map((point) => (
                 <div key={point.key} className="truncate">
                   <span className="font-medium">{point.label}</span>
@@ -940,7 +946,7 @@ function MiniLineChart(props: { points: SeriesPoint[]; metric: Exclude<ChartMetr
               ))}
             </div>
 
-            <div className="mt-4 text-[11px] font-medium uppercase tracking-[0.12em] text-[rgba(8,32,77,0.48)]">
+            <div className="mt-4 text-[11px] font-medium uppercase tracking-[0.12em] text-[rgba(8,32,77,0.48)] dark:text-slate-500">
               Período analisado: {periodStartLabel} a {periodEndLabel}
             </div>
           </div>
@@ -961,22 +967,22 @@ function RunsBarChart(props: { points: SeriesPoint[] }) {
   const periodEndLabel = props.points.at(-1)?.label ?? "-";
 
   return (
-    <div className="overflow-hidden rounded-[20px] border border-[rgba(15,23,42,0.06)] bg-[linear-gradient(180deg,#ffffff_0%,#fbfdff_100%)] p-5">
-      <div className="mb-4 flex flex-col gap-3 border-b border-[rgba(15,23,42,0.06)] pb-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className={`overflow-hidden rounded-[20px] border p-5 ${css.chartContainer}`}>
+      <div className="mb-4 flex flex-col gap-3 border-b border-[rgba(15,23,42,0.06)] pb-4 dark:border-slate-700/30 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(8,32,77,0.48)]">Execuções</div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(8,32,77,0.48)] dark:text-slate-400">Execuções</div>
           <div className="mt-2 text-[40px] font-extrabold leading-none tracking-[-0.06em] text-(--tc-text,#0b1a3c)">
             {formatCompactNumber(totalRuns)}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)]">Pico</span>
-            <span className="ml-2 font-medium text-[rgba(8,32,77,0.68)]">{formatCompactNumber(peak)} run(s)</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)] dark:text-slate-400">Pico</span>
+            <span className="ml-2 font-medium text-[rgba(8,32,77,0.68)] dark:text-slate-300">{formatCompactNumber(peak)} run(s)</span>
           </div>
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)]">Período</span>
-            <span className="ml-2 font-medium text-[rgba(8,32,77,0.68)]">{periodStartLabel} a {periodEndLabel}</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)] dark:text-slate-400">Período</span>
+            <span className="ml-2 font-medium text-[rgba(8,32,77,0.68)] dark:text-slate-300">{periodStartLabel} a {periodEndLabel}</span>
           </div>
         </div>
       </div>
@@ -989,14 +995,14 @@ function RunsBarChart(props: { points: SeriesPoint[] }) {
           const height = Math.max((point.runs / peak) * 100, point.runs > 0 ? 12 : 0);
           return (
             <div key={point.key} className="flex min-w-0 flex-col items-center gap-2">
-              <div className="text-[11px] font-semibold text-[rgba(8,32,77,0.68)]">{formatCompactNumber(point.runs)}</div>
-              <div className="relative flex h-48 w-full items-end justify-center rounded-[18px] bg-[linear-gradient(180deg,rgba(248,250,252,0.76)_0%,rgba(241,245,249,0.92)_100%)] px-2 pb-2">
+              <div className="text-[11px] font-semibold text-[rgba(8,32,77,0.68)] dark:text-slate-300">{formatCompactNumber(point.runs)}</div>
+              <div className={`relative flex h-48 w-full items-end justify-center rounded-[18px] px-2 pb-2 ${css.barBg}`}>
                 <div
                   className={`w-full rounded-[14px] bg-[linear-gradient(180deg,rgba(36,82,149,0.92)_0%,rgba(1,24,72,0.98)_100%)] shadow-[0_10px_22px_rgba(1,24,72,0.14)] ${css.barHeight}`}
                   {...{ style: { '--bar-h': `${height}%` } as React.CSSProperties }}
                 />
               </div>
-              <div className="truncate text-center text-[11px] font-medium text-[rgba(8,32,77,0.58)]">{point.label}</div>
+              <div className="truncate text-center text-[11px] font-medium text-[rgba(8,32,77,0.58)] dark:text-slate-400">{point.label}</div>
             </div>
           );
         })}
@@ -1014,10 +1020,10 @@ function ApplicationHealthChart(props: { applications: ApplicationAggregate[] })
     .slice(0, 8);
 
   return (
-    <div className="overflow-hidden rounded-[20px] border border-[rgba(15,23,42,0.06)] bg-[linear-gradient(180deg,#ffffff_0%,#fbfdff_100%)] p-5">
-      <div className="mb-4 flex flex-col gap-2 border-b border-[rgba(15,23,42,0.06)] pb-4">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(8,32,77,0.48)]">Aplicações comparadas</div>
-        <div className="text-sm text-[rgba(8,32,77,0.66)]">Pass rate por aplicação já considerando os filtros ativos.</div>
+    <div className={`overflow-hidden rounded-[20px] border p-5 ${css.chartContainer}`}>
+      <div className="mb-4 flex flex-col gap-2 border-b border-[rgba(15,23,42,0.06)] pb-4 dark:border-slate-700/30">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(8,32,77,0.48)] dark:text-slate-400">Aplicações comparadas</div>
+        <div className="text-sm text-[rgba(8,32,77,0.66)] dark:text-slate-400">Pass rate por aplicação já considerando os filtros ativos.</div>
       </div>
 
       <div className="space-y-4">
@@ -1046,7 +1052,7 @@ function ApplicationHealthChart(props: { applications: ApplicationAggregate[] })
                 </div>
                 <div className="shrink-0 text-sm font-bold text-(--tc-text,#0b1a3c)">{formatPercent(application.passRate)}</div>
               </div>
-              <div className="mt-2 h-2.5 rounded-full bg-slate-100">
+              <div className={`mt-2 h-2.5 rounded-full ${css.barTrack}`}>
                 <div
                   className={`h-full rounded-full shadow-[0_8px_16px_rgba(15,23,42,0.12)] ${css.barWidth}`}
                   {...{ style: { '--bar-w': `${Math.max(application.passRate, application.runs > 0 ? 4 : 0)}%`, background: barTone } as React.CSSProperties }}
@@ -1067,10 +1073,10 @@ function ApplicationDefectsChart(props: { applications: ApplicationAggregate[] }
   const peak = Math.max(...items.map((application) => application.defects), 1);
 
   return (
-    <div className="overflow-hidden rounded-[20px] border border-[rgba(15,23,42,0.06)] bg-[linear-gradient(180deg,#ffffff_0%,#fbfdff_100%)] p-5">
-      <div className="mb-4 flex flex-col gap-2 border-b border-[rgba(15,23,42,0.06)] pb-4">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(8,32,77,0.48)]">Concentração de defeitos</div>
-        <div className="text-sm text-[rgba(8,32,77,0.66)]">Onde os defeitos estão se acumulando dentro do recorte filtrado.</div>
+    <div className={`overflow-hidden rounded-[20px] border p-5 ${css.chartContainer}`}>
+      <div className="mb-4 flex flex-col gap-2 border-b border-[rgba(15,23,42,0.06)] pb-4 dark:border-slate-700/30">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(8,32,77,0.48)] dark:text-slate-400">Concentração de defeitos</div>
+        <div className="text-sm text-[rgba(8,32,77,0.66)] dark:text-slate-400">Onde os defeitos estão se acumulando dentro do recorte filtrado.</div>
       </div>
 
       <div className="space-y-4">
@@ -1088,7 +1094,7 @@ function ApplicationDefectsChart(props: { applications: ApplicationAggregate[] }
                 </div>
                 <div className="shrink-0 text-sm font-bold text-(--tc-text,#0b1a3c)">{formatCompactNumber(application.defects)}</div>
               </div>
-              <div className="mt-2 h-2.5 rounded-full bg-slate-100">
+              <div className={`mt-2 h-2.5 rounded-full ${css.barTrack}`}>
                 <div
                   className={`h-full rounded-full bg-[linear-gradient(90deg,rgba(1,24,72,0.92)_0%,rgba(239,0,1,0.95)_100%)] shadow-[0_8px_16px_rgba(239,0,1,0.12)] ${css.barWidth}`}
                   {...{ style: { '--bar-w': `${width}%` } as React.CSSProperties }}
@@ -1116,10 +1122,10 @@ function SelectField(props: {
     <label className="flex flex-col gap-1.5">
       <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">{props.label}</span>
       <Select value={props.value} onValueChange={props.onChange} disabled={props.disabled}>
-        <SelectTrigger className={`h-10.5 rounded-2xl border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 py-2 text-[15px] font-semibold text-(--tc-text,#0b1a3c) shadow-none focus-visible:ring-[rgba(36,82,149,0.16)] data-placeholder:text-(--tc-text-muted,#6b7280) ${props.disabled ? "cursor-not-allowed opacity-55" : ""}`}>
+        <SelectTrigger className={`h-10.5 rounded-2xl border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 py-2 text-[15px] font-semibold text-(--tc-text,#0b1a3c) shadow-none focus-visible:ring-[rgba(36,82,149,0.16)] data-placeholder:text-(--tc-text-muted,#6b7280) dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a) ${props.disabled ? "cursor-not-allowed opacity-55" : ""}`}>
           <SelectValue aria-label={selectedOption?.label}>{selectedOption?.label ?? "Selecionar"}</SelectValue>
         </SelectTrigger>
-        <SelectContent className="w-(--radix-select-trigger-width) rounded-[18px] border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) shadow-[0_18px_38px_rgba(1,24,72,0.12)]">
+        <SelectContent className="w-(--radix-select-trigger-width) rounded-[18px] border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) shadow-[0_18px_38px_rgba(1,24,72,0.12)] dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)">
           {props.options.map((option) => (
             <SelectItem
               key={option.value}
@@ -1141,7 +1147,7 @@ function ToggleChip(props: { active: boolean; onClick: () => void; label: string
     <button
       type="button"
       onClick={props.onClick}
-      className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-semibold tracking-[0.03em] transition ${props.active ? "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text,#0b1a3c) shadow-[0_4px_10px_rgba(1,24,72,0.08)]" : "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) text-(--tc-text-muted,#6b7280)"}`}
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-semibold tracking-[0.03em] transition ${props.active ? "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text,#0b1a3c) shadow-[0_4px_10px_rgba(1,24,72,0.08)] dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)" : "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) text-(--tc-text-muted,#6b7280) dark:border-(--tc-border,#334155) dark:bg-(--tc-surface-2,#1e293b)"}`}
     >
       {props.label}
     </button>
@@ -1155,8 +1161,8 @@ function ResultViewButton(props: { active: boolean; label: string; onClick: () =
       onClick={props.onClick}
       className={`inline-flex items-center rounded-full border px-3.5 py-2 text-sm font-semibold transition ${
         props.active
-          ? "border-transparent bg-(--tc-primary,#0b1a3c) text-white"
-          : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text,#0b1a3c)"
+          ? "border-transparent bg-(--tc-primary,#0b1a3c) text-white dark:bg-(--tc-primary,#245295)"
+          : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text,#0b1a3c) dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)"
       }`}
     >
       {props.label}
@@ -1280,8 +1286,9 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [exportingPdf, setExportingPdf] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState<DashboardFilterState | null>(null);
+  const [appliedFilters, setAppliedFilters] = useState<DashboardFilterState | null>(DEFAULT_FILTERS);
   const [activeView, setActiveView] = useState<ResultView>("overview");
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   const currentDraftFilters = useMemo<DashboardFilterState>(
     () => ({
@@ -1581,9 +1588,11 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   );
 
   const filteredDefects = useMemo(() => {
-    if (filteredRuns.length === 0 || activeSourceFilter === "integration") return [];
+    if (activeSourceFilter === "integration") return [];
     const runSlugs = new Set(filteredRuns.map((run) => run.slug));
-    const applicationKeys = new Set(filteredRuns.map((run) => run.applicationKey));
+    const applicationKeys = new Set(
+      (filteredRuns.length > 0 ? filteredRuns : enrichedRuns).map((run) => run.applicationKey),
+    );
 
     return props.defects.filter((defect) => {
       const time = Math.max(toTimestamp(defect.updatedAt), toTimestamp(defect.createdAt));
@@ -1594,12 +1603,14 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
       if (defect.runSlug) return runSlugs.has(defect.runSlug);
       return applicationKeys.has(defect.applicationKey);
     });
-  }, [props.defects, filteredRuns, ranges, activeApplicationFilter, activeRunFilter, activeEnvironmentFilter, hasMultipleEnvironments, activeSourceFilter]);
+  }, [props.defects, filteredRuns, enrichedRuns, ranges, activeApplicationFilter, activeRunFilter, activeEnvironmentFilter, hasMultipleEnvironments, activeSourceFilter]);
 
   const previousDefects = useMemo(() => {
-    if (!previousRange || previousRuns.length === 0 || activeSourceFilter === "integration") return [];
+    if (!previousRange || activeSourceFilter === "integration") return [];
     const runSlugs = new Set(previousRuns.map((run) => run.slug));
-    const applicationKeys = new Set(previousRuns.map((run) => run.applicationKey));
+    const applicationKeys = new Set(
+      (previousRuns.length > 0 ? previousRuns : enrichedRuns).map((run) => run.applicationKey),
+    );
 
     return props.defects.filter((defect) => {
       const time = Math.max(toTimestamp(defect.updatedAt), toTimestamp(defect.createdAt));
@@ -1610,7 +1621,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
       if (defect.runSlug) return runSlugs.has(defect.runSlug);
       return applicationKeys.has(defect.applicationKey);
     });
-  }, [props.defects, previousRuns, previousRange, activeApplicationFilter, activeRunFilter, activeEnvironmentFilter, hasMultipleEnvironments, activeSourceFilter]);
+  }, [props.defects, previousRuns, enrichedRuns, previousRange, activeApplicationFilter, activeRunFilter, activeEnvironmentFilter, hasMultipleEnvironments, activeSourceFilter]);
 
   const executiveSummary = useMemo(
     () => summarizeRuns(filteredRuns, filteredDefects),
@@ -1757,6 +1768,9 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
     syncDraftFilters(next);
     setAppliedFilters(next);
     setActiveView("overview");
+    requestAnimationFrame(() => {
+      resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   const resetFilters = () => {
@@ -2050,7 +2064,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   return (
     <div className="relative isolate min-h-screen bg-(--page-bg,#f5f6fa) px-4 pb-6 pt-2 text-(--page-text,#0b1a3c) sm:px-6 sm:pb-7 sm:pt-3 lg:px-10 lg:pb-8 lg:pt-4">
       <div className="relative z-10 flex w-full max-w-none flex-col gap-4 2xl:gap-5">
-        <section className="flex flex-col gap-2.5 border-b border-[rgba(15,23,42,0.08)] pb-3 lg:flex-row lg:items-start lg:justify-between">
+        <section className="flex flex-col gap-2.5 border-b border-[rgba(15,23,42,0.08)] pb-3 dark:border-slate-700/30 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
               Dashboard {props.companyName}
@@ -2083,7 +2097,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
           <div className="flex shrink-0 flex-wrap items-start gap-2 lg:justify-end lg:self-start">
             <Link
               href="../metrics"
-              className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c)"
+              className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c) dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)"
             >
               <FiLayers className="h-4 w-4" />
               Métricas
@@ -2092,7 +2106,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
               type="button"
               onClick={handleExportPdf}
               disabled={!analysisRequested || !hasFilterResults || exportingPdf}
-              className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-60 dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)"
             >
               <FiDownload className="h-4 w-4" />
               {exportingPdf ? "Gerando PDF..." : "Exportar PDF"}
@@ -2121,7 +2135,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setPeriodPreset(option.value)}
+                  onClick={() => setPeriodPreset(periodPreset === option.value ? "all" : option.value)}
                   className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-[0.03em] transition ${periodPreset === option.value ? "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text,#0b1a3c) shadow-[0_4px_10px_rgba(1,24,72,0.08)]" : "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) text-(--tc-text-muted,#6b7280)"}`}
                 >
                   {option.label}
@@ -2215,7 +2229,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                 hint="Escolha como deseja enxergar as execuções já filtradas."
               />
               <label className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgba(8,32,77,0.58)]">Data inicial</span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgba(8,32,77,0.58)] dark:text-slate-400">Data inicial</span>
                 <input
                   type="date"
                   value={dateFrom}
@@ -2223,11 +2237,11 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                     setDateFrom(event.target.value);
                     setPeriodPreset("custom");
                   }}
-                  className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 py-2 text-[15px] font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-[rgba(36,82,149,0.32)]"
+                  className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 py-2 text-[15px] font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-[rgba(36,82,149,0.32)] dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)"
                 />
               </label>
               <label className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgba(8,32,77,0.58)]">Data final</span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgba(8,32,77,0.58)] dark:text-slate-400">Data final</span>
                 <input
                   type="date"
                   value={dateTo}
@@ -2235,13 +2249,13 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                     setDateTo(event.target.value);
                     setPeriodPreset("custom");
                   }}
-                  className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 py-2 text-[15px] font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-[rgba(36,82,149,0.32)]"
+                  className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 py-2 text-[15px] font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-[rgba(36,82,149,0.32)] dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)"
                 />
               </label>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgba(8,32,77,0.58)]">Atalhos</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgba(8,32,77,0.58)] dark:text-slate-400">Atalhos</span>
               <div className="flex flex-wrap gap-2">
                 <ToggleChip active={compareEnabled} onClick={() => setCompareEnabled((value) => !value)} label="Comparar período" />
                 <ToggleChip active={onlyWithDefects} onClick={() => setOnlyWithDefects((value) => !value)} label="Com defeitos" />
@@ -2290,6 +2304,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
           </div>
         </Panel>
 
+        <div ref={resultsRef} />
         {!analysisRequested ? (
           <Panel
             eyebrow="Estado inicial"
@@ -2331,7 +2346,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
           </Panel>
         ) : (
           <>
-            <div className="flex flex-col gap-3 rounded-[20px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 rounded-[20px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-3 dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a) sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <div className="text-sm font-semibold text-(--tc-text,#0b1a3c)">Leitura aplicada</div>
                 <div className="mt-1 text-sm text-(--tc-text-muted,#6b7280)">{resultSummaryLine}</div>
@@ -2366,7 +2381,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                 {activeChartView === "runsTimeline" ? <RunsBarChart points={chartPoints} /> : null}
                 {activeChartView === "applicationHealth" ? <ApplicationHealthChart applications={applicationRanking} /> : null}
                 {activeChartView === "applicationDefects" ? <ApplicationDefectsChart applications={applicationRanking} /> : null}
-                <div className="mt-4 text-[11px] font-medium uppercase tracking-[0.12em] text-[rgba(8,32,77,0.48)]">
+                <div className="mt-4 text-[11px] font-medium uppercase tracking-[0.12em] text-[rgba(8,32,77,0.48)] dark:text-slate-500">
                   {chartUsesGrouping
                     ? `Visualização: ${activeChartLabel} | Agrupado por: ${activeGroupLabel}`
                     : `Visualização: ${activeChartLabel} | Base: aplicações filtradas`}
@@ -2379,24 +2394,24 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                 <div className="grid gap-3">
                   {insights[0] ? (
                     <div className={`rounded-[20px] border px-4 py-4 ${softInsightClasses(insights[0].tone)}`}>
-                      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(8,32,77,0.52)]">
+                      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(8,32,77,0.52)] dark:text-slate-400">
                         <span className={`h-2 w-2 rounded-full ${softInsightAccent(insights[0].tone)}`} />
                         Principal
                       </div>
                       <div className="mt-2 text-base font-bold text-(--tc-text,#0b1a3c)">{insights[0].title}</div>
-                      <p className="mt-2 text-sm leading-5 text-[rgba(8,32,77,0.72)]">{insights[0].detail}</p>
+                      <p className="mt-2 text-sm leading-5 text-[rgba(8,32,77,0.72)] dark:text-slate-300">{insights[0].detail}</p>
                     </div>
                   ) : null}
 
                   {insights.slice(1, 3).map((insight) => (
-                    <div key={insight.id} className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-3">
+                    <div key={insight.id} className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-3 dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)">
                       <div className="text-sm font-semibold text-(--tc-text,#0b1a3c)">{insight.title}</div>
                       <p className="mt-1 text-xs leading-5 text-(--tc-text-muted,#6b7280)">{insight.detail}</p>
                     </div>
                   ))}
 
                   {relevantAlerts.length > 0 ? (
-                    <div className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
+                    <div className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3 dark:border-(--tc-border,#334155) dark:bg-(--tc-surface-2,#1e293b)">
                       <div className="text-xs font-semibold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Alertas recentes</div>
                       <div className="mt-3 grid gap-2">
                         {relevantAlerts.slice(0, 2).map((alert, index) => (
@@ -2447,7 +2462,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
               {applicationRanking.length > 0 ? applicationRanking.slice(0, 6).map((aggregate) => {
                 const appMeta = getAppMeta(aggregate.key, aggregate.label);
                 return (
-                  <div key={aggregate.key} className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-3">
+                  <div key={aggregate.key} className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-3 dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2">
@@ -2463,8 +2478,8 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                       </div>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold tracking-[0.04em] text-(--tc-text-muted,#6b7280)">
-                      <span className="rounded-full bg-(--tc-surface-2,#f1f5f9) px-3 py-1">falha {formatPercent(aggregate.failRate)}</span>
-                      <span className="rounded-full bg-(--tc-surface-2,#f1f5f9) px-3 py-1">bloqueios {aggregate.blocked}</span>
+                      <span className="rounded-full bg-(--tc-surface-2,#f1f5f9) px-3 py-1 dark:bg-(--tc-surface-2,#1e293b)">falha {formatPercent(aggregate.failRate)}</span>
+                      <span className="rounded-full bg-(--tc-surface-2,#f1f5f9) px-3 py-1 dark:bg-(--tc-surface-2,#1e293b)">bloqueios {aggregate.blocked}</span>
                     </div>
                   </div>
                 );

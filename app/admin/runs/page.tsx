@@ -3,6 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { getAppMeta } from "@/lib/appMeta";
@@ -49,6 +50,7 @@ const APP_COLOR_CLASS: Record<string, string> = {
 
 export default function AdminRunsPage() {
   const { user } = useAuthUser();
+  const router = useRouter();
   const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
   const isAdmin = Boolean(user?.isGlobalAdmin || role === "leader_tc" || role === "technical_support");
   const isCompany = role === "empresa";
@@ -212,6 +214,8 @@ export default function AdminRunsPage() {
           qaseProject: selectedApplication?.qaseProjectCode || trimmedApp.toUpperCase(),
           summary: summary.trim() || "Run cadastrada pelo painel.",
           radis: trimmedRadis,
+          clientSlug: selectedCompany || undefined,
+          clientId: selectedCompany || undefined,
         }),
       });
       if (!res.ok) {
@@ -233,6 +237,16 @@ export default function AdminRunsPage() {
       setFeedback(okMsg);
       setFeedbackType("ok");
       setToast({ message: okMsg, type: "ok" });
+
+      // Auto-redirect to the created run
+      const createdSlug = data.release?.slug;
+      if (createdSlug) {
+        const companyCtx = selectedCompany || data.release?.clientId;
+        const runUrl = companyCtx
+          ? `/empresas/${encodeURIComponent(companyCtx)}/runs/${encodeURIComponent(createdSlug)}`
+          : `/release/${encodeURIComponent(createdSlug)}`;
+        router.push(runUrl);
+      }
     } catch {
       const errMsg = "Erro ao salvar.";
       setFeedback(errMsg);

@@ -3,6 +3,7 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { getTicketById, updateTicketStatus } from "@/lib/ticketsStore";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 import { canMoveTicket, canViewTicket } from "@/lib/rbac/tickets";
+import { notifyTicketStatusChanged } from "@/lib/notificationService";
 
 export const revalidate = 0;
 
@@ -48,6 +49,12 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   if (!updated) {
     return NextResponse.json({ error: "Chamado não encontrado ou status invalido" }, { status: 404 });
   }
+
+  notifyTicketStatusChanged({
+    ticket: updated,
+    actorId: user.id,
+    nextStatusLabel: nextStatus,
+  }).catch((err) => console.error("Falha ao notificar status:", err));
 
   const enriched = await attachAssigneeToTicket(updated);
   return NextResponse.json({ item: enriched }, { status: 200 });

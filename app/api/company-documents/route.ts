@@ -386,6 +386,7 @@ export async function GET(req: NextRequest) {
       const buf = await fs.readFile(absolute);
       const headers = new Headers();
       headers.set("content-type", item.mimeType || "application/octet-stream");
+      headers.set("cache-control", "no-store, no-cache, must-revalidate");
       if (item.fileName) {
         headers.set("content-disposition", `inline; filename*=UTF-8''${encodeURIComponent(item.fileName)}`);
       }
@@ -411,7 +412,10 @@ export async function GET(req: NextRequest) {
     }),
   );
 
-  return NextResponse.json({ items, canManage }, { status: 200 });
+  // Strip internal fields (storagePath, companySlug) from public response
+  const safeItems = items.map(({ storagePath: _sp, companySlug: _cs, ...rest }) => rest);
+
+  return NextResponse.json({ items: safeItems, canManage }, { status: 200, headers: { "cache-control": "no-store, no-cache, must-revalidate" } });
 }
 
 export async function POST(req: NextRequest) {

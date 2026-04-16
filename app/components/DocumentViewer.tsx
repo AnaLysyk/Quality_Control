@@ -61,13 +61,10 @@ export default function DocumentViewer({ open, item, slug, onClose, copy }: Docu
 
   const fileUrl = useMemo(() => {
     if (!item) return "";
-    return `/api/company-documents?slug=${encodeURIComponent(slug)}&id=${encodeURIComponent(item.id)}`;
-  }, [item, slug]);
-
-  const downloadUrl = useMemo(() => {
-    if (!item) return "";
     return `/api/company-documents?slug=${encodeURIComponent(slug)}&id=${encodeURIComponent(item.id)}&download=1`;
   }, [item, slug]);
+
+  const downloadUrl = fileUrl;
 
   // Fetch file as blob so auth cookies are sent (iframes don't send cookies)
   useEffect(() => {
@@ -79,14 +76,20 @@ export default function DocumentViewer({ open, item, slug, onClose, copy }: Docu
     let cancelled = false;
     setBlobUrl(null);
     setBlobError(false);
-    fetch(fileUrl, { credentials: "include" })
+    fetch(fileUrl, { credentials: "include", cache: "no-store" })
       .then((res) => {
         if (!res.ok) throw new Error("fetch failed");
+        const ct = res.headers.get("content-type") ?? "";
+        if (ct.includes("application/json") || ct.includes("text/html")) {
+          throw new Error("unexpected content-type");
+        }
         return res.blob();
       })
       .then((blob) => {
         if (cancelled) return;
-        const url = URL.createObjectURL(blob);
+        const expectedType = isPdf ? "application/pdf" : blob.type;
+        const typed = blob.type === expectedType ? blob : new Blob([blob], { type: expectedType });
+        const url = URL.createObjectURL(typed);
         prevBlobRef.current = url;
         setBlobUrl(url);
       })

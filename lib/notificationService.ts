@@ -463,7 +463,7 @@ export async function notifySuporteCreated(suporte: SuporteRecord) {
     new Set([
       ...(await resolveAdminUserIds()),
       ...(await resolveTechnicalSupportUserIds()),
-      ...(await resolveCompanyLinkedUserIds(suporte.companySlug ?? null)),
+      ...(await resolveCompanyUserIds(suporte.companySlug ?? null)),
     ]),
   );
   if (!recipients.length) return;
@@ -490,7 +490,7 @@ export async function notifySuporteStatusChanged(input: {
   reason?: string | null;
 }) {
   const recipients = new Set<string>();
-  const companyRecipients = await resolveCompanyLinkedUserIds(input.suporte.companySlug ?? null);
+  const companyRecipients = await resolveCompanyUserIds(input.suporte.companySlug ?? null);
   companyRecipients
     .filter((id) => id !== input.actorId)
     .forEach((id) => recipients.add(id));
@@ -522,7 +522,7 @@ export async function notifySuporteCommentAdded(input: {
   actorName?: string | null;
 }) {
   const recipients = new Set<string>();
-  const companyRecipients = await resolveCompanyLinkedUserIds(input.suporte.companySlug ?? null);
+  const companyRecipients = await resolveCompanyUserIds(input.suporte.companySlug ?? null);
   companyRecipients
     .filter((id) => id !== input.actorId)
     .forEach((id) => recipients.add(id));
@@ -555,7 +555,7 @@ export async function notifySuporteReactionAdded(input: {
   actorId: string;
 }) {
   const recipients = new Set<string>();
-  const companyRecipients = await resolveCompanyLinkedUserIds(input.suporte.companySlug ?? null);
+  const companyRecipients = await resolveCompanyUserIds(input.suporte.companySlug ?? null);
   companyRecipients
     .filter((id) => id !== input.actorId)
     .forEach((id) => recipients.add(id));
@@ -580,7 +580,7 @@ export async function notifySuporteAssigned(input: {
   actorId: string;
 }) {
   const recipients = new Set<string>();
-  const companyRecipients = await resolveCompanyLinkedUserIds(input.suporte.companySlug ?? null);
+  const companyRecipients = await resolveCompanyUserIds(input.suporte.companySlug ?? null);
   companyRecipients
     .filter((id) => id !== input.actorId)
     .forEach((id) => recipients.add(id));
@@ -774,4 +774,39 @@ export async function notifyTicketReactionAdded(input: { ticket: TicketRecord; c
 export async function notifyTicketAssigned(input: { ticket: TicketRecord; assigneeId: string; actorId: string }) {
   if (!input || !input.ticket) return;
   return notifySuporteAssigned({ suporte: input.ticket as SuporteRecord, assigneeId: input.assigneeId, actorId: input.actorId });
+}
+
+export async function notifyTicketUpdated(input: {
+  ticket: TicketRecord;
+  actorId: string;
+  actorName?: string | null;
+  changedFields?: string[];
+}) {
+  if (!input?.ticket) return;
+  const suporte = input.ticket as SuporteRecord;
+  const recipients = new Set<string>();
+  const companyRecipients = await resolveCompanyUserIds(suporte.companySlug ?? null);
+  companyRecipients
+    .filter((id) => id !== input.actorId)
+    .forEach((id) => recipients.add(id));
+  if (suporte.createdBy && suporte.createdBy !== input.actorId) {
+    recipients.add(suporte.createdBy);
+  }
+  if (suporte.assignedToUserId && suporte.assignedToUserId !== input.actorId) {
+    recipients.add(suporte.assignedToUserId);
+  }
+  if (!recipients.size) return;
+  const actorLabel = input.actorName || "Alguem";
+  const fieldsLabel = input.changedFields?.length
+    ? ` (${input.changedFields.join(", ")})`
+    : "";
+  await createNotificationsForUsers(Array.from(recipients), {
+    type: "TICKET_STATUS_CHANGED",
+    title: "Suporte atualizado",
+    description: `${actorLabel} editou o chamado ${suporte.title}${fieldsLabel}.`,
+    companySlug: suporte.companySlug ?? null,
+    link: "/meus-chamados",
+    ticketId: suporte.id,
+    dedupeKey: `suporte:${suporte.id}:updated:${Date.now()}`,
+  });
 }

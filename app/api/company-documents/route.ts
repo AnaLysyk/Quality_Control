@@ -321,16 +321,22 @@ function canManageCompanyDocuments(auth: AuthContext) {
   const role = (auth.role ?? "").toLowerCase();
   const companyRole = (auth.companyRole ?? "").toLowerCase();
   const permissionRole = (auth.permissionRole ?? "").toLowerCase();
+  const isCompanyScopedRole = (value: string) =>
+    value === "company_user" ||
+    value === "company_admin" ||
+    value === "client_admin" ||
+    value === "company" ||
+    value === "empresa";
   const canManageByRole =
     role === "leader_tc" ||
     role === "technical_support" ||
-    role === "company_user" ||
+    isCompanyScopedRole(role) ||
     companyRole === "leader_tc" ||
     companyRole === "technical_support" ||
-    companyRole === "company_user" ||
+    isCompanyScopedRole(companyRole) ||
     permissionRole === "leader_tc" ||
     permissionRole === "technical_support" ||
-    permissionRole === "company_user";
+    isCompanyScopedRole(permissionRole);
 
   return auth.isGlobalAdmin || canManageByRole;
 }

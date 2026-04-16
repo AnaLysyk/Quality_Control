@@ -105,6 +105,12 @@ export async function POST(req: Request) {
     const qaseProject = (body.qaseProject ?? body.qase_project_code ?? app).toString().trim().toUpperCase();
     const environments = Array.isArray(body.environments) ? body.environments.map((env: unknown) => String(env)) : [];
     const clientSlug = body.clientSlug ? String(body.clientSlug).trim() : null;
+    if (!effectiveAuthUser.isGlobalAdmin) {
+      const allowed = resolveAllowedSlugs(effectiveAuthUser);
+      if (clientSlug && !allowed.includes(clientSlug)) {
+        return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
+      }
+    }
     const role = await resolveDefectRole(effectiveAuthUser, clientSlug);
     if (!canCreateManualDefect(role)) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });

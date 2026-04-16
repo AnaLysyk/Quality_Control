@@ -3,7 +3,7 @@ import useSWR from "swr";
 type RequestItem = {
   id: string;
   type: "EMAIL_CHANGE" | "COMPANY_CHANGE" | "PASSWORD_RESET" | "PROFILE_DELETION";
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_REVISION";
   payload: Record<string, unknown>;
   createdAt: string;
   reviewNote?: string;

@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       {}
     );
     addAuditLogSafe({
-      action: "request.password_reset",
+      action: "auth.password.reset_requested",
       entityType: "request",
       entityId: record.id,
       entityLabel: authUser.user ?? authUser.email ?? null,

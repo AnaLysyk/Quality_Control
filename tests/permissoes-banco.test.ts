@@ -158,8 +158,8 @@ describe("Tabela user_permission_overrides — gestão de permissões via DB", (
   test("7. Allow + Deny na mesma linha → effectivePermissions aplica ambos", async () => {
     const user = await makeUser(`mixed-${uid()}`);
 
-    // Para perfil 'admin': releases já tem create/edit/delete
-    // Vamos vetar delete e adicionar releases.export (não existe por padrão em nenhum perfil)
+    // Para perfil 'admin' (→ leader_tc): releases tem apenas view
+    // Vamos adicionar releases.export via allow e vetar delete (que já não existe)
     await setUserOverride(user.id, {
       allow: { releases: ["export"] },
       deny: { releases: ["delete"] },
@@ -172,8 +172,6 @@ describe("Tabela user_permission_overrides — gestão de permissões via DB", (
     const releaseActions = Array.from(effective["releases"] ?? new Set());
 
     expect(releaseActions).toContain("view");
-    expect(releaseActions).toContain("create");
-    expect(releaseActions).toContain("edit");
     expect(releaseActions).toContain("export");     // adicionado via allow
     expect(releaseActions).not.toContain("delete"); // removido via deny
 

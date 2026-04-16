@@ -100,7 +100,7 @@ describe("validateAssistantTicketDraft", () => {
   it("rejects missing title", () => {
     const result = validateAssistantTicketDraft({ ...VALID_DRAFT, title: "" });
     expect(result.ok).toBe(false);
-    expect(result.issues.some((i) => i.includes("Titulo"))).toBe(true);
+    expect(result.issues.some((i) => i.includes("Título"))).toBe(true);
   });
 
   it("rejects title that is too short", () => {
@@ -111,13 +111,13 @@ describe("validateAssistantTicketDraft", () => {
   it("rejects missing description", () => {
     const result = validateAssistantTicketDraft({ ...VALID_DRAFT, description: "" });
     expect(result.ok).toBe(false);
-    expect(result.issues.some((i) => i.includes("Descricao"))).toBe(true);
+    expect(result.issues.some((i) => i.includes("Descrição"))).toBe(true);
   });
 
   it("rejects instruction-only title", () => {
     const result = validateAssistantTicketDraft({ ...VALID_DRAFT, title: "criar chamado" });
     expect(result.ok).toBe(false);
-    expect(result.issues.some((i) => i.includes("instrucao"))).toBe(true);
+    expect(result.issues.some((i) => i.includes("instrução"))).toBe(true);
   });
 
   it("rejects invalid type", () => {
@@ -162,7 +162,7 @@ describe("validateAssistantCommentBody", () => {
   it("rejects instruction-only comment", () => {
     const result = validateAssistantCommentBody("publicar comentario");
     expect(result.ok).toBe(false);
-    expect(result.issues.some((i) => i.includes("instrucao"))).toBe(true);
+    expect(result.issues.some((i) => i.includes("instrução"))).toBe(true);
   });
 
   it("normalizes non-string input", () => {
@@ -193,7 +193,7 @@ describe("validateAssistantTestCaseDraft", () => {
   it("rejects missing sourceTitle", () => {
     const result = validateAssistantTestCaseDraft({ ...VALID_TC, sourceTitle: "" });
     expect(result.ok).toBe(false);
-    expect(result.issues.some((i) => i.includes("Titulo"))).toBe(true);
+    expect(result.issues.some((i) => i.includes("Título"))).toBe(true);
   });
 
   it("rejects short objective", () => {

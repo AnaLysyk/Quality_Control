@@ -18,7 +18,7 @@ describe("CreateUserModal", () => {
     const clients = [{ id: "c1", name: "Client One" }];
 
     render(
-      <CreateUserModal open={true} clientId={null} clients={clients} onClose={onClose} onCreated={onCreated} />,
+      <CreateUserModal open={true} clientId={null} clients={clients} onClose={onClose} onCreated={onCreated} initialRole="leader_tc" />,
     );
 
     // Empresa select should have the single client selected
@@ -26,10 +26,10 @@ describe("CreateUserModal", () => {
     expect(select.value).toBe("c1");
 
     // Fill required fields
-    const nameInput = screen.getByPlaceholderText("Nome do usuario") as HTMLInputElement;
+    const nameInput = screen.getByPlaceholderText("Nome do usu\u00e1rio") as HTMLInputElement;
     const emailInput = screen.getByPlaceholderText("email@empresa.com") as HTMLInputElement;
-    const passwordInput = screen.getByPlaceholderText("Minimo 8 caracteres") as HTMLInputElement;
-    const submit = screen.getByRole("button", { name: /Criar usuario/i }) as HTMLButtonElement;
+    const passwordInput = screen.getByPlaceholderText("M\u00ednimo 8 caracteres") as HTMLInputElement;
+    const submit = screen.getByRole("button", { name: /Criar usu\u00e1rio/i }) as HTMLButtonElement;
 
     fireEvent.change(nameInput, { target: { value: "Teste Usuario" } });
     fireEvent.change(emailInput, { target: { value: "teste@exemplo.com" } });

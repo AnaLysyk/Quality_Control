@@ -130,6 +130,9 @@ function resolveProfileKind(input?: CompanyRouteAccessInput | null): FixedProfil
   const companyRole = normalizeLegacyRole(input.companyRole ?? null);
   const origin = normalizeValue(input.userOrigin);
 
+  // Internal profiles from testing_company always use long /empresas/ routes
+  if (origin === "testing_company") return null;
+
   if (input.isGlobalAdmin === true || permissionRole === SYSTEM_ROLES.LEADER_TC || role === SYSTEM_ROLES.LEADER_TC || companyRole === SYSTEM_ROLES.LEADER_TC) {
     return SYSTEM_ROLES.LEADER_TC;
   }

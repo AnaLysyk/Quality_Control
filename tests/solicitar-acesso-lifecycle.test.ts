@@ -148,7 +148,7 @@ describe("Criação de solicitação de acesso estruturada", () => {
     expect(parsed.username).toBe(`ana_test_${UID}`);
     expect(parsed.phone).toBe("(11) 99999-0001");
     expect(parsed.passwordHash).toBe(PASSWORD_HASH);
-    expect(parsed.accessType).toBe("user");
+    expect(parsed.accessType).toBe("testing_company_user");
     expect(parsed.profileType).toBe("testing_company_user");
     expect(parsed.company).toBe(`Empresa Acesso ${UID}`);
     expect(parsed.clientId).toBe(companyId);

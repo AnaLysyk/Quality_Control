@@ -104,7 +104,7 @@ describe("buildCommentCreationAction", () => {
     (findVisibleTicket as jest.Mock).mockResolvedValue(null);
     const result = await buildCommentCreationAction(makeUser(), makeContext(), "comentar no chamado SP-999");
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("ID/codigo");
+    expect(result.reply).toContain("ID/código");
   });
 
   /* ── No permission ── */
@@ -113,7 +113,7 @@ describe("buildCommentCreationAction", () => {
     (canCommentTicket as jest.Mock).mockReturnValue(false);
     const result = await buildCommentCreationAction(makeUser(), makeContext(), "comentar no chamado SP-000042");
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("nao pode comentar");
+    expect(result.reply).toContain("não pode comentar");
   });
 
   /* ── Generic comment request → builds draft from ticket ── */
@@ -197,14 +197,14 @@ describe("executeCreateComment", () => {
   it("rejects invalid body", async () => {
     const result = await executeCreateComment(makeUser(), makeAction({ body: "" }));
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("validacoes");
+    expect(result.reply).toContain("validações");
   });
 
   it("rejects when ticket not found", async () => {
     (getTicketById as jest.Mock).mockResolvedValue(null);
     const result = await executeCreateComment(makeUser(), makeAction());
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("nao esta disponivel");
+    expect(result.reply).toContain("não está disponível");
   });
 
   it("rejects when user can't view ticket", async () => {
@@ -217,7 +217,7 @@ describe("executeCreateComment", () => {
     (canCommentTicket as jest.Mock).mockReturnValue(false);
     const result = await executeCreateComment(makeUser(), makeAction());
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("nao pode comentar");
+    expect(result.reply).toContain("não pode comentar");
   });
 
   it("rejects duplicate comment", async () => {
@@ -240,6 +240,6 @@ describe("executeCreateComment", () => {
     (createTicketComment as jest.Mock).mockResolvedValueOnce(null);
     const result = await executeCreateComment(makeUser(), makeAction());
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("Nao consegui publicar");
+    expect(result.reply).toContain("Não consegui publicar");
   });
 });

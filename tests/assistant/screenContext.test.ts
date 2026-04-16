@@ -90,7 +90,7 @@ describe("resolveAssistantScreenContext", () => {
     ["/meus-chamados", "seus chamados", "impacto"],
     ["/admin/users/permissions", "permissoes", "bloqueios"],
     ["/empresas/acme/planos-de-teste", "casos de teste", "ticket"],
-    ["/empresas/acme", "empresa", "slug"],
+    ["/empresas/acme", "empresa", "chamados"],
     ["/dashboard", "operacao", "destravar"],
     ["/unknown", "navega", "deseja fazer"],
   ])("keeps an action-oriented summary for %s", (route, keywordA, keywordB) => {

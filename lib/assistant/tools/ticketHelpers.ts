@@ -191,10 +191,10 @@ export function isTicketTemplateRequest(message: string) {
   return (
     n.includes("modelo de chamado") ||
     n.includes("modelo de ticket") ||
-    n.includes("título, descrição, impacto e comportamento esperado") ||
-    n.includes("título descrição impacto e comportamento esperado") ||
-    /quero criar .*chamado.*título.*descrição.*impacto/.test(n) ||
-    /quero criar .*ticket.*título.*descrição.*impacto/.test(n)
+    n.includes("titulo, descricao, impacto e comportamento esperado") ||
+    n.includes("titulo descricao impacto e comportamento esperado") ||
+    /quero criar .*chamado.*titulo.*descricao.*impacto/.test(n) ||
+    /quero criar .*ticket.*titulo.*descricao.*impacto/.test(n)
   );
 }
 

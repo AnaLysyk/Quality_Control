@@ -93,7 +93,7 @@ describe("buildTicketCreationAction", () => {
     (hasPermissionAccess as jest.Mock).mockReturnValue(false);
     const result = await buildTicketCreationAction(makeUser(), makeContext(), "criar chamado");
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("nao pode criar chamados");
+    expect(result.reply).toContain("não pode criar chamados");
   });
 
   /* ── Generic prompt (instruction-only) ── */
@@ -101,7 +101,7 @@ describe("buildTicketCreationAction", () => {
   it("asks for content on generic prompt", async () => {
     const result = await buildTicketCreationAction(makeUser(), makeContext(), "transformar texto em chamado");
     expect(result.tool).toBe("create_ticket");
-    expect(result.reply).toContain("conteudo real");
+    expect(result.reply).toContain("conteúdo real");
     expect(result.actions).toBeDefined();
     expect(result.actions!.length).toBeGreaterThan(0);
   });
@@ -112,7 +112,7 @@ describe("buildTicketCreationAction", () => {
     const message = "Titulo: \nDescricao: ";
     const result = await buildTicketCreationAction(makeUser(), makeContext(), message);
     expect(result.tool).toBe("create_ticket");
-    expect(result.reply).toContain("Pendencias");
+    expect(result.reply).toContain("Pendências");
   });
 
   /* ── Structured draft — valid ── */
@@ -128,7 +128,7 @@ describe("buildTicketCreationAction", () => {
 
     const result = await buildTicketCreationAction(makeUser(), makeContext(), message);
     expect(result.success).toBe(true);
-    expect(result.reply).toContain("Titulo:");
+    expect(result.reply).toContain("Título:");
     expect(result.actions).toBeDefined();
 
     const toolAction = result.actions?.find((a) => a.kind === "tool");
@@ -146,14 +146,14 @@ describe("buildTicketCreationAction", () => {
     ].join("\n");
 
     const result = await buildTicketCreationAction(makeUser(), makeContext(), message);
-    expect(result.reply).toContain("validacoes");
+    expect(result.reply).toContain("validações");
   });
 
   /* ── Narrative too short ── */
 
   it("asks for more content when narrative is too short", async () => {
     const result = await buildTicketCreationAction(makeUser(), makeContext(), "criar ticket xyz");
-    expect(result.reply).toContain("validacoes");
+    expect(result.reply).toContain("validações");
   });
 
   /* ── Narrative with enough content ── */
@@ -191,13 +191,13 @@ describe("executeCreateTicket", () => {
     (hasPermissionAccess as jest.Mock).mockReturnValue(false);
     const result = await executeCreateTicket(makeUser(), makeContext(), makeAction());
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("nao pode criar chamados");
+    expect(result.reply).toContain("não pode criar chamados");
   });
 
   it("rejects invalid draft data", async () => {
     const result = await executeCreateTicket(makeUser(), makeContext(), makeAction({ title: "ab" }));
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("validacoes");
+    expect(result.reply).toContain("validações");
   });
 
   it("creates ticket successfully", async () => {
@@ -211,6 +211,6 @@ describe("executeCreateTicket", () => {
     (createTicket as jest.Mock).mockResolvedValueOnce(null);
     const result = await executeCreateTicket(makeUser(), makeContext(), makeAction());
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("Nao consegui criar");
+    expect(result.reply).toContain("Não consegui criar");
   });
 });

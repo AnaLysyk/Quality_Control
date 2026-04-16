@@ -205,10 +205,15 @@ function pgDuplicateUserError() {
 
 function isPrismaUniqueViolation(err: unknown, field?: string): boolean {
   if (!err || typeof err !== "object") return false;
-  const e = err as { code?: string; meta?: { target?: string[] } };
+  const e = err as { code?: string; meta?: { target?: string | string[] }; message?: string };
   if (e.code !== "P2002") return false;
   if (!field) return true;
-  return Array.isArray(e.meta?.target) && e.meta!.target!.includes(field);
+  const target = e.meta?.target;
+  if (typeof target === "string") return target.includes(field);
+  if (Array.isArray(target)) return target.some((t) => t === field || t.includes(field));
+  // Prisma 7 fallback: parse field name from error message
+  if (typeof e.message === "string") return e.message.includes(`(\`${field}\``);
+  return false;
 }
 
 // ── User ──────────────────────────────────────────────────────────────────────

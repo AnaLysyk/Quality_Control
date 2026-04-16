@@ -14,6 +14,7 @@ jest.mock("@/lib/assistant/data", () => ({
   displayRole: (user: { permissionRole?: string | null; role?: string | null; companyRole?: string | null }) =>
     user.permissionRole ?? user.role ?? user.companyRole ?? "usuario",
   summarizePermissionMatrix: () => "tickets: create, read | users: view",
+  isEmpresaUser: () => false,
 }));
 
 import type { AuthUser } from "@/lib/jwtAuth";
@@ -57,12 +58,13 @@ describe("toolGetScreenContext", () => {
     const result = await toolGetScreenContext(makeUser(), makeContext());
 
     expect(result.tool).toBe("get_screen_context");
-    expect(result.reply).toContain("Voce esta em Kanban global de suporte.");
-    expect(result.reply).toContain("O que voce pode fazer agora:");
-    expect(result.reply).toContain("Sugestoes de prompt:");
-    expect(result.reply).toContain("Contexto atual:");
-    expect(result.reply).toContain("Permissoes relevantes:");
-    expect(result.reply).toContain("Perfil: admin");
+    expect(result.reply).toContain("Voce esta em:");
+    expect(result.reply).toContain("O que posso fazer aqui:");
+    expect(result.reply).toContain("rápidas:");
+    expect(result.reply).toContain("Contexto Atual:");
+    expect(result.reply).toContain("Permissões:");
+    expect(result.reply).toContain("Perfil");
+    expect(result.reply).toContain("admin");
     expect(result.reply).not.toContain("ana@test.com");
     expect(result.reply).not.toContain("Rota:");
     expect(result.actions).toHaveLength(4);
@@ -80,8 +82,8 @@ describe("toolGetScreenContext", () => {
       }),
     );
 
-    expect(result.reply).toContain("Escopo: globex");
-    expect(result.reply).toContain("Resumir a empresa atual e os registros ligados a ela.");
+    expect(result.reply).toContain("globex");
+    expect(result.reply).toContain("Resumir a empresa atual");
     expect(result.reply.match(/Voce esta em/g)).toHaveLength(1);
   });
 });

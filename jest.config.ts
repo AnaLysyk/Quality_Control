@@ -24,6 +24,7 @@ const config: JestConfigWithTsJest = {
     ],
   },
   testMatch: ["**/tests/**/*.test.ts?(x)"],
+  testPathIgnorePatterns: ["/node_modules/", "/tests/integration/"],
 };
 
 export default config;

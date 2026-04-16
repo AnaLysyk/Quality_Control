@@ -33,10 +33,10 @@ export function isAwaitingTicketPayload(history: AssistantConversationTurn[]) {
   if (!last || last.tool !== "create_ticket") return false;
   const text = normalizeSearch(last.text);
   return (
-    text.includes("preciso do conteúdo real") ||
-    text.includes("preciso validar os dados do módulo de suporte") ||
+    text.includes("preciso do conteudo real") ||
+    text.includes("preciso validar os dados do modulo de suporte") ||
     text.includes("use este modelo para eu estruturar melhor o chamado") ||
-    text.includes("pendências encontradas") ||
+    text.includes("pendencias encontradas") ||
     text.includes("complete o modelo") ||
     text.includes("faltam campos")
   );
@@ -49,7 +49,7 @@ export function isAwaitingTestCasePayload(history: AssistantConversationTurn[]) 
   return (
     text.includes("antes de montar o caso de teste") ||
     text.includes("use este modelo para eu validar o caso de teste") ||
-    text.includes("preciso passar pelas validações do módulo de testes")
+    text.includes("preciso passar pelas validacoes do modulo de testes")
   );
 }
 

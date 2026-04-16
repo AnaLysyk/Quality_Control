@@ -52,7 +52,7 @@ export function normalizeTicketPriorityInput(value: string): TicketPriority | nu
 /* ──────────────────── "Instruction only" detector ──────────────────── */
 
 const INSTRUCTION_ONLY_EXACT = new Set([
-  "mostrar ações disponíveis",
+  "mostrar acoes disponiveis",
   "explicar meu escopo de acesso",
   "resumir esta tela",
   "resumir meu perfil atual",
@@ -72,8 +72,8 @@ const INSTRUCTION_ONLY_EXACT = new Set([
   "montar caso de teste",
   "usar modelo de chamado",
   "usar modelo de caso de teste",
-  "publicar comentário",
-  "montar comentário técnico",
+  "publicar comentario",
+  "montar comentario tecnico",
 ]);
 
 export function looksLikeInstructionOnly(value: string) {

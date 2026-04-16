@@ -281,9 +281,10 @@ describe("C) Perfil 'support' — mesma visão do lider_tc + tickets view_all", 
     console.log("✅ C6. support: settings somente view");
   });
 
-  test("C7. audit: view bloqueado (módulo vazio)", () => {
-    expect(hasPermissionAccess(p, "audit", "view")).toBe(false);
-    console.log("✅ C7. support: módulo audit vazio (igual lider_tc)");
+  test("C7. audit: view permitido (adicionado ao perfil support)", () => {
+    expect(hasPermissionAccess(p, "audit", "view")).toBe(true);
+    expect(hasPermissionAccess(p, "audit", "export")).toBe(false);
+    console.log("✅ C7. support: módulo audit com view");
   });
 
   test("C8. permissions: somente view (sem edit)", () => {

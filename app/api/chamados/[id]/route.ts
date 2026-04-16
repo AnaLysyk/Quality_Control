@@ -91,7 +91,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
   notifyTicketUpdated({
     ticket: updated,
     actorId: user.id,
-    actorName: user.name ?? user.email ?? null,
+    actorName: user.user ?? user.email ?? null,
     changedFields,
   }).catch((err) => console.error("Falha ao notificar atualizacao:", err));
 

@@ -46,6 +46,27 @@ export async function GET() {
       if (status === "archived") releaseStats.archived += 1;
     }
 
+    const testStats = { total: 0, passed: 0, failed: 0, blocked: 0, skipped: 0 };
+    manualReleases.forEach((release) => {
+      const stats = (release as { stats?: { pass?: number; fail?: number; blocked?: number; notRun?: number } }).stats;
+      if (stats) {
+        testStats.passed += Number(stats.pass) || 0;
+        testStats.failed += Number(stats.fail) || 0;
+        testStats.blocked += Number(stats.blocked) || 0;
+        testStats.skipped += Number(stats.notRun) || 0;
+      }
+    });
+    releases.forEach((release) => {
+      const summary = (release as { manualSummary?: { pass?: number; fail?: number; blocked?: number; notRun?: number } }).manualSummary;
+      if (summary) {
+        testStats.passed += Number(summary.pass) || 0;
+        testStats.failed += Number(summary.fail) || 0;
+        testStats.blocked += Number(summary.blocked) || 0;
+        testStats.skipped += Number(summary.notRun) || 0;
+      }
+    });
+    testStats.total = testStats.passed + testStats.failed + testStats.blocked + testStats.skipped;
+
     return NextResponse.json({
       overview: {
         totalUsers: users.length,
@@ -54,13 +75,7 @@ export async function GET() {
         totalTestRuns,
         activeSessions,
       },
-      testStats: {
-        total: 0,
-        passed: 0,
-        failed: 0,
-        blocked: 0,
-        skipped: 0,
-      },
+      testStats,
       releaseStats,
       lastUpdated: new Date().toISOString(),
     });

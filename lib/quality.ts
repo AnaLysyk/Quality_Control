@@ -352,6 +352,7 @@ export type ClientItem = {
   logo_url?: string | null;
   logo?: string | null;
   qase_project_code?: string | null;
+  qase_project_codes?: string[] | null;
   active?: boolean | null;
 };
 
@@ -409,12 +410,10 @@ export function buildCompanyRows(clients: ClientItem[], releases: ReleaseWithSta
   const byQaseProjectCode = new Map(
     clients.flatMap((client) => {
       const codes: string[] = [];
-      // prefer explicit array when present
-      if ((client as any).qase_project_codes && Array.isArray((client as any).qase_project_codes)) {
-        codes.push(...((client as any).qase_project_codes).filter(Boolean).map(String));
+      if (client.qase_project_codes && Array.isArray(client.qase_project_codes)) {
+        codes.push(...client.qase_project_codes.filter(Boolean).map(String));
       }
-      // legacy single code
-      if (client.qase_project_code) codes.push(client.qase_project_code);
+      if (client.qase_project_code && !codes.length) codes.push(client.qase_project_code);
       return codes.map((c) => [(c ?? "").toLowerCase(), client.id] as [string, string]);
     })
   );

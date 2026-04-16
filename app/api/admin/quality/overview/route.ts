@@ -30,6 +30,7 @@ type ClientRow = {
   slug?: string | null;
   logo_url?: string | null;
   qase_project_code?: string | null;
+  qase_project_codes?: string[] | null;
   active?: boolean | null;
 };
 
@@ -53,18 +54,30 @@ type CompanyListResponse = {
 };
 
 function mapLocalCompanies(companies: LocalAuthCompany[]): ClientRow[] {
-  return companies.map((company) => ({
-    id: company.id,
-    company_name: (company.company_name ?? company.name ?? "").toString() || null,
-    name: (company.name ?? company.company_name ?? "").toString() || null,
-    slug: company.slug ?? null,
-    logo_url: (company as { logo_url?: string | null }).logo_url ?? null,
-    qase_project_code:
-      Array.isArray((company as any).integrations)
-        ? (((company as any).integrations.find((it: any) => String(it?.type ?? "").toUpperCase() === "QASE")?.config?.projects ?? []) as any[])[0] ?? ((company as any).qase_project_codes && Array.isArray((company as any).qase_project_codes) && (company as any).qase_project_codes.length ? (company as any).qase_project_codes[0] : (company as any).qase_project_code) ?? null
-        : (company as { qase_project_code?: string | null }).qase_project_code ?? null,
-    active: company.active ?? true,
-  }));
+  return companies.map((company) => {
+    let codes: string[] = [];
+    if (Array.isArray((company as any).integrations)) {
+      const qaseIntegration = (company as any).integrations.find((it: any) => String(it?.type ?? "").toUpperCase() === "QASE");
+      const projects = qaseIntegration?.config?.projects;
+      if (Array.isArray(projects)) codes = projects.filter(Boolean).map(String);
+    }
+    if (!codes.length && Array.isArray((company as any).qase_project_codes)) {
+      codes = ((company as any).qase_project_codes).filter(Boolean).map(String);
+    }
+    if (!codes.length && (company as any).qase_project_code) {
+      codes = [String((company as any).qase_project_code)];
+    }
+    return {
+      id: company.id,
+      company_name: (company.company_name ?? company.name ?? "").toString() || null,
+      name: (company.name ?? company.company_name ?? "").toString() || null,
+      slug: company.slug ?? null,
+      logo_url: (company as { logo_url?: string | null }).logo_url ?? null,
+      qase_project_code: codes[0] ?? null,
+      qase_project_codes: codes.length ? codes : null,
+      active: company.active ?? true,
+    };
+  });
 }
 
 function normalizeClients(items: ClientRow[]) {
@@ -76,6 +89,7 @@ function normalizeClients(items: ClientRow[]) {
       slug: item.slug ?? null,
       logo_url: item.logo_url ?? null,
       qase_project_code: item.qase_project_code ?? null,
+      qase_project_codes: item.qase_project_codes ?? null,
       active: item.active ?? false,
     }));
 }

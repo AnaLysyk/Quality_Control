@@ -78,18 +78,20 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   }
 
   const updated = await updateRequestStatus(id, nextStatus, { id: authUser.id }, body?.reviewNote);
-  if (updated && updated.type === "PASSWORD_RESET") {
-    try {
-      await notifyPasswordResetStatus(updated, nextStatus);
-    } catch (err) {
-      console.error("Falha ao notificar status de reset", err);
+  if (updated && isFinalStatus(nextStatus)) {
+    if (updated.type === "PASSWORD_RESET") {
+      try {
+        await notifyPasswordResetStatus(updated, nextStatus);
+      } catch (err) {
+        console.error("Falha ao notificar status de reset", err);
+      }
     }
-  }
-  if (updated && updated.type === "PROFILE_DELETION") {
-    try {
-      await notifyProfileDeletionStatus(updated, nextStatus);
-    } catch (err) {
-      console.error("Falha ao notificar status de exclusão de perfil", err);
+    if (updated.type === "PROFILE_DELETION") {
+      try {
+        await notifyProfileDeletionStatus(updated, nextStatus);
+      } catch (err) {
+        console.error("Falha ao notificar status de exclusão de perfil", err);
+      }
     }
   }
 

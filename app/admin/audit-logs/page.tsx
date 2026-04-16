@@ -594,15 +594,15 @@ export default function AdminAuditLogsPage() {
               <div className={styles.summaryCard}>
                 <span className={styles.summaryLabel}>Erros / negados</span>
                 <strong className={styles.summaryValue}>{formatCount(summary.errorCount)}</strong>
-                <span className={styles.summaryHint}>Falhas, acessos negados e eventos sensÃƒÂ­veis.</span>
+                <span className={styles.summaryHint}>Falhas, acessos negados e eventos sensíveis.</span>
               </div>
               <div className={styles.summaryCard}>
-                <span className={styles.summaryLabel}>AutenticaÃƒÂ§ÃƒÂ£o</span>
+                <span className={styles.summaryLabel}>Autenticação</span>
                 <strong className={styles.summaryValue}>{formatCount(summary.authCount)}</strong>
                 <span className={styles.summaryHint}>Login, logout e senha na janela atual.</span>
               </div>
               <div className={styles.summaryCard}>
-                <span className={styles.summaryLabel}>Atores Ãƒºnicos</span>
+                <span className={styles.summaryLabel}>Atores únicos</span>
                 <strong className={styles.summaryValue}>{formatCount(summary.uniqueActors)}</strong>
                 <span className={styles.summaryHint}>Quem gerou eventos no recorte atual.</span>
               </div>
@@ -612,11 +612,11 @@ export default function AdminAuditLogsPage() {
               <section className={styles.monitorCard}>
                 <div className={styles.monitorHeader}>
                   <div>
-                    <p className={styles.monitorTitle}>TendÃƒªncia de eventos</p>
+                    <p className={styles.monitorTitle}>Tendência de eventos</p>
                     <p className={styles.monitorSubtitle}>Volume total vs. erros/negados na consulta atual.</p>
                   </div>
                   <div className={styles.monitorMeta}>
-                    <span>{summary.lastEventAt ? `ÃƒÅ¡ltimo evento ${formatDate(summary.lastEventAt)}` : "Sem eventos"}</span>
+                    <span>{summary.lastEventAt ? `Último evento ${formatDate(summary.lastEventAt)}` : "Sem eventos"}</span>
                   </div>
                 </div>
                 <div className={styles.monitorChart}>
@@ -638,7 +638,7 @@ export default function AdminAuditLogsPage() {
                         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#64748b" }} width={32} />
                         <Tooltip
                           formatter={renderTrendTooltip}
-                          labelFormatter={(value) => `PerÃƒÂ­odo ${String(value)}`}
+                          labelFormatter={(value) => `Período ${String(value)}`}
                           contentStyle={{
                             borderRadius: "12px",
                             border: "1px solid rgba(148,163,184,0.18)",
@@ -654,7 +654,7 @@ export default function AdminAuditLogsPage() {
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className={styles.monitorEmpty}>Sem eventos suficientes para montar a tendÃƒªncia.</div>
+                    <div className={styles.monitorEmpty}>Sem eventos suficientes para montar a tendência.</div>
                   )}
                 </div>
               </section>
@@ -663,10 +663,10 @@ export default function AdminAuditLogsPage() {
                 <div className={styles.monitorHeader}>
                   <div>
                     <p className={styles.monitorTitle}>Sinais mais frequentes</p>
-                    <p className={styles.monitorSubtitle}>AÃƒÂ§ÃƒÂµes com maior volume para o recorte atual.</p>
+                    <p className={styles.monitorSubtitle}>Ações com maior volume para o recorte atual.</p>
                   </div>
                   <div className={styles.monitorMeta}>
-                    <span>{retentionDays ? `RetenÃƒÂ§ÃƒÂ£o ${retentionDays} dias` : "Monitoramento ativo"}</span>
+                    <span>{retentionDays ? `Retenção ${retentionDays} dias` : "Monitoramento ativo"}</span>
                   </div>
                 </div>
                 {topActions.length > 0 ? (
@@ -683,7 +683,7 @@ export default function AdminAuditLogsPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className={styles.monitorEmpty}>Nenhuma aÃƒÂ§ÃƒÂ£o encontrada para os filtros atuais.</div>
+                  <div className={styles.monitorEmpty}>Nenhuma ação encontrada para os filtros atuais.</div>
                 )}
               </section>
             </div>

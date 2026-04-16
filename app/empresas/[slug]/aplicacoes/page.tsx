@@ -288,7 +288,10 @@ function ApplicationModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/72 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/72 p-4 backdrop-blur-sm lg:left-(--sidebar-collapsed)"
+      onClick={onClose}
+    >
       <div
         className="max-h-[calc(100dvh-1.5rem)] w-full max-w-[min(78rem,calc(100vw-1rem))] overflow-y-auto rounded-4xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) shadow-[0_32px_90px_rgba(15,23,42,0.42)]"
         onClick={(event) => event.stopPropagation()}

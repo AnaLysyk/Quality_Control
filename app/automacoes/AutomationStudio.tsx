@@ -1944,7 +1944,7 @@ export default function AutomationStudio({
             <div className="flex flex-wrap items-end gap-2">
               <button
                 type="button"
-                onClick={runPreparation}
+                onClick={() => void runPreparation()}
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
               >
                 <FiPlay className="h-4 w-4" />
@@ -2408,7 +2408,7 @@ export default function AutomationStudio({
           <div className="flex flex-wrap items-end gap-2 md:col-span-2 2xl:col-span-1">
             <button
               type="button"
-              onClick={runPreparation}
+              onClick={() => void runPreparation()}
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
             >
               <FiPlay className="h-4 w-4" />
@@ -3648,7 +3648,7 @@ export default function AutomationStudio({
               </div>
               <button
                 type="button"
-                onClick={runPreparation}
+                onClick={() => void runPreparation()}
                 disabled={runPreviewLoading}
                 className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-semibold text-white lg:w-auto"
               >

@@ -237,6 +237,15 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
     setForm((current) => ({ ...current, companySlug: fallbackCompany.slug }));
   }, [activeCompanySlug, companies, form.companySlug]);
 
+  useEffect(() => {
+    if (companies.length === 0) return;
+    if (companies.some((company) => company.slug === form.companySlug)) return;
+    const griaule = companies.find((company) => company.slug === "griaule");
+    const fallbackCompany = companies.find((company) => company.slug === activeCompanySlug) || griaule || companies[0] || null;
+    if (!fallbackCompany) return;
+    setForm((current) => ({ ...current, companySlug: fallbackCompany.slug }));
+  }, [activeCompanySlug, companies, form.companySlug]);
+
   const fingerprintFixtures = useMemo(
     () => (meta?.fixtures || []).filter((fixture) => fixture.kind === "fingerprint"),
     [meta],
@@ -250,6 +259,18 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
     [fingerprintFixtures, form.selectedFixture],
   );
   const effectiveIndex = selectedFixture?.index ?? (form.manualIndex ? Number(form.manualIndex) : NaN);
+
+  useEffect(() => {
+    if (fingerprintFixtures.length === 0) return;
+    if (fingerprintFixtures.some((fixture) => fixture.slug === form.selectedFixture)) return;
+    setForm((current) => ({ ...current, selectedFixture: fingerprintFixtures[0].slug }));
+  }, [fingerprintFixtures, form.selectedFixture]);
+
+  useEffect(() => {
+    if (faceFixtures.length === 0) return;
+    if (faceFixtures.some((fixture) => fixture.slug === form.faceFixture)) return;
+    setForm((current) => ({ ...current, faceFixture: faceFixtures[0].slug }));
+  }, [faceFixtures, form.faceFixture]);
 
   useEffect(() => {
     if (!selectedFixture || selectedFixture.index === null) return;
@@ -348,13 +369,18 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
               <select
                 value={form.companySlug}
                 onChange={(event) => setForm((current) => ({ ...current, companySlug: event.target.value }))}
+                disabled={companies.length === 0}
                 className="min-h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
               >
-                {companies.map((company) => (
-                  <option key={company.slug} value={company.slug}>
-                    {company.name}
-                  </option>
-                ))}
+                {companies.length === 0 ? (
+                  <option value="">Nenhuma empresa disponível</option>
+                ) : (
+                  companies.map((company) => (
+                    <option key={company.slug} value={company.slug}>
+                      {company.name}
+                    </option>
+                  ))
+                )}
               </select>
             </label>
 
@@ -363,14 +389,19 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
               <select
                 value={form.selectedFixture}
                 onChange={(event) => setForm((current) => ({ ...current, selectedFixture: event.target.value }))}
+                disabled={fingerprintFixtures.length === 0}
                 className="min-h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
               >
-                {fingerprintFixtures.map((fixture) => (
-                  <option key={fixture.slug} value={fixture.slug}>
-                    {fixture.label}
-                    {fixture.isStandard ? "" : " · avulsa"}
-                  </option>
-                ))}
+                {fingerprintFixtures.length === 0 ? (
+                  <option value="">Nenhuma digital disponível</option>
+                ) : (
+                  fingerprintFixtures.map((fixture) => (
+                    <option key={fixture.slug} value={fixture.slug}>
+                      {fixture.label}
+                      {fixture.isStandard ? "" : " · avulsa"}
+                    </option>
+                  ))
+                )}
               </select>
             </label>
 
@@ -422,14 +453,18 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
               <select
                 value={form.faceFixture}
                 onChange={(event) => setForm((current) => ({ ...current, faceFixture: event.target.value }))}
-                disabled={!form.includeFace}
+                disabled={!form.includeFace || faceFixtures.length === 0}
                 className="min-h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001) disabled:bg-(--tc-surface-2,#f8fafc) disabled:text-(--tc-text-muted,#6b7280)"
               >
-                {faceFixtures.map((fixture) => (
-                  <option key={fixture.slug} value={fixture.slug}>
-                    {fixture.label}
-                  </option>
-                ))}
+                {faceFixtures.length === 0 ? (
+                  <option value="">Nenhuma face disponível</option>
+                ) : (
+                  faceFixtures.map((fixture) => (
+                    <option key={fixture.slug} value={fixture.slug}>
+                      {fixture.label}
+                    </option>
+                  ))
+                )}
               </select>
             </label>
 

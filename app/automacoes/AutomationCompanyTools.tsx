@@ -145,6 +145,37 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
     setValues(buildInitialValues(selectedTool, activeCompanySlug));
   }, [activeCompanySlug, selectedTool]);
 
+  useEffect(() => {
+    if (!selectedTool) return;
+
+    setValues((current) => {
+      let changed = false;
+      const next = { ...current };
+
+      for (const field of selectedTool.fields) {
+        if (field.type !== "select") continue;
+
+        const options = field.options ?? [];
+        if (options.length === 0) {
+          if (next[field.id] !== "") {
+            next[field.id] = "";
+            changed = true;
+          }
+          continue;
+        }
+
+        const value = String(next[field.id] ?? "");
+        const hasValue = options.some((option) => option.value === value);
+        if (!hasValue) {
+          next[field.id] = options[0].value;
+          changed = true;
+        }
+      }
+
+      return changed ? next : current;
+    });
+  }, [selectedTool]);
+
   const currentEnvironment = useMemo(
     () => AUTOMATION_ENVIRONMENTS.find((environment) => environment.id === selectedEnvironmentId) ?? AUTOMATION_ENVIRONMENTS[0],
     [selectedEnvironmentId],
@@ -339,13 +370,18 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
                       <select
                         value={String(values[field.id] ?? "")}
                         onChange={(event) => setValues((current) => ({ ...current, [field.id]: event.target.value }))}
+                        disabled={(field.options ?? []).length === 0}
                         className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 text-sm outline-none"
                       >
-                        {(field.options ?? []).map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                        {(field.options ?? []).length === 0 ? (
+                          <option value="">Sem opções disponíveis</option>
+                        ) : (
+                          (field.options ?? []).map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))
+                        )}
                       </select>
                     ) : field.type === "textarea" ? (
                       <textarea
@@ -384,7 +420,7 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
                 ))}
               </div>
 
-              <div className="mt-4 rounded-[16px] border border-(--tc-border,#d7deea) bg-[#081227] p-4 text-white">
+              <div className="mt-4 rounded-2xl border border-(--tc-border,#d7deea) bg-[#081227] p-4 text-white">
                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">
                   <FiServer className="h-4 w-4" />
                   Request gerada
@@ -415,6 +451,8 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Resultado</p>
             <button
               type="button"
+              aria-label="Copiar resultado"
+              title="Copiar resultado"
               onClick={copyResult}
               disabled={!result}
               className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c) disabled:opacity-40"
@@ -423,7 +461,7 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
             </button>
           </div>
 
-          <div className="mt-3 grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]">
+          <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(140px,1fr))]">
             <div className="rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">Status</p>
               <p className="mt-1 text-sm font-semibold text-(--tc-text,#0b1a3c)">{result?.status ? `${result.status} ${result.statusText ?? ""}` : "--"}</p>
@@ -462,7 +500,7 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
             ))}
           </div>
 
-          <div className="mt-3 min-h-[420px] rounded-[16px] border border-(--tc-border,#d7deea) bg-[#081227] p-4">
+          <div className="mt-3 min-h-105 rounded-2xl border border-(--tc-border,#d7deea) bg-[#081227] p-4">
             <pre className="overflow-auto whitespace-pre-wrap font-mono text-xs leading-6 text-white">
               {resultTab === "summary"
                 ? JSON.stringify(

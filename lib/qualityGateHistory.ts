@@ -11,7 +11,7 @@ if (typeof process !== "undefined" && process.release?.name === "node") {
 
 const USE_MEMORY_ALERTS =
   process.env.QUALITY_ALERTS_IN_MEMORY === "true" || process.env.NODE_ENV === "test";
-const STORE_PATH = path && path.join(process.cwd(), "data", "quality_gate_history.json");
+const STORE_PATH = path && path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "quality_gate_history.json");
 const STORE_KEY = "qc:quality_gate_history:v1";
 const USE_PERSISTENT_STORE = !USE_MEMORY_ALERTS && canUsePersistentJsonStore();
 

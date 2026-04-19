@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+
 import { getSubgraph, searchNodes } from "@/lib/brain";
 import { prisma } from "@/lib/prismaClient";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export async function GET(req: Request) {
-  const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+  }
 
   const url = new URL(req.url);
   const nodeId = url.searchParams.get("nodeId");
@@ -15,7 +18,6 @@ export async function GET(req: Request) {
   try {
     let rootId = nodeId;
 
-    // Se não passou nodeId, buscar primeiro nó do tipo especificado ou um nó qualquer
     if (!rootId) {
       if (nodeType) {
         const nodes = await searchNodes({ type: nodeType, limit: 1 });
@@ -33,29 +35,27 @@ export async function GET(req: Request) {
 
     const subgraph = await getSubgraph(rootId, depth);
 
-    // Formatar para visualização com D3/force-graph
-    const graphNodes = subgraph.nodes.map((n) => ({
-      id: n.id,
-      label: n.label,
-      type: n.type,
-      refType: n.refType,
-      refId: n.refId,
-      description: n.description,
-      metadata: n.metadata,
-      isRoot: n.id === rootId,
+    const graphNodes = subgraph.nodes.map((node) => ({
+      id: node.id,
+      label: node.label,
+      type: node.type,
+      refType: node.refType,
+      refId: node.refId,
+      description: node.description,
+      metadata: node.metadata,
+      isRoot: node.id === rootId,
     }));
 
-    const graphEdges = subgraph.edges.map((e) => ({
-      id: e.id,
-      source: e.fromId,
-      target: e.toId,
-      type: e.type,
-      weight: e.weight,
+    const graphEdges = subgraph.edges.map((edge) => ({
+      id: edge.id,
+      source: edge.fromId,
+      target: edge.toId,
+      type: edge.type,
+      weight: edge.weight,
     }));
 
-    // Deduplicate
-    const uniqueNodes = Array.from(new Map(graphNodes.map((n) => [n.id, n])).values());
-    const uniqueEdges = Array.from(new Map(graphEdges.map((e) => [e.id, e])).values());
+    const uniqueNodes = Array.from(new Map(graphNodes.map((node) => [node.id, node])).values());
+    const uniqueEdges = Array.from(new Map(graphEdges.map((edge) => [edge.id, edge])).values());
 
     return NextResponse.json({
       nodes: uniqueNodes,

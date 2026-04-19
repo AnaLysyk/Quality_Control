@@ -14,7 +14,7 @@ import { getRedis } from "@/lib/redis";
 const USE_POSTGRES = shouldUsePostgresPersistence();
 
 type CompanyDocumentKind = "file" | "link";
-type DocumentHistoryAction = "created" | "deleted";
+type DocumentHistoryAction = "created" | "updated" | "deleted";
 
 export type CompanyDocumentItem = {
   id: string;
@@ -28,6 +28,7 @@ export type CompanyDocumentItem = {
   sizeBytes?: number | null;
   storagePath?: string | null;
   createdAt: string;
+  updatedAt?: string | null;
   createdBy?: string | null;
   createdByName?: string | null;
 };
@@ -85,9 +86,27 @@ function pgRowToDocItem(row: {
     sizeBytes: row.sizeBytes ?? null,
     storagePath: row.storagePath ?? null,
     createdAt: row.createdAt.toISOString(),
+    updatedAt: row.createdAt.toISOString(),
     createdBy: row.createdBy ?? null,
     createdByName: row.createdByName ?? null,
   };
+}
+
+function normalizeDocumentItem(item: CompanyDocumentItem): CompanyDocumentItem {
+  return {
+    ...item,
+    updatedAt: item.updatedAt ?? item.createdAt,
+  };
+}
+
+function buildLatestUpdateMap(history: DocumentHistoryEvent[]) {
+  const latestUpdatedAtByDocId = new Map<string, string>();
+  for (const event of history) {
+    if (event.action !== "updated") continue;
+    if (!event.documentId || latestUpdatedAtByDocId.has(event.documentId)) continue;
+    latestUpdatedAtByDocId.set(event.documentId, event.createdAt);
+  }
+  return latestUpdatedAtByDocId;
 }
 
 function sanitizeSlug(raw: string) {
@@ -111,14 +130,14 @@ async function ensureStore() {
 async function readStore(): Promise<{ items: CompanyDocumentItem[] }> {
   if (USE_POSTGRES) {
     const rows = await prisma.companyDocument.findMany({ orderBy: { createdAt: "desc" } });
-    return { items: rows.map(pgRowToDocItem) };
+    return { items: rows.map(pgRowToDocItem).map(normalizeDocumentItem) };
   }
   await ensureStore();
   try {
     const raw = await fs.readFile(STORE_PATH, "utf8");
     const parsed = JSON.parse(raw) as { items?: unknown };
     const items = Array.isArray(parsed?.items) ? (parsed.items as CompanyDocumentItem[]) : [];
-    return { items };
+    return { items: items.map(normalizeDocumentItem) };
   } catch {
     return { items: [] };
   }
@@ -435,19 +454,21 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const store = await readStore();
+  const [store, history] = await Promise.all([readStore(), readHistory()]);
+  const latestUpdatedAtByDocId = buildLatestUpdateMap(history.items.filter((event) => event.companySlug === companySlug));
   const items = await enrichItems(
     store.items
     .filter((i) => i.companySlug === companySlug)
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
     .map((item) => {
+      const updatedAt = latestUpdatedAtByDocId.get(item.id) ?? item.updatedAt ?? item.createdAt;
       if (item.kind === "file") {
         const downloadUrl = `/api/company-documents?slug=${encodeURIComponent(companySlug)}&id=${encodeURIComponent(
           item.id
         )}&download=1`;
-        return { ...item, url: downloadUrl };
+        return { ...item, updatedAt, url: downloadUrl };
       }
-      return item;
+      return { ...item, updatedAt };
     }),
   );
 
@@ -496,12 +517,25 @@ export async function POST(req: NextRequest) {
       sizeBytes: file.size,
       storagePath,
       createdAt,
+      updatedAt: createdAt,
       createdBy: auth.userId,
     };
 
     if (USE_POSTGRES) {
       await prisma.companyDocument.create({
-        data: { ...item, createdAt: new Date(item.createdAt) },
+        data: {
+          id: item.id,
+          companySlug: item.companySlug,
+          kind: item.kind,
+          title: item.title,
+          description: item.description ?? null,
+          fileName: item.fileName ?? null,
+          mimeType: item.mimeType ?? null,
+          sizeBytes: item.sizeBytes ?? null,
+          storagePath: item.storagePath ?? null,
+          createdAt: new Date(item.createdAt),
+          createdBy: item.createdBy ?? null,
+        },
       });
     } else {
       const store = await readStore();
@@ -541,12 +575,22 @@ export async function POST(req: NextRequest) {
     description,
     url,
     createdAt,
+    updatedAt: createdAt,
     createdBy: auth.userId,
   };
 
   if (USE_POSTGRES) {
     await prisma.companyDocument.create({
-      data: { ...item, createdAt: new Date(item.createdAt) },
+      data: {
+        id: item.id,
+        companySlug: item.companySlug,
+        kind: item.kind,
+        title: item.title,
+        description: item.description ?? null,
+        url: item.url ?? null,
+        createdAt: new Date(item.createdAt),
+        createdBy: item.createdBy ?? null,
+      },
     });
   } else {
     const store = await readStore();
@@ -615,6 +659,7 @@ export async function PATCH(req: NextRequest) {
   const newTitle = typeof record?.title === "string" ? record.title.trim().slice(0, 120) : undefined;
   const newDescription = typeof record?.description === "string" ? record.description.trim().slice(0, 280) : undefined;
   const newUrl = typeof record?.url === "string" ? record.url.trim() : undefined;
+  const updatedAt = new Date().toISOString();
 
   if (USE_POSTGRES) {
     const row = await prisma.companyDocument.findFirst({ where: { id, companySlug } });
@@ -623,7 +668,8 @@ export async function PATCH(req: NextRequest) {
     if (newTitle !== undefined) data.title = newTitle || row.title;
     if (newDescription !== undefined) data.description = newDescription || null;
     if (newUrl !== undefined && row.kind === "link") data.url = newUrl || row.url;
-    await prisma.companyDocument.update({ where: { id }, data });
+    const updatedRow = await prisma.companyDocument.update({ where: { id }, data });
+    await appendHistoryEvent("updated", { ...pgRowToDocItem(updatedRow), updatedAt }, auth.userId);
   } else {
     const store = await readStore();
     const item = store.items.find((i) => i.id === id && i.companySlug === companySlug);
@@ -631,7 +677,9 @@ export async function PATCH(req: NextRequest) {
     if (newTitle !== undefined) item.title = newTitle || item.title;
     if (newDescription !== undefined) item.description = newDescription || null;
     if (newUrl !== undefined && item.kind === "link") item.url = newUrl || item.url;
+    item.updatedAt = updatedAt;
     await writeStore(store);
+    await appendHistoryEvent("updated", item, auth.userId);
   }
 
   return NextResponse.json({ ok: true }, { status: 200 });

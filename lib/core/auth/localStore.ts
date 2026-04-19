@@ -848,9 +848,16 @@ export async function updateLocalCompany(id: string, patch: Partial<LocalAuthCom
     ...current,
     ...patch,
   };
-  if (typeof patch.name === "string") {
-    next.name = patch.name.trim() || current.name;
-    next.company_name = patch.company_name ?? next.name;
+  const patchHasName = typeof patch.name === "string";
+  const patchHasCompanyName = typeof patch.company_name === "string";
+  const patchName = patchHasName ? patch.name : undefined;
+  const patchCompanyName = patchHasCompanyName ? patch.company_name : undefined;
+  if (patchHasName) {
+    next.name = typeof patchName === "string" ? patchName.trim() || current.name : current.name;
+  }
+  if (patchHasCompanyName || patchHasName) {
+    const companyNameCandidate = patchCompanyName?.trim() || next.name;
+    next.company_name = companyNameCandidate || next.name || current.company_name || current.name;
   }
   if (typeof patch.slug === "string") {
     next.slug = normalizeSlug(patch.slug) || current.slug;

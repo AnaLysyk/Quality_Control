@@ -30,6 +30,7 @@ export type AccessContext = {
   userId: string;
   email: string;
   user?: string | null;
+  userOrigin?: string | null;
   isGlobalAdmin: boolean;
   role: string | null;
   globalRole?: string | null;
@@ -188,9 +189,17 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc");
   const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
   const shouldBindCompanyContext = !hasFullCompanyAccess;
+  const isDirectCompanyUser = normalizeLocalRole(user.role ?? null) === "empresa" || normalizeLocalRole(user.role ?? null) === "company_user" || user.user_origin === "client_company";
   const allowedCompanies = hasFullCompanyAccess
     ? companies
-    : companies.filter((company) => links.some((link) => link.companyId === company.id));
+    : companies.filter((company) => {
+        if (links.some((link) => link.companyId === company.id)) return true;
+        if (!isDirectCompanyUser) return false;
+        if (session.companyId && company.id === session.companyId) return true;
+        if (session.companySlug && company.slug === session.companySlug) return true;
+        if (user.default_company_slug && company.slug === user.default_company_slug) return true;
+        return false;
+      });
   // Importante: usuarios sem empresa ainda podem entrar para solicitar acesso.
 
   const companySlugs = allowedCompanies
@@ -224,13 +233,14 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     userId: user.id,
     email: user.email,
     user: user.user ?? null,
+    userOrigin: user.user_origin ?? null,
     isGlobalAdmin,
     role: effectiveRole,
     globalRole: isGlobalAdmin ? "global_admin" : null,
     companyRole,
     capabilities,
     companyId: shouldBindCompanyContext ? session.companyId ?? primaryCompany?.id ?? null : null,
-    companySlug: shouldBindCompanyContext ? session.companySlug ?? primaryCompany?.slug ?? null : null,
+    companySlug: shouldBindCompanyContext ? session.companySlug ?? primaryCompany?.slug ?? user.default_company_slug ?? null : null,
     companySlugs,
   };
 }

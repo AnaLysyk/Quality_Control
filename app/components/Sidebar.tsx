@@ -19,6 +19,7 @@ import {
   FiCpu,
   FiUserPlus,
   FiUsers,
+  FiZap,
 } from "react-icons/fi";
 import { useI18n } from "@/hooks/useI18n";
 import { useClientContext } from "@/context/ClientContext";
@@ -49,8 +50,13 @@ type SidebarProps = {
 export default function Sidebar({ pathname, mobileOpen = false, onClose, mobilePanelId }: SidebarProps) {
   const router = useRouter();
   const prefetchedRoutesRef = useRef<Set<string>>(new Set());
-  const logoSrc = useMemo(() => (menuLogoEnv ? menuLogoEnv : "/images/tc.png"), []);
   const { user, loading, visibility } = usePermissionAccess();
+  const logoSrc = useMemo(() => {
+    const dbLogo = typeof user?.companyLogoUrl === "string" ? user.companyLogoUrl.trim() : "";
+    if (dbLogo) return dbLogo;
+    if (menuLogoEnv) return menuLogoEnv;
+    return "/images/tc.png";
+  }, [user?.companyLogoUrl]);
   const { activeClientSlug } = useClientContext();
   const { t } = useI18n();
 
@@ -146,6 +152,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     { label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric" },
     { label: t("nav.runs"), icon: FiList, href: "/admin/runs" },
     { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
+    { label: t("nav.automations"), icon: FiZap, href: "/automacoes" },
     { label: t("nav.support"), icon: FiColumns, href: "/admin/support" },
     { label: t("nav.management"), icon: FiShield, href: "/admin/users/permissions" },
     { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
@@ -166,6 +173,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             { label: t("nav.metrics"), icon: FiBarChart2, href: buildCompanyPathForAccess(companySlug, "metrics", companyRouteInput) },
             { label: t("nav.apps"), icon: FiBriefcase, href: buildCompanyPathForAccess(companySlug, "aplicacoes", companyRouteInput) },
             { label: t("nav.testPlans"), icon: FiClipboard, href: buildCompanyPathForAccess(companySlug, "planos-de-teste", companyRouteInput) },
+            { label: t("nav.automations"), icon: FiZap, href: "/automacoes", roles: ["admin", "technical_support", "user", "client"] },
             { label: t("nav.runs"), icon: FiList, href: buildCompanyPathForAccess(companySlug, "runs", companyRouteInput) },
             { label: t("nav.defects"), icon: FiAlertTriangle, href: buildCompanyPathForAccess(companySlug, "defeitos", companyRouteInput) },
             { label: t("nav.support"), icon: FiColumns, href: buildCompanyPathForAccess(companySlug, "chamados", companyRouteInput) },
@@ -335,7 +343,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         </Link>
       </div>
 
-      <nav className="flex-1 min-h-0 flex flex-col">
+      <nav className="flex-1 min-h-0 flex flex-col overflow-hidden">
         <div className="flex-1 px-3 py-6 space-y-6">
           <div className="space-y-3">
             <div className="flex items-center px-1">
@@ -349,10 +357,12 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         </div>
       </nav>
 
-      <div className="sidebar-footer px-4 py-4">
+      <div className="sidebar-footer shrink-0 px-4 py-4">
         <div className="sidebar-footer-divider h-px w-full bg-white/10" aria-hidden />
         <div className="sidebar-footer-note pt-3 text-[0.82rem] font-light italic tracking-[0.02em] text-white/46">
-          Testing Company Platform
+          <a href="https://www.testingcompany.com.br/" target="_blank" rel="noopener noreferrer" className="hover:text-white/70 transition-colors">
+            Testing Company Platform
+          </a>
         </div>
       </div>
 
@@ -412,10 +422,12 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             </div>
           </nav>
 
-          <div className="sidebar-footer p-4">
+          <div className="sidebar-footer shrink-0 p-4">
             <div className="sidebar-footer-divider h-px w-full bg-white/10" aria-hidden />
             <div className="sidebar-footer-note pt-3 text-[0.82rem] font-light italic tracking-[0.02em] text-white/46">
-              Testing Company Platform
+              <a href="https://www.testingcompany.com.br/" target="_blank" rel="noopener noreferrer" className="hover:text-white/70 transition-colors">
+                Testing Company Platform
+              </a>
             </div>
           </div>
         </aside>

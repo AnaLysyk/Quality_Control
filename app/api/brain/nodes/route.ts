@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+
 import { searchNodes, upsertNode } from "@/lib/brain";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export async function GET(req: Request) {
-  const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+  }
 
   const url = new URL(req.url);
   const type = url.searchParams.get("type") ?? undefined;
@@ -16,8 +19,10 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+  }
 
   try {
     const body = await req.json();
@@ -34,7 +39,7 @@ export async function POST(req: Request) {
       refId,
       description,
       metadata,
-      userId: user.id,
+      userId: admin.id,
     });
 
     return NextResponse.json({ node }, { status: 201 });

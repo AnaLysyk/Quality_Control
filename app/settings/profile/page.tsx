@@ -854,7 +854,15 @@ export default function SettingsProfilePage() {
     () => resolveUserScopePolicy(institutionalCompanyContext ? "company_admin" : companyContextRoleValue || roleValue),
     [companyContextRoleValue, institutionalCompanyContext, roleValue],
   );
-  const canManageInstitutionalUsers = hasCompanyContext && institutionalCompanyContext;
+  const canManageInstitutionalUsers =
+    hasCompanyContext &&
+    (
+      institutionalCompanyContext ||
+      userOriginValue === "client_company" ||
+      userScopeValue === "company_only" ||
+      scopePolicy.roleKey === "empresa" ||
+      scopePolicy.roleKey === "company_user"
+    );
   const canViewCompanyUsersTab =
     hasCompanyContext &&
     (

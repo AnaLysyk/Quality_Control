@@ -278,6 +278,48 @@ input[type="password"]::-ms-clear {
 :root.dark .placeholder-gray-400::placeholder { color: var(--tc-text-muted); }
 :root.dark .placeholder-gray-500::placeholder { color: var(--tc-text-muted); }
 
+/* Wiki module dark mode */
+:root.dark .bg-\[\#ffffff\] { background-color: var(--tc-surface); }
+:root.dark .bg-\[\#fafafa\] { background-color: var(--tc-surface-2); }
+:root.dark .bg-\[\#f9fafb\] { background-color: var(--tc-surface-2); }
+:root.dark .bg-\[\#f3f4f6\] { background-color: var(--tc-surface-2); }
+:root.dark .text-\[\#374151\] { color: var(--tc-text-primary); }
+:root.dark .text-\[\#1f2937\] { color: var(--tc-text-primary); }
+:root.dark .text-\[\#6b7280\] { color: var(--tc-text-muted); }
+:root.dark .text-\[\#9ca3af\] { color: var(--tc-text-muted); }
+:root.dark .border-\[\#f3f4f6\] { border-color: var(--tc-border); }
+:root.dark .hover\:bg-\[\#f3f4f6\]:hover { background-color: var(--tc-surface-hover); }
+:root.dark .hover\:bg-\[\#e5e7eb\]:hover { background-color: var(--tc-surface-hover); }
+:root.dark .hover\:bg-\[\#fee2e2\]:hover { background-color: rgba(244,63,94,0.15); }
+/* Status badges */
+:root.dark .bg-\[\#fef9c3\] { background-color: rgba(245,158,11,0.15); }
+:root.dark .text-\[\#854d0e\] { color: #fcd34d; }
+:root.dark .bg-\[\#dcfce7\] { background-color: rgba(5,150,105,0.15); }
+:root.dark .bg-\[\#fee2e2\] { background-color: rgba(244,63,94,0.15); }
+:root.dark .bg-\[\#fecaca\] { background-color: rgba(244,63,94,0.2); }
+:root.dark .text-\[\#dc2626\] { color: #fca5a5; }
+/* Semantic card blocks */
+:root.dark .bg-\[\#eff6ff\] { background-color: rgba(37,99,235,0.12); }
+:root.dark .border-\[\#bfdbfe\] { border-color: rgba(37,99,235,0.3); }
+:root.dark .text-\[\#1e40af\] { color: #93c5fd; }
+:root.dark .bg-\[\#fffbeb\] { background-color: rgba(245,158,11,0.12); }
+:root.dark .border-\[\#fde68a\] { border-color: rgba(245,158,11,0.3); }
+:root.dark .text-\[\#92400e\] { color: #fcd34d; }
+:root.dark .bg-\[\#fef2f2\] { background-color: rgba(244,63,94,0.12); }
+:root.dark .border-\[\#fecaca\] { border-color: rgba(244,63,94,0.3); }
+:root.dark .text-\[\#991b1b\] { color: #fca5a5; }
+:root.dark .bg-\[\#f0fdf4\] { background-color: rgba(5,150,105,0.12); }
+:root.dark .border-\[\#bbf7d0\] { border-color: rgba(5,150,105,0.3); }
+:root.dark .text-\[\#166534\] { color: #86efac; }
+:root.dark .bg-\[\#f5f3ff\] { background-color: rgba(124,58,237,0.12); }
+:root.dark .border-\[\#ddd6fe\] { border-color: rgba(124,58,237,0.3); }
+:root.dark .text-\[\#5b21b6\] { color: #c4b5fd; }
+/* Selected/accent */
+:root.dark .bg-\[\#eef2ff\] { background-color: rgba(79,70,229,0.15); }
+:root.dark .border-\[\#c7d2fe\] { border-color: rgba(99,102,241,0.4); }
+:root.dark .text-\[\#4f46e5\] { color: #a5b4fc; }
+:root.dark .text-\[\#6366f1\] { color: #818cf8; }
+
 /* Paper-like surfaces */
 .bg-white {
   background-color: var(--tc-surface) !important;
@@ -9463,6 +9505,15 @@ video {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
+.sidebar-footer-note a {
+  color: inherit;
+  text-decoration: none;
+}
+.sidebar-footer-note a:hover {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+}
+
 .theme-light .sidebar-shell-theme,
 .theme-light .sidebar-mobile-theme {
   color: var(--tc-text-primary);
@@ -9583,3 +9634,6 @@ video {
 }
 
 
+
+/* Wiki sidebar invisible scrollbar */
+.wiki-nav-scroll::-webkit-scrollbar { display: none; }

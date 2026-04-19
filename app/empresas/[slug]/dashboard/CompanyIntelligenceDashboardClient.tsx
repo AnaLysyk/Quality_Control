@@ -6,6 +6,7 @@ import {
   FiActivity,
   FiAlertTriangle,
   FiArrowDownRight,
+  FiArrowLeft,
   FiArrowRight,
   FiArrowUpRight,
   FiDownload,
@@ -18,6 +19,7 @@ import {
   FiZap,
 } from "react-icons/fi";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import { getAppMeta } from "@/lib/appMeta";
 import css from "./CompanyIntelligenceDashboard.module.css";
 import type { CompanyDashboardData } from "./companyDashboardData";
@@ -1270,6 +1272,18 @@ function buildResolvedFilterChipList(
 }
 
 export default function CompanyIntelligenceDashboardClient(props: CompanyDashboardData) {
+  const { user } = useAuthUser();
+  const _role = user?.role?.toLowerCase() ?? null;
+  const _permissionRole = user?.permissionRole?.toLowerCase() ?? null;
+  const isInternalProfile =
+    user?.isGlobalAdmin === true ||
+    _role === "leader_tc" ||
+    _role === "technical_support" ||
+    _role === "testing_company_user" ||
+    _permissionRole === "leader_tc" ||
+    _permissionRole === "technical_support" ||
+    _permissionRole === "testing_company_user";
+
   const [periodPreset, setPeriodPreset] = useState<PeriodPreset>(DEFAULT_FILTERS.periodPreset);
   const [groupBy, setGroupBy] = useState<GroupBy>(DEFAULT_FILTERS.groupBy);
   const [chartView, setChartView] = useState<ChartView>(DEFAULT_FILTERS.chartView);
@@ -2095,6 +2109,15 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
           </div>
 
           <div className="flex shrink-0 flex-wrap items-start gap-2 lg:justify-end lg:self-start">
+            {isInternalProfile ? (
+              <Link
+                href="/documentos"
+                className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c) dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)"
+              >
+                <FiArrowLeft className="h-4 w-4" />
+                Voltar às empresas
+              </Link>
+            ) : null}
             <Link
               href="../metrics"
               className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c) dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)"

@@ -1,16 +1,19 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+
 import { addMemory, getNodeMemories } from "@/lib/brain";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export async function GET(req: Request) {
-  const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+  }
 
   const url = new URL(req.url);
   const nodeId = url.searchParams.get("nodeId");
 
   if (!nodeId) {
-    return NextResponse.json({ error: "nodeId e obrigatório" }, { status: 400 });
+    return NextResponse.json({ error: "nodeId e obrigatorio" }, { status: 400 });
   }
 
   const memories = await getNodeMemories(nodeId);
@@ -18,8 +21,10 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+  }
 
   try {
     const body = await req.json();
@@ -42,7 +47,7 @@ export async function POST(req: Request) {
       relatedNodeIds: relatedNodeIds ?? [],
       sourceType,
       sourceId,
-      userId: user.id,
+      userId: admin.id,
     });
 
     return NextResponse.json({ memory }, { status: 201 });

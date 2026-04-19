@@ -1,4 +1,5 @@
 import type { AuthUser } from "@/contracts/auth";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { resolveEntityImage } from "@/lib/resolveEntityImage";
 
 type ActiveCompanyLike = {
@@ -157,7 +158,32 @@ export function isInstitutionalCompanyAccount(
 }
 
 export function isCompanyProfileContext(user: AuthUser | null | undefined) {
-  return isInstitutionalCompanyAccount(user);
+  if (isInstitutionalCompanyAccount(user)) return true;
+  if (!user || typeof user !== "object") return false;
+
+  const record = user as Record<string, unknown>;
+  const origin = readTrimmedString(
+    typeof record.user_origin === "string" ? record.user_origin : null,
+    typeof record.userOrigin === "string" ? record.userOrigin : null,
+  );
+  const scope = readTrimmedString(
+    typeof record.user_scope === "string" ? record.user_scope : null,
+    typeof record.userScope === "string" ? record.userScope : null,
+  );
+  const permissionRole = normalizeLegacyRole(user.permissionRole);
+  const role = normalizeLegacyRole(user.role);
+  const companyRole = normalizeLegacyRole(user.companyRole);
+
+  return (
+    origin === "client_company" ||
+    scope === "company_only" ||
+    permissionRole === SYSTEM_ROLES.EMPRESA ||
+    role === SYSTEM_ROLES.EMPRESA ||
+    companyRole === SYSTEM_ROLES.EMPRESA ||
+    permissionRole === SYSTEM_ROLES.COMPANY_USER ||
+    role === SYSTEM_ROLES.COMPANY_USER ||
+    companyRole === SYSTEM_ROLES.COMPANY_USER
+  );
 }
 
 export function resolveActiveIdentity({

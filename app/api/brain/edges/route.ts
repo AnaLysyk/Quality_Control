@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+
 import { connectNodes } from "@/lib/brain";
 import { prisma } from "@/lib/prismaClient";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export async function GET(req: Request) {
-  const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+  }
 
   const url = new URL(req.url);
   const nodeId = url.searchParams.get("nodeId");
@@ -26,8 +29,10 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+  }
 
   try {
     const body = await req.json();
@@ -37,7 +42,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "fromId, toId e type sao obrigatorios" }, { status: 400 });
     }
 
-    const edge = await connectNodes(fromId, toId, type, metadata, user.id);
+    const edge = await connectNodes(fromId, toId, type, metadata, admin.id);
     return NextResponse.json({ edge }, { status: 201 });
   } catch (error) {
     console.error("[brain/edges] POST error:", error);

@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { getNodeWithContext, getNodeMemories, traceImpact, getSubgraph } from "@/lib/brain";
+
+import { getNodeWithContext, getNodeMemories, getSubgraph, traceImpact } from "@/lib/brain";
+import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+  }
 
   const { id } = await params;
   const url = new URL(req.url);

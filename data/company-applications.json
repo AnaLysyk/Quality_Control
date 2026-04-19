@@ -1,0 +1,33 @@
+{
+  "items": [
+    {
+      "id": "app_tc_quality_control",
+      "companyId": "testing-company",
+      "companySlug": "testing-company",
+      "name": "Quality Control Platform",
+      "slug": "quality-control",
+      "description": "Aplicação principal da Testing Company para operação do painel, runs, automações e dashboards.",
+      "imageUrl": null,
+      "qaseProjectCode": "QCP",
+      "source": "catalog",
+      "active": true,
+      "createdAt": "2026-04-19T00:00:00.000Z",
+      "updatedAt": "2026-04-19T00:00:00.000Z"
+    },
+    {
+      "id": "app_tc_automation_workspace",
+      "companyId": "testing-company",
+      "companySlug": "testing-company",
+      "name": "Automation Workspace",
+      "slug": "automation-workspace",
+      "description": "Workspace operacional de automação da Testing Company para smoke, runners e API Lab.",
+      "imageUrl": null,
+      "qaseProjectCode": "QCA",
+      "source": "catalog",
+      "active": true,
+      "createdAt": "2026-04-19T00:00:00.000Z",
+      "updatedAt": "2026-04-19T00:00:00.000Z"
+    }
+  ],
+  "counter": 2
+}

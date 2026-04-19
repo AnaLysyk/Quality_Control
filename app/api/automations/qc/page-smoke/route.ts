@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
 import { normalizeAutomationCompanyScope } from "@/lib/automations/companyScope";
+import { saveAutomationExecutionAudit } from "@/lib/automations/executionAuditStore";
 import { authenticateRequest } from "@/lib/jwtAuth";
 
 export const runtime = "nodejs";
@@ -38,6 +39,7 @@ function extractTitle(html: string) {
 
 export async function POST(request: Request) {
   const user = await authenticateRequest(request);
+  const startedAt = Date.now();
 
   if (!user) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
@@ -91,6 +93,20 @@ export async function POST(request: Request) {
     const redirectedToLogin = finalUrl.includes("/login");
     const durationMs = Date.now() - startedAt;
 
+    await saveAutomationExecutionAudit({
+      actorUserId: user.id,
+      companySlug,
+      durationMs,
+      metadata: {
+        finalUrl,
+        redirectedToLogin,
+        targetPath: payload.targetPath,
+      },
+      ok: response.ok && containsExpectedText && matchesTitleHint && !redirectedToLogin,
+      route: "qc-page-smoke",
+      statusCode: response.status,
+    });
+
     return NextResponse.json({
       ok: response.ok && containsExpectedText && matchesTitleHint && !redirectedToLogin,
       result: {
@@ -107,9 +123,19 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Falha ao validar a tela.";
+    await saveAutomationExecutionAudit({
+      actorUserId: user.id,
+      durationMs: Date.now() - startedAt,
+      error: message,
+      ok: false,
+      route: "qc-page-smoke",
+      statusCode: 500,
+    });
+
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Falha ao validar a tela.",
+        error: message,
       },
       { status: 500 },
     );

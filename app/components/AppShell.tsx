@@ -66,6 +66,7 @@ const APP_SHELL_COPY = {
       dashboard: "Dashboard",
       metrics: "Métricas",
       apps: "Aplicações",
+      operations: "Operação",
       runs: "Runs",
       defects: "Defeitos",
       support: "Suporte",
@@ -82,6 +83,7 @@ const APP_SHELL_COPY = {
     },
     notes: {
       dashboard: "Leitura operacional da empresa, com sinais de execução, risco e desempenho.",
+      operations: "Central operacional por empresa, com leitura de contexto e navegação de execução.",
       runs: "Acompanhe as execuções manuais e integradas com contexto claro e leitura rápida.",
       apps: "Catálogo visual das aplicações monitoradas, integrações conectadas e projetos vinculados.",
       defects: "Triagem dos defeitos e pontos de atenção que precisam de resposta do time.",
@@ -145,6 +147,7 @@ const APP_SHELL_COPY = {
     },
     notes: {
       dashboard: "Operational company view with execution signals, risk, and performance.",
+      operations: "Operational company hub with context-aware navigation and execution tracking.",
       runs: "Track manual and integrated executions with clear context and quick reading.",
       apps: "Visual catalog of monitored applications, connected integrations, and linked projects.",
       defects: "Defect triage and attention points that need a team response.",
@@ -536,18 +539,26 @@ export default function AppShell({ children }: AppShellProps) {
       companyBrand &&
       (viewerProfile === "empresa" || viewerProfile === "company_user");
     const shortProfileLabel = profileLabel(viewerProfile, shellCopy);
+    const isOperationalProfile =
+      viewerProfile === "technical_support" || viewerProfile === "leader_tc" || viewerProfile === "testing_company_user";
+    const isOperationalModule = isOperationalProfile && pathname.startsWith("/admin/runs");
+    const operationalTitle = shellCopy.sections.operations;
+    const operationalNote = shellCopy.notes.operations;
 
     return {
       ...baseIdentity,
       kicker: shouldCollapseCompanyKicker
         ? `${profileKicker(viewerProfile, companyBrand, shellCopy)}`
         : `${profileKicker(viewerProfile, companyBrand, shellCopy)} | ${baseIdentity.kicker}`,
-      title:
-        isCompanyHomeRoute && companyBrand
+      title: isOperationalModule
+        ? operationalTitle
+        : isCompanyHomeRoute && companyBrand
           ? companyBrand.name
           : isHomeRoute && !isCompanyRoute
             ? shortProfileLabel
             : baseIdentity.title,
+      note: isOperationalModule ? operationalNote : baseIdentity.note,
+      badge: isOperationalModule ? operationalTitle : baseIdentity.badge,
       profileLabel: shortProfileLabel,
       coverClassName: profileCoverClassName(viewerProfile),
       logoSrc,

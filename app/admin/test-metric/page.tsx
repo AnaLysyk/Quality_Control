@@ -218,7 +218,7 @@ function GlobalTrendSparkline({ points }: { points: TrendPoint[] }) {
   const xLabelStep = Math.max(1, Math.ceil(displayPoints.length / 7));
 
   return (
-    <div className="rounded-2xl border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02))] overflow-hidden">
+    <div className="overflow-hidden rounded-2xl border border-white/12 bg-linear-to-b from-white/7 to-white/2">
       <svg viewBox={`0 0 ${w} ${h}`} className="h-56 w-full">
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">

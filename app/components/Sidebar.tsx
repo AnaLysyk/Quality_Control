@@ -75,6 +75,12 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
       legacyUser?.is_global_admin === true ||
       normalizedRole === SYSTEM_ROLES.LEADER_TC);
   const isInstitutionalCompany = isInstitutionalCompanyAccount(user ?? null);
+  const adminRunsMenuLabel =
+    normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
+    normalizedRole === SYSTEM_ROLES.LEADER_TC ||
+    normalizedRole === SYSTEM_ROLES.TESTING_COMPANY_USER
+      ? "Operação"
+      : t("nav.runs");
 
   const appRole = useMemo<AppRole | null>(() => {
     if (!user) return null;
@@ -150,7 +156,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   const adminNav: NavItem[] = useMemo(() => [
     { label: t("nav.dashboard"), icon: FiCompass, href: "/admin/dashboard" },
     { label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric" },
-    { label: t("nav.runs"), icon: FiList, href: "/admin/runs" },
+    { label: adminRunsMenuLabel, icon: FiList, href: "/admin/runs" },
     { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
     { label: t("nav.automations"), icon: FiZap, href: "/automacoes" },
     { label: t("nav.support"), icon: FiColumns, href: "/admin/support" },
@@ -179,7 +185,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             { label: t("nav.support"), icon: FiColumns, href: buildCompanyPathForAccess(companySlug, "chamados", companyRouteInput) },
           ]
         : [],
-    [companyRouteInput, companySlug, t]
+    [companyRouteInput, companySlug, t, adminRunsMenuLabel]
   );
 
   const navigation = useMemo(() => {

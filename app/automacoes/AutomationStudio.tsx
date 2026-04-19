@@ -891,7 +891,7 @@ function findSubflow(id: string) {
 
 type AutomationStudioPanelId = "overview" | "steps" | "mappings" | "results" | "scripts" | "files";
 
-async function runApiStep(step: DraftStep, environmentBaseUrl: string): Promise<StepRunResult> {
+async function runApiStep(step: DraftStep, environmentBaseUrl: string, companySlug: string | null): Promise<StepRunResult> {
   const isGql = step.kind === "graphql_request";
   const url = /^https?:\/\//i.test(step.apiUrl)
     ? step.apiUrl
@@ -917,7 +917,15 @@ async function runApiStep(step: DraftStep, environmentBaseUrl: string): Promise<
   const res = await fetch("/api/automations/http", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ body, forwardCookies: false, headers, method: isGql ? "POST" : step.apiMethod, timeoutMs: step.timeoutMs || 15000, url }),
+    body: JSON.stringify({
+      body,
+      companySlug,
+      forwardCookies: false,
+      headers,
+      method: isGql ? "POST" : step.apiMethod,
+      timeoutMs: step.timeoutMs || 15000,
+      url,
+    }),
   });
   const payload = await res.json();
   if (!res.ok || !payload?.response) throw new Error(payload?.error ?? "Falha na chamada");
@@ -1351,7 +1359,7 @@ export default function AutomationStudio({
   async function runSelectedApiStep(step: DraftStep) {
     setStepRunning(true);
     try {
-      const result = await runApiStep(step, selectedEnvironment?.baseUrl ?? "");
+      const result = await runApiStep(step, selectedEnvironment?.baseUrl ?? "", selectedCompanySlug || null);
       const variableKey = step.apiSaveResponseTo.trim();
       const variablePath = step.apiSaveJsonPath.trim();
 

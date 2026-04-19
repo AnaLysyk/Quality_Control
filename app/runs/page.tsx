@@ -15,6 +15,11 @@ export default function RunsIndexPage() {
   const { user } = useAuthUser();
   const { clients } = useClientContext();
   const institutionalCompanyContext = isInstitutionalCompanyAccount(user ?? null);
+  const moduleLabel = "Runs";
+  const pageTitle = "Selecione a empresa";
+  const pageDescription = "As execuções de testes ficam organizadas por empresa. Escolha abaixo para abrir o hub de runs correspondente.";
+  const selectorTitle = "Empresas com runs";
+  const selectorDescription = "Acesso rápido às execuções mais recentes, métricas e histórico de resultados.";
   const fallbackClientSlug = clients[0]?.slug ?? null;
   const companySlug = user?.clientSlug ?? user?.defaultClientSlug ?? fallbackClientSlug;
   const routeInput = {
@@ -45,7 +50,7 @@ export default function RunsIndexPage() {
     return (
       <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c) px-4 sm:px-6 md:px-10 py-8 md:py-10">
         <div className="mx-auto flex max-w-5xl flex-col gap-2">
-          <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent)">Runs</p>
+          <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent)">{moduleLabel}</p>
           <h1 className="text-2xl font-bold">Abrindo contexto da empresa...</h1>
         </div>
       </div>
@@ -56,16 +61,14 @@ export default function RunsIndexPage() {
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c) px-4 sm:px-6 md:px-10 py-8 md:py-10">
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
         <header className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent)">Runs</p>
-          <h1 className="text-3xl font-bold">Selecione a empresa</h1>
-          <p className="text-sm text-(--tc-text-secondary,#4b5563)">
-            As execuções de testes ficam organizadas por empresa. Escolha abaixo para abrir o hub de runs correspondente.
-          </p>
+          <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent)">{moduleLabel}</p>
+          <h1 className="text-3xl font-bold">{pageTitle}</h1>
+          <p className="text-sm text-(--tc-text-secondary,#4b5563)">{pageDescription}</p>
         </header>
 
         <CompanySelector
-          title="Empresas com runs"
-          description="Acesso rápido às execuções mais recentes, métricas e histórico de resultados."
+          title={selectorTitle}
+          description={selectorDescription}
           buildHref={(company) =>
             buildCompanyPathForAccess(company.clientSlug, "runs", {
               ...routeInput,

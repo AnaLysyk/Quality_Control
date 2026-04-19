@@ -226,18 +226,19 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
       }
 
       const path = String(applyTemplate(selectedTool.pathTemplate, values));
-      const execution = await fetch("/api/automations/http", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          headers: selectedTool.headers ?? {},
-          method: selectedTool.method,
-          timeoutMs: 15000,
-          url: normalizeBaseUrl(currentEnvironment.baseUrl, path),
-        }),
-      });
+        const execution = await fetch("/api/automations/http", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            headers: selectedTool.headers ?? {},
+            companySlug: activeCompanySlug,
+            method: selectedTool.method,
+            timeoutMs: 15000,
+            url: normalizeBaseUrl(currentEnvironment.baseUrl, path),
+          }),
+        });
       const payload = await execution.json();
 
       if (!execution.ok || !payload?.response) {

@@ -1,14 +1,16 @@
 ﻿import { test, expect, type APIRequestContext } from "@playwright/test";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
+const adminPassword = process.env.E2E_ADMIN_PASSWORD || "Griaule@123";
+const userPassword = process.env.E2E_USER_PASSWORD || "Griaule@123";
 const adminUser = {
   email: "admin@demo.test",
-  password: "Demo@123",
+  password: adminPassword,
   role: "admin",
 };
 const normalUser = {
   email: "user@demo.test",
-  password: "Demo@123",
+  password: userPassword,
   role: "user",
 };
 

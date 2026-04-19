@@ -16,47 +16,40 @@ import AutomationModuleSidebar from "./AutomationModuleSidebar";
 function Skeleton() {
   return (
     <div className="w-full bg-(--page-bg,#f3f6fb) px-4 pt-4 pb-8 sm:px-6 lg:px-10 xl:px-12 2xl:px-14">
-      <div className="space-y-4 2xl:grid 2xl:grid-cols-[240px_minmax(0,1fr)] 2xl:gap-4 2xl:space-y-0">
-        <div className="h-40 animate-pulse rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) 2xl:h-64" />
-        <div className="h-[520px] animate-pulse rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)" />
-      </div>
+      <div className="h-40 animate-pulse rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) sm:h-48" />
+      <div className="mt-4 h-130 animate-pulse rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)" />
     </div>
   );
 }
 
 function AccessDenied() {
   return (
-    <div className="space-y-4 2xl:grid 2xl:grid-cols-[240px_minmax(0,1fr)] 2xl:gap-4 2xl:space-y-0">
-      <aside className="hidden 2xl:block">
-        <div className="h-64 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)" />
-      </aside>
-      <section className="rounded-[30px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-6 shadow-sm">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#011848,#ef0001)] text-white">
-          <FiLock className="h-6 w-6" />
-        </div>
-        <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-accent,#ef0001)">Acesso restrito</p>
-        <h2 className="mt-3 text-3xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Módulo interno de automações</h2>
-        <p className="mt-4 max-w-3xl text-sm leading-7 text-(--tc-text-secondary,#4b5563)">
-          Esse workspace foi desenhado para operação técnica da Testing Company. Perfis de empresa e usuário da empresa continuam usando os próprios
-          documentos, repositórios e telas da organização sem acesso aos fluxos internos.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href="/documentos"
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-(--tc-primary,#011848) px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
-          >
-            Abrir documentos
-            <FiArrowRight className="h-4 w-4" />
-          </Link>
-          <Link
-            href="/docs"
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-5 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
-          >
-            Ver base documental
-          </Link>
-        </div>
-      </section>
-    </div>
+    <section className="rounded-[30px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-6 shadow-sm">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#011848,#ef0001)] text-white">
+        <FiLock className="h-6 w-6" />
+      </div>
+      <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-accent,#ef0001)">Acesso restrito</p>
+      <h2 className="mt-3 text-3xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Módulo interno de automações</h2>
+      <p className="mt-4 max-w-3xl text-sm leading-7 text-(--tc-text-secondary,#4b5563)">
+        Esse workspace foi desenhado para operação técnica da Testing Company. Perfis de empresa e usuário da empresa continuam usando os próprios
+        documentos, repositórios e telas da organização sem acesso aos fluxos internos.
+      </p>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Link
+          href="/documentos"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-(--tc-primary,#011848) px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+        >
+          Abrir documentos
+          <FiArrowRight className="h-4 w-4" />
+        </Link>
+        <Link
+          href="/docs"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-5 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+        >
+          Ver base documental
+        </Link>
+      </div>
+    </section>
   );
 }
 
@@ -99,7 +92,7 @@ export default function AutomationModuleLayout({ children }: { children: React.R
           {!access.canOpen ? (
             <AccessDenied />
           ) : (
-            <div className="space-y-4 2xl:grid 2xl:grid-cols-[240px_minmax(0,1fr)] 2xl:items-start 2xl:gap-4 2xl:space-y-0">
+            <div className="relative min-w-0 w-full">
               <AutomationModuleSidebar />
               <main className="min-w-0 w-full">{children}</main>
             </div>

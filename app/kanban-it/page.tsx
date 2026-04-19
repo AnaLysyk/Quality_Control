@@ -532,15 +532,21 @@ export default function KanbanItPage() {
       typeof matchedCompany?.logoUrl === "string" && matchedCompany.logoUrl.trim()
         ? matchedCompany.logoUrl
         : null;
+    const photoSrc =
+      typeof user?.avatarUrl === "string" && user.avatarUrl.trim()
+        ? user.avatarUrl
+        : null;
 
     return {
       companyName,
       logoSrc,
+      photoSrc,
       logoAlt: companyName ? `Logo da empresa ${companyName}` : "Logo Testing Company",
+      photoAlt: user?.name ? `Foto de perfil de ${user.name}` : "Foto de perfil",
       logoFallback: getInitials(companyName ?? "Testing Company"),
       isCompanyScoped: Boolean(companyName),
     };
-  }, [activeClient, activeClientSlug, companies, pathname, user?.clientSlug, user?.defaultClientSlug]);
+  }, [activeClient, activeClientSlug, companies, pathname, user?.avatarUrl, user?.clientSlug, user?.defaultClientSlug, user?.name]);
   const statusKeys = useMemo(
     () => suportes.map((suporte) => normalizeKanbanStatus(suporte.status)),
     [suportes],
@@ -1048,6 +1054,28 @@ export default function KanbanItPage() {
                   width={72}
                   height={72}
                   className="h-14 w-14 object-contain sm:h-16 sm:w-16"
+                  priority
+                />
+              )
+            ) : supportBrand.photoSrc ? (
+              shouldUseNativeImageTag(supportBrand.photoSrc) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={supportBrand.photoSrc}
+                  alt={supportBrand.photoAlt}
+                  width={72}
+                  height={72}
+                  className="h-14 w-14 rounded-full object-cover sm:h-16 sm:w-16"
+                  loading="eager"
+                  decoding="async"
+                />
+              ) : (
+                <Image
+                  src={supportBrand.photoSrc}
+                  alt={supportBrand.photoAlt}
+                  width={72}
+                  height={72}
+                  className="h-14 w-14 rounded-full object-cover sm:h-16 sm:w-16"
                   priority
                 />
               )

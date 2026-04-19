@@ -4,6 +4,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { randomUUID } from "crypto";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
+import { resolveDatabaseUrlFromEnv } from "@/lib/databaseUrl";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import {
@@ -115,8 +116,9 @@ export const USE_POSTGRES = shouldUsePostgresPersistence();
 
 if (typeof process !== "undefined") {
   const backend = USE_POSTGRES ? "PostgreSQL" : process.env.LOCAL_AUTH_STORE === "redis" ? "Redis" : "JSON/Memory";
-  const databaseUrlStatus = process.env.DATABASE_URL
-    ? hasSupportedDatabaseUrl(process.env.DATABASE_URL)
+  const resolvedDatabaseUrl = resolveDatabaseUrlFromEnv();
+  const databaseUrlStatus = resolvedDatabaseUrl
+    ? hasSupportedDatabaseUrl(resolvedDatabaseUrl)
       ? "valid"
       : "invalid"
     : "unset";

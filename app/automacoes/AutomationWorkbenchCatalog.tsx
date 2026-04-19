@@ -4,6 +4,7 @@ import {
   FiCheckCircle,
   FiClock,
   FiCpu,
+  FiDatabase,
   FiGlobe,
   FiLock,
   FiPlay,
@@ -16,6 +17,7 @@ import {
   AUTOMATION_FLOWS,
   AUTOMATION_PILLARS,
 } from "@/data/automationCatalog";
+import { SC_INTEGRATION_COLLECTION } from "@/data/scIntegrationCollection";
 
 function maturityTone(maturity: (typeof AUTOMATION_DOMAINS)[number]["maturity"]) {
   if (maturity === "priority") return "border-emerald-200 bg-emerald-50 text-emerald-700";
@@ -198,6 +200,67 @@ export default function AutomationWorkbenchCatalog() {
             ))}
           </div>
         </article>
+      </section>
+
+      <section className="rounded-[30px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-6 shadow-sm">
+        <div className="flex flex-col gap-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Coleção importada</p>
+          <h3 className="text-3xl font-black tracking-[-0.04em] text-(--tc-text,#0b1a3c)">{SC_INTEGRATION_COLLECTION.name}</h3>
+          <p className="max-w-4xl text-sm leading-7 text-(--tc-text-secondary,#4b5563)">{SC_INTEGRATION_COLLECTION.summary}</p>
+        </div>
+
+        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+          <div className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-5">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
+              <FiDatabase className="h-4 w-4" />
+              Resumo da importação
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Grupos</p>
+                <p className="mt-2 text-3xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{SC_INTEGRATION_COLLECTION.groups.length}</p>
+              </div>
+              <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Requests</p>
+                <p className="mt-2 text-3xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{SC_INTEGRATION_COLLECTION.totalRequests}</p>
+              </div>
+              <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Foco</p>
+                <p className="mt-2 text-sm font-bold leading-6 text-(--tc-text,#0b1a3c)">Tokens, processos e leitura operacional</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            {SC_INTEGRATION_COLLECTION.groups.map((group) => (
+              <article
+                key={group.id}
+                className="flex min-h-full flex-col rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Grupo</p>
+                    <h4 className="mt-1 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{group.title}</h4>
+                  </div>
+                  <span className="inline-flex min-h-8 items-center rounded-full border border-(--tc-border,#d7deea) bg-white px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+                    {group.requestCount}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">{group.summary}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {group.sampleRequests.map((request) => (
+                    <span
+                      key={request}
+                      className="inline-flex items-center rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)"
+                    >
+                      {request}
+                    </span>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
       </section>
     </>
   );

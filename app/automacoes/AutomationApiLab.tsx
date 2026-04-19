@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ComponentType, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ComponentType, type Dispatch, type SetStateAction } from "react";
 import {
   FiActivity,
   FiCheckCircle,
@@ -22,6 +22,7 @@ import {
   FiToggleLeft,
   FiToggleRight,
   FiTrash2,
+  FiUploadCloud,
   FiXCircle,
   FiZap,
 } from "react-icons/fi";
@@ -37,7 +38,7 @@ import {
   type AutomationRequestKeyValue,
   type AutomationRequestPreset,
 } from "@/data/automationIde";
-import { isTestingCompanyScope, matchesAutomationCompanyScope } from "@/lib/automations/companyScope";
+import { isTestingCompanyScope, matchesAutomationCompanyScope, normalizeAutomationCompanyScope } from "@/lib/automations/companyScope";
 
 type CompanyOption = {
   name: string;
@@ -77,6 +78,62 @@ type AssertionResult = {
 type EditorPanel = "params" | "auth" | "variables" | "headers" | "body" | "tests" | "import-export" | "graphql" | "mock";
 
 type SidebarView = "collection" | "runner" | "history";
+
+type PostmanCollectionExport = {
+  info?: {
+    name?: string;
+  };
+  item?: PostmanItem[];
+};
+
+type PostmanItem = {
+  item?: PostmanItem[];
+  name?: string;
+  request?: PostmanRequest;
+  variable?: AutomationRequestKeyValue[];
+};
+
+type PostmanRequest = {
+  auth?: {
+    type?: string;
+    apikey?: Array<{
+      key?: string;
+      value?: string;
+    }>;
+    bearer?: Array<{
+      key?: string;
+      value?: string;
+    }>;
+    basic?: Array<{
+      key?: string;
+      value?: string;
+    }>;
+  };
+  body?: {
+    formdata?: Array<{
+      key?: string;
+      type?: string;
+      value?: string;
+    }>;
+    mode?: string;
+    raw?: string;
+    urlencoded?: Array<{
+      key?: string;
+      value?: string;
+    }>;
+  };
+  header?: Array<AutomationRequestKeyValue & { disabled?: boolean }>;
+  method?: string;
+  url?:
+    | string
+    | {
+        host?: string[];
+        path?: string[];
+        query?: Array<AutomationRequestKeyValue & { disabled?: boolean }>;
+        raw?: string;
+        variable?: AutomationRequestKeyValue[];
+      };
+};
 
 type RunnerStepResult = {
   requestId: string;
@@ -387,6 +444,104 @@ function authLabel(auth: AutomationRequestAuth) {
   return "Sem autenticação";
 }
 
+function normalizePostmanAuth(auth?: PostmanRequest["auth"]): AutomationRequestAuth {
+  if (!auth?.type || auth.type === "noauth") return { type: "none" };
+  if (auth.type === "bearer") {
+    return { type: "bearer", value: auth.bearer?.[0]?.value ?? "" };
+  }
+  if (auth.type === "basic") {
+    const username = auth.basic?.find((entry) => entry.key === "username")?.value ?? "";
+    const password = auth.basic?.find((entry) => entry.key === "password")?.value ?? "";
+    return { type: "basic", username, password };
+  }
+  if (auth.type === "apikey") {
+    const key = auth.apikey?.find((entry) => entry.key === "key")?.value ?? "";
+    const value = auth.apikey?.find((entry) => entry.key === "value")?.value ?? "";
+    const addTo = auth.apikey?.find((entry) => entry.key === "in")?.value === "query" ? "query" : "header";
+    return { type: "api-key", key, value, addTo };
+  }
+  return { type: "none" };
+}
+
+function buildPostmanUrl(url: PostmanRequest["url"]) {
+  if (!url) return "";
+  if (typeof url === "string") return url;
+  if (url.raw) return url.raw;
+  const host = (url.host ?? []).filter(Boolean).join(".");
+  const path = (url.path ?? []).filter(Boolean).join("/");
+  if (!host) return path ? `/${path}` : "";
+  if (host.includes("{{")) return `${host}${path ? `/${path}` : ""}`;
+  const prefix = host.startsWith("http") ? host : `https://${host}`;
+  return `${prefix}${path ? `/${path}` : ""}`;
+}
+
+function normalizePostmanBody(body?: PostmanRequest["body"]) {
+  if (!body) return "";
+  if (body.mode === "raw") return body.raw ?? "";
+  if (body.mode === "urlencoded") {
+    return JSON.stringify(
+      (body.urlencoded ?? []).reduce<Record<string, string>>((accumulator, item) => {
+        if (item.key) accumulator[item.key] = item.value ?? "";
+        return accumulator;
+      }, {}),
+      null,
+      2,
+    );
+  }
+  if (body.mode === "formdata") {
+    return JSON.stringify(
+      (body.formdata ?? []).reduce<Array<Record<string, string>>>((accumulator, item) => {
+        if (item.key) accumulator.push({ key: item.key, type: item.type ?? "", value: item.value ?? "" });
+        return accumulator;
+      }, []),
+      null,
+      2,
+    );
+  }
+  return "";
+}
+
+function flattenPostmanItems(items: PostmanItem[], parents: string[] = []): PostmanItem[] {
+  return items.flatMap((item) => {
+    const nextParents = item.name ? [...parents, item.name] : parents;
+    if (item.item && item.item.length > 0) {
+      return flattenPostmanItems(item.item, nextParents);
+    }
+    return item.request ? [{ ...item, name: nextParents.join(" / ") || item.name || "Request" }] : [];
+  });
+}
+
+function postmanItemsToSavedRequests(items: PostmanItem[], companyScope: AutomationRequestPreset["companyScope"]): SavedRequest[] {
+  return flattenPostmanItems(items).map((item, index) => {
+    const request = item.request ?? {};
+    const rawUrl = buildPostmanUrl(request.url);
+    const headers = (request.header ?? []).filter((entry) => !entry.disabled && entry.key).map((entry) => ({ key: entry.key ?? "", value: entry.value ?? "" }));
+    const queryParams =
+      typeof request.url === "object" && request.url?.query
+        ? request.url.query.filter((entry) => !entry.disabled && entry.key).map((entry) => ({ key: entry.key ?? "", value: entry.value ?? "" }))
+        : [];
+
+    return {
+      id: `postman-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`,
+      title: item.name ?? `Request ${index + 1}`,
+      method: (request.method?.toUpperCase() ?? "GET") as AutomationHttpMethod,
+      path: rawUrl,
+      body: normalizePostmanBody(request.body),
+      auth: normalizePostmanAuth(request.auth),
+      headers,
+      queryParams,
+      variables:
+        typeof request.url === "object"
+          ? (request.url.variable ?? []).filter((entry) => entry.key).map((entry) => ({ key: entry.key ?? "", value: entry.value ?? "" }))
+          : [],
+      assertions: [],
+      companyScope,
+      tags: ["postman"],
+      source: "saved",
+    };
+  });
+}
+
 export default function AutomationApiLab({ activeCompanySlug, companies }: Props) {
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(
     isTestingCompanyScope(activeCompanySlug) ? "qc-local" : (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local"),
@@ -425,11 +580,15 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<EditorPanel>("params");
   const [baseUrlInput, setBaseUrlInput] = useState("");
+  const [postmanImportError, setPostmanImportError] = useState<string | null>(null);
+  const [postmanImportFeedback, setPostmanImportFeedback] = useState<string | null>(null);
+  const postmanFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const selectedCompany = useMemo(
     () => companies.find((company) => company.slug === activeCompanySlug) ?? companies[0] ?? null,
     [activeCompanySlug, companies],
   );
+  const activeCompanyScope = normalizeAutomationCompanyScope(activeCompanySlug) ?? "all";
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -715,6 +874,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             body: resolvedBody,
+            companySlug: activeCompanySlug,
             forwardCookies: auth.type === "session",
             headers,
             method,
@@ -781,11 +941,19 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
       const gqlBody = JSON.stringify({ query: graphqlQuery, variables: parsedVars });
 
-      const execution = await fetch("/api/automations/http", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: gqlBody, forwardCookies: auth.type === "session", headers: gqlHeaders, method: "POST", timeoutMs: 15000, url: resolvedEndpoint }),
-      });
+        const execution = await fetch("/api/automations/http", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            body: gqlBody,
+            companySlug: activeCompanySlug,
+            forwardCookies: auth.type === "session",
+            headers: gqlHeaders,
+            method: "POST",
+            timeoutMs: 15000,
+            url: resolvedEndpoint,
+          }),
+        });
       const payload = await execution.json();
       if (!execution.ok || !payload?.response) throw new Error(payload?.error ?? "Falha ao executar GraphQL.");
       setResponse(payload.response as HttpResponseState);
@@ -838,7 +1006,15 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
         const execution = await fetch("/api/automations/http", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ body: resolvedBody, forwardCookies: reqAuth.type === "session", headers, method: req.method, timeoutMs: 15000, url: resolvedUrl }),
+          body: JSON.stringify({
+            body: resolvedBody,
+            companySlug: activeCompanySlug,
+            forwardCookies: reqAuth.type === "session",
+            headers,
+            method: req.method,
+            timeoutMs: 15000,
+            url: resolvedUrl,
+          }),
         });
         const payload = await execution.json();
         if (!execution.ok || !payload?.response) throw new Error(payload?.error ?? "Falha na execução");
@@ -902,6 +1078,52 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
     setCurlImportText("");
     setCopyFeedback("Request importado do cURL");
     window.setTimeout(() => setCopyFeedback(null), 1600);
+  }
+
+  function importPostmanCollection(rawCollection: string) {
+    const parsed = JSON.parse(rawCollection) as PostmanCollectionExport;
+    const items = Array.isArray(parsed.item) ? parsed.item : [];
+    if (items.length === 0) {
+      throw new Error("A coleção não possui requests válidos.");
+    }
+
+    const importedRequests = postmanItemsToSavedRequests(items, activeCompanyScope);
+    if (importedRequests.length === 0) {
+      throw new Error("Nenhum request foi encontrado na coleção.");
+    }
+
+    const nextRequests = [...importedRequests, ...savedRequests];
+    persistSavedRequests(nextRequests);
+    setSelectedPresetId(importedRequests[0].id);
+    applyPreset(importedRequests[0]);
+    setSidebarView("collection");
+    setPostmanImportError(null);
+    setPostmanImportFeedback(`Coleção "${parsed.info?.name ?? "Postman"}" importada com ${importedRequests.length} requests.`);
+    window.setTimeout(() => setPostmanImportFeedback(null), 2000);
+  }
+
+  function handlePostmanFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setPostmanImportError(null);
+    setPostmanImportFeedback(null);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        importPostmanCollection(String(reader.result ?? ""));
+        if (postmanFileInputRef.current) {
+          postmanFileInputRef.current.value = "";
+        }
+      } catch (error) {
+        setPostmanImportError(error instanceof Error ? error.message : "Falha ao importar a coleção.");
+      }
+    };
+    reader.onerror = () => {
+      setPostmanImportError("Não foi possível ler o arquivo selecionado.");
+    };
+    reader.readAsText(file);
   }
 
   function buildCurrentHeaders(): Record<string, string> {
@@ -1026,6 +1248,9 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                   ) : null}
                 </div>
               </div>
+              <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">
+                Coleção da empresa: <span className="font-semibold text-(--tc-text,#0b1a3c)">{selectedCompany?.name ?? "empresa atual"}</span>
+              </p>
               <div className="mt-3 space-y-2">
                 {visiblePresets.map((preset) => {
                   const active = selectedPresetId === preset.id;
@@ -1136,7 +1361,12 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           {sidebarView === "history" ? (
             <>
               <div className="mt-3 flex items-center justify-between gap-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Histórico</p>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Histórico</p>
+                  <p className="mt-1 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                    {selectedCompany?.name ?? "Empresa atual"}
+                  </p>
+                </div>
                 {history.length > 0 ? (
                   <button
                     type="button"
@@ -1673,6 +1903,34 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
           {activePanel === "import-export" ? (
             <section className="mt-4 space-y-4">
+              <article className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Importar Postman</p>
+                    <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Cada empresa mantém sua própria coleção neste navegador.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => postmanFileInputRef.current?.click()}
+                    className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"
+                  >
+                    <FiUploadCloud className="h-4 w-4" />
+                    Selecionar JSON
+                  </button>
+                </div>
+                <input
+                  ref={postmanFileInputRef}
+                  type="file"
+                  accept=".json,application/json"
+                  aria-label="Selecionar coleção JSON"
+                  title="Selecionar coleção JSON"
+                  className="hidden"
+                  onChange={handlePostmanFileChange}
+                />
+                {postmanImportError ? <p className="mt-2 text-sm font-semibold text-rose-600">{postmanImportError}</p> : null}
+                {postmanImportFeedback ? <p className="mt-2 text-sm font-semibold text-emerald-700">{postmanImportFeedback}</p> : null}
+              </article>
+
               <article className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>

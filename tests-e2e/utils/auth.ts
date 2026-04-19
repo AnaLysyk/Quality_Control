@@ -4,9 +4,23 @@ const rawBaseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
 const baseURL = /^https?:\/\//i.test(rawBaseURL) ? rawBaseURL : `http://${rawBaseURL}`;
 
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || "admin@demo.test";
-const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "Demo@123";
+const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "Griaule@123";
 const USER_EMAIL = process.env.E2E_USER_EMAIL || "user@demo.test";
-const USER_PASSWORD = process.env.E2E_USER_PASSWORD || "Demo@123";
+const USER_PASSWORD = process.env.E2E_USER_PASSWORD || "Griaule@123";
+
+function buildPasswordCandidates(primary: string) {
+  return Array.from(new Set([primary, "Griaule@123", "Demo@123", "senha"]));
+}
+
+function buildEmailCandidates(primary: string, type: "admin" | "company" | "user") {
+  const defaultsByType =
+    type === "admin"
+      ? ["admin@demo.test", "admin", "ana1"]
+      : type === "company"
+        ? ["company@demo.test", "demo"]
+        : ["user@demo.test", "anapaula", "analysyk"];
+  return Array.from(new Set([primary, ...defaultsByType].filter(Boolean)));
+}
 
 type MockRole = "admin" | "client" | "user";
 
@@ -35,19 +49,27 @@ export async function setMockUser(page: Page, role: MockRole, clientSlug?: strin
   lastRole = role;
   lastClientSlug = clientSlug ?? null;
   const creds = resolveCredentials(role === "admin" ? "admin" : "user", "");
+  const emailCandidates = buildEmailCandidates(creds.email, role === "admin" ? "admin" : "user");
 
   const loginUrl = new URL("/api/auth/login", baseURL).toString();
-  const response = await page.context().request.post(loginUrl, {
-    data: {
-      user: creds.email,
-      password: creds.password,
-      ...(lastClientSlug ? { clientSlug: lastClientSlug } : {}),
-    },
-  });
+  let response = null as Awaited<ReturnType<typeof page.context().request.post>> | null;
+  for (const emailCandidate of emailCandidates) {
+    for (const passwordCandidate of buildPasswordCandidates(creds.password)) {
+      response = await page.context().request.post(loginUrl, {
+        data: {
+          user: emailCandidate,
+          password: passwordCandidate,
+          ...(lastClientSlug ? { clientSlug: lastClientSlug } : {}),
+        },
+      });
+      if (response.ok()) break;
+    }
+    if (response?.ok()) break;
+  }
 
-  if (!response.ok()) {
-    const text = await response.text();
-    throw new Error(`setMockUser login failed: ${response.status()} ${response.statusText()} ${text}`);
+  if (!response?.ok()) {
+    const text = response ? await response.text() : "";
+    throw new Error(`setMockUser login failed: ${response?.status()} ${response?.statusText()} ${text}`);
   }
 
   const setCookie = response.headers()["set-cookie"];
@@ -80,16 +102,23 @@ export async function login(page: Page, email: string, password: string) {
   const creds = resolveCredentials(email, password);
   if (!sessionId) {
     const loginUrl = new URL("/api/auth/login", baseURL).toString();
-    const response = await page.context().request.post(loginUrl, {
-      data: {
-        user: creds.email,
-        password: creds.password,
-        ...(lastClientSlug ? { clientSlug: lastClientSlug } : {}),
-      },
-    });
-    if (!response.ok()) {
-      const text = await response.text();
-      throw new Error(`login failed: ${response.status()} ${response.statusText()} ${text}`);
+    let response = null as Awaited<ReturnType<typeof page.context().request.post>> | null;
+    for (const emailCandidate of emailCandidates) {
+      for (const passwordCandidate of buildPasswordCandidates(creds.password)) {
+        response = await page.context().request.post(loginUrl, {
+          data: {
+            user: emailCandidate,
+            password: passwordCandidate,
+            ...(lastClientSlug ? { clientSlug: lastClientSlug } : {}),
+          },
+        });
+        if (response.ok()) break;
+      }
+      if (response?.ok()) break;
+    }
+    if (!response?.ok()) {
+      const text = response ? await response.text() : "";
+      throw new Error(`login failed: ${response?.status()} ${response?.statusText()} ${text}`);
     }
 
     const setCookie = response.headers()["set-cookie"];

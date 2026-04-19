@@ -1,1 +1,130 @@
-[]
+[
+	{
+		"id": "plan_tc_manual_platform",
+		"companySlug": "testing-company",
+		"applicationId": "app_tc_quality_control",
+		"applicationName": "Quality Control Platform",
+		"applicationSlug": "quality-control",
+		"projectCode": "QCP",
+		"title": "Testing Company - Plano manual da plataforma",
+		"description": "Plano manual para operação assistida da plataforma da Testing Company, cobrindo navegação administrativa, acompanhamento de runs e validações operacionais antes de liberar execução automatizada.",
+		"cases": [
+			{
+				"id": "TC-MAN-001",
+				"title": "Validar shell administrativa da plataforma",
+				"description": "Confirmar navegação inicial, atalhos globais e contexto da empresa Testing Company.",
+				"preconditions": "Usuário admin autenticado na Testing Company.",
+				"postconditions": "Shell carregada sem erro visual ou redirecionamento inesperado.",
+				"severity": "high",
+				"steps": [
+					{
+						"id": "step_1",
+						"action": "Abrir o dashboard administrativo da plataforma.",
+						"expectedResult": "Cabeçalho principal, contexto da empresa e atalhos ficam visíveis.",
+						"data": "Empresa: testing-company"
+					},
+					{
+						"id": "step_2",
+						"action": "Validar que a navegação lateral e o shell respondem sem erro.",
+						"expectedResult": "A interface permanece operacional e sem mensagens de falha.",
+						"data": null
+					}
+				]
+			},
+			{
+				"id": "TC-MAN-002",
+				"title": "Validar plano de teste manual da empresa",
+				"description": "Confirmar que os planos manuais da Testing Company podem ser consultados e usados como referência operacional.",
+				"preconditions": "Aplicação Quality Control Platform cadastrada para a empresa.",
+				"postconditions": "Plano é listado com casos e metadados corretos.",
+				"severity": "medium",
+				"steps": [
+					{
+						"id": "step_1",
+						"action": "Abrir a tela de planos de teste da empresa.",
+						"expectedResult": "Lista de planos carrega com filtros por aplicação.",
+						"data": null
+					},
+					{
+						"id": "step_2",
+						"action": "Abrir o plano manual da plataforma.",
+						"expectedResult": "Casos, descrição e metadados ficam disponíveis para consulta.",
+						"data": "Plano: Testing Company - Plano manual da plataforma"
+					}
+				]
+			},
+			{
+				"id": "TC-MAN-003",
+				"title": "Criar run manual vinculada a plano",
+				"description": "Executar o fluxo manual de criação de run já vinculado a um plano da empresa.",
+				"preconditions": "Plano manual existente para a Testing Company.",
+				"postconditions": "Run manual criada com casos iniciais e estatísticas coerentes.",
+				"severity": "high"
+			},
+			{
+				"id": "TC-MAN-004",
+				"title": "Acompanhar execução e resultado consolidado",
+				"description": "Verificar a atualização de estatísticas da run conforme aprovações, falhas e bloqueios manuais.",
+				"preconditions": "Run existente com casos vinculados.",
+				"postconditions": "Pass rate, total e estado final ficam consistentes no painel.",
+				"severity": "medium"
+			}
+		],
+		"createdAt": "2026-04-19T00:00:00.000Z",
+		"updatedAt": "2026-04-19T00:00:00.000Z"
+	},
+	{
+		"id": "plan_tc_auto_playwright",
+		"companySlug": "testing-company",
+		"applicationId": "app_tc_automation_workspace",
+		"applicationName": "Automation Workspace",
+		"applicationSlug": "automation-workspace",
+		"projectCode": "QCA",
+		"title": "Testing Company - Regressão automatizada Playwright",
+		"description": "Plano automatizado da plataforma da Testing Company. Os casos abaixo são executados pelo Playwright e atualizam automaticamente a run interna do painel conforme cada cenário termina.",
+		"cases": [
+			{
+				"id": "TC-AUTO-001",
+				"title": "Abrir Automation Studio em /automacoes/tools",
+				"description": "Smoke principal da shell de automação da plataforma.",
+				"preconditions": "Admin autenticado na Testing Company.",
+				"postconditions": "Studio abre sem redirecionar para login.",
+				"severity": "critical"
+			},
+			{
+				"id": "TC-AUTO-002",
+				"title": "Abrir runner biométrico em /automacoes/execucoes",
+				"description": "Garante que a tela de execuções exiba o runner biométrico da plataforma.",
+				"preconditions": "Admin autenticado.",
+				"postconditions": "Seção Biometria Griaule fica visível.",
+				"severity": "high"
+			},
+			{
+				"id": "TC-AUTO-003",
+				"title": "Listar casos em /automacoes/casos",
+				"description": "Valida o board de casos e a ausência de erro de renderização.",
+				"preconditions": "Admin autenticado.",
+				"postconditions": "Tela de casos responde sem Application error.",
+				"severity": "high"
+			},
+			{
+				"id": "TC-AUTO-004",
+				"title": "Validar seletor do runner biométrico",
+				"description": "Confirma que os seletores não entram em estado inválido ao carregar fixtures dinâmicas.",
+				"preconditions": "Runner biométrico carregado.",
+				"postconditions": "Select de empresa permanece habilitado com opções válidas.",
+				"severity": "critical"
+			},
+			{
+				"id": "TC-AUTO-005",
+				"title": "Abrir API Lab em /automacoes/api-lab",
+				"description": "Smoke da tela de API Lab com shell e campos principais carregados.",
+				"preconditions": "Admin autenticado.",
+				"postconditions": "Tela abre sem erro e campo de método fica visível.",
+				"severity": "high"
+			}
+		],
+		"createdAt": "2026-04-19T00:00:00.000Z",
+		"updatedAt": "2026-04-19T00:00:00.000Z"
+	}
+]

@@ -180,6 +180,7 @@ type FlowDraft = {
   auditTrail: FlowAuditEntry[];
   base64Sample: string;
   boundAssetIds: string[];
+  linkedRunSlug: string;
   notes: string;
   script: string;
   scriptTemplateId: string;
@@ -198,10 +199,39 @@ type RunPreviewMetric = {
   value: string;
 };
 
+type RunPreviewOutcome = "passed" | "flaky" | "failed";
+
+type RunPreviewAttempt = {
+  detail: string;
+  label: string;
+  status: "passed" | "failed";
+};
+
+type RunPreviewArtifact = {
+  description: string;
+  href?: string;
+  hint: string;
+  title: string;
+};
+
+type LinkedReleaseRun = {
+  app: string | null;
+  qaseProject: string | null;
+  runId: number | null;
+  slug: string;
+  summary: string | null;
+  title: string;
+};
+
 type RunPreview = {
+  artifacts: RunPreviewArtifact[];
+  attempts: RunPreviewAttempt[];
   generatedAt: string;
   lines: string[];
   metrics: RunPreviewMetric[];
+  outcome: RunPreviewOutcome;
+  outcomeDetail: string;
+  outcomeLabel: string;
   technicalLines: string[];
 };
 
@@ -386,6 +416,7 @@ function buildDefaultDraft(flow: FlowDefinition, access: AutomationStudioAccess)
     boundAssetIds: AUTOMATION_STUDIO_ASSETS.filter((asset) => asset.flowIds.includes(flow.id))
       .slice(0, 2)
       .map((asset) => asset.id),
+    linkedRunSlug: "",
     notes: flow.defaultNotes,
     script: flow.defaultScript,
     scriptTemplateId: "blank-js",
@@ -424,6 +455,7 @@ function readStoredDraft(companySlug: string, flow: FlowDefinition, access: Auto
       boundAssetIds: Array.isArray(parsed.boundAssetIds)
         ? parsed.boundAssetIds.filter((value): value is string => typeof value === "string")
         : base.boundAssetIds,
+      linkedRunSlug: readString(parsed.linkedRunSlug),
       notes: readString(parsed.notes, base.notes),
       script: readString(parsed.script, base.script),
       scriptTemplateId: readString(parsed.scriptTemplateId, base.scriptTemplateId),
@@ -650,12 +682,38 @@ function metricTone(active: boolean) {
     : "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) text-(--tc-text-muted,#6b7280)";
 }
 
+function outcomeTone(outcome: RunPreviewOutcome) {
+  if (outcome === "passed") {
+    return {
+      badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      card: "border-emerald-200 bg-emerald-50/60",
+      icon: FiCheckCircle,
+    };
+  }
+
+  if (outcome === "flaky") {
+    return {
+      badge: "border-amber-200 bg-amber-50 text-amber-700",
+      card: "border-amber-200 bg-amber-50/60",
+      icon: FiRefreshCw,
+    };
+  }
+
+  return {
+    badge: "border-rose-200 bg-rose-50 text-rose-700",
+    card: "border-rose-200 bg-rose-50/60",
+    icon: FiAlertCircle,
+  };
+}
+
 function buildRunPreview(input: {
   access: AutomationStudioAccess;
+  companySlug: string | null;
   companyName: string;
   draft: FlowDraft;
   environmentTitle: string;
   flow: FlowDefinition;
+  linkedRun: LinkedReleaseRun | null;
 }) {
   const generatedAt = new Date().toLocaleTimeString("pt-BR", {
     hour: "2-digit",
@@ -663,9 +721,122 @@ function buildRunPreview(input: {
     second: "2-digit",
   });
   const enabledSteps = input.draft.steps.filter((step) => step.enabled);
+  const executedSteps = enabledSteps.filter((step) => step._runResult);
+  const failedExecutedSteps = executedSteps.filter((step) => {
+    const result = step._runResult;
+    if (!result) return false;
+    if (result.error) return true;
+    if (result.assertPassed === false) return true;
+    if (result.status === 0) return true;
+    return result.status >= 400;
+  });
   const conditionalCount = enabledSteps.filter((step) => step.kind === "conditional_branch" || step.kind === "loop_until").length;
   const parallelCount = enabledSteps.filter((step) => step.kind === "parallel_group").length;
   const subflowCount = enabledSteps.filter((step) => step.kind === "subflow_call").length;
+  const totalRetryBudget = input.draft.runtime.retryAttempts + enabledSteps.reduce((sum, step) => sum + step.retryAttempts, 0);
+  const firstRetryDelay = Math.max(input.draft.runtime.retryBackoffMs, ...enabledSteps.map((step) => step.retryBackoffMs));
+  const hasFailures = failedExecutedSteps.length > 0;
+  const hasRealExecution = executedSteps.length > 0;
+  const outcome: RunPreviewOutcome = hasFailures ? (totalRetryBudget > 0 ? "flaky" : "failed") : "passed";
+  const outcomeLabel = outcome === "passed" ? "passed" : outcome === "flaky" ? "flaky" : "failed";
+  const outcomeDetail =
+    outcome === "passed"
+      ? hasRealExecution
+        ? "Sem falhas registradas nas execucoes de etapa desta versao."
+        : "Sem execucao real ainda. Preview indica fluxo pronto para validar."
+      : outcome === "flaky"
+        ? `Falhas detectadas com janela de retry de ${totalRetryBudget} tentativa(s) para recuperacao.`
+        : "Falhas detectadas sem retry suficiente para recuperar a execucao.";
+
+  const attempts: RunPreviewAttempt[] =
+    outcome === "passed"
+      ? [
+          {
+            label: "Tentativa #1",
+            status: "passed",
+            detail: hasRealExecution ? "Passou sem retries" : "Pronto para primeira execucao",
+          },
+        ]
+      : outcome === "flaky"
+        ? [
+            {
+              label: "Tentativa #1",
+              status: "failed",
+              detail: `${failedExecutedSteps.length} etapa(s) com erro inicial`,
+            },
+            {
+              label: "Tentativa #2",
+              status: "passed",
+              detail: `Retry com backoff ate ${firstRetryDelay} ms`,
+            },
+          ]
+        : [
+            {
+              label: "Tentativa #1",
+              status: "failed",
+              detail: `${failedExecutedSteps.length} etapa(s) com falha`,
+            },
+            {
+              label: "Ultima tentativa",
+              status: "failed",
+              detail: `Sem recuperacao apos ${Math.max(1, input.draft.runtime.retryAttempts + 1)} execucao(oes)`,
+            },
+          ];
+
+  const companyRunsHref = input.companySlug ? `/empresas/${encodeURIComponent(input.companySlug)}/runs` : "/runs";
+  const runDetailHref =
+    input.companySlug && input.linkedRun?.slug
+      ? `/empresas/${encodeURIComponent(input.companySlug)}/runs/${encodeURIComponent(input.linkedRun.slug)}`
+      : null;
+  const qaseProject = input.linkedRun?.qaseProject?.trim().toUpperCase() || null;
+  const qaseRunId = input.linkedRun?.runId && input.linkedRun.runId > 0 ? input.linkedRun.runId : null;
+  const resultsApiHref = qaseProject && qaseRunId ? `/api/v1/results/${encodeURIComponent(qaseProject)}/${encodeURIComponent(String(qaseRunId))}` : null;
+
+  const artifacts: RunPreviewArtifact[] = [
+    {
+      title: "Dashboard de runs",
+      description: "Abrir a listagem real de runs da empresa no painel.",
+      hint: companyRunsHref,
+      href: companyRunsHref,
+    },
+    {
+      title: "Run vinculada",
+      description: runDetailHref
+        ? `Abrir detalhe da run ${input.linkedRun?.title || "selecionada"} para investigar falhas.`
+        : "Ainda sem run vinculada ao fluxo atual no releases-store desta empresa.",
+      hint: runDetailHref || "Sem slug de run para o contexto atual",
+      href: runDetailHref || undefined,
+    },
+    {
+      title: "HTML Report",
+      description: "Abrir painel completo de execucao e filtros por status/projeto.",
+      hint: "npx playwright show-report",
+    },
+    {
+      title: "Trace Viewer",
+      description: "Inspecao detalhada de acoes, rede, console e timeline.",
+      hint: "npx playwright show-trace test-results/<run-id>/trace.zip",
+    },
+    {
+      title: "Video + screenshot",
+      description: "Evidencias visuais por falha ou retry da execucao.",
+      hint: "test-results/<run-id>/(video|screenshot)",
+    },
+    {
+      title: "Trace remoto",
+      description: "Abertura direta no viewer web quando artefato estiver no storage.",
+      hint: "https://trace.playwright.dev/?trace=<url-artefato>",
+    },
+    {
+      title: "Resultados Qase (API)",
+      description: resultsApiHref
+        ? "Endpoint real da API para resultados da run vinculada."
+        : "Disponivel quando houver qaseProject + runId na run vinculada.",
+      hint: resultsApiHref || "/api/v1/results/<PROJECT>/<RUN_ID>",
+      href: resultsApiHref || undefined,
+    },
+  ];
+
   const lines = [
     `[${generatedAt}] Empresa ${input.companyName} carregada no studio.`,
     `[${generatedAt}] Fluxo "${input.flow.title}" preparado no ambiente ${input.environmentTitle}.`,
@@ -673,6 +844,7 @@ function buildRunPreview(input: {
     `[${generatedAt}] ${enabledSteps.length} etapa(s) habilitada(s), ${input.draft.variables.length} variável(is) e ${input.draft.boundAssetIds.length + input.draft.uploads.length} recurso(s).`,
     `[${generatedAt}] Retry global ${input.draft.runtime.retryAttempts}x com backoff ${input.draft.runtime.retryBackoffMs} ms.`,
     `[${generatedAt}] Perfil ${input.access.profileLabel} pronto para ${input.draft.status === "active" ? "execução" : "revisão"} do fluxo.`,
+    `[${generatedAt}] Classificacao simulada Playwright: ${outcomeLabel}.`,
   ];
   const technicalLines = enabledSteps.map(
     (step, index) =>
@@ -699,9 +871,14 @@ function buildRunPreview(input: {
       label: "Versões",
       value: `${input.draft.versions.length}`,
     },
+    {
+      detail: "Classificacao estilo Playwright para leitura rapida",
+      label: "Status",
+      value: outcomeLabel,
+    },
   ];
 
-  return { generatedAt, lines, metrics, technicalLines };
+  return { artifacts, attempts, generatedAt, lines, metrics, outcome, outcomeDetail, outcomeLabel, technicalLines };
 }
 
 function findTemplate(id: string) {
@@ -907,6 +1084,36 @@ function resolveDefaultPanel(mode: NonNullable<Props["mode"]>): AutomationStudio
   return "overview";
 }
 
+function normalizeLinkedReleaseRuns(releases: unknown[]): LinkedReleaseRun[] {
+  return releases
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const record = item as Record<string, unknown>;
+      const slug = typeof record.slug === "string" ? record.slug.trim() : "";
+      if (!slug) return null;
+      const runIdRaw = record.runId;
+      const parsedRunId =
+        typeof runIdRaw === "number"
+          ? runIdRaw
+          : typeof runIdRaw === "string"
+            ? Number(runIdRaw)
+            : Number.NaN;
+
+      return {
+        slug,
+        title:
+          (typeof record.title === "string" && record.title.trim()) ||
+          (typeof record.name === "string" && record.name.trim()) ||
+          slug,
+        summary: typeof record.summary === "string" && record.summary.trim() ? record.summary : null,
+        app: typeof record.app === "string" && record.app.trim() ? record.app : null,
+        qaseProject: typeof record.qaseProject === "string" && record.qaseProject.trim() ? record.qaseProject : null,
+        runId: Number.isFinite(parsedRunId) && parsedRunId > 0 ? parsedRunId : null,
+      } satisfies LinkedReleaseRun;
+    })
+    .filter((item): item is LinkedReleaseRun => Boolean(item));
+}
+
 export default function AutomationStudio({
   access,
   activeCompanySlug,
@@ -933,6 +1140,7 @@ export default function AutomationStudio({
   const [versionNote, setVersionNote] = useState("Snapshot manual do studio");
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [runPreview, setRunPreview] = useState<RunPreview | null>(null);
+  const [previewSync, setPreviewSync] = useState<{ at: string; mode: "manual" | "auto" } | null>(null);
   const [debugCursor, setDebugCursor] = useState(0);
   const [activePanel, setActivePanel] = useState<AutomationStudioPanelId>(() => resolveDefaultPanel(mode));
   const [scriptTarget, setScriptTarget] = useState<"flow" | "step">("flow");
@@ -941,6 +1149,9 @@ export default function AutomationStudio({
   const [stepRunning, setStepRunning] = useState(false);
   const [isFileLibraryOpen, setIsFileLibraryOpen] = useState(false);
   const [fileLibraryQuery, setFileLibraryQuery] = useState("");
+  const [runPreviewLoading, setRunPreviewLoading] = useState(false);
+  const [availableRuns, setAvailableRuns] = useState<LinkedReleaseRun[]>([]);
+  const [runsLoading, setRunsLoading] = useState(false);
   const scriptEditorRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -954,6 +1165,34 @@ export default function AutomationStudio({
 
       return current === "qc-local" ? (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local") : current;
     });
+  }, [selectedCompanySlug]);
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadRuns() {
+      if (!selectedCompanySlug) {
+        if (mounted) setAvailableRuns([]);
+        return;
+      }
+
+      setRunsLoading(true);
+      try {
+        const response = await fetch(`/api/releases?companySlug=${encodeURIComponent(selectedCompanySlug)}`, { cache: "no-store" });
+        const payload = (await response.json().catch(() => null)) as { releases?: unknown[] } | null;
+        const rows = response.ok && Array.isArray(payload?.releases) ? normalizeLinkedReleaseRuns(payload.releases) : [];
+        if (mounted) setAvailableRuns(rows);
+      } catch {
+        if (mounted) setAvailableRuns([]);
+      } finally {
+        if (mounted) setRunsLoading(false);
+      }
+    }
+
+    loadRuns();
+
+    return () => {
+      mounted = false;
+    };
   }, [selectedCompanySlug]);
   const customFlows = useMemo(() => {
     const revision = customFlowsRevision;
@@ -1455,18 +1694,94 @@ export default function AutomationStudio({
     activateFlow(selectedCompanySlug, visibleBuiltInFlows[0]?.id ?? selectedFlow.id);
   }
 
-  function runPreparation() {
+  async function resolveLinkedRun(companySlug: string, flow: FlowDefinition, preferredRunSlug: string): Promise<LinkedReleaseRun | null> {
+    try {
+      const baseRows = availableRuns.length > 0 ? availableRuns : null;
+      let rows = baseRows;
+
+      if (!rows) {
+        const response = await fetch(`/api/releases?companySlug=${encodeURIComponent(companySlug)}`, { cache: "no-store" });
+        const payload = (await response.json().catch(() => null)) as { releases?: unknown[] } | null;
+        rows = response.ok && Array.isArray(payload?.releases) ? normalizeLinkedReleaseRuns(payload.releases) : [];
+      }
+
+      if (!rows || rows.length === 0) return null;
+
+      if (preferredRunSlug.trim()) {
+        const preferred = rows.find((row) => row.slug === preferredRunSlug.trim());
+        if (preferred) return preferred;
+      }
+
+      const needle = [flow.id, flow.realRunnerId, flow.title]
+        .filter((part): part is string => typeof part === "string" && part.trim().length > 0)
+        .map((part) => part.toLowerCase());
+
+      if (needle.length) {
+        const matched = rows.find((row) => {
+          const haystack = `${row.slug} ${row.title} ${row.summary || ""} ${row.app || ""} ${row.qaseProject || ""}`.toLowerCase();
+          return needle.some((key) => haystack.includes(key));
+        });
+        if (matched) return matched;
+      }
+
+      return rows[0] || null;
+    } catch {
+      return null;
+    }
+  }
+
+  const runPreparation = useCallback(async (options?: { silent?: boolean }) => {
     if (!selectedCompany || !selectedEnvironment) return;
-    setRunPreview(
-      buildRunPreview({
+    const silent = options?.silent === true;
+    if (!silent) setRunPreviewLoading(true);
+    try {
+      const linkedRun = selectedCompanySlug ? await resolveLinkedRun(selectedCompanySlug, selectedFlow, draft.linkedRunSlug) : null;
+      if (!draft.linkedRunSlug && linkedRun?.slug) {
+        updateDraft((current) => ({ ...current, linkedRunSlug: linkedRun.slug }));
+      }
+      const nextPreview = buildRunPreview({
         access,
+        companySlug: selectedCompanySlug || null,
         companyName: selectedCompany.name,
         draft,
         environmentTitle: selectedEnvironment.title,
         flow: selectedFlow,
-      }),
-    );
-  }
+        linkedRun,
+      });
+      setRunPreview(nextPreview);
+      setPreviewSync({ at: nextPreview.generatedAt, mode: silent ? "auto" : "manual" });
+    } finally {
+      if (!silent) setRunPreviewLoading(false);
+    }
+  }, [
+    access,
+    draft,
+    resolveLinkedRun,
+    selectedCompany,
+    selectedCompanySlug,
+    selectedEnvironment,
+    selectedFlow,
+    updateDraft,
+  ]);
+
+  const runPreparationRef = useRef(runPreparation);
+  useEffect(() => {
+    runPreparationRef.current = runPreparation;
+  }, [runPreparation]);
+
+  useEffect(() => {
+    if (!runPreview) return;
+    if (activePanel !== "results") return;
+    if (!selectedCompanySlug) return;
+
+    const timer = setTimeout(() => {
+      void runPreparationRef.current({ silent: true });
+    }, 320);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [activePanel, draft.linkedRunSlug, effectiveSelectedFlowId, runPreview, selectedCompanySlug, selectedEnvironmentId]);
 
   const filteredLibraryAssets = useMemo(() => {
     const query = fileLibraryQuery.trim().toLowerCase();
@@ -1847,7 +2162,7 @@ export default function AutomationStudio({
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Biblioteca de arquivos</p>
                   <h2 className="mt-2 text-2xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Selecionar asset</h2>
-                  <p className="mt-2 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">
+                  <p className="mt-2 text-sm leading-6 sm:leading-7 text-(--tc-text-secondary,#4b5563)">
                     Busque e insira referências de `assets.resolve()` diretamente no editor, sem poluir a tela principal.
                   </p>
                 </div>
@@ -1977,12 +2292,12 @@ export default function AutomationStudio({
         </Link>
       </div>
       {showOverviewHero ? (
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid gap-3 2xl:grid-cols-[minmax(0,1fr)_320px]">
           <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Resumo rápido</p>
-                <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedFlow.title}</h2>
+                <h2 className="mt-2 text-lg sm:text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedFlow.title}</h2>
                 <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">{selectedFlow.objective}</p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -2002,7 +2317,7 @@ export default function AutomationStudio({
               </div>
             </div>
 
-            <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
               {compactOverviewCards.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -2011,7 +2326,7 @@ export default function AutomationStudio({
                       <p className="text-[11px] font-semibold uppercase tracking-[0.24em]">{item.label}</p>
                       <Icon className="h-4 w-4" />
                     </div>
-                    <p className="mt-2 text-lg font-black tracking-[-0.03em]">{item.value}</p>
+                    <p className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em]">{item.value}</p>
                     <p className="mt-1 text-xs opacity-80">{item.hint}</p>
                   </div>
                 );
@@ -2044,7 +2359,7 @@ export default function AutomationStudio({
       ) : null}
 
       <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
-        <div className="grid gap-3 xl:grid-cols-[minmax(180px,0.78fr)_minmax(160px,0.56fr)_minmax(260px,1fr)_auto]">
+        <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(180px,0.78fr)_minmax(160px,0.56fr)_minmax(260px,1fr)_auto]">
           <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
             Empresa
             <select
@@ -2090,7 +2405,7 @@ export default function AutomationStudio({
             </select>
           </label>
 
-          <div className="flex flex-wrap items-end gap-2">
+          <div className="flex flex-wrap items-end gap-2 md:col-span-2 2xl:col-span-1">
             <button
               type="button"
               onClick={runPreparation}
@@ -2142,8 +2457,8 @@ export default function AutomationStudio({
         </div>
       ) : null}
 
-      <div className={showAssetSidebar ? "grid gap-4 2xl:grid-cols-[minmax(0,1.22fr)_minmax(360px,0.78fr)]" : "grid gap-4"}>
-        <article className="min-w-0 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+      <div className={showAssetSidebar ? "grid gap-3 sm:gap-4 2xl:grid-cols-[minmax(0,1.18fr)_minmax(300px,0.82fr)]" : "grid gap-3 sm:gap-4"}>
+        <article className="min-w-0 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 sm:p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -2155,6 +2470,9 @@ export default function AutomationStudio({
               <h3 className="mt-2 text-2xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedFlow.title}</h3>
               <p className="mt-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">{selectedFlow.objective}</p>
               <p className="mt-1 max-w-4xl text-xs text-(--tc-text-secondary,#4b5563)">{selectedFlow.description}</p>
+              <p className="mt-2 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">
+                O que faz: centraliza a visao do fluxo e organiza configuracao, etapas, arquivos e resultado em blocos separados.
+              </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
@@ -2172,35 +2490,41 @@ export default function AutomationStudio({
             </div>
           </div>
 
-          <div className="mt-4 grid gap-3 grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
-            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
+            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Empresa</p>
-              <p className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedCompany?.name || "Sem empresa"}</p>
+              <p className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedCompany?.name || "Sem empresa"}</p>
             </div>
-            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Etapas</p>
-              <p className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{draft.steps.length}</p>
+              <p className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{draft.steps.length}</p>
             </div>
-            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Assets</p>
-              <p className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{boundAssetCount}</p>
+              <p className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{boundAssetCount}</p>
             </div>
-            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Salvo localmente</p>
-              <p className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{lastSavedAt || "aguardando"}</p>
+              <p className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{lastSavedAt || "aguardando"}</p>
             </div>
           </div>
 
           <div
             className={
               activePanel === "overview"
-                ? "mt-4 grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_320px]"
-                : "mt-4 grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.92fr)]"
+                ? "mt-4 grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(280px,320px)]"
+                : "mt-4 grid items-start gap-3 sm:gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.92fr)]"
             }
           >
             <div className="space-y-4">
               {activePanel === "overview" ? (
                 <div className="grid gap-3 lg:grid-cols-2">
+                <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 lg:col-span-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">O que faz</p>
+                  <p className="mt-1 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+                    Define metadados do fluxo (titulo, objetivo, runner e descricao) para padronizar manutencao e handoff do time.
+                  </p>
+                </div>
                 <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
                   Título
                   <input
@@ -2247,7 +2571,13 @@ export default function AutomationStudio({
               ) : null}
 
               {activePanel === "steps" ? (
-                <div className="grid gap-3 lg:grid-cols-2">
+                <div className="grid gap-3 2xl:grid-cols-2">
+                <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 xl:col-span-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">O que faz</p>
+                  <p className="mt-1 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+                    Organiza cada etapa do fluxo com contexto de binding, controle e subfluxo para facilitar leitura operacional.
+                  </p>
+                </div>
                 {draft.steps.map((step, index) => {
                   const selected = selectedStep?.id === step.id;
                   const subflow = findSubflow(step.subflowId);
@@ -2267,7 +2597,7 @@ export default function AutomationStudio({
                             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                               Etapa {index + 1}
                             </p>
-                            <h4 className="mt-2 wrap-break-word text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{step.title}</h4>
+                            <h4 className="mt-2 wrap-break-word text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{step.title}</h4>
                           </div>
                           <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${kindTone(step.kind)}`}>
                             {kindLabel(step.kind)}
@@ -2340,13 +2670,14 @@ export default function AutomationStudio({
             </div>
 
             {showFlowSidebar ? (
-              <aside className="space-y-4">
+              <aside className="space-y-3 sm:space-y-4">
               {activePanel === "overview" ? (
-                <article className="rounded-[22px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+                <article className="rounded-[22px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Novo fluxo</p>
-                    <h4 className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Criar ou clonar</h4>
+                    <h4 className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Criar ou clonar</h4>
+                    <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: cria um fluxo novo ou replica o atual para acelerar customizacoes.</p>
                   </div>
                   <FiPlus className="h-5 w-5 text-(--tc-accent,#ef0001)" />
                 </div>
@@ -2408,11 +2739,12 @@ export default function AutomationStudio({
               ) : null}
 
               {activePanel === "steps" ? (
-                <article className="rounded-[22px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+                <article className="rounded-[22px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 sm:p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Biblioteca de ações</p>
-                    <h4 className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Adicionar etapa</h4>
+                    <h4 className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Adicionar etapa</h4>
+                    <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: insere novas etapas prontas para montagem rapida do fluxo.</p>
                   </div>
                   <FiLayers className="h-5 w-5 text-(--tc-accent,#ef0001)" />
                 </div>
@@ -2443,8 +2775,8 @@ export default function AutomationStudio({
         </article>
 
         {showAssetSidebar ? (
-          <aside className="space-y-4">
-            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+          <aside className="space-y-3 sm:space-y-4">
+            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 sm:p-4">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
               <FiFolderPlus className="h-4 w-4" />
               Biblioteca de assets
@@ -2522,9 +2854,9 @@ export default function AutomationStudio({
       </div>
 
       {activePanel !== "files" ? (
-        <div className={splitExecutionLayout ? "grid gap-4 2xl:grid-cols-[minmax(0,1.14fr)_minmax(380px,0.86fr)]" : "grid gap-4"}>
+        <div className={splitExecutionLayout ? "grid gap-3 sm:gap-4 2xl:grid-cols-[minmax(0,1.14fr)_minmax(320px,0.86fr)]" : "grid gap-3 sm:gap-4"}>
         {activePanel === "steps" ? (
-          <article className="min-w-0 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+          <article className="min-w-0 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 sm:p-4">
           <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
             <FiCode className="h-4 w-4" />
             Configuração da etapa e do fluxo
@@ -2734,7 +3066,7 @@ export default function AutomationStudio({
               </div>
 
               {(selectedStep.kind === "http_request" || selectedStep.kind === "graphql_request") ? (
-                <div className="mt-5 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4 space-y-4">
+                <div className="mt-5 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4 space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                       <FiZap className="h-4 w-4" />
@@ -2962,11 +3294,11 @@ export default function AutomationStudio({
                 </div>
               ) : null}
 
-              <div className="mt-5 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+              <div className="mt-5 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Edição de script</p>
-                    <p className="mt-2 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">
+                    <p className="mt-2 text-sm leading-6 sm:leading-7 text-(--tc-text-secondary,#4b5563)">
                       Para não misturar configuração, mapeamentos e código, o editor completo fica na área Scripts.
                     </p>
                   </div>
@@ -2990,9 +3322,9 @@ export default function AutomationStudio({
         ) : null}
 
         {activePanel === "overview" || activePanel === "mappings" || activePanel === "results" ? (
-          <aside className="space-y-4">
+          <aside className="space-y-3 sm:space-y-4">
           {activePanel === "overview" ? (
-            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 sm:p-4">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
               <FiUploadCloud className="h-4 w-4" />
               Triggers e runtime
@@ -3013,7 +3345,7 @@ export default function AutomationStudio({
                   ))}
                 </select>
               </label>
-              <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-4 py-3 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">
+              <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-4 py-3 text-sm leading-6 sm:leading-7 text-(--tc-text-secondary,#4b5563)">
                 {AUTOMATION_STUDIO_TRIGGER_MODES.find((mode) => mode.id === draft.trigger.mode)?.summary}
               </div>
               <label className="flex items-center justify-between gap-3 rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
@@ -3173,7 +3505,7 @@ export default function AutomationStudio({
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Variáveis e subfluxos</p>
-                <h3 className="mt-2 text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Parâmetros dinâmicos</h3>
+                <h3 className="mt-2 text-lg sm:text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Parâmetros dinâmicos</h3>
               </div>
               <button
                 type="button"
@@ -3273,47 +3605,141 @@ export default function AutomationStudio({
           ) : null}
 
           {activePanel === "results" ? (
-            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
+            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 sm:p-4">
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.56fr)] xl:grid-cols-[minmax(0,1fr)_minmax(240px,0.56fr)_auto] lg:items-end">
+              <div className="min-w-0">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Depuração e histórico</p>
-                <h3 className="mt-2 text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Preview operacional</h3>
+                <h3 className="mt-2 text-lg sm:text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Preview operacional</h3>
+                <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: consolida status da execucao, artefatos e sinais de estabilidade do fluxo.</p>
+                {previewSync ? (
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <span
+                      className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] ${
+                        previewSync.mode === "auto"
+                          ? "border-sky-200 bg-sky-50 text-sky-700"
+                          : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                      }`}
+                    >
+                      {previewSync.mode}
+                    </span>
+                    <p className="text-xs font-medium text-(--tc-text-secondary,#4b5563)">
+                      Preview sincronizado {previewSync.mode === "auto" ? "automaticamente" : "manualmente"} às {previewSync.at}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+              <div className="grid w-full min-w-0 gap-2 lg:w-auto xl:min-w-60">
+                <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Run vinculada</label>
+                <select
+                  value={draft.linkedRunSlug}
+                  onChange={(event) => updateDraft((current) => ({ ...current, linkedRunSlug: event.target.value }))}
+                  disabled={runsLoading || !canEditFlow}
+                  aria-label="Selecionar run vinculada"
+                  title="Selecionar run vinculada"
+                  className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm font-medium outline-none disabled:cursor-not-allowed"
+                >
+                  <option value="">Auto (heurística)</option>
+                  {availableRuns.map((run) => (
+                    <option key={run.slug} value={run.slug}>
+                      {run.title} {run.runId ? `#${run.runId}` : ""}
+                    </option>
+                  ))}
+                </select>
               </div>
               <button
                 type="button"
                 onClick={runPreparation}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-semibold text-white"
+                disabled={runPreviewLoading}
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-semibold text-white lg:w-auto"
               >
                 <FiPlay className="h-4 w-4" />
-                Atualizar
+                {runPreviewLoading ? "Atualizando..." : "Atualizar"}
               </button>
             </div>
 
             {runPreview ? (
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className={`mt-4 rounded-2xl border p-3 sm:p-4 ${outcomeTone(runPreview.outcome).card}`}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Classificacao de execucao</p>
+                    <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: mostra rapidamente se a execucao esta estavel, intermitente (flaky) ou com falha persistente.</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${outcomeTone(runPreview.outcome).badge}`}>
+                        {runPreview.outcomeLabel}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm leading-6 sm:leading-7 text-(--tc-text,#0b1a3c)">{runPreview.outcomeDetail}</p>
+                  </div>
+                </div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {runPreview.attempts.map((attempt) => (
+                    <div key={attempt.label} className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
+                      <p className="text-xs font-black text-(--tc-text,#0b1a3c)">{attempt.label}</p>
+                      <p className={`mt-1 text-[11px] font-semibold uppercase tracking-[0.22em] ${attempt.status === "passed" ? "text-emerald-700" : "text-rose-700"}`}>
+                        {attempt.status}
+                      </p>
+                      <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">{attempt.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {runPreview ? (
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
                 {runPreview.metrics.map((metric) => (
-                  <div key={metric.label} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+                  <div key={metric.label} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">{metric.label}</p>
-                    <p className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{metric.value}</p>
+                    <p className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{metric.value}</p>
                     <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{metric.detail}</p>
                   </div>
                 ))}
               </div>
             ) : null}
 
-            <div className="mt-4 space-y-2 rounded-3xl border border-(--tc-border,#e5e7eb) bg-[#071227] p-4 text-white">
+            {runPreview ? (
+              <div className="mt-4 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
+                <div className="flex items-center gap-2 text-sm font-black text-(--tc-text,#0b1a3c)">
+                  <FiDatabase className="h-4 w-4 text-(--tc-accent,#ef0001)" />
+                  Artefatos e evidencias
+                </div>
+                <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: concentra atalhos para investigar a run real, traces, relatorios e API de resultados.</p>
+                <div className="mt-3 grid gap-2 lg:grid-cols-2">
+                  {runPreview.artifacts.map((artifact) => (
+                    <div key={artifact.title} className="rounded-2xl border border-(--tc-border,#d7deea) bg-white p-3">
+                      <p className="text-sm font-black text-(--tc-text,#0b1a3c)">{artifact.title}</p>
+                      <p className="mt-1 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{artifact.description}</p>
+                      {artifact.href ? (
+                        <Link
+                          href={artifact.href}
+                          className="mt-2 block wrap-break-word rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-3 py-2 font-mono text-[11px] text-(--tc-primary,#011848) underline-offset-2 hover:underline"
+                        >
+                          {artifact.hint}
+                        </Link>
+                      ) : (
+                        <p className="mt-2 wrap-break-word rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-3 py-2 font-mono text-[11px] text-(--tc-text,#0b1a3c)">
+                          {artifact.hint}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="mt-4 space-y-2 rounded-3xl border border-(--tc-border,#e5e7eb) bg-[#071227] p-3 sm:p-4 text-white">
               {(runPreview?.lines || [
                 "Clique em Preparar execução para gerar um preview do fluxo atual.",
                 "O preview usa empresa, ambiente, etapas habilitadas, variáveis, trigger e runtime configurados.",
               ]).map((line) => (
-                <div key={line} className="flex items-start gap-2 text-sm leading-7 text-white/80">
+                <div key={line} className="flex items-start gap-2 text-sm leading-6 sm:leading-7 text-white/80">
                   <FiCheckCircle className="mt-1 h-4 w-4 shrink-0 text-emerald-400" />
                   <span>{line}</span>
                 </div>
               ))}
             </div>
 
-            <div className="mt-4 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+            <div className="mt-4 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-sm font-black text-(--tc-text,#0b1a3c)">
                   <FiEye className="h-4 w-4 text-(--tc-accent,#ef0001)" />
@@ -3323,6 +3749,7 @@ export default function AutomationStudio({
                   {draft.runtime.simulationMode}
                 </span>
               </div>
+              <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: permite navegar etapa por etapa para entender causa raiz de erro e validar bindings/output.</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -3354,8 +3781,8 @@ export default function AutomationStudio({
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                     Passo {debugCursor + 1} de {enabledSteps.length}
                   </p>
-                  <h4 className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{debugStep.title}</h4>
-                  <p className="mt-2 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">{debugStep.description}</p>
+                  <h4 className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{debugStep.title}</h4>
+                  <p className="mt-2 text-sm leading-6 sm:leading-7 text-(--tc-text-secondary,#4b5563)">{debugStep.description}</p>
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
                     <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-3 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
                       binding: {debugStep.inputBinding || "n/a"}
@@ -3378,6 +3805,7 @@ export default function AutomationStudio({
                   <FiClock className="h-4 w-4 text-(--tc-accent,#ef0001)" />
                   Versões salvas
                 </div>
+                <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: guarda snapshots para comparar configuracoes e voltar rapidamente para um estado anterior.</p>
                 <div className="mt-3 space-y-2">
                   {draft.versions.length > 0 ? (
                     draft.versions.map((version) => (
@@ -3415,6 +3843,7 @@ export default function AutomationStudio({
                   <FiAlertCircle className="h-4 w-4 text-(--tc-accent,#ef0001)" />
                   Auditoria local
                 </div>
+                <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: rastreia alteracoes do studio para saber quem mudou o que e quando.</p>
                 <div className="mt-3 space-y-2">
                   {draft.auditTrail.slice(0, 6).map((entry) => (
                     <div key={entry.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3">
@@ -3432,6 +3861,7 @@ export default function AutomationStudio({
                   <FiPauseCircle className="h-4 w-4 text-(--tc-accent,#ef0001)" />
                   Regras críticas
                 </div>
+                <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: destaca configuracoes sensiveis que impactam risco operacional e governanca.</p>
                 <div className="mt-3 space-y-2">
                   {[
                     draft.trigger.requireApproval
@@ -3444,7 +3874,7 @@ export default function AutomationStudio({
                       ? "Escrita em produção está habilitada e exige revisão de escopo."
                       : "Produção segue protegida para evitar escrita destrutiva.",
                   ].map((item) => (
-                    <div key={item} className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm leading-7 text-(--tc-text,#0b1a3c)">
+                    <div key={item} className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm leading-6 sm:leading-7 text-(--tc-text,#0b1a3c)">
                       {item}
                     </div>
                   ))}
@@ -3463,7 +3893,7 @@ export default function AutomationStudio({
                     "Aguardando preview para gerar log técnico detalhado.",
                     "Suporte técnico e líder TC recebem selectors, bindings, timeout e retries por etapa.",
                   ]).map((line) => (
-                    <div key={line} className="flex items-start gap-2 text-sm leading-7 text-white/80">
+                    <div key={line} className="flex items-start gap-2 text-sm leading-6 sm:leading-7 text-white/80">
                       <FiZap className="mt-1 h-4 w-4 shrink-0 text-emerald-400" />
                       <span className="wrap-break-word font-mono text-[12px]">{line}</span>
                     </div>
@@ -3473,7 +3903,7 @@ export default function AutomationStudio({
             ) : (
               <div className="rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
                 <p className="text-sm font-semibold text-(--tc-text,#0b1a3c)">Logs técnicos, selectors internos e brain operacional ficam restritos a suporte técnico e líder TC.</p>
-                <p className="mt-2 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">
+                <p className="mt-2 text-sm leading-6 sm:leading-7 text-(--tc-text-secondary,#4b5563)">
                   A identidade do studio permanece igual, mas a telemetria avançada não é exibida fora do escopo técnico.
                 </p>
               </div>

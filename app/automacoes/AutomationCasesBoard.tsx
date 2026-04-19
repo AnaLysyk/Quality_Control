@@ -65,24 +65,50 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
   const [sourceFilter, setSourceFilter] = useState<AutomationCaseDefinition["source"] | "all">("all");
   const [applicationFilter, setApplicationFilter] = useState("all");
   const [selectedCaseId, setSelectedCaseId] = useState<string>(AUTOMATION_CASES[0]?.id ?? "");
-  const scopedCases = useMemo(
-    () => AUTOMATION_CASES.filter((testCase) => matchesAutomationCompanyScope(testCase.companyScope, activeCompanySlug)),
-    [activeCompanySlug],
+  const [isCaseModalOpen, setIsCaseModalOpen] = useState(false);
+  const [caseModalMode, setCaseModalMode] = useState<"view" | "edit">("view");
+  const [caseOverrides, setCaseOverrides] = useState<
+    Record<
+      string,
+      Partial<Pick<AutomationCaseDefinition, "title" | "summary" | "objective" | "expectedResult" | "tags">>
+    >
+  >({});
+
+  const casesCatalog = useMemo(
+    () =>
+      AUTOMATION_CASES.map((testCase) => {
+        const override = caseOverrides[testCase.id];
+        if (!override) return testCase;
+        return {
+          ...testCase,
+          ...override,
+          tags: override.tags ?? testCase.tags,
+        };
+      }),
+    [caseOverrides],
   );
+
+  const scopedCases = useMemo(
+    () => casesCatalog.filter((testCase) => matchesAutomationCompanyScope(testCase.companyScope, activeCompanySlug)),
+    [activeCompanySlug, casesCatalog],
+  );
+
+  const usingCatalogFallback = scopedCases.length === 0 && Boolean(activeCompanySlug);
+  const visibleCases = scopedCases.length > 0 ? scopedCases : casesCatalog;
 
   const applications = useMemo(
     () =>
       Array.from(
         new Set(
-          scopedCases.map((testCase) => testCase.application),
+            visibleCases.map((testCase) => testCase.application),
         ),
       ).sort((left, right) => left.localeCompare(right)),
-    [scopedCases],
+    [visibleCases],
   );
 
   const filteredCases = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return scopedCases.filter((testCase) => {
+    return visibleCases.filter((testCase) => {
       if (statusFilter !== "all" && testCase.status !== statusFilter) return false;
       if (sourceFilter !== "all" && testCase.source !== sourceFilter) return false;
       if (applicationFilter !== "all" && testCase.application !== applicationFilter) return false;
@@ -101,7 +127,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
 
       return haystack.includes(normalizedQuery);
     });
-  }, [applicationFilter, query, scopedCases, sourceFilter, statusFilter]);
+  }, [applicationFilter, query, sourceFilter, statusFilter, visibleCases]);
 
   const effectiveSelectedCaseId = filteredCases.some((testCase) => testCase.id === selectedCaseId) ? selectedCaseId : (filteredCases[0]?.id ?? "");
 
@@ -133,29 +159,52 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
       { label: "Casos", value: `${AUTOMATION_CASES.length}`, hint: "catálogo inicial", icon: FiClipboard },
       {
         label: "Automatizados",
-        value: `${AUTOMATION_CASES.filter((testCase) => testCase.status === "automated").length}`,
+        value: `${casesCatalog.filter((testCase) => testCase.status === "automated").length}`,
         hint: "rodando por fluxo",
         icon: FiCheckCircle,
       },
       {
         label: "Críticos",
-        value: `${AUTOMATION_CASES.filter((testCase) => testCase.priority === "critical").length}`,
+        value: `${casesCatalog.filter((testCase) => testCase.priority === "critical").length}`,
         hint: "prioridade alta",
         icon: FiShield,
       },
       {
         label: "Com plano",
-        value: `${AUTOMATION_CASES.filter((testCase) => Boolean(testCase.linkedPlanName || testCase.externalCaseRef)).length}`,
+        value: `${casesCatalog.filter((testCase) => Boolean(testCase.linkedPlanName || testCase.externalCaseRef)).length}`,
         hint: "manual ou Qase",
         icon: FiFileText,
       },
     ],
-    [],
+    [casesCatalog],
   );
 
+  function updateSelectedCaseDraft<K extends "title" | "summary" | "objective" | "expectedResult" | "tags">(
+    field: K,
+    value: AutomationCaseDefinition[K],
+  ) {
+    if (!selectedCase) return;
+    setCaseOverrides((current) => ({
+      ...current,
+      [selectedCase.id]: {
+        ...current[selectedCase.id],
+        [field]: value,
+      },
+    }));
+  }
+
+  function resetSelectedCaseDraft() {
+    if (!selectedCase) return;
+    setCaseOverrides((current) => {
+      const next = { ...current };
+      delete next[selectedCase.id];
+      return next;
+    });
+  }
+
   return (
-    <section className="space-y-4 rounded-[32px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-sm sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
+    <section className="space-y-4 rounded-4xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-sm sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
         <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
           <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
             <FiShield className="h-4 w-4 text-(--tc-accent,#ef0001)" />
@@ -189,6 +238,11 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
       </div>
 
       <article className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+        {usingCatalogFallback ? (
+          <div className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            A empresa atual não possui casos dedicados no escopo. Exibindo catálogo geral para você abrir e editar os detalhes.
+          </div>
+        ) : null}
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
           <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
             Buscar caso
@@ -249,7 +303,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
           </label>
         </div>
 
-        <div className="mt-4 grid auto-rows-fr gap-3 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
+        <div className="mt-4 grid auto-rows-fr gap-3 grid-cols-[repeat(auto-fit,minmax(180px,1fr))]">
           {metrics.map((item) => {
             const Icon = item.icon;
             return (
@@ -292,38 +346,70 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
                 const sourceMeta = SOURCE_META[testCase.source];
 
                 return (
-                  <button
+                  <article
                     key={testCase.id}
-                    type="button"
-                    onClick={() => setSelectedCaseId(testCase.id)}
                     className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
                       active
                         ? "border-(--tc-accent,#ef0001) bg-[#fff5f5] shadow-[0_10px_24px_rgba(239,0,1,0.08)]"
                         : "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) hover:border-(--tc-accent,#ef0001)"
                     }`}
                   >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">{testCase.application}</p>
-                        <h3 className="mt-1 break-words text-base font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{testCase.title}</h3>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCaseId(testCase.id);
+                        setCaseModalMode("view");
+                        setIsCaseModalOpen(true);
+                      }}
+                      className="block w-full text-left"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">{testCase.application}</p>
+                          <h3 className="mt-1 wrap-break-word text-base font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{testCase.title}</h3>
+                        </div>
+                        <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${priorityMeta.tone}`}>
+                          {priorityMeta.label}
+                        </span>
                       </div>
-                      <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${priorityMeta.tone}`}>
-                        {priorityMeta.label}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">{testCase.summary}</p>
+                      <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">{testCase.summary}</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${statusMeta.tone}`}>
+                          {statusMeta.label}
+                        </span>
+                        <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${sourceMeta.tone}`}>
+                          {sourceMeta.label}
+                        </span>
+                        <span className="inline-flex rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text,#0b1a3c)">
+                          {COVERAGE_META[testCase.coverage]}
+                        </span>
+                      </div>
+                    </button>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${statusMeta.tone}`}>
-                        {statusMeta.label}
-                      </span>
-                      <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${sourceMeta.tone}`}>
-                        {sourceMeta.label}
-                      </span>
-                      <span className="inline-flex rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text,#0b1a3c)">
-                        {COVERAGE_META[testCase.coverage]}
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedCaseId(testCase.id);
+                          setCaseModalMode("view");
+                          setIsCaseModalOpen(true);
+                        }}
+                        className="inline-flex min-h-9 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)"
+                      >
+                        Ver detalhes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedCaseId(testCase.id);
+                          setCaseModalMode("edit");
+                          setIsCaseModalOpen(true);
+                        }}
+                        className="inline-flex min-h-9 items-center justify-center rounded-xl border border-(--tc-accent,#ef0001) bg-[#fff5f5] px-3 py-1 text-xs font-semibold text-(--tc-accent,#ef0001)"
+                      >
+                        Editar
+                      </button>
                     </div>
-                  </button>
+                  </article>
                 );
               })
             )}
@@ -411,7 +497,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
                 </div>
 
                 <aside className="space-y-4">
-                  <section className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+                  <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
                     <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                       <FiGitBranch className="h-4 w-4" />
                       Fluxo vinculado
@@ -428,7 +514,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
                     ) : null}
                   </section>
 
-                  <section className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+                  <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
                     <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                       <FiCode className="h-4 w-4" />
                       Script
@@ -437,7 +523,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
                     <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">{selectedScriptTemplate?.summary ?? "Caso ainda sem estratégia de script."}</p>
                   </section>
 
-                  <section className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+                  <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
                     <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                       <FiFileText className="h-4 w-4" />
                       Vínculo QA
@@ -452,6 +538,28 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
               </div>
 
               <div className="mt-5 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCaseModalMode("view");
+                    setIsCaseModalOpen(true);
+                  }}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-(--tc-accent,#ef0001) bg-[#fff5f5] px-4 py-2 text-sm font-semibold text-(--tc-accent,#ef0001)"
+                >
+                  <FiClipboard className="h-4 w-4" />
+                  Abrir modal do caso
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCaseModalMode("edit");
+                    setIsCaseModalOpen(true);
+                  }}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"
+                >
+                  <FiCode className="h-4 w-4" />
+                  Editar no modal
+                </button>
                 <Link
                   href={`/automacoes/fluxos?flow=${encodeURIComponent(selectedCase.flowId)}`}
                   className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-semibold text-white"
@@ -507,6 +615,121 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
           )}
         </article>
       </div>
+
+      {isCaseModalOpen && selectedCase ? (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-[#06112acc] p-3 sm:p-6">
+          <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 shadow-[0_24px_70px_rgba(2,6,23,0.45)] sm:p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-accent,#ef0001)">Caso</p>
+                <h3 className="mt-2 text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedCase.title}</h3>
+                <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Abra, ajuste e valide os detalhes do caso sem sair da lista.</p>
+                <span className={`mt-2 inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] ${caseModalMode === "edit" ? "border-(--tc-accent,#ef0001) bg-[#fff5f5] text-(--tc-accent,#ef0001)" : "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) text-(--tc-text-muted,#6b7280)"}`}>
+                  {caseModalMode === "edit" ? "Editando" : "Visualização"}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCaseModalOpen(false)}
+                className="inline-flex min-h-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"
+              >
+                Fechar
+              </button>
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                Título
+                <input
+                  value={selectedCase.title}
+                  onChange={(event) => updateSelectedCaseDraft("title", event.target.value)}
+                  readOnly={caseModalMode !== "edit"}
+                  className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 text-sm outline-none read-only:cursor-default"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                Tags
+                <input
+                  value={selectedCase.tags.join(", ")}
+                  onChange={(event) =>
+                    updateSelectedCaseDraft(
+                      "tags",
+                      event.target.value
+                        .split(",")
+                        .map((item) => item.trim())
+                        .filter(Boolean),
+                    )
+                  }
+                  placeholder="smoke, regressao, api"
+                  readOnly={caseModalMode !== "edit"}
+                  className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 text-sm outline-none read-only:cursor-default"
+                />
+              </label>
+            </div>
+
+            <label className="mt-3 grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+              Resumo
+              <textarea
+                value={selectedCase.summary}
+                onChange={(event) => updateSelectedCaseDraft("summary", event.target.value)}
+                readOnly={caseModalMode !== "edit"}
+                rows={3}
+                className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3 text-sm leading-7 outline-none read-only:cursor-default"
+              />
+            </label>
+
+            <label className="mt-3 grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+              Objetivo
+              <textarea
+                value={selectedCase.objective}
+                onChange={(event) => updateSelectedCaseDraft("objective", event.target.value)}
+                readOnly={caseModalMode !== "edit"}
+                rows={3}
+                className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3 text-sm leading-7 outline-none read-only:cursor-default"
+              />
+            </label>
+
+            <label className="mt-3 grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+              Resultado esperado
+              <textarea
+                value={selectedCase.expectedResult}
+                onChange={(event) => updateSelectedCaseDraft("expectedResult", event.target.value)}
+                readOnly={caseModalMode !== "edit"}
+                rows={3}
+                className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3 text-sm leading-7 outline-none read-only:cursor-default"
+              />
+            </label>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {caseModalMode !== "edit" ? (
+                <button
+                  type="button"
+                  onClick={() => setCaseModalMode("edit")}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-(--tc-accent,#ef0001) bg-[#fff5f5] px-4 py-2 text-sm font-semibold text-(--tc-accent,#ef0001)"
+                >
+                  Editar
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setIsCaseModalOpen(false)}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-semibold text-white"
+              >
+                {caseModalMode === "edit" ? "Salvar e fechar" : "Fechar"}
+              </button>
+              {caseModalMode === "edit" ? (
+                <button
+                  type="button"
+                  onClick={resetSelectedCaseDraft}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"
+                >
+                  Restaurar original
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

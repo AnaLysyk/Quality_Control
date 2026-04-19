@@ -105,6 +105,7 @@ type HistoryEntry = {
 const REQUEST_STORAGE_PREFIX = "qc:automation:api-lab:v2";
 const ENV_STORAGE_PREFIX = "qc:automation:api-lab:env:v1";
 const HISTORY_STORAGE_PREFIX = "qc:automation:api-lab:history:v1";
+const BASE_URL_STORAGE_PREFIX = "qc:automation:api-lab:base-url:v1";
 const DEFAULT_AUTH: AutomationRequestAuth = { type: "none" };
 
 function historyStorageKey(companySlug: string | null) {
@@ -162,6 +163,10 @@ function storageKey(companySlug: string | null) {
 
 function environmentStorageKey(companySlug: string | null, environmentId: string) {
   return `${ENV_STORAGE_PREFIX}:${companySlug ?? "global"}:${environmentId}`;
+}
+
+function baseUrlStorageKey(companySlug: string | null, environmentId: string) {
+  return `${BASE_URL_STORAGE_PREFIX}:${companySlug ?? "global"}:${environmentId}`;
 }
 
 function buildAuthState(auth?: AutomationRequestAuth): AutomationRequestAuth {
@@ -419,6 +424,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
   const [responseTab, setResponseTab] = useState<"json" | "raw" | "headers" | "tests">("json");
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<EditorPanel>("params");
+  const [baseUrlInput, setBaseUrlInput] = useState("");
 
   const selectedCompany = useMemo(
     () => companies.find((company) => company.slug === activeCompanySlug) ?? companies[0] ?? null,
@@ -494,6 +500,29 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
     [selectedEnvironmentId],
   );
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(baseUrlStorageKey(activeCompanySlug, selectedEnvironmentId));
+      setBaseUrlInput(raw && raw.trim().length > 0 ? raw : currentEnvironment.baseUrl);
+    } catch {
+      setBaseUrlInput(currentEnvironment.baseUrl);
+    }
+  }, [activeCompanySlug, currentEnvironment.baseUrl, selectedEnvironmentId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const normalized = baseUrlInput.trim();
+    const key = baseUrlStorageKey(activeCompanySlug, selectedEnvironmentId);
+    if (!normalized || normalized === currentEnvironment.baseUrl) {
+      window.localStorage.removeItem(key);
+      return;
+    }
+    window.localStorage.setItem(key, normalized);
+  }, [activeCompanySlug, baseUrlInput, currentEnvironment.baseUrl, selectedEnvironmentId]);
+
+  const effectiveBaseUrl = baseUrlInput.trim() || currentEnvironment.baseUrl;
+
   const visiblePresets = useMemo(
     () => [
       ...AUTOMATION_API_PRESETS.filter((preset) => matchesAutomationCompanyScope(preset.companyScope, activeCompanySlug)),
@@ -514,11 +543,11 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
       buildSystemVariables({
         activeCompanySlug,
         companyName: selectedCompany?.name ?? "",
-        currentEnvironmentBaseUrl: currentEnvironment.baseUrl,
+        currentEnvironmentBaseUrl: effectiveBaseUrl,
         currentEnvironmentId: currentEnvironment.id,
         currentEnvironmentTitle: currentEnvironment.title,
       }),
-    [activeCompanySlug, currentEnvironment.baseUrl, currentEnvironment.id, currentEnvironment.title, selectedCompany?.name],
+    [activeCompanySlug, currentEnvironment.id, currentEnvironment.title, effectiveBaseUrl, selectedCompany?.name],
   );
 
   const resolvedVariables = useMemo(() => {
@@ -565,13 +594,13 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
   const resolvedUrlPreview = useMemo(
     () =>
       buildResolvedUrl(
-        currentEnvironment.baseUrl,
+        effectiveBaseUrl,
         path,
         sanitizeKeyValueRows(queryRows),
         auth,
         resolvedVariables,
       ),
-    [auth, currentEnvironment.baseUrl, path, queryRows, resolvedVariables],
+    [auth, effectiveBaseUrl, path, queryRows, resolvedVariables],
   );
 
   function applyPreset(preset: AutomationRequestPreset | SavedRequest) {
@@ -738,7 +767,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
     try {
       const endpoint = resolveTemplate(path, resolvedVariables);
-      const resolvedEndpoint = buildResolvedUrl(currentEnvironment.baseUrl, endpoint, [], auth, resolvedVariables);
+      const resolvedEndpoint = buildResolvedUrl(effectiveBaseUrl, endpoint, [], auth, resolvedVariables);
       const gqlHeaders: Record<string, string> = { "Content-Type": "application/json" };
       for (const row of sanitizeKeyValueRows(headerRows)) {
         const key = resolveTemplate(row.key, resolvedVariables).trim();
@@ -793,7 +822,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
         for (const v of req.variables ?? []) registry[v.key] = v.value;
 
         const reqAuth = req.auth ?? DEFAULT_AUTH;
-        const resolvedUrl = buildResolvedUrl(currentEnvironment.baseUrl, req.path, req.queryParams ?? [], reqAuth, registry);
+        const resolvedUrl = buildResolvedUrl(effectiveBaseUrl, req.path, req.queryParams ?? [], reqAuth, registry);
         const headers: Record<string, string> = {};
         for (const h of req.headers ?? []) {
           const key = resolveTemplate(h.key, registry).trim();
@@ -948,8 +977,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
         </div>
       </div>
 
-      <div className="grid items-start gap-4 xl:grid-cols-12">
-        <aside className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 xl:col-span-4 xl:sticky xl:top-6 2xl:col-span-3">
+      <div className="grid items-start gap-4 2xl:grid-cols-12">
+        <aside className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 2xl:col-span-3 2xl:sticky 2xl:top-6">
           {/* Sidebar tab bar */}
           <div className="flex gap-1 rounded-xl border border-(--tc-border,#d7deea) bg-white p-1">
             {([
@@ -1157,8 +1186,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           ) : null}
         </aside>
 
-        <article className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 xl:col-span-8 2xl:col-span-5">
-          <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_110px_180px] 2xl:grid-cols-[minmax(0,1fr)_110px_180px_auto]">
+        <article className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 2xl:col-span-9">
+          <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(0,1fr)_120px_180px_auto]">
             <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
               Request
               <input
@@ -1195,11 +1224,15 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 ))}
               </select>
             </label>
-            <div className="flex items-end xl:col-span-3 2xl:col-span-1">
-              <div className="inline-flex min-h-11 items-center rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 text-xs font-semibold text-(--tc-text-muted,#6b7280)">
-                {currentEnvironment?.baseUrl}
-              </div>
-            </div>
+            <label className="grid gap-2 md:col-span-2 2xl:col-span-1 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+              Base URL
+              <input
+                value={baseUrlInput}
+                onChange={(event) => setBaseUrlInput(event.target.value)}
+                placeholder={currentEnvironment.baseUrl}
+                className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 text-sm outline-none"
+              />
+            </label>
           </div>
 
           <label className="mt-4 grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
@@ -1272,7 +1305,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               </div>
               <div className="mt-3 space-y-2">
                 {queryRows.map((row) => (
-                  <div key={row.id} className="grid gap-2 md:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)_36px]">
+                  <div key={row.id} className="grid gap-2 lg:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)_36px]">
                     <input
                       value={row.key}
                       onChange={(event) => updateKeyValueRow(setQueryRows, row.id, "key", event.target.value)}
@@ -1426,7 +1459,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 </div>
                 <div className="mt-3 space-y-2">
                   {environmentVariableRows.map((row) => (
-                    <div key={row.id} className="grid gap-2 md:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)_36px]">
+                    <div key={row.id} className="grid gap-2 lg:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)_36px]">
                       <input
                         value={row.key}
                         onChange={(event) => updateKeyValueRow(setEnvironmentVariableRows, row.id, "key", event.target.value)}
@@ -1469,7 +1502,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 </div>
                 <div className="mt-3 space-y-2">
                   {localVariableRows.map((row) => (
-                    <div key={row.id} className="grid gap-2 md:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)_36px]">
+                    <div key={row.id} className="grid gap-2 lg:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)_36px]">
                       <input
                         value={row.key}
                         onChange={(event) => updateKeyValueRow(setLocalVariableRows, row.id, "key", event.target.value)}
@@ -1529,7 +1562,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               </div>
               <div className="mt-3 space-y-2">
                 {headerRows.map((row) => (
-                  <div key={row.id} className="grid gap-2 md:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)_36px]">
+                  <div key={row.id} className="grid gap-2 lg:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)_36px]">
                     <input
                       value={row.key}
                       onChange={(event) => updateKeyValueRow(setHeaderRows, row.id, "key", event.target.value)}
@@ -1590,7 +1623,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               ) : (
                 <div className="mt-3 space-y-2">
                   {assertionRules.map((rule) => (
-                    <div key={rule.id} className="grid gap-2 md:grid-cols-[200px_minmax(0,1fr)_minmax(0,1fr)_36px]">
+                    <div key={rule.id} className="grid gap-2 xl:grid-cols-[200px_minmax(0,1fr)_minmax(0,1fr)_36px]">
                       <select
                         aria-label="Tipo de assertion"
                         value={rule.type}
@@ -1791,7 +1824,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           ) : null}
         </article>
 
-        <aside className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 xl:col-span-12 2xl:col-span-4">
+        <aside className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 2xl:col-span-12">
           <div className="flex items-center justify-between gap-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Response</p>
             <div className="flex gap-2">
@@ -1829,7 +1862,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-700">{copyFeedback}</div>
           ) : null}
 
-          <div className="mt-4 inline-flex rounded-xl border border-(--tc-border,#d7deea) bg-white p-1">
+          <div className="mt-4 inline-flex max-w-full overflow-x-auto rounded-xl border border-(--tc-border,#d7deea) bg-white p-1">
             {[
               { id: "json", label: "JSON" },
               { id: "raw", label: "Raw" },

@@ -3,13 +3,32 @@ import type { AutomationCompanyScope } from "@/lib/automations/companyScope";
 
 export type AutomationHttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
+export type AutomationRequestKeyValue = {
+  key: string;
+  value: string;
+};
+
+export type AutomationRequestAuthType = "none" | "bearer" | "basic" | "api-key" | "session";
+
+export type AutomationRequestAuth = {
+  type: AutomationRequestAuthType;
+  addTo?: "header" | "query";
+  key?: string;
+  password?: string;
+  username?: string;
+  value?: string;
+};
+
 export type AutomationRequestPreset = {
   id: string;
   title: string;
   method: AutomationHttpMethod;
   path: string;
   body: string;
-  headers: Array<{ key: string; value: string }>;
+  auth?: AutomationRequestAuth;
+  headers: AutomationRequestKeyValue[];
+  queryParams?: AutomationRequestKeyValue[];
+  variables?: AutomationRequestKeyValue[];
   companyScope: AutomationCompanyScope;
   tags: string[];
 };
@@ -63,9 +82,10 @@ export const AUTOMATION_API_PRESETS: AutomationRequestPreset[] = [
     id: "rfb-cpf",
     title: "Consultar CPF / RFB",
     method: "GET",
-    path: "/api/bcadastro/cpf/12345678900",
+    path: "/api/bcadastro/cpf/{{cpf}}",
     body: "",
     headers: [],
+    variables: [{ key: "cpf", value: "12345678900" }],
     companyScope: "griaule",
     tags: ["rfb", "cpf"],
   },
@@ -73,9 +93,10 @@ export const AUTOMATION_API_PRESETS: AutomationRequestPreset[] = [
     id: "processo-by-id",
     title: "Consultar processo",
     method: "GET",
-    path: "/api/processos/123456",
+    path: "/api/processos/{{processId}}",
     body: "",
     headers: [],
+    variables: [{ key: "processId", value: "123456" }],
     companyScope: "griaule",
     tags: ["processo"],
   },
@@ -106,6 +127,9 @@ export const AUTOMATION_API_PRESETS: AutomationRequestPreset[] = [
     path: "/api/me",
     body: "",
     headers: [],
+    auth: {
+      type: "session",
+    },
     companyScope: "testing-company",
     tags: ["painel", "auth", "session"],
   },
@@ -116,6 +140,9 @@ export const AUTOMATION_API_PRESETS: AutomationRequestPreset[] = [
     path: "/api/test-plans",
     body: "",
     headers: [],
+    auth: {
+      type: "session",
+    },
     companyScope: "testing-company",
     tags: ["painel", "test-plans"],
   },

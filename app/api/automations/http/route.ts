@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 const RequestSchema = z.object({
   body: z.string().nullable().optional(),
+  forwardCookies: z.boolean().optional(),
   headers: z.record(z.string(), z.string()).optional(),
   method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
   timeoutMs: z.coerce.number().int().min(500).max(30000).optional(),
@@ -57,6 +58,8 @@ export async function POST(request: Request) {
 
   try {
     const targetUrl = resolveTargetUrl(payload.url, request.url);
+    const requestOrigin = new URL(request.url).origin;
+    const targetOrigin = new URL(targetUrl).origin;
     const controller = new AbortController();
     const timeoutMs = payload.timeoutMs ?? 15000;
     const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -66,6 +69,17 @@ export async function POST(request: Request) {
     for (const [key, value] of Object.entries(payload.headers ?? {})) {
       if (!key.trim()) continue;
       headers.set(key, value);
+    }
+
+    if (payload.forwardCookies) {
+      if (targetOrigin !== requestOrigin) {
+        throw new Error("A sessão atual só pode ser reutilizada em endpoints internos do mesmo domínio.");
+      }
+
+      const cookieHeader = request.headers.get("cookie");
+      if (cookieHeader && !headers.has("cookie")) {
+        headers.set("cookie", cookieHeader);
+      }
     }
 
     const response = await fetch(targetUrl, {
@@ -109,4 +123,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

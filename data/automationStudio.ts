@@ -1,4 +1,5 @@
 import { BIOMETRIC_FIXTURE_DEFINITIONS } from "@/data/biometricFixtures";
+import type { AutomationCompanyScope } from "@/lib/automations/companyScope";
 
 export type AutomationStudioStepKind =
   | "open_page"
@@ -30,6 +31,7 @@ export type AutomationStudioStepTemplate = {
 };
 
 export type AutomationStudioBlueprint = {
+  companyScope: AutomationCompanyScope;
   defaultNotes: string;
   defaultScript: string;
   defaultStatus: "active" | "inactive";
@@ -211,6 +213,38 @@ export const AUTOMATION_STUDIO_ACTION_LIBRARY: AutomationStudioActionPreset[] = 
 
 export const AUTOMATION_STUDIO_BLUEPRINTS: AutomationStudioBlueprint[] = [
   {
+    companyScope: "all",
+    id: "api-smoke-base",
+    title: "Fluxo base API",
+    description: "Template neutro para qualquer empresa começar um fluxo simples de request, validação e evidência.",
+    objective: "Oferecer um ponto de partida sem expor fluxos específicos de outra empresa.",
+    stack: "HTTP runner + variáveis dinâmicas",
+    runnerType: "http",
+    realRunnerId: null,
+    defaultStatus: "active",
+    defaultNotes: "Fluxo inicial neutro para novas empresas e contextos ainda sem catálogo dedicado.",
+    defaultScript: `const response = await http.get("/api/health");\nassertions.expectStatus(response, 200);\nreturn evidence.capture();`,
+    steps: [
+      {
+        kind: "http_request",
+        title: "Executar smoke base",
+        selector: "GET /api/health",
+        inputBinding: "environment.baseUrl",
+        expectedResult: "Endpoint básico responde sem erro.",
+        description: "Request neutro para validar ambiente e sessão inicial.",
+      },
+      {
+        kind: "capture_evidence",
+        title: "Salvar evidência",
+        selector: "run.summary",
+        inputBinding: "run.result",
+        expectedResult: "Resultado salvo no histórico.",
+        description: "Mantém o snapshot do smoke inicial.",
+      },
+    ],
+  },
+  {
+    companyScope: "griaule",
     id: "griaule-biometrics",
     title: "Biometria Griaule",
     description: "Fluxo real para anexar digital e face com controle de limite Base64, retries e auditoria do PUT.",
@@ -266,6 +300,7 @@ export const AUTOMATION_STUDIO_BLUEPRINTS: AutomationStudioBlueprint[] = [
     ],
   },
   {
+    companyScope: "griaule",
     id: "cpf-rfb",
     title: "Consulta CPF / RFB",
     description: "Transforma a consulta de CPF em um fluxo guiado com ambiente, request, validação e histórico operacional.",
@@ -312,6 +347,7 @@ export const AUTOMATION_STUDIO_BLUEPRINTS: AutomationStudioBlueprint[] = [
     ],
   },
   {
+    companyScope: "griaule",
     id: "token-processo",
     title: "Token + consulta de processo",
     description: "Encadeia autenticação e leitura de processo em uma mesma experiência operacional.",
@@ -350,6 +386,7 @@ export const AUTOMATION_STUDIO_BLUEPRINTS: AutomationStudioBlueprint[] = [
     ],
   },
   {
+    companyScope: "griaule",
     id: "smart-browser",
     title: "Fluxo visual Smart",
     description: "Base para abrir página, preencher dados, anexar arquivos, usar POM e validar mensagem de sucesso.",
@@ -392,6 +429,162 @@ export const AUTOMATION_STUDIO_BLUEPRINTS: AutomationStudioBlueprint[] = [
         inputBinding: "Sucesso",
         expectedResult: "Mensagem renderizada na UI.",
         description: "Confirma a conclusão do fluxo no navegador.",
+      },
+    ],
+  },
+  {
+    companyScope: "testing-company",
+    id: "qc-admin-dashboard",
+    title: "Dashboard admin do Painel QA",
+    description: "Smoke browser do dashboard administrativo da própria plataforma, validando shell, busca e contexto inicial.",
+    objective: "Garantir que a tela principal do admin continue acessível e autenticada antes de qualquer release.",
+    stack: "Playwright guiado + smoke interno do produto",
+    runnerType: "browser",
+    realRunnerId: null,
+    defaultStatus: "active",
+    defaultNotes: "Fluxo focado na Testing Company para validar a camada administrativa do próprio painel.",
+    defaultScript: `await browser.page.goto(\`\${environment.baseUrl}/admin/dashboard\`);\nawait assertions.expectText("Buscar empresa por nome ou slug");\nreturn evidence.capture();`,
+    steps: [
+      {
+        kind: "open_page",
+        title: "Abrir dashboard admin",
+        selector: "/admin/dashboard",
+        inputBinding: "environment.baseUrl",
+        expectedResult: "Dashboard responde sem redirecionar para login.",
+        description: "Acessa a tela administrativa principal do painel.",
+      },
+      {
+        kind: "assert_text",
+        title: "Validar campo de busca",
+        selector: "Buscar empresa por nome ou slug",
+        inputBinding: "page.content",
+        expectedResult: "Busca principal do dashboard visível.",
+        description: "Confirma que a tela carregou com o bloco principal do admin.",
+      },
+      {
+        kind: "capture_evidence",
+        title: "Salvar evidência",
+        selector: "screen",
+        inputBinding: "run.evidence",
+        expectedResult: "Screenshot e resultado salvos.",
+        description: "Guarda artefato do smoke do dashboard.",
+      },
+    ],
+  },
+  {
+    companyScope: "testing-company",
+    id: "qc-automation-ide",
+    title: "QA IDE do Painel QA",
+    description: "Smoke browser da nova shell de automação para validar navegação, cards e área principal do workspace.",
+    objective: "Garantir que o módulo de automação da própria plataforma siga acessível e coerente visualmente.",
+    stack: "Playwright guiado + smoke interno do produto",
+    runnerType: "browser",
+    realRunnerId: null,
+    defaultStatus: "active",
+    defaultNotes: "Fluxo interno da Testing Company para validar a IDE de automação antes de abrir para operação.",
+    defaultScript: `await browser.page.goto(\`\${environment.baseUrl}/automacoes/tools\`);\nawait assertions.expectText("QA IDE");\nawait assertions.expectText("Tools");\nreturn evidence.capture();`,
+    steps: [
+      {
+        kind: "open_page",
+        title: "Abrir QA IDE",
+        selector: "/automacoes/tools",
+        inputBinding: "environment.baseUrl",
+        expectedResult: "Shell de automação carregada.",
+        description: "Acessa a entrada principal do módulo de automação.",
+      },
+      {
+        kind: "assert_text",
+        title: "Validar navegação",
+        selector: "QA IDE",
+        inputBinding: "page.content",
+        expectedResult: "Título da shell e módulos visíveis.",
+        description: "Confirma que a lateral e a área principal renderizaram.",
+      },
+      {
+        kind: "capture_evidence",
+        title: "Salvar evidência",
+        selector: "screen",
+        inputBinding: "run.evidence",
+        expectedResult: "Screenshot do módulo salvo no histórico.",
+        description: "Guarda artefato do smoke da IDE.",
+      },
+    ],
+  },
+  {
+    companyScope: "testing-company",
+    id: "qc-company-home",
+    title: "Home institucional da empresa",
+    description: "Valida a home da empresa Testing Company e a separação entre home institucional e dashboard.",
+    objective: "Garantir que a entrada da empresa continue íntegra após alterações na navegação do produto.",
+    stack: "Playwright guiado + smoke interno do produto",
+    runnerType: "browser",
+    realRunnerId: null,
+    defaultStatus: "active",
+    defaultNotes: "Fluxo interno para validar a camada institucional da empresa dentro do próprio painel.",
+    defaultScript: `await browser.page.goto(\`\${environment.baseUrl}/empresas/testing-company/home\`);\nawait assertions.expectText("Home institucional");\nreturn evidence.capture();`,
+    steps: [
+      {
+        kind: "open_page",
+        title: "Abrir home da empresa",
+        selector: "/empresas/testing-company/home",
+        inputBinding: "environment.baseUrl",
+        expectedResult: "Home institucional abre com contexto ativo.",
+        description: "Acessa a home da empresa Testing Company.",
+      },
+      {
+        kind: "assert_text",
+        title: "Validar contexto institucional",
+        selector: "Home institucional",
+        inputBinding: "page.content",
+        expectedResult: "Texto institucional disponível na tela.",
+        description: "Confirma que a tela correta abriu.",
+      },
+      {
+        kind: "capture_evidence",
+        title: "Salvar evidência",
+        selector: "screen",
+        inputBinding: "run.evidence",
+        expectedResult: "Screenshot salvo no histórico.",
+        description: "Guarda artefato do smoke da home.",
+      },
+    ],
+  },
+  {
+    companyScope: "testing-company",
+    id: "qc-company-runs",
+    title: "Runs da empresa Testing Company",
+    description: "Smoke browser da tela de runs para garantir leitura operacional do próprio sistema.",
+    objective: "Validar que a tela de runs do produto continua abrindo com filtros e listagem operacional.",
+    stack: "Playwright guiado + smoke interno do produto",
+    runnerType: "browser",
+    realRunnerId: null,
+    defaultStatus: "active",
+    defaultNotes: "Fluxo interno para validar a página de runs da empresa Testing Company.",
+    defaultScript: `await browser.page.goto(\`\${environment.baseUrl}/empresas/testing-company/runs\`);\nawait assertions.expectText("runs-page");\nreturn evidence.capture();`,
+    steps: [
+      {
+        kind: "open_page",
+        title: "Abrir runs da empresa",
+        selector: "/empresas/testing-company/runs",
+        inputBinding: "environment.baseUrl",
+        expectedResult: "Tela de runs responde autenticada.",
+        description: "Acessa a listagem operacional de runs da empresa.",
+      },
+      {
+        kind: "assert_text",
+        title: "Validar listagem operacional",
+        selector: "runs-page",
+        inputBinding: "page.content",
+        expectedResult: "A página de runs está renderizada.",
+        description: "Confirma a presença da área principal da listagem.",
+      },
+      {
+        kind: "capture_evidence",
+        title: "Salvar evidência",
+        selector: "screen",
+        inputBinding: "run.evidence",
+        expectedResult: "Screenshot salvo no histórico.",
+        description: "Guarda artefato do smoke das runs.",
       },
     ],
   },

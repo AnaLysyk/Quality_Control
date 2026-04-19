@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function AutomacoesPage() {
-  redirect("/automacoes/casos");
+  redirect("/automacoes/tools");
 }

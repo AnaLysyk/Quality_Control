@@ -57,4 +57,8 @@ describe("companyRoutes", () => {
     expect(shortenCompanyPathname("/empresas/griaule/chamados")).toBe("/griaule/chamados");
     expect(rewriteShortCompanyPathname("/admin/dashboard")).toBeNull();
   });
+
+  it("nao trata automacoes como slug de empresa", () => {
+    expect(rewriteShortCompanyPathname("/automacoes")).toBeNull();
+  });
 });

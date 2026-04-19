@@ -1,0 +1,90 @@
+{
+  "categories": [
+    {
+      "id": "d7901393-7d07-4bd3-bbfc-f41ce0ae60f3",
+      "slug": "teste",
+      "title": "Teste",
+      "description": "xfdsf sfdsfsd",
+      "icon": "FiDatabase",
+      "order": 0,
+      "createdAt": "2026-04-17T19:25:07.992Z",
+      "updatedAt": "2026-04-17T19:25:07.992Z",
+      "createdBy": "usr_company_griaule"
+    },
+    {
+      "id": "bdd4f3da-9abc-49c8-b692-69271625b5b1",
+      "slug": "xcvcxvx",
+      "title": "xcvcxvx",
+      "description": "xcvxcvxc",
+      "icon": "FiSettings",
+      "order": 1,
+      "createdAt": "2026-04-17T19:57:16.178Z",
+      "updatedAt": "2026-04-17T19:57:16.178Z",
+      "createdBy": "usr_company_griaule"
+    }
+  ],
+  "docs": [
+    {
+      "id": "953afc8f-eb75-4603-9b37-960dd9bc0baf",
+      "categoryId": "d7901393-7d07-4bd3-bbfc-f41ce0ae60f3",
+      "slug": "cbcvbvcvc",
+      "title": "cbcvbvcvc",
+      "description": "cvbvcbvc",
+      "status": "published",
+      "order": 0,
+      "blocks": [
+        {
+          "id": "ljtp5x6rrmo3bvcun",
+          "type": "heading",
+          "level": 3,
+          "text": "cdf"
+        }
+      ],
+      "createdAt": "2026-04-17T19:55:17.394Z",
+      "updatedAt": "2026-04-17T19:55:39.930Z",
+      "createdBy": "usr_company_griaule",
+      "updatedBy": "usr_company_griaule"
+    },
+    {
+      "id": "c4b3d275-f615-4d57-a613-509fbfeff7e6",
+      "categoryId": "d7901393-7d07-4bd3-bbfc-f41ce0ae60f3",
+      "slug": "xfvxvxcv",
+      "title": "xfvxvxcv",
+      "description": "xcvcxvc",
+      "status": "published",
+      "order": 1,
+      "blocks": [],
+      "createdAt": "2026-04-17T19:56:40.477Z",
+      "updatedAt": "2026-04-17T19:56:40.477Z",
+      "createdBy": "usr_company_griaule",
+      "updatedBy": "usr_company_griaule"
+    },
+    {
+      "id": "0748774a-b82f-40da-9c55-d4ba4bc5d197",
+      "categoryId": "d7901393-7d07-4bd3-bbfc-f41ce0ae60f3",
+      "slug": "cvc",
+      "title": "cvc",
+      "description": "gfbcvcxbxc",
+      "status": "draft",
+      "order": 3,
+      "blocks": [],
+      "createdAt": "2026-04-17T19:57:54.528Z",
+      "updatedAt": "2026-04-17T19:57:54.528Z",
+      "createdBy": "usr_company_griaule",
+      "updatedBy": "usr_company_griaule"
+    },
+    {
+      "id": "57557603-547e-4e72-ba4b-749a2c11a424",
+      "categoryId": "d7901393-7d07-4bd3-bbfc-f41ce0ae60f3",
+      "slug": "xfvcvcv",
+      "title": "xfvcvcv",
+      "status": "outdated",
+      "order": 4,
+      "blocks": [],
+      "createdAt": "2026-04-17T19:58:06.792Z",
+      "updatedAt": "2026-04-17T19:58:06.792Z",
+      "createdBy": "usr_company_griaule",
+      "updatedBy": "usr_company_griaule"
+    }
+  ]
+}

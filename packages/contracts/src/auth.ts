@@ -70,6 +70,7 @@ export const AuthUserSchema = z
     clientSlugs: z.array(z.string().min(1)).optional(),
     isGlobalAdmin: z.boolean().optional(),
     is_global_admin: z.boolean().optional(),
+    companyLogoUrl: z.string().optional().nullable(),
   })
   .passthrough();
 

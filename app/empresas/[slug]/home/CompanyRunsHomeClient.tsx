@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   FiActivity,
   FiAlertTriangle,
+  FiArrowLeft,
   FiArrowRight,
   FiCheckCircle,
   FiExternalLink,
@@ -16,6 +17,7 @@ import {
 } from "react-icons/fi";
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
 import StatusChart from "@/components/StatusChart";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import { getAppColorClass, getAppMeta } from "@/lib/appMeta";
 import type {
   CompanyRunsHeroStats,
@@ -374,6 +376,18 @@ function SummaryValue(props: { label: string; value: string; note: string }) {
   );
 }
 export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps) {
+  const { user } = useAuthUser();
+  const _role = user?.role?.toLowerCase() ?? null;
+  const _permissionRole = user?.permissionRole?.toLowerCase() ?? null;
+  const isInternalProfile =
+    user?.isGlobalAdmin === true ||
+    _role === "leader_tc" ||
+    _role === "technical_support" ||
+    _role === "testing_company_user" ||
+    _permissionRole === "leader_tc" ||
+    _permissionRole === "technical_support" ||
+    _permissionRole === "testing_company_user";
+
   const {
     companySlug,
     companyName,
@@ -499,6 +513,15 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
               </div>
 
               <div className="flex flex-wrap gap-3 lg:max-w-sm lg:justify-end">
+                {isInternalProfile ? (
+                  <Link
+                    href="/documentos"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+                  >
+                    <FiArrowLeft className="h-4 w-4" />
+                    Voltar às empresas
+                  </Link>
+                ) : null}
                 <CreateManualReleaseButton companySlug={companySlug} redirectToRun={false} />
                 <Link
                   href="../runs"
@@ -530,6 +553,15 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
             />
             {isMetricsView ? (
               <div className="flex flex-wrap gap-3 lg:justify-end">
+                {isInternalProfile ? (
+                  <Link
+                    href="/documentos"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-5 py-3 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:bg-(--tc-surface-alt)"
+                  >
+                    <FiArrowLeft className="h-4 w-4" />
+                    Voltar às empresas
+                  </Link>
+                ) : null}
                 <CreateManualReleaseButton companySlug={companySlug} redirectToRun={false} />
                 <Link
                   href="../runs"

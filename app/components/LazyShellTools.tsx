@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
+import { Component, useCallback, useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import type { IconType } from "react-icons";
 import { FiBell, FiEdit3, FiMessageSquare, FiMoon, FiSun } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -124,6 +124,22 @@ function ToolbarGhostButton({
 
   if (!wrapperClassName) return button;
   return <span className={wrapperClassName}>{button}</span>;
+}
+
+class ChunkErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { failed: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    if (this.state.failed) return null;
+    return this.props.children;
+  }
 }
 
 function useDeferredShellTool() {
@@ -320,7 +336,7 @@ export function DeferredChatButton() {
   if (!assistantEnabled || !user) return null;
   if (!can("ai", "view") || !can("ai", "use")) return null;
 
-  if (mounted) return <LazyChatButtonInner defaultOpen={defaultOpen} />;
+  if (mounted) return <ChunkErrorBoundary><LazyChatButtonInner defaultOpen={defaultOpen} /></ChunkErrorBoundary>;
 
   return (
     <div className="fixed bottom-6 right-6 z-50">

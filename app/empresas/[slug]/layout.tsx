@@ -10,7 +10,7 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
 
   return (
     <RequireClient slug={slug}>
-      <div className="min-h-screen bg-(--page-bg,#f5f6fa) text-(--page-text,#0b1a3c)">{children}</div>
+      <div className="flex flex-1 min-h-0 flex-col bg-(--page-bg,#f5f6fa) text-(--page-text,#0b1a3c)">{children}</div>
     </RequireClient>
   );
 }

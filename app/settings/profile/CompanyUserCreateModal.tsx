@@ -62,7 +62,7 @@ export function CompanyUserCreateModal({
     setEmail("");
     setUsername("");
     setPassword("");
-    setRole("user");
+    setRole("company_user");
     setLoading(false);
     setGenerating(false);
     setError(null);

@@ -18,13 +18,18 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
   const pathname = usePathname() || "/";
 
   const role = typeof user?.role === "string" ? user.role.toLowerCase() : null;
-  const isAdmin = role === "leader_tc" || role === "technical_support" || user?.isGlobalAdmin === true;
+  const permissionRole = typeof user?.permissionRole === "string" ? user.permissionRole.toLowerCase() : null;
+  const isAdmin = role === "leader_tc" || role === "technical_support" || permissionRole === "leader_tc" || permissionRole === "technical_support" || user?.isGlobalAdmin === true;
+  // testing_company_user can be linked to multiple companies; allow access to any of their clientSlugs
+  const isTcUser = role === "testing_company_user" || permissionRole === "testing_company_user";
+  const linkedSlugs: string[] = Array.isArray(user?.clientSlugs) ? (user.clientSlugs as string[]) : [];
+  const isLinkedTcUser = isTcUser && !!slug && linkedSlugs.some((s) => s.toLowerCase() === slug.toLowerCase());
   const loginHref =
     pathname.startsWith("/") && pathname !== "/login" ? `/login?next=${encodeURIComponent(pathname)}` : "/login";
   const shouldRedirectToLogin = !loading && !user;
   const shouldRedirectToCompanyHome =
-    !loading && !!user && !isAdmin && !!slug && !!user.clientSlug && user.clientSlug !== slug;
-  const shouldBlockContent = loading || shouldRedirectToLogin || (!isAdmin && !!user && !user.clientSlug) || shouldRedirectToCompanyHome;
+    !loading && !!user && !isAdmin && !isLinkedTcUser && !!slug && !!user.clientSlug && user.clientSlug !== slug;
+  const shouldBlockContent = loading || shouldRedirectToLogin || (!isAdmin && !isLinkedTcUser && !!user && !user.clientSlug) || shouldRedirectToCompanyHome;
 
   useEffect(() => {
     if (loading) return;
@@ -32,7 +37,7 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
       router.replace(loginHref);
       return;
     }
-    if (isAdmin) return;
+    if (isAdmin || isLinkedTcUser) return;
 
     if (!user.clientSlug) {
       router.replace(loginHref);

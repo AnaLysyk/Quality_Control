@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { WikiDoc } from "@/data/platformDocsStore";
 import type { RequestRecord } from "@/data/requestsStore";
 import type { Release } from "@/types/release";
 import type { SuporteRecord } from "@/lib/ticketsStore";
@@ -136,6 +137,153 @@ async function resolveCompanyLinkedUserIds(companySlug?: string | null) {
   }
   const links = await listLocalLinksForCompany(company.id);
   return Array.from(new Set(links.map((link) => link.userId).filter(Boolean)));
+}
+
+function isActiveNotificationUser(user: { active?: boolean; status?: string | null }) {
+  return user.active !== false && user.status !== "blocked";
+}
+
+function isPrivilegedWikiRole(role?: string | null) {
+  const normalized = normalizeLegacyRole(role);
+  return normalized === SYSTEM_ROLES.LEADER_TC || normalized === SYSTEM_ROLES.TECHNICAL_SUPPORT;
+}
+
+function matchesCompanyId(left?: string | null, right?: string | null) {
+  const normalizedLeft = (left ?? "").trim();
+  const normalizedRight = (right ?? "").trim();
+  return normalizedLeft.length > 0 && normalizedLeft === normalizedRight;
+}
+
+function isDirectCompanyWikiUser(
+  user: {
+    user_origin?: string | null;
+    default_company_slug?: string | null;
+    created_by_company_id?: string | null;
+    home_company_id?: string | null;
+  },
+  company: { id: string; slug?: string | null },
+) {
+  const companySlug = normalizeCompanySlug(company.slug);
+  const defaultCompanySlug = normalizeCompanySlug(user.default_company_slug);
+  if (user.user_origin === "client_company" && companySlug && defaultCompanySlug === companySlug) {
+    return true;
+  }
+  return matchesCompanyId(user.created_by_company_id, company.id) || matchesCompanyId(user.home_company_id, company.id);
+}
+
+async function resolvePlatformWikiRecipientIds() {
+  const users = await listLocalUsers();
+  return users
+    .filter((user) => Boolean(user.id) && isActiveNotificationUser(user))
+    .map((user) => user.id);
+}
+
+async function resolveCompanyWikiRecipientIds(companySlug?: string | null) {
+  const normalizedSlug = normalizeCompanySlug(companySlug);
+  if (!normalizedSlug) return [] as string[];
+
+  const [users, companies, memberships] = await Promise.all([
+    listLocalUsers(),
+    listLocalCompanies(),
+    listLocalMemberships(),
+  ]);
+  const company = companies.find((item) => normalizeCompanySlug(item.slug) === normalizedSlug);
+  if (!company) return [] as string[];
+
+  const linkedFanoutEnabled = isCompanyLinkedNotificationFanoutEnabled(company as Record<string, unknown>);
+  const membershipsByUserId = new Map<string, (typeof memberships)[number][]>();
+  for (const membership of memberships) {
+    const current = membershipsByUserId.get(membership.userId) ?? [];
+    current.push(membership);
+    membershipsByUserId.set(membership.userId, current);
+  }
+
+  const recipients = new Set<string>();
+  for (const user of users) {
+    if (!user.id || !isActiveNotificationUser(user)) continue;
+    const userMemberships = membershipsByUserId.get(user.id) ?? [];
+    const linkedToCompany = linkedFanoutEnabled && userMemberships.some((membership) => membership.companyId === company.id);
+    const hasPrivilegedAccess =
+      user.is_global_admin === true ||
+      normalizeLegacyRole(user.globalRole) === SYSTEM_ROLES.LEADER_TC ||
+      isPrivilegedWikiRole(user.role) ||
+      userMemberships.some((membership) => isPrivilegedWikiRole(membership.role));
+    const directCompanyUser = isDirectCompanyWikiUser(user, company);
+
+    if (linkedToCompany || hasPrivilegedAccess || directCompanyUser) {
+      recipients.add(user.id);
+    }
+  }
+
+  return Array.from(recipients);
+}
+
+function buildCompanyWikiDocsLink(companySlug: string) {
+  return `/empresas/${encodeURIComponent(companySlug)}/docs`;
+}
+
+function buildWikiDocNotificationTitle(event: "created" | "published") {
+  return event === "created" ? "Novo documento publicado" : "Documento publicado";
+}
+
+function buildWikiDocNotificationDescription(input: {
+  title: string;
+  scopeLabel: string;
+  event: "created" | "published";
+}) {
+  if (input.event === "created") {
+    return `${input.title} foi criado e publicado no repositório ${input.scopeLabel}.`;
+  }
+  return `${input.title} foi publicado no repositório ${input.scopeLabel}.`;
+}
+
+export async function notifyPlatformWikiDocPublished(input: {
+  doc: Pick<WikiDoc, "id" | "title" | "updatedAt">;
+  event: "created" | "published";
+}) {
+  const recipients = await resolvePlatformWikiRecipientIds();
+  if (!recipients.length) return;
+
+  await createNotificationsForUsers(recipients, {
+    type: "DOC_PUBLISHED",
+    title: buildWikiDocNotificationTitle(input.event),
+    description: buildWikiDocNotificationDescription({
+      title: input.doc.title || "Documento",
+      scopeLabel: "da Testing Company",
+      event: input.event,
+    }),
+    link: "/docs",
+    dedupeKey: `wiki-doc:platform:${input.doc.id}:${input.doc.updatedAt}`,
+  });
+}
+
+export async function notifyCompanyWikiDocPublished(input: {
+  companySlug: string;
+  doc: Pick<WikiDoc, "id" | "title" | "updatedAt">;
+  event: "created" | "published";
+}) {
+  const normalizedSlug = normalizeCompanySlug(input.companySlug);
+  if (!normalizedSlug) return;
+
+  const recipients = await resolveCompanyWikiRecipientIds(normalizedSlug);
+  if (!recipients.length) return;
+
+  const companies = await listLocalCompanies();
+  const company = companies.find((item) => normalizeCompanySlug(item.slug) === normalizedSlug);
+  const companyLabel = company?.name || company?.company_name || normalizedSlug;
+
+  await createNotificationsForUsers(recipients, {
+    type: "DOC_PUBLISHED",
+    title: buildWikiDocNotificationTitle(input.event),
+    description: buildWikiDocNotificationDescription({
+      title: input.doc.title || "Documento",
+      scopeLabel: `de ${companyLabel}`,
+      event: input.event,
+    }),
+    companySlug: normalizedSlug,
+    link: buildCompanyWikiDocsLink(normalizedSlug),
+    dedupeKey: `wiki-doc:company:${normalizedSlug}:${input.doc.id}:${input.doc.updatedAt}`,
+  });
 }
 
 async function resolveCompanySlugFromClientId(clientId?: string | null) {

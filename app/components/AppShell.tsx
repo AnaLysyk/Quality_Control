@@ -70,6 +70,7 @@ const APP_SHELL_COPY = {
       defects: "Defeitos",
       support: "Suporte",
       testPlans: "Planos de teste",
+      automations: "Automações",
       profile: "Perfil",
       settings: "Configurações",
       commandCenter: "Command Center",
@@ -86,6 +87,7 @@ const APP_SHELL_COPY = {
       defects: "Triagem dos defeitos e pontos de atenção que precisam de resposta do time.",
       support: "Painel unificado de suporte para abrir tickets, acompanhar comentários e consultar o andamento.",
       testPlans: "Panorama dos planos, campanhas e vínculos com as aplicações da empresa.",
+      automations: "Área técnica para fluxos de endpoint, ambientes, presets e automações guiadas.",
       profile: "Cadastro institucional, identidade visual, usuários e configurações do contexto atual.",
       home: "Entrada institucional da empresa, com contexto salvo, aplicações e navegação principal.",
       commandCenter: "Visão executiva do ambiente administrativo, com acesso rápido aos módulos centrais.",
@@ -131,6 +133,7 @@ const APP_SHELL_COPY = {
       defects: "Defects",
       support: "Support",
       testPlans: "Test plans",
+      automations: "Automations",
       profile: "Profile",
       settings: "Settings",
       commandCenter: "Command Center",
@@ -147,6 +150,7 @@ const APP_SHELL_COPY = {
       defects: "Defect triage and attention points that need a team response.",
       support: "Unified support panel to open tickets, follow comments, and track progress.",
       testPlans: "Overview of plans, campaigns, and links to the company's applications.",
+      automations: "Technical area for endpoint flows, environments, presets, and guided automations.",
       profile: "Institutional profile, visual identity, users, and settings for the current context.",
       home: "Company entry view with saved context, applications, and primary navigation.",
       commandCenter: "Executive view of the admin environment, with quick access to core modules.",
@@ -206,6 +210,7 @@ function normalizeSectionKey(value: string) {
   if (normalized === "defeitos") return "defects";
   if (normalized === "suporte" || normalized === "chamados" || normalized === "meus chamados" || normalized === "support") return "support";
   if (normalized === "planos de teste" || normalized === "planos-de-teste") return "testPlans";
+  if (normalized === "automacoes" || normalized === "automações" || normalized === "automations") return "automations";
   if (normalized === "perfil" || normalized === "profile") return "profile";
   if (normalized === "configurações" || normalized === "settings") return "settings";
   if (normalized === "command center") return "commandCenter";
@@ -517,8 +522,11 @@ export default function AppShell({ children }: AppShellProps) {
       clientSlug: typeof user?.clientSlug === "string" ? user.clientSlug : null,
       companyCount: companies.length,
     });
+    const isCompanyScopedProfilePage =
+      pathname.startsWith("/settings/profile") &&
+      (resolvedViewerProfile === "empresa" || resolvedViewerProfile === "company_user");
     const viewerProfile: ViewerProfileKind =
-      isCompanyRoute && (resolvedViewerProfile === "empresa" || resolvedViewerProfile === "company_user")
+      (isCompanyRoute || isCompanyScopedProfilePage) && (resolvedViewerProfile === "empresa" || resolvedViewerProfile === "company_user")
         ? "empresa"
         : resolvedViewerProfile;
 

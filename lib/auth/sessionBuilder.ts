@@ -64,9 +64,14 @@ export async function buildLocalSessionForUser(
     links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc");
   const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
   const shouldBindCompanyContext = !hasFullCompanyAccess;
+  const isDirectCompanyUser = normalizeLocalRole(user.role ?? null) === "empresa" || normalizeLocalRole(user.role ?? null) === "company_user" || user.user_origin === "client_company";
   const allowedCompanies = hasFullCompanyAccess
     ? companies
-    : companies.filter((company) => links.some((link) => link.companyId === company.id));
+    : companies.filter((company) => {
+        if (links.some((link) => link.companyId === company.id)) return true;
+        if (!isDirectCompanyUser) return false;
+        return Boolean(user.default_company_slug && company.slug === user.default_company_slug);
+      });
 
   const requestedSlug = typeof opts?.requestedSlug === "string" ? opts.requestedSlug.trim() : "";
   const requestedCompany =

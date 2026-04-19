@@ -105,28 +105,9 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const [assistantContext, setAssistantContext] = useState<AssistantScreenContext>(screenContext);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [confirmState, setConfirmState] = useState<ConfirmState>({ open: false });
-  const [hintVisible, setHintVisible] = useState(false);
-  const [hintIndex, setHintIndex] = useState(0);
   const boxRef = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
 
-  const HINTS = [
-    "Posso resumir esta tela para voc\u00ea!",
-    "Precisa de ajuda? \u00c9 s\u00f3 me chamar.",
-    "Posso buscar chamados ou criar rascunhos.",
-    "Pergunte algo sobre o que voc\u00ea est\u00e1 vendo.",
-    "Posso explicar suas permiss\u00f5es de acesso.",
-  ];
-
-  useEffect(() => {
-    if (open) return;
-    const id = setInterval(() => {
-      setHintIndex((i) => (i + 1) % HINTS.length);
-      setHintVisible(true);
-      setTimeout(() => setHintVisible(false), 5000);
-    }, 60_000);
-    return () => clearInterval(id);
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!open) return undefined;
@@ -419,12 +400,6 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
     <div className="relative" ref={boxRef}>
       <div className="fixed bottom-6 right-6 z-50">
         <div className="flex items-end">
-          {/* periodic hint bubble */}
-          {!open && hintVisible ? (
-            <div className="mr-3 mb-1 max-w-56 animate-[fadeSlideUp_0.3s_ease] rounded-2xl rounded-br-sm border border-[#d7dff1] bg-white px-3.5 py-2.5 text-sm font-semibold text-[#011848] shadow-[0_8px_24px_rgba(1,24,72,0.16)] ring-1 ring-[rgba(1,24,72,0.08)] dark:border-[#31476f] dark:bg-[#122038] dark:text-[#d7e5ff] dark:ring-white/10">
-              {HINTS[hintIndex]}
-            </div>
-          ) : null}
           {open ? (
             <div
               className={`mr-3 flex w-[min(36rem,calc(100vw-1rem))] flex-col overflow-hidden rounded-4xl border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#ffffff_0%,#fff8fb_54%,#f7faff_100%)] shadow-[0_32px_80px_rgba(1,24,72,0.22)] ring-1 ring-[rgba(1,24,72,0.08)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0d1729_0%,#122038_54%,#0b1424_100%)] dark:ring-white/10 ${
@@ -493,7 +468,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
 
               <div className={`min-h-0 flex-1 ${hasConversation ? "overflow-y-auto" : "overflow-y-hidden"} bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.04),transparent_26%),linear-gradient(180deg,#f6f9ff_0%,#ffffff_28%,#ffffff_100%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.08),transparent_26%),linear-gradient(180deg,#0e182b_0%,#111d33_34%,#0b1424_100%)] ${denseViewport ? "space-y-4 px-4 py-4" : hasConversation ? "space-y-4 px-4 py-4" : "space-y-5 px-5 py-5"}`}>
                 {messages.length === 0 ? (
-                  <div className={`rounded-[1.6rem] border border-[#dfe6f3] bg-white shadow-[0_18px_40px_rgba(15,23,42,0.06)] dark:border-[#36507f] dark:bg-[#13213a] dark:shadow-[0_18px_40px_rgba(0,0,0,0.28)] ${denseViewport ? "p-4" : "p-5"}`}>
+                  <div className={`rounded-[1.6rem] border border-[#dfe6f3] bg-[#ffffff] shadow-[0_18px_40px_rgba(15,23,42,0.06)] dark:border-[#36507f] dark:bg-[#13213a] dark:shadow-[0_18px_40px_rgba(0,0,0,0.28)] ${denseViewport ? "p-4" : "p-5"}`}>
                     <p className="text-base font-bold text-[#ef0001] dark:text-[#ff8a8a]">Pronto para atuar dentro do seu perfil.</p>
                     <p className="mt-2 text-base leading-7 text-[#011848] dark:text-[#d7e5ff]">
                       Uso a sessão atual, enxergo apenas o que o seu perfil pode ver e executo ações somente dentro do seu RBAC.
@@ -538,7 +513,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                                 className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition ${
                                   action.kind === "tool"
                                     ? "border border-[rgba(1,24,72,0.12)] bg-[linear-gradient(135deg,var(--tc-primary,#011848)_0%,#173a88_100%)] text-white hover:bg-[linear-gradient(135deg,#132a63_0%,#214ca8_100%)]"
-                                    : "border border-(--tc-border,#d7dff1) bg-white text-(--tc-primary,#011848) hover:border-[rgba(239,0,1,0.2)] hover:text-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#13213a] dark:text-[#d7e5ff] dark:hover:border-[#ff8a8a] dark:hover:text-[#ffb4b4]"
+                                    : "border border-(--tc-border,#d7dff1) bg-[#ffffff] text-(--tc-primary,#011848) hover:border-[rgba(239,0,1,0.2)] hover:text-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#13213a] dark:text-[#d7e5ff] dark:hover:border-[#ff8a8a] dark:hover:text-[#ffb4b4]"
                                 } disabled:opacity-60`}
                               >
                                 {action.kind === "tool" ? <FiZap size={12} /> : <FiChevronRight size={12} />}
@@ -573,7 +548,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                       }
                     }}
                     placeholder={`Escreva o que você precisa em ${screenContext.screenLabel.toLowerCase()}...`}
-                    className={`w-full resize-none rounded-[1.1rem] border border-(--tc-border,#d7dff1) bg-white px-4 text-sm leading-6 text-[#20304f] outline-none placeholder:text-[#8b98b1] focus:border-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#0f192d] dark:text-[#e6efff] dark:placeholder:text-[#94abd6] dark:focus:border-[#ff8a8a] ${denseViewport ? "min-h-[2.7rem] py-1.5" : hasConversation ? "min-h-[2.85rem] py-1.5" : "min-h-[5.6rem] py-3"}`}
+                    className={`w-full resize-none rounded-[1.1rem] border border-(--tc-border,#d7dff1) bg-[#ffffff] px-4 text-sm leading-6 text-[#20304f] outline-none placeholder:text-[#8b98b1] focus:border-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#0f192d] dark:text-[#e6efff] dark:placeholder:text-[#94abd6] dark:focus:border-[#ff8a8a] ${denseViewport ? "min-h-[2.7rem] py-1.5" : hasConversation ? "min-h-[2.85rem] py-1.5" : "min-h-[5.6rem] py-3"}`}
                   />
                   <div className={`flex items-center justify-between gap-3 ${denseViewport ? "mt-1.5" : hasConversation ? "mt-2" : "mt-3"}`}>
                     <button
@@ -604,7 +579,6 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
             aria-label="Abrir assistente da plataforma"
             title="Assistente Testing Company — clique para abrir"
             className="group relative flex h-14 w-14 items-center justify-center rounded-full shadow-[0_18px_35px_rgba(1,24,72,0.22)] transition hover:scale-105"
-            onMouseEnter={() => setHintVisible(false)}
           >
             {/* spinning logo with gradient background */}
             <div className="absolute inset-0 rounded-full bg-[linear-gradient(135deg,#011848_0%,#6b0000_55%,#ef0001_100%)] shadow-[0_8px_24px_rgba(1,24,72,0.4)]" />

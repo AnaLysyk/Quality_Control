@@ -123,6 +123,18 @@ type FlowAuditEntry = {
   summary: string;
 };
 
+type StepRunResult = {
+  durationMs: number;
+  error: string | null;
+  json: unknown;
+  status: number;
+  statusText: string;
+  assertPassed: boolean | null;
+  savedVariableKey: string | null;
+  savedVariablePath: string | null;
+  savedVariableUsedFallback: boolean;
+};
+
 type DraftStep = AutomationStudioStepTemplate & {
   approvalRole: string;
   condition: string;
@@ -138,6 +150,23 @@ type DraftStep = AutomationStudioStepTemplate & {
   script: string;
   subflowId: string;
   timeoutMs: number;
+  // API Request fields
+  apiMethod: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  apiUrl: string;
+  apiHeaders: string;
+  apiBody: string;
+  apiAuthType: "none" | "bearer" | "basic" | "api-key";
+  apiAuthValue: string;
+  apiAssertStatus: string;
+  apiAssertJsonPath: string;
+  apiAssertExpected: string;
+  apiSaveResponseTo: string;
+  apiSaveJsonPath: string;
+  // GraphQL fields
+  gqlQuery: string;
+  gqlVariables: string;
+  // Step run result (transient, not persisted)
+  _runResult?: StepRunResult | null;
 };
 
 type DraftUpload = {
@@ -322,6 +351,20 @@ function toDraftStep(step: AutomationStudioStepTemplate): DraftStep {
     script: buildStepScript(step),
     subflowId: "",
     timeoutMs: 5000,
+    apiMethod: "GET",
+    apiUrl: step.selector || "",
+    apiHeaders: "",
+    apiBody: "",
+    apiAuthType: "none",
+    apiAuthValue: "",
+    apiAssertStatus: "200",
+    apiAssertJsonPath: "",
+    apiAssertExpected: "",
+    apiSaveResponseTo: "",
+    apiSaveJsonPath: "",
+    gqlQuery: "query {\n  \n}",
+    gqlVariables: "{}",
+    _runResult: null,
   };
 }
 
@@ -411,6 +454,20 @@ function readStoredDraft(companySlug: string, flow: FlowDefinition, access: Auto
                 subflowId: readString(step.subflowId),
                 timeoutMs: readNumber(step.timeoutMs, 5000),
                 title: readString(step.title, "Etapa customizada"),
+                apiMethod: (readString(step.apiMethod, "GET") as DraftStep["apiMethod"]) || "GET",
+                apiUrl: readString(step.apiUrl, ""),
+                apiHeaders: readString(step.apiHeaders, ""),
+                apiBody: readString(step.apiBody, ""),
+                apiAuthType: (readString(step.apiAuthType, "none") as DraftStep["apiAuthType"]) || "none",
+                apiAuthValue: readString(step.apiAuthValue, ""),
+                apiAssertStatus: readString(step.apiAssertStatus, "200"),
+                apiAssertJsonPath: readString(step.apiAssertJsonPath, ""),
+                apiAssertExpected: readString(step.apiAssertExpected, ""),
+                apiSaveResponseTo: readString(step.apiSaveResponseTo, ""),
+                apiSaveJsonPath: readString(step.apiSaveJsonPath, ""),
+                gqlQuery: readString(step.gqlQuery, "query {\n  \n}"),
+                gqlVariables: readString(step.gqlVariables, "{}"),
+                _runResult: null,
               }))
           : base.steps,
       trigger: {
@@ -657,6 +714,192 @@ function findSubflow(id: string) {
 
 type AutomationStudioPanelId = "overview" | "steps" | "mappings" | "results" | "scripts" | "files";
 
+async function runApiStep(step: DraftStep, environmentBaseUrl: string): Promise<StepRunResult> {
+  const isGql = step.kind === "graphql_request";
+  const url = /^https?:\/\//i.test(step.apiUrl)
+    ? step.apiUrl
+    : `${environmentBaseUrl.replace(/\/+$/, "")}/${step.apiUrl.replace(/^\/+/, "")}`;
+
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (step.apiHeaders.trim()) {
+    for (const line of step.apiHeaders.split("\n")) {
+      const idx = line.indexOf(":");
+      if (idx > 0) headers[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+    }
+  }
+  if (step.apiAuthType === "bearer" && step.apiAuthValue) headers.Authorization = `Bearer ${step.apiAuthValue}`;
+  if (step.apiAuthType === "api-key" && step.apiAuthValue) headers["x-api-key"] = step.apiAuthValue;
+
+  let gqlVars: Record<string, unknown> = {};
+  try { gqlVars = JSON.parse(step.gqlVariables || "{}"); } catch { /* ignore */ }
+
+  const body = isGql
+    ? JSON.stringify({ query: step.gqlQuery, variables: gqlVars })
+    : step.apiBody.trim() || null;
+
+  const res = await fetch("/api/automations/http", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ body, forwardCookies: false, headers, method: isGql ? "POST" : step.apiMethod, timeoutMs: step.timeoutMs || 15000, url }),
+  });
+  const payload = await res.json();
+  if (!res.ok || !payload?.response) throw new Error(payload?.error ?? "Falha na chamada");
+  const r = payload.response as { status: number; statusText: string; durationMs: number; json: unknown };
+
+  let assertPassed: boolean | null = null;
+  if (step.apiAssertStatus.trim()) assertPassed = String(r.status) === step.apiAssertStatus.trim();
+  if (step.apiAssertJsonPath && step.apiAssertExpected) {
+    const val = resolveStudioJsonPath(r.json, step.apiAssertJsonPath);
+    const matches = String(val ?? "") === step.apiAssertExpected;
+    assertPassed = assertPassed === null ? matches : assertPassed && matches;
+  }
+
+  return {
+    status: r.status,
+    statusText: r.statusText,
+    durationMs: r.durationMs,
+    json: r.json,
+    error: null,
+    assertPassed,
+    savedVariableKey: null,
+    savedVariablePath: null,
+    savedVariableUsedFallback: false,
+  };
+}
+
+function serializeApiVariableValue(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value == null) return "";
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return "";
+  }
+}
+
+function tokenizeStudioJsonPath(path: string): string[] {
+  const source = path.trim();
+  if (!source) return [];
+
+  const tokens: string[] = [];
+  let current = "";
+  let index = 0;
+
+  const pushCurrent = () => {
+    const value = current.trim();
+    if (value) tokens.push(value);
+    current = "";
+  };
+
+  while (index < source.length) {
+    const char = source[index];
+
+    if (char === ".") {
+      pushCurrent();
+      index += 1;
+      continue;
+    }
+
+    if (char === "[") {
+      pushCurrent();
+      index += 1;
+
+      while (index < source.length && /\s/.test(source[index])) index += 1;
+      if (index >= source.length) break;
+
+      const bracketStart = source[index];
+      if (bracketStart === '"' || bracketStart === "'") {
+        const quote = bracketStart;
+        index += 1;
+        let quotedValue = "";
+
+        while (index < source.length) {
+          const quotedChar = source[index];
+          if (quotedChar === "\\") {
+            if (index + 1 < source.length) {
+              quotedValue += source[index + 1];
+              index += 2;
+              continue;
+            }
+            index += 1;
+            break;
+          }
+          if (quotedChar === quote) {
+            index += 1;
+            break;
+          }
+          quotedValue += quotedChar;
+          index += 1;
+        }
+
+        while (index < source.length && /\s/.test(source[index])) index += 1;
+        if (index < source.length && source[index] === "]") index += 1;
+        if (quotedValue) tokens.push(quotedValue);
+        continue;
+      }
+
+      let rawValue = "";
+      while (index < source.length && source[index] !== "]") {
+        rawValue += source[index];
+        index += 1;
+      }
+      if (index < source.length && source[index] === "]") index += 1;
+      const trimmedValue = rawValue.trim();
+      if (trimmedValue) tokens.push(trimmedValue);
+      continue;
+    }
+
+    current += char;
+    index += 1;
+  }
+
+  pushCurrent();
+  return tokens;
+}
+
+function resolveStudioJsonPath(source: unknown, path: string): unknown {
+  const tokens = tokenizeStudioJsonPath(path);
+  if (tokens.length === 0) return source;
+
+  let current: unknown = source;
+  for (const token of tokens) {
+    if (Array.isArray(current)) {
+      const index = Number(token);
+      if (!Number.isInteger(index) || index < 0 || index >= current.length) return undefined;
+      current = current[index];
+      continue;
+    }
+
+    if (current == null || typeof current !== "object") return undefined;
+    current = (current as Record<string, unknown>)[token];
+  }
+  return current;
+}
+
+function splitStudioJsonPathCandidates(pathInput: string): string[] {
+  return pathInput
+    .split(/\r?\n|\|\|/g)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function resolveStudioJsonPathWithFallback(source: unknown, pathInput: string): { matchedPath: string | null; value: unknown } {
+  const candidates = splitStudioJsonPathCandidates(pathInput);
+  if (candidates.length === 0) {
+    return { matchedPath: null, value: source };
+  }
+
+  for (const candidate of candidates) {
+    const candidateValue = resolveStudioJsonPath(source, candidate);
+    if (candidateValue !== undefined) {
+      return { matchedPath: candidate, value: candidateValue };
+    }
+  }
+
+  return { matchedPath: candidates[0] ?? null, value: undefined };
+}
+
 function resolveDefaultPanel(mode: NonNullable<Props["mode"]>): AutomationStudioPanelId {
   if (mode === "scripts") return "scripts";
   if (mode === "files") return "files";
@@ -695,6 +938,7 @@ export default function AutomationStudio({
   const [scriptTarget, setScriptTarget] = useState<"flow" | "step">("flow");
   const [showScriptStepsPanel, setShowScriptStepsPanel] = useState(true);
   const [showScriptToolkitPanel, setShowScriptToolkitPanel] = useState(true);
+  const [stepRunning, setStepRunning] = useState(false);
   const [isFileLibraryOpen, setIsFileLibraryOpen] = useState(false);
   const [fileLibraryQuery, setFileLibraryQuery] = useState("");
   const scriptEditorRef = useRef<HTMLTextAreaElement | null>(null);
@@ -863,6 +1107,83 @@ export default function AutomationStudio({
       ...current,
       steps: current.steps.map((step) => (step.id === stepId ? updater(step) : step)),
     }));
+  }
+
+  async function runSelectedApiStep(step: DraftStep) {
+    setStepRunning(true);
+    try {
+      const result = await runApiStep(step, selectedEnvironment?.baseUrl ?? "");
+      const variableKey = step.apiSaveResponseTo.trim();
+      const variablePath = step.apiSaveJsonPath.trim();
+
+      updateDraft((current) => {
+        const resolvedPath = variablePath
+          ? resolveStudioJsonPathWithFallback(result.json, variablePath)
+          : { matchedPath: null as string | null, value: result.json };
+        const extractedValue = resolvedPath.value;
+        const pathLabel = resolvedPath.matchedPath ?? variablePath;
+        const firstPathCandidate = variablePath ? splitStudioJsonPathCandidates(variablePath)[0] ?? null : null;
+        const usedFallback = Boolean(firstPathCandidate && pathLabel && pathLabel !== firstPathCandidate);
+        const stepRunResult: StepRunResult = {
+          ...result,
+          savedVariableKey: variableKey || null,
+          savedVariablePath: pathLabel || null,
+          savedVariableUsedFallback: usedFallback,
+        };
+        const nextSteps = current.steps.map((currentStep) =>
+          currentStep.id === step.id ? { ...currentStep, _runResult: stepRunResult } : currentStep,
+        );
+
+        if (!variableKey) {
+          return { ...current, steps: nextSteps };
+        }
+
+        const variableValue = serializeApiVariableValue(extractedValue);
+        const variableIndex = current.variables.findIndex((item) => item.key === variableKey);
+        const nextVariables = [...current.variables];
+
+        if (variableIndex >= 0) {
+          nextVariables[variableIndex] = {
+            ...nextVariables[variableIndex],
+            description: `Atualizada pela etapa ${step.title}${pathLabel ? ` (${pathLabel})` : ""}`,
+            source: "api",
+            value: variableValue,
+          };
+        } else {
+          nextVariables.push({
+            description: `Gerada pela etapa ${step.title}${pathLabel ? ` (${pathLabel})` : ""}`,
+            id: createClientId(),
+            key: variableKey,
+            scope: "local",
+            source: "api",
+            value: variableValue,
+          });
+        }
+
+        return {
+          ...current,
+          steps: nextSteps,
+          variables: nextVariables,
+        };
+      });
+    } catch (err) {
+      updateDraftStep(step.id, (currentStep) => ({
+        ...currentStep,
+        _runResult: {
+          status: 0,
+          statusText: "Erro",
+          durationMs: 0,
+          json: null,
+          error: err instanceof Error ? err.message : "Erro desconhecido",
+          assertPassed: null,
+          savedVariableKey: null,
+          savedVariablePath: null,
+          savedVariableUsedFallback: false,
+        },
+      }));
+    } finally {
+      setStepRunning(false);
+    }
   }
 
   function updateVariable(variableId: string, field: keyof FlowVariable, value: string) {
@@ -1216,8 +1537,8 @@ export default function AutomationStudio({
     const breadcrumbCompany = selectedCompany?.name || selectedCompanySlug || "Empresa";
 
     return (
-      <section className="space-y-4 rounded-[32px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-sm sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
+      <section className="space-y-4 rounded-4xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
           <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
             <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
               <FiShield className="h-4 w-4 text-(--tc-accent,#ef0001)" />
@@ -1358,7 +1679,7 @@ export default function AutomationStudio({
                           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                             Etapa {index + 1}
                           </p>
-                          <p className="mt-1 break-words text-sm font-black tracking-[-0.02em] text-(--tc-text,#0b1a3c)">{step.title}</p>
+                          <p className="mt-1 wrap-break-word text-sm font-black tracking-[-0.02em] text-(--tc-text,#0b1a3c)">{step.title}</p>
                         </div>
                         <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${kindTone(step.kind)}`}>
                           {kindLabel(step.kind)}
@@ -1406,6 +1727,7 @@ export default function AutomationStudio({
             <textarea
               ref={scriptEditorRef}
               value={scriptValue}
+              aria-label="Editor de script"
               onChange={(event) => {
                 if (!canEditFlow) return;
                 if (scriptTarget === "step") {
@@ -1418,7 +1740,7 @@ export default function AutomationStudio({
               }}
               readOnly={!canEditFlow}
               rows={26}
-              className="mt-4 w-full rounded-[24px] border border-(--tc-border,#d7deea) bg-[#081227] px-4 py-3 font-mono text-sm leading-7 text-white outline-none"
+              className="mt-4 w-full rounded-3xl border border-(--tc-border,#d7deea) bg-[#081227] px-4 py-3 font-mono text-sm leading-7 text-white outline-none"
             />
           </article>
 
@@ -1430,9 +1752,10 @@ export default function AutomationStudio({
               </div>
 
               <div className="mt-4 space-y-4">
-                <div className="rounded-[24px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+                <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
                   <p className="text-sm font-black text-(--tc-text,#0b1a3c)">Templates</p>
                   <select
+                    aria-label="Template de script"
                     value={selectedTemplateId}
                     onChange={(event) => setSelectedTemplateId(event.target.value)}
                     className="mt-3 min-h-11 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none"
@@ -1472,7 +1795,7 @@ export default function AutomationStudio({
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+                <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
                   <p className="text-sm font-black text-(--tc-text,#0b1a3c)">Biblioteca de funções</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {AUTOMATION_STUDIO_SCRIPT_API.map((item) => (
@@ -1486,7 +1809,7 @@ export default function AutomationStudio({
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+                <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
                   <p className="text-sm font-black text-(--tc-text,#0b1a3c)">Versionamento</p>
                   <label className="mt-3 grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
                     Nota da versão
@@ -1530,6 +1853,7 @@ export default function AutomationStudio({
                 </div>
                 <button
                   type="button"
+                  aria-label="Fechar biblioteca de arquivos"
                   onClick={() => setIsFileLibraryOpen(false)}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
                 >
@@ -1621,7 +1945,7 @@ export default function AutomationStudio({
 
   return (
     <section className="space-y-3 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 shadow-sm sm:p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
         <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
           <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
             <FiShield className="h-4 w-4 text-(--tc-accent,#ef0001)" />
@@ -1654,7 +1978,7 @@ export default function AutomationStudio({
       </div>
       {showOverviewHero ? (
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+          <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Resumo rápido</p>
@@ -1678,7 +2002,7 @@ export default function AutomationStudio({
               </div>
             </div>
 
-            <div className="mt-3 grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
+            <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
               {compactOverviewCards.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -1695,7 +2019,7 @@ export default function AutomationStudio({
             </div>
           </article>
 
-          <aside className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+          <aside className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
               <FiShield className="h-4 w-4" />
               Acesso atual
@@ -1719,7 +2043,7 @@ export default function AutomationStudio({
         </div>
       ) : null}
 
-      <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+      <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
         <div className="grid gap-3 xl:grid-cols-[minmax(180px,0.78fr)_minmax(160px,0.56fr)_minmax(260px,1fr)_auto]">
           <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
             Empresa
@@ -1790,7 +2114,7 @@ export default function AutomationStudio({
       </article>
 
       {mode === "flows" ? (
-        <div className="flex flex-wrap gap-2 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-2">
+        <div className="flex flex-wrap gap-2 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-2">
           {[
             { id: "overview" as const, label: "Visão geral", icon: FiLayers },
             { id: "steps" as const, label: "Etapas", icon: FiGitBranch },
@@ -1819,7 +2143,7 @@ export default function AutomationStudio({
       ) : null}
 
       <div className={showAssetSidebar ? "grid gap-4 2xl:grid-cols-[minmax(0,1.22fr)_minmax(360px,0.78fr)]" : "grid gap-4"}>
-        <article className="min-w-0 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+        <article className="min-w-0 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -1848,7 +2172,7 @@ export default function AutomationStudio({
             </div>
           </div>
 
-          <div className="mt-4 grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
+          <div className="mt-4 grid gap-3 grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
             <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Empresa</p>
               <p className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedCompany?.name || "Sem empresa"}</p>
@@ -1931,7 +2255,7 @@ export default function AutomationStudio({
                   return (
                     <article
                       key={step.id}
-                      className={`rounded-[24px] border p-4 transition ${
+                      className={`rounded-3xl border p-4 transition ${
                         selected
                           ? "border-(--tc-accent,#ef0001) bg-[#fff5f5] shadow-[0_12px_30px_rgba(239,0,1,0.08)]"
                           : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)"
@@ -1943,7 +2267,7 @@ export default function AutomationStudio({
                             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                               Etapa {index + 1}
                             </p>
-                            <h4 className="mt-2 break-words text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{step.title}</h4>
+                            <h4 className="mt-2 wrap-break-word text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{step.title}</h4>
                           </div>
                           <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${kindTone(step.kind)}`}>
                             {kindLabel(step.kind)}
@@ -1954,7 +2278,7 @@ export default function AutomationStudio({
                         <div className="mt-4 grid gap-2 sm:grid-cols-2">
                           <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-3 py-2">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Binding</p>
-                            <p className="mt-1 break-words text-sm font-semibold text-(--tc-text,#0b1a3c)">{step.inputBinding || "Não definido"}</p>
+                            <p className="mt-1 wrap-break-word text-sm font-semibold text-(--tc-text,#0b1a3c)">{step.inputBinding || "Não definido"}</p>
                           </div>
                           <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-3 py-2">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Controle</p>
@@ -1973,6 +2297,7 @@ export default function AutomationStudio({
                       <div className="mt-4 flex flex-wrap gap-2">
                         <button
                           type="button"
+                          aria-label="Mover etapa para cima"
                           onClick={() => moveStep(step.id, -1)}
                           disabled={!canEditFlow || index === 0}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-40"
@@ -1981,6 +2306,7 @@ export default function AutomationStudio({
                         </button>
                         <button
                           type="button"
+                          aria-label="Mover etapa para baixo"
                           onClick={() => moveStep(step.id, 1)}
                           disabled={!canEditFlow || index === draft.steps.length - 1}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-40"
@@ -1989,6 +2315,7 @@ export default function AutomationStudio({
                         </button>
                         <button
                           type="button"
+                          aria-label="Duplicar etapa"
                           onClick={() => duplicateStep(step.id)}
                           disabled={!canEditFlow}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-40"
@@ -1997,6 +2324,7 @@ export default function AutomationStudio({
                         </button>
                         <button
                           type="button"
+                          aria-label="Remover etapa"
                           onClick={() => removeStep(step.id)}
                           disabled={!canEditFlow || draft.steps.length === 1}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-accent,#ef0001) disabled:cursor-not-allowed disabled:opacity-40"
@@ -2116,7 +2444,7 @@ export default function AutomationStudio({
 
         {showAssetSidebar ? (
           <aside className="space-y-4">
-            <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
               <FiFolderPlus className="h-4 w-4" />
               Biblioteca de assets
@@ -2177,6 +2505,7 @@ export default function AutomationStudio({
                     </div>
                     <button
                       type="button"
+                      aria-label="Remover upload"
                       onClick={() => removeUpload(upload.id)}
                       disabled={!canEditFlow}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-accent,#ef0001) disabled:cursor-not-allowed disabled:opacity-40"
@@ -2195,7 +2524,7 @@ export default function AutomationStudio({
       {activePanel !== "files" ? (
         <div className={splitExecutionLayout ? "grid gap-4 2xl:grid-cols-[minmax(0,1.14fr)_minmax(380px,0.86fr)]" : "grid gap-4"}>
         {activePanel === "steps" ? (
-          <article className="min-w-0 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+          <article className="min-w-0 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
           <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
             <FiCode className="h-4 w-4" />
             Configuração da etapa e do fluxo
@@ -2404,7 +2733,236 @@ export default function AutomationStudio({
                 </label>
               </div>
 
-              <div className="mt-5 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+              {(selectedStep.kind === "http_request" || selectedStep.kind === "graphql_request") ? (
+                <div className="mt-5 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4 space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                      <FiZap className="h-4 w-4" />
+                      {selectedStep.kind === "graphql_request" ? "GraphQL" : "HTTP Request"}
+                    </div>
+                    <button
+                      type="button"
+                      disabled={stepRunning}
+                      onClick={() => runSelectedApiStep(selectedStep)}
+                      className="inline-flex min-h-9 items-center gap-2 rounded-xl bg-(--tc-primary,#011848) px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
+                    >
+                      <FiPlay className="h-3.5 w-3.5" />
+                      {stepRunning ? "Executando…" : "Executar etapa"}
+                    </button>
+                  </div>
+
+                  {selectedStep.kind === "http_request" ? (
+                    <div className="grid gap-3 md:grid-cols-[120px_minmax(0,1fr)]">
+                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                        Método
+                        <select
+                          value={selectedStep.apiMethod}
+                          onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiMethod: e.target.value as DraftStep["apiMethod"] }))}
+                          disabled={!canEditFlow}
+                          className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none disabled:cursor-not-allowed"
+                        >
+                          {(["GET","POST","PUT","PATCH","DELETE"] as const).map((m) => <option key={m}>{m}</option>)}
+                        </select>
+                      </label>
+                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                        URL / Path
+                        <input
+                          value={selectedStep.apiUrl}
+                          onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiUrl: e.target.value }))}
+                          readOnly={!canEditFlow}
+                          placeholder="/api/health ou https://…"
+                          className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none read-only:cursor-default"
+                        />
+                      </label>
+                    </div>
+                  ) : (
+                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                      Endpoint GraphQL
+                      <input
+                        value={selectedStep.apiUrl}
+                        onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiUrl: e.target.value }))}
+                        readOnly={!canEditFlow}
+                        placeholder="/graphql"
+                        className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none read-only:cursor-default"
+                      />
+                    </label>
+                  )}
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                      Auth
+                      <select
+                        value={selectedStep.apiAuthType}
+                        onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiAuthType: e.target.value as DraftStep["apiAuthType"] }))}
+                        disabled={!canEditFlow}
+                        className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none disabled:cursor-not-allowed"
+                      >
+                        <option value="none">Nenhuma</option>
+                        <option value="bearer">Bearer</option>
+                        <option value="basic">Basic</option>
+                        <option value="api-key">API Key</option>
+                      </select>
+                    </label>
+                    {selectedStep.apiAuthType !== "none" ? (
+                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                        Token / credencial
+                        <input
+                          value={selectedStep.apiAuthValue}
+                          onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiAuthValue: e.target.value }))}
+                          readOnly={!canEditFlow}
+                          placeholder="{{token}}"
+                          className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none read-only:cursor-default"
+                        />
+                      </label>
+                    ) : null}
+                  </div>
+
+                  <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                    Headers extras (uma linha por header: Key: Value)
+                    <textarea
+                      value={selectedStep.apiHeaders}
+                      onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiHeaders: e.target.value }))}
+                      readOnly={!canEditFlow}
+                      rows={3}
+                      placeholder={"Content-Type: application/json\nX-Tenant-Id: griaule"}
+                      className="rounded-xl border border-(--tc-border,#d7deea) bg-[#081227] px-3 py-2 font-mono text-xs leading-6 text-white outline-none read-only:cursor-default"
+                    />
+                  </label>
+
+                  {selectedStep.kind === "graphql_request" ? (
+                    <>
+                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                        Query / Mutation
+                        <textarea
+                          value={selectedStep.gqlQuery}
+                          onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, gqlQuery: e.target.value }))}
+                          readOnly={!canEditFlow}
+                          rows={6}
+                          spellCheck={false}
+                          className="rounded-xl border border-(--tc-border,#d7deea) bg-[#081227] px-3 py-2 font-mono text-xs leading-6 text-white outline-none read-only:cursor-default"
+                        />
+                      </label>
+                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                        Variables (JSON)
+                        <textarea
+                          value={selectedStep.gqlVariables}
+                          onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, gqlVariables: e.target.value }))}
+                          readOnly={!canEditFlow}
+                          rows={3}
+                          spellCheck={false}
+                          className="rounded-xl border border-(--tc-border,#d7deea) bg-[#081227] px-3 py-2 font-mono text-xs leading-6 text-white outline-none read-only:cursor-default"
+                        />
+                      </label>
+                    </>
+                  ) : (
+                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                      Body (JSON)
+                      <textarea
+                        value={selectedStep.apiBody}
+                        onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiBody: e.target.value }))}
+                        readOnly={!canEditFlow}
+                        rows={5}
+                        spellCheck={false}
+                        placeholder={'{"cpf":"{{cpf}}"}'}
+                        className="rounded-xl border border-(--tc-border,#d7deea) bg-[#081227] px-3 py-2 font-mono text-xs leading-6 text-white outline-none read-only:cursor-default"
+                      />
+                    </label>
+                  )}
+
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                      Assert status
+                      <input
+                        value={selectedStep.apiAssertStatus}
+                        onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiAssertStatus: e.target.value }))}
+                        readOnly={!canEditFlow}
+                        placeholder="200"
+                        className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none read-only:cursor-default"
+                      />
+                    </label>
+                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                      JSON path
+                      <input
+                        value={selectedStep.apiAssertJsonPath}
+                        onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiAssertJsonPath: e.target.value }))}
+                        readOnly={!canEditFlow}
+                        placeholder="data.items.0.status"
+                        className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none read-only:cursor-default"
+                      />
+                    </label>
+                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                      Valor esperado
+                      <input
+                        value={selectedStep.apiAssertExpected}
+                        onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiAssertExpected: e.target.value }))}
+                        readOnly={!canEditFlow}
+                        placeholder="active"
+                        className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none read-only:cursor-default"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                      Salvar resposta em variável
+                      <input
+                        value={selectedStep.apiSaveResponseTo}
+                        onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiSaveResponseTo: e.target.value }))}
+                        readOnly={!canEditFlow}
+                        placeholder="ex.: loginToken"
+                        className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none read-only:cursor-default"
+                      />
+                    </label>
+                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                      JSON path para salvar (opcional)
+                      <input
+                        value={selectedStep.apiSaveJsonPath}
+                        onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiSaveJsonPath: e.target.value }))}
+                        readOnly={!canEditFlow}
+                        placeholder='ex.: data.token || data.auth.token || token'
+                        className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none read-only:cursor-default"
+                      />
+                    </label>
+                  </div>
+
+                  {selectedStep._runResult ? (
+                    <div className={`rounded-xl border px-4 py-3 space-y-2 ${selectedStep._runResult.error ? "border-rose-300 bg-rose-50" : selectedStep._runResult.assertPassed === false ? "border-amber-300 bg-amber-50" : "border-emerald-300 bg-emerald-50"}`}>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Resultado</p>
+                      {selectedStep._runResult.error ? (
+                        <p className="text-sm font-semibold text-rose-700">{selectedStep._runResult.error}</p>
+                      ) : (
+                        <>
+                          <div className="flex flex-wrap gap-3 text-xs font-semibold text-(--tc-text,#0b1a3c)">
+                            <span>{selectedStep._runResult.status} {selectedStep._runResult.statusText}</span>
+                            <span>{selectedStep._runResult.durationMs}ms</span>
+                            {selectedStep._runResult.assertPassed !== null ? (
+                              <span className={selectedStep._runResult.assertPassed ? "text-emerald-700" : "text-rose-700"}>
+                                Assertion: {selectedStep._runResult.assertPassed ? "passou" : "falhou"}
+                              </span>
+                            ) : null}
+                            {selectedStep._runResult.savedVariableKey ? (
+                              <span className="text-(--tc-text-secondary,#4b5563)">
+                                Variável: {selectedStep._runResult.savedVariableKey}
+                                {selectedStep._runResult.savedVariablePath ? ` (${selectedStep._runResult.savedVariablePath})` : ""}
+                              </span>
+                            ) : null}
+                            {selectedStep._runResult.savedVariableUsedFallback ? (
+                              <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-amber-700">
+                                fallback
+                              </span>
+                            ) : null}
+                          </div>
+                          <pre className="overflow-auto rounded-lg bg-[#081227] px-3 py-2 font-mono text-[11px] leading-6 text-white max-h-40">
+                            {JSON.stringify(selectedStep._runResult.json, null, 2)}
+                          </pre>
+                        </>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <div className="mt-5 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Edição de script</p>
@@ -2434,7 +2992,7 @@ export default function AutomationStudio({
         {activePanel === "overview" || activePanel === "mappings" || activePanel === "results" ? (
           <aside className="space-y-4">
           {activePanel === "overview" ? (
-            <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
               <FiUploadCloud className="h-4 w-4" />
               Triggers e runtime
@@ -2611,7 +3169,7 @@ export default function AutomationStudio({
           ) : null}
 
           {activePanel === "mappings" ? (
-            <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Variáveis e subfluxos</p>
@@ -2619,6 +3177,7 @@ export default function AutomationStudio({
               </div>
               <button
                 type="button"
+                aria-label="Adicionar variável"
                 onClick={appendVariable}
                 disabled={!canEditFlow}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-(--tc-border,#d7deea) bg-white text-(--tc-primary,#011848) disabled:cursor-not-allowed disabled:opacity-60"
@@ -2632,20 +3191,25 @@ export default function AutomationStudio({
                   <div className="grid gap-3">
                     <div className="grid gap-3 sm:grid-cols-2">
                       <input
+                        aria-label="Nome da variável"
                         value={variable.key}
                         onChange={(event) => updateVariable(variable.id, "key", event.target.value)}
                         readOnly={!canEditFlow}
+                        placeholder="chave"
                         className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
                       />
                       <input
+                        aria-label="Valor da variável"
                         value={variable.value}
                         onChange={(event) => updateVariable(variable.id, "value", event.target.value)}
                         readOnly={!canEditFlow}
+                        placeholder="valor"
                         className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
                       />
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <select
+                        aria-label="Escopo da variável"
                         value={variable.scope}
                         onChange={(event) => updateVariable(variable.id, "scope", event.target.value)}
                         disabled={!canEditFlow}
@@ -2655,6 +3219,7 @@ export default function AutomationStudio({
                         <option value="local">local</option>
                       </select>
                       <select
+                        aria-label="Origem da variável"
                         value={variable.source}
                         onChange={(event) => updateVariable(variable.id, "source", event.target.value)}
                         disabled={!canEditFlow}
@@ -2669,10 +3234,12 @@ export default function AutomationStudio({
                       </select>
                     </div>
                     <textarea
+                      aria-label="Descrição da variável"
                       value={variable.description}
                       onChange={(event) => updateVariable(variable.id, "description", event.target.value)}
                       readOnly={!canEditFlow}
                       rows={2}
+                      placeholder="Descreva para que serve esta variável"
                       className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm leading-6 outline-none"
                     />
                     <button
@@ -2706,7 +3273,7 @@ export default function AutomationStudio({
           ) : null}
 
           {activePanel === "results" ? (
-            <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Depuração e histórico</p>
@@ -2734,7 +3301,7 @@ export default function AutomationStudio({
               </div>
             ) : null}
 
-            <div className="mt-4 space-y-2 rounded-[24px] border border-(--tc-border,#e5e7eb) bg-[#071227] p-4 text-white">
+            <div className="mt-4 space-y-2 rounded-3xl border border-(--tc-border,#e5e7eb) bg-[#071227] p-4 text-white">
               {(runPreview?.lines || [
                 "Clique em Preparar execução para gerar um preview do fluxo atual.",
                 "O preview usa empresa, ambiente, etapas habilitadas, variáveis, trigger e runtime configurados.",
@@ -2746,7 +3313,7 @@ export default function AutomationStudio({
               ))}
             </div>
 
-            <div className="mt-4 rounded-[24px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+            <div className="mt-4 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-sm font-black text-(--tc-text,#0b1a3c)">
                   <FiEye className="h-4 w-4 text-(--tc-accent,#ef0001)" />
@@ -2759,6 +3326,7 @@ export default function AutomationStudio({
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
+                  aria-label="Passo anterior"
                   onClick={() => setDebugCursor((current) => Math.max(current - 1, 0))}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
                 >
@@ -2766,6 +3334,7 @@ export default function AutomationStudio({
                 </button>
                 <button
                   type="button"
+                  aria-label="Próximo passo"
                   onClick={() => setDebugCursor((current) => Math.min(current + 1, Math.max(enabledSteps.length - 1, 0)))}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
                 >
@@ -2884,7 +3453,7 @@ export default function AutomationStudio({
             </div>
 
             {canSeeLogs ? (
-              <div className="rounded-[24px] border border-(--tc-border,#e5e7eb) bg-[#071227] p-4 text-white">
+              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-[#071227] p-4 text-white">
                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/58">
                   <FiEye className="h-4 w-4" />
                   Observabilidade avançada
@@ -2896,13 +3465,13 @@ export default function AutomationStudio({
                   ]).map((line) => (
                     <div key={line} className="flex items-start gap-2 text-sm leading-7 text-white/80">
                       <FiZap className="mt-1 h-4 w-4 shrink-0 text-emerald-400" />
-                      <span className="break-words font-mono text-[12px]">{line}</span>
+                      <span className="wrap-break-word font-mono text-[12px]">{line}</span>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="rounded-[24px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+              <div className="rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
                 <p className="text-sm font-semibold text-(--tc-text,#0b1a3c)">Logs técnicos, selectors internos e brain operacional ficam restritos a suporte técnico e líder TC.</p>
                 <p className="mt-2 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">
                   A identidade do studio permanece igual, mas a telemetria avançada não é exibida fora do escopo técnico.

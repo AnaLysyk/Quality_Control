@@ -19,6 +19,22 @@ export type AutomationRequestAuth = {
   value?: string;
 };
 
+export type AutomationAssertionType =
+  | "status-equals"
+  | "status-lt"
+  | "json-path-equals"
+  | "json-path-contains"
+  | "header-exists"
+  | "header-equals"
+  | "response-time-lt";
+
+export type AutomationAssertionRule = {
+  id: string;
+  type: AutomationAssertionType;
+  path: string;
+  expected: string;
+};
+
 export type AutomationRequestPreset = {
   id: string;
   title: string;
@@ -29,6 +45,7 @@ export type AutomationRequestPreset = {
   headers: AutomationRequestKeyValue[];
   queryParams?: AutomationRequestKeyValue[];
   variables?: AutomationRequestKeyValue[];
+  assertions?: AutomationAssertionRule[];
   companyScope: AutomationCompanyScope;
   tags: string[];
 };

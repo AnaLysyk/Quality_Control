@@ -16,8 +16,8 @@ import AutomationModuleSidebar from "./AutomationModuleSidebar";
 function Skeleton() {
   return (
     <div className="w-full bg-(--page-bg,#f3f6fb) px-4 pt-4 pb-8 sm:px-6 lg:px-10 xl:px-12 2xl:px-14">
-      <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <div className="h-64 animate-pulse rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)" />
+      <div className="space-y-4 2xl:grid 2xl:grid-cols-[240px_minmax(0,1fr)] 2xl:gap-4 2xl:space-y-0">
+        <div className="h-40 animate-pulse rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) 2xl:h-64" />
         <div className="h-[520px] animate-pulse rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)" />
       </div>
     </div>
@@ -26,8 +26,8 @@ function Skeleton() {
 
 function AccessDenied() {
   return (
-    <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-      <aside className="hidden lg:block">
+    <div className="space-y-4 2xl:grid 2xl:grid-cols-[240px_minmax(0,1fr)] 2xl:gap-4 2xl:space-y-0">
+      <aside className="hidden 2xl:block">
         <div className="h-64 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)" />
       </aside>
       <section className="rounded-[30px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-6 shadow-sm">
@@ -99,9 +99,9 @@ export default function AutomationModuleLayout({ children }: { children: React.R
           {!access.canOpen ? (
             <AccessDenied />
           ) : (
-            <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+            <div className="space-y-4 2xl:grid 2xl:grid-cols-[240px_minmax(0,1fr)] 2xl:items-start 2xl:gap-4 2xl:space-y-0">
               <AutomationModuleSidebar />
-              <main className="min-w-0">{children}</main>
+              <main className="min-w-0 w-full">{children}</main>
             </div>
           )}
         </div>
@@ -109,4 +109,3 @@ export default function AutomationModuleLayout({ children }: { children: React.R
     </RequireAuth>
   );
 }
-

@@ -21,6 +21,7 @@ import {
 import type { AutomationAccess } from "@/lib/automations/access";
 import { AUTOMATION_CASES, type AutomationCaseDefinition } from "@/data/automationCases";
 import { AUTOMATION_STUDIO_ASSETS, AUTOMATION_STUDIO_BLUEPRINTS, AUTOMATION_STUDIO_SCRIPT_TEMPLATES } from "@/data/automationStudio";
+import { matchesAutomationCompanyScope } from "@/lib/automations/companyScope";
 
 type CompanyOption = {
   name: string;
@@ -64,15 +65,24 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
   const [sourceFilter, setSourceFilter] = useState<AutomationCaseDefinition["source"] | "all">("all");
   const [applicationFilter, setApplicationFilter] = useState("all");
   const [selectedCaseId, setSelectedCaseId] = useState<string>(AUTOMATION_CASES[0]?.id ?? "");
+  const scopedCases = useMemo(
+    () => AUTOMATION_CASES.filter((testCase) => matchesAutomationCompanyScope(testCase.companyScope, activeCompanySlug)),
+    [activeCompanySlug],
+  );
 
   const applications = useMemo(
-    () => Array.from(new Set(AUTOMATION_CASES.map((testCase) => testCase.application))).sort((left, right) => left.localeCompare(right)),
-    [],
+    () =>
+      Array.from(
+        new Set(
+          scopedCases.map((testCase) => testCase.application),
+        ),
+      ).sort((left, right) => left.localeCompare(right)),
+    [scopedCases],
   );
 
   const filteredCases = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return AUTOMATION_CASES.filter((testCase) => {
+    return scopedCases.filter((testCase) => {
       if (statusFilter !== "all" && testCase.status !== statusFilter) return false;
       if (sourceFilter !== "all" && testCase.source !== sourceFilter) return false;
       if (applicationFilter !== "all" && testCase.application !== applicationFilter) return false;
@@ -91,12 +101,12 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
 
       return haystack.includes(normalizedQuery);
     });
-  }, [applicationFilter, query, sourceFilter, statusFilter]);
+  }, [applicationFilter, query, scopedCases, sourceFilter, statusFilter]);
 
   const effectiveSelectedCaseId = filteredCases.some((testCase) => testCase.id === selectedCaseId) ? selectedCaseId : (filteredCases[0]?.id ?? "");
 
   const selectedCase = useMemo(
-    () => filteredCases.find((testCase) => testCase.id === effectiveSelectedCaseId) ?? filteredCases[0] ?? AUTOMATION_CASES[0] ?? null,
+    () => filteredCases.find((testCase) => testCase.id === effectiveSelectedCaseId) ?? filteredCases[0] ?? null,
     [effectiveSelectedCaseId, filteredCases],
   );
 
@@ -239,7 +249,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
           </label>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-4 grid auto-rows-fr gap-3 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
           {metrics.map((item) => {
             const Icon = item.icon;
             return (
@@ -256,8 +266,8 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
         </div>
       </article>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(320px,0.78fr)_minmax(0,1.22fr)]">
-        <aside className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+      <div className="grid items-start gap-4 xl:grid-cols-12">
+        <aside className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 xl:col-span-4 xl:sticky xl:top-6 2xl:col-span-3">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Casos</p>
@@ -320,7 +330,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
           </div>
         </aside>
 
-        <article className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5">
+        <article className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 xl:col-span-8 2xl:col-span-9">
           {selectedCase ? (
             <>
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -343,7 +353,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
                 </div>
               </div>
 
-              <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)]">
+              <div className="mt-5 grid items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_340px]">
                 <div className="space-y-4">
                   <section>
                     <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">

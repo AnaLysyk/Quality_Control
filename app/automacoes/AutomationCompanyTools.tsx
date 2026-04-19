@@ -17,6 +17,7 @@ import {
 import type { AutomationAccess } from "@/lib/automations/access";
 import { AUTOMATION_ENVIRONMENTS } from "@/data/automationCatalog";
 import { AUTOMATION_COMPANY_TOOLS, type AutomationCompanyTool } from "@/data/automationIde";
+import { isTestingCompanyScope, matchesAutomationCompanyScope } from "@/lib/automations/companyScope";
 
 type CompanyOption = {
   name: string;
@@ -95,9 +96,9 @@ function buildInitialValues(tool: AutomationCompanyTool, activeCompanySlug: stri
 
 export default function AutomationCompanyTools({ access, activeCompanySlug, companies }: Props) {
   const [query, setQuery] = useState("");
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(AUTOMATION_ENVIRONMENTS[0]?.id ?? "local");
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(isTestingCompanyScope(activeCompanySlug) ? "qc-local" : (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local"));
   const [selectedToolId, setSelectedToolId] = useState(
-    AUTOMATION_COMPANY_TOOLS.find((tool) => tool.companySlug === activeCompanySlug)?.id ?? AUTOMATION_COMPANY_TOOLS[0]?.id ?? "",
+    AUTOMATION_COMPANY_TOOLS.find((tool) => matchesAutomationCompanyScope(tool.companySlug, activeCompanySlug))?.id ?? "",
   );
   const [values, setValues] = useState<Record<string, string | number | boolean>>({});
   const [loading, setLoading] = useState(false);
@@ -109,19 +110,38 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
   const visibleTools = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return AUTOMATION_COMPANY_TOOLS.filter((tool) => {
-      if (tool.companySlug !== "all" && activeCompanySlug && tool.companySlug !== activeCompanySlug) return false;
+      if (!matchesAutomationCompanyScope(tool.companySlug, activeCompanySlug)) return false;
       if (!normalizedQuery) return true;
       return `${tool.title} ${tool.summary} ${tool.group}`.toLowerCase().includes(normalizedQuery);
     });
   }, [activeCompanySlug, query]);
 
   const selectedTool = useMemo(
-    () => visibleTools.find((tool) => tool.id === selectedToolId) ?? visibleTools[0] ?? AUTOMATION_COMPANY_TOOLS[0] ?? null,
+    () => visibleTools.find((tool) => tool.id === selectedToolId) ?? visibleTools[0] ?? null,
     [selectedToolId, visibleTools],
   );
 
   useEffect(() => {
-    if (!selectedTool) return;
+    if (!selectedTool && visibleTools[0]) {
+      setSelectedToolId(visibleTools[0].id);
+    }
+  }, [selectedTool, visibleTools]);
+
+  useEffect(() => {
+    setSelectedEnvironmentId((current) => {
+      if (isTestingCompanyScope(activeCompanySlug)) {
+        return current === "qc-local" ? current : "qc-local";
+      }
+
+      return current === "qc-local" ? (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local") : current;
+    });
+  }, [activeCompanySlug]);
+
+  useEffect(() => {
+    if (!selectedTool) {
+      setValues({});
+      return;
+    }
     setValues(buildInitialValues(selectedTool, activeCompanySlug));
   }, [activeCompanySlug, selectedTool]);
 
@@ -221,7 +241,7 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
   }
 
   return (
-    <section className="space-y-4 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 shadow-sm">
+    <section className="space-y-4 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 shadow-sm sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
         <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
           <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
@@ -254,8 +274,8 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
         </div>
       </div>
 
-      <div className="grid gap-4 2xl:grid-cols-[280px_minmax(0,1fr)_minmax(320px,0.76fr)]">
-        <aside className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+      <div className="grid items-start gap-4 xl:grid-cols-12">
+        <aside className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 xl:col-span-4 xl:sticky xl:top-6 2xl:col-span-3">
           <label className="relative block">
             <FiSearch className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
             <input
@@ -290,7 +310,7 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
           </div>
         </aside>
 
-        <article className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+        <article className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 xl:col-span-8 2xl:col-span-5">
           {selectedTool ? (
             <>
               <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_220px]">
@@ -390,7 +410,7 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
           )}
         </article>
 
-        <aside className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+        <aside className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 xl:col-span-12 2xl:col-span-4">
           <div className="flex items-center justify-between gap-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Resultado</p>
             <button
@@ -403,7 +423,7 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
             </button>
           </div>
 
-          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          <div className="mt-3 grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]">
             <div className="rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">Status</p>
               <p className="mt-1 text-sm font-semibold text-(--tc-text,#0b1a3c)">{result?.status ? `${result.status} ${result.statusText ?? ""}` : "--"}</p>

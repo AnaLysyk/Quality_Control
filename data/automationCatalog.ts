@@ -110,6 +110,13 @@ export const AUTOMATION_ENVIRONMENTS: AutomationEnvironment[] = [
     note: "Já compatível com Newman e com o setup atual do repositório.",
   },
   {
+    id: "qc-local",
+    title: "Painel QA local",
+    baseUrl: "http://127.0.0.1:3000",
+    status: "ready",
+    note: "Usado pela Testing Company para smoke de telas e fluxos do proprio sistema.",
+  },
+  {
     id: "staging",
     title: "Homologação",
     baseUrl: "Definir por ambiente",
@@ -172,6 +179,14 @@ export const AUTOMATION_FLOWS: AutomationFlow[] = [
     objective: "Usar Playwright apenas onde houver interface, autenticação web ou dependência de navegador.",
     steps: ["Preparar estado", "Executar fluxo", "Capturar evidência", "Anexar resultado"],
     stack: "Playwright",
+  },
+  {
+    id: "qc-screen-smoke",
+    title: "Smoke de telas do Painel QA",
+    audience: "Testing Company",
+    objective: "Validar as telas principais do proprio produto com uma suite curta por contexto.",
+    steps: ["Selecionar tela", "Abrir rota interna", "Validar shell", "Salvar evidencia"],
+    stack: "Playwright + runner interno",
   },
 ];
 

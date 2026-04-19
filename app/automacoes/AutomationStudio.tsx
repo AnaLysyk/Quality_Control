@@ -48,6 +48,7 @@ import {
   type AutomationStudioTriggerMode,
 } from "@/data/automationStudio";
 import { AUTOMATION_ENVIRONMENTS } from "@/data/automationCatalog";
+import { isTestingCompanyScope, matchesAutomationCompanyScope, normalizeAutomationCompanyScope } from "@/lib/automations/companyScope";
 
 type CompanyOption = {
   name: string;
@@ -190,6 +191,10 @@ const BUILT_IN_FLOWS: FlowDefinition[] = AUTOMATION_STUDIO_BLUEPRINTS.map((flow)
   ...flow,
   source: "catalog",
 }));
+
+function getVisibleBuiltInFlows(companySlug: string | null | undefined) {
+  return BUILT_IN_FLOWS.filter((flow) => matchesAutomationCompanyScope(flow.companyScope, companySlug));
+}
 const DEFAULT_TRIGGER: FlowTriggerConfig = {
   cron: "0 8 * * 1-5",
   enabled: false,
@@ -499,6 +504,7 @@ function readCustomFlows(companySlug: string): FlowDefinition[] {
       .map((item) => readRecord(item))
       .filter((item): item is Record<string, unknown> => Boolean(item))
       .map((flow) => ({
+        companyScope: normalizeAutomationCompanyScope(companySlug) ?? "all",
         companySlug,
         createdAt: readString(flow.createdAt, nowLabel()),
         defaultNotes: readString(flow.defaultNotes, "Fluxo customizado criado no studio."),
@@ -540,6 +546,7 @@ function persistCustomFlows(companySlug: string, flows: FlowDefinition[]) {
   if (typeof window === "undefined") return;
 
   const serializable = flows.map((flow) => ({
+    companyScope: flow.companyScope,
     companySlug,
     createdAt: flow.createdAt ?? nowLabel(),
     defaultNotes: flow.defaultNotes,
@@ -666,13 +673,14 @@ export default function AutomationStudio({
   mode = "flows",
 }: Props) {
   const initialCompanySlug = activeCompanySlug || companies[0]?.slug || "";
+  const initialBuiltInFlows = useMemo(() => getVisibleBuiltInFlows(initialCompanySlug), [initialCompanySlug]);
   const bootstrapFlow = useMemo(
-    () => BUILT_IN_FLOWS.find((flow) => flow.id === initialFlowId) || BUILT_IN_FLOWS[0],
-    [initialFlowId],
+    () => initialBuiltInFlows.find((flow) => flow.id === initialFlowId) || initialBuiltInFlows[0] || BUILT_IN_FLOWS[0],
+    [initialBuiltInFlows, initialFlowId],
   );
   const initialDraft = useMemo(() => buildDefaultDraft(bootstrapFlow, access), [access, bootstrapFlow]);
   const [selectedCompanySlug, setSelectedCompanySlug] = useState(initialCompanySlug);
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(AUTOMATION_ENVIRONMENTS[0]?.id ?? "local");
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(isTestingCompanyScope(initialCompanySlug) ? "qc-local" : (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local"));
   const [customFlowsRevision, setCustomFlowsRevision] = useState(0);
   const [selectedFlowId, setSelectedFlowId] = useState(bootstrapFlow?.id ?? BUILT_IN_FLOWS[0]?.id ?? "griaule-biometrics");
   const [draft, setDraft] = useState<FlowDraft>(initialDraft);
@@ -694,18 +702,28 @@ export default function AutomationStudio({
   useEffect(() => {
     setActivePanel(resolveDefaultPanel(mode));
   }, [mode]);
+  useEffect(() => {
+    setSelectedEnvironmentId((current) => {
+      if (isTestingCompanyScope(selectedCompanySlug)) {
+        return current === "qc-local" ? current : "qc-local";
+      }
+
+      return current === "qc-local" ? (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local") : current;
+    });
+  }, [selectedCompanySlug]);
   const customFlows = useMemo(() => {
     const revision = customFlowsRevision;
     void revision;
     return selectedCompanySlug ? readCustomFlows(selectedCompanySlug) : [];
   }, [selectedCompanySlug, customFlowsRevision]);
-  const flowCatalog = useMemo(() => [...BUILT_IN_FLOWS, ...customFlows], [customFlows]);
+  const visibleBuiltInFlows = useMemo(() => getVisibleBuiltInFlows(selectedCompanySlug), [selectedCompanySlug]);
+  const flowCatalog = useMemo(() => [...visibleBuiltInFlows, ...customFlows], [customFlows, visibleBuiltInFlows]);
   const effectiveSelectedFlowId = flowCatalog.some((flow) => flow.id === selectedFlowId)
     ? selectedFlowId
-    : (BUILT_IN_FLOWS[0]?.id ?? selectedFlowId);
+    : (flowCatalog[0]?.id ?? selectedFlowId);
   const selectedFlow = useMemo(
-    () => flowCatalog.find((flow) => flow.id === effectiveSelectedFlowId) || flowCatalog[0] || BUILT_IN_FLOWS[0],
-    [effectiveSelectedFlowId, flowCatalog],
+    () => flowCatalog.find((flow) => flow.id === effectiveSelectedFlowId) || flowCatalog[0] || bootstrapFlow,
+    [bootstrapFlow, effectiveSelectedFlowId, flowCatalog],
   );
   const selectedCompany = useMemo(
     () => companies.find((company) => company.slug === selectedCompanySlug) || companies[0] || null,
@@ -802,8 +820,8 @@ export default function AutomationStudio({
 
   const activateFlow = useCallback((nextCompanySlug: string, nextFlowId: string) => {
     const nextCustomFlows = readCustomFlows(nextCompanySlug);
-    const nextCatalog = [...BUILT_IN_FLOWS, ...nextCustomFlows];
-    const nextFlow = nextCatalog.find((flow) => flow.id === nextFlowId) || BUILT_IN_FLOWS[0];
+    const nextCatalog = [...getVisibleBuiltInFlows(nextCompanySlug), ...nextCustomFlows];
+    const nextFlow = nextCatalog.find((flow) => flow.id === nextFlowId) || nextCatalog[0] || BUILT_IN_FLOWS[0];
     const nextDraft = readStoredDraft(nextCompanySlug, nextFlow, access);
 
     setSelectedCompanySlug(nextCompanySlug);
@@ -1042,6 +1060,7 @@ export default function AutomationStudio({
     const template = findTemplate(selectedTemplateId);
     const flowId = `custom-${selectedCompanySlug}-${createClientId()}`;
     const newFlow: FlowDefinition = {
+      companyScope: normalizeAutomationCompanyScope(selectedCompanySlug) ?? "all",
       companySlug: selectedCompanySlug,
       createdAt: nowLabel(),
       defaultNotes:
@@ -1112,7 +1131,7 @@ export default function AutomationStudio({
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(draftStorageKey(selectedCompanySlug, selectedFlow.id));
     }
-    activateFlow(selectedCompanySlug, BUILT_IN_FLOWS[0]?.id ?? selectedFlow.id);
+    activateFlow(selectedCompanySlug, visibleBuiltInFlows[0]?.id ?? selectedFlow.id);
   }
 
   function runPreparation() {

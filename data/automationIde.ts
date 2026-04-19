@@ -1,4 +1,5 @@
 import { BIOMETRIC_FIXTURE_DEFINITIONS } from "@/data/biometricFixtures";
+import type { AutomationCompanyScope } from "@/lib/automations/companyScope";
 
 export type AutomationHttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -9,7 +10,7 @@ export type AutomationRequestPreset = {
   path: string;
   body: string;
   headers: Array<{ key: string; value: string }>;
-  companyScope: "all" | "griaule";
+  companyScope: AutomationCompanyScope;
   tags: string[];
 };
 
@@ -26,7 +27,7 @@ export type AutomationToolField = {
 export type AutomationCompanyTool = {
   id: string;
   title: string;
-  companySlug: "all" | "griaule";
+  companySlug: AutomationCompanyScope;
   group: "Consulta" | "Biometria" | "Sessão" | "Documento";
   summary: string;
   mode: "proxy" | "internal";
@@ -87,6 +88,36 @@ export const AUTOMATION_API_PRESETS: AutomationRequestPreset[] = [
     headers: [],
     companyScope: "griaule",
     tags: ["sessao", "token"],
+  },
+  {
+    id: "qc-health",
+    title: "Health do painel",
+    method: "GET",
+    path: "/api/health",
+    body: "",
+    headers: [],
+    companyScope: "testing-company",
+    tags: ["painel", "health", "smoke"],
+  },
+  {
+    id: "qc-me",
+    title: "Sessão autenticada",
+    method: "GET",
+    path: "/api/me",
+    body: "",
+    headers: [],
+    companyScope: "testing-company",
+    tags: ["painel", "auth", "session"],
+  },
+  {
+    id: "qc-test-plans",
+    title: "Planos de teste",
+    method: "GET",
+    path: "/api/test-plans",
+    body: "",
+    headers: [],
+    companyScope: "testing-company",
+    tags: ["painel", "test-plans"],
   },
 ];
 
@@ -226,5 +257,134 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
       },
     ],
   },
+  {
+    id: "qc-admin-dashboard",
+    title: "Smoke dashboard admin",
+    companySlug: "testing-company",
+    group: "Consulta",
+    summary: "Valida se o dashboard administrativo do próprio painel abre autenticado e sem cair no login.",
+    mode: "internal",
+    method: "POST",
+    internalPath: "/api/automations/qc/page-smoke",
+    bodyTemplate: {
+      companySlug: "{{companySlug}}",
+      expectedText: "Buscar empresa por nome ou slug",
+      targetPath: "/admin/dashboard",
+      titleHint: "Quality Control",
+    },
+    responseFocus: ["status", "title", "finalUrl", "containsExpectedText"],
+    fields: [
+      {
+        id: "companySlug",
+        label: "Empresa",
+        type: "text",
+        required: true,
+        defaultValue: "testing-company",
+      },
+    ],
+  },
+  {
+    id: "qc-automations-tools",
+    title: "Smoke automações IDE",
+    companySlug: "testing-company",
+    group: "Consulta",
+    summary: "Abre o módulo de automação do próprio sistema e confirma que a shell principal respondeu.",
+    mode: "internal",
+    method: "POST",
+    internalPath: "/api/automations/qc/page-smoke",
+    bodyTemplate: {
+      companySlug: "{{companySlug}}",
+      expectedText: "QA IDE",
+      targetPath: "/automacoes/tools",
+      titleHint: "Automações",
+    },
+    responseFocus: ["status", "title", "finalUrl", "containsExpectedText"],
+    fields: [
+      {
+        id: "companySlug",
+        label: "Empresa",
+        type: "text",
+        required: true,
+        defaultValue: "testing-company",
+      },
+    ],
+  },
+  {
+    id: "qc-company-home",
+    title: "Smoke home da empresa",
+    companySlug: "testing-company",
+    group: "Consulta",
+    summary: "Testa a home institucional da empresa ativa e garante que a tela principal abre com sessão válida.",
+    mode: "internal",
+    method: "POST",
+    internalPath: "/api/automations/qc/page-smoke",
+    bodyTemplate: {
+      companySlug: "{{companySlug}}",
+      expectedText: "Home institucional",
+      targetPath: "/empresas/{{companySlug}}/home",
+      titleHint: "Home",
+    },
+    responseFocus: ["status", "title", "finalUrl", "containsExpectedText"],
+    fields: [
+      {
+        id: "companySlug",
+        label: "Empresa",
+        type: "text",
+        required: true,
+        defaultValue: "testing-company",
+      },
+    ],
+  },
+  {
+    id: "qc-company-runs",
+    title: "Smoke runs da empresa",
+    companySlug: "testing-company",
+    group: "Consulta",
+    summary: "Verifica se a tela de runs da empresa responde autenticada para o contexto da Testing Company.",
+    mode: "internal",
+    method: "POST",
+    internalPath: "/api/automations/qc/page-smoke",
+    bodyTemplate: {
+      companySlug: "{{companySlug}}",
+      expectedText: "runs-page",
+      targetPath: "/empresas/{{companySlug}}/runs",
+      titleHint: "Runs",
+    },
+    responseFocus: ["status", "title", "finalUrl", "containsExpectedText"],
+    fields: [
+      {
+        id: "companySlug",
+        label: "Empresa",
+        type: "text",
+        required: true,
+        defaultValue: "testing-company",
+      },
+    ],
+  },
+  {
+    id: "qc-company-defects",
+    title: "Smoke defeitos da empresa",
+    companySlug: "testing-company",
+    group: "Consulta",
+    summary: "Executa leitura rápida da tela de defeitos para validar carregamento e autenticação do painel.",
+    mode: "internal",
+    method: "POST",
+    internalPath: "/api/automations/qc/page-smoke",
+    bodyTemplate: {
+      companySlug: "{{companySlug}}",
+      expectedText: "defeitos",
+      targetPath: "/empresas/{{companySlug}}/defeitos",
+      titleHint: "Defeitos",
+    },
+    responseFocus: ["status", "title", "finalUrl", "containsExpectedText"],
+    fields: [
+      {
+        id: "companySlug",
+        label: "Empresa",
+        type: "text",
+        required: true,
+        defaultValue: "testing-company",
+      },
+    ],
+  },
 ];
-

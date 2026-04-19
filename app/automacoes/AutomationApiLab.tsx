@@ -15,6 +15,7 @@ import {
 
 import { AUTOMATION_ENVIRONMENTS } from "@/data/automationCatalog";
 import { AUTOMATION_API_PRESETS, type AutomationHttpMethod, type AutomationRequestPreset } from "@/data/automationIde";
+import { isTestingCompanyScope, matchesAutomationCompanyScope } from "@/lib/automations/companyScope";
 
 type CompanyOption = {
   name: string;
@@ -72,7 +73,7 @@ function storageKey(companySlug: string | null) {
 }
 
 export default function AutomationApiLab({ activeCompanySlug }: Props) {
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(AUTOMATION_ENVIRONMENTS[0]?.id ?? "local");
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(isTestingCompanyScope(activeCompanySlug) ? "qc-local" : (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local"));
   const [selectedPresetId, setSelectedPresetId] = useState(AUTOMATION_API_PRESETS[0]?.id ?? "scratch");
   const [requestName, setRequestName] = useState(AUTOMATION_API_PRESETS[0]?.title ?? "Request");
   const [method, setMethod] = useState<AutomationHttpMethod>(AUTOMATION_API_PRESETS[0]?.method ?? "GET");
@@ -98,6 +99,16 @@ export default function AutomationApiLab({ activeCompanySlug }: Props) {
     } catch {}
   }, [activeCompanySlug]);
 
+  useEffect(() => {
+    setSelectedEnvironmentId((current) => {
+      if (isTestingCompanyScope(activeCompanySlug)) {
+        return current === "qc-local" ? current : "qc-local";
+      }
+
+      return current === "qc-local" ? (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local") : current;
+    });
+  }, [activeCompanySlug]);
+
   const currentEnvironment = useMemo(
     () => AUTOMATION_ENVIRONMENTS.find((environment) => environment.id === selectedEnvironmentId) ?? AUTOMATION_ENVIRONMENTS[0],
     [selectedEnvironmentId],
@@ -105,11 +116,18 @@ export default function AutomationApiLab({ activeCompanySlug }: Props) {
 
   const visiblePresets = useMemo(
     () => [
-      ...AUTOMATION_API_PRESETS.filter((preset) => preset.companyScope === "all" || preset.companyScope === activeCompanySlug),
+      ...AUTOMATION_API_PRESETS.filter((preset) => matchesAutomationCompanyScope(preset.companyScope, activeCompanySlug)),
       ...savedRequests,
     ],
     [activeCompanySlug, savedRequests],
   );
+
+  useEffect(() => {
+    if (visiblePresets.some((preset) => preset.id === selectedPresetId)) return;
+    if (visiblePresets[0]) {
+      applyPreset(visiblePresets[0]);
+    }
+  }, [selectedPresetId, visiblePresets]);
 
   function applyPreset(preset: AutomationRequestPreset | SavedRequest) {
     setSelectedPresetId(preset.id);
@@ -202,7 +220,7 @@ export default function AutomationApiLab({ activeCompanySlug }: Props) {
   }
 
   return (
-    <section className="space-y-4 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 shadow-sm">
+    <section className="space-y-4 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 shadow-sm sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
         <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
           <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
@@ -235,8 +253,8 @@ export default function AutomationApiLab({ activeCompanySlug }: Props) {
         </div>
       </div>
 
-      <div className="grid gap-4 2xl:grid-cols-[280px_minmax(0,1fr)_minmax(320px,0.72fr)]">
-        <aside className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+      <div className="grid items-start gap-4 xl:grid-cols-12">
+        <aside className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 xl:col-span-4 xl:sticky xl:top-6 2xl:col-span-3">
           <div className="flex items-center justify-between gap-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Coleção</p>
             <span className="inline-flex rounded-full border border-(--tc-border,#d7deea) bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
@@ -274,8 +292,8 @@ export default function AutomationApiLab({ activeCompanySlug }: Props) {
           </div>
         </aside>
 
-        <article className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
-          <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_110px_180px_auto]">
+        <article className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 xl:col-span-8 2xl:col-span-5">
+          <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_110px_180px] 2xl:grid-cols-[minmax(0,1fr)_110px_180px_auto]">
             <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
               Request
               <input
@@ -304,7 +322,7 @@ export default function AutomationApiLab({ activeCompanySlug }: Props) {
                 ))}
               </select>
             </label>
-            <div className="flex items-end">
+            <div className="flex items-end xl:col-span-3 2xl:col-span-1">
               <div className="inline-flex min-h-11 items-center rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 text-xs font-semibold text-(--tc-text-muted,#6b7280)">
                 {currentEnvironment?.baseUrl}
               </div>
@@ -376,7 +394,7 @@ export default function AutomationApiLab({ activeCompanySlug }: Props) {
           </div>
         </article>
 
-        <aside className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+        <aside className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 xl:col-span-12 2xl:col-span-4">
           <div className="flex items-center justify-between gap-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Response</p>
             <div className="flex gap-2">
@@ -391,7 +409,7 @@ export default function AutomationApiLab({ activeCompanySlug }: Props) {
             </div>
           </div>
 
-          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          <div className="mt-3 grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]">
             <div className="rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">Status</p>
               <p className="mt-1 text-sm font-semibold text-(--tc-text,#0b1a3c)">{response ? `${response.status} ${response.statusText}` : "--"}</p>

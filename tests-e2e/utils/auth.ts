@@ -1,4 +1,4 @@
-﻿import type { Page } from "@playwright/test";
+﻿import type { APIResponse, Page } from "@playwright/test";
 
 const rawBaseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
 const baseURL = /^https?:\/\//i.test(rawBaseURL) ? rawBaseURL : `http://${rawBaseURL}`;
@@ -52,7 +52,7 @@ export async function setMockUser(page: Page, role: MockRole, clientSlug?: strin
   const emailCandidates = buildEmailCandidates(creds.email, role === "admin" ? "admin" : "user");
 
   const loginUrl = new URL("/api/auth/login", baseURL).toString();
-  let response = null as Awaited<ReturnType<typeof page.context().request.post>> | null;
+  let response: APIResponse | null = null;
   for (const emailCandidate of emailCandidates) {
     for (const passwordCandidate of buildPasswordCandidates(creds.password)) {
       response = await page.context().request.post(loginUrl, {
@@ -102,7 +102,8 @@ export async function login(page: Page, email: string, password: string) {
   const creds = resolveCredentials(email, password);
   if (!sessionId) {
     const loginUrl = new URL("/api/auth/login", baseURL).toString();
-    let response = null as Awaited<ReturnType<typeof page.context().request.post>> | null;
+    const emailCandidates = buildEmailCandidates(creds.email, creds.role);
+    let response: APIResponse | null = null;
     for (const emailCandidate of emailCandidates) {
       for (const passwordCandidate of buildPasswordCandidates(creds.password)) {
         response = await page.context().request.post(loginUrl, {

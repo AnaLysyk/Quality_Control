@@ -37,7 +37,7 @@ for (const asset of AUTOMATION_STUDIO_ASSETS) {
   }
 }
 
-function assetsForFlow(flowId: string, limit = 3) {
+export function assetsForFlow(flowId: string, limit = 3) {
   return (flowAssets.get(flowId) ?? []).slice(0, limit);
 }
 

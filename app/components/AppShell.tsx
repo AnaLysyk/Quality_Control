@@ -131,6 +131,7 @@ const APP_SHELL_COPY = {
       dashboard: "Dashboard",
       metrics: "Metrics",
       apps: "Applications",
+      operations: "Operations",
       runs: "Runs",
       defects: "Defects",
       support: "Support",

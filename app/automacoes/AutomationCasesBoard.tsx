@@ -21,7 +21,7 @@ import {
 } from "react-icons/fi";
 
 import type { AutomationAccess } from "@/lib/automations/access";
-import { AUTOMATION_CASES, type AutomationCaseDefinition } from "@/data/automationCases";
+import { AUTOMATION_CASES, type AutomationCaseDefinition, assetsForFlow } from "@/data/automationCases";
 import { AUTOMATION_STUDIO_ASSETS, AUTOMATION_STUDIO_BLUEPRINTS, AUTOMATION_STUDIO_SCRIPT_TEMPLATES } from "@/data/automationStudio";
 import { matchesAutomationCompanyScope, normalizeAutomationCompanyScope } from "@/lib/automations/companyScope";
 
@@ -262,7 +262,9 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
   const selectedCompany = companies.find((company) => company.slug === activeCompanySlug) ?? companies[0] ?? null;
   const linkedPlansHref = activeCompanySlug ? `/empresas/${activeCompanySlug}/planos-de-teste` : null;
 
-  function updateSelectedCaseDraft<K extends "title" | "summary" | "objective" | "expectedResult" | "tags">(
+  function updateSelectedCaseDraft<
+    K extends "title" | "summary" | "objective" | "expectedResult" | "tags" | "preconditions" | "inputBindings",
+  >(
     field: K,
     value: AutomationCaseDefinition[K],
   ) {

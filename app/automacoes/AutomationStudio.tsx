@@ -1614,8 +1614,13 @@ export default function AutomationStudio({
     );
   }
 
+  const showOverviewHero = mode === "flows" && activePanel === "overview";
+  const showFlowSidebar = activePanel === "overview" || activePanel === "steps";
+  const showAssetSidebar = mode === "files" || activePanel === "mappings";
+  const splitExecutionLayout = activePanel === "steps";
+
   return (
-    <section className="space-y-4 rounded-[32px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-sm sm:p-6">
+    <section className="space-y-3 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 shadow-sm sm:p-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
         <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
           <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
@@ -1647,13 +1652,13 @@ export default function AutomationStudio({
           Abrir scripts
         </Link>
       </div>
-      {mode === "flows" && activePanel === "overview" ? (
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,0.82fr)]">
-          <article className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+      {showOverviewHero ? (
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Resumo rápido</p>
-                <h2 className="mt-2 text-2xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedFlow.title}</h2>
+                <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedFlow.title}</h2>
                 <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">{selectedFlow.objective}</p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -1673,7 +1678,7 @@ export default function AutomationStudio({
               </div>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="mt-3 grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
               {compactOverviewCards.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -1690,7 +1695,7 @@ export default function AutomationStudio({
             </div>
           </article>
 
-          <aside className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+          <aside className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
               <FiShield className="h-4 w-4" />
               Acesso atual
@@ -1714,8 +1719,8 @@ export default function AutomationStudio({
         </div>
       ) : null}
 
-      <article className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
-        <div className="grid gap-3 xl:grid-cols-[minmax(180px,0.86fr)_minmax(160px,0.62fr)_minmax(260px,1fr)_auto]">
+      <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+        <div className="grid gap-3 xl:grid-cols-[minmax(180px,0.78fr)_minmax(160px,0.56fr)_minmax(260px,1fr)_auto]">
           <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
             Empresa
             <select
@@ -1813,8 +1818,8 @@ export default function AutomationStudio({
         </div>
       ) : null}
 
-      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1.22fr)_minmax(360px,0.78fr)]">
-        <article className="min-w-0 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5">
+      <div className={showAssetSidebar ? "grid gap-4 2xl:grid-cols-[minmax(0,1.22fr)_minmax(360px,0.78fr)]" : "grid gap-4"}>
+        <article className="min-w-0 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -1843,7 +1848,7 @@ export default function AutomationStudio({
             </div>
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-4 grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
             <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Empresa</p>
               <p className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedCompany?.name || "Sem empresa"}</p>
@@ -1862,10 +1867,16 @@ export default function AutomationStudio({
             </div>
           </div>
 
-          <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.88fr)]">
+          <div
+            className={
+              activePanel === "overview"
+                ? "mt-4 grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_320px]"
+                : "mt-4 grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.92fr)]"
+            }
+          >
             <div className="space-y-4">
               {activePanel === "overview" ? (
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 lg:grid-cols-2">
                 <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
                   Título
                   <input
@@ -2000,10 +2011,10 @@ export default function AutomationStudio({
               ) : null}
             </div>
 
-            {activePanel === "overview" || activePanel === "steps" ? (
+            {showFlowSidebar ? (
               <aside className="space-y-4">
               {activePanel === "overview" ? (
-                <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+                <article className="rounded-[22px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Novo fluxo</p>
@@ -2069,7 +2080,7 @@ export default function AutomationStudio({
               ) : null}
 
               {activePanel === "steps" ? (
-                <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+                <article className="rounded-[22px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Biblioteca de ações</p>
@@ -2103,9 +2114,9 @@ export default function AutomationStudio({
           </div>
         </article>
 
-        {mode === "files" || activePanel === "mappings" ? (
+        {showAssetSidebar ? (
           <aside className="space-y-4">
-            <article className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5">
+            <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
               <FiFolderPlus className="h-4 w-4" />
               Biblioteca de assets
@@ -2182,9 +2193,9 @@ export default function AutomationStudio({
       </div>
 
       {activePanel !== "files" ? (
-        <div className="grid gap-4 2xl:grid-cols-[minmax(0,1.14fr)_minmax(380px,0.86fr)]">
+        <div className={splitExecutionLayout ? "grid gap-4 2xl:grid-cols-[minmax(0,1.14fr)_minmax(380px,0.86fr)]" : "grid gap-4"}>
         {activePanel === "steps" ? (
-          <article className="min-w-0 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5">
+          <article className="min-w-0 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
           <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
             <FiCode className="h-4 w-4" />
             Configuração da etapa e do fluxo
@@ -2423,7 +2434,7 @@ export default function AutomationStudio({
         {activePanel === "overview" || activePanel === "mappings" || activePanel === "results" ? (
           <aside className="space-y-4">
           {activePanel === "overview" ? (
-            <article className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5">
+            <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
               <FiUploadCloud className="h-4 w-4" />
               Triggers e runtime
@@ -2600,7 +2611,7 @@ export default function AutomationStudio({
           ) : null}
 
           {activePanel === "mappings" ? (
-            <article className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5">
+            <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Variáveis e subfluxos</p>
@@ -2695,7 +2706,7 @@ export default function AutomationStudio({
           ) : null}
 
           {activePanel === "results" ? (
-            <article className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5">
+            <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Depuração e histórico</p>

@@ -121,6 +121,9 @@ async function resolveCompanyUserIds(companySlug?: string | null) {
   const normalizedSlug = normalizeCompanySlug(companySlug);
   const company = companies.find((item) => normalizeCompanySlug(item.slug) === normalizedSlug);
   if (!company) return adminIds;
+  if (!isCompanyLinkedNotificationFanoutEnabled(company as Record<string, unknown>)) {
+    return adminIds;
+  }
   const links = await listLocalLinksForCompany(company.id);
   const memberIds = links.map((link) => link.userId);
   return Array.from(new Set([...adminIds, ...memberIds]));

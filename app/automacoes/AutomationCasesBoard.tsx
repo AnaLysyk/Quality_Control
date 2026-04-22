@@ -138,6 +138,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
       setManualLinkedCasesError(null);
       return;
     }
+    const companySlug = activeCompanySlug;
 
     let active = true;
 
@@ -145,7 +146,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
       try {
         setManualLinkedCasesError(null);
         const response = await fetch(
-          `/api/automations/manual-links?companySlug=${encodeURIComponent(activeCompanySlug)}`,
+          `/api/automations/manual-links?companySlug=${encodeURIComponent(companySlug)}`,
           { cache: "no-store" },
         );
         const payload = (await response.json().catch(() => null)) as {

@@ -190,7 +190,6 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
       clientSlug: session.companySlug ?? null,
       defaultClientSlug: user.default_company_slug ?? null,
     },
-    links,
   );
   const shouldBindCompanyContext = visibilityMode !== "all";
   const allowedCompanies = resolveVisibleCompanies(companies, {

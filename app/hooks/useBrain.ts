@@ -41,6 +41,26 @@ export type BrainStats = {
     errors: string[];
     stats: { nodes: number; edges: number; memories: number };
   };
+  graphMetrics: {
+    nodeCount: number;
+    edgeCount: number;
+    memoryCount: number;
+    averageDegree: number;
+    density: number;
+    cyclesDetected: number;
+    orphanedNodes: number;
+    largestComponent: number;
+  };
+  intelligenceScore: number;
+  alerts: string[];
+  topConnectedNodes: {
+    id: string;
+    label: string;
+    type: string;
+    inDegree: number;
+    outDegree: number;
+    totalDegree: number;
+  }[];
   breakdown: {
     nodesByType: { type: string; count: number }[];
     edgesByType: { type: string; count: number }[];
@@ -69,6 +89,53 @@ export type BrainMemory = {
   createdAt: string;
 };
 
+export type BrainNodeStats = {
+  nodeId: string;
+  label: string;
+  type: string;
+  inDegree: number;
+  outDegree: number;
+  memoryCount: number;
+  createdAt: string;
+  updatedAt: string;
+  importance: number;
+};
+
+export type BrainNodeInfluence = {
+  nodeId: string;
+  influenceScore: number;
+  rankedPosition?: number;
+};
+
+export type BrainNodeSuggestion = {
+  suggestedNodeId: string;
+  suggestedNode: BrainNode;
+  reason: string;
+  score: number;
+};
+
+export type BrainNodeContextData = {
+  context?: {
+    node: BrainNode | null;
+    outgoing: Array<{ id: string; fromId: string; toId: string; type: string }>;
+    incoming: Array<{ id: string; fromId: string; toId: string; type: string }>;
+    neighbors: BrainNode[];
+  } | null;
+  memories?: BrainMemory[];
+  impact?: {
+    impactedNodes: BrainNode[];
+    paths: Array<{ nodeId: string; edgeType: string; distance: number }>;
+  };
+  subgraph?: BrainGraphData;
+  stats?: BrainNodeStats;
+  influence?: BrainNodeInfluence;
+  relatedMemories?: BrainMemory[];
+  ancestors?: BrainNode[];
+  descendants?: BrainNode[];
+  suggestions?: BrainNodeSuggestion[];
+  similarNodes?: BrainNode[];
+};
+
 /* ─── Hooks ─── */
 
 export function useBrainGraph(nodeId?: string | null, depth = 2) {
@@ -90,21 +157,23 @@ export function useBrainStats() {
   });
 }
 
-export function useBrainSearch(type?: string, label?: string) {
+export function useBrainSearch(query?: string, type?: string, limit = 8) {
   const params = new URLSearchParams();
+  const normalizedQuery = query?.trim();
+  if (normalizedQuery) params.set("query", normalizedQuery);
   if (type) params.set("type", type);
-  if (label) params.set("label", label);
-  const key = type || label ? `/api/brain/nodes?${params.toString()}` : null;
+  params.set("limit", String(limit));
+  const key = normalizedQuery || type ? `/api/brain/nodes?${params.toString()}` : null;
 
   return useSWR<{ nodes: BrainNode[] }>(key, fetcher, {
     revalidateOnFocus: false,
   });
 }
 
-export function useBrainNodeContext(nodeId: string | null) {
-  const key = nodeId ? `/api/brain/nodes/${nodeId}?include=all&depth=2` : null;
+export function useBrainNodeContext(nodeId: string | null, depth = 2) {
+  const key = nodeId ? `/api/brain/nodes/${nodeId}?include=all&depth=${depth}` : null;
 
-  return useSWR(key, fetcher, {
+  return useSWR<BrainNodeContextData>(key, fetcher, {
     revalidateOnFocus: false,
   });
 }

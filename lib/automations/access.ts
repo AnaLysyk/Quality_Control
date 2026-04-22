@@ -121,13 +121,13 @@ export function resolveAutomationAccess(
       canOpen: true,
       canConfigure: false,
       canManageFlows: false,
-      canViewTechnicalLogs: true,
+      canViewTechnicalLogs: false,
       hasGlobalCompanyVisibility: false,
       profileLabel: "Usuario TC",
       scopeLabel: linkedCompaniesLabel,
-      visibilityLabel: "Leitura operacional + logs proprios",
+      visibilityLabel: "Leitura operacional",
       helperText:
-        "Mantem a mesma identidade visual do modulo interno, executa automacoes das empresas vinculadas, nao altera fluxos globais e consulta apenas os proprios logs tecnicos.",
+        "Mantem a mesma identidade visual do modulo interno, executa automacoes das empresas vinculadas e nao altera fluxos globais.",
     };
   }
 
@@ -136,13 +136,13 @@ export function resolveAutomationAccess(
       canOpen: true,
       canConfigure: false,
       canManageFlows: true,
-      canViewTechnicalLogs: true,
+      canViewTechnicalLogs: false,
       hasGlobalCompanyVisibility: false,
-      profileLabel: isCompanyUserRole && !isCompanyRole ? "Usuario da empresa" : "Empresa",
+      profileLabel: isCompanyUserRole && !isCompanyRole ? "Usuário da empresa" : "Empresa",
       scopeLabel: ownCompanyLabel,
-      visibilityLabel: "Operacao da empresa + logs proprios",
+      visibilityLabel: "Operação da empresa",
       helperText:
-        "Visualiza, edita, inativa e executa apenas as automacoes da propria empresa. Usuario da empresa herda a mesma visao da empresa de origem e consulta apenas os proprios logs.",
+        "Visualiza, edita, inativa e executa apenas as automacoes da propria empresa. Usuario da empresa herda a mesma visao da empresa de origem.",
     };
   }
 

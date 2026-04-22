@@ -12,9 +12,10 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const type = url.searchParams.get("type") ?? undefined;
   const label = url.searchParams.get("label") ?? undefined;
+  const query = url.searchParams.get("query") ?? undefined;
   const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit") ?? 50)));
 
-  const nodes = await searchNodes({ type, label, limit });
+  const nodes = await searchNodes({ type, label, query, limit });
   return NextResponse.json({ nodes });
 }
 

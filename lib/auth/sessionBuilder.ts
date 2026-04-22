@@ -66,7 +66,6 @@ export async function buildLocalSessionForUser(
       default_company_slug: user.default_company_slug ?? null,
       defaultClientSlug: user.default_company_slug ?? null,
     },
-    links,
   );
   const shouldBindCompanyContext = visibilityMode !== "all";
   const allowedCompanies = resolveVisibleCompanies(companies, {

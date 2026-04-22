@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ComponentType, type Dispatch, type PointerEvent as ReactPointerEvent, type SetStateAction } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ComponentType, type Dispatch, type PointerEvent as ReactPointerEvent, type ReactElement, type SetStateAction } from "react";
 import {
   FiActivity,
   FiCheckCircle,
@@ -1207,7 +1207,7 @@ function filterCollectionTree(nodes: CollectionTreeNode[], term: string): Collec
   const normalized = term.trim().toLowerCase();
   if (!normalized) return nodes;
 
-  return nodes.flatMap((node) => {
+  return nodes.flatMap<CollectionTreeNode>((node) => {
     if (node.kind === "request") {
       const haystack = `${node.title} ${node.method} ${node.isSaved ? "saved" : ""}`.toLowerCase();
       return haystack.includes(normalized) ? [node] : [];
@@ -1873,13 +1873,6 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
     syncRequestToDb(duplicated);
   }
 
-  function collectSavedRequestIdsFromNode(node: CollectionTreeNode): string[] {
-    if (node.kind === "request") {
-      return node.isSaved ? [node.preset.id] : [];
-    }
-    return node.children.flatMap((child) => collectSavedRequestIdsFromNode(child));
-  }
-
   function removeSavedRequestsBulk(requestIds: string[]) {
     if (requestIds.length === 0) return;
     const uniqueIds = Array.from(new Set(requestIds));
@@ -1890,17 +1883,6 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
       deleteRequestFromDb(requestId);
     }
     if (idSet.has(selectedPresetId)) {
-      applyPreset(AUTOMATION_API_PRESETS[0]);
-    }
-  }
-
-  function clearAllSavedRequests() {
-    if (savedRequests.length === 0) return;
-    for (const request of savedRequests) {
-      deleteRequestFromDb(request.id);
-    }
-    persistSavedRequests([]);
-    if (selectedPresetId.startsWith("saved-")) {
       applyPreset(AUTOMATION_API_PRESETS[0]);
     }
   }
@@ -2392,7 +2374,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
     window.addEventListener("pointerup", handlePointerUp);
   }
 
-  function renderCollectionNode(node: CollectionTreeNode, depth = 0): JSX.Element {
+  function renderCollectionNode(node: CollectionTreeNode, depth = 0): ReactElement {
     const forceOpen = collectionSearchTerm.trim().length > 0;
     const isOpen = node.kind === "request" ? false : forceOpen || expandedCollectionIds.includes(node.id);
     const compact = sidebarWidth < 300;
@@ -2707,7 +2689,10 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                   <div className="mt-2 flex items-center justify-end gap-2">
                     <div className="flex items-center gap-1.5">
                       <span className="inline-flex rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
-                        {filteredCollectionTree.reduce((count, root) => count + countCollectionRequests(root.children), 0)}
+                        {filteredCollectionTree.reduce(
+                          (count, root) => count + (root.kind === "request" ? 1 : countCollectionRequests(root.children)),
+                          0,
+                        )}
                       </span>
                       <button
                         type="button"
@@ -2872,7 +2857,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           {/* â”€â”€ Postman-style URL bar â”€â”€ */}
           <div className="flex items-stretch overflow-hidden rounded-lg border border-(--tc-border,#d7deea)">
             <select
-              aria-label="M\u00e9todo HTTP"
+              id="api-lab-http-method"
+              aria-label="Método HTTP"
               value={method}
               onChange={(event) => setMethod(event.target.value as AutomationHttpMethod)}
               className={`shrink-0 border-r border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 text-sm font-bold outline-none ${
@@ -3703,4 +3689,3 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
     </div>
   );
 }
-

@@ -3,9 +3,35 @@ import "server-only";
 import { prisma } from "@/lib/prismaClient";
 import { getSubgraph, getNodeMemories, searchNodes } from "@/lib/brain";
 
+function normalizeBrainText(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function scoreBrainMatch(query: string, values: Array<string | null | undefined>) {
+  const normalizedQuery = normalizeBrainText(query);
+  if (!normalizedQuery) return 0;
+
+  const haystack = normalizeBrainText(values.filter(Boolean).join(" "));
+  if (!haystack) return 0;
+
+  let score = haystack.includes(normalizedQuery) ? 12 : 0;
+  for (const term of normalizedQuery.split(/\s+/)) {
+    if (term.length < 2) continue;
+    const occurrences = haystack.split(term).length - 1;
+    if (occurrences > 0) {
+      score += occurrences * (term.length >= 5 ? 3 : 1);
+    }
+  }
+  return score;
+}
+
 /**
  * Gera contexto do Brain para alimentar o assistente de IA.
- * Busca informações relevantes do grafo para enriquecer as respostas.
+ * Busca informacoes relevantes do grafo para enriquecer as respostas.
  */
 export async function buildBrainContextForAI(options: {
   companySlug?: string | null;
@@ -16,36 +42,51 @@ export async function buildBrainContextForAI(options: {
   try {
     const parts: string[] = [];
 
-    // 0. Se tem query do usuário, fazer busca semântica nos nós e memórias
+    // 0. Se tem query do usuario, trazer o que mais pontua por relevancia
     if (options.userQuery && options.userQuery.length > 3) {
-      const queryTerms = options.userQuery.toLowerCase().split(/\s+/).filter(t => t.length > 2);
-      
+      const queryTerms = normalizeBrainText(options.userQuery).split(/\s+/).filter((term) => term.length > 2);
+      const seenMemoryIds = new Set<string>();
+
       if (queryTerms.length > 0) {
-        // Buscar nós relevantes
-        const relevantNodes = await searchNodes({
+        const candidateNodes = await searchNodes({
           query: options.userQuery,
-          limit: 5,
+          limit: 12,
         });
+        const relevantNodes = candidateNodes
+          .map((node) => ({
+            node,
+            score: scoreBrainMatch(options.userQuery ?? "", [node.label, node.description]),
+          }))
+          .filter((entry) => entry.score > 0)
+          .sort((left, right) => right.score - left.score)
+          .slice(0, 6);
 
         if (relevantNodes.length > 0) {
           parts.push("## Conhecimento Relevante do Brain:");
-          for (const node of relevantNodes) {
-            parts.push(`- **${node.label}** (${node.type}): ${node.description || 'sem descrição'}`);
-            
-            // Buscar memórias deste nó
-            const nodeMemories = await getNodeMemories(node.id);
-            for (const mem of nodeMemories.slice(0, 2)) {
-              parts.push(`  • [${mem.memoryType}] ${mem.title}`);
+          for (const { node } of relevantNodes) {
+            parts.push(`- **${node.label}** (${node.type}): ${node.description || "sem descricao"}`);
+
+            const nodeMemories = (await getNodeMemories(node.id))
+              .map((memory) => ({
+                memory,
+                score: scoreBrainMatch(options.userQuery ?? "", [memory.title, memory.summary]) + memory.importance * 2,
+              }))
+              .filter((entry) => entry.score > 0 && !seenMemoryIds.has(entry.memory.id))
+              .sort((left, right) => right.score - left.score)
+              .slice(0, 2);
+
+            for (const { memory } of nodeMemories) {
+              seenMemoryIds.add(memory.id);
+              parts.push(`  - [${memory.memoryType}] ${memory.title}`);
             }
           }
           parts.push("");
         }
 
-        // Buscar memórias diretamente relacionadas à query
-        const relevantMemories = await prisma.brainMemory.findMany({
+        const memoryCandidates = await prisma.brainMemory.findMany({
           where: {
             status: "ACTIVE",
-            OR: queryTerms.map(term => ({
+            OR: queryTerms.map((term) => ({
               OR: [
                 { title: { contains: term, mode: "insensitive" as const } },
                 { summary: { contains: term, mode: "insensitive" as const } },
@@ -53,15 +94,25 @@ export async function buildBrainContextForAI(options: {
             })),
           },
           orderBy: { importance: "desc" },
-          take: 5,
+          take: 12,
           include: {
             node: { select: { label: true, type: true } },
           },
         });
+        const relevantMemories = memoryCandidates
+          .map((memory) => ({
+            memory,
+            score:
+              scoreBrainMatch(options.userQuery ?? "", [memory.title, memory.summary, memory.node?.label]) +
+              memory.importance * 2,
+          }))
+          .filter((entry) => entry.score > 0 && !seenMemoryIds.has(entry.memory.id))
+          .sort((left, right) => right.score - left.score)
+          .slice(0, 6);
 
         if (relevantMemories.length > 0) {
-          parts.push("### Aprendizados e Decisões:");
-          for (const m of relevantMemories) {
+          parts.push("### Aprendizados e Decisoes:");
+          for (const { memory: m } of relevantMemories) {
             const nodeInfo = m.node ? ` (de ${m.node.label})` : "";
             parts.push(`- **[${m.memoryType}]** ${m.title}${nodeInfo}`);
             parts.push(`  ${m.summary}`);
@@ -70,7 +121,6 @@ export async function buildBrainContextForAI(options: {
         }
       }
     }
-
     // 1. Se tem empresa, buscar contexto da empresa
     if (options.companySlug) {
       const company = await prisma.company.findFirst({
@@ -98,13 +148,13 @@ export async function buildBrainContextForAI(options: {
           const tickets = subgraph.nodes.filter((n) => n.type === "Ticket");
 
           parts.push(`## Contexto da Empresa: ${company.name}`);
-          if (apps.length) parts.push(`- **Aplicações:** ${apps.map((a) => a.label).join(", ")}`);
-          if (modules.length) parts.push(`- **Módulos:** ${modules.map((m) => m.label).join(", ")}`);
+          if (apps.length) parts.push(`- **Aplicacoes:** ${apps.map((a) => a.label).join(", ")}`);
+          if (modules.length) parts.push(`- **Modulos:** ${modules.map((m) => m.label).join(", ")}`);
           if (defects.length) parts.push(`- **Defeitos ativos:** ${defects.length}`);
           if (tickets.length) parts.push(`- **Tickets:** ${tickets.length}`);
 
           if (memories.length) {
-            parts.push("\n### Memórias/Decisões da Empresa:");
+            parts.push("\n### Memorias/Decisoes da Empresa:");
             for (const m of memories.slice(0, 5)) {
               parts.push(`- **[${m.memoryType}]** ${m.title}: ${m.summary}`);
             }
@@ -114,7 +164,7 @@ export async function buildBrainContextForAI(options: {
       }
     }
 
-    // 2. Se tem entidade específica, buscar seu contexto
+    // 2. Se tem entidade especifica, buscar seu contexto
     if (options.entityType && options.entityId) {
       const entityNode = await prisma.brainNode.findFirst({
         where: { refType: options.entityType, refId: options.entityId },
@@ -125,7 +175,7 @@ export async function buildBrainContextForAI(options: {
         const memories = await getNodeMemories(entityNode.id);
 
         parts.push(`## Contexto de ${options.entityType}: ${entityNode.label}`);
-        if (entityNode.description) parts.push(`**Descrição:** ${entityNode.description}`);
+        if (entityNode.description) parts.push(`**Descricao:** ${entityNode.description}`);
 
         const related = subgraph.nodes.filter((n) => n.id !== entityNode.id);
         if (related.length) {
@@ -133,7 +183,7 @@ export async function buildBrainContextForAI(options: {
         }
 
         if (memories.length) {
-          parts.push("**Memórias:**");
+          parts.push("**Memorias:**");
           for (const m of memories.slice(0, 3)) {
             parts.push(`- [${m.memoryType}] ${m.title}: ${m.summary}`);
           }
@@ -142,7 +192,7 @@ export async function buildBrainContextForAI(options: {
       }
     }
 
-    // 3. Estatísticas gerais do brain (resumidas)
+    // 3. Estatisticas gerais do brain (resumidas)
     if (!options.companySlug && !options.entityId && parts.length === 0) {
       const [nodeCount, edgeCount, memoryCount] = await Promise.all([
         prisma.brainNode.count(),
@@ -151,9 +201,9 @@ export async function buildBrainContextForAI(options: {
       ]);
 
       if (nodeCount > 0) {
-        parts.push(`## Brain Graph: ${nodeCount} nós, ${edgeCount} conexões, ${memoryCount} memórias`);
+        parts.push(`## Brain Graph: ${nodeCount} nos, ${edgeCount} conexoes, ${memoryCount} memorias`);
 
-        // Buscar memórias mais importantes
+        // Buscar memorias mais importantes
         const topMemories = await prisma.brainMemory.findMany({
           where: { status: "ACTIVE" },
           orderBy: { importance: "desc" },
@@ -164,7 +214,7 @@ export async function buildBrainContextForAI(options: {
         });
 
         if (topMemories.length) {
-          parts.push("### Conhecimento Prioritário:");
+          parts.push("### Conhecimento Prioritario:");
           for (const m of topMemories) {
             const nodeInfo = m.node ? ` (${m.node.type}: ${m.node.label})` : "";
             parts.push(`- **[${m.memoryType}]** ${m.title}${nodeInfo}`);
@@ -181,3 +231,4 @@ export async function buildBrainContextForAI(options: {
     return null;
   }
 }
+

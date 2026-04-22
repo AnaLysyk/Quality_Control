@@ -100,7 +100,7 @@ export function resolveVisibleCompanies<T extends CompanyVisibilityItem>(
   },
 ): T[] {
   const links = input?.links ?? [];
-  const mode = resolveCompanyVisibilityMode(input?.user, links);
+  const mode = resolveCompanyVisibilityMode(input?.user);
 
   if (mode === "all") {
     return companies;

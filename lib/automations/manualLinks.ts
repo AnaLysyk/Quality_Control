@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { AutomationCaseDefinition } from "@/data/automationCases";
-import type { Release } from "@/app/types/release";
+import type { Release } from "@/types/release";
 import { readManualReleaseCases, readManualReleases } from "@/lib/manualReleaseStore";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
 import { listManualTestPlans, type ManualTestPlanRecord } from "@/lib/testPlansStore";

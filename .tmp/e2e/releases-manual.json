@@ -1,5 +1,89 @@
 [
   {
+    "id": "playwright_testing_company_mo9lvf15_toj0",
+    "slug": "playwright_testing_company_mo9lvf15_toj0",
+    "name": "Testing Company - Regressão automatizada Playwright - 2026-04-22 05:21",
+    "app": "automation-workspace",
+    "qaseProject": null,
+    "kind": "run",
+    "environments": [
+      "playwright",
+      "testing-company"
+    ],
+    "source": "MANUAL",
+    "status": "done",
+    "stats": {
+      "pass": 12,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "observations": "Última atualização automática: ambiente exige URL base e token no Studio -> APROVADO.",
+    "clientSlug": "testing-company",
+    "testPlanId": "plan_tc_auto_playwright",
+    "testPlanName": "Testing Company - Regressão automatizada Playwright",
+    "testPlanSource": "manual",
+    "testPlanProjectCode": null,
+    "createdAt": "2026-04-22T05:21:59.511Z",
+    "updatedAt": "2026-04-22T05:22:51.077Z"
+  },
+  {
+    "id": "playwright_testing_company_mo9lmr04_5de4",
+    "slug": "playwright_testing_company_mo9lmr04_5de4",
+    "name": "Testing Company - Regressão automatizada Playwright - 2026-04-22 05:15",
+    "app": "automation-workspace",
+    "qaseProject": null,
+    "kind": "run",
+    "environments": [
+      "playwright",
+      "testing-company"
+    ],
+    "source": "MANUAL",
+    "status": "ACTIVE",
+    "stats": {
+      "pass": 7,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 5
+    },
+    "observations": "Última atualização automática: ambiente exige URL base e token no Studio -> APROVADO.",
+    "clientSlug": "testing-company",
+    "testPlanId": "plan_tc_auto_playwright",
+    "testPlanName": "Testing Company - Regressão automatizada Playwright",
+    "testPlanSource": "manual",
+    "testPlanProjectCode": null,
+    "createdAt": "2026-04-22T05:15:15.122Z",
+    "updatedAt": "2026-04-22T05:15:36.699Z"
+  },
+  {
+    "id": "playwright_testing_company_mo9llnhw_0pdd",
+    "slug": "playwright_testing_company_mo9llnhw_0pdd",
+    "name": "Testing Company - Regressão automatizada Playwright - 2026-04-22 05:14",
+    "app": "automation-workspace",
+    "qaseProject": null,
+    "kind": "run",
+    "environments": [
+      "playwright",
+      "testing-company"
+    ],
+    "source": "MANUAL",
+    "status": "ACTIVE",
+    "stats": {
+      "pass": 4,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 7
+    },
+    "observations": "Última atualização automática: API Lab abre em /automacoes/api-lab sem erros -> FALHA.",
+    "clientSlug": "testing-company",
+    "testPlanId": "plan_tc_auto_playwright",
+    "testPlanName": "Testing Company - Regressão automatizada Playwright",
+    "testPlanSource": "manual",
+    "testPlanProjectCode": null,
+    "createdAt": "2026-04-22T05:14:23.923Z",
+    "updatedAt": "2026-04-22T05:15:08.000Z"
+  },
+  {
     "id": "playwright_testing_company_mo9k42pe_ncnq",
     "slug": "playwright_testing_company_mo9k42pe_ncnq",
     "name": "Testing Company - Regressão automatizada Playwright - 2026-04-22 04:32",

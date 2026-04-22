@@ -1,6 +1,366 @@
 {
   "items": [
     {
+      "id": "3ae57937-4760-430b-8ea2-40a28265718c",
+      "created_at": "2026-04-22T05:22:46.977Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "95df7d51-8d14-4d9a-b995-cd51d77ddd55",
+      "created_at": "2026-04-22T05:22:43.350Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "36bc3063-7f25-4419-b2d5-b0265265ec82",
+      "created_at": "2026-04-22T05:22:40.092Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "38b7f17f-375e-4e27-b53d-6a95ba02320e",
+      "created_at": "2026-04-22T05:22:37.457Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "4dbb4bd0-341a-4dc7-8994-1539f5a3b6f7",
+      "created_at": "2026-04-22T05:22:34.697Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "d9ceebb0-cfe7-469d-a0b9-34b44c2e1561",
+      "created_at": "2026-04-22T05:22:31.638Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "631d95a0-9440-4e17-8be3-69d5259ba8fd",
+      "created_at": "2026-04-22T05:22:28.596Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "c7566c55-c613-4d47-b78b-e2158ca0c633",
+      "created_at": "2026-04-22T05:22:24.580Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "81568547-f4c4-4a55-bbcc-9546c74ad8f0",
+      "created_at": "2026-04-22T05:22:13.640Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "2fca2112-deab-4b46-ba8a-12c7e340d56b",
+      "created_at": "2026-04-22T05:22:04.805Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "329d1732-0003-4659-89e1-3f69a5c6bd15",
+      "created_at": "2026-04-22T05:21:59.992Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "b59d9446-1760-4562-b1b2-c122d42a59fa",
+      "created_at": "2026-04-22T05:21:55.364Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "eacb4772-8ae7-4212-92c1-2270f9d46862",
+      "created_at": "2026-04-22T05:15:33.993Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "cb1f67b9-e27c-46a2-9dff-ccd2637f08c9",
+      "created_at": "2026-04-22T05:15:29.894Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "adfe59ee-529f-4c91-a5da-765922e6bc04",
+      "created_at": "2026-04-22T05:15:26.029Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "c59350cc-2867-470c-af75-462d2bde1cb4",
+      "created_at": "2026-04-22T05:15:23.053Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "38f79a3b-fecc-4be8-9dad-7273563d2ffe",
+      "created_at": "2026-04-22T05:15:19.579Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "0fe53b0b-1fbf-4303-b6c4-c5cb742b7c3c",
+      "created_at": "2026-04-22T05:15:15.679Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "01f107d9-01d1-4f04-911d-51b3a3de4b6d",
+      "created_at": "2026-04-22T05:15:12.157Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "eb4efc0d-1b19-4136-8c27-476f1ca29179",
+      "created_at": "2026-04-22T05:14:48.475Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "7edf472b-2cad-4377-973f-b524c8a32ef2",
+      "created_at": "2026-04-22T05:14:36.603Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "a9290adc-bdb6-45e4-afea-846ad3c99440",
+      "created_at": "2026-04-22T05:14:28.759Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "6fa7a4bf-c74e-4719-b176-af470e922dd7",
+      "created_at": "2026-04-22T05:14:24.580Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
+      "id": "3976b2ca-469a-4d28-a0f4-38c774ab79cd",
+      "created_at": "2026-04-22T05:14:19.160Z",
+      "actor_user_id": "usr_admin_demo_test",
+      "actor_email": "admin@demo.test",
+      "action": "auth.login.success",
+      "entity_type": "user",
+      "entity_id": "usr_admin_demo_test",
+      "entity_label": "admin@demo.test",
+      "metadata": {
+        "role": null,
+        "companySlug": null,
+        "ip": "::ffff:127.0.0.1"
+      }
+    },
+    {
       "id": "d773b5b4-efe9-4e09-b8f3-9b9027a046b9",
       "created_at": "2026-04-22T04:32:37.248Z",
       "actor_user_id": "usr_admin_demo_test",

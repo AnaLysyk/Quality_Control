@@ -1,6 +1,18 @@
 import { NextResponse } from "next/server";
 
-import { getNodeWithContext, getNodeMemories, getSubgraph, traceImpact } from "@/lib/brain";
+import {
+  findSimilarNodes,
+  getNodeAncestors,
+  getNodeDescendants,
+  getNodeInfluence,
+  getNodeMemories,
+  getNodeStats,
+  getNodeWithContext,
+  getRelatedMemories,
+  getSubgraph,
+  suggestConnections,
+  traceImpact,
+} from "@/lib/brain";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export async function GET(
@@ -16,24 +28,59 @@ export async function GET(
   const url = new URL(req.url);
   const include = url.searchParams.get("include") ?? "context";
   const depth = Math.min(5, Math.max(1, Number(url.searchParams.get("depth") ?? 2)));
+  const includeSet = new Set(include.split(",").map((value) => value.trim()).filter(Boolean));
+  const wants = (key: string) => include === "all" || includeSet.has(key);
 
   try {
     const result: Record<string, unknown> = {};
 
-    if (include.includes("context") || include === "all") {
+    if (wants("context")) {
       result.context = await getNodeWithContext(id, depth);
     }
-    if (include.includes("memories") || include === "all") {
+    if (wants("memories")) {
       result.memories = await getNodeMemories(id);
     }
-    if (include.includes("impact") || include === "all") {
+    if (wants("impact")) {
       result.impact = await traceImpact(id, depth);
     }
-    if (include.includes("subgraph") || include === "all") {
+    if (wants("subgraph")) {
       result.subgraph = await getSubgraph(id, depth);
     }
+    if (wants("stats")) {
+      result.stats = await getNodeStats(id);
+    }
+    if (wants("influence")) {
+      result.influence = await getNodeInfluence(id);
+    }
+    if (wants("relatedMemories")) {
+      result.relatedMemories = await getRelatedMemories(id, depth);
+    }
+    if (wants("ancestors")) {
+      result.ancestors = await getNodeAncestors(id);
+    }
+    if (wants("descendants")) {
+      result.descendants = await getNodeDescendants(id);
+    }
+    if (wants("suggestions")) {
+      result.suggestions = await suggestConnections(id, 6);
+    }
+    if (wants("similar")) {
+      result.similarNodes = await findSimilarNodes(id, 6);
+    }
 
-    if (!result.context && !result.memories && !result.impact && !result.subgraph) {
+    if (
+      !result.context &&
+      !result.memories &&
+      !result.impact &&
+      !result.subgraph &&
+      !result.stats &&
+      !result.influence &&
+      !result.relatedMemories &&
+      !result.ancestors &&
+      !result.descendants &&
+      !result.suggestions &&
+      !result.similarNodes
+    ) {
       result.context = await getNodeWithContext(id, depth);
     }
 

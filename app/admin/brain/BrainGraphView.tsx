@@ -1,21 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useBrainGraph, useBrainStats, useBrainNodeContext, useBrainMemories } from "@/hooks/useBrain";
 import type { BrainNode, BrainEdge, BrainMemory } from "@/hooks/useBrain";
 import { useTranslation } from "@/context/LanguageContext";
 import styles from "./Brain.module.css";
 
-/* ─── Hook to detect theme ─── */
+/* â”€â”€â”€ Hook to detect theme â”€â”€â”€ */
 function useTheme() {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof document === "undefined") return true;
+    return document.documentElement.classList.contains("dark");
+  });
 
   useEffect(() => {
-    // Check initial state
     const checkDark = () => document.documentElement.classList.contains("dark");
-    setIsDark(checkDark());
-
-    // Observe class changes on <html>
     const observer = new MutationObserver(() => {
       setIsDark(checkDark());
     });
@@ -27,11 +26,11 @@ function useTheme() {
   return { isDark };
 }
 
-/* ─── Testing Company Colors ─── */
+/* â”€â”€â”€ Testing Company Colors â”€â”€â”€ */
 const TC_PRIMARY = "#011848";  // Dark blue
 const TC_ACCENT = "#ef0001";   // Red
 
-/* ─── Enhanced Color mapping per node type (dark mode) ─── */
+/* â”€â”€â”€ Enhanced Color mapping per node type (dark mode) â”€â”€â”€ */
 const NODE_COLORS_DARK: Record<string, string> = {
   Company: TC_ACCENT,          // Testing Company red
   Application: "#9c27b0",
@@ -46,7 +45,7 @@ const NODE_COLORS_DARK: Record<string, string> = {
   Note: "#ffc107",
 };
 
-/* ─── Enhanced Color mapping per node type (light mode) ─── */
+/* â”€â”€â”€ Enhanced Color mapping per node type (light mode) â”€â”€â”€ */
 const NODE_COLORS_LIGHT: Record<string, string> = {
   Company: TC_PRIMARY,         // Testing Company blue
   Application: "#7b1fa2",
@@ -79,19 +78,19 @@ const MEMORY_TYPE_COLORS_LIGHT: Record<string, string> = {
   TECHNICAL_NOTE: "#ffa000",
 };
 
-/* ─── Node type icons (emoji) ─── */
+/* â”€â”€â”€ Node type icons (emoji) â”€â”€â”€ */
 const NODE_ICONS: Record<string, string> = {
-  Company: "🏢",
-  Application: "📱",
-  Module: "📦",
-  Ticket: "🎫",
-  Defect: "🐛",
-  User: "👤",
-  Screen: "🖥️",
-  TestRun: "🧪",
-  Release: "🚀",
-  Integration: "🔗",
-  Note: "📝",
+  Company: "C",
+  Application: "A",
+  Module: "M",
+  Ticket: "T",
+  Defect: "D",
+  User: "U",
+  Screen: "S",
+  TestRun: "Q",
+  Release: "R",
+  Integration: "I",
+  Note: "N",
 };
 
 function getNodeColor(type: string, isDark: boolean) {
@@ -105,29 +104,48 @@ function getMemoryTypeColor(memoryType: string, isDark: boolean) {
 }
 
 function getNodeIcon(type: string) {
-  return NODE_ICONS[type] ?? "●";
+  return NODE_ICONS[type] ?? "*";
 }
 
 function getNodeRadius(type: string, isRoot: boolean) {
-  if (isRoot) return 38;
-  if (type === "Company") return 32;
-  if (type === "Application" || type === "Module") return 26;
-  return 20;
+  if (isRoot) return 46;
+  if (type === "Company") return 38;
+  if (type === "Application" || type === "Module") return 30;
+  return 22;
 }
 
-/* ─── Force simulation types ─── */
+function lightenColor(hex: string, percent: number): string {
+  const num = parseInt(hex.slice(1), 16);
+  const r = Math.min(255, ((num >> 16) & 0xff) + percent);
+  const g = Math.min(255, ((num >> 8) & 0xff) + percent);
+  const b = Math.min(255, (num & 0xff) + percent);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function darkenColor(hex: string, percent: number): string {
+  const num = parseInt(hex.slice(1), 16);
+  const r = Math.max(0, ((num >> 16) & 0xff) - percent);
+  const g = Math.max(0, ((num >> 8) & 0xff) - percent);
+  const b = Math.max(0, (num & 0xff) - percent);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+/* â”€â”€â”€ Force simulation types â”€â”€â”€ */
 type SimNode = BrainNode & { x: number; y: number; vx: number; vy: number; fx?: number | null; fy?: number | null };
 
 function initSimulation(nodes: BrainNode[], edges: BrainEdge[], width: number, height: number) {
   const cx = width / 2;
   const cy = height / 2;
+  const spread = Math.min(Math.max(280, Math.sqrt(nodes.length) * 90), 760);
 
   const simNodes: SimNode[] = nodes.map((n) => ({
     ...n,
-    x: cx + (Math.random() - 0.5) * 400,
-    y: cy + (Math.random() - 0.5) * 400,
+    x: n.isRoot ? cx : cx + (Math.random() - 0.5) * spread,
+    y: n.isRoot ? cy : cy + (Math.random() - 0.5) * spread,
     vx: 0,
     vy: 0,
+    fx: n.isRoot ? cx : null,
+    fy: n.isRoot ? cy : null,
   }));
 
   return simNodes;
@@ -142,8 +160,8 @@ function tickSimulation(simNodes: SimNode[], edges: BrainEdge[], width: number, 
   // Center gravity
   for (const node of simNodes) {
     if (node.fx != null) { node.x = node.fx; node.y = node.fy!; continue; }
-    node.vx += (cx - node.x) * 0.0008;
-    node.vy += (cy - node.y) * 0.0008;
+    node.vx += (cx - node.x) * 0.0006;
+    node.vy += (cy - node.y) * 0.0006;
   }
 
   // Stronger repulsion for larger nodes
@@ -154,7 +172,7 @@ function tickSimulation(simNodes: SimNode[], edges: BrainEdge[], width: number, 
       let dx = b.x - a.x;
       let dy = b.y - a.y;
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      const force = 2000 / (dist * dist);
+      const force = 2600 / (dist * dist);
       dx = (dx / dist) * force;
       dy = (dy / dist) * force;
       if (a.fx == null) { a.vx -= dx; a.vy -= dy; }
@@ -170,7 +188,7 @@ function tickSimulation(simNodes: SimNode[], edges: BrainEdge[], width: number, 
     let dx = b.x - a.x;
     let dy = b.y - a.y;
     const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-    const force = (dist - 180) * 0.004;
+    const force = (dist - 220) * 0.0045;
     dx = (dx / dist) * force;
     dy = (dy / dist) * force;
     if (a.fx == null) { a.vx += dx; a.vy += dy; }
@@ -184,12 +202,12 @@ function tickSimulation(simNodes: SimNode[], edges: BrainEdge[], width: number, 
     node.vy *= 0.55;
     node.x += node.vx * alpha;
     node.y += node.vy * alpha;
-    node.x = Math.max(60, Math.min(width - 60, node.x));
-    node.y = Math.max(60, Math.min(height - 60, node.y));
+    node.x = Math.max(84, Math.min(width - 84, node.x));
+    node.y = Math.max(84, Math.min(height - 84, node.y));
   }
 }
 
-/* ─── Main component ─── */
+/* â”€â”€â”€ Main component â”€â”€â”€ */
 export default function BrainGraphView() {
   const { t, locale } = useTranslation();
   const { isDark } = useTheme();
@@ -198,8 +216,9 @@ export default function BrainGraphView() {
   const [rootNodeId, setRootNodeId] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
   const [filterType, setFilterType] = useState<string | null>(null);
-  const [depth, setDepth] = useState(2);
-  const [animTime, setAnimTime] = useState(0);
+  const [depth, setDepth] = useState(3);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [viewScale, setViewScale] = useState(1);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const simNodesRef = useRef<SimNode[]>([]);
@@ -209,12 +228,19 @@ export default function BrainGraphView() {
 
   const { data: graphData, isLoading: graphLoading } = useBrainGraph(rootNodeId, depth);
   const { data: stats } = useBrainStats();
-  const { data: nodeContext } = useBrainNodeContext(selectedNodeId);
+  const { data: nodeContext } = useBrainNodeContext(selectedNodeId, depth);
   const { data: memoriesData } = useBrainMemories(selectedNodeId);
 
   const nodes = graphData?.nodes ?? [];
   const edges = graphData?.edges ?? [];
   const memories: BrainMemory[] = memoriesData?.memories ?? [];
+
+  useEffect(() => {
+    if (selectedNodeId) {
+      const frame = window.requestAnimationFrame(() => setPanelOpen(true));
+      return () => window.cancelAnimationFrame(frame);
+    }
+  }, [selectedNodeId]);
 
   // Filter nodes
   const filteredNodes = nodes.filter((n) => {
@@ -239,7 +265,7 @@ export default function BrainGraphView() {
     canvas.height = height * (window.devicePixelRatio || 1);
 
     simNodesRef.current = initSimulation(filteredNodes, filteredEdges, width, height);
-  }, [filteredNodes.length, filteredEdges.length, filterType, searchText]);
+  }, [filteredEdges, filteredNodes, filterType, searchText]);
 
   // Render loop
   useEffect(() => {
@@ -366,7 +392,7 @@ export default function BrainGraphView() {
         }
       }
 
-      // Draw nodes (sorted só selected is on top)
+      // Draw nodes (sorted sÃ³ selected is on top)
       const sortedNodes = [...simNodes].sort((a, b) => {
         if (a.id === selectedNodeId) return 1;
         if (b.id === selectedNodeId) return -1;
@@ -440,7 +466,7 @@ export default function BrainGraphView() {
         ctx.fillText(icon, node.x, node.y);
 
         // Label with rounded background
-        const label = node.label.length > 22 ? node.label.slice(0, 20) + "…" : node.label;
+        const label = node.label.length > 22 ? `${node.label.slice(0, 20)}...` : node.label;
         ctx.font = `${isSelected ? "bold " : ""}${radius > 26 ? 14 : 12}px Inter, system-ui, sans-serif`;
         const labelWidth = ctx.measureText(label).width;
         const labelY = node.y + radius + 14;
@@ -491,114 +517,89 @@ export default function BrainGraphView() {
     };
   }, [filteredEdges, selectedNodeId, hoveredNodeId, isDark]);
 
-  // Helper functions for colors
-  function lightenColor(hex: string, percent: number): string {
-    const num = parseInt(hex.slice(1), 16);
-    const r = Math.min(255, ((num >> 16) & 0xff) + percent);
-    const g = Math.min(255, ((num >> 8) & 0xff) + percent);
-    const b = Math.min(255, (num & 0xff) + percent);
-    return `rgb(${r}, ${g}, ${b})`;
-  }
-
-  function darkenColor(hex: string, percent: number): string {
-    const num = parseInt(hex.slice(1), 16);
-    const r = Math.max(0, ((num >> 16) & 0xff) - percent);
-    const g = Math.max(0, ((num >> 8) & 0xff) - percent);
-    const b = Math.max(0, (num & 0xff) - percent);
-    return `rgb(${r}, ${g}, ${b})`;
-  }
-
   // Mouse interaction
-  const findNodeAtPoint = useCallback(
-    (clientX: number, clientY: number) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return null;
+  function findNodeAtPoint(clientX: number, clientY: number) {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const pan = panRef.current;
+    const mx = (clientX - rect.left - pan.x) / pan.scale;
+    const my = (clientY - rect.top - pan.y) / pan.scale;
+
+    for (let i = simNodesRef.current.length - 1; i >= 0; i--) {
+      const node = simNodesRef.current[i];
+      const r = getNodeRadius(node.type, node.isRoot ?? false);
+      const dx = mx - node.x;
+      const dy = my - node.y;
+      if (dx * dx + dy * dy <= (r + 4) * (r + 4)) return node;
+    }
+    return null;
+  }
+
+  function handleMouseDown(e: React.MouseEvent<HTMLCanvasElement>) {
+    const node = findNodeAtPoint(e.clientX, e.clientY);
+    if (node) {
+      const canvas = canvasRef.current!;
       const rect = canvas.getBoundingClientRect();
       const pan = panRef.current;
-      const mx = (clientX - rect.left - pan.x) / pan.scale;
-      const my = (clientY - rect.top - pan.y) / pan.scale;
+      const mx = (e.clientX - rect.left - pan.x) / pan.scale;
+      const my = (e.clientY - rect.top - pan.y) / pan.scale;
+      dragRef.current = { nodeId: node.id, offsetX: mx - node.x, offsetY: my - node.y };
+      node.fx = node.x;
+      node.fy = node.y;
+      return;
+    }
 
-      for (let i = simNodesRef.current.length - 1; i >= 0; i--) {
-        const node = simNodesRef.current[i];
-        const r = getNodeRadius(node.type, node.isRoot ?? false);
-        const dx = mx - node.x;
-        const dy = my - node.y;
-        if (dx * dx + dy * dy <= (r + 4) * (r + 4)) return node;
-      }
-      return null;
-    },
-    []
-  );
+    panRef.current.dragging = true;
+    panRef.current.lastX = e.clientX;
+    panRef.current.lastY = e.clientY;
+  }
 
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const node = findNodeAtPoint(e.clientX, e.clientY);
+  function handleMouseMove(e: React.MouseEvent<HTMLCanvasElement>) {
+    if (dragRef.current) {
+      const canvas = canvasRef.current!;
+      const rect = canvas.getBoundingClientRect();
+      const pan = panRef.current;
+      const mx = (e.clientX - rect.left - pan.x) / pan.scale;
+      const my = (e.clientY - rect.top - pan.y) / pan.scale;
+      const node = simNodesRef.current.find((entry) => entry.id === dragRef.current!.nodeId);
       if (node) {
-        const canvas = canvasRef.current!;
-        const rect = canvas.getBoundingClientRect();
-        const pan = panRef.current;
-        const mx = (e.clientX - rect.left - pan.x) / pan.scale;
-        const my = (e.clientY - rect.top - pan.y) / pan.scale;
-        dragRef.current = { nodeId: node.id, offsetX: mx - node.x, offsetY: my - node.y };
-        node.fx = node.x;
-        node.fy = node.y;
-      } else {
-        panRef.current.dragging = true;
-        panRef.current.lastX = e.clientX;
-        panRef.current.lastY = e.clientY;
+        node.fx = mx - dragRef.current.offsetX;
+        node.fy = my - dragRef.current.offsetY;
+        node.x = node.fx;
+        node.y = node.fy;
       }
-    },
-    [findNodeAtPoint]
-  );
+      return;
+    }
 
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      if (dragRef.current) {
-        const canvas = canvasRef.current!;
-        const rect = canvas.getBoundingClientRect();
-        const pan = panRef.current;
-        const mx = (e.clientX - rect.left - pan.x) / pan.scale;
-        const my = (e.clientY - rect.top - pan.y) / pan.scale;
-        const node = simNodesRef.current.find((n) => n.id === dragRef.current!.nodeId);
-        if (node) {
-          node.fx = mx - dragRef.current.offsetX;
-          node.fy = my - dragRef.current.offsetY;
-          node.x = node.fx;
-          node.y = node.fy;
-        }
-      } else if (panRef.current.dragging) {
-        panRef.current.x += e.clientX - panRef.current.lastX;
-        panRef.current.y += e.clientY - panRef.current.lastY;
-        panRef.current.lastX = e.clientX;
-        panRef.current.lastY = e.clientY;
-      } else {
-        // Hover detection
-        const hoverNode = findNodeAtPoint(e.clientX, e.clientY);
-        setHoveredNodeId(hoverNode?.id ?? null);
+    if (panRef.current.dragging) {
+      panRef.current.x += e.clientX - panRef.current.lastX;
+      panRef.current.y += e.clientY - panRef.current.lastY;
+      panRef.current.lastX = e.clientX;
+      panRef.current.lastY = e.clientY;
+      return;
+    }
+
+    const hoverNode = findNodeAtPoint(e.clientX, e.clientY);
+    setHoveredNodeId(hoverNode?.id ?? null);
+  }
+
+  function handleMouseUp() {
+    if (dragRef.current) {
+      const node = simNodesRef.current.find((entry) => entry.id === dragRef.current!.nodeId);
+      if (node) {
+        node.fx = null;
+        node.fy = null;
       }
-    },
-    [findNodeAtPoint]
-  );
+      setSelectedNodeId(dragRef.current.nodeId);
+      dragRef.current = null;
+      return;
+    }
 
-  const handleMouseUp = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      if (dragRef.current) {
-        const node = simNodesRef.current.find((n) => n.id === dragRef.current!.nodeId);
-        if (node) { node.fx = null; node.fy = null; }
-        // Click = select
-        const moved = dragRef.current.offsetX !== 0 || dragRef.current.offsetY !== 0;
-        if (!moved || true) {
-          setSelectedNodeId(dragRef.current.nodeId);
-        }
-        dragRef.current = null;
-      } else {
-        panRef.current.dragging = false;
-      }
-    },
-    []
-  );
+    panRef.current.dragging = false;
+  }
 
-  const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
+  function handleWheel(e: React.WheelEvent<HTMLCanvasElement>) {
     e.preventDefault();
     const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
@@ -612,19 +613,30 @@ export default function BrainGraphView() {
     pan.x = mx - ((mx - pan.x) / pan.scale) * newScale;
     pan.y = my - ((my - pan.y) / pan.scale) * newScale;
     pan.scale = newScale;
-  }, []);
+    setViewScale(Number(newScale.toFixed(2)));
+  }
 
-  const handleDoubleClick = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const node = findNodeAtPoint(e.clientX, e.clientY);
-      if (node) {
-        setRootNodeId(node.id);
-        setSelectedNodeId(node.id);
-        panRef.current = { x: 0, y: 0, scale: 1, dragging: false, lastX: 0, lastY: 0 };
-      }
-    },
-    [findNodeAtPoint]
-  );
+  function handleDoubleClick(e: React.MouseEvent<HTMLCanvasElement>) {
+    const node = findNodeAtPoint(e.clientX, e.clientY);
+    if (node) {
+      setRootNodeId(node.id);
+      setSelectedNodeId(node.id);
+      panRef.current = { x: 0, y: 0, scale: 1, dragging: false, lastX: 0, lastY: 0 };
+      setViewScale(1);
+    }
+  }
+
+  function resetViewport() {
+    panRef.current = { x: 0, y: 0, scale: 1, dragging: false, lastX: 0, lastY: 0 };
+    setViewScale(1);
+  }
+
+  function clearBrainFilters() {
+    setSearchText("");
+    setFilterType(null);
+    setRootNodeId(null);
+    resetViewport();
+  }
 
   // Node types present for filter buttons
   const nodeTypes = Array.from(new Set(nodes.map((n) => n.type))).sort();
@@ -634,76 +646,158 @@ export default function BrainGraphView() {
   const nodeNeighbors = nodeContext?.context?.neighbors ?? [];
   const nodeOutgoing = nodeContext?.context?.outgoing ?? [];
   const nodeIncoming = nodeContext?.context?.incoming ?? [];
+  const isPanelVisible = panelOpen && (!!selectedNode || !!stats);
+  const recentActivity = stats?.recentActivity?.slice(0, 6) ?? [];
+  const topNodeTypes = stats?.breakdown?.nodesByType?.slice(0, 6) ?? [];
+  const impactData = nodeContext?.impact;
+  const impactedNodes = impactData?.impactedNodes ?? [];
+  const impactPaths = impactData?.paths ?? [];
 
   return (
     <div className={styles.brainPage}>
       {/* Top bar */}
       <div className={styles.topBar}>
-        <div className={styles.title}>
-          <span className={styles.pulseOrb} />
-          {t.brain.title} — {t.brain.subtitle}
+        <div className={styles.topBarMain}>
+          <div className={styles.titleBlock}>
+            <div className={styles.title}>
+              <span className={styles.pulseOrb} />
+              {t.brain.title} - {t.brain.subtitle}
+            </div>
+            <div className={styles.subtitleMeta}>
+              {locale === "pt"
+                ? `Exploracao em profundidade ${depth} com ${filteredNodes.length} nos visiveis.`
+                : `Depth ${depth} exploration with ${filteredNodes.length} visible nodes.`}
+            </div>
+          </div>
+
+          <div className={styles.controlCluster}>
+            <input
+              className={styles.searchInput}
+              placeholder={t.brain.searchPlaceholder}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+
+            <div className={styles.depthControl}>
+              <button
+                type="button"
+                className={styles.filterBtn}
+                onClick={() => setDepth((current) => Math.max(1, current - 1))}
+                disabled={depth <= 1}
+              >
+                -1
+              </button>
+              <span className={styles.depthBadge}>
+                {locale === "pt" ? `Profundidade ${depth}` : `Depth ${depth}`}
+              </span>
+              <button
+                type="button"
+                className={styles.filterBtn}
+                onClick={() => setDepth((current) => Math.min(4, current + 1))}
+                disabled={depth >= 4}
+              >
+                +1
+              </button>
+            </div>
+
+            <button type="button" className={styles.filterBtn} onClick={resetViewport}>
+              {`Zoom ${Math.round(viewScale * 100)}%`}
+            </button>
+
+            <button type="button" className={styles.filterBtn} onClick={clearBrainFilters}>
+              {locale === "pt" ? "Limpar foco" : "Clear focus"}
+            </button>
+
+            <button
+              type="button"
+              className={panelOpen ? styles.filterBtnActive : styles.filterBtn}
+              onClick={() => setPanelOpen((current) => !current)}
+            >
+              {locale === "pt" ? "Painel" : "Panel"}
+            </button>
+          </div>
         </div>
 
-        <input
-          className={styles.searchInput}
-          placeholder={t.brain.searchPlaceholder}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-        />
+        <div className={styles.filterRow}>
+          {nodeTypes.map((type) => (
+            <button
+              key={type}
+              className={filterType === type ? styles.filterBtnActive : styles.filterBtn}
+              onClick={() => setFilterType(filterType === type ? null : type)}
+            >
+              <span
+                className={styles.filterDot}
+                data-color={getNodeColor(type, isDark)}
+                ref={(el) => { if (el) el.style.setProperty("--dot-color", getNodeColor(type, isDark)); }}
+              />
+              {type}
+            </button>
+          ))}
 
-        {nodeTypes.map((type) => (
-          <button
-            key={type}
-            className={filterType === type ? styles.filterBtnActive : styles.filterBtn}
-            onClick={() => setFilterType(filterType === type ? null : type)}
-          >
-            <span
-              className={styles.filterDot}
-              data-color={getNodeColor(type, isDark)}
-              ref={(el) => { if (el) el.style.setProperty("--dot-color", getNodeColor(type, isDark)); }}
-            />
-            {type}
-          </button>
-        ))}
+          {rootNodeId && (
+            <button
+              type="button"
+              className={styles.filterBtn}
+              onClick={() => {
+                setRootNodeId(null);
+                resetViewport();
+              }}
+            >
+              {locale === "pt" ? "Resetar raiz" : "Reset root"}
+            </button>
+          )}
+        </div>
 
-        {rootNodeId && (
-          <button
-            className={styles.filterBtn}
-            onClick={() => { setRootNodeId(null); panRef.current = { x: 0, y: 0, scale: 1, dragging: false, lastX: 0, lastY: 0 }; }}
-          >
-            ✕ Reset
-          </button>
-        )}
-
-        {/* Stats */}
         <div className={styles.statsBar}>
           <div className={styles.statItem}>
-            <span className={styles.statValue}>{stats?.integrity?.stats?.nodes ?? "—"}</span>
+            <span className={styles.statValue}>{stats?.integrity?.stats?.nodes ?? "-"}</span>
             <span className={styles.statLabel}>{t.brain.stats.nodes}</span>
           </div>
           <div className={styles.statItem}>
-            <span className={styles.statValue}>{stats?.integrity?.stats?.edges ?? "—"}</span>
+            <span className={styles.statValue}>{stats?.integrity?.stats?.edges ?? "-"}</span>
             <span className={styles.statLabel}>{t.brain.stats.edges}</span>
           </div>
           <div className={styles.statItem}>
-            <span className={styles.statValue}>{stats?.integrity?.stats?.memories ?? "—"}</span>
+            <span className={styles.statValue}>{stats?.integrity?.stats?.memories ?? "-"}</span>
             <span className={styles.statLabel}>{t.brain.stats.memories}</span>
+          </div>
+          <div className={styles.statItem}>
+            <span className={styles.statValue}>{filteredNodes.length}</span>
+            <span className={styles.statLabel}>{locale === "pt" ? "Visiveis" : "Visible"}</span>
           </div>
         </div>
       </div>
-
       {/* Main area */}
       <div className={styles.mainArea}>
-        {/* Graph canvas */}
         <div className={styles.graphContainer}>
+          <div className={styles.graphHud}>
+            <div className={styles.graphHudGroup}>
+              <span className={styles.hudPill}>
+                {rootNodeId
+                  ? `${locale === "pt" ? "Raiz" : "Root"}: ${selectedNode?.id === rootNodeId ? selectedNode.label : rootNodeId.slice(0, 8)}`
+                  : locale === "pt" ? "Mapa global" : "Global map"}
+              </span>
+              <span className={styles.hudPill}>{filteredNodes.length} {locale === "pt" ? "nos" : "nodes"}</span>
+              <span className={styles.hudPill}>{filteredEdges.length} {locale === "pt" ? "conexoes" : "edges"}</span>
+            </div>
+            <div className={styles.graphHudGroup}>
+              <button type="button" className={styles.hudButton} onClick={resetViewport}>
+                {locale === "pt" ? "Centralizar" : "Center"}
+              </button>
+              <button type="button" className={styles.hudButton} onClick={() => setPanelOpen((current) => !current)}>
+                {panelOpen ? (locale === "pt" ? "Ocultar painel" : "Hide panel") : (locale === "pt" ? "Mostrar painel" : "Show panel")}
+              </button>
+            </div>
+          </div>
+
           {graphLoading ? (
             <div className={styles.emptyState}>
               <div className={styles.pulseOrbLg} />
               <span>{t.common.loading}</span>
             </div>
           ) : filteredNodes.length === 0 ? (
-            <div className={styles.emptyState}>
-              <div className={styles.emptyIcon}>🧠</div>
+          <div className={styles.emptyState}>
+              <div className={styles.emptyIcon}>*</div>
               <span>{t.brain.empty.title}</span>
               <span className={styles.emptyDescription}>{t.brain.empty.description}</span>
             </div>
@@ -714,27 +808,80 @@ export default function BrainGraphView() {
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
-              onMouseLeave={() => { handleMouseUp({} as React.MouseEvent<HTMLCanvasElement>); setHoveredNodeId(null); }}
+              onMouseLeave={() => { handleMouseUp(); setHoveredNodeId(null); }}
               onWheel={handleWheel}
               onDoubleClick={handleDoubleClick}
             />
           )}
         </div>
 
-        {/* Side panel */}
-        <div className={selectedNode ? styles.sidePanel : styles.sidePanelHidden}>
-          {selectedNode && (
+        <div className={isPanelVisible ? styles.sidePanel : styles.sidePanelHidden}>
+          <div className={styles.panelHeader}>
+            <div>
+              <h2 className={styles.panelTitle}>{selectedNode ? selectedNode.label : (locale === "pt" ? "Visao do Brain" : "Brain overview")}</h2>
+              <p className={styles.panelSubtitle}>
+                {selectedNode
+                  ? `${selectedNode.type}${selectedNode.refId ? ` - ${selectedNode.refId.slice(0, 8)}` : ""}`
+                  : (locale === "pt" ? "Contexto, profundidade e atividade recente." : "Context, depth and recent activity.")}
+              </p>
+            </div>
+            <button type="button" className={styles.panelCloseBtn} onClick={() => setPanelOpen(false)}>
+              {locale === "pt" ? "Fechar" : "Close"}
+            </button>
+          </div>
+
+          {!selectedNode ? (
             <>
-              <div>
-                <h2 className={styles.panelTitle}>{selectedNode.label}</h2>
-                <p className={styles.panelSubtitle}>
-                  {selectedNode.type} {selectedNode.refId ? `• ${selectedNode.refId.slice(0, 8)}` : ""}
-                </p>
+              <div className={styles.panelSection}>
+                <p className={styles.panelSectionTitle}>{locale === "pt" ? "Estado atual" : "Current state"}</p>
+                <div className={styles.metadataItem}>
+                  <span className={styles.metadataKey}>{locale === "pt" ? "Profundidade" : "Depth"}</span>
+                  <span className={styles.metadataValue}>{depth}</span>
+                </div>
+                <div className={styles.metadataItem}>
+                  <span className={styles.metadataKey}>{locale === "pt" ? "Zoom" : "Zoom"}</span>
+                  <span className={styles.metadataValue}>{Math.round(viewScale * 100)}%</span>
+                </div>
+                <div className={styles.metadataItem}>
+                  <span className={styles.metadataKey}>{locale === "pt" ? "Raiz" : "Root"}</span>
+                  <span className={styles.metadataValue}>{rootNodeId ? rootNodeId.slice(0, 8) : (locale === "pt" ? "Global" : "Global")}</span>
+                </div>
+                <div className={styles.metadataItem}>
+                  <span className={styles.metadataKey}>{locale === "pt" ? "Filtro" : "Filter"}</span>
+                  <span className={styles.metadataValue}>{filterType ?? (locale === "pt" ? "Todos" : "All")}</span>
+                </div>
               </div>
 
+              {topNodeTypes.length > 0 ? (
+                <div className={styles.panelSection}>
+                  <p className={styles.panelSectionTitle}>{locale === "pt" ? "Tipos dominantes" : "Top node types"}</p>
+                  {topNodeTypes.map((item) => (
+                    <div key={item.type} className={styles.metadataItem}>
+                      <span className={styles.metadataKey}>{item.type}</span>
+                      <span className={styles.metadataValue}>{item.count}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {recentActivity.length > 0 ? (
+                <div className={styles.panelSection}>
+                  <p className={styles.panelSectionTitle}>{locale === "pt" ? "Atividade recente" : "Recent activity"}</p>
+                  {recentActivity.map((activity) => (
+                    <div key={activity.id} className={styles.memoryCard}>
+                      <p className={styles.memoryTitle}>{activity.action}</p>
+                      <p className={styles.memorySummary}>{activity.reason ?? activity.entityType}</p>
+                      <span className={styles.memoryBadgeDynamic}>{new Date(activity.createdAt).toLocaleString(locale === "pt" ? "pt-BR" : "en-US")}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <>
               {selectedNode.description && (
                 <div className={styles.panelSection}>
-                  <p className={styles.panelSectionTitle}>{locale === "pt" ? "Descrição" : "Description"}</p>
+                  <p className={styles.panelSectionTitle}>{locale === "pt" ? "Descricao" : "Description"}</p>
                   <p className={styles.memorySummary}>{selectedNode.description}</p>
                 </div>
               )}
@@ -751,11 +898,10 @@ export default function BrainGraphView() {
                 </div>
               )}
 
-              {/* Connections */}
               {nodeNeighbors.length > 0 && (
                 <div className={styles.panelSection}>
                   <p className={styles.panelSectionTitle}>
-                    {t.brain.panel.connections} ({nodeOutgoing.length} {locale === "pt" ? "saída" : "out"}, {nodeIncoming.length} {locale === "pt" ? "entrada" : "in"})
+                    {t.brain.panel.connections} ({nodeOutgoing.length} {locale === "pt" ? "saida" : "out"}, {nodeIncoming.length} {locale === "pt" ? "entrada" : "in"})
                   </p>
                   {nodeNeighbors.slice(0, 20).map((neighbor: BrainNode & { id: string; label: string; type: string }) => {
                     const outEdge = nodeOutgoing.find((e: { toId: string; type: string }) => e.toId === neighbor.id);
@@ -763,11 +909,7 @@ export default function BrainGraphView() {
                     const edgeType = outEdge?.type ?? inEdge?.type ?? "";
 
                     return (
-                      <div
-                        key={neighbor.id}
-                        className={styles.neighborItem}
-                        onClick={() => setSelectedNodeId(neighbor.id)}
-                      >
+                      <div key={neighbor.id} className={styles.neighborItem} onClick={() => setSelectedNodeId(neighbor.id)}>
                         <span className={styles.neighborDot} ref={(el) => { if (el) el.style.setProperty("--dot-color", getNodeColor(neighbor.type, isDark)); }} />
                         <span>{neighbor.label}</span>
                         <span className={styles.neighborEdgeType}>{edgeType}</span>
@@ -777,7 +919,6 @@ export default function BrainGraphView() {
                 </div>
               )}
 
-              {/* Memories */}
               {memories.length > 0 && (
                 <div className={styles.panelSection}>
                   <p className={styles.panelSectionTitle}>{t.brain.panel.memories} ({memories.length})</p>
@@ -795,28 +936,25 @@ export default function BrainGraphView() {
                           }
                         }}
                       >
-                        {m.memoryType} • ★{m.importance}
+                        {m.memoryType} - I{m.importance}
                       </span>
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* Impact */}
-              {nodeContext?.impact?.impactedNodes?.length > 0 && (
+              {impactedNodes.length > 0 && (
                 <div className={styles.panelSection}>
                   <p className={styles.panelSectionTitle}>
-                    {locale === "pt" ? "Impacto" : "Impact"} ({nodeContext.impact.impactedNodes.length} {locale === "pt" ? "nós afetados" : "affected nodes"})
+                    {locale === "pt" ? "Impacto" : "Impact"} ({impactedNodes.length} {locale === "pt" ? "nos afetados" : "affected nodes"})
                   </p>
-                  {nodeContext.impact.paths.slice(0, 10).map((p: { nodeId: string; edgeType: string; distance: number }, i: number) => {
-                    const impactNode = nodeContext.impact.impactedNodes.find((n: BrainNode) => n.id === p.nodeId);
+                  {impactPaths.slice(0, 10).map((p: { nodeId: string; edgeType: string; distance: number }, i: number) => {
+                    const impactNode = impactedNodes.find((n: BrainNode) => n.id === p.nodeId);
                     return (
                       <div key={i} className={styles.neighborItem} onClick={() => setSelectedNodeId(p.nodeId)}>
                         <span className={styles.neighborDot} ref={(el) => { if (el) el.style.setProperty("--dot-color", getNodeColor(impactNode?.type ?? "", isDark)); }} />
                         <span>{impactNode?.label ?? p.nodeId.slice(0, 8)}</span>
-                        <span className={styles.neighborEdgeType}>
-                          {p.edgeType} (dist: {p.distance})
-                        </span>
+                        <span className={styles.neighborEdgeType}>{p.edgeType} (d {p.distance})</span>
                       </div>
                     );
                   })}
@@ -826,7 +964,6 @@ export default function BrainGraphView() {
           )}
         </div>
       </div>
-
       {/* Legend */}
       <div className={styles.legend}>
         {Object.entries(isDark ? NODE_COLORS_DARK : NODE_COLORS_LIGHT).map(([type, color]) => (
@@ -837,11 +974,13 @@ export default function BrainGraphView() {
         ))}
         <div className={styles.legendHint}>
           {locale === "pt"
-            ? "Clique = selecionar • Duplo clique = explorar • Scroll = zoom • Arrastar = mover"
-            : "Click = select • Double click = explore • Scroll = zoom • Drag = move"
+            ? "Clique = selecionar | Duplo clique = explorar | Scroll = zoom | Arrastar = mover"
+            : "Click = select | Double click = explore | Scroll = zoom | Drag = move"
           }
         </div>
       </div>
     </div>
   );
 }
+
+

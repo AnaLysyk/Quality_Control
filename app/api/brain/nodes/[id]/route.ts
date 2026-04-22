@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
+  deleteNode,
   findSimilarNodes,
   getNodeAncestors,
   getNodeDescendants,
@@ -21,7 +22,10 @@ export async function GET(
 ) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+    return NextResponse.json(
+      { error: status === 401 ? "N\u00e3o autorizado" : "Sem permiss\u00e3o" },
+      { status },
+    );
   }
 
   const { id } = await params;
@@ -87,6 +91,29 @@ export async function GET(
     return NextResponse.json(result);
   } catch (error) {
     console.error("[brain/nodes/id] GET error:", error);
-    return NextResponse.json({ error: "Erro ao buscar no" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao buscar n\u00f3" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json(
+      { error: status === 401 ? "N\u00e3o autorizado" : "Sem permiss\u00e3o" },
+      { status },
+    );
+  }
+
+  try {
+    const { id } = await params;
+    const result = await deleteNode(id, admin.id);
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("[brain/nodes/id] DELETE error:", error);
+    return NextResponse.json({ error: "Erro ao excluir n\u00f3" }, { status: 500 });
   }
 }

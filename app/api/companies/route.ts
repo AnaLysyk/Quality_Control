@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { createLocalCompany, deleteLocalCompany, listLocalCompanies } from "@/lib/auth/localStore";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { syncCompanyToBrain } from "@/lib/brain-sync";
 
 export async function GET() {
   const companies = await listLocalCompanies();
@@ -52,6 +53,13 @@ export async function POST(req: Request) {
     integrations: integrations.length ? integrations : undefined,
     created_at: new Date().toISOString(),
   });
+  syncCompanyToBrain({
+    id: company.id,
+    name: company.name,
+    slug: company.slug,
+    status: (company as any).status ?? "active",
+    integration_mode: (company as any).integration_mode ?? "manual",
+  }).catch(() => {});
   return NextResponse.json(company, { status: 201 });
 }
 

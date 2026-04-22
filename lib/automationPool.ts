@@ -14,7 +14,7 @@ function createPool(): pg.Pool {
 
   if (!url) {
     throw new Error(
-      "AUTOMATION_POSTGRES_URL or AUTOMATION_PRISMA_DATABASE_URL is required.",
+      "AUTOMATION_POSTGRES_URL, AUTOMATION_PRISMA_DATABASE_URL or AUTOMATION_DATABASE_URL is required.",
     );
   }
 
@@ -27,17 +27,26 @@ function createPool(): pg.Pool {
   });
 }
 
-export const automationPool: pg.Pool = g.automationPool ?? createPool();
-
-if (process.env.NODE_ENV !== "production") {
-  g.automationPool = automationPool;
+export function getAutomationPool(): pg.Pool {
+  if (!g.automationPool) {
+    g.automationPool = createPool();
+  }
+  return g.automationPool;
 }
+
+export const automationPool: pg.Pool = new Proxy({} as pg.Pool, {
+  get(_target, property) {
+    const pool = getAutomationPool();
+    const value = pool[property as keyof pg.Pool];
+    return typeof value === "function" ? value.bind(pool) : value;
+  },
+});
 
 /**
  * Ensures all automation tables exist. Safe to call on every request (uses IF NOT EXISTS).
  */
 export async function ensureAutomationTables(): Promise<void> {
-  await automationPool.query(`
+  await getAutomationPool().query(`
     CREATE TABLE IF NOT EXISTS automation_scripts (
       id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
       company_slug TEXT NOT NULL,

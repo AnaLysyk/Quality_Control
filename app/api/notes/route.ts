@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { createUserNote, listUserNotes } from "@/lib/userNotesStore";
+import { syncNoteToBrain } from "@/lib/brain-sync";
 
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
@@ -31,6 +32,16 @@ export async function POST(req: Request) {
   if (!note) {
     return NextResponse.json({ error: "Informe título ou conteudo" }, { status: 400 });
   }
+
+  syncNoteToBrain({
+    id: note.id,
+    title: note.title,
+    content: note.content,
+    userId: user.id,
+    status: note.status,
+    priority: note.priority,
+    tags: note.tags,
+  }).catch(() => {});
 
   return NextResponse.json({ item: note }, { status: 201 });
 }

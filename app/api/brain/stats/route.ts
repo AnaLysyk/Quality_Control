@@ -7,7 +7,7 @@ import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 export async function GET(req: Request) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Nao autorizado" : "Sem permissao" }, { status });
   }
 
   try {
@@ -129,13 +129,13 @@ export async function GET(req: Request) {
       alerts.push(...integrity.errors);
     }
     if (graphMetrics.orphanedNodes > 0) {
-      alerts.push(`${graphMetrics.orphanedNodes} nÃ³s sem conexÃ£o direta no grafo.`);
+      alerts.push(`${graphMetrics.orphanedNodes} nos sem conexao direta no grafo.`);
     }
     if (graphMetrics.cyclesDetected > 0) {
-      alerts.push(`${graphMetrics.cyclesDetected} ciclos detectados. Revisar relaÃ§Ãµes redundantes.`);
+      alerts.push(`${graphMetrics.cyclesDetected} ciclos detectados. Revisar relacoes redundantes.`);
     }
     if (graphMetrics.density < 0.015 && graphMetrics.nodeCount > 8) {
-      alerts.push("Grafo disperso: a densidade estÃ¡ baixa para o volume atual de nÃ³s.");
+      alerts.push("Grafo disperso: a densidade esta baixa para o volume atual de nos.");
     }
 
     return NextResponse.json({

@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { brainOnUserCreated } from "@/lib/brain/autoSync";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAccessContext } from "@/lib/auth/session";
 import { getAdminUserItem, listAdminUserItems } from "@/lib/adminUsers";
@@ -232,6 +233,14 @@ export async function POST(req: NextRequest) {
   });
 
   console.error(`[ADMIN-USERS][POST] created admin=${admin?.email ?? "-"} user=${user?.email ?? user?.id}`);
+
+  brainOnUserCreated({
+    id: user.id,
+    name: user.user ?? user.email,
+    email: user.email ?? undefined,
+    role: user.role ?? undefined,
+  }).catch(() => {});
+
   const item = user ? await getAdminUserItem(user.id) : null;
   return NextResponse.json({ ok: true, item }, { status: 201 });
 }

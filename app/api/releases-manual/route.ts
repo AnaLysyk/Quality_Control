@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { canCreateManualDefect, getMockRole, resolveDefectRole } from "@/lib/rbac/defects";
+import { syncReleaseManualToBrain } from "@/lib/brain-sync";
 import type { Release, Stats } from "@/types/release";
 import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalization";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
@@ -218,6 +219,14 @@ export async function POST(req: Request) {
         passRate: total > 0 ? Math.round((release.stats.pass / total) * 100) : 0,
       },
     };
+
+    syncReleaseManualToBrain({
+      id: release.id,
+      title: release.name,
+      description: release.observations ?? null,
+      status: release.status ?? null,
+      companyId: release.clientSlug ?? null,
+    }).catch(() => {});
 
     return NextResponse.json(payload, { status: 201 });
   } catch (error) {

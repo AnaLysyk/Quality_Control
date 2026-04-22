@@ -310,6 +310,15 @@ function resolveShellIdentity(
     };
   }
 
+  if (pathname.startsWith("/operacao")) {
+    return {
+      kicker: copy.kickers.platform,
+      title: copy.sections.operations,
+      note: copy.notes.operations,
+      badge: copy.sections.operations,
+    };
+  }
+
   if (pathname.startsWith("/meus-chamados") || pathname.startsWith("/chamados")) {
     return {
       kicker: copy.kickers.platform,
@@ -322,9 +331,9 @@ function resolveShellIdentity(
   if (pathname.startsWith("/runs")) {
     return {
       kicker: copy.kickers.platform,
-      title: copy.sections.runs,
-      note: resolveSectionNote("runs", copy),
-      badge: copy.sections.runs,
+      title: copy.sections.operations,
+      note: copy.notes.operations,
+      badge: copy.sections.operations,
     };
   }
 
@@ -451,6 +460,7 @@ function shouldHideShellCover(pathname: string) {
     pathname.startsWith("/settings/profile") ||
     pathname.startsWith("/requests") ||
     pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/automacoes") ||
     isCompanyAppsRoute(pathname) ||
     isCompanyDefectsRoute(pathname) ||
     isCompanyRunDetailRoute(pathname) ||
@@ -542,7 +552,7 @@ export default function AppShell({ children }: AppShellProps) {
     const shortProfileLabel = profileLabel(viewerProfile, shellCopy);
     const isOperationalProfile =
       viewerProfile === "technical_support" || viewerProfile === "leader_tc" || viewerProfile === "testing_company_user";
-    const isOperationalModule = isOperationalProfile && pathname.startsWith("/admin/runs");
+    const isOperationalModule = isOperationalProfile && (pathname.startsWith("/admin/operacao") || pathname.startsWith("/operacao"));
     const operationalTitle = shellCopy.sections.operations;
     const operationalNote = shellCopy.notes.operations;
 

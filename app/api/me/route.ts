@@ -19,6 +19,7 @@ import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 import { COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode } from "@/lib/companyRoutes";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { resolveVisibleCompanies } from "@/lib/companyVisibility";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -54,19 +55,26 @@ export async function GET(req: Request) {
   const hasTechnicalSupportPrivileges =
     normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
     normalizedCompanyRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
-  const hasPrivilegedAccess = isGlobalAdmin || hasTechnicalSupportPrivileges;
-  const allowedSlugSet = new Set(
-    (access.companySlugs ?? [])
-      .map((slug) => (typeof slug === "string" ? slug.trim().toLowerCase() : ""))
-      .filter((slug): slug is string => slug.length > 0),
-  );
-  const allowedCompanies = hasPrivilegedAccess
-    ? companies
-    : companies.filter((company) => {
-        const slug = typeof company.slug === "string" ? company.slug.trim().toLowerCase() : "";
-        if (slug && allowedSlugSet.has(slug)) return true;
-        return links.some((link) => link.companyId === company.id);
-      });
+  const hasLeaderPrivileges =
+    normalizedRole === SYSTEM_ROLES.LEADER_TC ||
+    normalizedCompanyRole === SYSTEM_ROLES.LEADER_TC;
+  const hasPrivilegedAccess = isGlobalAdmin || hasTechnicalSupportPrivileges || hasLeaderPrivileges;
+  const allowedCompanies = resolveVisibleCompanies(companies, {
+    user: {
+      role: access.role ?? null,
+      companyRole: access.companyRole ?? null,
+      userOrigin: user.user_origin ?? null,
+      isGlobalAdmin: access.isGlobalAdmin === true,
+      default_company_slug: user.default_company_slug ?? null,
+      defaultClientSlug: user.default_company_slug ?? null,
+      companySlug: access.companySlug ?? null,
+      clientSlug: access.companySlug ?? null,
+      companySlugs: access.companySlugs ?? [],
+      clientSlugs: access.companySlugs ?? [],
+    },
+    links,
+    preferredSlug: access.companySlug ?? user.default_company_slug ?? null,
+  });
 
   const companiesResponse: AuthCompany[] = allowedCompanies.map((company) => {
     const link = links.find((item) => item.companyId === company.id);

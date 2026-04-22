@@ -1,8 +1,26 @@
+import {
+  normalizeAutomationWorkflowStatus,
+  type AutomationWorkflowStatus,
+} from "@/lib/automations/workflowStatus";
+
 export type TestPlanCaseStep = {
   id: string;
   action?: string | null;
   expectedResult?: string | null;
   data?: string | null;
+};
+
+export type TestPlanAutomationState = {
+  enabled: boolean;
+  status: AutomationWorkflowStatus;
+  linkedAt?: string | null;
+  updatedAt?: string | null;
+  publishedAt?: string | null;
+};
+
+export type TestPlanCaseAutomation = TestPlanAutomationState & {
+  flowId?: string | null;
+  scriptTemplateId?: string | null;
 };
 
 export type TestPlanCase = {
@@ -14,12 +32,86 @@ export type TestPlanCase = {
   severity?: string | null;
   link?: string | null;
   steps?: TestPlanCaseStep[];
+  automation?: TestPlanCaseAutomation;
 };
 
 function normalizeOptionalString(value: unknown) {
   if (typeof value !== "string") return null;
   const normalized = value.trim();
   return normalized || null;
+}
+
+function normalizeOptionalIsoDate(value: unknown) {
+  const normalized = normalizeOptionalString(value);
+  if (!normalized) return null;
+  const time = Date.parse(normalized);
+  return Number.isFinite(time) ? new Date(time).toISOString() : null;
+}
+
+function normalizeBoolean(value: unknown, fallback = false) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "true") return true;
+    if (normalized === "false") return false;
+  }
+  return fallback;
+}
+
+export function createDefaultTestPlanAutomationState(
+  enabled = false,
+): TestPlanAutomationState {
+  return {
+    enabled,
+    status: "not_started",
+    linkedAt: null,
+    updatedAt: null,
+    publishedAt: null,
+  };
+}
+
+export function createDefaultTestPlanCaseAutomation(
+  enabled = false,
+): TestPlanCaseAutomation {
+  return {
+    ...createDefaultTestPlanAutomationState(enabled),
+    flowId: null,
+    scriptTemplateId: null,
+  };
+}
+
+export function normalizeTestPlanAutomationState(
+  raw: unknown,
+  fallbackEnabled = false,
+): TestPlanAutomationState {
+  if (!raw || typeof raw !== "object") {
+    return createDefaultTestPlanAutomationState(fallbackEnabled);
+  }
+
+  const record = raw as Record<string, unknown>;
+  const enabled = normalizeBoolean(
+    record.enabled ?? record.visible ?? record.marked ?? record.linked,
+    fallbackEnabled,
+  );
+
+  return {
+    enabled,
+    status: normalizeAutomationWorkflowStatus(record.status),
+    linkedAt: normalizeOptionalIsoDate(record.linkedAt),
+    updatedAt: normalizeOptionalIsoDate(record.updatedAt),
+    publishedAt: normalizeOptionalIsoDate(record.publishedAt),
+  };
+}
+
+export function normalizeTestPlanCaseAutomation(raw: unknown): TestPlanCaseAutomation {
+  const base = normalizeTestPlanAutomationState(raw);
+  const record = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
+
+  return {
+    ...base,
+    flowId: normalizeOptionalString(record?.flowId),
+    scriptTemplateId: normalizeOptionalString(record?.scriptTemplateId),
+  };
 }
 
 function normalizeStep(raw: unknown, fallbackIndex = 0): TestPlanCaseStep | null {
@@ -79,6 +171,17 @@ export function normalizeTestPlanCase(raw: unknown, fallbackId?: string | null):
     severity: normalizeOptionalString(record.severity),
     link: normalizeOptionalString(record.link) ?? normalizeOptionalString(record.url),
     steps: steps.length ? steps : undefined,
+    automation: normalizeTestPlanCaseAutomation(
+      record.automation ?? {
+        enabled: record.automationEnabled ?? record.markedForAutomation ?? record.markForAutomation,
+        status: record.automationStatus,
+        flowId: record.automationFlowId,
+        scriptTemplateId: record.automationScriptTemplateId,
+        linkedAt: record.automationLinkedAt,
+        updatedAt: record.automationUpdatedAt,
+        publishedAt: record.automationPublishedAt,
+      },
+    ),
   };
 }
 
@@ -144,6 +247,7 @@ export function createEmptyManualCase(cases: Array<Pick<TestPlanCase, "id">>): T
     postconditions: "",
     severity: "",
     steps: [],
+    automation: createDefaultTestPlanCaseAutomation(false),
   };
 }
 

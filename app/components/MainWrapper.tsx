@@ -17,10 +17,11 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
   const companySection = getCompanyRouteSection(pathname);
   const isDocumentosRoute = pathname.startsWith("/documentos");
   const isDocsRoute = pathname.startsWith("/docs") || companySection === "docs";
+  const isAutomacoesRoute = pathname.startsWith("/automacoes");
 
   // Left padding grows with viewport; right padding uses --content-pr to always
   // clear the fixed floating action strip regardless of breakpoint.
-  const leftPx = isDocumentosRoute || isDocsRoute
+  const leftPx = isDocumentosRoute || isDocsRoute || isAutomacoesRoute
     ? "px-0"
     : isUsersPermissionsRoute
     ? "px-2 sm:px-2.5 lg:px-3 xl:px-4 2xl:px-5"
@@ -30,7 +31,7 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
     ? "px-2 sm:px-3 lg:px-4 xl:px-5 2xl:px-6"
     : "px-2.5 sm:px-4 lg:px-5 xl:px-6 2xl:px-8";
 
-  const bottomPb = isDocumentosRoute || isDocsRoute
+  const bottomPb = isDocumentosRoute || isDocsRoute || isAutomacoesRoute
     ? "pb-0"
     : isUsersPermissionsRoute
     ? "pb-4 sm:pb-5"
@@ -43,7 +44,7 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
 
   return (
     <main
-      className={`flex-1 w-full min-w-0 pt-(--topbar-h) pr-(--content-pr) ${leftPx} ${bottomPb} ${isDocsRoute ? "h-screen overflow-hidden flex flex-col" : "min-h-full overflow-x-hidden"}`}
+      className={`flex-1 w-full min-w-0 pt-(--topbar-h) pr-(--content-pr) ${leftPx} ${bottomPb} ${isDocsRoute || isAutomacoesRoute ? "h-screen overflow-hidden flex flex-col" : "min-h-full overflow-x-hidden"}`}
     >
       {beforeContent ? <div className={`shrink-0 ${beforeTopGap} ${beforeBottomGap} ${beforeHorizontalPad}`}>{beforeContent}</div> : null}
       {children}

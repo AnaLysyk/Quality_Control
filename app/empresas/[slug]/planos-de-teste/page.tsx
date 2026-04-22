@@ -15,6 +15,7 @@ import {
   FiRefreshCcw,
   FiTrash2,
   FiX,
+  FiZap,
 } from "react-icons/fi";
 import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
 import { fetchApi } from "@/lib/api";
@@ -23,8 +24,10 @@ import {
   buildQaseCaseLink,
   createEmptyCaseStep,
   createEmptyManualCase,
+  createDefaultTestPlanAutomationState,
   isCaseEffectivelyEmpty,
   parseQaseCaseIdsInput,
+  type TestPlanAutomationState,
   type TestPlanCase,
   type TestPlanCaseStep,
 } from "@/lib/testPlanCases";
@@ -163,6 +166,18 @@ const COPY = {
     caseManualLabel: (n: number) => `Caso manual ${n}`,
     collapseCase: "Recolher",
     expandCase: "Expandir",
+    planAutomationLabel: "Plano na automacao",
+    planAutomationDesc: "Quando marcado, o plano passa a aparecer tambem no modulo de automacao da empresa.",
+    planAutomationToggle: "Exibir este plano na automacao",
+    caseAutomationToggle: "Marcar para automacao",
+    caseAutomationDesc: "Esse caso passa a aparecer na tela de casos de automacao da empresa.",
+    automationLinkedCount: (n: number) => `${n} marcado${n === 1 ? "" : "s"} para automacao`,
+    automationStatusLabel: "Status da automacao",
+    automationStatusNotStarted: "Nao iniciado",
+    automationStatusDraft: "Rascunho",
+    automationStatusPublished: "Publicado",
+    automationPlanBadge: "Plano em automacao",
+    automationCaseBadge: "Caso em automacao",
     caseDetailsAria: (action: string, title: string) => `${action} detalhes do caso ${title}`,
     planDetailsAria: (title: string) => `Abrir detalhes do plano ${title}`,
   },
@@ -299,6 +314,18 @@ const COPY = {
     caseManualLabel: (n: number) => `Manual case ${n}`,
     collapseCase: "Collapse",
     expandCase: "Expand",
+    planAutomationLabel: "Automation plan",
+    planAutomationDesc: "When enabled, this plan also shows up in the company's automation module.",
+    planAutomationToggle: "Show this plan in automation",
+    caseAutomationToggle: "Mark for automation",
+    caseAutomationDesc: "This case starts showing up in the company automation cases screen.",
+    automationLinkedCount: (n: number) => `${n} marked for automation`,
+    automationStatusLabel: "Automation status",
+    automationStatusNotStarted: "Not started",
+    automationStatusDraft: "Draft",
+    automationStatusPublished: "Published",
+    automationPlanBadge: "Plan in automation",
+    automationCaseBadge: "Case in automation",
     caseDetailsAria: (action: string, title: string) => `${action} case details for ${title}`,
     planDetailsAria: (title: string) => `Open plan details for ${title}`,
   },
@@ -326,6 +353,8 @@ type TestPlanItem = {
   applicationId?: string | null;
   applicationName?: string | null;
   cases?: TestPlanCase[];
+  automation?: TestPlanAutomationState | null;
+  automationCasesCount?: number;
 };
 
 type PlanDraft = {
@@ -335,6 +364,7 @@ type PlanDraft = {
   title: string;
   description: string;
   cases: TestPlanCase[];
+  automation: TestPlanAutomationState;
 };
 
 const EMPTY_DRAFT: PlanDraft = {
@@ -342,6 +372,7 @@ const EMPTY_DRAFT: PlanDraft = {
   title: "",
   description: "",
   cases: [],
+  automation: createDefaultTestPlanAutomationState(false),
 };
 
 function formatDate(value?: string | null, noDateLabel = "Sem data") {
@@ -382,8 +413,27 @@ function formatCaseMeta(testCase: TestPlanCase, copy: CopyType) {
   const parts = [
     trimText(testCase.severity) ? `${copy.severityLabel} ${trimText(testCase.severity)}` : null,
     Array.isArray(testCase.steps) && testCase.steps.length ? `${testCase.steps.length} ${copy.stepsLabel.toLowerCase()}` : null,
+    testCase.automation?.enabled
+      ? `${copy.automationStatusLabel} ${formatAutomationStatus(testCase.automation.status, copy)}`
+      : null,
   ].filter((item): item is string => Boolean(item));
   return parts.join(" | ");
+}
+
+function formatAutomationStatus(status: TestPlanAutomationState["status"], copy: CopyType) {
+  if (status === "published") return copy.automationStatusPublished;
+  if (status === "draft") return copy.automationStatusDraft;
+  return copy.automationStatusNotStarted;
+}
+
+function countAutomationCases(cases: TestPlanCase[]) {
+  return cases.filter((testCase) => testCase.automation?.enabled).length;
+}
+
+function buildAutomationCasesHref(planId: string, caseId?: string | null) {
+  const params = new URLSearchParams({ planId });
+  if (caseId) params.set("caseId", caseId);
+  return `/automacoes/casos?${params.toString()}`;
 }
 
 function normalizeStepsForSave(steps?: TestPlanCaseStep[]) {
@@ -420,9 +470,10 @@ function normalizeCasesForSave(source: "manual" | "qase", cases: TestPlanCase[])
       postconditions: trimText(testCase.postconditions),
       severity: trimText(testCase.severity),
       steps: normalizeStepsForSave(testCase.steps),
+      automation: testCase.automation ?? undefined,
     }))
     .filter((testCase) => testCase.id)
-    .filter((testCase) => !isCaseEffectivelyEmpty(testCase));
+    .filter((testCase) => Boolean(testCase.automation?.enabled) || !isCaseEffectivelyEmpty(testCase));
 }
 
 export default function TestPlansPage() {
@@ -638,6 +689,7 @@ export default function TestPlansPage() {
       applicationId: nextApplicationId,
       source,
       cases: initialCases,
+      automation: createDefaultTestPlanAutomationState(false),
     });
     setExpandedCaseId(initialCases[0]?.id ?? null);
     setModalOpen(true);
@@ -656,6 +708,7 @@ export default function TestPlansPage() {
       title: plan.title,
       description: plan.description ?? "",
       cases: [],
+      automation: plan.automation ?? createDefaultTestPlanAutomationState(false),
     });
 
     try {
@@ -684,6 +737,7 @@ export default function TestPlansPage() {
         title: fullPlan.title,
         description: fullPlan.description ?? "",
         cases: nextCases,
+        automation: fullPlan.automation ?? createDefaultTestPlanAutomationState(false),
       });
       setExpandedCaseId(nextCases[0]?.id ?? null);
     } catch {
@@ -738,7 +792,9 @@ export default function TestPlansPage() {
 
     if (draft.source === "manual") {
       const untitledCase = draft.cases.find(
-        (testCase) => !isCaseEffectivelyEmpty(testCase) && !trimText(testCase.title),
+        (testCase) =>
+          (!isCaseEffectivelyEmpty(testCase) || Boolean(testCase.automation?.enabled)) &&
+          !trimText(testCase.title),
       );
       if (untitledCase) {
         setError(copy.errCaseTitle(untitledCase.id));
@@ -767,6 +823,7 @@ export default function TestPlansPage() {
           title,
           description: draft.description,
           cases: casesPayload,
+          automation: draft.automation,
           projectCode: draftApplication?.qaseProjectCode ?? projectCode,
         }),
       });
@@ -780,6 +837,37 @@ export default function TestPlansPage() {
       setError(cause instanceof Error ? cause.message : copy.errSavePlan);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleQuickMarkAutomation(plan: TestPlanItem, enabled: boolean) {
+    if (plan.source !== "manual") return;
+    try {
+      const response = await fetchApi("/api/test-plans", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companySlug: slug,
+          applicationId: plan.applicationId,
+          source: plan.source,
+          planId: plan.id,
+          title: plan.title,
+          description: plan.description ?? "",
+          cases: [],
+          automation: { enabled, status: "not_started" },
+        }),
+      });
+      if (response.ok) {
+        setPlans((prev) =>
+          prev.map((p) =>
+            p.id === plan.id
+              ? { ...p, automation: { ...p.automation, enabled, status: "not_started" } as TestPlanAutomationState }
+              : p,
+          ),
+        );
+      }
+    } catch {
+      // silently ignore quick-action failures — user can still use the modal
     }
   }
 
@@ -1052,6 +1140,11 @@ export default function TestPlansPage() {
                               {plan.projectCode}
                             </span>
                           ) : null}
+                          {plan.source === "manual" && ((plan.automation?.enabled ?? false) || (plan.automationCasesCount ?? 0) > 0) ? (
+                            <span className="rounded-full border border-[#f59e0b33] bg-[#fff7e8] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b45309]">
+                              {copy.automationPlanBadge}
+                            </span>
+                          ) : null}
                         </div>
                         <h2 className="mt-3 text-lg font-extrabold text-[#10234d]">
                           {plan.title}
@@ -1075,6 +1168,17 @@ export default function TestPlansPage() {
                       {copy.createdLabel} {formatDate(plan.createdAt, copy.noDate)} | {copy.updatedLabel} {formatDate(plan.updatedAt, copy.noDate)}
                     </div>
 
+                    {plan.source === "manual" && ((plan.automation?.enabled ?? false) || (plan.automationCasesCount ?? 0) > 0) ? (
+                      <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-[#8a5a0b]">
+                        <span className="rounded-full border border-[#f59e0b33] bg-[#fff7e8] px-3 py-1 font-semibold uppercase tracking-[0.18em]">
+                          {copy.automationStatusLabel} {formatAutomationStatus(plan.automation?.status ?? "not_started", copy)}
+                        </span>
+                        <span className="rounded-full border border-[#f59e0b33] bg-[#fffdf6] px-3 py-1 font-semibold uppercase tracking-[0.18em]">
+                          {copy.automationLinkedCount(plan.automationCasesCount ?? 0)}
+                        </span>
+                      </div>
+                    ) : null}
+
                     <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
                       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#44536c]">
                         {copy.clickToDetails}
@@ -1087,6 +1191,36 @@ export default function TestPlansPage() {
                   </button>
 
                   <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-[#d7deea] pt-4">
+                    {plan.source === "manual" && !(plan.automation?.enabled) && (
+                      <button
+                        type="button"
+                        onClick={() => void handleQuickMarkAutomation(plan, true)}
+                        className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
+                        title={copy.planAutomationToggle}
+                      >
+                        <FiZap className="h-3.5 w-3.5" />
+                        {copy.planAutomationToggle}
+                      </button>
+                    )}
+                    {plan.source === "manual" && plan.automation?.enabled && (
+                      <button
+                        type="button"
+                        onClick={() => void handleQuickMarkAutomation(plan, false)}
+                        className="inline-flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+                      >
+                        <FiZap className="h-3.5 w-3.5" />
+                        Desativar automacao
+                      </button>
+                    )}
+                    {plan.source === "manual" && ((plan.automation?.enabled ?? false) || (plan.automationCasesCount ?? 0) > 0) ? (
+                      <Link
+                        href={buildAutomationCasesHref(plan.id)}
+                        className="inline-flex items-center gap-2 rounded-xl border border-[#d7deea] bg-[#f8fbff] px-3 py-2 text-xs font-semibold text-[#10234d]"
+                      >
+                        <FiExternalLink className="h-3.5 w-3.5" />
+                        Ver na automacao
+                      </Link>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => void openEdit(plan)}
@@ -1219,6 +1353,7 @@ export default function TestPlansPage() {
                                 postconditions: testCase.postconditions ?? "",
                                 severity: testCase.severity ?? "",
                                 steps: testCase.steps ?? [],
+                                automation: testCase.automation,
                               }))
                             : current.cases.map((testCase) => ({
                                 id: testCase.id,
@@ -1257,6 +1392,49 @@ export default function TestPlansPage() {
                   placeholder={copy.descPlaceholder}
                 />
               </label>
+
+              {draft.source === "manual" ? (
+                <section className="rounded-3xl border border-amber-200 bg-amber-50/70 p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#b45309]">
+                        {copy.planAutomationLabel}
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-[#8a5a0b]">
+                        {copy.planAutomationDesc}
+                      </p>
+                    </div>
+                    <label className="inline-flex min-h-11 items-center gap-3 rounded-2xl border border-amber-300 bg-white px-4 py-3 text-sm font-semibold text-[#8a5a0b]">
+                      <input
+                        type="checkbox"
+                        checked={draft.automation.enabled}
+                        onChange={(event) =>
+                          setDraft((current) => ({
+                            ...current,
+                            automation: {
+                              ...current.automation,
+                              enabled: event.target.checked,
+                              status: event.target.checked
+                                ? current.automation.status ?? "not_started"
+                                : "not_started",
+                            },
+                          }))
+                        }
+                        className="h-4 w-4 accent-[#b45309]"
+                      />
+                      {copy.planAutomationToggle}
+                    </label>
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+                    <span className="rounded-full border border-amber-300 bg-white px-3 py-1 font-semibold uppercase tracking-[0.2em] text-[#8a5a0b]">
+                      {copy.automationStatusLabel} {formatAutomationStatus(draft.automation.status, copy)}
+                    </span>
+                    <span className="rounded-full border border-amber-300 bg-white px-3 py-1 font-semibold uppercase tracking-[0.2em] text-[#8a5a0b]">
+                      {copy.automationLinkedCount(countAutomationCases(draft.cases))}
+                    </span>
+                  </div>
+                </section>
+              ) : null}
 
               <section className="rounded-3xl border border-(--tc-border,#dfe5f1) bg-[#f5f7fb] p-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
@@ -1354,6 +1532,20 @@ export default function TestPlansPage() {
                                 <span className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                                   ID {testCase.id}
                                 </span>
+                                {draft.source === "manual" && testCase.automation?.enabled ? (
+                                  <span className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b45309]">
+                                    {copy.automationCaseBadge}
+                                  </span>
+                                ) : null}
+                                {draft.source === "manual" && draft.id && testCase.automation?.enabled ? (
+                                  <Link
+                                    href={buildAutomationCasesHref(draft.id, testCase.id)}
+                                    className="inline-flex items-center gap-1 rounded-full border border-[#d7deea] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#10234d]"
+                                  >
+                                    Abrir na automacao
+                                    <FiExternalLink className="h-3 w-3" />
+                                  </Link>
+                                ) : null}
                                 {testCase.link ? (
                                   <a
                                     href={testCase.link}
@@ -1497,6 +1689,44 @@ export default function TestPlansPage() {
                                 )
                               ) : (
                                 <div className="space-y-4">
+                                  <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
+                                    <div className="flex flex-wrap items-start justify-between gap-4">
+                                      <div>
+                                        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#b45309]">
+                                          {copy.caseAutomationToggle}
+                                        </p>
+                                        <p className="mt-2 text-sm leading-6 text-[#8a5a0b]">
+                                          {copy.caseAutomationDesc}
+                                        </p>
+                                      </div>
+                                      <label className="inline-flex min-h-11 items-center gap-3 rounded-2xl border border-amber-300 bg-white px-4 py-3 text-sm font-semibold text-[#8a5a0b]">
+                                        <input
+                                          type="checkbox"
+                                          checked={Boolean(testCase.automation?.enabled)}
+                                          onChange={(event) =>
+                                            updateDraftCase(testCase.id, (current) => ({
+                                              ...current,
+                                              automation: {
+                                                ...(current.automation ?? {}),
+                                                enabled: event.target.checked,
+                                                status: event.target.checked
+                                                  ? current.automation?.status ?? "not_started"
+                                                  : "not_started",
+                                              },
+                                            }))
+                                          }
+                                          className="h-4 w-4 accent-[#b45309]"
+                                        />
+                                        {copy.caseAutomationToggle}
+                                      </label>
+                                    </div>
+                                    <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+                                      <span className="rounded-full border border-amber-300 bg-white px-3 py-1 font-semibold uppercase tracking-[0.2em] text-[#8a5a0b]">
+                                        {copy.automationStatusLabel} {formatAutomationStatus(testCase.automation?.status ?? "not_started", copy)}
+                                      </span>
+                                    </div>
+                                  </div>
+
                                   <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)]">
                                     <label className="space-y-2">
                                       <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">

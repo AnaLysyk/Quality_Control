@@ -75,12 +75,12 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
       legacyUser?.is_global_admin === true ||
       normalizedRole === SYSTEM_ROLES.LEADER_TC);
   const isInstitutionalCompany = isInstitutionalCompanyAccount(user ?? null);
-  const adminRunsMenuLabel =
+  const isOperationalProfile =
     normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
     normalizedRole === SYSTEM_ROLES.LEADER_TC ||
-    normalizedRole === SYSTEM_ROLES.TESTING_COMPANY_USER
-      ? "Operação"
-      : t("nav.runs");
+    normalizedRole === SYSTEM_ROLES.TESTING_COMPANY_USER;
+  const adminRunsMenuLabel = isOperationalProfile ? t("nav.operations") : t("nav.runsManagement");
+  const companyRunsMenuLabel = isOperationalProfile ? t("nav.operations") : t("nav.runs");
 
   const appRole = useMemo<AppRole | null>(() => {
     if (!user) return null;
@@ -133,11 +133,6 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     [activeClientSlug, isGlobalAdmin, user],
   );
 
-  const adminCompanyHref = useMemo(() => {
-    if (activeClientSlug) return `/empresas/${activeClientSlug}`;
-    return "/empresas";
-  }, [activeClientSlug]);
-
   const logoHref = useMemo(() => {
     if (isGlobalAdmin) return "/admin/dashboard";
     if (companySlug) return buildCompanyPathForAccess(companySlug, "home", companyRouteInput);
@@ -156,7 +151,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   const adminNav: NavItem[] = useMemo(() => [
     { label: t("nav.dashboard"), icon: FiCompass, href: "/admin/dashboard" },
     { label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric" },
-    { label: adminRunsMenuLabel, icon: FiList, href: "/admin/runs" },
+    { label: adminRunsMenuLabel, icon: FiList, href: "/admin/operacao" },
     { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
     { label: t("nav.automations"), icon: FiZap, href: "/automacoes" },
     { label: t("nav.support"), icon: FiColumns, href: "/admin/support" },
@@ -164,7 +159,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
     { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
     { label: "Brain", icon: FiCpu, href: "/admin/brain" },
-  ], [t]);
+  ], [t, adminRunsMenuLabel]);
 
   const supportNav: NavItem[] = useMemo(() => {
     return adminNav;
@@ -180,12 +175,12 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             { label: t("nav.apps"), icon: FiBriefcase, href: buildCompanyPathForAccess(companySlug, "aplicacoes", companyRouteInput) },
             { label: t("nav.testPlans"), icon: FiClipboard, href: buildCompanyPathForAccess(companySlug, "planos-de-teste", companyRouteInput) },
             { label: t("nav.automations"), icon: FiZap, href: "/automacoes", roles: ["admin", "technical_support", "user", "client"] },
-            { label: t("nav.runs"), icon: FiList, href: buildCompanyPathForAccess(companySlug, "runs", companyRouteInput) },
+            { label: companyRunsMenuLabel, icon: FiList, href: buildCompanyPathForAccess(companySlug, "runs", companyRouteInput) },
             { label: t("nav.defects"), icon: FiAlertTriangle, href: buildCompanyPathForAccess(companySlug, "defeitos", companyRouteInput) },
             { label: t("nav.support"), icon: FiColumns, href: buildCompanyPathForAccess(companySlug, "chamados", companyRouteInput) },
           ]
         : [],
-    [companyRouteInput, companySlug, t, adminRunsMenuLabel]
+    [companyRouteInput, companySlug, companyRunsMenuLabel, t]
   );
 
   const navigation = useMemo(() => {
@@ -198,10 +193,10 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     if (isOnCompanyPage && companyNav.length) return companyNav;
     if (appRole === "admin") return adminNav;
     if (appRole === "technical_support") return supportNav;
-    // testing_company_user not in company context → runs goes to /runs hub
+    // testing_company_user not in company context → runs goes to /operacao hub
     if (appRole === "user" && companyNav.length && !isInstitutionalCompany) {
       return companyNav.map((item) =>
-        /\/runs$/.test(item.href) ? { ...item, href: "/runs" } : item,
+        /\/runs$/.test(item.href) ? { ...item, href: "/operacao" } : item,
       );
     }
     if (companyNav.length) return companyNav;
@@ -215,8 +210,10 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     if (href === "/admin/support" || href === "/kanban-it") return "support";
     if (href === "/empresas" || href === "/admin/clients") return "applications";
     if (href === "/admin/dashboard") return "dashboard";
+    if (href === "/admin/operacao") return "runs";
     if (href === "/admin/runs") return "runs";
-    if (href === "/runs") return null; // hub — bypass permission check
+    if (href === "/operacao") return null; // hub — bypass permission check
+    if (href === "/runs") return null; // legacy hub redirect
     if (href === "/admin/defeitos") return "defects";
     if (href === "/admin/access-requests") return "access_requests";
     if (href === "/admin/audit-logs") return "audit";
@@ -268,7 +265,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             key={item.href}
             href={item.href}
             prefetch={false}
-            className={`group/link relative flex items-center h-11 w-full rounded-xl text-sm font-semibold transition-all duration-200 overflow-hidden min-w-0 sidebar-link ${
+            className={`group/link relative flex items-center h-10 w-full rounded-xl text-sm font-semibold transition-all duration-200 overflow-hidden min-w-0 sidebar-link ${
               isMobile
                 ? "px-3 justify-start gap-3"
                 : "px-3 justify-start gap-3"
@@ -288,15 +285,15 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
               }`}
             />
             <div
-              className={`flex items-center justify-center w-11 h-11 rounded-[14px] border transition-all duration-200 shrink-0 backdrop-blur-sm sidebar-icon ${
+              className={`flex items-center justify-center w-10 h-10 rounded-[14px] border transition-all duration-200 shrink-0 backdrop-blur-sm sidebar-icon ${
                 isActive
                   ? "sidebar-icon-state-active border-white/16 bg-white/14 text-white shadow-[0_12px_26px_rgba(1,24,72,0.28)]"
                   : "sidebar-icon-state-idle border-white/10 bg-white/6 text-white/84 group-hover/link:border-white/18 group-hover/link:bg-white/10 group-hover/link:text-white"
               }`}
             >
-              <item.icon size={20} />
+              <item.icon size={17} />
             </div>
-            <span className="inline-flex whitespace-normal text-left leading-snug flex-1 overflow-hidden pl-3 sidebar-label">
+            <span className="sidebar-label flex-1 overflow-hidden pl-3 text-left leading-snug truncate">
               {item.label}
             </span>
           </Link>
@@ -306,6 +303,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   const DesktopNav = (
     <aside
       className="sidebar-shell sidebar-shell-theme hidden fixed left-0 top-0 z-40 h-screen overflow-hidden border-r text-white flex-col backdrop-blur-2xl lg:flex"
+      suppressHydrationWarning
       data-app-role={appRole ?? ""}
       data-active-client={activeClientSlug ?? ""}
       data-is-global-admin={isGlobalAdmin ? "1" : "0"}
@@ -350,22 +348,22 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
       </div>
 
       <nav className="flex-1 min-h-0 flex flex-col overflow-hidden">
-        <div className="flex-1 px-3 py-6 space-y-6">
-          <div className="space-y-3">
+        <div className="flex-1 px-3 py-3 space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center px-1">
               <p className="sidebar-nav-caption text-xs uppercase tracking-[0.18em] text-white/55 transition duration-150 sidebar-divider">
                 Navegacao
               </p>
               <span className="h-px flex-1 ml-3 bg-white/12 sidebar-divider-line" aria-hidden />
             </div>
-            <div className="space-y-3">{renderNavLinks()}</div>
+            <div className="space-y-2">{renderNavLinks()}</div>
           </div>
         </div>
       </nav>
 
-      <div className="sidebar-footer shrink-0 px-4 py-4">
+      <div className="sidebar-footer shrink-0 px-4 py-3">
         <div className="sidebar-footer-divider h-px w-full bg-white/10" aria-hidden />
-        <div className="sidebar-footer-note pt-3 text-[0.82rem] font-light italic tracking-[0.02em] text-white/46">
+        <div className="sidebar-footer-note pt-2 text-[0.78rem] font-light italic tracking-[0.02em] text-white/46">
           <a href="https://www.testingcompany.com.br/" target="_blank" rel="noopener noreferrer" className="hover:text-white/70 transition-colors">
             Testing Company Platform
           </a>
@@ -381,6 +379,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
       <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden dark:bg-black/60" onClick={onClose}>
         <aside
           id={mobilePanelId}
+          suppressHydrationWarning
           data-app-role={appRole ?? ""}
           data-active-client={activeClientSlug ?? ""}
           data-is-global-admin={isGlobalAdmin ? "1" : "0"}
@@ -419,8 +418,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             </Link>
           </div>
 
-          <nav className="flex-1 min-h-0 flex flex-col overflow-y-auto custom-scroll">
-            <div className="flex-1 px-3 py-4 space-y-6">
+          <nav className="flex-1 min-h-0 flex flex-col overflow-hidden">
+            <div className="flex-1 px-3 py-3 space-y-3">
               <div className="space-y-2">
                 <p className="sidebar-nav-caption px-1 text-xs uppercase tracking-[0.18em] text-white/52">Navegacao</p>
                 <div className="space-y-2">{renderNavLinks(true)}</div>
@@ -428,9 +427,9 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             </div>
           </nav>
 
-          <div className="sidebar-footer shrink-0 p-4">
+          <div className="sidebar-footer shrink-0 p-3">
             <div className="sidebar-footer-divider h-px w-full bg-white/10" aria-hidden />
-            <div className="sidebar-footer-note pt-3 text-[0.82rem] font-light italic tracking-[0.02em] text-white/46">
+            <div className="sidebar-footer-note pt-2 text-[0.78rem] font-light italic tracking-[0.02em] text-white/46">
               <a href="https://www.testingcompany.com.br/" target="_blank" rel="noopener noreferrer" className="hover:text-white/70 transition-colors">
                 Testing Company Platform
               </a>

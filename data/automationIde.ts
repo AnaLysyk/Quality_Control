@@ -46,6 +46,7 @@ export type AutomationRequestPreset = {
   queryParams?: AutomationRequestKeyValue[];
   variables?: AutomationRequestKeyValue[];
   assertions?: AutomationAssertionRule[];
+  preRequestScript?: string;
   companyScope: AutomationCompanyScope;
   tags: string[];
 };

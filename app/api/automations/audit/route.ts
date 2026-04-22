@@ -10,6 +10,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const QuerySchema = z.object({
+  actorUserId: z.string().trim().optional(),
   cursor: z.string().trim().optional(),
   companySlug: z.string().trim().optional(),
   limit: z.coerce.number().int().min(1).max(200).optional(),
@@ -50,13 +51,15 @@ function parsePayload(value: string): AuditPayload | null {
 
 function shouldExposePayload(
   payload: AuditPayload,
+  actorUserId: string | null,
   hasGlobalCompanyVisibility: boolean,
   allowedCompanySlugs: string[],
 ) {
+  if (actorUserId && payload.actorUserId?.trim() !== actorUserId) return false;
   if (hasGlobalCompanyVisibility) return true;
   const companySlug = payload.companySlug?.trim();
-  if (!companySlug) return false;
-  return allowedCompanySlugs.includes(companySlug);
+  if (!companySlug || !allowedCompanySlugs.includes(companySlug)) return false;
+  return payload.actorUserId?.trim() === actorUserId;
 }
 
 function resolveCutoffDate(window: "all" | "1h" | "24h" | "7d") {
@@ -136,6 +139,9 @@ export async function GET(request: Request) {
 
   const routeFilter = parsedQuery.data.route?.trim();
   const companySlug = parsedQuery.data.companySlug?.trim() || null;
+  const actorUserId = access.hasGlobalCompanyVisibility
+    ? parsedQuery.data.actorUserId?.trim() || null
+    : user.id;
   const window = parsedQuery.data.window ?? "all";
   const limit = parsedQuery.data.limit ?? 50;
   const cursor = decodeCursor(parsedQuery.data.cursor);
@@ -191,7 +197,14 @@ export async function GET(request: Request) {
     })
     .filter((entry): entry is { key: string; payload: AuditPayload } => Boolean(entry))
     .filter((entry) => matchesCompanyScope(entry.payload, companySlug, allowedCompanySlugs, access.hasGlobalCompanyVisibility))
-    .filter((entry) => shouldExposePayload(entry.payload, access.hasGlobalCompanyVisibility, allowedCompanySlugs))
+    .filter((entry) =>
+      shouldExposePayload(
+        entry.payload,
+        actorUserId,
+        access.hasGlobalCompanyVisibility,
+        allowedCompanySlugs,
+      ),
+    )
     .filter((entry) => matchesTimeWindow(entry.payload, cutoff))
     .slice(0, limit);
 

@@ -10,6 +10,7 @@ import {
   listLocalLinksForUser,
 } from "@/lib/auth/localStore";
 import { listUserNotes } from "@/lib/userNotesStore";
+import { resolveVisibleCompanies } from "@/lib/companyVisibility";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -53,23 +54,22 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
-  const hasFullCompanyAccess =
-    access.isGlobalAdmin === true ||
-    (access.role ?? "").toLowerCase() === "technical_support" ||
-    (access.companyRole ?? "").toLowerCase() === "technical_support";
+  const visibleCompanies = resolveVisibleCompanies(companies, {
+    user: {
+      role: access.role ?? null,
+      companyRole: access.companyRole ?? null,
+      userOrigin: access.userOrigin ?? null,
+      isGlobalAdmin: access.isGlobalAdmin === true,
+      companySlug: access.companySlug ?? null,
+      clientSlug: access.companySlug ?? null,
+      companySlugs: access.companySlugs ?? [],
+      clientSlugs: access.companySlugs ?? [],
+    },
+    links,
+    preferredSlug: access.companySlug ?? null,
+  });
 
-  const linkedCompanyIds = new Set(
-    links
-      .map((link) => link.companyId)
-      .filter((companyId): companyId is string => typeof companyId === "string" && companyId.length > 0),
-  );
-
-  const visibleCompanies = hasFullCompanyAccess
-    ? companies
-    : companies.filter((company) => linkedCompanyIds.has(company.id));
-
-  const activeLinkedCompanies = companies.filter((company) => {
-    if (!linkedCompanyIds.has(company.id)) return false;
+  const activeLinkedCompanies = visibleCompanies.filter((company) => {
     if (company.active === false) return false;
     if ((company.status ?? "active") === "archived") return false;
     return true;

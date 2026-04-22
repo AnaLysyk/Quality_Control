@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   FiActivity,
   FiClipboard,
@@ -37,8 +38,8 @@ type Props = {
 };
 
 const STATUS_META = {
-  automated: { label: "Automatizado", tone: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-  ready: { label: "Pronto", tone: "border-sky-200 bg-sky-50 text-sky-700" },
+  not_started: { label: "Nao iniciado", tone: "border-slate-200 bg-slate-50 text-slate-700" },
+  published: { label: "Publicado", tone: "border-emerald-200 bg-emerald-50 text-emerald-700" },
   review: { label: "Revisão", tone: "border-amber-200 bg-amber-50 text-amber-700" },
   draft: { label: "Rascunho", tone: "border-slate-200 bg-slate-50 text-slate-700" },
 } as const;
@@ -92,6 +93,7 @@ function compareCases(left: AutomationCaseDefinition, right: AutomationCaseDefin
 
 export default function AutomationCasesBoard({ access, activeCompanySlug, companies }: Props) {
   const storageKey = `${CASES_STORAGE_PREFIX}:${activeCompanySlug ?? "global"}`;
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<AutomationCaseDefinition["status"] | "all">("all");
   const [sourceFilter, setSourceFilter] = useState<AutomationCaseDefinition["source"] | "all">("all");
@@ -103,6 +105,8 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
   const [isCaseModalOpen, setIsCaseModalOpen] = useState(false);
   const [caseModalTab, setCaseModalTab] = useState<CaseModalTab>("overview");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [manualLinkedCases, setManualLinkedCases] = useState<AutomationCaseDefinition[]>([]);
+  const [manualLinkedCasesError, setManualLinkedCasesError] = useState<string | null>(null);
   const [customCases, setCustomCases] = useState<AutomationCaseDefinition[]>([]);
   const [removedCaseIds, setRemovedCaseIds] = useState<Set<string>>(new Set());
   const [newCaseDraft, setNewCaseDraft] = useState({
@@ -114,7 +118,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
     expectedResult: "",
     flowId: AUTOMATION_STUDIO_BLUEPRINTS[0]?.id ?? "",
     scriptTemplateId: AUTOMATION_STUDIO_SCRIPT_TEMPLATES[0]?.id ?? "",
-    status: "draft" as AutomationCaseDefinition["status"],
+    status: "not_started" as AutomationCaseDefinition["status"],
     priority: "medium" as AutomationCaseDefinition["priority"],
     source: "manual" as AutomationCaseDefinition["source"],
     coverage: "hybrid" as AutomationCaseDefinition["coverage"],
@@ -127,6 +131,49 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
   const [caseOverrides, setCaseOverrides] = useState<
     Record<string, Partial<Omit<AutomationCaseDefinition, "id">>>
   >({});
+
+  useEffect(() => {
+    if (!activeCompanySlug) {
+      setManualLinkedCases([]);
+      setManualLinkedCasesError(null);
+      return;
+    }
+
+    let active = true;
+
+    async function loadManualLinkedCases() {
+      try {
+        setManualLinkedCasesError(null);
+        const response = await fetch(
+          `/api/automations/manual-links?companySlug=${encodeURIComponent(activeCompanySlug)}`,
+          { cache: "no-store" },
+        );
+        const payload = (await response.json().catch(() => null)) as {
+          cases?: AutomationCaseDefinition[];
+          error?: string;
+        } | null;
+
+        if (!response.ok) {
+          throw new Error(payload?.error || "Falha ao carregar casos vinculados.");
+        }
+
+        if (!active) return;
+        setManualLinkedCases(Array.isArray(payload?.cases) ? payload.cases : []);
+      } catch (error) {
+        if (!active) return;
+        setManualLinkedCases([]);
+        setManualLinkedCasesError(
+          error instanceof Error ? error.message : "Falha ao carregar casos vinculados.",
+        );
+      }
+    }
+
+    void loadManualLinkedCases();
+
+    return () => {
+      active = false;
+    };
+  }, [activeCompanySlug]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -160,7 +207,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
 
   const casesCatalog = useMemo(
     () =>
-      [...AUTOMATION_CASES, ...customCases]
+      [...manualLinkedCases, ...AUTOMATION_CASES, ...customCases]
         .filter((testCase) => !removedCaseIds.has(testCase.id))
         .map((testCase) => {
         const override = caseOverrides[testCase.id];
@@ -173,7 +220,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
           tags: override.tags ?? testCase.tags,
         };
       }),
-    [caseOverrides, customCases, removedCaseIds],
+    [caseOverrides, customCases, manualLinkedCases, removedCaseIds],
   );
 
   const scopedCases = useMemo(
@@ -261,6 +308,89 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
 
   const selectedCompany = companies.find((company) => company.slug === activeCompanySlug) ?? companies[0] ?? null;
   const linkedPlansHref = activeCompanySlug ? `/empresas/${activeCompanySlug}/planos-de-teste` : null;
+  const focusPlanId = searchParams.get("planId")?.trim() || "";
+  const focusCaseId = searchParams.get("caseId")?.trim() || "";
+
+  function isManualLinkedCase(testCase: AutomationCaseDefinition | null) {
+    return Boolean(testCase?.linkedPlanId && testCase?.manualCaseId);
+  }
+
+  useEffect(() => {
+    if (!focusPlanId && !focusCaseId) return;
+    const targetCase =
+      casesCatalog.find((testCase) => {
+        if (focusCaseId) {
+          return (
+            testCase.id === focusCaseId ||
+            testCase.manualCaseId === focusCaseId ||
+            testCase.externalCaseRef === focusCaseId
+          );
+        }
+
+        return testCase.linkedPlanId === focusPlanId;
+      }) ?? null;
+
+    if (!targetCase) return;
+
+    setSelectedCaseId(targetCase.id);
+    setCaseModalTab("overview");
+    setIsCaseModalOpen(true);
+  }, [casesCatalog, focusCaseId, focusPlanId]);
+
+  async function persistManualCaseAutomation(
+    testCase: AutomationCaseDefinition,
+    patch: {
+      enabled?: boolean;
+      flowId?: string | null;
+      scriptTemplateId?: string | null;
+      status?: AutomationCaseDefinition["status"];
+    },
+  ) {
+    if (!activeCompanySlug || !testCase.linkedPlanId || !testCase.manualCaseId) return;
+
+    const response = await fetch("/api/automations/manual-links", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        companySlug: activeCompanySlug,
+        planId: testCase.linkedPlanId,
+        caseId: testCase.manualCaseId,
+        automation: patch,
+      }),
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(payload?.error || "Falha ao sincronizar o caso manual.");
+    }
+
+    const workflowUpdatedAt = new Date().toISOString();
+    if (patch.enabled === false) {
+      setManualLinkedCases((current) => current.filter((item) => item.id !== testCase.id));
+      return;
+    }
+
+    setManualLinkedCases((current) =>
+      current.map((item) =>
+        item.id === testCase.id
+          ? {
+              ...item,
+              ...("flowId" in patch ? { flowId: patch.flowId ?? item.flowId } : {}),
+              ...("scriptTemplateId" in patch
+                ? { scriptTemplateId: patch.scriptTemplateId ?? item.scriptTemplateId }
+                : {}),
+              ...("status" in patch ? { status: patch.status ?? item.status } : {}),
+              workflowUpdatedAt,
+            }
+          : item,
+      ),
+    );
+  }
+
+  function promoteStatusOnEdit(testCase: AutomationCaseDefinition | null) {
+    if (!testCase || !isManualLinkedCase(testCase)) return null;
+    return testCase.status === "not_started" ? "draft" : null;
+  }
 
   function updateSelectedCaseDraft<
     K extends "title" | "summary" | "objective" | "expectedResult" | "tags" | "preconditions" | "inputBindings",
@@ -269,13 +399,18 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
     value: AutomationCaseDefinition[K],
   ) {
     if (!selectedCase) return;
+    const nextStatus = promoteStatusOnEdit(selectedCase);
     setCaseOverrides((current) => ({
       ...current,
       [selectedCase.id]: {
         ...current[selectedCase.id],
         [field]: value,
+        ...(nextStatus ? { status: nextStatus } : {}),
       },
     }));
+    if (nextStatus) {
+      void persistManualCaseAutomation(selectedCase, { status: nextStatus }).catch(() => null);
+    }
   }
 
   function updateSelectedCaseDraftAny<K extends keyof Omit<AutomationCaseDefinition, "id">>(
@@ -283,13 +418,39 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
     value: Omit<AutomationCaseDefinition, "id">[K],
   ) {
     if (!selectedCase) return;
+    const nextStatus = field === "status" ? null : promoteStatusOnEdit(selectedCase);
     setCaseOverrides((current) => ({
       ...current,
       [selectedCase.id]: {
         ...current[selectedCase.id],
         [field]: value,
+        ...(nextStatus ? { status: nextStatus } : {}),
       },
     }));
+
+    if (!isManualLinkedCase(selectedCase)) return;
+
+    const patch: {
+      flowId?: string | null;
+      scriptTemplateId?: string | null;
+      status?: AutomationCaseDefinition["status"];
+    } = {};
+
+    if (field === "flowId") {
+      patch.flowId = value as AutomationCaseDefinition["flowId"];
+    }
+    if (field === "scriptTemplateId") {
+      patch.scriptTemplateId = value as AutomationCaseDefinition["scriptTemplateId"];
+    }
+    if (field === "status") {
+      patch.status = value as AutomationCaseDefinition["status"];
+    } else if (nextStatus) {
+      patch.status = nextStatus;
+    }
+
+    if (Object.keys(patch).length > 0) {
+      void persistManualCaseAutomation(selectedCase, patch).catch(() => null);
+    }
   }
 
   function resetSelectedCaseDraft() {
@@ -312,6 +473,13 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
     if (!caseItem) return;
     const confirmed = window.confirm(`Remover o caso \"${caseItem.title}\"?`);
     if (!confirmed) return;
+    if (isManualLinkedCase(caseItem)) {
+      void persistManualCaseAutomation(caseItem, { enabled: false, status: "not_started" }).catch(() => null);
+      if (selectedCaseId === caseId) {
+        setIsCaseModalOpen(false);
+      }
+      return;
+    }
     setRemovedCaseIds((current) => {
       const next = new Set(current);
       next.add(caseId);
@@ -436,6 +604,16 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
       </div>
 
       <section className="space-y-4 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+        {manualLinkedCasesError ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            {manualLinkedCasesError}
+          </div>
+        ) : null}
+        {manualLinkedCases.length > 0 ? (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {manualLinkedCases.length} caso{manualLinkedCases.length === 1 ? "" : "s"} marcado{manualLinkedCases.length === 1 ? "" : "s"} para automacao foi{manualLinkedCases.length === 1 ? "" : "ram"} sincronizado{manualLinkedCases.length === 1 ? "" : "s"} a partir dos planos manuais da empresa.
+          </div>
+        ) : null}
         {usingCatalogFallback ? (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
             A empresa atual não possui casos dedicados no escopo. Exibindo catálogo geral para você abrir e editar os detalhes.
@@ -463,9 +641,9 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
               className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 text-sm outline-none transition focus:border-(--tc-accent,#ef0001)"
             >
               <option value="all">Todos</option>
+              <option value="not_started">Nao iniciado</option>
               <option value="draft">Rascunho</option>
-              <option value="ready">Pronto</option>
-              <option value="automated">Automatizado</option>
+              <option value="published">Publicado</option>
               <option value="review">Revisão</option>
             </select>
           </label>
@@ -924,9 +1102,9 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
                     onChange={(event) => updateSelectedCaseDraftAny("status", event.target.value as AutomationCaseDefinition["status"])}
                     className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
                   >
+                    <option value="not_started">Nao iniciado</option>
                     <option value="draft">Rascunho</option>
-                    <option value="ready">Pronto</option>
-                    <option value="automated">Automatizado</option>
+                    <option value="published">Publicado</option>
                     <option value="review">Revisão</option>
                   </select>
                 </label>
@@ -1153,6 +1331,30 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
                       <FiTrash2 className="h-4 w-4" />
                       Remover
                     </button>
+                    {isManualLinkedCase(selectedCase) ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateSelectedCaseDraftAny("status", "draft");
+                          }}
+                          className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700"
+                        >
+                          <FiEdit2 className="h-4 w-4" />
+                          Marcar rascunho
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateSelectedCaseDraftAny("status", "published");
+                          }}
+                          className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700"
+                        >
+                          <FiClipboard className="h-4 w-4" />
+                          Publicar caso
+                        </button>
+                      </>
+                    ) : null}
                     <Link
                       href={`/automacoes/execucoes?flow=${encodeURIComponent(selectedCase.flowId)}`}
                       className="inline-flex min-h-11 items-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-semibold text-white"

@@ -17,7 +17,7 @@
 }
 
 @import "tailwindcss";
-/* PostCSS custom-variant directive (handled by postcss/tailwind plugin) */
+@custom-variant dark (&:where(.dark, .dark *));
 
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {
@@ -5738,8 +5738,37 @@ video {
    ──────────────────────────────────────────────────────────── */
 @media (min-width: 1024px) and (max-width: 1200px) {
   .app-shell {
-    --sidebar-collapsed: 78px;
-    --sidebar-expanded: 232px;
+    --sidebar-collapsed: 72px;
+    --sidebar-expanded: 210px;
+  }
+
+  .app-shell .sidebar-shell {
+    font-size: 0.95rem;
+  }
+
+  .app-shell .sidebar-shell .sidebar-link {
+    height: 2.5rem;
+  }
+
+  .app-shell .sidebar-shell .sidebar-link .sidebar-icon {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .app-shell .sidebar-shell .sidebar-link .sidebar-label {
+    padding-left: 0.65rem;
+  }
+
+  .app-shell .sidebar-shell .sidebar-brand-title {
+    font-size: 0.95rem;
+  }
+
+  .app-shell .sidebar-shell .sidebar-brand-kicker {
+    font-size: 0.65rem;
+  }
+
+  .app-shell .sidebar-shell .sidebar-footer-note {
+    font-size: 0.72rem;
   }
 }
 
@@ -5813,6 +5842,10 @@ video {
   .app-shell .sidebar-shell:not(:hover) .sidebar-logo-icon {
     opacity: 0;
     transform: scale(0.9);
+  }
+
+  .app-shell .sidebar-shell .sidebar-link {
+    min-height: 2.5rem;
   }
 }
 /* CENTRALIZAR GRAFICOS NA IMPRESSÃO */

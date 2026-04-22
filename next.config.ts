@@ -5,6 +5,32 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   allowedDevOrigins: ["localhost", "127.0.0.1", "172.16.19.244"],
+  async redirects() {
+    return [
+      {
+        source: "/runs",
+        destination: "/operacao",
+        permanent: false,
+      },
+      {
+        source: "/admin/runs",
+        destination: "/admin/operacao",
+        permanent: false,
+      },
+    ];
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/operacao",
+        destination: "/runs",
+      },
+      {
+        source: "/admin/operacao",
+        destination: "/admin/runs",
+      },
+    ];
+  },
   devIndicators: {
     buildActivity: false, // esconde o indicador/loader do Next no canto
   },

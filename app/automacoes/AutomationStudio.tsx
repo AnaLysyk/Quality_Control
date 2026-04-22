@@ -14,6 +14,7 @@ import {
   FiDatabase,
   FiEye,
   FiFolderPlus,
+  FiImage,
   FiGitBranch,
   FiLayers,
   FiPauseCircle,
@@ -95,6 +96,12 @@ type FlowTriggerConfig = {
 type FlowRuntimeConfig = {
   allowProductionWrite: boolean;
   debugMode: boolean;
+  imageInputMode: "saved_base64" | "convert_now";
+  imageQuality: number;
+  imageResizeHeight: number;
+  imageResizeMode: "original" | "fit" | "fill";
+  imageResizeWidth: number;
+  imageTargetFormat: "png" | "jpeg" | "webp";
   maxParallel: number;
   notifyOnFailure: boolean;
   retryAttempts: number;
@@ -174,6 +181,16 @@ type DraftUpload = {
   name: string;
   size: number;
   type: string;
+};
+
+type SavedBase64Entry = {
+  id: string;
+  name: string;
+  kind: string;
+  size_bytes: number;
+  source: string;
+  source_asset_id: string | null;
+  created_at: string;
 };
 
 type FlowDraft = {
@@ -266,6 +283,12 @@ const DEFAULT_TRIGGER: FlowTriggerConfig = {
 const DEFAULT_RUNTIME: FlowRuntimeConfig = {
   allowProductionWrite: false,
   debugMode: true,
+  imageInputMode: "saved_base64",
+  imageQuality: 0.92,
+  imageResizeHeight: 1024,
+  imageResizeMode: "fit",
+  imageResizeWidth: 1024,
+  imageTargetFormat: "png",
   maxParallel: 2,
   notifyOnFailure: true,
   retryAttempts: 2,
@@ -313,6 +336,77 @@ function nowLabel() {
     minute: "2-digit",
     month: "2-digit",
   });
+}
+
+type ImageConversionSettings = {
+  quality: number;
+  resizeHeight: number;
+  resizeMode: "original" | "fit" | "fill";
+  resizeWidth: number;
+  targetFormat: "png" | "jpeg" | "webp";
+};
+
+function loadImageElement(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+}
+
+async function convertImageFileToDataURL(file: File, settings: ImageConversionSettings) {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = await loadImageElement(objectUrl);
+    const sourceWidth = image.naturalWidth || image.width;
+    const sourceHeight = image.naturalHeight || image.height;
+
+    const targetWidth = settings.resizeMode === "original" ? sourceWidth : Math.max(1, settings.resizeWidth || sourceWidth);
+    const targetHeight = settings.resizeMode === "original" ? sourceHeight : Math.max(1, settings.resizeHeight || sourceHeight);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Não foi possível preparar o canvas de conversão.");
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, targetWidth, targetHeight);
+
+    if (settings.resizeMode === "fill") {
+      const sourceRatio = sourceWidth / sourceHeight;
+      const targetRatio = targetWidth / targetHeight;
+      let drawWidth = sourceWidth;
+      let drawHeight = sourceHeight;
+      let sourceX = 0;
+      let sourceY = 0;
+
+      if (sourceRatio > targetRatio) {
+        drawWidth = sourceHeight * targetRatio;
+        sourceX = (sourceWidth - drawWidth) / 2;
+      } else {
+        drawHeight = sourceWidth / targetRatio;
+        sourceY = (sourceHeight - drawHeight) / 2;
+      }
+
+      ctx.drawImage(image, sourceX, sourceY, drawWidth, drawHeight, 0, 0, targetWidth, targetHeight);
+    } else if (settings.resizeMode === "fit") {
+      const scale = Math.min(targetWidth / sourceWidth, targetHeight / sourceHeight);
+      const drawWidth = sourceWidth * scale;
+      const drawHeight = sourceHeight * scale;
+      const offsetX = (targetWidth - drawWidth) / 2;
+      const offsetY = (targetHeight - drawHeight) / 2;
+      ctx.drawImage(image, 0, 0, sourceWidth, sourceHeight, offsetX, offsetY, drawWidth, drawHeight);
+    } else {
+      ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+    }
+
+    const mimeType = `image/${settings.targetFormat}`;
+    return canvas.toDataURL(mimeType, settings.targetFormat === "png" ? undefined : settings.quality);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
 
 function buildAuditEntry(actor: string, summary: string): FlowAuditEntry {
@@ -514,6 +608,18 @@ function readStoredDraft(companySlug: string, flow: FlowDefinition, access: Auto
       runtime: {
         allowProductionWrite: readBoolean(parsed.runtime?.allowProductionWrite, DEFAULT_RUNTIME.allowProductionWrite),
         debugMode: readBoolean(parsed.runtime?.debugMode, DEFAULT_RUNTIME.debugMode),
+        imageInputMode:
+          (readString(parsed.runtime?.imageInputMode, DEFAULT_RUNTIME.imageInputMode) as FlowRuntimeConfig["imageInputMode"]) ||
+          DEFAULT_RUNTIME.imageInputMode,
+        imageQuality: readNumber(parsed.runtime?.imageQuality, DEFAULT_RUNTIME.imageQuality),
+        imageResizeHeight: readNumber(parsed.runtime?.imageResizeHeight, DEFAULT_RUNTIME.imageResizeHeight),
+        imageResizeMode:
+          (readString(parsed.runtime?.imageResizeMode, DEFAULT_RUNTIME.imageResizeMode) as FlowRuntimeConfig["imageResizeMode"]) ||
+          DEFAULT_RUNTIME.imageResizeMode,
+        imageResizeWidth: readNumber(parsed.runtime?.imageResizeWidth, DEFAULT_RUNTIME.imageResizeWidth),
+        imageTargetFormat:
+          (readString(parsed.runtime?.imageTargetFormat, DEFAULT_RUNTIME.imageTargetFormat) as FlowRuntimeConfig["imageTargetFormat"]) ||
+          DEFAULT_RUNTIME.imageTargetFormat,
         maxParallel: readNumber(parsed.runtime?.maxParallel, DEFAULT_RUNTIME.maxParallel),
         notifyOnFailure: readBoolean(parsed.runtime?.notifyOnFailure, DEFAULT_RUNTIME.notifyOnFailure),
         retryAttempts: readNumber(parsed.runtime?.retryAttempts, DEFAULT_RUNTIME.retryAttempts),
@@ -1157,6 +1263,11 @@ export default function AutomationStudio({
   const [stepRunning, setStepRunning] = useState(false);
   const [isFileLibraryOpen, setIsFileLibraryOpen] = useState(false);
   const [fileLibraryQuery, setFileLibraryQuery] = useState("");
+  const [savedBase64Entries, setSavedBase64Entries] = useState<SavedBase64Entry[]>([]);
+  const [savedBase64Loading, setSavedBase64Loading] = useState(false);
+  const [selectedSavedBase64Id, setSelectedSavedBase64Id] = useState("");
+  const [imageConversionLoading, setImageConversionLoading] = useState(false);
+  const imageConvertInputRef = useRef<HTMLInputElement | null>(null);
   const [runPreviewLoading, setRunPreviewLoading] = useState(false);
   const [availableRuns, setAvailableRuns] = useState<LinkedReleaseRun[]>([]);
   const [runsLoading, setRunsLoading] = useState(false);
@@ -1202,6 +1313,44 @@ export default function AutomationStudio({
       mounted = false;
     };
   }, [selectedCompanySlug]);
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadSavedBase64() {
+      if (!selectedCompanySlug) {
+        if (mounted) {
+          setSavedBase64Entries([]);
+          setSelectedSavedBase64Id("");
+        }
+        return;
+      }
+
+      setSavedBase64Loading(true);
+      try {
+        const response = await fetch(`/api/automations/base64?companySlug=${encodeURIComponent(selectedCompanySlug)}`, {
+          cache: "no-store",
+        });
+        const payload = (await response.json().catch(() => null)) as { entries?: SavedBase64Entry[] } | null;
+        const rows = response.ok && Array.isArray(payload?.entries) ? payload.entries : [];
+        if (!mounted) return;
+        setSavedBase64Entries(rows);
+        setSelectedSavedBase64Id(rows[0]?.id || "");
+      } catch {
+        if (mounted) {
+          setSavedBase64Entries([]);
+          setSelectedSavedBase64Id("");
+        }
+      } finally {
+        if (mounted) setSavedBase64Loading(false);
+      }
+    }
+
+    void loadSavedBase64();
+
+    return () => {
+      mounted = false;
+    };
+  }, [selectedCompanySlug]);
   const customFlows = useMemo(() => {
     const revision = customFlowsRevision;
     void revision;
@@ -1227,6 +1376,10 @@ export default function AutomationStudio({
   const selectedStep = useMemo(
     () => draft.steps.find((step) => step.id === selectedStepId) || draft.steps[0] || null,
     [draft.steps, selectedStepId],
+  );
+  const selectedSavedBase64Entry = useMemo(
+    () => savedBase64Entries.find((entry) => entry.id === selectedSavedBase64Id) || null,
+    [savedBase64Entries, selectedSavedBase64Id],
   );
   const visibleAssets = useMemo(
     () => AUTOMATION_STUDIO_ASSETS.filter((asset) => asset.flowIds.includes(selectedFlow.id)),
@@ -1615,12 +1768,87 @@ export default function AutomationStudio({
         [field]:
           field === "debugMode" || field === "notifyOnFailure" || field === "allowProductionWrite"
             ? Boolean(value)
-            : field === "simulationMode" || field === "uploadStrategy"
+            : field === "simulationMode" || field === "uploadStrategy" || field === "imageInputMode" || field === "imageResizeMode" || field === "imageTargetFormat"
               ? String(value)
               : Number(value),
       } as FlowRuntimeConfig,
     }));
   }
+
+  const applySavedBase64ToFlow = useCallback(async () => {
+    if (!selectedCompanySlug || !selectedSavedBase64Id || imageConversionLoading) return;
+
+    setImageConversionLoading(true);
+    try {
+      const response = await fetch(
+        `/api/automations/base64?companySlug=${encodeURIComponent(selectedCompanySlug)}&id=${encodeURIComponent(selectedSavedBase64Id)}`,
+        { cache: "no-store" },
+      );
+      const payload = (await response.json().catch(() => null)) as { entry?: { base64_data?: string; name?: string } } | null;
+      const base64Data = payload?.entry?.base64_data;
+      if (!response.ok || !base64Data) return;
+
+      updateDraft((current) => ({
+        ...current,
+        auditTrail: [
+          buildAuditEntry(access.profileLabel, `Base64 salvo ${payload.entry?.name ?? selectedSavedBase64Id} aplicado ao fluxo.`),
+          ...current.auditTrail,
+        ].slice(0, 20),
+        base64Sample: base64Data,
+        runtime: {
+          ...current.runtime,
+          imageInputMode: "saved_base64",
+        },
+      }));
+    } finally {
+      setImageConversionLoading(false);
+    }
+  }, [access.profileLabel, imageConversionLoading, selectedCompanySlug, selectedSavedBase64Id, updateDraft]);
+
+  const convertImageForFlow = useCallback(async () => {
+    const file = imageConvertInputRef.current?.files?.[0] ?? null;
+    if (!file || !selectedCompanySlug || imageConversionLoading) return;
+    if (!file.type.startsWith("image/")) return;
+
+    setImageConversionLoading(true);
+    try {
+      const converted = await convertImageFileToDataURL(file, {
+        quality: draft.runtime.imageQuality,
+        resizeHeight: draft.runtime.imageResizeHeight,
+        resizeMode: draft.runtime.imageResizeMode,
+        resizeWidth: draft.runtime.imageResizeWidth,
+        targetFormat: draft.runtime.imageTargetFormat,
+      });
+
+      updateDraft((current) => ({
+        ...current,
+        auditTrail: [
+          buildAuditEntry(access.profileLabel, `Imagem ${file.name} convertida para ${draft.runtime.imageTargetFormat.toUpperCase()} no fluxo.`),
+          ...current.auditTrail,
+        ].slice(0, 20),
+        base64Sample: converted,
+        runtime: {
+          ...current.runtime,
+          imageInputMode: "convert_now",
+        },
+      }));
+    } finally {
+      if (imageConvertInputRef.current) {
+        imageConvertInputRef.current.value = "";
+      }
+      setImageConversionLoading(false);
+    }
+  }, [
+    access.profileLabel,
+    draft.runtime.imageQuality,
+    draft.runtime.imageResizeHeight,
+    draft.runtime.imageResizeMode,
+    draft.runtime.imageResizeWidth,
+    draft.runtime.imageTargetFormat,
+    imageConversionLoading,
+    selectedCompanySlug,
+    updateDraft,
+  ]);
 
   function createCustomFlow(mode: "blank" | "clone") {
     if (!canEditFlow || !selectedCompanySlug) return;
@@ -3862,6 +4090,187 @@ export default function AutomationStudio({
                     </div>
                   ))}
                 </div>
+              </div>
+
+              <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+                <div className="flex items-center gap-2 text-sm font-black text-(--tc-text,#0b1a3c)">
+                  <FiImage className="h-4 w-4 text-(--tc-accent,#ef0001)" />
+                  Imagem para automação
+                </div>
+                <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">
+                  Escolha entre reaproveitar um Base64 salvo ou converter uma imagem agora, já com formato e redimensionamento.
+                </p>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => updateRuntime("imageInputMode", "saved_base64")}
+                    disabled={!canEditFlow}
+                    className={`inline-flex min-h-10 items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition ${
+                      draft.runtime.imageInputMode === "saved_base64"
+                        ? "bg-(--tc-primary,#011848) text-white"
+                        : "border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
+                    } disabled:cursor-not-allowed disabled:opacity-60`}
+                  >
+                    Base64 salvo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updateRuntime("imageInputMode", "convert_now")}
+                    disabled={!canEditFlow}
+                    className={`inline-flex min-h-10 items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition ${
+                      draft.runtime.imageInputMode === "convert_now"
+                        ? "bg-(--tc-primary,#011848) text-white"
+                        : "border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
+                    } disabled:cursor-not-allowed disabled:opacity-60`}
+                  >
+                    Converter agora
+                  </button>
+                </div>
+
+                {draft.runtime.imageInputMode === "saved_base64" ? (
+                  <div className="mt-4 space-y-3">
+                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                      Base64 salvo
+                      <select
+                        value={selectedSavedBase64Id}
+                        onChange={(event) => setSelectedSavedBase64Id(event.target.value)}
+                        disabled={!canEditFlow || savedBase64Loading || savedBase64Entries.length === 0}
+                        className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none disabled:cursor-not-allowed"
+                      >
+                        <option value="">Selecione um Base64 salvo</option>
+                        {savedBase64Entries.map((entry) => (
+                          <option key={entry.id} value={entry.id}>
+                            {entry.name} · {formatBytes(entry.size_bytes)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    {selectedSavedBase64Entry ? (
+                      <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">
+                        <p className="font-semibold text-(--tc-text,#0b1a3c)">{selectedSavedBase64Entry.name}</p>
+                        <p className="mt-1">
+                          {selectedSavedBase64Entry.source === "library" ? "Biblioteca" : "Upload"} · {formatBytes(selectedSavedBase64Entry.size_bytes)}
+                        </p>
+                        <p className="mt-1">Selecione e aplique para carregar esse Base64 no fluxo atual.</p>
+                      </div>
+                    ) : null}
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void applySavedBase64ToFlow()}
+                        disabled={!canEditFlow || savedBase64Loading || !selectedSavedBase64Id || imageConversionLoading}
+                        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {imageConversionLoading ? "Aplicando..." : "Usar Base64 salvo"}
+                      </button>
+                      <Link
+                        href="/automacoes/base64"
+                        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"
+                      >
+                        Abrir Base64
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-4 space-y-3">
+                    <input
+                      ref={imageConvertInputRef}
+                      type="file"
+                      accept="image/*"
+                      disabled={!canEditFlow}
+                      onChange={() => void convertImageForFlow()}
+                      className="hidden"
+                    />
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                        Formato
+                        <select
+                          value={draft.runtime.imageTargetFormat}
+                          onChange={(event) => updateRuntime("imageTargetFormat", event.target.value)}
+                          disabled={!canEditFlow}
+                          className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none disabled:cursor-not-allowed"
+                        >
+                          <option value="png">PNG</option>
+                          <option value="jpeg">JPEG</option>
+                          <option value="webp">WebP</option>
+                        </select>
+                      </label>
+                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                        Modo de resize
+                        <select
+                          value={draft.runtime.imageResizeMode}
+                          onChange={(event) => updateRuntime("imageResizeMode", event.target.value)}
+                          disabled={!canEditFlow}
+                          className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none disabled:cursor-not-allowed"
+                        >
+                          <option value="original">Original</option>
+                          <option value="fit">Ajustar</option>
+                          <option value="fill">Preencher</option>
+                        </select>
+                      </label>
+                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                        Largura
+                        <input
+                          type="number"
+                          min={1}
+                          value={draft.runtime.imageResizeWidth}
+                          onChange={(event) => updateRuntime("imageResizeWidth", Number(event.target.value) || 1)}
+                          readOnly={!canEditFlow}
+                          className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
+                        />
+                      </label>
+                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                        Altura
+                        <input
+                          type="number"
+                          min={1}
+                          value={draft.runtime.imageResizeHeight}
+                          onChange={(event) => updateRuntime("imageResizeHeight", Number(event.target.value) || 1)}
+                          readOnly={!canEditFlow}
+                          className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
+                        />
+                      </label>
+                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c) sm:col-span-2">
+                        Qualidade
+                        <input
+                          type="range"
+                          min={0.5}
+                          max={1}
+                          step={0.01}
+                          value={draft.runtime.imageQuality}
+                          onChange={(event) => updateRuntime("imageQuality", Number(event.target.value) || 0.92)}
+                          disabled={!canEditFlow}
+                          className="w-full accent-[#ef0001]"
+                        />
+                        <span className="text-xs font-medium text-(--tc-text-muted,#6b7280)">
+                          {Math.round(draft.runtime.imageQuality * 100)}%
+                        </span>
+                      </label>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => imageConvertInputRef.current?.click()}
+                        disabled={!canEditFlow || imageConversionLoading}
+                        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {imageConversionLoading ? "Convertendo..." : "Selecionar imagem"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void convertImageForFlow()}
+                        disabled={!canEditFlow || imageConversionLoading}
+                        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Converter e usar
+                      </button>
+                    </div>
+                    <p className="text-xs leading-6 text-(--tc-text-secondary,#4b5563)">
+                      A imagem escolhida entra como `base64Sample` e fica pronta para etapas que esperam Base64 sem precisar abrir o módulo separado.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">

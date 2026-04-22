@@ -12,6 +12,7 @@ import {
 } from "@/lib/auth/localStore";
 import { resolveCapabilities } from "@/lib/permissions";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
+import { resolveVisibleCompanies, resolveCompanyVisibilityMode } from "@/lib/companyVisibility";
 
 export type SessionPayload = {
   userId?: string;
@@ -178,28 +179,33 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     session.isGlobalAdmin === true ||
     sessionRole === "leader_tc";
 
-  // 6) Lista de empresas permitidas (todas para admin global, ou apenas as vinculadas).
-  const hasTechnicalSupportRole =
-    sessionRole === "technical_support" ||
-    normalizeLocalRole(user.role ?? null) === "technical_support" ||
-    links.some((link) => normalizeLocalRole(link.role ?? null) === "technical_support");
-  const hasLeaderTcRole =
-    sessionRole === "leader_tc" ||
-    normalizeLocalRole(user.role ?? null) === "leader_tc" ||
-    links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc");
-  const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
-  const shouldBindCompanyContext = !hasFullCompanyAccess;
-  const isDirectCompanyUser = normalizeLocalRole(user.role ?? null) === "empresa" || normalizeLocalRole(user.role ?? null) === "company_user" || user.user_origin === "client_company";
-  const allowedCompanies = hasFullCompanyAccess
-    ? companies
-    : companies.filter((company) => {
-        if (links.some((link) => link.companyId === company.id)) return true;
-        if (!isDirectCompanyUser) return false;
-        if (session.companyId && company.id === session.companyId) return true;
-        if (session.companySlug && company.slug === session.companySlug) return true;
-        if (user.default_company_slug && company.slug === user.default_company_slug) return true;
-        return false;
-      });
+  const visibilityMode = resolveCompanyVisibilityMode(
+    {
+      permissionRole: session.globalRole ?? session.role ?? null,
+      role: session.role ?? null,
+      companyRole: user.role ?? null,
+      userOrigin: user.user_origin ?? null,
+      isGlobalAdmin,
+      default_company_slug: user.default_company_slug ?? null,
+      clientSlug: session.companySlug ?? null,
+      defaultClientSlug: user.default_company_slug ?? null,
+    },
+    links,
+  );
+  const shouldBindCompanyContext = visibilityMode !== "all";
+  const allowedCompanies = resolveVisibleCompanies(companies, {
+    user: {
+      role: session.role ?? null,
+      companyRole: user.role ?? null,
+      userOrigin: user.user_origin ?? null,
+      isGlobalAdmin,
+      default_company_slug: user.default_company_slug ?? null,
+      clientSlug: session.companySlug ?? null,
+      defaultClientSlug: user.default_company_slug ?? null,
+    },
+    links,
+    preferredSlug: session.companySlug ?? user.default_company_slug ?? null,
+  });
   // Importante: usuarios sem empresa ainda podem entrar para solicitar acesso.
 
   const companySlugs = allowedCompanies

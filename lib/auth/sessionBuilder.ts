@@ -7,6 +7,7 @@ import {
   normalizeLocalRole,
 } from "@/lib/auth/localStore";
 import { resolveCapabilities } from "@/lib/permissions";
+import { resolveVisibleCompanies, resolveCompanyVisibilityMode } from "@/lib/companyVisibility";
 
 export type BuiltSessionPayload = {
   userId: string;
@@ -56,22 +57,30 @@ export async function buildLocalSessionForUser(
   ]);
 
   const isGlobalAdmin = user.globalRole === "global_admin" || user.is_global_admin === true;
-  const hasTechnicalSupportRole =
-    normalizeLocalRole(user.role ?? null) === "technical_support" ||
-    links.some((link) => normalizeLocalRole(link.role ?? null) === "technical_support");
-  const hasLeaderTcRole =
-    normalizeLocalRole(user.role ?? null) === "leader_tc" ||
-    links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc");
-  const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
-  const shouldBindCompanyContext = !hasFullCompanyAccess;
-  const isDirectCompanyUser = normalizeLocalRole(user.role ?? null) === "empresa" || normalizeLocalRole(user.role ?? null) === "company_user" || user.user_origin === "client_company";
-  const allowedCompanies = hasFullCompanyAccess
-    ? companies
-    : companies.filter((company) => {
-        if (links.some((link) => link.companyId === company.id)) return true;
-        if (!isDirectCompanyUser) return false;
-        return Boolean(user.default_company_slug && company.slug === user.default_company_slug);
-      });
+  const visibilityMode = resolveCompanyVisibilityMode(
+    {
+      role: user.role ?? null,
+      companyRole: user.role ?? null,
+      userOrigin: user.user_origin ?? null,
+      isGlobalAdmin,
+      default_company_slug: user.default_company_slug ?? null,
+      defaultClientSlug: user.default_company_slug ?? null,
+    },
+    links,
+  );
+  const shouldBindCompanyContext = visibilityMode !== "all";
+  const allowedCompanies = resolveVisibleCompanies(companies, {
+    user: {
+      role: user.role ?? null,
+      companyRole: user.role ?? null,
+      userOrigin: user.user_origin ?? null,
+      isGlobalAdmin,
+      default_company_slug: user.default_company_slug ?? null,
+      defaultClientSlug: user.default_company_slug ?? null,
+    },
+    links,
+    preferredSlug: opts?.requestedSlug ?? user.default_company_slug ?? null,
+  });
 
   const requestedSlug = typeof opts?.requestedSlug === "string" ? opts.requestedSlug.trim() : "";
   const requestedCompany =

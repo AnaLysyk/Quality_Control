@@ -1,8 +1,9 @@
 import { AUTOMATION_STUDIO_ASSETS, AUTOMATION_STUDIO_BLUEPRINTS } from "@/data/automationStudio";
+import type { AutomationWorkflowStatus } from "@/lib/automations/workflowStatus";
 import type { AutomationCompanyScope } from "@/lib/automations/companyScope";
 
 export type AutomationCaseSource = "manual" | "qase" | "catalog";
-export type AutomationCaseStatus = "draft" | "ready" | "automated" | "review";
+export type AutomationCaseStatus = AutomationWorkflowStatus;
 export type AutomationCasePriority = "critical" | "high" | "medium";
 export type AutomationCaseCoverage = "manual" | "automation" | "hybrid";
 
@@ -21,7 +22,10 @@ export type AutomationCaseDefinition = {
   priority: AutomationCasePriority;
   coverage: AutomationCaseCoverage;
   linkedPlanName: string | null;
+  linkedPlanId?: string | null;
   externalCaseRef: string | null;
+  manualCaseId?: string | null;
+  workflowUpdatedAt?: string | null;
   companyScope: AutomationCompanyScope;
   preconditions: string[];
   inputBindings: string[];
@@ -57,7 +61,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "griaule-biometrics",
     scriptTemplateId: "conditional-loop",
     source: "manual",
-    status: "ready",
+    status: "published",
     priority: "critical",
     coverage: "hybrid",
     linkedPlanName: "Plano biometria Smart",
@@ -79,7 +83,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "griaule-biometrics",
     scriptTemplateId: "conditional-loop",
     source: "qase",
-    status: "review",
+    status: "draft",
     priority: "high",
     coverage: "automation",
     linkedPlanName: "Regressão biometria",
@@ -101,7 +105,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "cpf-rfb",
     scriptTemplateId: "playwright-api",
     source: "catalog",
-    status: "automated",
+    status: "published",
     priority: "high",
     coverage: "automation",
     linkedPlanName: null,
@@ -123,7 +127,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "token-processo",
     scriptTemplateId: "playwright-api",
     source: "manual",
-    status: "ready",
+    status: "published",
     priority: "medium",
     coverage: "hybrid",
     linkedPlanName: "Smoke operacional",
@@ -167,7 +171,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "smart-browser",
     scriptTemplateId: "parallel-upload",
     source: "catalog",
-    status: "ready",
+    status: "published",
     priority: "high",
     coverage: "automation",
     linkedPlanName: null,
@@ -189,7 +193,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "qc-admin-dashboard",
     scriptTemplateId: "playwright-pom",
     source: "catalog",
-    status: "ready",
+    status: "published",
     priority: "critical",
     coverage: "automation",
     linkedPlanName: "Testing Company - Regressão automatizada Playwright",
@@ -211,7 +215,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "qc-automation-ide",
     scriptTemplateId: "playwright-pom",
     source: "catalog",
-    status: "ready",
+    status: "published",
     priority: "high",
     coverage: "automation",
     linkedPlanName: "Testing Company - Regressão automatizada Playwright",
@@ -233,7 +237,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "qc-company-home",
     scriptTemplateId: "playwright-pom",
     source: "catalog",
-    status: "ready",
+    status: "published",
     priority: "high",
     coverage: "automation",
     linkedPlanName: "Testing Company - Regressão automatizada Playwright",
@@ -255,7 +259,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "qc-company-runs",
     scriptTemplateId: "playwright-pom",
     source: "catalog",
-    status: "ready",
+    status: "published",
     priority: "medium",
     coverage: "automation",
     linkedPlanName: "Testing Company - Regressão automatizada Playwright",
@@ -277,7 +281,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "qc-automation-ide",
     scriptTemplateId: "playwright-pom",
     source: "catalog",
-    status: "ready",
+    status: "published",
     priority: "critical",
     coverage: "automation",
     linkedPlanName: "Testing Company - Regressão automatizada Playwright",
@@ -299,7 +303,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "qc-automation-ide",
     scriptTemplateId: "playwright-pom",
     source: "catalog",
-    status: "ready",
+    status: "published",
     priority: "high",
     coverage: "automation",
     linkedPlanName: "Testing Company - Regressão automatizada Playwright",
@@ -321,7 +325,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "qc-automation-ide",
     scriptTemplateId: "playwright-pom",
     source: "catalog",
-    status: "ready",
+    status: "published",
     priority: "medium",
     coverage: "automation",
     linkedPlanName: "Testing Company - Regressão automatizada Playwright",
@@ -343,7 +347,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "qc-automation-ide",
     scriptTemplateId: "playwright-pom",
     source: "catalog",
-    status: "ready",
+    status: "published",
     priority: "high",
     coverage: "automation",
     linkedPlanName: "Testing Company - Regressão automatizada Playwright",
@@ -387,7 +391,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "qc-automation-ide",
     scriptTemplateId: "playwright-pom",
     source: "catalog",
-    status: "ready",
+    status: "published",
     priority: "critical",
     coverage: "automation",
     linkedPlanName: "Testing Company - Regressão automatizada Playwright",
@@ -409,7 +413,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "qc-automation-ide",
     scriptTemplateId: "playwright-pom",
     source: "catalog",
-    status: "ready",
+    status: "published",
     priority: "critical",
     coverage: "automation",
     linkedPlanName: "Testing Company - Regressão automatizada Playwright",
@@ -431,7 +435,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "qc-automation-ide",
     scriptTemplateId: "playwright-pom",
     source: "catalog",
-    status: "ready",
+    status: "published",
     priority: "high",
     coverage: "automation",
     linkedPlanName: "Testing Company - Regressão automatizada Playwright",
@@ -453,7 +457,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     flowId: "qc-company-runs",
     scriptTemplateId: "playwright-pom",
     source: "manual",
-    status: "ready",
+    status: "published",
     priority: "medium",
     coverage: "hybrid",
     linkedPlanName: "Testing Company - Plano manual da plataforma",

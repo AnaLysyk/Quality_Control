@@ -5,8 +5,12 @@ import { QaseError } from "@/lib/qaseSdk";
 import {
   extractNumericCaseIds,
   parseTestPlanCases,
+  createDefaultTestPlanAutomationState,
+  normalizeTestPlanAutomationState,
+  type TestPlanAutomationState,
   type TestPlanCase,
 } from "@/lib/testPlanCases";
+import { aggregateAutomationWorkflowStatus } from "@/lib/automations/workflowStatus";
 import {
   createQasePlan,
   deleteQasePlan,
@@ -52,6 +56,8 @@ function toResponsePlan(input: {
   applicationId?: string | null;
   applicationName?: string | null;
   cases?: TestPlanCase[];
+  automation?: TestPlanAutomationState | null;
+  automationCasesCount?: number;
 }) {
   return {
     id: input.id,
@@ -65,6 +71,8 @@ function toResponsePlan(input: {
     applicationId: input.applicationId ?? null,
     applicationName: input.applicationName ?? null,
     cases: Array.isArray(input.cases) ? input.cases : undefined,
+    automation: input.automation ?? null,
+    automationCasesCount: input.automationCasesCount ?? 0,
   };
 }
 
@@ -83,6 +91,24 @@ async function resolveApplication(companySlug: string, applicationId: string) {
 function normalizeWarningList(values: Array<string | null | undefined>) {
   const unique = Array.from(new Set(values.filter((value): value is string => Boolean(value && value.trim()))));
   return unique.length ? unique.join(" ") : null;
+}
+
+function resolveManualPlanAutomation(plan: {
+  automation?: TestPlanAutomationState | null;
+  cases: TestPlanCase[];
+}) {
+  const base = plan.automation ?? createDefaultTestPlanAutomationState(false);
+  const enabledCaseStatuses = plan.cases
+    .filter((testCase) => testCase.automation?.enabled)
+    .map((testCase) => testCase.automation?.status);
+
+  return {
+    ...base,
+    status: aggregateAutomationWorkflowStatus([
+      base.enabled ? base.status : null,
+      ...enabledCaseStatuses,
+    ]),
+  };
 }
 
 function resolveWarningFromQaseError(error: unknown) {
@@ -137,6 +163,8 @@ export async function GET(request: Request) {
           applicationId: plan.applicationId,
           applicationName: plan.applicationName,
           cases: plan.cases,
+          automation: resolveManualPlanAutomation(plan),
+          automationCasesCount: plan.cases.filter((testCase) => testCase.automation?.enabled).length,
         }),
       });
     }
@@ -249,6 +277,8 @@ export async function GET(request: Request) {
       source: "manual",
       applicationId: plan.applicationId,
       applicationName: plan.applicationName,
+      automation: resolveManualPlanAutomation(plan),
+      automationCasesCount: plan.cases.filter((testCase) => testCase.automation?.enabled).length,
     }),
   );
 
@@ -278,6 +308,7 @@ export async function POST(request: Request) {
   const title = String(body.title ?? "").trim();
   const description = typeof body.description === "string" ? body.description.trim() || null : null;
   const caseRefs = parseTestPlanCases(body.cases);
+  const planAutomation = normalizeTestPlanAutomationState(body.automation);
 
   if (!companySlug || !applicationId || !title) {
     return NextResponse.json({ error: "companySlug, applicationId and title are required" }, { status: 400 });
@@ -338,6 +369,7 @@ export async function POST(request: Request) {
     title,
     description,
     cases: caseRefs,
+    automation: planAutomation,
   });
 
   return NextResponse.json({
@@ -353,6 +385,8 @@ export async function POST(request: Request) {
       applicationId: created.applicationId,
       applicationName: created.applicationName,
       cases: created.cases,
+      automation: resolveManualPlanAutomation(created),
+      automationCasesCount: created.cases.filter((testCase) => testCase.automation?.enabled).length,
     }),
   }, { status: 201 });
 }
@@ -373,6 +407,7 @@ export async function PATCH(request: Request) {
   }
 
   const caseRefs = body.cases === undefined ? undefined : parseTestPlanCases(body.cases);
+  const planAutomation = body.automation === undefined ? undefined : normalizeTestPlanAutomationState(body.automation);
 
   if (source === "qase") {
     const { selectedApplication } = await resolveApplication(companySlug, applicationId);
@@ -423,6 +458,7 @@ export async function PATCH(request: Request) {
       ? { description: typeof body.description === "string" ? body.description.trim() || null : null }
       : {}),
     ...(caseRefs !== undefined ? { cases: caseRefs } : {}),
+    ...(planAutomation !== undefined ? { automation: planAutomation } : {}),
     ...(selectedApplication
       ? {
           applicationId: selectedApplication.id,
@@ -451,6 +487,8 @@ export async function PATCH(request: Request) {
       applicationId: updated.applicationId,
       applicationName: updated.applicationName,
       cases: updated.cases,
+      automation: resolveManualPlanAutomation(updated),
+      automationCasesCount: updated.cases.filter((testCase) => testCase.automation?.enabled).length,
     }),
   });
 }

@@ -1,17 +1,22 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ComponentType, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ComponentType, type Dispatch, type PointerEvent as ReactPointerEvent, type SetStateAction } from "react";
 import {
   FiActivity,
   FiCheckCircle,
+  FiChevronDown,
+  FiChevronRight,
   FiClock,
   FiCopy,
   FiDatabase,
   FiDownload,
+  FiFolder,
   FiList,
+  FiMoreHorizontal,
   FiPlay,
   FiPlus,
   FiServer,
+  FiSearch,
   FiToggleLeft,
   FiToggleRight,
   FiTrash2,
@@ -31,6 +36,7 @@ import {
   type AutomationRequestKeyValue,
   type AutomationRequestPreset,
 } from "@/data/automationIde";
+import { SC_INTEGRATION_COLLECTION } from "@/data/scIntegrationCollection";
 import { isTestingCompanyScope, matchesAutomationCompanyScope, normalizeAutomationCompanyScope } from "@/lib/automations/companyScope";
 
 type CompanyOption = {
@@ -50,6 +56,27 @@ type KeyValueRow = AutomationRequestKeyValue & {
 type SavedRequest = AutomationRequestPreset & {
   source: "saved";
 };
+
+type CollectionPreset = AutomationRequestPreset | SavedRequest;
+
+type CollectionTreeRequestNode = {
+  kind: "request";
+  id: string;
+  title: string;
+  method: AutomationHttpMethod;
+  preset: CollectionPreset;
+  isSaved: boolean;
+};
+
+type CollectionTreeFolderNode = {
+  kind: "folder" | "root";
+  id: string;
+  title: string;
+  summary?: string;
+  children: CollectionTreeNode[];
+};
+
+type CollectionTreeNode = CollectionTreeFolderNode | CollectionTreeRequestNode;
 
 type HttpResponseState = {
   durationMs: number;
@@ -172,6 +199,7 @@ const REQUEST_STORAGE_PREFIX = "qc:automation:api-lab:v2";
 const ENV_STORAGE_PREFIX = "qc:automation:api-lab:env:v1";
 const HISTORY_STORAGE_PREFIX = "qc:automation:api-lab:history:v1";
 const BASE_URL_STORAGE_PREFIX = "qc:automation:api-lab:base-url:v1";
+const HIDDEN_REQUESTS_STORAGE_PREFIX = "qc:automation:api-lab:hidden:v1";
 const DEFAULT_AUTH: AutomationRequestAuth = { type: "none" };
 
 function historyStorageKey(companySlug: string | null) {
@@ -250,6 +278,10 @@ function baseUrlStorageKey(companySlug: string | null, environmentId: string) {
   return `${BASE_URL_STORAGE_PREFIX}:${companySlug ?? "global"}:${environmentId}`;
 }
 
+function hiddenRequestsStorageKey(companySlug: string | null) {
+  return `${HIDDEN_REQUESTS_STORAGE_PREFIX}:${companySlug ?? "global"}`;
+}
+
 function buildAuthState(auth?: AutomationRequestAuth): AutomationRequestAuth {
   return {
     ...DEFAULT_AUTH,
@@ -269,7 +301,7 @@ function collectTemplateKeys(template: string) {
   return matches.map((item) => item.slice(2, -2).trim()).filter(Boolean);
 }
 
-// ── Variable source types & badge config ─────────────────────────────────────
+// â”€â”€ Variable source types & badge config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type VarSource = "env" | "local" | "system";
 
 function buildVarSourceMap(
@@ -301,10 +333,10 @@ function VarDropdown({
   return (
     <div className="absolute left-0 top-full z-50 mt-1 w-80 overflow-hidden rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) shadow-xl">
       <p className="border-b border-(--tc-border,#d7deea) px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-(--tc-text-muted,#6b7280)">
-        Variáveis disponíveis
+        Vari\u00e1veis dispon\u00edveis
       </p>
       {vars.length === 0 ? (
-        <p className="px-3 py-3 text-sm text-(--tc-text-muted,#6b7280)">Nenhuma variável definida</p>
+        <p className="px-3 py-3 text-sm text-(--tc-text-muted,#6b7280)">Nenhuma vari\u00e1vel definida</p>
       ) : (
         vars.slice(0, 8).map((key) => {
           const src = varSourceMap[key];
@@ -322,7 +354,7 @@ function VarDropdown({
                 </span>
               )}
               <code className="shrink-0 rounded bg-orange-50 px-1.5 py-0.5 font-mono text-[11px] font-bold text-orange-600 dark:bg-orange-900/20 dark:text-orange-300">{`{{${key}}}`}</code>
-              <span className="min-w-0 truncate font-mono text-xs text-(--tc-text-muted,#6b7280)">{resolvedVariables[key] || "—"}</span>
+              <span className="min-w-0 truncate font-mono text-xs text-(--tc-text-muted,#6b7280)">{resolvedVariables[key] || "-"}</span>
             </button>
           );
         })
@@ -336,13 +368,13 @@ function VarDropdown({
             </span>
           ))}
         </div>
-        <span className="text-[10px] text-(--tc-text-muted,#6b7280)">Variáveis no request →</span>
+        <span className="text-[10px] text-(--tc-text-muted,#6b7280)">Vari\u00e1veis no request -&gt;</span>
       </div>
     </div>
   );
 }
 
-// ── VarAutocomplete (wraps regular inputs) ────────────────────────────────────
+// â”€â”€ VarAutocomplete (wraps regular inputs) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type VarAutocompleteProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> & {
   value: string;
   onChange: (v: string) => void;
@@ -390,7 +422,7 @@ function VarAutocomplete({ value, onChange, resolvedVariables, varSourceMap = {}
   );
 }
 
-// ── URL bar with inline variable highlighting (Postman-style) ─────────────────
+// â”€â”€ URL bar with inline variable highlighting (Postman-style) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type UrlVarInputProps = {
   value: string;
   onChange: (v: string) => void;
@@ -449,7 +481,7 @@ function UrlVarInput({ value, onChange, resolvedVariables, varSourceMap = {}, pl
 
   return (
     <div className="relative flex-1 min-w-0">
-      {/* Highlight overlay — pointer-events-none, renders ALL text so dark mode works */}
+      {/* Highlight overlay â€” pointer-events-none, renders ALL text so dark mode works */}
       <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center overflow-hidden px-4">
         <span className="whitespace-pre text-sm text-(--tc-text,#0b1a3c)">
           {segments.map((seg, idx) =>
@@ -469,7 +501,7 @@ function UrlVarInput({ value, onChange, resolvedVariables, varSourceMap = {}, pl
         </span>
       </div>
 
-      {/* Actual input — transparent text + caret, overlay renders the visual */}
+      {/* Actual input â€” transparent text + caret, overlay renders the visual */}
       <input
         ref={inputRef}
         value={value}
@@ -491,7 +523,7 @@ function UrlVarInput({ value, onChange, resolvedVariables, varSourceMap = {}, pl
             return (
               <span
                 key={seg.key}
-                title={`${seg.key} = ${resolvedVariables[seg.key] ?? "não definida"}`}
+                title={`${seg.key} = ${resolvedVariables[seg.key] ?? "n\u00e3o definida"}`}
                 className={`inline-flex cursor-default items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[11px] font-semibold shadow-sm ${
                   seg.isDefined
                     ? "border border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-800 dark:bg-orange-950/40 dark:text-orange-300"
@@ -564,7 +596,7 @@ function colorizeJson(json: string): React.ReactNode[] {
       nodes.push(<span key={k++} className="text-slate-400 dark:text-slate-500">{json[i]}</span>);
       i++;
     }
-    // Whitespace — keep as plain text for correct indentation
+    // Whitespace â€” keep as plain text for correct indentation
     else {
       const start = i;
       while (i < json.length && /\s/.test(json[i])) i++;
@@ -903,7 +935,7 @@ function runAssertions(rules: AutomationAssertionRule[], res: HttpResponseState)
       if (rule.type === "json-path-contains") {
         const value = resolveJsonPath(res.json, rule.path);
         const actual = String(value ?? "");
-        return { ruleId: rule.id, passed: actual.includes(rule.expected), label: `${rule.path || "body"} contém "${rule.expected}"`, actual };
+        return { ruleId: rule.id, passed: actual.includes(rule.expected), label: `${rule.path || "body"} cont\u00e9m "${rule.expected}"`, actual };
       }
       if (rule.type === "header-exists") {
         const lkey = rule.path.toLowerCase();
@@ -982,7 +1014,7 @@ const ASSERTION_TYPE_LABELS: Record<AutomationAssertionType, string> = {
   "status-equals": "Status =",
   "status-lt": "Status <",
   "json-path-equals": "JSON path =",
-  "json-path-contains": "JSON path contém",
+  "json-path-contains": "JSON path cont\u00e9m",
   "header-exists": "Header existe",
   "header-equals": "Header =",
   "response-time-lt": "Tempo (ms) <",
@@ -1002,8 +1034,8 @@ function authLabel(auth: AutomationRequestAuth) {
   if (auth.type === "bearer") return "Bearer";
   if (auth.type === "basic") return "Basic";
   if (auth.type === "api-key") return "API Key";
-  if (auth.type === "session") return "Sessão atual";
-  return "Sem autenticação";
+  if (auth.type === "session") return "Sess\u00e3o atual";
+  return "Sem autentica\u00e7\u00e3o";
 }
 
 function normalizePostmanAuth(auth?: PostmanRequest["auth"]): AutomationRequestAuth {
@@ -1073,6 +1105,216 @@ function flattenPostmanItems(items: PostmanItem[], parents: string[] = []): Post
   });
 }
 
+function collectionMethodClass(method: AutomationHttpMethod) {
+  if (method === "GET") return "text-emerald-500";
+  if (method === "POST") return "text-amber-500";
+  if (method === "PUT") return "text-blue-500";
+  if (method === "PATCH") return "text-violet-500";
+  return "text-rose-500";
+}
+
+function getCollectionRootInfo(preset: AutomationRequestPreset | SavedRequest) {
+  if ("source" in preset && preset.source === "saved") {
+    return {
+      id: "saved-requests",
+      title: "Cole\u00e7\u00f5es salvas",
+      summary: "Requests importados e salvos manualmente.",
+    };
+  }
+
+  if (preset.companyScope === "griaule") {
+    return {
+      id: "sc-integration",
+      title: SC_INTEGRATION_COLLECTION.name,
+      summary: SC_INTEGRATION_COLLECTION.summary,
+    };
+  }
+
+  if (preset.companyScope === "testing-company") {
+    return {
+      id: "testing-company",
+      title: "Testing Company",
+      summary: "Fluxos internos, smoke tests e requests do painel.",
+    };
+  }
+
+  return {
+    id: "global",
+    title: "Globais",
+    summary: "Requests dispon\u00edveis em qualquer contexto.",
+  };
+}
+
+function inferCollectionFolderTitle(preset: AutomationRequestPreset | SavedRequest) {
+  const tags = new Set(preset.tags.map((tag) => tag.toLowerCase()));
+  const title = preset.title.toLowerCase();
+
+  if (preset.companyScope === "testing-company") {
+    if (tags.has("auth") || tags.has("session") || tags.has("sessao") || tags.has("test-plans")) return "Sess\u00e3o";
+    if (tags.has("biometria")) return "Biometria";
+    return "Consulta";
+  }
+
+  if (tags.has("rfb") || tags.has("cpf")) return "RFB";
+  if (tags.has("processo") || title.includes("processo")) return "Processos";
+  if (tags.has("token") || tags.has("sessao") || tags.has("auth")) return "Tokens";
+  if (tags.has("painel") || tags.has("smoke")) return "Cidad\u00e3o SMART";
+  if (tags.has("pessoa")) return "Pessoas";
+  if (tags.has("cardscan")) return "Cardscan";
+  if (tags.has("config")) return "Config";
+  if (tags.has("package")) return "Package";
+  if (tags.has("sefaz") || tags.has("dae")) return "Sefaz";
+  if (tags.has("attention")) return "Attention";
+  if (tags.has("user") || tags.has("users")) return "Usu\u00e1rios";
+  if (title.includes("biometria")) return "Biometria";
+  return "Outros";
+}
+
+function splitSavedRequestTitle(title: string) {
+  const parts = title.split(" / ").map((part) => part.trim()).filter(Boolean);
+  if (parts.length > 1) {
+    return {
+      folders: parts.slice(0, -1),
+      leafTitle: parts[parts.length - 1] ?? title,
+    };
+  }
+
+  return {
+    folders: [],
+    leafTitle: title,
+  };
+}
+
+function countCollectionRequests(nodes: CollectionTreeNode[]): number {
+  return nodes.reduce((count, node) => count + (node.kind === "request" ? 1 : countCollectionRequests(node.children)), 0);
+}
+
+function findCollectionNodePath(nodes: CollectionTreeNode[], targetId: string, parents: string[] = []): string[] | null {
+  for (const node of nodes) {
+    const nextParents = node.kind === "request" ? parents : [...parents, node.id];
+    if (node.id === targetId) {
+      return nextParents;
+    }
+    if (node.kind !== "request") {
+      const found = findCollectionNodePath(node.children, targetId, nextParents);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function filterCollectionTree(nodes: CollectionTreeNode[], term: string): CollectionTreeNode[] {
+  const normalized = term.trim().toLowerCase();
+  if (!normalized) return nodes;
+
+  return nodes.flatMap((node) => {
+    if (node.kind === "request") {
+      const haystack = `${node.title} ${node.method} ${node.isSaved ? "saved" : ""}`.toLowerCase();
+      return haystack.includes(normalized) ? [node] : [];
+    }
+
+    const filteredChildren = filterCollectionTree(node.children, normalized);
+    const haystack = `${node.title} ${node.summary ?? ""}`.toLowerCase();
+    if (filteredChildren.length === 0 && !haystack.includes(normalized)) return [];
+    return [
+      {
+        ...node,
+        children: haystack.includes(normalized) ? node.children : filteredChildren,
+      },
+    ];
+  });
+}
+
+function buildCollectionTree(presets: CollectionPreset[]) {
+  const rootMap = new Map<string, CollectionTreeFolderNode>();
+
+  const ensureRoot = (preset: CollectionPreset) => {
+    const info = getCollectionRootInfo(preset);
+    let root = rootMap.get(info.id);
+    if (!root) {
+      root = {
+        kind: "root",
+        id: `root:${info.id}`,
+        title: info.title,
+        summary: info.summary,
+        children: [],
+      };
+      rootMap.set(info.id, root);
+    }
+    return root;
+  };
+
+  const ensureFolder = (children: CollectionTreeNode[], path: string[], baseId: string): CollectionTreeFolderNode | null => {
+    if (path.length === 0) return null;
+    const [head, ...rest] = path;
+    const folderId = `${baseId}/folder:${path.join("/")}`;
+    let folder = children.find((node): node is CollectionTreeFolderNode => node.kind !== "request" && node.title === head && node.id === folderId);
+    if (!folder) {
+      folder = {
+        kind: "folder",
+        id: folderId,
+        title: head,
+        children: [],
+      };
+      children.push(folder);
+    }
+
+    if (rest.length === 0) return folder;
+    return ensureFolder(folder.children, rest, baseId);
+  };
+
+  for (const preset of presets) {
+    const root = ensureRoot(preset);
+    const requestNode: CollectionTreeRequestNode = {
+      kind: "request",
+      id: preset.id,
+      title: preset.title,
+      method: preset.method,
+      preset,
+      isSaved: "source" in preset && preset.source === "saved",
+    };
+
+    if ("source" in preset && preset.source === "saved") {
+      const { folders, leafTitle } = splitSavedRequestTitle(preset.title);
+      const folderPath = folders.length > 0 ? folders : [inferCollectionFolderTitle(preset)];
+      const leafNode = {
+        ...requestNode,
+        title: leafTitle,
+      };
+      const targetFolder = ensureFolder(root.children, folderPath, root.id);
+      if (!targetFolder) {
+        root.children.push(leafNode);
+      } else {
+        targetFolder.children.push(leafNode);
+      }
+      continue;
+    }
+
+    const folderPath = [inferCollectionFolderTitle(preset)];
+    const targetFolder = ensureFolder(root.children, folderPath, root.id);
+    if (!targetFolder) {
+      root.children.push(requestNode);
+    } else {
+      targetFolder.children.push(requestNode);
+    }
+  }
+
+  const roots = Array.from(rootMap.values());
+  const rootOrder = ["sc-integration", "testing-company", "saved-requests", "global"];
+  roots.sort((left, right) => {
+    const leftIndex = rootOrder.indexOf(left.id.replace("root:", ""));
+    const rightIndex = rootOrder.indexOf(right.id.replace("root:", ""));
+    return (leftIndex === -1 ? Number.MAX_SAFE_INTEGER : leftIndex) - (rightIndex === -1 ? Number.MAX_SAFE_INTEGER : rightIndex);
+  });
+
+  return roots.map((root) => ({
+    ...root,
+    children: root.children,
+    summary: root.summary ?? "",
+    totalRequests: countCollectionRequests(root.children),
+  }));
+}
+
 function postmanItemsToSavedRequests(items: PostmanItem[], companyScope: AutomationRequestPreset["companyScope"]): SavedRequest[] {
   return flattenPostmanItems(items).map((item, index) => {
     const request = item.request ?? {};
@@ -1133,7 +1375,12 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
   const [mockStatus, setMockStatus] = useState("200");
   const [mockBody, setMockBody] = useState("{\"ok\":true}");
   const [savedRequests, setSavedRequests] = useState<SavedRequest[]>([]);
+  const [hiddenRequestIds, setHiddenRequestIds] = useState<string[]>([]);
   const [sidebarView, setSidebarView] = useState<SidebarView>("collection");
+  const [collectionSearchTerm, setCollectionSearchTerm] = useState("");
+  const [openCollectionMenuId, setOpenCollectionMenuId] = useState<string | null>(null);
+  const [expandedCollectionIds, setExpandedCollectionIds] = useState<string[]>([]);
+  const [sidebarWidth, setSidebarWidth] = useState(276);
   const [runnerResults, setRunnerResults] = useState<RunnerStepResult[]>([]);
   const [runnerRunning, setRunnerRunning] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -1161,6 +1408,15 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
     preRequestScript: AUTOMATION_API_PRESETS[0]?.preRequestScript ?? "",
   });
   const postmanFileInputRef = useRef<HTMLInputElement | null>(null);
+  const sidebarResizeStateRef = useRef<{ active: boolean; startX: number; startWidth: number }>({ active: false, startX: 0, startWidth: 276 });
+  const collectionExpansionStorageKey = useMemo(
+    () => `automation-api-lab-collection-expanded:${activeCompanySlug ?? "none"}`,
+    [activeCompanySlug],
+  );
+  const sidebarWidthStorageKey = useMemo(
+    () => `automation-api-lab-sidebar-width:${activeCompanySlug ?? "none"}`,
+    [activeCompanySlug],
+  );
 
   const selectedCompany = useMemo(
     () => companies.find((company) => company.slug === activeCompanySlug) ?? companies[0] ?? null,
@@ -1192,6 +1448,26 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
       });
     return () => { cancelled = true; };
   }, [activeCompanySlug]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(hiddenRequestsStorageKey(activeCompanySlug));
+      if (!raw) {
+        setHiddenRequestIds([]);
+        return;
+      }
+      const parsed = JSON.parse(raw) as string[];
+      setHiddenRequestIds(Array.isArray(parsed) ? parsed.filter((id) => typeof id === "string") : []);
+    } catch {
+      setHiddenRequestIds([]);
+    }
+  }, [activeCompanySlug]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(hiddenRequestsStorageKey(activeCompanySlug), JSON.stringify(hiddenRequestIds));
+  }, [activeCompanySlug, hiddenRequestIds]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1272,7 +1548,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
     setIsDirty(true);
   }, [requestName, method, path, body, auth, headerRows, queryRows, localVariableRows, assertionRules, preRequestScript]);
 
-  // Ctrl+S → save
+  // Ctrl+S â†’ save
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
@@ -1285,7 +1561,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDirty, requestName, method, path, body, auth, headerRows, queryRows, localVariableRows, assertionRules, preRequestScript]);
 
-  // Navigation guard — warn before browser tab close / refresh when there are unsaved changes
+  // Navigation guard â€” warn before browser tab close / refresh when there are unsaved changes
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       if (!isDirty) return;
@@ -1301,9 +1577,52 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
     () => [
       ...AUTOMATION_API_PRESETS.filter((preset) => matchesAutomationCompanyScope(preset.companyScope, activeCompanySlug)),
       ...savedRequests,
-    ],
-    [activeCompanySlug, savedRequests],
+    ].filter((preset) => !hiddenRequestIds.includes(preset.id)),
+    [activeCompanySlug, hiddenRequestIds, savedRequests],
   );
+
+  const collectionTree = useMemo(
+    () => buildCollectionTree(visiblePresets),
+    [visiblePresets],
+  );
+
+  const filteredCollectionTree = useMemo(
+    () => filterCollectionTree(collectionTree, collectionSearchTerm),
+    [collectionSearchTerm, collectionTree],
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(collectionExpansionStorageKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as string[];
+      if (Array.isArray(parsed)) {
+        setExpandedCollectionIds(parsed.filter((value) => typeof value === "string"));
+      }
+    } catch {
+      // ignore invalid cached state
+    }
+  }, [collectionExpansionStorageKey]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(sidebarWidthStorageKey);
+      if (!raw) return;
+      const parsed = Number(raw);
+      if (Number.isFinite(parsed)) {
+        setSidebarWidth(Math.min(380, Math.max(240, parsed)));
+      }
+    } catch {
+      // ignore invalid cached state
+    }
+  }, [sidebarWidthStorageKey]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(sidebarWidthStorageKey, String(sidebarWidth));
+  }, [sidebarWidth, sidebarWidthStorageKey]);
 
   useEffect(() => {
     if (visiblePresets.some((preset) => preset.id === selectedPresetId)) return;
@@ -1311,6 +1630,26 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
       applyPreset(visiblePresets[0]);
     }
   }, [selectedPresetId, visiblePresets]);
+
+  useEffect(() => {
+    const nextExpanded = new Set(expandedCollectionIds);
+    const selectedPath = findCollectionNodePath(collectionTree, selectedPresetId);
+
+    if (selectedPath) {
+      for (const id of selectedPath) nextExpanded.add(id);
+    } else if (collectionTree[0]) {
+      nextExpanded.add(collectionTree[0].id);
+    }
+
+    if (nextExpanded.size > 0) {
+      const nextValue = Array.from(nextExpanded);
+      setExpandedCollectionIds(nextValue);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(collectionExpansionStorageKey, JSON.stringify(nextValue));
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collectionExpansionStorageKey, collectionTree, selectedPresetId]);
 
   const systemVariables = useMemo(
     () =>
@@ -1463,7 +1802,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
     setIsDirty(false);
     // Update last-saved snapshot so discard works correctly after a save
     lastSavedRef.current = { requestName: snapshot.title, method, path, body, auth, headerRows, queryRows, localVariableRows, assertionRules, preRequestScript };
-    setCopyFeedback("Request salvo com auth, params e variáveis");
+    setCopyFeedback("Request salvo com auth, params e vari\u00e1veis");
     window.setTimeout(() => setCopyFeedback(null), 1400);
   }
 
@@ -1486,6 +1825,82 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
     persistSavedRequests(savedRequests.filter((request) => request.id !== requestId));
     deleteRequestFromDb(requestId);
     if (selectedPresetId === requestId) {
+      applyPreset(AUTOMATION_API_PRESETS[0]);
+    }
+  }
+
+  function hideRequestIds(requestIds: string[]) {
+    if (requestIds.length === 0) return;
+    setHiddenRequestIds((current) => Array.from(new Set([...current, ...requestIds])));
+    if (requestIds.includes(selectedPresetId)) {
+      applyPreset(AUTOMATION_API_PRESETS[0]);
+    }
+  }
+
+  function removeRequestFromList(preset: CollectionPreset) {
+    if ("source" in preset && preset.source === "saved") {
+      removeSavedRequest(preset.id);
+      return;
+    }
+    hideRequestIds([preset.id]);
+  }
+
+  function removeCollectionFromList(requests: Array<AutomationRequestPreset | SavedRequest>) {
+    if (requests.length === 0) return;
+    const savedIds = requests
+      .filter((request): request is SavedRequest => "source" in request && request.source === "saved")
+      .map((request) => request.id);
+    const presetIds = requests
+      .filter((request) => !("source" in request && request.source === "saved"))
+      .map((request) => request.id);
+
+    if (savedIds.length > 0) {
+      removeSavedRequestsBulk(savedIds);
+    }
+    if (presetIds.length > 0) {
+      hideRequestIds(presetIds);
+    }
+  }
+
+  function duplicateSavedRequest(request: SavedRequest) {
+    const duplicated: SavedRequest = {
+      ...request,
+      id: `saved-${Date.now()}`,
+      title: `${request.title} (copy)`,
+      source: "saved",
+    };
+    persistSavedRequests([duplicated, ...savedRequests]);
+    syncRequestToDb(duplicated);
+  }
+
+  function collectSavedRequestIdsFromNode(node: CollectionTreeNode): string[] {
+    if (node.kind === "request") {
+      return node.isSaved ? [node.preset.id] : [];
+    }
+    return node.children.flatMap((child) => collectSavedRequestIdsFromNode(child));
+  }
+
+  function removeSavedRequestsBulk(requestIds: string[]) {
+    if (requestIds.length === 0) return;
+    const uniqueIds = Array.from(new Set(requestIds));
+    const idSet = new Set(uniqueIds);
+    const nextRequests = savedRequests.filter((request) => !idSet.has(request.id));
+    persistSavedRequests(nextRequests);
+    for (const requestId of uniqueIds) {
+      deleteRequestFromDb(requestId);
+    }
+    if (idSet.has(selectedPresetId)) {
+      applyPreset(AUTOMATION_API_PRESETS[0]);
+    }
+  }
+
+  function clearAllSavedRequests() {
+    if (savedRequests.length === 0) return;
+    for (const request of savedRequests) {
+      deleteRequestFromDb(request.id);
+    }
+    persistSavedRequests([]);
+    if (selectedPresetId.startsWith("saved-")) {
       applyPreset(AUTOMATION_API_PRESETS[0]);
     }
   }
@@ -1518,7 +1933,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
         resolvedVariables: executionVariables,
       });
       if (runtimeMissing.length > 0) {
-        throw new Error(`Defina as variáveis: ${runtimeMissing.join(", ")}.`);
+        throw new Error(`Defina as vari\u00e1veis: ${runtimeMissing.join(", ")}.`);
       }
 
       const headers = scripted.draft.headers.reduce<Record<string, string>>((accumulator, row) => {
@@ -1538,7 +1953,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
         const username = resolveTemplate(scripted.draft.auth.username ?? "", executionVariables);
         const password = resolveTemplate(scripted.draft.auth.password ?? "", executionVariables);
         if (!username && !password) {
-          throw new Error("Informe usuário e senha para Basic Auth.");
+          throw new Error("Informe usu\u00e1rio e senha para Basic Auth.");
         }
         headers.Authorization = encodeBasicAuth(username, password);
       }
@@ -1588,7 +2003,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
         });
         const payload = await execution.json();
         if (!execution.ok || !payload?.response) {
-          throw new Error(payload?.error || "Não foi possível executar a chamada.");
+          throw new Error(payload?.error || "N\u00e3o foi poss\u00edvel executar a chamada.");
         }
         res = payload.response as HttpResponseState;
       }
@@ -1669,10 +2084,163 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
   }
 
   async function runCollection() {
-    if (savedRequests.length === 0 || runnerRunning) return;
+    await runRequestsInSequence(savedRequests);
+  }
+
+  async function copyResponse() {
+    if (!response) return;
+    const content =
+      responseTab === "headers"
+        ? JSON.stringify(response.headers, null, 2)
+        : responseTab === "raw"
+          ? response.text
+          : JSON.stringify(response.json ?? response.text, null, 2);
+    await navigator.clipboard.writeText(content);
+    setCopyFeedback("Resposta copiada");
+    window.setTimeout(() => setCopyFeedback(null), 1400);
+  }
+
+  function importFromCurl() {
+    const result = parseCurl(curlImportText.trim());
+    if (!result) {
+      setCurlImportError("N\u00e3o foi poss\u00edvel interpretar o comando cURL. Verifique a sintaxe.");
+      return;
+    }
+    setCurlImportError(null);
+    setMethod(result.method);
+    setPath(result.url);
+    setHeaderRows(buildKeyValueRows(result.headers.length > 0 ? result.headers : []));
+    if (result.body) setBody(result.body);
+    setCurlImportText("");
+    setCopyFeedback("Request importado do cURL");
+    window.setTimeout(() => setCopyFeedback(null), 1600);
+  }
+
+  function openPostmanImportDialog() {
+    postmanFileInputRef.current?.click();
+  }
+
+  function importPostmanCollection(rawCollection: string) {
+    const parsed = JSON.parse(rawCollection) as PostmanCollectionExport;
+    const items = Array.isArray(parsed.item) ? parsed.item : [];
+    if (items.length === 0) {
+      throw new Error("A cole\u00e7\u00e3o n\u00e3o possui requests v\u00e1lidos.");
+    }
+
+    const importedRequests = postmanItemsToSavedRequests(items, activeCompanyScope);
+    if (importedRequests.length === 0) {
+      throw new Error("Nenhum request foi encontrado na cole\u00e7\u00e3o.");
+    }
+
+    const nextRequests = [...importedRequests, ...savedRequests];
+    persistSavedRequests(nextRequests);
+    setSelectedPresetId(importedRequests[0].id);
+    applyPreset(importedRequests[0]);
+    setSidebarView("collection");
+    setPostmanImportError(null);
+    setPostmanImportFeedback(`Cole\u00e7\u00e3o "${parsed.info?.name ?? "Postman"}" importada com ${importedRequests.length} requests.`);
+    window.setTimeout(() => setPostmanImportFeedback(null), 2000);
+  }
+
+  function handlePostmanFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setPostmanImportError(null);
+    setPostmanImportFeedback(null);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        importPostmanCollection(String(reader.result ?? ""));
+        if (postmanFileInputRef.current) {
+          postmanFileInputRef.current.value = "";
+        }
+      } catch (error) {
+        setPostmanImportError(error instanceof Error ? error.message : "Falha ao importar a cole\u00e7\u00e3o.");
+      }
+    };
+    reader.onerror = () => {
+      setPostmanImportError("N\u00e3o foi poss\u00edvel ler o arquivo selecionado.");
+    };
+    reader.readAsText(file);
+  }
+
+  function buildCurrentHeaders(): Record<string, string> {
+    const headers = sanitizeKeyValueRows(headerRows).reduce<Record<string, string>>((acc, row) => {
+      const key = resolveTemplate(row.key, resolvedVariables).trim();
+      if (key) acc[key] = resolveTemplate(row.value, resolvedVariables);
+      return acc;
+    }, {});
+    if (auth.type === "bearer") headers.Authorization = `Bearer ${resolveTemplate(auth.value ?? "", resolvedVariables)}`;
+    if (auth.type === "basic") headers.Authorization = encodeBasicAuth(resolveTemplate(auth.username ?? "", resolvedVariables), resolveTemplate(auth.password ?? "", resolvedVariables));
+    if (auth.type === "api-key" && auth.addTo !== "query") {
+      const key = resolveTemplate(auth.key ?? "", resolvedVariables).trim();
+      if (key) headers[key] = resolveTemplate(auth.value ?? "", resolvedVariables);
+    }
+    return headers;
+  }
+
+  function getExportSnippet() {
+    const headers = buildCurrentHeaders();
+    const resolvedBody = body.trim() ? resolveTemplate(body, resolvedVariables) : null;
+    if (exportLang === "curl") return generateCurlSnippet(resolvedUrlPreview, method, headers, resolvedBody);
+    if (exportLang === "axios") return generateAxiosSnippet(resolvedUrlPreview, method, headers, resolvedBody);
+    return generateFetchSnippet(resolvedUrlPreview, method, headers, resolvedBody);
+  }
+
+  async function copyExportSnippet() {
+    await navigator.clipboard.writeText(getExportSnippet());
+    setCopyFeedback("C\u00f3digo copiado");
+    window.setTimeout(() => setCopyFeedback(null), 1400);
+  }
+
+  function toggleCollectionNode(nodeId: string) {
+    setExpandedCollectionIds((current) => {
+      const next = current.includes(nodeId) ? current.filter((id) => id !== nodeId) : [...current, nodeId];
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(collectionExpansionStorageKey, JSON.stringify(next));
+      }
+      return next;
+    });
+  }
+
+  function expandAllCollections() {
+    const ids: string[] = [];
+    const walk = (nodes: CollectionTreeNode[]) => {
+      for (const node of nodes) {
+        if (node.kind !== "request") {
+          ids.push(node.id);
+          walk(node.children);
+        }
+      }
+    };
+    walk(filteredCollectionTree);
+    setExpandedCollectionIds(ids);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(collectionExpansionStorageKey, JSON.stringify(ids));
+    }
+  }
+
+  function collapseAllCollections() {
+    setExpandedCollectionIds([]);
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(collectionExpansionStorageKey);
+    }
+  }
+
+  function collectRequestsFromNode(node: CollectionTreeNode): Array<AutomationRequestPreset | SavedRequest> {
+    if (node.kind === "request") return [node.preset];
+    return node.children.flatMap((child) => collectRequestsFromNode(child));
+  }
+
+  async function runRequestsInSequence(requests: Array<AutomationRequestPreset | SavedRequest>) {
+    if (requests.length === 0 || runnerRunning) return;
+
     setRunnerRunning(true);
     setSidebarView("runner");
     setRunnerResults([]);
+
     const results: RunnerStepResult[] = [];
     let runtimeEnvironmentRows = sanitizeKeyValueRows(environmentVariableRows);
     let runtimeLocalRows = sanitizeKeyValueRows(localVariableRows);
@@ -1680,7 +2248,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
     for (const row of runtimeEnvironmentRows) runtimeLookup[row.key] = row.value;
     for (const row of runtimeLocalRows) runtimeLookup[row.key] = row.value;
 
-    for (const req of savedRequests) {
+    for (const req of requests) {
       const stepResult: RunnerStepResult = {
         requestId: req.id,
         requestTitle: req.title,
@@ -1732,7 +2300,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           resolvedVariables: runtimeLookup,
         });
         if (runtimeMissing.length > 0) {
-          throw new Error(`Defina as variáveis: ${runtimeMissing.join(", ")}.`);
+          throw new Error(`Defina as vari\u00e1veis: ${runtimeMissing.join(", ")}.`);
         }
 
         const resolvedUrl = buildResolvedUrl(effectiveBaseUrl, scripted.draft.path, scripted.draft.queryParams, scripted.draft.auth, runtimeLookup);
@@ -1762,7 +2330,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           }),
         });
         const payload = await execution.json();
-        if (!execution.ok || !payload?.response) throw new Error(payload?.error ?? "Falha na execução");
+        if (!execution.ok || !payload?.response) throw new Error(payload?.error ?? "Falha na execu\u00e7\u00e3o");
         const res = payload.response as HttpResponseState;
         stepResult.status = res.status;
         stepResult.statusText = res.statusText;
@@ -1793,117 +2361,207 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
         return next;
       });
     }
+
     setEnvironmentVariableRows(buildKeyValueRows(runtimeEnvironmentRows));
     setLocalVariableRows(buildKeyValueRows(runtimeLocalRows));
     setRunnerRunning(false);
   }
 
-  async function copyResponse() {
-    if (!response) return;
-    const content =
-      responseTab === "headers"
-        ? JSON.stringify(response.headers, null, 2)
-        : responseTab === "raw"
-          ? response.text
-          : JSON.stringify(response.json ?? response.text, null, 2);
-    await navigator.clipboard.writeText(content);
-    setCopyFeedback("Resposta copiada");
-    window.setTimeout(() => setCopyFeedback(null), 1400);
-  }
-
-  function importFromCurl() {
-    const result = parseCurl(curlImportText.trim());
-    if (!result) {
-      setCurlImportError("Não foi possível interpretar o comando cURL. Verifique a sintaxe.");
-      return;
-    }
-    setCurlImportError(null);
-    setMethod(result.method);
-    setPath(result.url);
-    setHeaderRows(buildKeyValueRows(result.headers.length > 0 ? result.headers : []));
-    if (result.body) setBody(result.body);
-    setCurlImportText("");
-    setCopyFeedback("Request importado do cURL");
-    window.setTimeout(() => setCopyFeedback(null), 1600);
-  }
-
-  function openPostmanImportDialog() {
-    postmanFileInputRef.current?.click();
-  }
-
-  function importPostmanCollection(rawCollection: string) {
-    const parsed = JSON.parse(rawCollection) as PostmanCollectionExport;
-    const items = Array.isArray(parsed.item) ? parsed.item : [];
-    if (items.length === 0) {
-      throw new Error("A coleção não possui requests válidos.");
-    }
-
-    const importedRequests = postmanItemsToSavedRequests(items, activeCompanyScope);
-    if (importedRequests.length === 0) {
-      throw new Error("Nenhum request foi encontrado na coleção.");
-    }
-
-    const nextRequests = [...importedRequests, ...savedRequests];
-    persistSavedRequests(nextRequests);
-    setSelectedPresetId(importedRequests[0].id);
-    applyPreset(importedRequests[0]);
-    setSidebarView("collection");
-    setPostmanImportError(null);
-    setPostmanImportFeedback(`Coleção "${parsed.info?.name ?? "Postman"}" importada com ${importedRequests.length} requests.`);
-    window.setTimeout(() => setPostmanImportFeedback(null), 2000);
-  }
-
-  function handlePostmanFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setPostmanImportError(null);
-    setPostmanImportFeedback(null);
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        importPostmanCollection(String(reader.result ?? ""));
-        if (postmanFileInputRef.current) {
-          postmanFileInputRef.current.value = "";
-        }
-      } catch (error) {
-        setPostmanImportError(error instanceof Error ? error.message : "Falha ao importar a coleção.");
-      }
+  function beginSidebarResize(event: ReactPointerEvent<HTMLDivElement>) {
+    event.preventDefault();
+    sidebarResizeStateRef.current = {
+      active: true,
+      startX: event.clientX,
+      startWidth: sidebarWidth,
     };
-    reader.onerror = () => {
-      setPostmanImportError("Não foi possível ler o arquivo selecionado.");
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      if (!sidebarResizeStateRef.current.active) return;
+      const delta = moveEvent.clientX - sidebarResizeStateRef.current.startX;
+      const nextWidth = sidebarResizeStateRef.current.startWidth + delta;
+      setSidebarWidth(Math.min(380, Math.max(240, nextWidth)));
     };
-    reader.readAsText(file);
+
+    const handlePointerUp = () => {
+      sidebarResizeStateRef.current.active = false;
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
   }
 
-  function buildCurrentHeaders(): Record<string, string> {
-    const headers = sanitizeKeyValueRows(headerRows).reduce<Record<string, string>>((acc, row) => {
-      const key = resolveTemplate(row.key, resolvedVariables).trim();
-      if (key) acc[key] = resolveTemplate(row.value, resolvedVariables);
-      return acc;
-    }, {});
-    if (auth.type === "bearer") headers.Authorization = `Bearer ${resolveTemplate(auth.value ?? "", resolvedVariables)}`;
-    if (auth.type === "basic") headers.Authorization = encodeBasicAuth(resolveTemplate(auth.username ?? "", resolvedVariables), resolveTemplate(auth.password ?? "", resolvedVariables));
-    if (auth.type === "api-key" && auth.addTo !== "query") {
-      const key = resolveTemplate(auth.key ?? "", resolvedVariables).trim();
-      if (key) headers[key] = resolveTemplate(auth.value ?? "", resolvedVariables);
+  function renderCollectionNode(node: CollectionTreeNode, depth = 0): JSX.Element {
+    const forceOpen = collectionSearchTerm.trim().length > 0;
+    const isOpen = node.kind === "request" ? false : forceOpen || expandedCollectionIds.includes(node.id);
+    const compact = sidebarWidth < 300;
+    const paddingClass = depth === 0 ? "pl-1" : depth === 1 ? (compact ? "pl-2" : "pl-3") : (compact ? "pl-3" : "pl-5");
+    const rowBase = `flex w-full items-center gap-2 rounded-lg text-left transition ${compact ? "px-1.5 py-1" : "px-2 py-1.5"}`;
+
+    if (node.kind === "request") {
+      const active = selectedPresetId === node.preset.id;
+      return (
+        <div key={node.id} className={`group ${paddingClass}`}>
+          <div className={`${rowBase} ${active ? "bg-(--tc-surface,#ffffff) shadow-sm ring-1 ring-amber-300" : "hover:bg-(--tc-surface,#ffffff)/70"}`}>
+            <button
+              type="button"
+              onClick={() => applyPreset(node.preset)}
+              className="flex min-w-0 flex-1 items-center gap-2 text-left"
+            >
+              <span className={`shrink-0 text-[10px] font-black uppercase tracking-[0.16em] ${collectionMethodClass(node.method)}`}>
+                {node.method}
+              </span>
+              <span className={`min-w-0 flex-1 truncate ${compact ? "text-[13px] font-medium" : "text-sm font-medium"} text-(--tc-text,#0b1a3c)`}>
+                {node.title}
+              </span>
+              {node.isSaved ? <FiDatabase className="h-3.5 w-3.5 shrink-0 text-(--tc-accent,#ef0001)" /> : null}
+            </button>
+            <div className="relative flex items-center gap-1 opacity-0 transition group-hover:opacity-100 focus-within:opacity-100">
+              <button
+                type="button"
+                onClick={() => setOpenCollectionMenuId((current) => (current === `request:${node.id}` ? null : `request:${node.id}`))}
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-(--tc-text-muted,#6b7280) hover:bg-(--tc-surface-2,#f8fafc) hover:text-(--tc-text,#0b1a3c)"
+                aria-label="Acoes do request"
+                title="Acoes do request"
+              >
+                <FiMoreHorizontal className="h-3.5 w-3.5" />
+              </button>
+              {openCollectionMenuId === `request:${node.id}` ? (
+                <div className="absolute right-0 top-8 z-30 min-w-44 rounded-lg border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-1 shadow-xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      applyPreset(node.preset);
+                      setOpenCollectionMenuId(null);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs font-medium text-(--tc-text,#0b1a3c) hover:bg-(--tc-surface-2,#f8fafc)"
+                  >
+                    Abrir
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void runRequestsInSequence([node.preset]);
+                      setOpenCollectionMenuId(null);
+                    }}
+                    disabled={runnerRunning}
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs font-medium text-(--tc-text,#0b1a3c) hover:bg-(--tc-surface-2,#f8fafc) disabled:opacity-50"
+                  >
+                    Run
+                  </button>
+                  {node.isSaved ? <div className="my-1 border-t border-(--tc-border,#d7deea)" /> : null}
+                  {node.isSaved ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        duplicateSavedRequest(node.preset as SavedRequest);
+                        setOpenCollectionMenuId(null);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs font-medium text-(--tc-text,#0b1a3c) hover:bg-(--tc-surface-2,#f8fafc)"
+                    >
+                      Duplicar
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      removeRequestFromList(node.preset);
+                      setOpenCollectionMenuId(null);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs font-medium text-rose-600 hover:bg-rose-50"
+                  >
+                    Deletar
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      );
     }
-    return headers;
-  }
 
-  function getExportSnippet() {
-    const headers = buildCurrentHeaders();
-    const resolvedBody = body.trim() ? resolveTemplate(body, resolvedVariables) : null;
-    if (exportLang === "curl") return generateCurlSnippet(resolvedUrlPreview, method, headers, resolvedBody);
-    if (exportLang === "axios") return generateAxiosSnippet(resolvedUrlPreview, method, headers, resolvedBody);
-    return generateFetchSnippet(resolvedUrlPreview, method, headers, resolvedBody);
-  }
+    const requestsInNode = collectRequestsFromNode(node);
 
-  async function copyExportSnippet() {
-    await navigator.clipboard.writeText(getExportSnippet());
-    setCopyFeedback("Código copiado");
-    window.setTimeout(() => setCopyFeedback(null), 1400);
+    return (
+      <div key={node.id} className={`group ${paddingClass}`}>
+        <div className={`${rowBase} ${node.kind === "root" ? "rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)" : "text-(--tc-text,#0b1a3c) hover:bg-(--tc-surface,#ffffff)/70"}`}>
+          <button
+            type="button"
+            onClick={() => toggleCollectionNode(node.id)}
+            className="flex min-w-0 flex-1 items-center gap-2 text-left"
+          >
+            {isOpen ? <FiChevronDown className={`${compact ? "h-3 w-3" : "h-3.5 w-3.5"} shrink-0 text-(--tc-text-muted,#6b7280)`} /> : <FiChevronRight className={`${compact ? "h-3 w-3" : "h-3.5 w-3.5"} shrink-0 text-(--tc-text-muted,#6b7280)`} />}
+            <FiFolder className={`${compact ? "h-3 w-3" : "h-3.5 w-3.5"} shrink-0 ${node.kind === "root" ? "text-(--tc-accent,#ef0001)" : "text-(--tc-text-muted,#6b7280)"}`} />
+            <span className={`min-w-0 flex-1 truncate ${compact ? "text-[12px] font-semibold" : "text-sm font-semibold"}`}>{node.title}</span>
+            <span className={`rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) ${compact ? "px-1.5 py-0.5 text-[9px]" : "px-2 py-0.5 text-[10px]"} font-semibold uppercase tracking-[0.14em] text-(--tc-text-muted,#6b7280)`}>
+              {countCollectionRequests(node.children)}
+            </span>
+          </button>
+          <div className="relative flex items-center gap-1 opacity-0 transition group-hover:opacity-100 focus-within:opacity-100">
+            <button
+              type="button"
+              onClick={() => setOpenCollectionMenuId((current) => (current === node.id ? null : node.id))}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-(--tc-text-muted,#6b7280) hover:bg-(--tc-surface-2,#f8fafc) hover:text-(--tc-text,#0b1a3c)"
+              aria-label="Ações da coleção"
+              title="Ações da coleção"
+            >
+              <FiMoreHorizontal className="h-3.5 w-3.5" />
+            </button>
+            {openCollectionMenuId === node.id ? (
+              <div className="absolute right-0 top-8 z-30 min-w-44 rounded-lg border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-1 shadow-xl">
+                <button
+                  type="button"
+                  onClick={() => {
+                    applyPreset(AUTOMATION_API_PRESETS[0]);
+                    setOpenCollectionMenuId(null);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs font-medium text-(--tc-text,#0b1a3c) hover:bg-(--tc-surface-2,#f8fafc)"
+                >
+                  <FiPlus className="h-3 w-3" />
+                  Adicionar request
+                </button>
+                {requestsInNode.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void runRequestsInSequence(requestsInNode);
+                      setOpenCollectionMenuId(null);
+                    }}
+                    disabled={runnerRunning}
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs font-medium text-(--tc-text,#0b1a3c) hover:bg-(--tc-surface-2,#f8fafc) disabled:opacity-50"
+                  >
+                    <FiPlay className="h-3 w-3" />
+                    Executar coleção
+                  </button>
+                ) : null}
+                {requestsInNode.length > 0 ? <div className="my-1 border-t border-(--tc-border,#d7deea)" /> : null}
+                {requestsInNode.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof window !== "undefined" && !window.confirm(`Remover ${requestsInNode.length} request(s) desta coleção?`)) return;
+                      removeCollectionFromList(requestsInNode);
+                      setOpenCollectionMenuId(null);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs font-medium text-rose-600 hover:bg-rose-50"
+                  >
+                    <FiTrash2 className="h-3 w-3" />
+                    Remover coleção
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </div>
+        {node.summary ? (
+          <p className={`mt-1 ${compact ? "pl-6" : "pl-8"} pr-2 text-[11px] leading-4 text-(--tc-text-muted,#6b7280)`}>
+            {node.summary}
+          </p>
+        ) : null}
+        {isOpen ? <div className="mt-1 space-y-1">{node.children.map((child) => renderCollectionNode(child, depth + 1))}</div> : null}
+      </div>
+    );
   }
 
   return (
@@ -1927,80 +2585,53 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
         ref={postmanFileInputRef}
         type="file"
         accept=".json,application/json"
-        aria-label="Selecionar coleção JSON"
-        title="Selecionar coleção JSON"
+        aria-label="Selecionar cole\u00e7\u00e3o JSON"
+        title="Selecionar cole\u00e7\u00e3o JSON"
         className="hidden"
         onChange={handlePostmanFileChange}
       />
 
       <div className="flex flex-1 min-h-0">
-        <aside className="hidden xl:flex w-64 shrink-0 flex-col overflow-hidden border-r border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc)">
+        <aside
+          className={`hidden xl:flex shrink-0 flex-col overflow-hidden border-r border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) relative ${
+            sidebarWidth < 264 ? "w-60" : sidebarWidth < 304 ? "w-72" : sidebarWidth < 344 ? "w-80" : "w-96"
+          }`}
+        >
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Redimensionar lateral"
+            onPointerDown={beginSidebarResize}
+            className="absolute right-0 top-0 z-20 h-full w-1.5 cursor-col-resize bg-transparent transition hover:bg-(--tc-accent,#ef0001)/20"
+          />
           {/* Sidebar tab bar */}
-          <div className="shrink-0 flex gap-1 border-b border-(--tc-border,#d7deea) p-2">
+          <div className={`shrink-0 flex gap-1 border-b border-(--tc-border,#d7deea) ${sidebarWidth < 300 ? "p-1.5" : "p-2"}`}>
             {([
-              { id: "collection" as const, icon: FiList, label: "Coleção" },
+              { id: "collection" as const, icon: FiList, label: "Cole\u00e7\u00e3o" },
               { id: "runner" as const, icon: FiActivity, label: "Runner" },
-              { id: "history" as const, icon: FiClock, label: "Histórico" },
+              { id: "history" as const, icon: FiClock, label: "Hist\u00f3rico" },
             ] satisfies { id: SidebarView; icon: ComponentType<{ className?: string }>; label: string }[]).map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   type="button"
-                  aria-label="Adicionar parâmetro"
+                  aria-label="Selecionar aba"
                   onClick={() => setSidebarView(tab.id)}
-                  className={`flex-1 min-h-9 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition ${sidebarView === tab.id ? "bg-(--tc-surface,#ffffff) text-(--tc-accent,#ef0001) shadow-sm" : "text-(--tc-text-muted,#6b7280) hover:text-(--tc-text,#0b1a3c)"}`}
+                  className={`flex-1 ${sidebarWidth < 300 ? "min-h-8 text-[11px]" : "min-h-9 text-xs"} rounded-lg font-semibold flex items-center justify-center gap-1.5 transition ${sidebarView === tab.id ? "bg-(--tc-surface,#ffffff) text-(--tc-accent,#ef0001) shadow-sm" : "text-(--tc-text-muted,#6b7280) hover:text-(--tc-text,#0b1a3c)"}`}
                 >
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className={sidebarWidth < 300 ? "h-3 w-3" : "h-3.5 w-3.5"} />
                   {tab.label}
                 </button>
               );
             })}
           </div>
 
-          {/* ── Collection toolbar (sticky, outside scroll) ── */}
-          {sidebarView === "collection" && (
-            <div className="shrink-0 px-3 py-2 border-b border-(--tc-border,#d7deea)">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Coleção</p>
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
-                    {visiblePresets.length}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={openPostmanImportDialog}
-                    title="Importar coleção do Postman (.json)"
-                    className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-2.5 text-[11px] font-semibold text-(--tc-text,#0b1a3c) hover:bg-(--tc-surface-2,#f8fafc) transition"
-                  >
-                    <FiUploadCloud className="h-3 w-3" />
-                    Importar
-                  </button>
-                  {savedRequests.length > 0 ? (
-                    <button
-                      type="button"
-                      onClick={runCollection}
-                      disabled={runnerRunning}
-                      title="Executar todos os requests salvos em sequência"
-                      className="inline-flex h-7 items-center gap-1.5 rounded-lg bg-(--tc-primary,#011848) px-3 text-[11px] font-semibold text-white disabled:opacity-60"
-                    >
-                      <FiPlay className="h-3 w-3" />
-                      Run All
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-              <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">
-                Coleção da empresa: <span className="font-semibold text-(--tc-text,#0b1a3c)">{selectedCompany?.name ?? "empresa atual"}</span>
-              </p>
-            </div>
-          )}
-
-          {/* ── Runner toolbar (sticky, outside scroll) ── */}
+          {/* â”€â”€ Runner toolbar (sticky, outside scroll) â”€â”€ */}
           {sidebarView === "runner" && (
             <div className="shrink-0 px-3 py-2 border-b border-(--tc-border,#d7deea) flex items-center justify-between gap-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                {runnerRunning ? "Executando…" : `Runner — ${runnerResults.length} requests`}
+                {runnerRunning ? "Executando..." : `Runner - ${runnerResults.length} requests`}
               </p>
               {!runnerRunning && savedRequests.length > 0 ? (
                 <button
@@ -2015,11 +2646,11 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             </div>
           )}
 
-          {/* ── History toolbar (sticky, outside scroll) ── */}
+          {/* â”€â”€ History toolbar (sticky, outside scroll) â”€â”€ */}
           {sidebarView === "history" && (
             <div className="shrink-0 px-3 py-2 border-b border-(--tc-border,#d7deea) flex items-center justify-between gap-2">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Histórico</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">{"Hist\u00f3rico"}</p>
                 <p className="mt-1 text-sm font-semibold text-(--tc-text,#0b1a3c)">
                   {selectedCompany?.name ?? "Empresa atual"}
                 </p>
@@ -2039,53 +2670,80 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             </div>
           )}
 
-          {/* ── Scrollable list ── */}
-          <div className="flex-1 min-h-0 overflow-y-auto py-1">
-          {/* Collection list */}
-          {sidebarView === "collection" ? (
-            <div>
-              {visiblePresets.map((preset) => {
-                  const active = selectedPresetId === preset.id;
-                  const isSaved = "source" in preset && preset.source === "saved";
-                  const methodColor =
-                    preset.method === "GET" ? "text-emerald-600" :
-                    preset.method === "POST" ? "text-amber-600" :
-                    preset.method === "PUT" ? "text-blue-600" :
-                    preset.method === "PATCH" ? "text-violet-600" :
-                    preset.method === "DELETE" || preset.method === "DEL" ? "text-rose-600" :
-                    "text-(--tc-text-muted,#6b7280)";
-                  return (
-                    <div key={preset.id} className={`group rounded-lg transition ${active ? "bg-(--tc-surface,#ffffff) shadow-sm" : "hover:bg-(--tc-surface,#ffffff)/60"}`}>
-                      <button type="button" onClick={() => applyPreset(preset)} className="w-full flex items-center gap-2 px-2 py-1.5 text-left">
-                        <span className={`shrink-0 w-9 text-[10px] font-bold text-right ${methodColor}`}>
-                          {preset.method}
-                        </span>
-                        <span className="truncate text-sm text-(--tc-text,#0b1a3c)">{preset.title}</span>
-                        {isSaved ? <FiDatabase className="ml-auto shrink-0 h-3.5 w-3.5 text-(--tc-accent,#ef0001)" /> : null}
-                      </button>
-                      {isSaved ? (
-                        <div className="pl-11 pr-2 pb-1">
-                          <button
-                            type="button"
-                            onClick={() => removeSavedRequest(preset.id)}
-                            className="inline-flex items-center gap-1 text-xs text-(--tc-text-muted,#6b7280) opacity-0 group-hover:opacity-100 transition"
-                          >
-                            <FiTrash2 className="h-3.5 w-3.5" />
-                            Remover
-                          </button>
-                        </div>
-                      ) : null}
+          {/* â”€â”€ Scrollable list â”€â”€ */}
+          <div className="flex-1 min-h-0 overflow-y-auto py-2">
+            {sidebarView === "collection" ? (
+              <div className="flex h-full min-h-0 flex-col gap-2 px-2">
+                <div className="shrink-0 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-2 shadow-sm">
+                <div className="mb-2 flex items-center justify-end gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => applyPreset(AUTOMATION_API_PRESETS[0])}
+                      title="Novo request"
+                      className="inline-flex h-7 items-center rounded-md bg-(--tc-primary,#011848) px-2.5 text-[11px] font-semibold text-white transition hover:opacity-90"
+                    >
+                      New
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openPostmanImportDialog}
+                      title="Importar coleção do Postman (.json)"
+                      className="inline-flex h-7 items-center rounded-md border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-2.5 text-[11px] font-semibold text-(--tc-text,#0b1a3c) transition hover:bg-(--tc-surface-2,#f8fafc)"
+                    >
+                      Import
+                    </button>
+                  </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                    <div className="relative min-w-0 flex-1">
+                      <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
+                      <input
+                        value={collectionSearchTerm}
+                        onChange={(event) => setCollectionSearchTerm(event.target.value)}
+                        placeholder="Search collections"
+                        className="h-9 w-full rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) pl-9 pr-3 text-sm outline-none placeholder:text-(--tc-text-muted,#6b7280)/70 focus:border-(--tc-accent,#ef0001)"
+                      />
                     </div>
-                  );
-                })}
+                  </div>
+                  <div className="mt-2 flex items-center justify-end gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="inline-flex rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+                        {filteredCollectionTree.reduce((count, root) => count + countCollectionRequests(root.children), 0)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={expandAllCollections}
+                        className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280) transition hover:text-(--tc-text,#0b1a3c)"
+                      >
+                        Expandir tudo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={collapseAllCollections}
+                        className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280) transition hover:text-(--tc-text,#0b1a3c)"
+                      >
+                        Recolher
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="min-h-0 flex-1 space-y-2 pb-1">
+                  {filteredCollectionTree.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 py-5 text-center text-sm text-(--tc-text-muted,#6b7280)">
+                      Nenhuma cole\u00e7\u00e3o encontrada.
+                    </div>
+                  ) : (
+                    filteredCollectionTree.map((node) => renderCollectionNode(node))
+                  )}
+                </div>
               </div>
-          ) : null}
+            ) : null}
 
           {/* Runner list */}
           {sidebarView === "runner" ? (
             <div>
               {runnerResults.length === 0 && !runnerRunning ? (
-                <p className="mt-4 text-center text-sm text-(--tc-text-muted,#6b7280)">Clique em Run All na aba Coleção para executar.</p>
+                <p className="mt-4 text-center text-sm text-(--tc-text-muted,#6b7280)">Clique em Run All na aba Cole\u00e7\u00e3o para executar.</p>
               ) : (
                 <div className="space-y-2">
                   {runnerResults.map((result) => {
@@ -2128,7 +2786,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                   })}
                   {runnerRunning ? (
                     <div className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 py-3 text-sm text-(--tc-text-muted,#6b7280) opacity-70 animate-pulse">
-                      Executando próximo request…
+                      Executando pr\u00f3ximo request...
                     </div>
                   ) : null}
                 </div>
@@ -2140,7 +2798,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           {sidebarView === "history" ? (
             <div>
               {history.length === 0 ? (
-                <p className="mt-4 text-center text-sm text-(--tc-text-muted,#6b7280)">Nenhuma execução registrada ainda.</p>
+                <p className="mt-4 text-center text-sm text-(--tc-text-muted,#6b7280)">Nenhuma execu\u00e7\u00e3o registrada ainda.</p>
               ) : (
                 <div className="space-y-2">
                   {history.map((entry) => {
@@ -2178,7 +2836,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
         <div className="flex flex-1 min-h-0 flex-col overflow-y-auto">
           <div className="shrink-0 p-4 sm:p-5">
-          {/* ── Breadcrumb / request name ── */}
+          {/* â”€â”€ Breadcrumb / request name â”€â”€ */}
           <div className="mb-3 flex items-center gap-1.5 text-xs text-(--tc-text-muted,#6b7280)">
             <span className="font-medium">{currentEnvironment?.title}</span>
             <span>/</span>
@@ -2202,7 +2860,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 <button
                   type="button"
                   onClick={discardChanges}
-                  title="Descartar alteracoes"
+                  title="Descartar altera\u00e7\u00f5es"
                   className="inline-flex items-center rounded-full bg-(--tc-primary,#011848) px-3 py-1 text-[11px] font-semibold text-white/80 transition hover:text-white active:scale-95"
                 >
                   Descartar
@@ -2211,10 +2869,10 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             )}
           </div>
 
-          {/* ── Postman-style URL bar ── */}
+          {/* â”€â”€ Postman-style URL bar â”€â”€ */}
           <div className="flex items-stretch overflow-hidden rounded-lg border border-(--tc-border,#d7deea)">
             <select
-              aria-label="Método HTTP"
+              aria-label="M\u00e9todo HTTP"
               value={method}
               onChange={(event) => setMethod(event.target.value as AutomationHttpMethod)}
               className={`shrink-0 border-r border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 text-sm font-bold outline-none ${
@@ -2244,11 +2902,11 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               disabled={loading}
               className="shrink-0 bg-(--tc-primary,#011848) px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60 transition hover:opacity-90"
             >
-              {loading ? "…" : "Executar"}
+              {loading ? "..." : "Executar"}
             </button>
           </div>
 
-          {/* ── Secondary settings: Ambiente + Base URL ── */}
+          {/* â”€â”€ Secondary settings: Ambiente + Base URL â”€â”€ */}
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <select
               aria-label="Ambiente"
@@ -2266,21 +2924,21 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               placeholder={currentEnvironment.baseUrl}
               className="min-w-0 flex-1 rounded-md border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-2 py-1 font-mono text-xs text-(--tc-text,#0b1a3c) outline-none placeholder:text-(--tc-text-muted,#6b7280)/60"
             />
-            <p className="font-mono text-xs text-(--tc-text-muted,#6b7280) truncate max-w-xs">→ {resolvedUrlPreview}</p>
+            <p className="font-mono text-xs text-(--tc-text-muted,#6b7280) truncate max-w-xs">-&gt; {resolvedUrlPreview}</p>
           </div>
 
           {missingVariableKeys.length > 0 ? (
             <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
-              Variáveis pendentes: {missingVariableKeys.join(", ")}
+              Vari\u00e1veis pendentes: {missingVariableKeys.join(", ")}
             </div>
           ) : null}
 
-          {/* ── Postman-style underline tab bar ── */}
+          {/* â”€â”€ Postman-style underline tab bar â”€â”€ */}
           <div className="mt-4 flex overflow-x-auto border-b border-(--tc-border,#d7deea)">
             {[
               { id: "params" as const, label: "Params", dot: queryRows.some(r => r.key) },
               { id: "auth" as const, label: "Auth", dot: auth.type !== "none" },
-              { id: "variables" as const, label: "Variáveis", dot: false },
+              { id: "variables" as const, label: "Vari\u00e1veis", dot: false },
               { id: "headers" as const, label: `Headers${headerRows.some(r => r.key) ? ` (${headerRows.filter(r => r.key).length})` : ""}`, dot: false },
               { id: "body" as const, label: "Body", dot: !!body.trim() },
               { id: "scripts" as const, label: "Scripts", dot: !!preRequestScript.trim() },
@@ -2317,7 +2975,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 </div>
                 <button
                   type="button"
-                  aria-label="Adicionar parâmetro"
+                  aria-label="Adicionar par\u00e2metro"
                   onClick={() => appendKeyValueRow(setQueryRows)}
                   className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text,#0b1a3c)"
                 >
@@ -2344,7 +3002,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                     />
                     <button
                       type="button"
-                      aria-label="Remover parâmetro"
+                      aria-label="Remover par\u00e2metro"
                       onClick={() => removeKeyValueRow(setQueryRows, row.id)}
                       className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-muted,#6b7280)"
                     >
@@ -2360,7 +3018,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             <section className="mt-4 rounded-xl bg-(--tc-surface-2,#f8fafc) p-3">
               <div className="grid gap-3 md:grid-cols-2">
                 <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                  Tipo de autenticação
+                  Tipo de autentica\u00e7\u00e3o
                   <select
                     value={auth.type}
                     onChange={(event) =>
@@ -2376,20 +3034,20 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                     <option value="bearer">Bearer</option>
                     <option value="basic">Basic</option>
                     <option value="api-key">API Key</option>
-                    <option value="session">Sessão atual</option>
+                    <option value="session">Sess\u00e3o atual</option>
                   </select>
                 </label>
 
                 <div className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-3 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
                   {auth.type === "session"
-                    ? "Reaproveita os cookies da sessão atual para chamadas internas do próprio painel."
+                    ? "Reaproveita os cookies da sess\u00e3o atual para chamadas internas do pr\u00f3prio painel."
                     : auth.type === "api-key"
                       ? "A chave pode entrar em header ou query string."
                       : auth.type === "basic"
                         ? "Monta automaticamente o header Authorization Basic."
                         : auth.type === "bearer"
                           ? "Monta automaticamente o header Authorization Bearer."
-                          : "A request segue sem autenticação adicional."}
+                          : "A request segue sem autentica\u00e7\u00e3o adicional."}
                 </div>
               </div>
 
@@ -2408,7 +3066,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               {auth.type === "basic" ? (
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
                   <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                    Usuário
+                    UsuÃ¡rio
                     <input
                       value={auth.username ?? ""}
                       onChange={(event) => setAuth((current) => ({ ...current, username: event.target.value }))}
@@ -2469,12 +3127,12 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               <article className="rounded-xl bg-(--tc-surface-2,#f8fafc) p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Variáveis do ambiente</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">VariÃ¡veis do ambiente</p>
                     <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Persistidas por empresa + ambiente selecionado.</p>
                   </div>
                   <button
                     type="button"
-                    aria-label="Adicionar variável de ambiente"
+                    aria-label="Adicionar variÃ¡vel de ambiente"
                     onClick={() => appendKeyValueRow(setEnvironmentVariableRows)}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text,#0b1a3c)"
                   >
@@ -2498,7 +3156,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                       />
                       <button
                         type="button"
-                        aria-label="Remover variável de ambiente"
+                        aria-label="Remover variÃ¡vel de ambiente"
                         onClick={() => removeKeyValueRow(setEnvironmentVariableRows, row.id)}
                         className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-muted,#6b7280)"
                       >
@@ -2512,12 +3170,12 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               <article className="rounded-xl bg-(--tc-surface-2,#f8fafc) p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Variáveis do request</p>
-                    <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Sobrescrevem o ambiente só nessa request.</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">VariÃ¡veis do request</p>
+                    <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Sobrescrevem o ambiente sÃ³ nessa request.</p>
                   </div>
                   <button
                     type="button"
-                    aria-label="Adicionar variável do request"
+                    aria-label="Adicionar variÃ¡vel do request"
                     onClick={() => appendKeyValueRow(setLocalVariableRows)}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text,#0b1a3c)"
                   >
@@ -2541,7 +3199,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                       />
                       <button
                         type="button"
-                        aria-label="Remover variável do request"
+                        aria-label="Remover variÃ¡vel do request"
                         onClick={() => removeKeyValueRow(setLocalVariableRows, row.id)}
                         className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-muted,#6b7280)"
                       >
@@ -2553,7 +3211,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               </article>
 
               <article className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 xl:col-span-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Variáveis de sistema</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">VariÃ¡veis de sistema</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {systemVariables.map((item) => (
                     <span
@@ -2674,9 +3332,9 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               </label>
 
               <div className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Saída do último script</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">SaÃ­da do Ãºltimo script</p>
                 {scriptOutput.length === 0 ? (
-                  <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">A saída aparece aqui depois da execução.</p>
+                  <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">A saÃ­da aparece aqui depois da execuÃ§Ã£o.</p>
                 ) : (
                   <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap rounded-xl border border-(--tc-border,#d7deea) bg-[#f6f8fa] px-4 py-3 font-mono text-xs leading-6 text-slate-800">
                     {scriptOutput.join("\n")}
@@ -2691,7 +3349,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Assertions</p>
-                  <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Executadas automaticamente após cada request.</p>
+                  <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Executadas automaticamente apÃ³s cada request.</p>
                 </div>
                 <button
                   type="button"
@@ -2731,7 +3389,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                         />
                       ) : (
                         <div className="min-h-10 rounded-lg border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 flex items-center text-xs text-(--tc-text-muted,#6b7280)">
-                          —
+                          â€”
                         </div>
                       )}
                       <input
@@ -2761,7 +3419,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Importar Postman</p>
-                    <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Cada empresa mantém sua própria coleção neste navegador.</p>
+                    <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Cada empresa mantÃ©m sua prÃ³pria coleÃ§Ã£o neste navegador.</p>
                   </div>
                   <button
                     type="button"
@@ -2776,8 +3434,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                   ref={postmanFileInputRef}
                   type="file"
                   accept=".json,application/json"
-                  aria-label="Selecionar coleção JSON"
-                  title="Selecionar coleção JSON"
+                  aria-label="Selecionar coleÃ§Ã£o JSON"
+                  title="Selecionar coleÃ§Ã£o JSON"
                   className="hidden"
                   onChange={handlePostmanFileChange}
                 />
@@ -2816,8 +3474,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               <article className="rounded-xl bg-(--tc-surface-2,#f8fafc) p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Exportar código</p>
-                    <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Gera snippet do request atual com variáveis resolvidas.</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Exportar cÃ³digo</p>
+                    <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Gera snippet do request atual com variÃ¡veis resolvidas.</p>
                   </div>
                   <div className="flex gap-1 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-1">
                     {(["curl", "fetch", "axios"] as const).map((lang) => (
@@ -2841,7 +3499,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                   className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"
                 >
                   <FiCopy className="h-4 w-4" />
-                  Copiar código
+                  Copiar cÃ³digo
                 </button>
               </article>
             </section>
@@ -2852,7 +3510,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               <div className="rounded-xl bg-(--tc-surface-2,#f8fafc) p-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">GraphQL</p>
                 <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">
-                  Endpoint configurado no campo Path acima. Auth e Headers são compartilhados.
+                  Endpoint configurado no campo Path acima. Auth e Headers sÃ£o compartilhados.
                 </p>
               </div>
               <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
@@ -2884,7 +3542,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-(--tc-primary,#011848) px-5 py-2 text-sm font-semibold text-white disabled:opacity-60"
               >
                 <FiZap className="h-4 w-4" />
-                {loading ? "Executando…" : "Executar GraphQL"}
+                {loading ? "Executandoâ€¦" : "Executar GraphQL"}
               </button>
             </section>
           ) : null}
@@ -2929,7 +3587,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               </label>
 {mockEnabled ? (
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-700">
-                  Mock ativo — próxima execução usará essa resposta simulada.
+                  Mock ativo â€” prÃ³xima execuÃ§Ã£o usarÃ¡ essa resposta simulada.
                 </div>
               ) : null}
             </section>
@@ -3014,7 +3672,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                       )}
                       <div className="min-w-0">
                         <p className={`text-sm font-semibold ${result.passed ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"}`}>{result.label}</p>
-                        <p className="mt-0.5 text-xs text-slate-400 dark:text-white/50">obtido: {result.actual || "—"}</p>
+                        <p className="mt-0.5 text-xs text-slate-400 dark:text-white/50">obtido: {result.actual || "â€”"}</p>
                       </div>
                     </div>
                   ))}
@@ -3037,7 +3695,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
           <div className="mt-3 flex items-center gap-2 text-xs text-(--tc-text-muted,#6b7280)">
             <FiClock className="h-4 w-4" />
-            BFF interno para request com auth, params e variáveis sem abrir Postman.
+            BFF interno para request com auth, params e variÃ¡veis sem abrir Postman.
           </div>
           </div>
         </div>
@@ -3045,3 +3703,4 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
     </div>
   );
 }
+

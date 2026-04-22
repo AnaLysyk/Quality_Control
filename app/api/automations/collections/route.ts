@@ -12,7 +12,7 @@ const UpsertSchema = z.object({
   id: z.string().optional(),
   companySlug: z.string().trim().min(1),
   name: z.string().trim().min(1),
-  payload: z.record(z.unknown()),
+  payload: z.record(z.string(), z.unknown()),
 });
 
 const DeleteSchema = z.object({

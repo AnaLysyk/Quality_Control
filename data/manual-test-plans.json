@@ -82,6 +82,13 @@
 		"projectCode": "QCA",
 		"title": "Testing Company - Regressão automatizada Playwright",
 		"description": "Plano automatizado da plataforma da Testing Company. Os casos abaixo são executados pelo Playwright e atualizam automaticamente a run interna do painel conforme cada cenário termina.",
+		"automation": {
+			"enabled": true,
+			"status": "published",
+			"linkedAt": "2026-04-22T00:00:00.000Z",
+			"updatedAt": "2026-04-22T00:00:00.000Z",
+			"publishedAt": "2026-04-22T00:00:00.000Z"
+		},
 		"cases": [
 			{
 				"id": "TC-AUTO-001",
@@ -89,7 +96,16 @@
 				"description": "Smoke principal da shell de automação da plataforma.",
 				"preconditions": "Admin autenticado na Testing Company.",
 				"postconditions": "Studio abre sem redirecionar para login.",
-				"severity": "critical"
+				"severity": "critical",
+				"automation": {
+					"enabled": true,
+					"status": "published",
+					"flowId": "qc-automation-ide",
+					"scriptTemplateId": "playwright-pom",
+					"linkedAt": "2026-04-22T00:00:00.000Z",
+					"updatedAt": "2026-04-22T00:00:00.000Z",
+					"publishedAt": "2026-04-22T00:00:00.000Z"
+				}
 			},
 			{
 				"id": "TC-AUTO-002",
@@ -97,7 +113,16 @@
 				"description": "Garante que a tela de execuções exiba o runner biométrico da plataforma.",
 				"preconditions": "Admin autenticado.",
 				"postconditions": "Seção Biometria Griaule fica visível.",
-				"severity": "high"
+				"severity": "high",
+				"automation": {
+					"enabled": true,
+					"status": "published",
+					"flowId": "qc-automation-ide",
+					"scriptTemplateId": "playwright-pom",
+					"linkedAt": "2026-04-22T00:00:00.000Z",
+					"updatedAt": "2026-04-22T00:00:00.000Z",
+					"publishedAt": "2026-04-22T00:00:00.000Z"
+				}
 			},
 			{
 				"id": "TC-AUTO-003",
@@ -105,7 +130,16 @@
 				"description": "Valida o board de casos e a ausência de erro de renderização.",
 				"preconditions": "Admin autenticado.",
 				"postconditions": "Tela de casos responde sem Application error.",
-				"severity": "high"
+				"severity": "high",
+				"automation": {
+					"enabled": true,
+					"status": "published",
+					"flowId": "qc-automation-ide",
+					"scriptTemplateId": "playwright-pom",
+					"linkedAt": "2026-04-22T00:00:00.000Z",
+					"updatedAt": "2026-04-22T00:00:00.000Z",
+					"publishedAt": "2026-04-22T00:00:00.000Z"
+				}
 			},
 			{
 				"id": "TC-AUTO-004",
@@ -113,7 +147,16 @@
 				"description": "Confirma que os seletores não entram em estado inválido ao carregar fixtures dinâmicas.",
 				"preconditions": "Runner biométrico carregado.",
 				"postconditions": "Select de empresa permanece habilitado com opções válidas.",
-				"severity": "critical"
+				"severity": "critical",
+				"automation": {
+					"enabled": true,
+					"status": "published",
+					"flowId": "qc-automation-ide",
+					"scriptTemplateId": "playwright-pom",
+					"linkedAt": "2026-04-22T00:00:00.000Z",
+					"updatedAt": "2026-04-22T00:00:00.000Z",
+					"publishedAt": "2026-04-22T00:00:00.000Z"
+				}
 			},
 			{
 				"id": "TC-AUTO-005",
@@ -121,10 +164,138 @@
 				"description": "Smoke da tela de API Lab com shell e campos principais carregados.",
 				"preconditions": "Admin autenticado.",
 				"postconditions": "Tela abre sem erro e campo de método fica visível.",
-				"severity": "high"
+				"severity": "high",
+				"automation": {
+					"enabled": true,
+					"status": "published",
+					"flowId": "qc-automation-ide",
+					"scriptTemplateId": "playwright-pom",
+					"linkedAt": "2026-04-22T00:00:00.000Z",
+					"updatedAt": "2026-04-22T00:00:00.000Z",
+					"publishedAt": "2026-04-22T00:00:00.000Z"
+				}
+			},
+			{
+				"id": "TC-AUTO-006",
+				"title": "Validar coleção SC Integration API v2 no Studio",
+				"description": "Confirma que a coleção inicial do módulo aparece organizada e navegável no hub de automação.",
+				"preconditions": "Admin autenticado e coleção carregada.",
+				"postconditions": "A coleção fica visível com seção e conteúdo carregados.",
+				"severity": "medium",
+				"automation": {
+					"enabled": true,
+					"status": "published",
+					"flowId": "qc-automation-ide",
+					"scriptTemplateId": "playwright-pom",
+					"linkedAt": "2026-04-22T00:00:00.000Z",
+					"updatedAt": "2026-04-22T00:00:00.000Z",
+					"publishedAt": "2026-04-22T00:00:00.000Z"
+				}
+			},
+			{
+				"id": "TC-AUTO-007",
+				"title": "Abrir conversor Base64 em /automacoes/base64",
+				"description": "Smoke da tela de Base64 com o conversor e o histórico operacional carregados.",
+				"preconditions": "Admin autenticado.",
+				"postconditions": "Conversor Base64 e código gerado ficam visíveis sem erro de aplicação.",
+				"severity": "high",
+				"automation": {
+					"enabled": true,
+					"status": "published",
+					"flowId": "qc-automation-ide",
+					"scriptTemplateId": "playwright-pom",
+					"linkedAt": "2026-04-22T00:00:00.000Z",
+					"updatedAt": "2026-04-22T00:00:00.000Z",
+					"publishedAt": "2026-04-22T00:00:00.000Z"
+				}
+			},
+			{
+				"id": "TC-AUTO-008",
+				"title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+				"description": "Smoke da tela de documentos e assets para validar listagem, upload e painel lateral.",
+				"preconditions": "Admin autenticado e empresa ativa.",
+				"postconditions": "Documentos e assets aparecem sem conflito visual nem Application error.",
+				"severity": "high",
+				"automation": {
+					"enabled": true,
+					"status": "published",
+					"flowId": "qc-automation-ide",
+					"scriptTemplateId": "playwright-pom",
+					"linkedAt": "2026-04-22T00:00:00.000Z",
+					"updatedAt": "2026-04-22T00:00:00.000Z",
+					"publishedAt": "2026-04-22T00:00:00.000Z"
+				}
+			},
+			{
+				"id": "TC-AUTO-009",
+				"title": "Abrir console de logs técnicos em /automacoes/logs",
+				"description": "Smoke do console operacional que concentra auditoria e eventos de automação.",
+				"preconditions": "Usuário com acesso técnico autenticado.",
+				"postconditions": "Console e filtros carregam sem erro e mostram a grade de logs.",
+				"severity": "medium",
+				"automation": {
+					"enabled": true,
+					"status": "published",
+					"flowId": "qc-automation-ide",
+					"scriptTemplateId": "playwright-pom",
+					"linkedAt": "2026-04-22T00:00:00.000Z",
+					"updatedAt": "2026-04-22T00:00:00.000Z",
+					"publishedAt": "2026-04-22T00:00:00.000Z"
+				}
+			},
+			{
+				"id": "TC-AUTO-010",
+				"title": "Abrir área de scripts da automação",
+				"description": "Valida a entrada de scripts e o carregamento do editor principal da automação.",
+				"preconditions": "Admin autenticado e módulo de automação carregado.",
+				"postconditions": "Editor de scripts abre com navegação e conteúdo visíveis.",
+				"severity": "medium",
+				"automation": {
+					"enabled": true,
+					"status": "published",
+					"flowId": "qc-automation-ide",
+					"scriptTemplateId": "playwright-pom",
+					"linkedAt": "2026-04-22T00:00:00.000Z",
+					"updatedAt": "2026-04-22T00:00:00.000Z",
+					"publishedAt": "2026-04-22T00:00:00.000Z"
+				}
+			},
+			{
+				"id": "TC-AUTO-011",
+				"title": "Abrir fluxos prioritários da automação",
+				"description": "Smoke dos fluxos sugeridos para confirmar a navegação entre catálogo, fluxo e detalhes.",
+				"preconditions": "Admin autenticado.",
+				"postconditions": "Fluxos prioritários carregam e os cards ficam navegáveis.",
+				"severity": "medium",
+				"automation": {
+					"enabled": true,
+					"status": "published",
+					"flowId": "qc-automation-ide",
+					"scriptTemplateId": "playwright-pom",
+					"linkedAt": "2026-04-22T00:00:00.000Z",
+					"updatedAt": "2026-04-22T00:00:00.000Z",
+					"publishedAt": "2026-04-22T00:00:00.000Z"
+				}
+			},
+			{
+				"id": "TC-AUTO-012",
+				"title": "Trocar ambiente e executar tool com URL base e token",
+				"description": "Valida o novo comportamento do seletor de ambiente quando a execução exige URL base e token do alvo.",
+				"preconditions": "Admin autenticado e ambiente homologado configurado.",
+				"postconditions": "O formulário aceita URL base e token e gera request com header mascarado no preview.",
+				"severity": "critical",
+				"automation": {
+					"enabled": true,
+					"status": "published",
+					"flowId": "qc-automation-ide",
+					"scriptTemplateId": "playwright-pom",
+					"linkedAt": "2026-04-22T00:00:00.000Z",
+					"updatedAt": "2026-04-22T00:00:00.000Z",
+					"publishedAt": "2026-04-22T00:00:00.000Z"
+				}
 			}
 		],
 		"createdAt": "2026-04-19T00:00:00.000Z",
-		"updatedAt": "2026-04-19T00:00:00.000Z"
+		"updatedAt": "2026-04-22T00:00:00.000Z"
 	}
 ]

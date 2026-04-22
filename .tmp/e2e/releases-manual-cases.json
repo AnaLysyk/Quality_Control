@@ -616,5 +616,1553 @@
       "bug": null,
       "fromApi": false
     }
+  ],
+  "playwright_testing_company_mo9ibs2m_quvs": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "FALHA",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9ica1b_lyhm": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "FALHA",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9icgvt_ckdb": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "FALHA",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9id9wr_heol": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "FALHA",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9idr1w_ezkk": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "FALHA",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9ie1o7_spm9": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9imzpu_c5h3": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "FALHA",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9inveb_aake": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "FALHA",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9ip7b6_8769": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "FALHA",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9iqdhb_06ji": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "FALHA",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9iqydc_rtl4": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "FALHA",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9ir43s_jhm6": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9iu5i7_4xoq": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "FALHA",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9iugdg_2xj9": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9iwik0_g6uv": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9jmyne_qjw7": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9jspup_pfhy": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    }
+  ],
+  "playwright_testing_company_mo9k42pe_ncnq": [
+    {
+      "id": "TC-AUTO-001",
+      "title": "Abrir Automation Studio em /automacoes/tools",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-002",
+      "title": "Abrir runner biométrico em /automacoes/execucoes",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-003",
+      "title": "Listar casos em /automacoes/casos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-004",
+      "title": "Validar seletor do runner biométrico",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-005",
+      "title": "Abrir API Lab em /automacoes/api-lab",
+      "status": "APROVADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-006",
+      "title": "Validar coleção SC Integration API v2 no Studio",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-007",
+      "title": "Abrir conversor Base64 em /automacoes/base64",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-008",
+      "title": "Abrir biblioteca de documentos em /automacoes/arquivos",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-009",
+      "title": "Abrir console de logs técnicos em /automacoes/logs",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-010",
+      "title": "Abrir área de scripts da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-011",
+      "title": "Abrir fluxos prioritários da automação",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    },
+    {
+      "id": "TC-AUTO-012",
+      "title": "Trocar ambiente e executar tool com URL base e token",
+      "status": "NAO_EXECUTADO",
+      "bug": null,
+      "fromApi": false
+    }
   ]
 }

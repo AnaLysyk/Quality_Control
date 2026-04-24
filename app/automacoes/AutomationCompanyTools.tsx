@@ -18,9 +18,10 @@ import {
   AUTOMATION_ENVIRONMENTS,
   AUTOMATION_FLOWS,
   describeAutomationEnvironmentRequirements,
+  getDefaultAutomationEnvironmentId,
 } from "@/data/automationCatalog";
 import { AUTOMATION_API_PRESETS, AUTOMATION_COMPANY_TOOLS, type AutomationCompanyTool } from "@/data/automationIde";
-import { isTestingCompanyScope, matchesAutomationCompanyScope } from "@/lib/automations/companyScope";
+import { matchesAutomationCompanyScope, normalizeAutomationCompanyScope } from "@/lib/automations/companyScope";
 
 type CompanyOption = {
   name: string;
@@ -173,14 +174,14 @@ function JsonHighlight({ json }: { json: string }) {
 
 export default function AutomationCompanyTools({ access, activeCompanySlug, companies }: Props) {
   const effectiveCompanySlug = activeCompanySlug ?? null;
+  const defaultToolId =
+    normalizeAutomationCompanyScope(effectiveCompanySlug) === "griaule"
+      ? "griaule-token"
+      : (AUTOMATION_COMPANY_TOOLS.find((tool) => matchesAutomationCompanyScope(tool.companySlug, effectiveCompanySlug))?.id ?? "");
 
   const [query, setQuery] = useState("");
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(
-    isTestingCompanyScope(effectiveCompanySlug) ? "qc-local" : (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local"),
-  );
-  const [selectedToolId, setSelectedToolId] = useState(
-    AUTOMATION_COMPANY_TOOLS.find((tool) => matchesAutomationCompanyScope(tool.companySlug, effectiveCompanySlug))?.id ?? "",
-  );
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(getDefaultAutomationEnvironmentId(effectiveCompanySlug));
+  const [selectedToolId, setSelectedToolId] = useState(defaultToolId);
   const [values, setValues] = useState<Record<string, string | number | boolean>>({});
   const [environmentBaseUrls, setEnvironmentBaseUrls] = useState<Record<string, string>>(() =>
     Object.fromEntries(
@@ -224,11 +225,29 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
   }, [selectedTool, visibleTools]);
 
   useEffect(() => {
+    const normalizedScope = normalizeAutomationCompanyScope(effectiveCompanySlug);
+    if (normalizedScope === "griaule") {
+      setSelectedToolId("griaule-token");
+    } else if (selectedToolId === "griaule-token") {
+      setSelectedToolId(visibleTools[0]?.id ?? "");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveCompanySlug]);
+
+  useEffect(() => {
     setSelectedEnvironmentId((current) => {
-      if (isTestingCompanyScope(effectiveCompanySlug)) {
+      const normalizedScope = normalizeAutomationCompanyScope(effectiveCompanySlug);
+      const defaultEnvironmentId = getDefaultAutomationEnvironmentId(effectiveCompanySlug);
+      if (normalizedScope === "testing-company") {
         return current === "qc-local" ? current : "qc-local";
       }
-      return current === "qc-local" ? (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local") : current;
+      if (normalizedScope === "griaule") {
+        return current === "local" || current === "qc-local" ? defaultEnvironmentId : current;
+      }
+      if (current.startsWith("griaule-hml-")) {
+        return defaultEnvironmentId;
+      }
+      return current === "qc-local" ? defaultEnvironmentId : current;
     });
   }, [effectiveCompanySlug]);
 
@@ -342,6 +361,15 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
       }
 
       const environmentHeaders = buildEnvironmentHeaders(currentEnvironment, environmentToken);
+      const renderedHeaders = Object.fromEntries(
+        Object.entries(selectedTool.headers ?? {})
+          .map(([key, value]) => [key, String(applyTemplate(value, values))])
+          .filter(([key]) => key.trim().length > 0),
+      );
+      const renderedBody =
+        selectedTool.bodyTemplate === undefined || selectedTool.bodyTemplate === null
+          ? null
+          : JSON.stringify(applyTemplate(selectedTool.bodyTemplate, values));
 
       const execution = await fetch("/api/automations/http", {
         method: "POST",
@@ -350,9 +378,11 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
         },
           body: JSON.stringify({
             headers: {
-              ...(selectedTool.headers ?? {}),
+              ...renderedHeaders,
               ...environmentHeaders,
+              ...(renderedBody ? { "Content-Type": "application/json" } : {}),
             },
+            body: renderedBody,
             companySlug: effectiveCompanySlug,
             method: selectedTool.method,
             timeoutMs: 15000,
@@ -589,7 +619,7 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
                       </button>
                     ) : (
                       <input
-                        type={field.type === "number" ? "number" : "text"}
+                        type={field.type === "number" ? "number" : field.type === "password" ? "password" : "text"}
                         value={String(values[field.id] ?? "")}
                         onChange={(event) =>
                           setValues((current) => ({

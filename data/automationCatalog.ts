@@ -17,6 +17,12 @@ export type AutomationEnvironment = {
   requiresToken?: boolean;
   tokenHeaderName?: string;
   tokenPrefix?: string;
+  variables?: AutomationEnvironmentVariable[];
+};
+
+export type AutomationEnvironmentVariable = {
+  key: string;
+  value: string;
 };
 
 export type AutomationFlow = {
@@ -121,6 +127,55 @@ export const AUTOMATION_ENVIRONMENTS: AutomationEnvironment[] = [
     note: "Use para o próprio painel, smoke de interface e fluxos que dependem do app em localhost:3000.",
   },
   {
+    id: "griaule-hml-api-146",
+    title: "Griaule HML API 146 (8100)",
+    baseUrl: "http://172.16.1.146:8100",
+    status: "ready",
+    note: "Homologacao SMART API REST. Use para tokens, processos, RFB, biometria, pacotes e consultas tecnicas do Swagger.",
+    variables: [
+      { key: "validCPF", value: "03659187682" },
+      { key: "invalidCPF", value: "03651285639" },
+      { key: "smartUser", value: "gbds_bind" },
+      { key: "smartPassword", value: "" },
+      { key: "token", value: "" },
+      { key: "processId", value: "" },
+      { key: "protocol", value: "" },
+      { key: "packageId", value: "" },
+    ],
+  },
+  {
+    id: "griaule-hml-smart-146",
+    title: "Griaule HML SMART 146 (8128)",
+    baseUrl: "http://172.16.1.146:8128",
+    status: "ready",
+    note: "Homologacao da interface SMART. Use quando o fluxo precisar abrir a UI em /smart/ ou validar endpoints expostos no mesmo host.",
+    variables: [
+      { key: "validCPF", value: "03659184829" },
+      { key: "invalidCPF", value: "03651285639" },
+      { key: "smartUser", value: "admin" },
+      { key: "smartPassword", value: "" },
+      { key: "token", value: "" },
+      { key: "processId", value: "" },
+      { key: "protocol", value: "" },
+    ],
+  },
+  {
+    id: "griaule-hml-api-201",
+    title: "Griaule HML API 201 (8100)",
+    baseUrl: "http://172.16.1.201:8100",
+    status: "ready",
+    note: "No secundario de homologacao. Use para comparar comportamento entre hosts ou repetir chamadas com massa diferente.",
+    variables: [
+      { key: "validCPF", value: "05529136850" },
+      { key: "invalidCPF", value: "03651285639" },
+      { key: "smartUser", value: "admin" },
+      { key: "smartPassword", value: "" },
+      { key: "token", value: "" },
+      { key: "processId", value: "" },
+      { key: "protocol", value: "" },
+    ],
+  },
+  {
     id: "staging",
     title: "Homologação",
     baseUrl: "Definir por ambiente",
@@ -151,6 +206,27 @@ export const AUTOMATION_ENVIRONMENTS: AutomationEnvironment[] = [
     tokenPrefix: "Bearer",
   },
 ];
+
+export function getDefaultAutomationEnvironmentId(companySlug?: string | null) {
+  const normalized = companySlug?.trim().toLowerCase();
+  if (
+    normalized === "testing-company" ||
+    normalized === "testing_company" ||
+    normalized === "testingcompany" ||
+    normalized === "testing company" ||
+    normalized === "test-company"
+  ) {
+    return "qc-local";
+  }
+  if (normalized === "griaule") {
+    return "griaule-hml-api-146";
+  }
+  return AUTOMATION_ENVIRONMENTS[0]?.id ?? "local";
+}
+
+export function getAutomationEnvironmentVariables(environmentId: string) {
+  return AUTOMATION_ENVIRONMENTS.find((environment) => environment.id === environmentId)?.variables ?? [];
+}
 
 export function describeAutomationEnvironmentRequirements(environment: AutomationEnvironment) {
   const requirements: string[] = [];

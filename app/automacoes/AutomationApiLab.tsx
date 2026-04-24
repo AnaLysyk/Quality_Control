@@ -25,10 +25,15 @@ import {
   FiZap,
 } from "react-icons/fi";
 
-import { AUTOMATION_ENVIRONMENTS } from "@/data/automationCatalog";
+import {
+  AUTOMATION_ENVIRONMENTS,
+  getAutomationEnvironmentVariables,
+  getDefaultAutomationEnvironmentId,
+} from "@/data/automationCatalog";
 import {
   AUTOMATION_API_PRESETS,
   AUTOMATION_IDE_METHODS,
+  getDefaultAutomationApiPreset,
   type AutomationAssertionRule,
   type AutomationAssertionType,
   type AutomationHttpMethod,
@@ -37,7 +42,7 @@ import {
   type AutomationRequestPreset,
 } from "@/data/automationIde";
 import { SC_INTEGRATION_COLLECTION } from "@/data/scIntegrationCollection";
-import { isTestingCompanyScope, matchesAutomationCompanyScope, normalizeAutomationCompanyScope } from "@/lib/automations/companyScope";
+import { matchesAutomationCompanyScope, normalizeAutomationCompanyScope } from "@/lib/automations/companyScope";
 
 type CompanyOption = {
   name: string;
@@ -1347,22 +1352,21 @@ function postmanItemsToSavedRequests(items: PostmanItem[], companyScope: Automat
 }
 
 export default function AutomationApiLab({ activeCompanySlug, companies }: Props) {
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(
-    isTestingCompanyScope(activeCompanySlug) ? "qc-local" : (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local"),
-  );
-  const [selectedPresetId, setSelectedPresetId] = useState(AUTOMATION_API_PRESETS[0]?.id ?? "scratch");
-  const [requestName, setRequestName] = useState(AUTOMATION_API_PRESETS[0]?.title ?? "Request");
-  const [method, setMethod] = useState<AutomationHttpMethod>(AUTOMATION_API_PRESETS[0]?.method ?? "GET");
-  const [path, setPath] = useState(AUTOMATION_API_PRESETS[0]?.path ?? "/api/health");
-  const [body, setBody] = useState(AUTOMATION_API_PRESETS[0]?.body ?? "");
-  const [headerRows, setHeaderRows] = useState<KeyValueRow[]>(buildKeyValueRows(AUTOMATION_API_PRESETS[0]?.headers ?? []));
-  const [queryRows, setQueryRows] = useState<KeyValueRow[]>(buildKeyValueRows(AUTOMATION_API_PRESETS[0]?.queryParams ?? []));
-  const [localVariableRows, setLocalVariableRows] = useState<KeyValueRow[]>(buildKeyValueRows(AUTOMATION_API_PRESETS[0]?.variables ?? []));
+  const initialPreset = getDefaultAutomationApiPreset(activeCompanySlug) ?? AUTOMATION_API_PRESETS[0];
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(getDefaultAutomationEnvironmentId(activeCompanySlug));
+  const [selectedPresetId, setSelectedPresetId] = useState(initialPreset?.id ?? "scratch");
+  const [requestName, setRequestName] = useState(initialPreset?.title ?? "Request");
+  const [method, setMethod] = useState<AutomationHttpMethod>(initialPreset?.method ?? "GET");
+  const [path, setPath] = useState(initialPreset?.path ?? "/api/health");
+  const [body, setBody] = useState(initialPreset?.body ?? "");
+  const [headerRows, setHeaderRows] = useState<KeyValueRow[]>(buildKeyValueRows(initialPreset?.headers ?? []));
+  const [queryRows, setQueryRows] = useState<KeyValueRow[]>(buildKeyValueRows(initialPreset?.queryParams ?? []));
+  const [localVariableRows, setLocalVariableRows] = useState<KeyValueRow[]>(buildKeyValueRows(initialPreset?.variables ?? []));
   const [environmentVariableRows, setEnvironmentVariableRows] = useState<KeyValueRow[]>([createKeyValueRow()]);
-  const [auth, setAuth] = useState<AutomationRequestAuth>(buildAuthState(AUTOMATION_API_PRESETS[0]?.auth));
-  const [assertionRules, setAssertionRules] = useState<AutomationAssertionRule[]>([]);
+  const [auth, setAuth] = useState<AutomationRequestAuth>(buildAuthState(initialPreset?.auth));
+  const [assertionRules, setAssertionRules] = useState<AutomationAssertionRule[]>(initialPreset?.assertions ?? []);
   const [assertionResults, setAssertionResults] = useState<AssertionResult[]>([]);
-  const [preRequestScript, setPreRequestScript] = useState("");
+  const [preRequestScript, setPreRequestScript] = useState(initialPreset?.preRequestScript ?? "");
   const [scriptOutput, setScriptOutput] = useState<string[]>([]);
   const [curlImportText, setCurlImportText] = useState("");
   const [curlImportError, setCurlImportError] = useState<string | null>(null);
@@ -1396,18 +1400,19 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
   const [isDirty, setIsDirty] = useState(false);
   // Snapshot of last-saved / initial state for discard
   const lastSavedRef = useRef({
-    requestName: AUTOMATION_API_PRESETS[0]?.title ?? "Request",
-    method: (AUTOMATION_API_PRESETS[0]?.method ?? "GET") as AutomationHttpMethod,
-    path: AUTOMATION_API_PRESETS[0]?.path ?? "/api/health",
-    body: AUTOMATION_API_PRESETS[0]?.body ?? "",
-    auth: buildAuthState(AUTOMATION_API_PRESETS[0]?.auth),
-    headerRows: buildKeyValueRows(AUTOMATION_API_PRESETS[0]?.headers ?? []),
-    queryRows: buildKeyValueRows(AUTOMATION_API_PRESETS[0]?.queryParams ?? []),
-    localVariableRows: buildKeyValueRows(AUTOMATION_API_PRESETS[0]?.variables ?? []),
-    assertionRules: [] as AutomationAssertionRule[],
-    preRequestScript: AUTOMATION_API_PRESETS[0]?.preRequestScript ?? "",
+    requestName: initialPreset?.title ?? "Request",
+    method: (initialPreset?.method ?? "GET") as AutomationHttpMethod,
+    path: initialPreset?.path ?? "/api/health",
+    body: initialPreset?.body ?? "",
+    auth: buildAuthState(initialPreset?.auth),
+    headerRows: buildKeyValueRows(initialPreset?.headers ?? []),
+    queryRows: buildKeyValueRows(initialPreset?.queryParams ?? []),
+    localVariableRows: buildKeyValueRows(initialPreset?.variables ?? []),
+    assertionRules: (initialPreset?.assertions ?? []) as AutomationAssertionRule[],
+    preRequestScript: initialPreset?.preRequestScript ?? "",
   });
   const postmanFileInputRef = useRef<HTMLInputElement | null>(null);
+  const lastCompanySlugRef = useRef(activeCompanySlug);
   const sidebarResizeStateRef = useRef<{ active: boolean; startX: number; startWidth: number }>({ active: false, startX: 0, startWidth: 276 });
   const collectionExpansionStorageKey = useMemo(
     () => `automation-api-lab-collection-expanded:${activeCompanySlug ?? "none"}`,
@@ -1474,14 +1479,14 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
     try {
       const raw = window.localStorage.getItem(environmentStorageKey(activeCompanySlug, selectedEnvironmentId));
       if (!raw) {
-        setEnvironmentVariableRows([createKeyValueRow()]);
+        setEnvironmentVariableRows(buildKeyValueRows(getAutomationEnvironmentVariables(selectedEnvironmentId)));
         return;
       }
 
       const parsed = JSON.parse(raw) as AutomationRequestKeyValue[];
       setEnvironmentVariableRows(buildKeyValueRows(Array.isArray(parsed) ? parsed : []));
     } catch {
-      setEnvironmentVariableRows([createKeyValueRow()]);
+      setEnvironmentVariableRows(buildKeyValueRows(getAutomationEnvironmentVariables(selectedEnvironmentId)));
     }
   }, [activeCompanySlug, selectedEnvironmentId]);
 
@@ -1495,12 +1500,32 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
   useEffect(() => {
     setSelectedEnvironmentId((current) => {
-      if (isTestingCompanyScope(activeCompanySlug)) {
+      const normalizedScope = normalizeAutomationCompanyScope(activeCompanySlug);
+      const defaultEnvironmentId = getDefaultAutomationEnvironmentId(activeCompanySlug);
+      if (normalizedScope === "testing-company") {
         return current === "qc-local" ? current : "qc-local";
       }
 
-      return current === "qc-local" ? (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local") : current;
+      if (normalizedScope === "griaule") {
+        return current === "local" || current === "qc-local" ? defaultEnvironmentId : current;
+      }
+
+      if (current.startsWith("griaule-hml-")) {
+        return defaultEnvironmentId;
+      }
+
+      return current === "qc-local" ? defaultEnvironmentId : current;
     });
+  }, [activeCompanySlug]);
+
+  useEffect(() => {
+    if (lastCompanySlugRef.current === activeCompanySlug) return;
+    lastCompanySlugRef.current = activeCompanySlug;
+
+    const defaultPreset = getDefaultAutomationApiPreset(activeCompanySlug);
+    if (defaultPreset) {
+      applyPreset(defaultPreset);
+    }
   }, [activeCompanySlug]);
 
   useEffect(() => {

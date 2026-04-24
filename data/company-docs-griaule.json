@@ -1,6 +1,17 @@
 {
   "categories": [
     {
+      "id": "cat-griaule-smart-operador",
+      "slug": "smart-operador",
+      "title": "SMART Operador",
+      "description": "Onboarding operacional para homologacao SMART, Booking, Cidadao Smart e PRINT.",
+      "icon": "FiServer",
+      "order": 0,
+      "createdAt": "2026-04-24T00:00:00.000Z",
+      "updatedAt": "2026-04-24T00:00:00.000Z",
+      "createdBy": "usr_company_griaule"
+    },
+    {
       "id": "d7901393-7d07-4bd3-bbfc-f41ce0ae60f3",
       "slug": "teste",
       "title": "Teste",
@@ -24,6 +35,110 @@
     }
   ],
   "docs": [
+    {
+      "id": "doc-griaule-smart-operador-homologacao",
+      "categoryId": "cat-griaule-smart-operador",
+      "slug": "smart-operador-homologacao",
+      "title": "SMART - Operador - Homologacao",
+      "description": "Ambientes, presets e rotina de validacao para qualquer usuario autorizado executar no painel.",
+      "status": "published",
+      "order": 0,
+      "blocks": [
+        {
+          "id": "smart-op-h1",
+          "type": "heading",
+          "level": 2,
+          "text": "Contexto"
+        },
+        {
+          "id": "smart-op-context",
+          "type": "table",
+          "headers": ["Campo", "Preenchimento"],
+          "rows": [
+            ["Nome do sistema", "SMART"],
+            ["Ambiente de testes", "Homologacao"],
+            ["Planilhas de acompanhamento", "SMART, Booking, Cidadao Smart e PRINT"],
+            ["Analista de Testes", "Ana Paula Lysyk"],
+            ["Executor manual", "Thiago - execucao pratica e coleta de evidencias"],
+            ["Ferramentas de controle", "Qase, Planilha Excel e Jira"],
+            ["Objetivo da validacao", "Garantir os fluxos criticos, identificar falhas e propor melhorias"],
+            ["Metodologia", "Testes exploratorios com suites existentes e verificacao funcional pratica"],
+            ["Inicio da atuacao", "10/07/2025"]
+          ]
+        },
+        {
+          "id": "smart-op-links-h",
+          "type": "heading",
+          "level": 3,
+          "text": "Links e hosts"
+        },
+        {
+          "id": "smart-op-links",
+          "type": "table",
+          "headers": ["Recurso", "URL / host"],
+          "rows": [
+            ["Swagger SMART API", "http://172.16.1.146:8100/swagger-ui.html#/"],
+            ["SMART UI", "http://172.16.1.146:8128/smart/"],
+            ["GBDS/SPS", "http://gbdsps:8100/react/"],
+            ["MIR", "http://172.16.0.200:8120/gbs-mir-server/react/profile/1660AD81-686A-4F68-9277-503D5B6AE188"],
+            ["Fluxograma funcional", "https://www.canva.com/design/DAGtPLadxtY/4tf9N08pkCmoyXStM3i98g/edit"],
+            ["Notes - Daily", "https://docs.google.com/document/d/1rjU9ONIOQZSQ35gI84ezLw8Y7coKCGGt3TGhKLv6B14/edit?pli=1&tab=t.0"]
+          ]
+        },
+        {
+          "id": "smart-op-api-h",
+          "type": "heading",
+          "level": 3,
+          "text": "Execucao pelo painel"
+        },
+        {
+          "id": "smart-op-api-list",
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Selecione a empresa Griaule; o ambiente padrao abre em Griaule HML API 146 (8100).",
+            "Use o preset Criar token SMART e preencha smartPassword com a senha do ambiente armazenada em segredo.",
+            "Cole data.token na variavel de ambiente token para executar RFB, processos e configuracoes.",
+            "Para biometria, o runner usa SC_BIOMETRICS_API_HOST, SC_BIOMETRICS_API_PORT, SC_BIOMETRICS_API_USER e SC_BIOMETRICS_API_PASSWORD configurados no deploy."
+          ]
+        },
+        {
+          "id": "smart-op-security",
+          "type": "card",
+          "variant": "warning",
+          "title": "Segredos",
+          "text": "Credenciais de VPN, SSH, admin/root e senhas SMART nao ficam neste documento nem no codigo. Use cofre, variaveis de ambiente do deploy ou variaveis locais do usuario."
+        },
+        {
+          "id": "smart-op-ops-h",
+          "type": "heading",
+          "level": 3,
+          "text": "Comandos operacionais"
+        },
+        {
+          "id": "smart-op-logs-code",
+          "type": "code",
+          "language": "bash",
+          "caption": "Logs e evidencias com placeholders",
+          "code": "ssh -i \"<caminho-da-chave>\" anapaula.external@172.16.1.146\nintegrationlogt -n10000 | grep \"<protocolo-ou-processo>\" -A10\nprintlogt -n1000\nmirlogt -n1000\ndocker logs gbs-trust-bff\nscp root@172.16.1.146:\"/var/spool/cups-pdf/ANONYMOUS/<arquivo>.pdf\" \"C:\\\\Users\\\\Testing Company\\\\Downloads\\\\\""
+        },
+        {
+          "id": "smart-op-config-list",
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Troca de UF: /etc/griaule/scintegration/application.properties, chave biographic.preferredUF.",
+            "Role mapping: /etc/griaule/conf/gbsapi/ranger/role_permission_mapping.json.",
+            "Reinicio SMART: integrationstop e integrationstart.",
+            "PDFs de impressao: /var/spool/cups-pdf/ANONYMOUS."
+          ]
+        }
+      ],
+      "createdAt": "2026-04-24T00:00:00.000Z",
+      "updatedAt": "2026-04-24T00:00:00.000Z",
+      "createdBy": "usr_company_griaule",
+      "updatedBy": "usr_company_griaule"
+    },
     {
       "id": "953afc8f-eb75-4603-9b37-960dd9bc0baf",
       "categoryId": "d7901393-7d07-4bd3-bbfc-f41ce0ae60f3",

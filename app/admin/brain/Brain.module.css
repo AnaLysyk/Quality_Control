@@ -2796,3 +2796,15 @@
     bottom: 10px;
   }
 }
+
+/* Keep the canvas free while manipulating the graph. Side areas only open by click. */
+.graphLegend,
+.graphLegend:hover,
+.graphLegend:focus-within {
+  display: none;
+}
+
+.sideRailButton:hover,
+.sideRailButton:focus-visible {
+  transform: none;
+}

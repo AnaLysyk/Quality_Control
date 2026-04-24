@@ -41,6 +41,15 @@ type SimNode = BrainNode & {
   mass: number;
 };
 
+type DragState = {
+  nodeId: string;
+  offsetX: number;
+  offsetY: number;
+  startClientX: number;
+  startClientY: number;
+  moved: boolean;
+};
+
 const MAX_GRAPH_DEPTH = 4;
 
 const TYPE_RING_WEIGHTS: Record<string, number> = {
@@ -522,6 +531,102 @@ function tickSimulation(simNodes: SimNode[], edges: BrainEdge[], width: number, 
   }
 }
 
+function getUndirectedEdgeKey(source: string, target: string) {
+  return source < target ? `${source}:${target}` : `${target}:${source}`;
+}
+
+function addNeuralLink(
+  links: BrainEdge[],
+  existingKeys: Set<string>,
+  source: string | undefined,
+  target: string | undefined,
+  type: string,
+) {
+  if (!source || !target || source === target) return;
+
+  const key = getUndirectedEdgeKey(source, target);
+  if (existingKeys.has(key)) return;
+
+  existingKeys.add(key);
+  links.push({
+    id: `neural-${type}-${source}-${target}`,
+    source,
+    target,
+    type,
+    weight: 0.12,
+  });
+}
+
+function buildNeuralMeshEdges(
+  nodes: BrainNode[],
+  actualEdges: BrainEdge[],
+  rootNodeId: string | null,
+) {
+  if (nodes.length < 2) return [];
+
+  const visibleNodeIds = new Set(nodes.map((node) => node.id));
+  const existingKeys = new Set<string>();
+  const degreeMap = new Map(nodes.map((node) => [node.id, 0]));
+  const links: BrainEdge[] = [];
+
+  for (const edge of actualEdges) {
+    if (!visibleNodeIds.has(edge.source) || !visibleNodeIds.has(edge.target)) continue;
+    existingKeys.add(getUndirectedEdgeKey(edge.source, edge.target));
+    degreeMap.set(edge.source, (degreeMap.get(edge.source) ?? 0) + 1);
+    degreeMap.set(edge.target, (degreeMap.get(edge.target) ?? 0) + 1);
+  }
+
+  const orderedNodes = [...nodes].sort((left, right) => {
+    const leftType = NODE_TYPES.indexOf(left.type);
+    const rightType = NODE_TYPES.indexOf(right.type);
+    const leftOrder = leftType === -1 ? Number.MAX_SAFE_INTEGER : leftType;
+    const rightOrder = rightType === -1 ? Number.MAX_SAFE_INTEGER : rightType;
+    return leftOrder - rightOrder || left.label.localeCompare(right.label);
+  });
+  const hubId =
+    rootNodeId && visibleNodeIds.has(rootNodeId) ? rootNodeId : orderedNodes[0]?.id ?? null;
+
+  for (let index = 1; index < orderedNodes.length; index += 1) {
+    addNeuralLink(
+      links,
+      existingKeys,
+      orderedNodes[index - 1]?.id,
+      orderedNodes[index]?.id,
+      "CHAIN",
+    );
+  }
+
+  const nodesByType = new Map<string, BrainNode[]>();
+  for (const node of orderedNodes) {
+    if (!nodesByType.has(node.type)) nodesByType.set(node.type, []);
+    nodesByType.get(node.type)?.push(node);
+  }
+
+  for (const typeNodes of nodesByType.values()) {
+    for (let index = 1; index < typeNodes.length; index += 1) {
+      addNeuralLink(
+        links,
+        existingKeys,
+        typeNodes[index - 1]?.id,
+        typeNodes[index]?.id,
+        "TYPE",
+      );
+    }
+    addNeuralLink(links, existingKeys, hubId ?? undefined, typeNodes[0]?.id, "HUB");
+  }
+
+  for (const node of orderedNodes) {
+    if ((degreeMap.get(node.id) ?? 0) > 0) continue;
+    const fallbackTarget =
+      hubId && hubId !== node.id
+        ? hubId
+        : orderedNodes.find((candidate) => candidate.id !== node.id)?.id;
+    addNeuralLink(links, existingKeys, node.id, fallbackTarget, "ORPHAN");
+  }
+
+  return links;
+}
+
 export default function BrainGraphView() {
   const { t, locale } = useTranslation();
   const { isDark } = useTheme();
@@ -531,13 +636,13 @@ export default function BrainGraphView() {
   const [searchText, setSearchText] = useState("");
   const [filterType, setFilterType] = useState<string | null>(null);
   const [depth, setDepth] = useState(MAX_GRAPH_DEPTH);
-  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [viewScale, setViewScale] = useState(1);
   const [showLabels, setShowLabels] = useState(false);
   const [activeTab, setActiveTab] = useState<"info" | "ask" | "create" | "timeline">("info");
   const [showEdgeLabels, setShowEdgeLabels] = useState(true);
   const [workspaceMode, setWorkspaceMode] = useState<keyof typeof WORKSPACE_MODES>("all");
-  const [showExplorer, setShowExplorer] = useState(true);
+  const [showExplorer, setShowExplorer] = useState(false);
   const [explorerCollapsed, setExplorerCollapsed] = useState<Set<string>>(new Set());
   const [showPalette, setShowPalette] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState("");
@@ -562,7 +667,7 @@ export default function BrainGraphView() {
   const graphContainerRef = useRef<HTMLDivElement>(null);
   const simNodesRef = useRef<SimNode[]>([]);
   const animationFrameRef = useRef<number | undefined>(undefined);
-  const dragRef = useRef<{ nodeId: string; offsetX: number; offsetY: number } | null>(null);
+  const dragRef = useRef<DragState | null>(null);
   const panRef = useRef({ x: 0, y: 0, scale: 1, dragging: false, lastX: 0, lastY: 0 });
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -634,6 +739,16 @@ export default function BrainGraphView() {
     );
   }, [edges, filteredNodes]);
 
+  const neuralMeshEdges = useMemo(
+    () => buildNeuralMeshEdges(filteredNodes, filteredEdges, effectiveRootNodeId),
+    [effectiveRootNodeId, filteredEdges, filteredNodes],
+  );
+
+  const simulationEdges = useMemo(
+    () => [...filteredEdges, ...neuralMeshEdges],
+    [filteredEdges, neuralMeshEdges],
+  );
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || filteredNodes.length === 0) return;
@@ -645,12 +760,12 @@ export default function BrainGraphView() {
 
     simNodesRef.current = initSimulation(
       filteredNodes,
-      filteredEdges,
+      simulationEdges,
       width,
       height,
       effectiveRootNodeId,
     );
-  }, [filteredEdges, filteredNodes, effectiveRootNodeId]);
+  }, [simulationEdges, filteredNodes, effectiveRootNodeId]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -661,7 +776,7 @@ export default function BrainGraphView() {
       if (!width || !height) return;
 
       for (let step = 0; step < 140; step += 1) {
-        tickSimulation(simNodesRef.current, filteredEdges, width, height);
+        tickSimulation(simNodesRef.current, simulationEdges, width, height);
       }
 
       let minX = Infinity;
@@ -688,7 +803,7 @@ export default function BrainGraphView() {
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [effectiveRootNodeId, filteredEdges, filteredNodes.length]);
+  }, [effectiveRootNodeId, simulationEdges, filteredNodes.length]);
 
   const selectedNode = nodeContext?.context?.node ?? nodes.find((node) => node.id === selectedNodeId) ?? null;
   const nodeNeighbors = nodeContext?.context?.neighbors ?? EMPTY_NODES;
@@ -834,7 +949,7 @@ export default function BrainGraphView() {
       context.scale(panRef.current.scale, panRef.current.scale);
 
       const simNodes = simNodesRef.current;
-      tickSimulation(simNodes, filteredEdges, width, height);
+      tickSimulation(simNodes, simulationEdges, width, height);
 
       const accentNodeIds = new Set<string>();
       if (effectiveRootNodeId) accentNodeIds.add(effectiveRootNodeId);
@@ -880,6 +995,39 @@ export default function BrainGraphView() {
         context.beginPath();
         context.arc(selectedNode.x, selectedNode.y, 120, 0, Math.PI * 2);
         context.fill();
+      }
+
+      for (const edge of neuralMeshEdges) {
+        const source = nodeMap.get(edge.source);
+        const target = nodeMap.get(edge.target);
+        if (!source || !target) continue;
+
+        const connectedToSelection =
+          selectedNodeId != null &&
+          (edge.source === selectedNodeId || edge.target === selectedNodeId);
+        const activeEdge =
+          connectedToSelection ||
+          edge.source === effectiveRootNodeId ||
+          edge.target === effectiveRootNodeId ||
+          edge.source === hoveredNodeId ||
+          edge.target === hoveredNodeId;
+        const { controlX, controlY } = getEdgeControlPoint(source, target);
+
+        context.save();
+        context.beginPath();
+        context.moveTo(source.x, source.y);
+        context.quadraticCurveTo(controlX, controlY, target.x, target.y);
+        context.strokeStyle = activeEdge
+          ? palette.edgeActive
+          : isDark
+            ? "rgba(139, 184, 255, 0.12)"
+            : "rgba(1, 24, 72, 0.09)";
+        context.lineWidth = activeEdge ? 0.9 : 0.55;
+        context.shadowColor = activeEdge ? palette.edgeGlowActive : "transparent";
+        context.shadowBlur = activeEdge ? 10 : 0;
+        context.setLineDash(edge.type === "CHAIN" ? [] : [2, 8]);
+        context.stroke();
+        context.restore();
       }
 
       // Draw edges with arrowheads
@@ -1112,10 +1260,12 @@ export default function BrainGraphView() {
     hoveredNodeId,
     impactedNodes,
     isDark,
+    neuralMeshEdges,
     nodeNeighbors,
     selectedNodeId,
     showEdgeLabels,
     showLabels,
+    simulationEdges,
   ]);
 
   function resetViewport() {
@@ -1408,6 +1558,9 @@ export default function BrainGraphView() {
         nodeId: node.id,
         offsetX: mx - node.x,
         offsetY: my - node.y,
+        startClientX: event.clientX,
+        startClientY: event.clientY,
+        moved: false,
       };
       node.fx = node.x;
       node.fy = node.y;
@@ -1421,6 +1574,14 @@ export default function BrainGraphView() {
 
   function handleMouseMove(event: ReactMouseEvent<HTMLCanvasElement>) {
     if (dragRef.current) {
+      const dragDistance = Math.hypot(
+        event.clientX - dragRef.current.startClientX,
+        event.clientY - dragRef.current.startClientY,
+      );
+      if (dragDistance > 4) {
+        dragRef.current.moved = true;
+      }
+
       const canvas = canvasRef.current!;
       const rect = canvas.getBoundingClientRect();
       const pan = panRef.current;
@@ -1452,15 +1613,19 @@ export default function BrainGraphView() {
 
   function handleMouseUp() {
     if (dragRef.current) {
+      const draggedNodeId = dragRef.current.nodeId;
+      const wasMoved = dragRef.current.moved;
       const node = simNodesRef.current.find((entry) => entry.id === dragRef.current?.nodeId);
       if (node) {
         node.fx = null;
         node.fy = null;
       }
 
-      setSelectedNodeId(dragRef.current.nodeId);
-      setPanelOpen(true);
       dragRef.current = null;
+      if (!wasMoved) {
+        setSelectedNodeId(draggedNodeId);
+        setPanelOpen(true);
+      }
       return;
     }
 
@@ -1744,7 +1909,7 @@ export default function BrainGraphView() {
                 {filteredNodes.length} {locale === "pt" ? "n\u00f3s" : "nodes"}
               </span>
               <span className={styles.hudPill}>
-                {filteredEdges.length} {locale === "pt" ? "arestas" : "edges"}
+                {filteredEdges.length + neuralMeshEdges.length} {locale === "pt" ? "conex\u00f5es" : "links"}
               </span>
             </div>
 

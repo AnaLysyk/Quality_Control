@@ -1,5 +1,6 @@
 import "server-only";
 import pg from "pg";
+import { resolveDatabaseUrlFromEnv } from "@/lib/databaseUrl";
 
 const { Pool } = pg;
 
@@ -7,14 +8,11 @@ type PoolGlobal = { automationPool?: pg.Pool };
 const g = globalThis as unknown as PoolGlobal;
 
 function createPool(): pg.Pool {
-  const url =
-    process.env.AUTOMATION_POSTGRES_URL ||
-    process.env.AUTOMATION_PRISMA_DATABASE_URL ||
-    process.env.AUTOMATION_DATABASE_URL;
+  const url = resolveDatabaseUrlFromEnv("automation");
 
   if (!url) {
     throw new Error(
-      "AUTOMATION_POSTGRES_URL, AUTOMATION_PRISMA_DATABASE_URL or AUTOMATION_DATABASE_URL is required.",
+      "AUTOMATION_DATABASE_URL, AUTOMATION_PRISMA_DATABASE_URL, PRISMA_DATABASE_URL, AUTOMATION_POSTGRES_PRISMA_URL, AUTOMATION_POSTGRES_URL, POSTGRES_PRISMA_URL, POSTGRES_URL or DATABASE_URL is required.",
     );
   }
 

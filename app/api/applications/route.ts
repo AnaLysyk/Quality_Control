@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     if (!body.name) {
       return NextResponse.json({ error: "name is required" }, { status: 400 });
     }
-    const created = createApplication({
+    const created = await createApplication({
       name: String(body.name),
       slug: body.slug ? String(body.slug) : undefined,
       description: body.description ?? null,

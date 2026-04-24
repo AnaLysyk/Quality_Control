@@ -10,6 +10,7 @@
 
 import { prisma } from "@/lib/prismaClient";
 import { upsertNode, connectNodes } from "@/lib/brain";
+import type { Prisma } from "@prisma/client";
 
 /* ─── helpers ─────────────────────────────────────────────────────────────── */
 
@@ -23,7 +24,7 @@ async function safeConnect(
   toRefType: string,
   toRefId: string,
   edgeType: string,
-  meta?: Record<string, unknown>,
+  meta?: Prisma.InputJsonValue,
 ) {
   const [from, to] = await Promise.all([
     findBrainNode(fromRefType, fromRefId),
@@ -350,7 +351,6 @@ export async function syncBrain() {
       refType: 'Platform',
       refId: 'testing-company-root',
       description: 'Plataforma de QA da Testing Company — nó raiz do Brain',
-      isRoot: true,
       metadata: {
         slug: 'testing-company',
         status: 'active',
@@ -551,7 +551,7 @@ export async function syncBrain() {
       fromRefType: string, fromRefId: string,
       toRefType: string, toRefId: string,
       edgeType: string,
-      meta?: Record<string, unknown>,
+      meta?: Prisma.InputJsonValue,
     ) {
       const [from, to] = await Promise.all([
         findNode(fromRefType, fromRefId),

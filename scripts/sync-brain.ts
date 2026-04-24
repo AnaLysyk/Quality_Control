@@ -1,6 +1,7 @@
 import { readdir } from 'node:fs/promises'
 import path from 'node:path'
 import { prisma } from '@/lib/prismaClient'
+import type { Prisma } from '@prisma/client'
 import {
   upsertNode,
   connectNodes,
@@ -25,7 +26,7 @@ async function safeConnect(
   fromRefType: string, fromRefId: string,
   toRefType: string, toRefId: string,
   edgeType: string,
-  meta?: Record<string, unknown>,
+  meta?: Prisma.InputJsonValue,
 ) {
   const [from, to] = await Promise.all([
     findNode(fromRefType, fromRefId),
@@ -236,7 +237,6 @@ export async function syncBrain() {
       refType: 'Platform',
       refId: 'testing-company-root',
       description: 'Plataforma de QA da Testing Company — nó raiz do Brain',
-      isRoot: true,
       metadata: {
         slug: 'testing-company',
         status: 'active',

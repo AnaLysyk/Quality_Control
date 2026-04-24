@@ -79,7 +79,7 @@ export type BiometricAttachExecution = {
 };
 
 function toRelativeOutputPath(filePath: string) {
-  return path.relative(process.cwd(), filePath).replace(/\\/g, "/");
+  return path.relative(/*turbopackIgnore: true*/ process.cwd(), filePath).replace(/\\/g, "/");
 }
 
 function resolveConfig(config?: Partial<BiometricApiConfig>): BiometricApiConfig {
@@ -111,7 +111,7 @@ function resolveFingerprintInput(input: BiometricAttachInput) {
     throw new Error("Informe uma fixture biométrica ou um arquivo de digital.");
   }
 
-  if (!fs.existsSync(filePath)) {
+  if (!fs.existsSync(/*turbopackIgnore: true*/ filePath)) {
     throw new Error(`Arquivo de digital não encontrado: ${filePath}`);
   }
 
@@ -134,7 +134,7 @@ function resolveFaceInput(input: BiometricAttachInput) {
   const filePath = input.faceFilePath || fixture?.path || "";
 
   if (!filePath) return null;
-  if (!fs.existsSync(filePath)) {
+  if (!fs.existsSync(/*turbopackIgnore: true*/ filePath)) {
     throw new Error(`Arquivo de face não encontrado: ${filePath}`);
   }
 
@@ -150,7 +150,7 @@ function resolveFaceInput(input: BiometricAttachInput) {
 }
 
 async function buildFingerprintPayload(input: BiometricAttachInput, filePath: string) {
-  const inputBuffer = fs.readFileSync(filePath);
+  const inputBuffer = fs.readFileSync(/*turbopackIgnore: true*/ filePath);
   const mode: BiometricAttachMode = String(input.mode || "below").trim().toUpperCase() === "ABOVE" ? "ABOVE" : "BELOW";
   const target = Number(input.target || (mode === "ABOVE" ? "520000" : String(MAX_FINGERPRINT_BASE64_LENGTH)));
 
@@ -267,8 +267,10 @@ async function attachBiometrics(config: BiometricApiConfig, token: string, proce
 }
 
 function ensureGeneratedDir(outputDir?: string | null) {
-  const dir = path.resolve(process.cwd(), outputDir || path.join("generated", "biometrics"));
-  fs.mkdirSync(dir, { recursive: true });
+  const dir = outputDir?.trim()
+    ? path.resolve(/*turbopackIgnore: true*/ process.cwd(), outputDir)
+    : path.join(/*turbopackIgnore: true*/ process.cwd(), "generated", "biometrics");
+  fs.mkdirSync(/*turbopackIgnore: true*/ dir, { recursive: true });
   return dir;
 }
 
@@ -305,7 +307,7 @@ export async function runBiometricAttach(input: BiometricAttachInput): Promise<B
   const token = await obtainToken(config);
   const processId = await resolveProcessId(config, token, input);
   const preparedFingerprint = await buildFingerprintPayload(input, fingerprint.filePath);
-  const faceBase64 = face ? fs.readFileSync(face.filePath).toString("base64") : null;
+  const faceBase64 = face ? fs.readFileSync(/*turbopackIgnore: true*/ face.filePath).toString("base64") : null;
 
   const body = {
     data: [
@@ -369,8 +371,8 @@ export async function runBiometricAttach(input: BiometricAttachInput): Promise<B
     user: config.user,
   };
 
-  fs.writeFileSync(outputPath, JSON.stringify(result, null, 2));
-  fs.writeFileSync(latestOutputPath, JSON.stringify(result, null, 2));
+  fs.writeFileSync(/*turbopackIgnore: true*/ outputPath, JSON.stringify(result, null, 2));
+  fs.writeFileSync(/*turbopackIgnore: true*/ latestOutputPath, JSON.stringify(result, null, 2));
 
   return result;
 }

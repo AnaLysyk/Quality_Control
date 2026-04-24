@@ -20,7 +20,9 @@ export function resolveDatabaseUrlFromEnv(scope: DatabaseScope = "default") {
           process.env.PRISMA_DATABASE_URL,
           process.env.AUTOMATION_POSTGRES_PRISMA_URL,
           process.env.AUTOMATION_POSTGRES_URL,
+          process.env.POSTGRES_PRISMA_URL,
           process.env.POSTGRES_URL,
+          process.env.DATABASE_URL,
         )
       : firstDefined(
           process.env.DATABASE_URL,

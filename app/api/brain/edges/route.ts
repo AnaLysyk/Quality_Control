@@ -7,7 +7,10 @@ import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 export async function GET(req: Request) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+    return NextResponse.json(
+      { error: status === 401 ? "N\u00e3o autorizado" : "Sem permiss\u00e3o" },
+      { status },
+    );
   }
 
   const url = new URL(req.url);
@@ -31,7 +34,10 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+    return NextResponse.json(
+      { error: status === 401 ? "N\u00e3o autorizado" : "Sem permiss\u00e3o" },
+      { status },
+    );
   }
 
   try {
@@ -39,13 +45,16 @@ export async function POST(req: Request) {
     const { fromId, toId, type, metadata } = body;
 
     if (!fromId || !toId || !type) {
-      return NextResponse.json({ error: "fromId, toId e type sao obrigatorios" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Origem, destino e tipo da conex\u00e3o s\u00e3o obrigat\u00f3rios" },
+        { status: 400 },
+      );
     }
 
     const edge = await connectNodes(fromId, toId, type, metadata, admin.id);
     return NextResponse.json({ edge }, { status: 201 });
   } catch (error) {
     console.error("[brain/edges] POST error:", error);
-    return NextResponse.json({ error: "Erro ao criar aresta" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao criar conex\u00e3o" }, { status: 500 });
   }
 }

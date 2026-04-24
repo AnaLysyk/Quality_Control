@@ -42,7 +42,7 @@ function getDatabaseUrl(scope: DatabaseScope = "default") {
   if (!databaseUrl) {
     throw new Error(
       scope === "automation"
-        ? "AUTOMATION_DATABASE_URL, AUTOMATION_PRISMA_DATABASE_URL, PRISMA_DATABASE_URL, AUTOMATION_POSTGRES_PRISMA_URL, AUTOMATION_POSTGRES_URL or POSTGRES_URL is required to initialize Prisma for automation scope."
+        ? "AUTOMATION_DATABASE_URL, AUTOMATION_PRISMA_DATABASE_URL, PRISMA_DATABASE_URL, AUTOMATION_POSTGRES_PRISMA_URL, AUTOMATION_POSTGRES_URL, POSTGRES_PRISMA_URL, POSTGRES_URL or DATABASE_URL is required to initialize Prisma for automation scope."
         : "DATABASE_URL, PRISMA_DATABASE_URL, POSTGRES_PRISMA_URL or POSTGRES_URL is required to initialize Prisma.",
     );
   }

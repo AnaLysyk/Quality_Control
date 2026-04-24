@@ -6,6 +6,7 @@ import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { hasCapability, type Capability } from "@/lib/permissions";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
+import { syncReleaseManualToBrain } from "@/lib/brain-sync";
 
 type ManualRelease = {
   id: string;
@@ -119,6 +120,14 @@ export async function POST(req: NextRequest) {
   const releases = await readStore();
   releases.unshift(release);
   await writeStore(releases);
+
+  syncReleaseManualToBrain({
+    id: release.id,
+    title: release.title,
+    description: release.description,
+    status: release.status,
+    companyId: release.companyId,
+  }).catch(() => {});
 
   return NextResponse.json(release, { status: 201 });
 }

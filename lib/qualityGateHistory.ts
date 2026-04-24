@@ -1,17 +1,13 @@
 import "server-only";
 
-import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
+import fs from "node:fs/promises";
+import path from "node:path";
 
-let fs: typeof import("fs/promises") | undefined;
-let path: typeof import("path") | undefined;
-if (typeof process !== "undefined" && process.release?.name === "node") {
-  fs = require("fs/promises");
-  path = require("path");
-}
+import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
 
 const USE_MEMORY_ALERTS =
   process.env.QUALITY_ALERTS_IN_MEMORY === "true" || process.env.NODE_ENV === "test";
-const STORE_PATH = path && path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "quality_gate_history.json");
+const STORE_PATH = path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "quality_gate_history.json");
 const STORE_KEY = "qc:quality_gate_history:v1";
 const USE_PERSISTENT_STORE = !USE_MEMORY_ALERTS && canUsePersistentJsonStore();
 
@@ -37,7 +33,6 @@ export type QualityGateHistoryEntry = {
 
 async function ensureStore() {
   if (USE_MEMORY_ALERTS || USE_PERSISTENT_STORE) return;
-  if (!fs || !path || !STORE_PATH) return;
   await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
   try {
     await fs.access(STORE_PATH);
@@ -59,7 +54,6 @@ export async function appendQualityGateHistory(entry: QualityGateHistoryEntry) {
     return;
   }
 
-  if (!fs || !STORE_PATH) return;
   try {
     await ensureStore();
     const raw = await fs.readFile(STORE_PATH, "utf8");
@@ -89,7 +83,6 @@ export async function readQualityGateHistory(
     const persisted = await readPersistentJson<QualityGateHistoryEntry[]>(STORE_KEY, []);
     arr = Array.isArray(persisted) ? persisted : [];
   } else {
-    if (!fs || !STORE_PATH) return [];
     try {
       await ensureStore();
       const raw = await fs.readFile(STORE_PATH, "utf8");

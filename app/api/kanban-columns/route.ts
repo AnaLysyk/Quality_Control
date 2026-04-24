@@ -3,7 +3,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { isDevRole } from "@/lib/rbac/devAccess";
-import { getJsonStoreDir } from "@/data/jsonStorePath";
+import { getJsonStorePath } from "@/data/jsonStorePath";
 import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
 
 export const revalidate = 0;
@@ -21,7 +21,7 @@ const DEFAULT_COLUMNS: KanbanColumn[] = [
   { key: "done", label: "Concluido", locked: true },
 ];
 
-const STORE_PATH = path.join(getJsonStoreDir(), "kanban-columns.json");
+const STORE_PATH = getJsonStorePath("kanban-columns.json");
 const STORE_KEY = "qc:kanban_columns:v1";
 const USE_PERSISTENT_STORE = canUsePersistentJsonStore();
 

@@ -455,7 +455,7 @@ function isCompanyRunDetailRoute(pathname: string) {
 }
 
 function shouldHideShellCover(pathname: string) {
-  const hasAdminHeroCover = /^\/admin\/(?:home|dashboard|test-metric|users|clients|support|access-requests)(?:\/.*)?$/.test(pathname);
+  const hasAdminHeroCover = /^\/admin\/(?:home|dashboard|test-metric|users|clients|support|access-requests|brain)(?:\/.*)?$/.test(pathname);
   return (
     pathname.startsWith("/settings/profile") ||
     pathname.startsWith("/requests") ||
@@ -487,6 +487,7 @@ export default function AppShell({ children }: AppShellProps) {
   const isCompanyHomeRoute = isCompanyHomePathname(pathname);
   const isHomeRoute = pathname === "/" || pathname === "/home" || /\/home$/.test(pathname);
   const hideShellCover = shouldHideShellCover(pathname);
+  const isBrainCanvasRoute = pathname.startsWith("/admin/brain");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [coverSlotContent, setCoverSlotContent] = useState<ReactNode | null>(null);
   const [, setLogoFailureTick] = useState(0);
@@ -659,16 +660,18 @@ export default function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className="min-h-screen w-full bg-(--page-bg) text-(--page-text) app-shell">
+    <div className={`min-h-screen w-full bg-(--page-bg) text-(--page-text) app-shell${isBrainCanvasRoute ? " app-shell--brain-canvas" : ""}`}>
       <NewVersionBanner />
       {/* Detector de hover na lateral esquerda para telas pequenas */}
-      <div
-        className={`fixed top-0 left-0 h-full w-16 z-40 menu-hover-area${mobileOpen ? ' menu-hover-area--disabled' : ''}`}
-        onMouseEnter={() => setMobileOpen(true)}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      />
+      {!isBrainCanvasRoute ? (
+        <div
+          className={`fixed top-0 left-0 h-full w-16 z-40 menu-hover-area${mobileOpen ? ' menu-hover-area--disabled' : ''}`}
+          onMouseEnter={() => setMobileOpen(true)}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        />
+      ) : null}
 
       <Sidebar
         pathname={pathname}
@@ -690,9 +693,9 @@ export default function AppShell({ children }: AppShellProps) {
           mobileOpen ? "pointer-events-none opacity-0" : ""
         ].join(" ")}
         onClick={() => setMobileOpen(true)}
-        onMouseEnter={() => setMobileOpen(true)}
+        onMouseEnter={isBrainCanvasRoute ? undefined : () => setMobileOpen(true)}
         onTouchStart={() => setMobileOpen(true)}
-        onMouseLeave={() => setMobileOpen(false)}
+        onMouseLeave={isBrainCanvasRoute ? undefined : () => setMobileOpen(false)}
       >
         <FiMenu size={20} />
       </button>

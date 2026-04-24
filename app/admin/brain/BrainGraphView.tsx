@@ -41,6 +41,15 @@ type SimNode = BrainNode & {
   mass: number;
 };
 
+type DragState = {
+  nodeId: string;
+  offsetX: number;
+  offsetY: number;
+  startClientX: number;
+  startClientY: number;
+  moved: boolean;
+};
+
 const MAX_GRAPH_DEPTH = 4;
 
 const TYPE_RING_WEIGHTS: Record<string, number> = {
@@ -264,7 +273,7 @@ function dedupeMemories(memories: BrainMemory[]) {
 }
 
 function getNodeRadius(node: SimNode, isFocused: boolean, isHovered: boolean) {
-  let radius = 3.2 + Math.min(node.degree, 9) * 0.5;
+  let radius = 2.7 + Math.min(node.degree, 9) * 0.42;
 
   if (node.isRoot) radius += 2.4;
   if (node.type === "Company" || node.type === "Application") radius += 0.9;
@@ -272,7 +281,7 @@ function getNodeRadius(node: SimNode, isFocused: boolean, isHovered: boolean) {
   if (isHovered) radius += 0.8;
   if (isFocused) radius += 2.1;
 
-  return clamp(radius, 4, 13.5);
+  return clamp(radius, 3.6, 11.8);
 }
 
 function buildSimulationGraph(
@@ -335,8 +344,8 @@ function getEdgeControlPoint(source: SimNode, target: SimNode) {
   const perpendicularX = -dy / distance;
   const perpendicularY = dx / distance;
   const curveStrength =
-    Math.min(22, Math.max(6, distance * 0.05)) *
-    (source.layer === target.layer ? 1.14 : 0.82);
+    Math.min(10, Math.max(2.5, distance * 0.018)) *
+    (source.layer === target.layer ? 1.08 : 0.68);
   const direction = source.id.localeCompare(target.id) <= 0 ? 1 : -1;
 
   return {
@@ -522,6 +531,102 @@ function tickSimulation(simNodes: SimNode[], edges: BrainEdge[], width: number, 
   }
 }
 
+function getUndirectedEdgeKey(source: string, target: string) {
+  return source < target ? `${source}:${target}` : `${target}:${source}`;
+}
+
+function addNeuralLink(
+  links: BrainEdge[],
+  existingKeys: Set<string>,
+  source: string | undefined,
+  target: string | undefined,
+  type: string,
+) {
+  if (!source || !target || source === target) return;
+
+  const key = getUndirectedEdgeKey(source, target);
+  if (existingKeys.has(key)) return;
+
+  existingKeys.add(key);
+  links.push({
+    id: `neural-${type}-${source}-${target}`,
+    source,
+    target,
+    type,
+    weight: 0.12,
+  });
+}
+
+function buildNeuralMeshEdges(
+  nodes: BrainNode[],
+  actualEdges: BrainEdge[],
+  rootNodeId: string | null,
+) {
+  if (nodes.length < 2) return [];
+
+  const visibleNodeIds = new Set(nodes.map((node) => node.id));
+  const existingKeys = new Set<string>();
+  const degreeMap = new Map(nodes.map((node) => [node.id, 0]));
+  const links: BrainEdge[] = [];
+
+  for (const edge of actualEdges) {
+    if (!visibleNodeIds.has(edge.source) || !visibleNodeIds.has(edge.target)) continue;
+    existingKeys.add(getUndirectedEdgeKey(edge.source, edge.target));
+    degreeMap.set(edge.source, (degreeMap.get(edge.source) ?? 0) + 1);
+    degreeMap.set(edge.target, (degreeMap.get(edge.target) ?? 0) + 1);
+  }
+
+  const orderedNodes = [...nodes].sort((left, right) => {
+    const leftType = NODE_TYPES.indexOf(left.type);
+    const rightType = NODE_TYPES.indexOf(right.type);
+    const leftOrder = leftType === -1 ? Number.MAX_SAFE_INTEGER : leftType;
+    const rightOrder = rightType === -1 ? Number.MAX_SAFE_INTEGER : rightType;
+    return leftOrder - rightOrder || left.label.localeCompare(right.label);
+  });
+  const hubId =
+    rootNodeId && visibleNodeIds.has(rootNodeId) ? rootNodeId : orderedNodes[0]?.id ?? null;
+
+  for (let index = 1; index < orderedNodes.length; index += 1) {
+    addNeuralLink(
+      links,
+      existingKeys,
+      orderedNodes[index - 1]?.id,
+      orderedNodes[index]?.id,
+      "CHAIN",
+    );
+  }
+
+  const nodesByType = new Map<string, BrainNode[]>();
+  for (const node of orderedNodes) {
+    if (!nodesByType.has(node.type)) nodesByType.set(node.type, []);
+    nodesByType.get(node.type)?.push(node);
+  }
+
+  for (const typeNodes of nodesByType.values()) {
+    for (let index = 1; index < typeNodes.length; index += 1) {
+      addNeuralLink(
+        links,
+        existingKeys,
+        typeNodes[index - 1]?.id,
+        typeNodes[index]?.id,
+        "TYPE",
+      );
+    }
+    addNeuralLink(links, existingKeys, hubId ?? undefined, typeNodes[0]?.id, "HUB");
+  }
+
+  for (const node of orderedNodes) {
+    if ((degreeMap.get(node.id) ?? 0) > 0) continue;
+    const fallbackTarget =
+      hubId && hubId !== node.id
+        ? hubId
+        : orderedNodes.find((candidate) => candidate.id !== node.id)?.id;
+    addNeuralLink(links, existingKeys, node.id, fallbackTarget, "ORPHAN");
+  }
+
+  return links;
+}
+
 export default function BrainGraphView() {
   const { t, locale } = useTranslation();
   const { isDark } = useTheme();
@@ -531,7 +636,7 @@ export default function BrainGraphView() {
   const [searchText, setSearchText] = useState("");
   const [filterType, setFilterType] = useState<string | null>(null);
   const [depth, setDepth] = useState(MAX_GRAPH_DEPTH);
-  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [viewScale, setViewScale] = useState(1);
   const [showLabels, setShowLabels] = useState(false);
   const [activeTab, setActiveTab] = useState<"info" | "ask" | "create" | "timeline">("info");
@@ -559,9 +664,10 @@ export default function BrainGraphView() {
   const deferredSearchText = useDeferredValue(searchText.trim());
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const graphContainerRef = useRef<HTMLDivElement>(null);
   const simNodesRef = useRef<SimNode[]>([]);
   const animationFrameRef = useRef<number | undefined>(undefined);
-  const dragRef = useRef<{ nodeId: string; offsetX: number; offsetY: number } | null>(null);
+  const dragRef = useRef<DragState | null>(null);
   const panRef = useRef({ x: 0, y: 0, scale: 1, dragging: false, lastX: 0, lastY: 0 });
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -571,7 +677,7 @@ export default function BrainGraphView() {
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
 
-  const { data: graphData, isLoading: graphLoading, mutate: mutateGraph } = useBrainGraph(rootNodeId, depth);
+  const { data: graphData, isLoading: graphLoading, mutate: mutateGraph } = useBrainGraph(rootNodeId, depth, true);
   const { data: stats, mutate: mutateStats } = useBrainStats();
   const { data: nodeContext, mutate: mutateNodeContext } = useBrainNodeContext(selectedNodeId, depth);
   const { data: searchData, isLoading: searchLoading } = useBrainSearch(
@@ -633,6 +739,16 @@ export default function BrainGraphView() {
     );
   }, [edges, filteredNodes]);
 
+  const neuralMeshEdges = useMemo(
+    () => buildNeuralMeshEdges(filteredNodes, filteredEdges, effectiveRootNodeId),
+    [effectiveRootNodeId, filteredEdges, filteredNodes],
+  );
+
+  const simulationEdges = useMemo(
+    () => [...filteredEdges, ...neuralMeshEdges],
+    [filteredEdges, neuralMeshEdges],
+  );
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || filteredNodes.length === 0) return;
@@ -644,12 +760,12 @@ export default function BrainGraphView() {
 
     simNodesRef.current = initSimulation(
       filteredNodes,
-      filteredEdges,
+      simulationEdges,
       width,
       height,
       effectiveRootNodeId,
     );
-  }, [filteredEdges, filteredNodes, effectiveRootNodeId]);
+  }, [simulationEdges, filteredNodes, effectiveRootNodeId]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -660,7 +776,7 @@ export default function BrainGraphView() {
       if (!width || !height) return;
 
       for (let step = 0; step < 140; step += 1) {
-        tickSimulation(simNodesRef.current, filteredEdges, width, height);
+        tickSimulation(simNodesRef.current, simulationEdges, width, height);
       }
 
       let minX = Infinity;
@@ -687,7 +803,7 @@ export default function BrainGraphView() {
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [effectiveRootNodeId, filteredEdges, filteredNodes.length]);
+  }, [effectiveRootNodeId, simulationEdges, filteredNodes.length]);
 
   const selectedNode = nodeContext?.context?.node ?? nodes.find((node) => node.id === selectedNodeId) ?? null;
   const nodeNeighbors = nodeContext?.context?.neighbors ?? EMPTY_NODES;
@@ -732,6 +848,24 @@ export default function BrainGraphView() {
   );
   const isPanelVisible = panelOpen && (!!selectedNode || !!stats);
   const activeRootLabel = visibleRootNode?.label ?? (effectiveRootNodeId ? effectiveRootNodeId.slice(0, 8) : null);
+
+  useEffect(() => {
+    const container = graphContainerRef.current;
+    if (!container || typeof ResizeObserver === "undefined") return;
+
+    let frameId: number | undefined;
+    const observer = new ResizeObserver(() => {
+      if (frameId) window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(() => zoomToFit());
+    });
+
+    observer.observe(container);
+
+    return () => {
+      if (frameId) window.cancelAnimationFrame(frameId);
+      observer.disconnect();
+    };
+  }, [filteredNodes.length, isPanelVisible, showExplorer]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -794,12 +928,28 @@ export default function BrainGraphView() {
       context.fillStyle = gradient;
       context.fillRect(0, 0, width, height);
 
+      const gridSize = 64;
+      context.save();
+      context.strokeStyle = isDark ? "rgba(91, 146, 255, 0.07)" : "rgba(1, 24, 72, 0.055)";
+      context.lineWidth = 1;
+      context.beginPath();
+      for (let x = ((panRef.current.x % gridSize) + gridSize) % gridSize; x < width; x += gridSize) {
+        context.moveTo(x, 0);
+        context.lineTo(x, height);
+      }
+      for (let y = ((panRef.current.y % gridSize) + gridSize) % gridSize; y < height; y += gridSize) {
+        context.moveTo(0, y);
+        context.lineTo(width, y);
+      }
+      context.stroke();
+      context.restore();
+
       context.save();
       context.translate(panRef.current.x, panRef.current.y);
       context.scale(panRef.current.scale, panRef.current.scale);
 
       const simNodes = simNodesRef.current;
-      tickSimulation(simNodes, filteredEdges, width, height);
+      tickSimulation(simNodes, simulationEdges, width, height);
 
       const accentNodeIds = new Set<string>();
       if (effectiveRootNodeId) accentNodeIds.add(effectiveRootNodeId);
@@ -845,6 +995,39 @@ export default function BrainGraphView() {
         context.beginPath();
         context.arc(selectedNode.x, selectedNode.y, 120, 0, Math.PI * 2);
         context.fill();
+      }
+
+      for (const edge of neuralMeshEdges) {
+        const source = nodeMap.get(edge.source);
+        const target = nodeMap.get(edge.target);
+        if (!source || !target) continue;
+
+        const connectedToSelection =
+          selectedNodeId != null &&
+          (edge.source === selectedNodeId || edge.target === selectedNodeId);
+        const activeEdge =
+          connectedToSelection ||
+          edge.source === effectiveRootNodeId ||
+          edge.target === effectiveRootNodeId ||
+          edge.source === hoveredNodeId ||
+          edge.target === hoveredNodeId;
+        const { controlX, controlY } = getEdgeControlPoint(source, target);
+
+        context.save();
+        context.beginPath();
+        context.moveTo(source.x, source.y);
+        context.quadraticCurveTo(controlX, controlY, target.x, target.y);
+        context.strokeStyle = activeEdge
+          ? palette.edgeActive
+          : isDark
+            ? "rgba(139, 184, 255, 0.12)"
+            : "rgba(1, 24, 72, 0.09)";
+        context.lineWidth = activeEdge ? 0.9 : 0.55;
+        context.shadowColor = activeEdge ? palette.edgeGlowActive : "transparent";
+        context.shadowBlur = activeEdge ? 10 : 0;
+        context.setLineDash(edge.type === "CHAIN" ? [] : [2, 8]);
+        context.stroke();
+        context.restore();
       }
 
       // Draw edges with arrowheads
@@ -897,7 +1080,7 @@ export default function BrainGraphView() {
           targetNode.id === hoveredNodeId,
         );
         const angle = Math.atan2(target.y - controlY, target.x - controlX);
-        const arrowSize = connectedToSelection ? 7 : connectedToRoot ? 6 : activeEdge ? 5.5 : 4;
+        const arrowSize = connectedToSelection ? 6 : connectedToRoot ? 5.2 : activeEdge ? 4.6 : 3.4;
         const arrowX = target.x - Math.cos(angle) * (tRadius + 1.5);
         const arrowY = target.y - Math.sin(angle) * (tRadius + 1.5);
 
@@ -1077,10 +1260,12 @@ export default function BrainGraphView() {
     hoveredNodeId,
     impactedNodes,
     isDark,
+    neuralMeshEdges,
     nodeNeighbors,
     selectedNodeId,
     showEdgeLabels,
     showLabels,
+    simulationEdges,
   ]);
 
   function resetViewport() {
@@ -1322,8 +1507,8 @@ export default function BrainGraphView() {
       if (res.ok) {
         const data = await res.json();
         setSyncResult({ nodes: data.nodeCount ?? 0, edges: data.edgeCount ?? 0 });
-        mutateStats();
-        // Refetch graph after sync
+        await Promise.all([mutateStats(), mutateGraph()]);
+        window.setTimeout(() => zoomToFit(), 120);
         setTimeout(() => setSyncResult(null), 4000);
       }
     } catch {
@@ -1373,6 +1558,9 @@ export default function BrainGraphView() {
         nodeId: node.id,
         offsetX: mx - node.x,
         offsetY: my - node.y,
+        startClientX: event.clientX,
+        startClientY: event.clientY,
+        moved: false,
       };
       node.fx = node.x;
       node.fy = node.y;
@@ -1386,6 +1574,14 @@ export default function BrainGraphView() {
 
   function handleMouseMove(event: ReactMouseEvent<HTMLCanvasElement>) {
     if (dragRef.current) {
+      const dragDistance = Math.hypot(
+        event.clientX - dragRef.current.startClientX,
+        event.clientY - dragRef.current.startClientY,
+      );
+      if (dragDistance > 4) {
+        dragRef.current.moved = true;
+      }
+
       const canvas = canvasRef.current!;
       const rect = canvas.getBoundingClientRect();
       const pan = panRef.current;
@@ -1417,15 +1613,19 @@ export default function BrainGraphView() {
 
   function handleMouseUp() {
     if (dragRef.current) {
+      const draggedNodeId = dragRef.current.nodeId;
+      const wasMoved = dragRef.current.moved;
       const node = simNodesRef.current.find((entry) => entry.id === dragRef.current?.nodeId);
       if (node) {
         node.fx = null;
         node.fy = null;
       }
 
-      setSelectedNodeId(dragRef.current.nodeId);
-      setPanelOpen(true);
       dragRef.current = null;
+      if (!wasMoved) {
+        setSelectedNodeId(draggedNodeId);
+        setPanelOpen(true);
+      }
       return;
     }
 
@@ -1507,11 +1707,6 @@ export default function BrainGraphView() {
               {locale === "pt" ? "Mapa neural de conhecimento" : "Knowledge neural map"}
             </span>
             <div className={styles.title}>{t.brain.title}</div>
-            <div className={styles.subtitleMeta}>
-              {locale === "pt"
-                ? "Grafo interativo com IA integrada, conex\u00f5es direcionais e explora\u00e7\u00e3o sem\u00e2ntica."
-                : "Interactive graph with integrated AI, directional connections and semantic exploration."}
-            </div>
           </div>
 
           <div className={styles.controlCluster}>
@@ -1606,113 +1801,6 @@ export default function BrainGraphView() {
           </div>
         </div>
 
-        <div className={styles.statsBar}>
-          <div className={styles.scoreCard}>
-            <span className={styles.scoreLabel}>Brain score</span>
-            <span className={styles.scoreValue}>{intelligenceScore}</span>
-            <span className={styles.scoreNote}>
-              {locale === "pt" ? "sa\u00fade estrutural e mem\u00f3ria" : "structural health and memory"}
-            </span>
-          </div>
-
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>{t.brain.stats.nodes}</span>
-            <span className={styles.statValue}>{graphMetrics?.nodeCount ?? "-"}</span>
-          </div>
-
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>{t.brain.stats.edges}</span>
-            <span className={styles.statValue}>{graphMetrics?.edgeCount ?? "-"}</span>
-          </div>
-
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>{t.brain.stats.memories}</span>
-            <span className={styles.statValue}>{graphMetrics?.memoryCount ?? "-"}</span>
-          </div>
-
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>{locale === "pt" ? "densidade" : "density"}</span>
-            <span className={styles.statValue}>
-              {graphMetrics ? graphMetrics.density.toFixed(3) : "-"}
-            </span>
-          </div>
-        </div>
-
-        {/* Workspace mode selector */}
-        <div className={styles.workspaceBar}>
-          {Object.entries(WORKSPACE_MODES).map(([key, mode]) => (
-            <button
-              key={key}
-              type="button"
-              className={workspaceMode === key ? styles.workspaceBtnActive : styles.workspaceBtn}
-              onClick={() => setWorkspaceMode(key)}
-            >
-              {locale === "pt" ? mode.label : mode.labelEn}
-            </button>
-          ))}
-          <span className={styles.workspaceSep} />
-          <button
-            type="button"
-            className={showExplorer ? styles.workspaceBtnActive : styles.workspaceBtn}
-            onClick={() => setShowExplorer((v) => !v)}
-            title="E"
-          >
-            {locale === "pt" ? "Mapa neural" : "Neural map"}
-          </button>
-          <button
-            type="button"
-            className={styles.workspaceBtn}
-            onClick={() => { setShowPalette(true); setPaletteQuery(""); }}
-            title="Ctrl+K"
-          >
-            {locale === "pt" ? "Comandos Ctrl+K" : "Commands Ctrl+K"}
-          </button>
-          <span className={styles.workspaceSep} />
-          <button
-            type="button"
-            className={syncLoading ? styles.workspaceBtnActive : styles.workspaceBtn}
-            onClick={handleSync}
-            disabled={syncLoading}
-            title={locale === "pt" ? "Sincronizar todos os n\u00f3s do sistema com o Brain" : "Sync all system entities to Brain"}
-          >
-            {syncLoading
-              ? (locale === "pt" ? "Sincronizando..." : "Syncing...")
-              : syncResult
-                ? (locale === "pt" ? `OK ${syncResult.nodes} n\u00f3s` : `OK ${syncResult.nodes} nodes`)
-                : (locale === "pt" ? "Sincronizar" : "Sync")}
-          </button>
-        </div>
-
-        <div className={styles.filterRow}>
-          {nodeTypes.map((type) => (
-            <button
-              key={type}
-              type="button"
-              className={filterType === type ? styles.filterBtnActive : styles.filterBtn}
-              onClick={() => setFilterType((current) => (current === type ? null : type))}
-              data-type={filterType === type ? type : undefined}
-            >
-              <span
-                className={styles.filterDot}
-                data-type={type}
-              />
-              {type}
-            </button>
-          ))}
-
-          {effectiveRootNodeId ? (
-            <button
-              type="button"
-              className={styles.filterBtn}
-              onClick={() => {
-                setRootNodeId(null);
-                resetViewport();
-              }}
-            >
-              {locale === "pt" ? "Soltar raiz" : "Release root"}
-            </button>
-          ) : null}
-        </div>
       </div>
 
       <div className={styles.mainArea}>
@@ -1807,7 +1895,7 @@ export default function BrainGraphView() {
           </div>
         </div>
 
-        <div className={styles.graphContainer}>
+        <div className={styles.graphContainer} ref={graphContainerRef}>
           <div className={styles.graphHud}>
             <div className={styles.graphHudGroup}>
               <span className={styles.hudPill}>
@@ -1821,7 +1909,7 @@ export default function BrainGraphView() {
                 {filteredNodes.length} {locale === "pt" ? "n\u00f3s" : "nodes"}
               </span>
               <span className={styles.hudPill}>
-                {filteredEdges.length} {locale === "pt" ? "arestas" : "edges"}
+                {filteredEdges.length + neuralMeshEdges.length} {locale === "pt" ? "conex\u00f5es" : "links"}
               </span>
             </div>
 
@@ -1836,6 +1924,83 @@ export default function BrainGraphView() {
                 {`${Math.round(viewScale * 100)}%`}
               </button>
             </div>
+          </div>
+
+          <div className={styles.graphWorkspaceDock}>
+            <div className={styles.workspaceBar}>
+              {Object.entries(WORKSPACE_MODES).map(([key, mode]) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={workspaceMode === key ? styles.workspaceBtnActive : styles.workspaceBtn}
+                  onClick={() => setWorkspaceMode(key)}
+                >
+                  {locale === "pt" ? mode.label : mode.labelEn}
+                </button>
+              ))}
+              <span className={styles.workspaceSep} />
+              <button
+                type="button"
+                className={showExplorer ? styles.workspaceBtnActive : styles.workspaceBtn}
+                onClick={() => setShowExplorer((v) => !v)}
+                title="E"
+              >
+                {locale === "pt" ? "Mapa neural" : "Neural map"}
+              </button>
+              <button
+                type="button"
+                className={styles.workspaceBtn}
+                onClick={() => { setShowPalette(true); setPaletteQuery(""); }}
+                title="Ctrl+K"
+              >
+                {locale === "pt" ? "Comandos Ctrl+K" : "Commands Ctrl+K"}
+              </button>
+              <span className={styles.workspaceSep} />
+              <button
+                type="button"
+                className={syncLoading ? styles.workspaceBtnActive : styles.workspaceBtn}
+                onClick={handleSync}
+                disabled={syncLoading}
+                title={locale === "pt" ? "Sincronizar todos os n\u00f3s do sistema com o Brain" : "Sync all system entities to Brain"}
+              >
+                {syncLoading
+                  ? (locale === "pt" ? "Sincronizando..." : "Syncing...")
+                  : syncResult
+                    ? (locale === "pt" ? `OK ${syncResult.nodes} n\u00f3s` : `OK ${syncResult.nodes} nodes`)
+                    : (locale === "pt" ? "Sincronizar" : "Sync")}
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.graphFilterDock}>
+            {nodeTypes.map((type) => (
+              <button
+                key={type}
+                type="button"
+                className={filterType === type ? styles.filterBtnActive : styles.filterBtn}
+                onClick={() => setFilterType((current) => (current === type ? null : type))}
+                data-type={filterType === type ? type : undefined}
+              >
+                <span
+                  className={styles.filterDot}
+                  data-type={type}
+                />
+                {type}
+              </button>
+            ))}
+
+            {effectiveRootNodeId ? (
+              <button
+                type="button"
+                className={styles.filterBtn}
+                onClick={() => {
+                  setRootNodeId(null);
+                  resetViewport();
+                }}
+              >
+                {locale === "pt" ? "Soltar raiz" : "Release root"}
+              </button>
+            ) : null}
           </div>
 
           {graphLoading ? (

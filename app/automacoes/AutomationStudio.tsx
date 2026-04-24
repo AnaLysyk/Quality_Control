@@ -48,8 +48,8 @@ import {
   type AutomationStudioSubflowTemplate,
   type AutomationStudioTriggerMode,
 } from "@/data/automationStudio";
-import { AUTOMATION_ENVIRONMENTS } from "@/data/automationCatalog";
-import { isTestingCompanyScope, matchesAutomationCompanyScope, normalizeAutomationCompanyScope } from "@/lib/automations/companyScope";
+import { AUTOMATION_ENVIRONMENTS, getDefaultAutomationEnvironmentId } from "@/data/automationCatalog";
+import { matchesAutomationCompanyScope, normalizeAutomationCompanyScope } from "@/lib/automations/companyScope";
 
 type CompanyOption = {
   name: string;
@@ -1244,7 +1244,7 @@ export default function AutomationStudio({
   );
   const initialDraft = useMemo(() => buildDefaultDraft(bootstrapFlow, access), [access, bootstrapFlow]);
   const [selectedCompanySlug, setSelectedCompanySlug] = useState(initialCompanySlug);
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(isTestingCompanyScope(initialCompanySlug) ? "qc-local" : (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local"));
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(getDefaultAutomationEnvironmentId(initialCompanySlug));
   const [customFlowsRevision, setCustomFlowsRevision] = useState(0);
   const [selectedFlowId, setSelectedFlowId] = useState(bootstrapFlow?.id ?? BUILT_IN_FLOWS[0]?.id ?? "griaule-biometrics");
   const [draft, setDraft] = useState<FlowDraft>(initialDraft);
@@ -1278,11 +1278,21 @@ export default function AutomationStudio({
   }, [mode]);
   useEffect(() => {
     setSelectedEnvironmentId((current) => {
-      if (isTestingCompanyScope(selectedCompanySlug)) {
+      const normalizedScope = normalizeAutomationCompanyScope(selectedCompanySlug);
+      const defaultEnvironmentId = getDefaultAutomationEnvironmentId(selectedCompanySlug);
+      if (normalizedScope === "testing-company") {
         return current === "qc-local" ? current : "qc-local";
       }
 
-      return current === "qc-local" ? (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local") : current;
+      if (normalizedScope === "griaule") {
+        return current === "local" || current === "qc-local" ? defaultEnvironmentId : current;
+      }
+
+      if (current.startsWith("griaule-hml-")) {
+        return defaultEnvironmentId;
+      }
+
+      return current === "qc-local" ? defaultEnvironmentId : current;
     });
   }, [selectedCompanySlug]);
   useEffect(() => {

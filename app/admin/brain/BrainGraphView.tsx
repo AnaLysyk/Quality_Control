@@ -559,6 +559,7 @@ export default function BrainGraphView() {
   const deferredSearchText = useDeferredValue(searchText.trim());
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const graphContainerRef = useRef<HTMLDivElement>(null);
   const simNodesRef = useRef<SimNode[]>([]);
   const animationFrameRef = useRef<number | undefined>(undefined);
   const dragRef = useRef<{ nodeId: string; offsetX: number; offsetY: number } | null>(null);
@@ -732,6 +733,24 @@ export default function BrainGraphView() {
   );
   const isPanelVisible = panelOpen && (!!selectedNode || !!stats);
   const activeRootLabel = visibleRootNode?.label ?? (effectiveRootNodeId ? effectiveRootNodeId.slice(0, 8) : null);
+
+  useEffect(() => {
+    const container = graphContainerRef.current;
+    if (!container || typeof ResizeObserver === "undefined") return;
+
+    let frameId: number | undefined;
+    const observer = new ResizeObserver(() => {
+      if (frameId) window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(() => zoomToFit());
+    });
+
+    observer.observe(container);
+
+    return () => {
+      if (frameId) window.cancelAnimationFrame(frameId);
+      observer.disconnect();
+    };
+  }, [filteredNodes.length, isPanelVisible, showExplorer]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -1338,8 +1357,8 @@ export default function BrainGraphView() {
       if (res.ok) {
         const data = await res.json();
         setSyncResult({ nodes: data.nodeCount ?? 0, edges: data.edgeCount ?? 0 });
-        mutateStats();
-        // Refetch graph after sync
+        await Promise.all([mutateStats(), mutateGraph()]);
+        window.setTimeout(() => zoomToFit(), 120);
         setTimeout(() => setSyncResult(null), 4000);
       }
     } catch {
@@ -1617,51 +1636,6 @@ export default function BrainGraphView() {
           </div>
         </div>
 
-        {/* Workspace mode selector */}
-        <div className={styles.workspaceBar}>
-          {Object.entries(WORKSPACE_MODES).map(([key, mode]) => (
-            <button
-              key={key}
-              type="button"
-              className={workspaceMode === key ? styles.workspaceBtnActive : styles.workspaceBtn}
-              onClick={() => setWorkspaceMode(key)}
-            >
-              {locale === "pt" ? mode.label : mode.labelEn}
-            </button>
-          ))}
-          <span className={styles.workspaceSep} />
-          <button
-            type="button"
-            className={showExplorer ? styles.workspaceBtnActive : styles.workspaceBtn}
-            onClick={() => setShowExplorer((v) => !v)}
-            title="E"
-          >
-            {locale === "pt" ? "Mapa neural" : "Neural map"}
-          </button>
-          <button
-            type="button"
-            className={styles.workspaceBtn}
-            onClick={() => { setShowPalette(true); setPaletteQuery(""); }}
-            title="Ctrl+K"
-          >
-            {locale === "pt" ? "Comandos Ctrl+K" : "Commands Ctrl+K"}
-          </button>
-          <span className={styles.workspaceSep} />
-          <button
-            type="button"
-            className={syncLoading ? styles.workspaceBtnActive : styles.workspaceBtn}
-            onClick={handleSync}
-            disabled={syncLoading}
-            title={locale === "pt" ? "Sincronizar todos os n\u00f3s do sistema com o Brain" : "Sync all system entities to Brain"}
-          >
-            {syncLoading
-              ? (locale === "pt" ? "Sincronizando..." : "Syncing...")
-              : syncResult
-                ? (locale === "pt" ? `OK ${syncResult.nodes} n\u00f3s` : `OK ${syncResult.nodes} nodes`)
-                : (locale === "pt" ? "Sincronizar" : "Sync")}
-          </button>
-        </div>
-
       </div>
 
       <div className={styles.mainArea}>
@@ -1756,7 +1730,7 @@ export default function BrainGraphView() {
           </div>
         </div>
 
-        <div className={styles.graphContainer}>
+        <div className={styles.graphContainer} ref={graphContainerRef}>
           <div className={styles.graphHud}>
             <div className={styles.graphHudGroup}>
               <span className={styles.hudPill}>
@@ -1783,6 +1757,52 @@ export default function BrainGraphView() {
               </button>
               <button type="button" className={styles.hudButton}>
                 {`${Math.round(viewScale * 100)}%`}
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.graphWorkspaceDock}>
+            <div className={styles.workspaceBar}>
+              {Object.entries(WORKSPACE_MODES).map(([key, mode]) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={workspaceMode === key ? styles.workspaceBtnActive : styles.workspaceBtn}
+                  onClick={() => setWorkspaceMode(key)}
+                >
+                  {locale === "pt" ? mode.label : mode.labelEn}
+                </button>
+              ))}
+              <span className={styles.workspaceSep} />
+              <button
+                type="button"
+                className={showExplorer ? styles.workspaceBtnActive : styles.workspaceBtn}
+                onClick={() => setShowExplorer((v) => !v)}
+                title="E"
+              >
+                {locale === "pt" ? "Mapa neural" : "Neural map"}
+              </button>
+              <button
+                type="button"
+                className={styles.workspaceBtn}
+                onClick={() => { setShowPalette(true); setPaletteQuery(""); }}
+                title="Ctrl+K"
+              >
+                {locale === "pt" ? "Comandos Ctrl+K" : "Commands Ctrl+K"}
+              </button>
+              <span className={styles.workspaceSep} />
+              <button
+                type="button"
+                className={syncLoading ? styles.workspaceBtnActive : styles.workspaceBtn}
+                onClick={handleSync}
+                disabled={syncLoading}
+                title={locale === "pt" ? "Sincronizar todos os n\u00f3s do sistema com o Brain" : "Sync all system entities to Brain"}
+              >
+                {syncLoading
+                  ? (locale === "pt" ? "Sincronizando..." : "Syncing...")
+                  : syncResult
+                    ? (locale === "pt" ? `OK ${syncResult.nodes} n\u00f3s` : `OK ${syncResult.nodes} nodes`)
+                    : (locale === "pt" ? "Sincronizar" : "Sync")}
               </button>
             </div>
           </div>

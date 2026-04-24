@@ -2516,3 +2516,283 @@
     text-align: left;
   }
 }
+
+/* Obsidian-like workspace refinements */
+.brainPage {
+  gap: 8px;
+  height: calc(100vh - 56px);
+  min-height: calc(100vh - 56px);
+  padding: 10px;
+}
+
+.topBar {
+  flex: 0 0 auto;
+  overflow: visible;
+  gap: 0;
+  padding: 8px 10px;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, var(--brain-panel-strong) 0%, var(--brain-panel-bg) 100%);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+.topBar::before {
+  display: none;
+}
+
+.topBarMain {
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+
+.titleBlock {
+  flex: 0 0 auto;
+  gap: 1px;
+  width: 150px;
+  max-width: 150px;
+}
+
+.kicker {
+  font-size: 0.57rem;
+  letter-spacing: 0.1em;
+}
+
+.title {
+  font-size: clamp(1.05rem, 1.2vw, 1.28rem);
+  letter-spacing: 0;
+}
+
+.controlCluster {
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.searchShell {
+  flex: 1 1 420px;
+  min-width: min(260px, 100%);
+  max-width: 560px;
+}
+
+.searchInput {
+  min-height: 34px;
+  border-radius: 12px;
+  font-size: 0.86rem;
+}
+
+.depthControl {
+  flex: 0 0 auto;
+}
+
+.depthBadge {
+  min-height: 34px;
+  padding: 0 9px;
+}
+
+.mainArea {
+  gap: 12px;
+}
+
+.graphContainer {
+  border-radius: 26px;
+  border-color: var(--brain-border-strong);
+}
+
+.graphWorkspaceDock {
+  position: absolute;
+  top: 56px;
+  left: 18px;
+  right: 18px;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.graphWorkspaceDock .workspaceBar {
+  max-width: min(920px, calc(100% - 24px));
+  padding: 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  border: 1px solid var(--brain-border);
+  border-radius: 16px;
+  background: var(--brain-overlay-bg);
+  box-shadow: 0 18px 46px rgba(15, 23, 42, 0.14);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  pointer-events: auto;
+}
+
+.graphWorkspaceDock .workspaceBar::-webkit-scrollbar {
+  height: 4px;
+}
+
+.graphWorkspaceDock .workspaceBar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--brain-border-strong);
+}
+
+.graphWorkspaceDock .workspaceBtn,
+.graphWorkspaceDock .workspaceBtnActive {
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 10px;
+  font-size: 0.74rem;
+}
+
+.graphFilterDock {
+  left: 18px;
+  right: 210px;
+  bottom: 14px;
+}
+
+.graphLegend {
+  right: 14px;
+  bottom: 14px;
+  min-width: 176px;
+  max-height: 42px;
+  opacity: 0.72;
+  transition:
+    max-height 180ms ease,
+    opacity 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.graphLegend:hover,
+.graphLegend:focus-within {
+  max-height: 260px;
+  opacity: 1;
+  box-shadow: 0 24px 56px rgba(15, 23, 42, 0.22);
+}
+
+.explorerPanel {
+  width: 300px;
+  min-width: 270px;
+  max-width: 318px;
+  border-color: var(--brain-accent-outline);
+  background:
+    radial-gradient(circle at 12% 0%, var(--brain-accent-soft) 0%, transparent 34%),
+    linear-gradient(180deg, var(--brain-panel-strong) 0%, var(--brain-panel-bg) 100%);
+  box-shadow:
+    0 0 0 1px var(--brain-accent-outline),
+    0 24px 64px rgba(15, 23, 42, 0.16);
+}
+
+.sidePanel,
+.sidePanelHidden {
+  width: min(390px, 31vw);
+  min-width: 320px;
+}
+
+.sidePanelHidden {
+  width: 0;
+  min-width: 0;
+}
+
+@media (max-width: 1280px) {
+  .topBarMain,
+  .controlCluster {
+    flex-wrap: wrap;
+  }
+
+  .titleBlock {
+    width: 120px;
+    max-width: 120px;
+  }
+
+  .graphWorkspaceDock {
+    top: 64px;
+  }
+
+  .graphFilterDock {
+    right: 18px;
+  }
+
+  .graphLegend {
+    display: none;
+  }
+
+  .sidePanel,
+  .sidePanelHidden {
+    width: min(360px, 32vw);
+    min-width: 300px;
+  }
+}
+
+@media (max-width: 1080px) {
+  .brainPage {
+    height: auto;
+    min-height: calc(100vh - 56px);
+    overflow: visible;
+  }
+
+  .titleBlock {
+    width: auto;
+    max-width: none;
+  }
+
+  .controlCluster {
+    justify-content: stretch;
+  }
+
+  .graphContainer {
+    min-height: 560px;
+  }
+
+  .graphWorkspaceDock {
+    top: 92px;
+  }
+
+  .explorerPanel,
+  .sidePanel,
+  .sidePanelHidden {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .brainPage {
+    padding: 10px;
+  }
+
+  .topBar {
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .topBarMain {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .controlCluster {
+    flex-wrap: wrap;
+  }
+
+  .searchShell {
+    max-width: none;
+  }
+
+  .graphContainer {
+    min-height: 500px;
+  }
+
+  .graphHud {
+    inset: 10px;
+  }
+
+  .graphWorkspaceDock {
+    top: 118px;
+    left: 10px;
+    right: 10px;
+  }
+
+  .graphFilterDock {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+  }
+}

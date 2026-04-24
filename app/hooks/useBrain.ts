@@ -138,10 +138,11 @@ export type BrainNodeContextData = {
 
 /* ─── Hooks ─── */
 
-export function useBrainGraph(nodeId?: string | null, depth = 2) {
+export function useBrainGraph(nodeId?: string | null, depth = 2, showAll = false) {
   const params = new URLSearchParams();
   if (nodeId) params.set("nodeId", nodeId);
   params.set("depth", String(depth));
+  if (showAll) params.set("all", "true");
 
   return useSWR<BrainGraphData>(
     `/api/brain/graph?${params.toString()}`,

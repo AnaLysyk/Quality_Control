@@ -69,6 +69,7 @@ export async function GET(req: Request) {
   const nodeId = url.searchParams.get("nodeId");
   const depth = Math.min(4, Math.max(1, Number(url.searchParams.get("depth") ?? 2)));
   const nodeType = url.searchParams.get("type") ?? undefined;
+  const showAll = url.searchParams.get("all") === "true";
 
   try {
     let rootId = nodeId;
@@ -89,6 +90,39 @@ export async function GET(req: Request) {
 
     if (!rootId) {
       return NextResponse.json({ nodes: [], edges: [], root: null });
+    }
+
+    if (showAll) {
+      const [allNodes, allEdges, root] = await Promise.all([
+        prisma.brainNode.findMany({
+          orderBy: [{ type: "asc" }, { label: "asc" }],
+        }),
+        prisma.brainEdge.findMany({
+          orderBy: { createdAt: "asc" },
+        }),
+        prisma.brainNode.findUnique({ where: { id: rootId } }),
+      ]);
+
+      return NextResponse.json({
+        nodes: allNodes.map((node) => ({
+          id: node.id,
+          label: node.label,
+          type: node.type,
+          refType: node.refType,
+          refId: node.refId,
+          description: node.description,
+          metadata: node.metadata,
+          isRoot: node.id === rootId,
+        })),
+        edges: allEdges.map((edge) => ({
+          id: edge.id,
+          source: edge.fromId,
+          target: edge.toId,
+          type: edge.type,
+          weight: edge.weight,
+        })),
+        root,
+      });
     }
 
     const subgraph = await getSubgraph(rootId, depth);

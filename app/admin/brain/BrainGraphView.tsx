@@ -571,7 +571,7 @@ export default function BrainGraphView() {
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
 
-  const { data: graphData, isLoading: graphLoading, mutate: mutateGraph } = useBrainGraph(rootNodeId, depth);
+  const { data: graphData, isLoading: graphLoading, mutate: mutateGraph } = useBrainGraph(rootNodeId, depth, true);
   const { data: stats, mutate: mutateStats } = useBrainStats();
   const { data: nodeContext, mutate: mutateNodeContext } = useBrainNodeContext(selectedNodeId, depth);
   const { data: searchData, isLoading: searchLoading } = useBrainSearch(

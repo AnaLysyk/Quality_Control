@@ -264,7 +264,7 @@ function dedupeMemories(memories: BrainMemory[]) {
 }
 
 function getNodeRadius(node: SimNode, isFocused: boolean, isHovered: boolean) {
-  let radius = 3.2 + Math.min(node.degree, 9) * 0.5;
+  let radius = 2.7 + Math.min(node.degree, 9) * 0.42;
 
   if (node.isRoot) radius += 2.4;
   if (node.type === "Company" || node.type === "Application") radius += 0.9;
@@ -272,7 +272,7 @@ function getNodeRadius(node: SimNode, isFocused: boolean, isHovered: boolean) {
   if (isHovered) radius += 0.8;
   if (isFocused) radius += 2.1;
 
-  return clamp(radius, 4, 13.5);
+  return clamp(radius, 3.6, 11.8);
 }
 
 function buildSimulationGraph(
@@ -335,8 +335,8 @@ function getEdgeControlPoint(source: SimNode, target: SimNode) {
   const perpendicularX = -dy / distance;
   const perpendicularY = dx / distance;
   const curveStrength =
-    Math.min(22, Math.max(6, distance * 0.05)) *
-    (source.layer === target.layer ? 1.14 : 0.82);
+    Math.min(10, Math.max(2.5, distance * 0.018)) *
+    (source.layer === target.layer ? 1.08 : 0.68);
   const direction = source.id.localeCompare(target.id) <= 0 ? 1 : -1;
 
   return {
@@ -537,7 +537,7 @@ export default function BrainGraphView() {
   const [activeTab, setActiveTab] = useState<"info" | "ask" | "create" | "timeline">("info");
   const [showEdgeLabels, setShowEdgeLabels] = useState(true);
   const [workspaceMode, setWorkspaceMode] = useState<keyof typeof WORKSPACE_MODES>("all");
-  const [showExplorer, setShowExplorer] = useState(false);
+  const [showExplorer, setShowExplorer] = useState(true);
   const [explorerCollapsed, setExplorerCollapsed] = useState<Set<string>>(new Set());
   const [showPalette, setShowPalette] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState("");
@@ -794,6 +794,22 @@ export default function BrainGraphView() {
       context.fillStyle = gradient;
       context.fillRect(0, 0, width, height);
 
+      const gridSize = 64;
+      context.save();
+      context.strokeStyle = isDark ? "rgba(91, 146, 255, 0.07)" : "rgba(1, 24, 72, 0.055)";
+      context.lineWidth = 1;
+      context.beginPath();
+      for (let x = ((panRef.current.x % gridSize) + gridSize) % gridSize; x < width; x += gridSize) {
+        context.moveTo(x, 0);
+        context.lineTo(x, height);
+      }
+      for (let y = ((panRef.current.y % gridSize) + gridSize) % gridSize; y < height; y += gridSize) {
+        context.moveTo(0, y);
+        context.lineTo(width, y);
+      }
+      context.stroke();
+      context.restore();
+
       context.save();
       context.translate(panRef.current.x, panRef.current.y);
       context.scale(panRef.current.scale, panRef.current.scale);
@@ -897,7 +913,7 @@ export default function BrainGraphView() {
           targetNode.id === hoveredNodeId,
         );
         const angle = Math.atan2(target.y - controlY, target.x - controlX);
-        const arrowSize = connectedToSelection ? 7 : connectedToRoot ? 6 : activeEdge ? 5.5 : 4;
+        const arrowSize = connectedToSelection ? 6 : connectedToRoot ? 5.2 : activeEdge ? 4.6 : 3.4;
         const arrowX = target.x - Math.cos(angle) * (tRadius + 1.5);
         const arrowY = target.y - Math.sin(angle) * (tRadius + 1.5);
 
@@ -1507,11 +1523,6 @@ export default function BrainGraphView() {
               {locale === "pt" ? "Mapa neural de conhecimento" : "Knowledge neural map"}
             </span>
             <div className={styles.title}>{t.brain.title}</div>
-            <div className={styles.subtitleMeta}>
-              {locale === "pt"
-                ? "Grafo interativo com IA integrada, conex\u00f5es direcionais e explora\u00e7\u00e3o sem\u00e2ntica."
-                : "Interactive graph with integrated AI, directional connections and semantic exploration."}
-            </div>
           </div>
 
           <div className={styles.controlCluster}>
@@ -1606,38 +1617,6 @@ export default function BrainGraphView() {
           </div>
         </div>
 
-        <div className={styles.statsBar}>
-          <div className={styles.scoreCard}>
-            <span className={styles.scoreLabel}>Brain score</span>
-            <span className={styles.scoreValue}>{intelligenceScore}</span>
-            <span className={styles.scoreNote}>
-              {locale === "pt" ? "sa\u00fade estrutural e mem\u00f3ria" : "structural health and memory"}
-            </span>
-          </div>
-
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>{t.brain.stats.nodes}</span>
-            <span className={styles.statValue}>{graphMetrics?.nodeCount ?? "-"}</span>
-          </div>
-
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>{t.brain.stats.edges}</span>
-            <span className={styles.statValue}>{graphMetrics?.edgeCount ?? "-"}</span>
-          </div>
-
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>{t.brain.stats.memories}</span>
-            <span className={styles.statValue}>{graphMetrics?.memoryCount ?? "-"}</span>
-          </div>
-
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>{locale === "pt" ? "densidade" : "density"}</span>
-            <span className={styles.statValue}>
-              {graphMetrics ? graphMetrics.density.toFixed(3) : "-"}
-            </span>
-          </div>
-        </div>
-
         {/* Workspace mode selector */}
         <div className={styles.workspaceBar}>
           {Object.entries(WORKSPACE_MODES).map(([key, mode]) => (
@@ -1683,36 +1662,6 @@ export default function BrainGraphView() {
           </button>
         </div>
 
-        <div className={styles.filterRow}>
-          {nodeTypes.map((type) => (
-            <button
-              key={type}
-              type="button"
-              className={filterType === type ? styles.filterBtnActive : styles.filterBtn}
-              onClick={() => setFilterType((current) => (current === type ? null : type))}
-              data-type={filterType === type ? type : undefined}
-            >
-              <span
-                className={styles.filterDot}
-                data-type={type}
-              />
-              {type}
-            </button>
-          ))}
-
-          {effectiveRootNodeId ? (
-            <button
-              type="button"
-              className={styles.filterBtn}
-              onClick={() => {
-                setRootNodeId(null);
-                resetViewport();
-              }}
-            >
-              {locale === "pt" ? "Soltar raiz" : "Release root"}
-            </button>
-          ) : null}
-        </div>
       </div>
 
       <div className={styles.mainArea}>
@@ -1836,6 +1785,37 @@ export default function BrainGraphView() {
                 {`${Math.round(viewScale * 100)}%`}
               </button>
             </div>
+          </div>
+
+          <div className={styles.graphFilterDock}>
+            {nodeTypes.map((type) => (
+              <button
+                key={type}
+                type="button"
+                className={filterType === type ? styles.filterBtnActive : styles.filterBtn}
+                onClick={() => setFilterType((current) => (current === type ? null : type))}
+                data-type={filterType === type ? type : undefined}
+              >
+                <span
+                  className={styles.filterDot}
+                  data-type={type}
+                />
+                {type}
+              </button>
+            ))}
+
+            {effectiveRootNodeId ? (
+              <button
+                type="button"
+                className={styles.filterBtn}
+                onClick={() => {
+                  setRootNodeId(null);
+                  resetViewport();
+                }}
+              >
+                {locale === "pt" ? "Soltar raiz" : "Release root"}
+              </button>
+            ) : null}
           </div>
 
           {graphLoading ? (

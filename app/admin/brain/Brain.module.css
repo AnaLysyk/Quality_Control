@@ -68,6 +68,8 @@
     linear-gradient(180deg, var(--brain-bg-alt) 0%, var(--brain-bg) 100%);
   font-family: var(--font-geist-sans, "Segoe UI", system-ui, sans-serif);
   color-scheme: light;
+  gap: 10px;
+  padding: 12px;
 }
 
 :global(.dark) .brainPage {
@@ -149,6 +151,13 @@
   overflow: hidden;
 }
 
+.topBar {
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.1);
+}
+
 .topBar::before {
   content: "";
   position: absolute;
@@ -157,6 +166,11 @@
   height: 180px;
   background: radial-gradient(circle, var(--brain-accent-soft) 0%, transparent 70%);
   pointer-events: none;
+}
+
+.topBar::before {
+  width: 120px;
+  height: 120px;
 }
 
 .topBarMain {
@@ -169,11 +183,21 @@
   flex-wrap: wrap;
 }
 
+.topBarMain {
+  align-items: center;
+  gap: 14px;
+}
+
 .titleBlock {
   display: flex;
   flex-direction: column;
   gap: 6px;
   max-width: 620px;
+}
+
+.titleBlock {
+  gap: 3px;
+  max-width: 360px;
 }
 
 .kicker {
@@ -187,6 +211,11 @@
   color: var(--brain-accent);
 }
 
+.kicker {
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+}
+
 .title {
   margin: 0;
   font-size: clamp(1.75rem, 2vw, 2.35rem);
@@ -194,6 +223,11 @@
   line-height: 1;
   letter-spacing: -0.04em;
   color: var(--brain-text);
+}
+
+.title {
+  font-size: clamp(1.28rem, 1.55vw, 1.78rem);
+  letter-spacing: -0.025em;
 }
 
 .subtitleMeta {
@@ -214,11 +248,22 @@
   flex-wrap: wrap;
 }
 
+.controlCluster {
+  flex: 999 1 620px;
+  gap: 8px;
+}
+
 .searchShell {
   position: relative;
   flex: 1 1 280px;
   min-width: min(360px, 100%);
   max-width: 420px;
+}
+
+.searchShell {
+  flex: 1 1 300px;
+  min-width: min(280px, 100%);
+  max-width: 520px;
 }
 
 .searchInput {
@@ -235,6 +280,12 @@
     border-color 160ms ease,
     box-shadow 160ms ease,
     background-color 160ms ease;
+}
+
+.searchInput {
+  min-height: 38px;
+  border-radius: 12px;
+  font-size: 0.9rem;
 }
 
 .searchInput::placeholder {
@@ -395,7 +446,7 @@
 .depthControl {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .depthBadge {
@@ -414,6 +465,13 @@
   text-transform: uppercase;
 }
 
+.depthBadge {
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+}
+
 .filterRow {
   position: relative;
   z-index: 1;
@@ -422,6 +480,34 @@
   gap: 10px;
   overflow-x: auto;
   padding-bottom: 2px;
+}
+
+.graphFilterDock {
+  position: absolute;
+  left: 18px;
+  right: 246px;
+  bottom: 18px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px;
+  border: 1px solid var(--brain-border);
+  border-radius: 18px;
+  background: var(--brain-overlay-bg);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.16);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.graphFilterDock::-webkit-scrollbar {
+  height: 5px;
+}
+
+.graphFilterDock::-webkit-scrollbar-thumb {
+  background: var(--brain-border-strong);
+  border-radius: 999px;
 }
 
 .filterRow::-webkit-scrollbar {
@@ -455,6 +541,16 @@
     border-color 160ms ease,
     background-color 160ms ease,
     box-shadow 160ms ease;
+}
+
+.filterBtn,
+.filterBtnActive,
+.panelCloseBtn,
+.hudButton {
+  min-height: 36px;
+  padding: 0 11px;
+  border-radius: 12px;
+  font-size: 0.78rem;
 }
 
 .filterBtn:hover,
@@ -562,6 +658,10 @@
   min-height: 0;
 }
 
+.mainArea {
+  gap: 10px;
+}
+
 .explorerShell,
 .panelShell {
   display: flex;
@@ -569,6 +669,11 @@
   gap: 12px;
   min-height: 0;
   flex-shrink: 0;
+}
+
+.explorerShell,
+.panelShell {
+  gap: 8px;
 }
 
 .graphContainer {
@@ -581,6 +686,15 @@
   overflow: hidden;
   background: var(--brain-canvas-bg);
   box-shadow: var(--brain-shadow);
+}
+
+.graphContainer {
+  min-height: 0;
+  border-radius: 24px;
+  border-color: var(--brain-border-strong);
+  box-shadow:
+    0 0 0 1px var(--brain-accent-outline),
+    0 28px 80px rgba(15, 23, 42, 0.18);
 }
 
 .graphContainer::before,
@@ -634,11 +748,19 @@
   pointer-events: none;
 }
 
+.graphHud {
+  inset: 14px 14px auto 14px;
+}
+
 .graphHudGroup {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   pointer-events: auto;
+}
+
+.graphHudGroup {
+  gap: 8px;
 }
 
 .hudPill,
@@ -653,6 +775,13 @@
   font-weight: 650;
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
+}
+
+.hudPill,
+.hudButton {
+  min-height: 34px;
+  padding: 0 11px;
+  font-size: 0.76rem;
 }
 
 .hudPill {
@@ -705,6 +834,17 @@
   box-shadow: 0 20px 48px rgba(15, 23, 42, 0.18);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
+}
+
+.graphLegend {
+  left: auto;
+  right: 18px;
+  bottom: 18px;
+  min-width: 204px;
+  max-height: 240px;
+  overflow: auto;
+  padding: 12px 14px;
+  border-radius: 16px;
 }
 
 .legendTitle {
@@ -768,6 +908,16 @@
     padding 220ms ease,
     border-color 220ms ease,
     margin 220ms ease;
+}
+
+.sidePanel,
+.sidePanelHidden {
+  width: min(450px, 34vw);
+  min-width: 360px;
+  border-color: var(--brain-accent-outline);
+  box-shadow:
+    0 0 0 1px var(--brain-accent-outline),
+    0 24px 64px rgba(15, 23, 42, 0.16);
 }
 
 .sidePanel {
@@ -1822,6 +1972,16 @@
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   overflow: hidden;
+}
+
+.explorerPanel {
+  width: 292px;
+  min-width: 270px;
+  max-width: 320px;
+  border-color: var(--brain-accent-outline);
+  box-shadow:
+    0 0 0 1px var(--brain-accent-outline),
+    0 24px 60px rgba(15, 23, 42, 0.14);
 }
 
 .explorerHeader {

@@ -5,13 +5,13 @@ export const dynamic = "force-dynamic";
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess, resolveCompanyRouteAccessInput } from "@/lib/companyRoutes";
 
 import { CompanySelector } from "../components/CompanySelector";
 
 export default function EmpresasIndexPage() {
   const router = useRouter();
-  const { user, loading } = useAuthUser();
+  const { user, loading, normalizedUser } = useAuthUser();
 
   const isAdmin = useMemo(() => {
     const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
@@ -22,25 +22,23 @@ export default function EmpresasIndexPage() {
     if (loading) return;
     if (!user) return;
     if (isAdmin) return;
-    const slug = typeof user.clientSlug === "string" ? user.clientSlug.trim() : "";
+    const slug = normalizedUser.primaryCompanySlug ?? "";
     if (!slug) return;
     router.replace(
-      buildCompanyPathForAccess(slug, "home", {
-        isGlobalAdmin: user.isGlobalAdmin === true,
-        permissionRole: user.permissionRole ?? null,
-        role: user.role ?? null,
-        companyRole: user.companyRole ?? null,
-        userOrigin:
-          (user as { userOrigin?: string | null }).userOrigin ??
-          (user as { user_origin?: string | null }).user_origin ??
-          null,
-        clientSlug: slug,
-        defaultClientSlug: user?.defaultClientSlug ?? null,
-      }),
+      buildCompanyPathForAccess(
+        slug,
+        "home",
+        resolveCompanyRouteAccessInput({
+          user,
+          normalizedUser,
+          clientSlug: normalizedUser.primaryCompanySlug,
+          companyCount: normalizedUser.companyCount,
+        }),
+      ),
     );
-  }, [loading, user, isAdmin, router]);
+  }, [loading, user, isAdmin, normalizedUser, router]);
 
-  if (!loading && user && !isAdmin && (user.clientSlug ?? "")) {
+  if (!loading && user && !isAdmin && normalizedUser.primaryCompanySlug) {
     return null;
   }
 
@@ -60,18 +58,15 @@ export default function EmpresasIndexPage() {
             title="Empresas disponíveis"
             description="Acesse o hub completo de cada empresa, incluindo releases, runs e defeitos."
             buildHref={(company) =>
-              buildCompanyPathForAccess(company.clientSlug, "home", {
-                isGlobalAdmin: user?.isGlobalAdmin === true,
-                permissionRole: user?.permissionRole ?? null,
-                role: user?.role ?? null,
-                companyRole: user?.companyRole ?? null,
-                userOrigin:
-                  (user as { userOrigin?: string | null } | null)?.userOrigin ??
-                  (user as { user_origin?: string | null } | null)?.user_origin ??
-                  null,
-                clientSlug: company.clientSlug,
-                defaultClientSlug: user?.defaultClientSlug ?? null,
-              })
+              buildCompanyPathForAccess(
+                company.clientSlug,
+                "home",
+                resolveCompanyRouteAccessInput({
+                  user,
+                  normalizedUser,
+                  clientSlug: company.clientSlug,
+                }),
+              )
             }
             ctaLabel={(company) => (company.role === "ADMIN" ? "Gerenciar" : "Entrar")}
           />

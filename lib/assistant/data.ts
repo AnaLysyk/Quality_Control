@@ -5,6 +5,7 @@
 import "server-only";
 
 import { getLocalUserById, listLocalCompanies, listLocalMemberships, listLocalUsers } from "@/lib/auth/localStore";
+import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
 import type { AuthUser } from "@/lib/jwtAuth";
 import { hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
 import { canAccessGlobalTicketWorkspace } from "@/lib/rbac/tickets";
@@ -173,7 +174,7 @@ export async function getVisibleUsers(user: AuthUser): Promise<VisibleUsersConte
   if (scope === "company") {
     const allowedCompanyIds = new Set<string>();
     if (user.companyId) allowedCompanyIds.add(user.companyId);
-    const allowedSlugs = new Set((user.companySlugs ?? []).map((s) => normalizeSearch(s)));
+    const allowedSlugs = new Set(resolveNormalizedCompanySlugs(user).map((s) => normalizeSearch(s)));
     for (const c of companies) {
       if (allowedSlugs.has(normalizeSearch(c.slug))) allowedCompanyIds.add(c.id);
     }
@@ -211,7 +212,7 @@ export async function getVisibleCompanies(user: AuthUser) {
 
   const allowedIds = new Set<string>();
   if (user.companyId) allowedIds.add(user.companyId);
-  const allowedSlugs = new Set((user.companySlugs ?? []).map((s) => normalizeSearch(s)));
+  const allowedSlugs = new Set(resolveNormalizedCompanySlugs(user).map((s) => normalizeSearch(s)));
   return companies.filter((c) => allowedIds.has(c.id) || allowedSlugs.has(normalizeSearch(c.slug)));
 }
 

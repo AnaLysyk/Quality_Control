@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getLocalUserById } from "@/lib/auth/localStore";
+import { resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
 import { createTicket, listAllTickets, listTicketsForUser } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketCreated } from "@/lib/notificationService";
@@ -84,11 +85,12 @@ export async function POST(req: Request) {
     const requestedCompanyId = typeof body?.companyId === "string" ? body.companyId : null;
     const targetCompanyId = requestedCompanyId ?? user.companyId ?? null;
     if (requestedCompanyId) {
-      assertCompanyAccess(user, requestedCompanyId);
+      await assertCompanyAccess(user, requestedCompanyId);
     }
     // Log received payload for debugging when creation fails
     console.debug("[tickets POST] received body:", body);
     const localUser = await getLocalUserById(user.id);
+    const normalizedCompanySlug = resolvePrimaryCompanySlug(user);
     const assignedToUserId =
       canAccessGlobalTicketWorkspace(user) &&
       typeof body?.assignedToUserId === "string"
@@ -107,7 +109,7 @@ export async function POST(req: Request) {
       createdBy: user.id,
       createdByName: resolveDisplayName(localUser),
       createdByEmail: localUser?.email ?? null,
-      companySlug: user.companySlug ?? null,
+      companySlug: normalizedCompanySlug,
       companyId: targetCompanyId,
     });
 

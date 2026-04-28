@@ -9,7 +9,7 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { useClientContext } from "@/context/ClientContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { fetchApi } from "@/lib/api";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess, resolveCompanyRouteAccessInput } from "@/lib/companyRoutes";
 
 function getInitials(value: string) {
   const parts = value.trim().split(/\s+/).filter(Boolean);
@@ -50,20 +50,15 @@ const SkeletonGrid = () => (
 );
 
 export default function DocsOverviewClient() {
-  const { user } = useAuthUser();
+  const { user, normalizedUser } = useAuthUser();
   const { clients, loading } = useClientContext();
   const profile = resolveProfile(user);
   const showPlatformWiki = profile !== "company";
-  const routeInput = {
-    isGlobalAdmin: user?.isGlobalAdmin === true || user?.is_global_admin === true,
-    permissionRole: user?.permissionRole ?? null,
-    role: user?.role ?? null,
-    companyRole: user?.companyRole ?? null,
-    userOrigin: user?.userOrigin ?? user?.user_origin ?? null,
+  const routeInput = resolveCompanyRouteAccessInput({
+    user,
+    normalizedUser,
     companyCount: clients.length,
-    clientSlug: user?.clientSlug ?? null,
-    defaultClientSlug: user?.defaultClientSlug ?? null,
-  };
+  });
 
   // wiki summaries keyed by company slug
   const [summaries, setSummaries] = useState<Record<string, WikiSummary>>({});

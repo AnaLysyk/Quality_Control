@@ -4,9 +4,10 @@
 import HomeContent from "./home/HomeContent";
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
+import { normalizeAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 import { getAccessContext } from "@/lib/auth/session";
 import { getLocalUserById } from "@/lib/auth/localStore";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess, resolveCompanyRouteAccessInput } from "@/lib/companyRoutes";
 
 export default async function Page() {
   const headerStore = await headers();
@@ -26,22 +27,38 @@ export default async function Page() {
   const access = await getAccessContext(req);
   if (!access) redirect("/login");
   const user = await getLocalUserById(access.userId);
+  const routeUser = {
+    ...(user ?? {}),
+    role: access.role ?? null,
+    companyRole: access.companyRole ?? null,
+    user_origin: user?.user_origin ?? null,
+    isGlobalAdmin: access.isGlobalAdmin,
+    companySlug: access.companySlug ?? null,
+    companySlugs: access.companySlugs ?? [],
+    default_company_slug: user?.default_company_slug ?? null,
+  };
+  const normalizedUser = normalizeAuthenticatedUser(routeUser);
 
   const requestedCompany =
     activeCompanyCookie && access.companySlugs.includes(activeCompanyCookie) ? activeCompanyCookie : null;
-  const companySlug = requestedCompany ?? access.companySlug ?? user?.default_company_slug ?? access.companySlugs[0] ?? null;
+  const companySlug =
+    requestedCompany ??
+    normalizedUser.primaryCompanySlug ??
+    normalizedUser.defaultCompanySlug ??
+    access.companySlugs[0] ??
+    null;
   if (companySlug) {
     redirect(
-      buildCompanyPathForAccess(companySlug, "home", {
-        isGlobalAdmin: access.isGlobalAdmin,
-        permissionRole: null,
-        role: access.role ?? null,
-        companyRole: access.companyRole ?? null,
-        userOrigin: user?.user_origin ?? null,
-        companyCount: access.companySlugs.length,
-        clientSlug: companySlug,
-        defaultClientSlug: user?.default_company_slug ?? null,
-      }),
+      buildCompanyPathForAccess(
+        companySlug,
+        "home",
+        resolveCompanyRouteAccessInput({
+          user: routeUser,
+          normalizedUser,
+          companyCount: access.companySlugs.length,
+          clientSlug: companySlug,
+        }),
+      ),
     );
   }
 

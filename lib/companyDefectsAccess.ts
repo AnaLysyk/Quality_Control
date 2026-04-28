@@ -1,6 +1,10 @@
 import "server-only";
 
 import type { AuthUser } from "@/lib/jwtAuth";
+import {
+  resolveNormalizedCompanySlugs,
+  resolvePrimaryCompanySlug,
+} from "@/lib/auth/normalizeAuthenticatedUser";
 import { getCompanyDefects, type CompanyDefectRecord } from "@/lib/companyDefects";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { resolveLocalUserDisplayName } from "@/lib/manualReleaseResponsible";
@@ -15,9 +19,11 @@ export function hasGlobalCompanyVisibility(user: AuthUser | null | undefined) {
 }
 
 export function resolveAllowedCompanySlugs(user: AuthUser) {
-  if (Array.isArray(user.companySlugs) && user.companySlugs.length) return user.companySlugs;
-  if (user.companySlug) return [user.companySlug];
-  return [];
+  return resolveNormalizedCompanySlugs(user);
+}
+
+export function resolveAccessibleCompanySlug(user: AuthUser) {
+  return resolvePrimaryCompanySlug(user);
 }
 
 export function canAccessCompanyDefects(user: AuthUser, companySlug: string) {

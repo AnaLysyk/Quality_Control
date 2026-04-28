@@ -1,7 +1,8 @@
 import type { AuthUser } from "@/lib/jwtAuth";
+import { listLocalLinksForUser } from "@/lib/auth/localStore";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
-export function assertCompanyAccess(user: AuthUser | null, companyId?: string | null) {
+export async function assertCompanyAccess(user: AuthUser | null, companyId?: string | null) {
   if (!user || !companyId) throw new Error("MISSING_COMPANY_ID");
 
   const role = normalizeLegacyRole(user.role);
@@ -15,7 +16,8 @@ export function assertCompanyAccess(user: AuthUser | null, companyId?: string | 
   // TC users access only linked companies.
   if (role === SYSTEM_ROLES.TESTING_COMPANY_USER) {
     if (user.companyId === companyId) return;
-    if (Array.isArray(user.companySlugs) && user.companySlugs.includes(companyId)) return;
+    const links = await listLocalLinksForUser(user.id);
+    if (links.some((link) => link.companyId === companyId)) return;
   }
 
   throw new Error("FORBIDDEN_COMPANY_ACCESS");

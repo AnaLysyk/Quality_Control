@@ -6,24 +6,16 @@ import { CompanySelector } from "../components/CompanySelector";
 import { ReleasesList } from "./ReleasesList";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess, resolveCompanyRouteAccessInput } from "@/lib/companyRoutes";
 
 export default function ReleasesPage() {
-  const { user } = useAuthUser();
+  const { user, normalizedUser } = useAuthUser();
   const { clients } = useClientContext();
-  const routeInput = {
-    isGlobalAdmin: user?.isGlobalAdmin === true,
-    permissionRole: user?.permissionRole ?? null,
-    role: user?.role ?? null,
-    companyRole: user?.companyRole ?? null,
-    userOrigin:
-      (user as { userOrigin?: string | null } | null)?.userOrigin ??
-      (user as { user_origin?: string | null } | null)?.user_origin ??
-      null,
+  const routeInput = resolveCompanyRouteAccessInput({
+    user,
+    normalizedUser,
     companyCount: clients.length,
-    clientSlug: user?.clientSlug ?? null,
-    defaultClientSlug: user?.defaultClientSlug ?? null,
-  };
+  });
 
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c) px-4 sm:px-6 md:px-10 py-8 md:py-10">

@@ -22,7 +22,7 @@ import { useAppSettings, type Language, type Theme } from "@/context/AppSettings
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { fetchApi } from "@/lib/api";
 import { isCompanyProfileContext, isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess, resolveCompanyRouteAccessInput } from "@/lib/companyRoutes";
 import { getFixedProfileLabel, resolveFixedProfileKind } from "@/lib/fixedProfilePresentation";
 import { hasPermissionAccess, normalizePermissionMatrix } from "@/lib/permissionMatrix";
 import {
@@ -616,7 +616,7 @@ function resolveCompanyIntegrationMeta({
 }
 
 export default function SettingsProfilePage() {
-  const { user, loading, refreshUser } = useAuthUser();
+  const { user, loading, refreshUser, normalizedUser } = useAuthUser();
   const { t } = useI18n();
   const { theme, language, setTheme, setLanguage, saveSettings, loading: settingsLoading } = useAppSettings();
   const [companies, setCompanies] = useState<LinkedCompany[]>([]);
@@ -754,24 +754,12 @@ export default function SettingsProfilePage() {
       : typeof userRecord?.clientId === "number"
         ? String(userRecord.clientId)
         : null;
-  const currentClientSlug =
-    (typeof userRecord?.clientSlug === "string"
-      ? userRecord.clientSlug
-      : typeof userRecord?.defaultClientSlug === "string"
-        ? userRecord.defaultClientSlug
-        : typeof userRecord?.default_company_slug === "string"
-          ? String(userRecord.default_company_slug)
-          : null) ?? null;
-  const companyRouteInput = {
-    isGlobalAdmin: user?.isGlobalAdmin === true || user?.is_global_admin === true,
-    permissionRole: user?.permissionRole ?? null,
-    role: user?.role ?? null,
-    companyRole: user?.companyRole ?? null,
-    userOrigin: user?.userOrigin ?? user?.user_origin ?? null,
-    companyCount: Array.isArray(user?.clientSlugs) ? user.clientSlugs.length : 0,
-    clientSlug: user?.clientSlug ?? null,
-    defaultClientSlug: user?.defaultClientSlug ?? null,
-  };
+  const currentClientSlug = normalizedUser.primaryCompanySlug ?? normalizedUser.defaultCompanySlug ?? null;
+  const companyRouteInput = resolveCompanyRouteAccessInput({
+    user,
+    normalizedUser,
+    clientSlug: currentClientSlug,
+  });
   const currentCompanyHomeHref = currentClientSlug
     ? buildCompanyPathForAccess(currentClientSlug, "home", companyRouteInput)
     : null;

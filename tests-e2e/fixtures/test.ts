@@ -3,7 +3,7 @@ import path from "node:path";
 import { test as base, expect, type TestInfo, type TestStatus } from "@playwright/test";
 import { createQaseClient, QaseError } from "../../lib/qaseSdk";
 import { slugifyRelease } from "@/lib/slugifyRelease";
-import type { Release } from "@/app/types/release";
+import type { Release } from "@/types/release";
 import type { TestPlanCase } from "@/lib/testPlanCases";
 
 type QaseStatus = "passed" | "failed" | "blocked" | "skipped" | "invalid" | "untested";

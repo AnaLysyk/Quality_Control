@@ -25,7 +25,7 @@ export function withCompanyValidation(handler: HandlerFn) {
       }
 
       if (!companyId) throw new Error("MISSING_COMPANY_ID");
-      assertCompanyAccess(user, companyId);
+      await assertCompanyAccess(user, companyId);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       if (message === "MISSING_COMPANY_ID") {

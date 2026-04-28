@@ -10,7 +10,7 @@ import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
 import { RequireAuth } from "@/components/RequireAuth";
 import { useClientContext } from "@/context/ClientContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess, resolveCompanyRouteAccessInput } from "@/lib/companyRoutes";
 import { fetchApi } from "@/lib/api";
 
 function normalizeRole(value?: string | null) {
@@ -50,7 +50,7 @@ const SkeletonGrid = () => (
 );
 
 export default function DocumentosPage() {
-  const { user } = useAuthUser();
+  const { user, normalizedUser } = useAuthUser();
   const { clients, activeClientSlug, loading, setActiveClientSlug } = useClientContext();
 
   // Wiki docs state — company-scoped for company users, platform for others
@@ -62,7 +62,11 @@ export default function DocumentosPage() {
     return roles.includes("empresa") || roles.includes("company_user") || (user?.userOrigin ?? user?.user_origin) === "client_company";
   })();
 
-  const companySlug = user?.clientSlug ?? user?.defaultClientSlug ?? (clients.length === 1 ? clients[0]?.slug : null);
+  const companySlug =
+    activeClientSlug ??
+    normalizedUser.primaryCompanySlug ??
+    normalizedUser.defaultCompanySlug ??
+    (clients.length === 1 ? clients[0]?.slug : null);
   const wikiApiPath = isCompanyUser && companySlug
     ? `/api/company-docs/${companySlug}`
     : null; // null = show overview link, no count fetch
@@ -83,16 +87,12 @@ export default function DocumentosPage() {
       .catch(() => {/* ignore */});
   }, [wikiApiPath]);
 
-  const routeInput = {
-    isGlobalAdmin: user?.isGlobalAdmin === true || user?.is_global_admin === true,
-    permissionRole: user?.permissionRole ?? null,
-    role: user?.role ?? null,
-    companyRole: user?.companyRole ?? null,
-    userOrigin: user?.userOrigin ?? user?.user_origin ?? null,
+  const routeInput = resolveCompanyRouteAccessInput({
+    user,
+    normalizedUser,
     companyCount: clients.length,
-    clientSlug: user?.clientSlug ?? null,
-    defaultClientSlug: user?.defaultClientSlug ?? null,
-  };
+    clientSlug: companySlug,
+  });
 
   const scope = resolveScopePresentation(user, clients.length);
 

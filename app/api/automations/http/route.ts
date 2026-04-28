@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
 import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
 import { saveAutomationExecutionAudit } from "@/lib/automations/executionAuditStore";
 import { authenticateRequest } from "@/lib/jwtAuth";
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
   }
 
   const payload = validation.data;
-  const companySlug = payload.companySlug?.trim() || user.companySlug || null;
+  const companySlug = payload.companySlug?.trim() || resolvePrimaryCompanySlug(user) || null;
 
   try {
     const targetUrl = resolveTargetUrl(payload.url, request.url);

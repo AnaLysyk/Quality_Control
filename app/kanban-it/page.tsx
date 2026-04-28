@@ -473,7 +473,7 @@ export default function KanbanItPage() {
     [isPt],
   );
   const pathname = usePathname() || "";
-  const { user, loading } = usePermissionAccess();
+  const { user, loading, normalizedUser } = usePermissionAccess();
   const { companies } = useAuth();
   const { activeClient, activeClientSlug } = useClientContext();
   const [suportes, setSuportes] = useState<SuporteItem[]>([]);
@@ -517,8 +517,8 @@ export default function KanbanItPage() {
     const preferredSlug =
       routeCompanySlug ??
       activeClientSlug ??
-      (typeof user?.clientSlug === "string" ? user.clientSlug : null) ??
-      (typeof user?.defaultClientSlug === "string" ? user.defaultClientSlug : null) ??
+      normalizedUser.primaryCompanySlug ??
+      normalizedUser.defaultCompanySlug ??
       null;
 
     const foundCompany = preferredSlug
@@ -546,7 +546,7 @@ export default function KanbanItPage() {
       logoFallback: getInitials(companyName ?? "Testing Company"),
       isCompanyScoped: Boolean(companyName),
     };
-  }, [activeClient, activeClientSlug, companies, pathname, user?.avatarUrl, user?.clientSlug, user?.defaultClientSlug, user?.name]);
+  }, [activeClient, activeClientSlug, companies, normalizedUser.defaultCompanySlug, normalizedUser.primaryCompanySlug, pathname, user?.avatarUrl, user?.name]);
   const statusKeys = useMemo(
     () => suportes.map((suporte) => normalizeKanbanStatus(suporte.status)),
     [suportes],

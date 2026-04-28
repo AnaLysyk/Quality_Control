@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import {
   canAccessCompanyDefects,
+  resolveAccessibleCompanySlug,
   resolveAllowedCompanySlugs,
 } from "@/lib/companyDefectsAccess";
 import {
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
     ? requestedCompanySlug
     : requestedCompanySlug && canAccessCompanyDefects(user, requestedCompanySlug)
       ? requestedCompanySlug
-      : user.companySlug ?? resolveAllowedCompanySlugs(user)[0] ?? null;
+      : resolveAccessibleCompanySlug(user) ?? resolveAllowedCompanySlugs(user)[0] ?? null;
 
   if (!companySlug) {
     return NextResponse.json({ message: "Empresa não informada" }, { status: 400 });

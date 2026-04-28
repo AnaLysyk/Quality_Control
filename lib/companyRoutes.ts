@@ -1,4 +1,9 @@
 import type { FixedProfileKind } from "@/lib/fixedProfilePresentation";
+import {
+  normalizeAuthenticatedUser,
+  type AuthenticatedUserLike,
+  type NormalizedAuthenticatedUser,
+} from "@/lib/auth/normalizeAuthenticatedUser";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 type CompanyRouteAccessInput = {
@@ -18,6 +23,18 @@ export type ParsedCompanyRoute = {
   targetSlug: string;
   route: string;
   prefixSlug: string | null;
+};
+
+type CompanyRouteAccessResolverOptions = {
+  user: AuthenticatedUserLike | null | undefined;
+  normalizedUser?: Pick<
+    NormalizedAuthenticatedUser,
+    "primaryCompanySlug" | "defaultCompanySlug" | "companyCount"
+  > | null;
+  clientSlug?: string | null;
+  defaultClientSlug?: string | null;
+  companyCount?: number | null;
+  isInstitutionalCompany?: boolean;
 };
 
 export const COMPANY_ROUTE_MODE_COOKIE = "qc_company_route_mode";
@@ -196,6 +213,31 @@ export function shouldUseShortCompanyRoutes(input?: CompanyRouteAccessInput | nu
 
 export function resolveCompanyRouteMode(input?: CompanyRouteAccessInput | null) {
   return shouldUseShortCompanyRoutes(input) ? SHORT_COMPANY_ROUTE_MODE : LONG_COMPANY_ROUTE_MODE;
+}
+
+export function resolveCompanyRouteAccessInput(
+  options: CompanyRouteAccessResolverOptions,
+): CompanyRouteAccessInput {
+  const normalizedUser = options.normalizedUser ?? normalizeAuthenticatedUser(options.user);
+
+  return {
+    isGlobalAdmin: options.user?.isGlobalAdmin === true || options.user?.is_global_admin === true,
+    permissionRole:
+      typeof options.user?.permissionRole === "string" ? options.user.permissionRole : null,
+    role: typeof options.user?.role === "string" ? options.user.role : null,
+    companyRole:
+      typeof options.user?.companyRole === "string" ? options.user.companyRole : null,
+    userOrigin:
+      typeof options.user?.userOrigin === "string"
+        ? options.user.userOrigin
+        : typeof options.user?.user_origin === "string"
+          ? options.user.user_origin
+          : null,
+    companyCount: options.companyCount ?? normalizedUser.companyCount,
+    clientSlug: options.clientSlug ?? normalizedUser.primaryCompanySlug,
+    defaultClientSlug: options.defaultClientSlug ?? normalizedUser.defaultCompanySlug,
+    isInstitutionalCompany: options.isInstitutionalCompany,
+  };
 }
 
 export function buildCompanyPath(

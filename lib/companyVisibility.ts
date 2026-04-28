@@ -1,23 +1,10 @@
 import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
+import { normalizeAuthenticatedUser, type AuthenticatedUserLike } from "@/lib/auth/normalizeAuthenticatedUser";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 export type CompanyVisibilityMode = "all" | "linked" | "own";
 
-export type CompanyVisibilityUserLike = {
-  clientSlug?: string | null;
-  clientSlugs?: string[] | null;
-  companyRole?: string | null;
-  companySlug?: string | null;
-  companySlugs?: string[] | null;
-  defaultClientSlug?: string | null;
-  default_company_slug?: string | null;
-  isGlobalAdmin?: boolean | null;
-  is_global_admin?: boolean | null;
-  permissionRole?: string | null;
-  role?: string | null;
-  userOrigin?: string | null;
-  user_origin?: string | null;
-};
+export type CompanyVisibilityUserLike = AuthenticatedUserLike;
 
 export type CompanyVisibilityLinkLike = {
   companyId: string;
@@ -41,24 +28,21 @@ function uniqueStrings(values: Array<string | null | undefined>) {
 }
 
 function collectPreferredSlugs(user: CompanyVisibilityUserLike | null | undefined, preferredSlug?: string | null) {
+  const normalizedUser = normalizeAuthenticatedUser(user);
   return uniqueStrings([
     preferredSlug,
-    user?.companySlug,
-    user?.clientSlug,
-    user?.default_company_slug,
-    user?.defaultClientSlug,
-    ...(Array.isArray(user?.companySlugs) ? user.companySlugs : []),
-    ...(Array.isArray(user?.clientSlugs) ? user.clientSlugs : []),
+    normalizedUser.primaryCompanySlug,
+    normalizedUser.defaultCompanySlug,
+    ...normalizedUser.companySlugs,
   ]);
 }
 
 function collectOwnCompanySlugs(user: CompanyVisibilityUserLike | null | undefined, preferredSlug?: string | null) {
+  const normalizedUser = normalizeAuthenticatedUser(user);
   return uniqueStrings([
     preferredSlug,
-    user?.companySlug,
-    user?.clientSlug,
-    user?.default_company_slug,
-    user?.defaultClientSlug,
+    normalizedUser.primaryCompanySlug,
+    normalizedUser.defaultCompanySlug,
   ]);
 }
 

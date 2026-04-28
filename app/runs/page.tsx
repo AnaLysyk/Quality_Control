@@ -45,13 +45,13 @@ type CompanyRouteInput = {
 
 export default function RunsIndexPage() {
   const { t } = useI18n();
-  const { user } = useAuthUser();
+  const { user, normalizedUser } = useAuthUser();
   const { clients, activeClientSlug } = useClientContext();
   const searchParams = useSearchParams();
   const [contextQuery, setContextQuery] = useState("");
 
   const selectedCompanySlug =
-    searchParams.get("companySlug") ?? activeClientSlug ?? user?.clientSlug ?? user?.defaultClientSlug ?? null;
+    searchParams.get("companySlug") ?? activeClientSlug ?? normalizedUser.primaryCompanySlug ?? normalizedUser.defaultCompanySlug ?? null;
   const selectedCompany = clients.find((company) => company.slug === selectedCompanySlug) ?? null;
 
   const companyRouteInput: CompanyRouteInput = {
@@ -63,9 +63,9 @@ export default function RunsIndexPage() {
       (user as { userOrigin?: string | null } | null)?.userOrigin ??
       (user as { user_origin?: string | null } | null)?.user_origin ??
       null,
-    companyCount: clients.length,
-    clientSlug: user?.clientSlug ?? null,
-    defaultClientSlug: user?.defaultClientSlug ?? null,
+    companyCount: normalizedUser.companyCount,
+    clientSlug: normalizedUser.primaryCompanySlug,
+    defaultClientSlug: normalizedUser.defaultCompanySlug,
   };
 
   const operationContexts: OperationContextItem[] = [

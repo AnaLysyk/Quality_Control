@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { normalizeAuthenticatedUser, type NormalizedAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 import {
   getTicketViewScope,
   getUsersViewScope,
@@ -11,7 +12,11 @@ import {
 } from "@/lib/permissionMatrix";
 
 export function usePermissionAccess() {
-  const { user, loading } = useAuthUser();
+  const { user, companies, loading } = useAuthUser();
+  const normalizedUser: NormalizedAuthenticatedUser = useMemo(
+    () => normalizeAuthenticatedUser(user, companies),
+    [user, companies],
+  );
 
   const permissions = useMemo(
     () => normalizePermissionMatrix(user?.permissions),
@@ -22,6 +27,8 @@ export function usePermissionAccess() {
 
   return {
     user,
+    companies,
+    normalizedUser,
     loading,
     permissions,
     visibility,

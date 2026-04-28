@@ -87,12 +87,14 @@ const storageKey = (userId: string) => `activeClient:${userId}`;
 const getSessionStorage = () => (typeof window === "undefined" ? null : window.sessionStorage);
 
 export function ClientProvider({ children }: { children: ReactNode }) {
-  const { user, companies, loading: authLoading, refreshUser } = useAuth();
+  const { user, companies, normalizedUser, loading: authLoading, refreshUser } = useAuth();
+  const { primaryCompanySlug, defaultCompanySlug, companySlugs } = normalizedUser;
   const [activeClientSlug, setActiveClientSlugState] = useState<string | null>(null);
   const [loading, setLoading] = useState(authLoading);
   const [error, setError] = useState<string | null>(null);
   const isGlobalAdmin =
     user?.isGlobalAdmin === true || (typeof user?.role === "string" && (user.role.toLowerCase() === "admin" || user.role.toLowerCase() === "leader_tc"));
+  const normalizeSlug = (value?: string | null) => (typeof value === "string" ? value.trim().toLowerCase() : "");
 
   const normalizedClients = useMemo(
     () =>
@@ -139,33 +141,31 @@ export function ClientProvider({ children }: { children: ReactNode }) {
     const storage = getSessionStorage();
     const stored = storage?.getItem(storageKey(user.id)) ?? null;
     const storedSlug = stored
-      ? normalizedClients.find((client) => client.slug === stored || client.id === stored)?.slug ?? null
+      ? normalizedClients.find((client) => normalizeSlug(client.slug) === normalizeSlug(stored) || normalizeSlug(client.id) === normalizeSlug(stored))?.slug ?? null
       : null;
 
     const cookieMatch = typeof document !== "undefined" ? document.cookie.match(/(?:^|; )active_company_slug=([^;]+)/) : null;
-    const cookieActiveSlug = cookieMatch?.[1] ?? null;
+    const cookieActiveSlug = normalizeSlug(cookieMatch?.[1] ?? null) || null;
 
     // Order of preference for resolving active client slug:
     // 1) explicit cookie set by login (represents user choosing a company)
-    // 2) for non-global-admin users: user.clientSlug, storedSlug, defaultClientSlug, clientSlugs
-    // For global admins we intentionally avoid inheriting a company from user.clientSlug or storage
+    // 2) for non-global-admin users: normalized primary/default company plus the stored company choice
+    // For global admins we intentionally avoid inheriting a company from storage or implicit defaults
     // so the admin sees the global admin nav unless they explicitly requested a company via cookie.
     const preferredSlugs = [
       ...(cookieActiveSlug ? [cookieActiveSlug] : []),
       ...(!isGlobalAdmin
         ? [
-            ...(typeof user.clientSlug === "string" && user.clientSlug ? [user.clientSlug] : []),
+            ...(primaryCompanySlug ? [primaryCompanySlug] : []),
             storedSlug,
-            ...(typeof user.defaultClientSlug === "string" ? [user.defaultClientSlug] : []),
-            ...(Array.isArray(user.clientSlugs)
-              ? user.clientSlugs.filter((item): item is string => typeof item === "string" && item.length > 0)
-              : []),
+            ...(defaultCompanySlug ? [defaultCompanySlug] : []),
+            ...companySlugs,
           ]
         : []),
     ].filter((value, index, self): value is string => Boolean(value) && self.indexOf(value) === index);
 
     const resolvedSlug =
-      preferredSlugs.find((candidate) => normalizedClients.some((client) => client.slug === candidate)) ??
+      preferredSlugs.find((candidate) => normalizedClients.some((client) => normalizeSlug(client.slug) === candidate || normalizeSlug(client.id) === candidate)) ??
       (isGlobalAdmin ? null : normalizedClients[0].slug);
 
     setActiveClientSlugState(resolvedSlug ?? null);
@@ -177,7 +177,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
 
     setLoading(false);
     setError(null);
-  }, [authLoading, normalizedClients, user, isGlobalAdmin]);
+  }, [authLoading, normalizedClients, user, isGlobalAdmin, primaryCompanySlug, defaultCompanySlug, companySlugs]);
 
   const refreshClients = useCallback(async () => {
     setLoading(true);
@@ -207,18 +207,19 @@ export function ClientProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const exists = clients.find((client) => client.slug === slug);
+      const normalizedSlug = normalizeSlug(slug);
+      const exists = clients.find((client) => normalizeSlug(client.slug) === normalizedSlug || normalizeSlug(client.id) === normalizedSlug);
       if (!exists) {
         return;
       }
 
-      if (slug === activeClientSlug) {
-        storage?.setItem(storageKey(user.id), slug);
+      if (normalizedSlug && normalizeSlug(activeClientSlug) === normalizedSlug) {
+        storage?.setItem(storageKey(user.id), exists.slug);
         return;
       }
 
-      setActiveClientSlugState(slug);
-      storage?.setItem(storageKey(user.id), slug);
+      setActiveClientSlugState(exists.slug);
+      storage?.setItem(storageKey(user.id), exists.slug);
     },
     [clients, user, activeClientSlug]
   );

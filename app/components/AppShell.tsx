@@ -479,7 +479,8 @@ export default function AppShell({ children }: AppShellProps) {
   const { language } = useI18n();
   const locale = normalizeLocale(language);
   const shellCopy = APP_SHELL_COPY[locale];
-  const { user, companies } = useAuth();
+  const { user, companies, normalizedUser } = useAuth();
+  const { primaryCompanySlug, defaultCompanySlug, companyCount } = normalizedUser;
   const { activeClient, activeClientSlug } = useClientContext();
   const isLoginRoute = pathname.startsWith("/login");
   const useMinimalShell = pathname.length === 0 || isLoginRoute;
@@ -502,8 +503,8 @@ export default function AppShell({ children }: AppShellProps) {
     const preferredCompanySlug =
       routeCompanySlug ??
       activeClientSlug ??
-      (typeof user?.clientSlug === "string" ? user.clientSlug : null) ??
-      (typeof user?.defaultClientSlug === "string" ? user.defaultClientSlug : null) ??
+      primaryCompanySlug ??
+      defaultCompanySlug ??
       null;
 
     const routeMatchedCompany = preferredCompanySlug
@@ -534,8 +535,8 @@ export default function AppShell({ children }: AppShellProps) {
       permissionRole: typeof user?.permissionRole === "string" ? user.permissionRole : null,
       role: typeof user?.role === "string" ? user.role : null,
       companyRole: typeof user?.companyRole === "string" ? user.companyRole : null,
-      clientSlug: typeof user?.clientSlug === "string" ? user.clientSlug : null,
-      companyCount: companies.length,
+      clientSlug: primaryCompanySlug,
+      companyCount,
     });
     const isCompanyScopedProfilePage =
       pathname.startsWith("/settings/profile") &&
@@ -587,6 +588,9 @@ export default function AppShell({ children }: AppShellProps) {
     activeClient,
     activeClientSlug,
     shellCopy,
+    primaryCompanySlug,
+    defaultCompanySlug,
+    companyCount,
   ]);
 
   const shellLogoSrc =
@@ -634,14 +638,14 @@ export default function AppShell({ children }: AppShellProps) {
           : typeof (user as { user_origin?: string | null } | null)?.user_origin === "string"
             ? (user as { user_origin?: string | null }).user_origin
             : null,
-      companyCount: companies.length,
-      clientSlug: typeof user?.clientSlug === "string" ? user.clientSlug : null,
-      defaultClientSlug: typeof user?.defaultClientSlug === "string" ? user.defaultClientSlug : null,
+      companyCount,
+      clientSlug: primaryCompanySlug,
+      defaultClientSlug: defaultCompanySlug,
     });
     if (!nextPath) return;
     if (nextPath === pathname) return;
     router.replace(nextPath);
-  }, [pathname, router, user, companies.length]);
+  }, [pathname, router, user, companies.length, primaryCompanySlug, defaultCompanySlug, companyCount]);
 
   useEffect(() => {
     // Close mobile menu only when the route actually changes.

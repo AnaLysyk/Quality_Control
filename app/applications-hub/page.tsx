@@ -11,8 +11,8 @@ import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
 export default function ApplicationsPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuthUser();
-  const { activeClientSlug, clients, loading: clientsLoading } = useClientContext();
+  const { user, loading: authLoading, normalizedUser } = useAuthUser();
+  const { activeClientSlug, loading: clientsLoading } = useClientContext();
   const routeInput = useMemo(
     () => ({
       isGlobalAdmin: user?.isGlobalAdmin === true,
@@ -23,11 +23,11 @@ export default function ApplicationsPage() {
         (user as { userOrigin?: string | null } | null)?.userOrigin ??
         (user as { user_origin?: string | null } | null)?.user_origin ??
         null,
-      companyCount: clients.length,
-      clientSlug: activeClientSlug ?? user?.clientSlug ?? null,
-      defaultClientSlug: user?.defaultClientSlug ?? null,
+      companyCount: normalizedUser.companyCount,
+      clientSlug: activeClientSlug ?? normalizedUser.primaryCompanySlug ?? normalizedUser.defaultCompanySlug ?? null,
+      defaultClientSlug: normalizedUser.defaultCompanySlug,
     }),
-    [activeClientSlug, clients.length, user],
+    [activeClientSlug, normalizedUser, user],
   );
 
   useEffect(() => {
@@ -55,6 +55,4 @@ export default function ApplicationsPage() {
     </div>
   );
 }
-
-
 

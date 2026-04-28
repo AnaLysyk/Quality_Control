@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getNextId, readKanbanStore, writeKanbanStore } from "../store";
 import type { Card, Status } from "../types";
+import { resolveNormalizedCompanySlugs, resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 
 function jsonError(message: string, status: number) {
@@ -19,9 +20,7 @@ function isAdmin(user: AuthUser) {
 }
 
 function resolveAllowedSlugs(user: AuthUser): string[] {
-  if (Array.isArray(user.companySlugs) && user.companySlugs.length) return user.companySlugs;
-  if (user.companySlug) return [user.companySlug];
-  return [];
+  return resolveNormalizedCompanySlugs(user);
 }
 
 function normalizeStatus(value: unknown): Status | null {
@@ -87,14 +86,15 @@ export async function POST(request: NextRequest) {
   const caseId = asCaseId(record.caseId ?? record.case_id ?? record.id);
 
   const requestedSlug = asSlug(record.slug);
+  const preferredCompanySlug = resolvePrimaryCompanySlug(user);
   let effectiveSlug: string | null = null;
   if (isAdmin(user)) {
-    effectiveSlug = requestedSlug ?? user.companySlug ?? null;
+    effectiveSlug = requestedSlug ?? preferredCompanySlug ?? null;
   } else {
     const allowed = resolveAllowedSlugs(user);
     if (!allowed.length) return jsonError("slug e obrigatório", 400);
     if (requestedSlug && !allowed.includes(requestedSlug)) return jsonError("Acesso proibido", 403);
-    effectiveSlug = requestedSlug ?? user.companySlug ?? allowed[0] ?? null;
+    effectiveSlug = requestedSlug ?? preferredCompanySlug ?? allowed[0] ?? null;
   }
 
   if (!effectiveSlug) return jsonError("slug e obrigatório", 400);

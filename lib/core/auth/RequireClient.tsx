@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AuthSkeleton } from "@/components/AuthSkeleton";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -13,13 +13,33 @@ type RequireClientProps = {
   fallback?: ReactNode;
 };
 
+const CLIENT_ACCESS_TIMEOUT_MS = 10_000;
+
 export function RequireClient({ slug, children, fallback }: RequireClientProps) {
   const { user, companies, loading, error, refreshUser } = useAuthUser();
   const router = useRouter();
   const pathname = usePathname() || "/";
+  const [validationTimedOut, setValidationTimedOut] = useState(false);
   const loginHref =
     pathname.startsWith("/") && pathname !== "/login" ? `/login?next=${encodeURIComponent(pathname)}` : "/login";
-  const access = resolveCompanyAccess({ user, companies, slug, loading, error });
+  const access = resolveCompanyAccess({
+    user,
+    companies,
+    slug,
+    loading: loading && !validationTimedOut,
+    error: validationTimedOut ? "A validacao de acesso demorou mais que o esperado." : error,
+  });
+
+  useEffect(() => {
+    if (!loading) {
+      const resetId = window.setTimeout(() => setValidationTimedOut(false), 0);
+      return () => window.clearTimeout(resetId);
+    }
+    const timeoutId = window.setTimeout(() => {
+      setValidationTimedOut(true);
+    }, CLIENT_ACCESS_TIMEOUT_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [loading]);
 
   useEffect(() => {
     if (access.status !== "unauthenticated") return;
@@ -33,20 +53,30 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
   }
 
   if (access.status === "error") {
+    const isTimeout = validationTimedOut && loading;
     return (
       <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-900">
-        <h2 className="text-lg font-semibold">Nao foi possivel validar a sessao</h2>
-        <p className="mt-2 text-sm text-red-700">{access.errorMessage ?? "Tente novamente em instantes."}</p>
+        <h2 className="text-lg font-semibold">
+          {isTimeout ? "Validacao demorou demais" : "Nao foi possivel validar a sessao"}
+        </h2>
+        <p className="mt-2 text-sm text-red-700">
+          {isTimeout
+            ? "A sessao ou o vinculo da empresa nao respondeu a tempo. Tente recarregar a validacao."
+            : access.errorMessage ?? "Tente novamente em instantes."}
+        </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <button
             type="button"
-            onClick={() => void refreshUser(true)}
+            onClick={() => {
+              setValidationTimedOut(false);
+              void refreshUser(true);
+            }}
             className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
           >
             Tentar novamente
           </button>
           <Link
-            href="/login"
+            href={loginHref}
             className="rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-100"
           >
             Ir para login

@@ -1239,7 +1239,7 @@ export default function DocsWikiClient({ basePath = "/api/platform-docs" }: { ba
               ))}
               {editBlocks.length === 0 && (
                 <p className="text-xs text-[#9ca3af] text-center py-6 border border-dashed border-[#e5e7eb] rounded-lg">
-                  Clique em "Adicionar Bloco" para começar.
+                  Clique em &quot;Adicionar Bloco&quot; para começar.
                 </p>
               )}
             </div>
@@ -1359,3 +1359,4 @@ export default function DocsWikiClient({ basePath = "/api/platform-docs" }: { ba
     </div>
   );
 }
+

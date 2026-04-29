@@ -428,6 +428,11 @@ export async function getQaseRunCases(project: string, runId: number, slug?: str
     }
   }
 
+  if (allCases.length === 0) {
+    console.warn(`${logBase} empty /cases response for runId=${runId} - trying /result`);
+    return fetchAllQaseResults(ctx, runId);
+  }
+
   return allCases;
 }
 

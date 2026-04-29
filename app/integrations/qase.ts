@@ -126,6 +126,45 @@ function normalizeQaseEntity(raw: unknown): RawQaseEntity {
   };
 }
 
+function extractQaseEntities(payload: unknown): unknown[] {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload;
+
+  const root = payload as Record<string, unknown>;
+  const result = (root.result ?? root.data ?? root.payload ?? null) as Record<string, unknown> | null;
+
+  const candidates: unknown[] = [];
+  const pushAll = (value: unknown) => {
+    if (!value) return;
+    if (Array.isArray(value)) {
+      candidates.push(...value);
+      return;
+    }
+    if (typeof value === "object") {
+      const rec = value as Record<string, unknown>;
+      if (Array.isArray(rec.entities)) candidates.push(...rec.entities);
+      if (Array.isArray(rec.items)) candidates.push(...rec.items);
+      if (Array.isArray(rec.cases)) candidates.push(...rec.cases);
+      if (Array.isArray(rec.results)) candidates.push(...rec.results);
+      if (Array.isArray(rec.data)) candidates.push(...rec.data);
+    }
+  };
+
+  pushAll(root.entities);
+  pushAll(root.items);
+  pushAll(root.cases);
+  pushAll(root.results);
+  pushAll(root.data);
+  pushAll(result);
+  pushAll(result?.entities);
+  pushAll(result?.items);
+  pushAll(result?.cases);
+  pushAll(result?.results);
+  pushAll(result?.data);
+
+  return candidates.filter(Boolean);
+}
+
 async function buildQaseContext(projectArg: string | undefined, slug?: string): Promise<QaseRuntimeContext> {
   const normalizedSlug = slug?.trim().toLowerCase() ?? "";
   const settings = normalizedSlug ? await getClientQaseSettings(normalizedSlug) : null;
@@ -267,7 +306,7 @@ async function fetchAllQaseResults(ctx: QaseRuntimeContext, runId: number): Prom
       );
       console.log(`${logBase}[RESULTS][RESPONSE]`, { slug: ctx.slugKey, status });
 
-      const entities = (data.result?.entities ?? []) as unknown[];
+      const entities = extractQaseEntities(data);
       if (!entities.length) break;
       all.push(...entities.map(normalizeQaseEntity));
       if (entities.length < pageSize) break;
@@ -298,7 +337,7 @@ async function fetchAllQaseResults(ctx: QaseRuntimeContext, runId: number): Prom
       );
       console.log(`${logBase}[FALLBACK][RESPONSE]`, { slug: ctx.slugKey, status });
 
-      const entities = (data.result?.entities ?? []) as unknown[];
+      const entities = extractQaseEntities(data);
       if (!entities.length) break;
       all.push(...entities.map(normalizeQaseEntity));
       if (entities.length < pageSize) break;
@@ -365,7 +404,7 @@ export async function getQaseRunCases(project: string, runId: number, slug?: str
       );
       console.log(`${logBase}[RESPONSE]`, { slug: ctx.slugKey, status });
 
-      const entities = (data.result?.entities ?? []) as unknown[];
+      const entities = extractQaseEntities(data);
       allCases.push(...entities.map(normalizeQaseEntity));
 
       if (entities.length < pageSize) {

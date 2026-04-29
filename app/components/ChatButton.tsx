@@ -4,10 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { FiChevronRight, FiSend, FiX, FiZap } from "react-icons/fi";
+import { usePermissionAccess } from "@/hooks/usePermissionAccess";
+import { resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
 import type { AssistantAction, AssistantConversationTurn, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
 import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
 import { fetchApi } from "@/lib/api";
-import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import ConfirmDialog from "./ConfirmDialog";
 import UserAvatar from "./UserAvatar";
 
@@ -96,7 +97,7 @@ function formatToolLabel(tool?: string | null) {
 export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const pathname = usePathname() || "/";
   const screenContext = useMemo(() => resolveAssistantScreenContext(pathname), [pathname]);
-  const { user, can } = usePermissionAccess();
+  const { user, can, normalizedUser } = usePermissionAccess();
   const assistantEnabled = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
   const [open, setOpen] = useState(defaultOpen);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -186,7 +187,8 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   if (!can("ai", "view") || !can("ai", "use")) return null;
 
   const roleLabel = user.permissionRole ?? user.role ?? user.companyRole ?? "usu\u00e1rio";
-  const activeCompanyScope = assistantContext.companySlug ?? user.clientSlug ?? user.defaultClientSlug ?? "global";
+  const activeCompanyScope =
+    assistantContext.companySlug ?? normalizedUser.primaryCompanySlug ?? normalizedUser.defaultCompanySlug ?? "global";
   const activeModule = assistantContext.module ?? screenContext.module;
   const activeScreenLabel = assistantContext.screenLabel ?? screenContext.screenLabel;
   const hasConversation = messages.length > 0;
@@ -249,8 +251,8 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
             permissionRole: user.permissionRole ?? null,
             role: user.role ?? null,
             companyRole: user.companyRole ?? null,
-            companySlug: user.clientSlug ?? null,
-            companySlugs: Array.isArray(user.clientSlugs) ? user.clientSlugs : null,
+            companySlug: resolvePrimaryCompanySlug(user),
+            companySlugs: normalizedUser.companySlugs,
             userOrigin: user.userOrigin ?? user.user_origin ?? null,
             isGlobalAdmin: Boolean(user.isGlobalAdmin ?? user.is_global_admin),
           },

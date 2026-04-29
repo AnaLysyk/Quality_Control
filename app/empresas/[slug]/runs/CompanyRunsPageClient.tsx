@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
+import { RunDetailKanbanPanel } from "./RunDetailKanbanPanel";
 import { useI18n } from "@/hooks/useI18n";
 import { fetchApi } from "@/lib/api";
 import { formatRunTitle } from "@/lib/runPresentation";
@@ -53,6 +55,7 @@ type ApplicationItem = {
 type IntegratedRun = {
   slug: string;
   title: string;
+  runId: number | null;
   summary: string | null;
   status: string | null;
   app: string | null;
@@ -81,6 +84,7 @@ type UnifiedRun = {
   key: string;
   slug: string;
   name: string;
+  runId: number | null;
   createdAt: string | null;
   statusLabel: string;
   sourceType: "manual" | "integrated";
@@ -123,6 +127,11 @@ function buildApplicationKeys(companySlug: string, applications: ApplicationItem
 function normalizeProjectCode(value: unknown) {
   const normalized = String(value ?? "").trim().toUpperCase();
   return normalized || null;
+}
+
+function normalizeNumericId(value: unknown) {
+  const numeric = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
 }
 
 function toTimestamp(value: string | null) {
@@ -204,6 +213,7 @@ function normalizeManualRuns(data: unknown[], t: (key: string, params?: Record<s
       key: `manual:${slug}`,
       slug,
       name: formatRunTitle(String(rec.name ?? rec.title ?? rec.slug ?? t("runsPage.manualNameFallback")), t("runsPage.manualNameFallback")),
+      runId: normalizeNumericId(rec.runId ?? rec.run_id),
       createdAt: typeof rec.createdAt === "string" ? rec.createdAt : typeof rec.created_at === "string" ? rec.created_at : null,
       statusLabel: resolveStatusLabel(typeof rec.status === "string" ? rec.status : null, t),
       sourceType: "manual",
@@ -241,6 +251,7 @@ function normalizeIntegratedRuns(data: unknown[]): IntegratedRun[] {
     accumulator.push({
       slug,
       title: typeof rec.title === "string" ? rec.title : typeof rec.name === "string" ? rec.name : slug,
+      runId: normalizeNumericId(rec.runId ?? rec.run_id ?? rec.run),
       summary: typeof rec.summary === "string" ? rec.summary : null,
       status: typeof rec.status === "string" ? rec.status : typeof rec.status === "number" ? String(rec.status) : null,
       app: typeof rec.app === "string" ? rec.app : null,
@@ -305,6 +316,7 @@ function toUnifiedIntegratedRuns(data: IntegratedRun[], t: (key: string, params?
       key: `integrated:${run.slug}`,
       slug: run.slug,
       name: formatRunTitle(run.title, t("runsPage.integratedNameFallback")),
+      runId: run.runId,
       createdAt: run.createdAt,
       statusLabel: resolveStatusLabel(run.statusText ?? run.status, t),
       sourceType: "integrated",
@@ -324,6 +336,7 @@ function toUnifiedIntegratedRuns(data: IntegratedRun[], t: (key: string, params?
       raw: {
         slug: run.slug,
         title: run.title,
+        runId: run.runId,
         summary: run.summary,
         status: run.status,
         app: run.app,
@@ -401,7 +414,8 @@ export default function CompanyRunsPageClient() {
   const [sortKey, setSortKey] = useState<RunSortKey>("createdAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [selectedRun, setSelectedRun] = useState<UnifiedRun | null>(null);
-  const [detailTab, setDetailTab] = useState<"resumo" | "fluxo" | "detalhes" | "bruto">("resumo");
+  const [detailTab, setDetailTab] = useState<"resumo" | "kanban" | "fluxo" | "detalhes" | "bruto">("resumo");
+  const [reloadNonce, setReloadNonce] = useState(0);
   const pageSize = 12;
 
   useEffect(() => {
@@ -518,7 +532,7 @@ export default function CompanyRunsPageClient() {
     return () => {
       active = false;
     };
-  }, [companySlug, t, dateFrom, dateTo]);
+  }, [companySlug, t, dateFrom, dateTo, reloadNonce]);
 
   const filteredRuns = useMemo(() => {
     let result = runs;
@@ -576,8 +590,13 @@ export default function CompanyRunsPageClient() {
 
   useEffect(() => {
     if (!selectedRun) return;
-    if (!sortedRuns.some((run) => run.key === selectedRun.key)) {
+    const refreshedRun = sortedRuns.find((run) => run.key === selectedRun.key) ?? null;
+    if (!refreshedRun) {
       setSelectedRun(null);
+      return;
+    }
+    if (refreshedRun !== selectedRun) {
+      setSelectedRun(refreshedRun);
     }
   }, [selectedRun, sortedRuns]);
 
@@ -639,6 +658,11 @@ export default function CompanyRunsPageClient() {
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <CreateManualReleaseButton
+              companySlug={companySlug}
+              redirectToRun={false}
+              onCreated={() => setReloadNonce((current) => current + 1)}
+            />
             <input
               aria-label="Data inicial"
               title="De"
@@ -711,6 +735,13 @@ export default function CompanyRunsPageClient() {
                         <FiLayers className="h-7 w-7 text-slate-400" />
                       </div>
                       <p className="mt-4 text-sm font-medium text-(--tc-text-muted,#6b7280)">{t("runsPage.empty")}</p>
+                      <div className="mt-5">
+                        <CreateManualReleaseButton
+                          companySlug={companySlug}
+                          redirectToRun={false}
+                          onCreated={() => setReloadNonce((current) => current + 1)}
+                        />
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -867,6 +898,7 @@ export default function CompanyRunsPageClient() {
               <div className="flex flex-wrap gap-2">
                 {[
                   { key: "resumo", label: "Resumo" },
+                  { key: "kanban", label: activeRun.sourceType === "manual" ? "Kanban" : "Kanban integrado" },
                   { key: "fluxo", label: "Fluxo" },
                   { key: "detalhes", label: "Detalhes" },
                   { key: "bruto", label: "Bruto" },
@@ -939,6 +971,22 @@ export default function CompanyRunsPageClient() {
                     </div>
                   </div>
                 </div>
+              ) : null}
+
+              {detailTab === "kanban" ? (
+                <RunDetailKanbanPanel
+                  run={{
+                    slug: activeRun.slug,
+                    sourceType: activeRun.sourceType,
+                    applicationLabel: activeRun.applicationLabel,
+                    projectCode: activeRun.projectCode,
+                    runId: activeRun.runId,
+                    stats: activeRun.stats,
+                    raw: activeRun.raw,
+                  }}
+                  companySlug={companySlug}
+                  onRunUpdated={() => setReloadNonce((current) => current + 1)}
+                />
               ) : null}
 
               {detailTab === "fluxo" ? (
@@ -1034,7 +1082,7 @@ export default function CompanyRunsPageClient() {
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-(--tc-border,#e5e7eb) pt-4">
                 <p className="text-sm text-(--tc-text-muted,#6b7280)">Clique fora do modal ou pressione Esc para fechar.</p>
                 <Link
-                  href={companySlug ? `./runs/${encodeURIComponent(activeRun.slug)}` : `/release/${encodeURIComponent(activeRun.slug)}`}
+                  href={companySlug ? `/empresas/${encodeURIComponent(companySlug)}/runs/${encodeURIComponent(activeRun.slug)}` : `/release/${encodeURIComponent(activeRun.slug)}`}
                   className="inline-flex items-center gap-2 rounded-2xl bg-(--tc-accent,#ef0001) px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
                 >
                   <FiExternalLink className="h-4 w-4" />

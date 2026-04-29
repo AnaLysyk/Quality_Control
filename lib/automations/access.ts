@@ -1,5 +1,6 @@
 import type { AuthUser } from "@/contracts/auth";
 import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
+import { normalizeAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 type AutomationUserLike = Partial<
@@ -42,17 +43,7 @@ function hasAuthIdentity(user: AutomationUserLike | null | undefined): user is A
 }
 
 export function resolveAutomationAllowedCompanySlugs(user: AutomationUserLike | null | undefined) {
-  const merged = [
-    ...(Array.isArray(user?.companySlugs) ? user.companySlugs : []),
-    ...(Array.isArray(user?.clientSlugs) ? user.clientSlugs : []),
-    ...(user?.companySlug ? [user.companySlug] : []),
-    ...(user?.clientSlug ? [user.clientSlug] : []),
-  ];
-
-  return merged.filter(
-    (value, index, self): value is string =>
-      typeof value === "string" && value.length > 0 && self.indexOf(value) === index,
-  );
+  return normalizeAuthenticatedUser(user).companySlugs;
 }
 
 export function resolveAutomationAccess(

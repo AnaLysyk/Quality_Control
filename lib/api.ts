@@ -22,14 +22,18 @@ let clientRefreshPromise: Promise<boolean> | null = null;
 export async function refreshClientSession() {
   if (typeof window === "undefined") return false;
   if (!clientRefreshPromise) {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 10_000);
     clientRefreshPromise = fetch("/api/auth/refresh", {
       method: "POST",
       credentials: "include",
       cache: "no-store",
+      signal: controller.signal,
     })
       .then((response) => response.ok)
       .catch(() => false)
       .finally(() => {
+        window.clearTimeout(timeoutId);
         clientRefreshPromise = null;
       });
   }

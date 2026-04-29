@@ -1,5 +1,9 @@
 import "server-only";
 
+import {
+  resolvePrimaryCompanySlug,
+  type AuthenticatedUserLike,
+} from "@/lib/auth/normalizeAuthenticatedUser";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { listTicketComments } from "@/lib/ticketCommentsStore";
 import { prisma } from "@/lib/prismaClient";
@@ -36,6 +40,7 @@ async function getBrainInsights(refType: string, refId: string): Promise<string[
 }
 
 export async function toolSummarizeEntity(user: AuthUser, context: AssistantScreenContext, message: string): Promise<AssistantExecutorResult> {
+  const normalizedCompanySlug = resolvePrimaryCompanySlug(user as AuthenticatedUserLike);
   const normalized = normalizeSearch(message);
 
   // ─── Resumir perfil do usuário ───
@@ -51,7 +56,7 @@ export async function toolSummarizeEntity(user: AuthUser, context: AssistantScre
       `| **Login** | ${currentUser?.user ?? currentUser?.email ?? user.email} |`,
       `| **Email** | ${currentUser?.email ?? user.email} |`,
       `| **Papel** | ${displayRole(user)} |`,
-      `| **Empresa** | ${context.companySlug ?? user.companySlug ?? "global"} |`,
+      `| **Empresa** | ${context.companySlug ?? normalizedCompanySlug ?? "global"} |`,
     ];
 
     if (insights.length) {
@@ -193,7 +198,7 @@ export async function toolSummarizeEntity(user: AuthUser, context: AssistantScre
       `**Tela:** ${context.screenLabel}`,
       `**Módulo:** ${context.module}`,
       `**Perfil:** ${displayRole(user)}`,
-      `**Empresa:** ${context.companySlug ?? user.companySlug ?? "global"}`,
+      `**Empresa:** ${context.companySlug ?? normalizedCompanySlug ?? "global"}`,
       "",
       `> ${context.screenSummary}`,
     ].join("\n")),

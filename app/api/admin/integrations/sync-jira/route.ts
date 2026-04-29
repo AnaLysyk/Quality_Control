@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import "server-only";
+import { resolveNormalizedCompanySlugs, resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { fetchJiraIssuesForCompany, syncJiraIssuesToApplications } from "@/lib/jiraSync";
 import { info } from "@/lib/logger";
@@ -13,7 +14,8 @@ export async function POST(request: Request) {
   if (!slug) return NextResponse.json({ success: false, error: { message: "companySlug ausente" } }, { status: 400 });
 
   // basic permission: allow global admins or users belonging to the same company
-  const allowed = auth.isGlobalAdmin || auth.companySlug === slug || (Array.isArray(auth.companySlugs) && auth.companySlugs.includes(slug));
+  const allowedSlugs = resolveNormalizedCompanySlugs(auth);
+  const allowed = auth.isGlobalAdmin || resolvePrimaryCompanySlug(auth) === slug || allowedSlugs.includes(slug);
   if (!allowed) return NextResponse.json({ success: false, error: { message: "Sem permissão" } }, { status: 403 });
 
   info("admin:sync-jira triggered", { by: auth.id, company: slug });

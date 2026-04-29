@@ -3,28 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getNextId, readKanbanStore, writeKanbanStore } from "./store";
 import type { Status } from "./types";
 import { getAuthContext } from "@/lib/rbac";
-import type { AuthUser } from "@/lib/jwtAuth";
 
 export const revalidate = 0;
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ message }, { status });
-}
-
-function normalizeRole(role?: string | null) {
-  return (role ?? "").trim().toLowerCase();
-}
-
-function isAdmin(user: AuthUser) {
-  if (user.isGlobalAdmin) return true;
-  const role = normalizeRole(user.role);
-  return role === "leader_tc" || role === "technical_support" || role === "empresa";
-}
-
-function resolveAllowedSlugs(user: AuthUser): string[] {
-  if (Array.isArray(user.companySlugs) && user.companySlugs.length) return user.companySlugs;
-  if (user.companySlug) return [user.companySlug];
-  return [];
 }
 
 function normalizeStatus(value: unknown): Status | null {

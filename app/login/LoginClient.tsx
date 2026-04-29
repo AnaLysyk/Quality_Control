@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { buildCompanyPathForAccess, shortenCompanyPathname, shouldUseShortCompanyRoutes } from "@/lib/companyRoutes";
+import { normalizeAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 
 type AuthUserShape = {
   role?: string | null;
@@ -124,7 +125,11 @@ export default function LoginClient() {
     };
   }, []);
 
-  function resolvePostLoginRedirect(nextParam: string | null, authUser: AuthUserShape | null) {
+  function resolvePostLoginRedirect(nextParam: string | null, authUser: AuthUserShape | null, companies: Array<{ id: string; name: string; slug: string; role?: string; active?: boolean; createdAt?: string | null; logoUrl?: string | null }> = []) {
+    const normalizedAuth = normalizeAuthenticatedUser(
+      authUser as Parameters<typeof normalizeAuthenticatedUser>[0],
+      companies as Parameters<typeof normalizeAuthenticatedUser>[1],
+    );
     const safeNext = typeof nextParam === "string" && nextParam.startsWith("/") ? nextParam : "";
     const companyRouteInput = {
       isGlobalAdmin: authUser?.isGlobalAdmin === true,
@@ -132,12 +137,9 @@ export default function LoginClient() {
       role: authUser?.role ?? null,
       companyRole: authUser?.companyRole ?? null,
       userOrigin: authUser?.userOrigin ?? authUser?.user_origin ?? null,
-      clientSlug:
-        typeof authUser?.clientSlug === "string"
-          ? authUser.clientSlug
-          : typeof authUser?.companySlug === "string"
-            ? authUser.companySlug
-            : null,
+      clientSlug: normalizedAuth.primaryCompanySlug,
+      defaultClientSlug: normalizedAuth.defaultCompanySlug,
+      companyCount: normalizedAuth.companyCount,
     };
     if (safeNext) {
       const shortenedNext = shortenCompanyPathname(safeNext);
@@ -152,12 +154,7 @@ export default function LoginClient() {
       authUser?.globalRole === "global_admin" ||
       normalizedRole === "leader_tc" ||
       normalizedRole === "technical_support";
-    const clientSlug =
-      typeof authUser?.clientSlug === "string"
-        ? authUser.clientSlug
-        : typeof authUser?.companySlug === "string"
-          ? authUser.companySlug
-          : null;
+    const clientSlug = normalizedAuth.primaryCompanySlug ?? normalizedAuth.defaultCompanySlug;
     if (isAdmin) return "/admin/home";
     if (clientSlug) {
       return buildCompanyPathForAccess(clientSlug, "home", companyRouteInput);
@@ -182,9 +179,10 @@ export default function LoginClient() {
         const meRes = await fetch("/api/me", { cache: "no-store", credentials: "include" });
         const meJson = await meRes.json().catch(() => null);
         const authUser = meJson?.user ?? null;
+        const meCompanies = Array.isArray(meJson?.companies) ? meJson.companies : [];
         await refreshUser();
         const nextParam = searchParams?.get("next") ?? null;
-        const redirectTo = resolvePostLoginRedirect(nextParam, authUser);
+        const redirectTo = resolvePostLoginRedirect(nextParam, authUser, meCompanies);
         router.push(redirectTo);
         router.refresh();
       } else {

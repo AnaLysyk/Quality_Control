@@ -50,7 +50,7 @@ type SidebarProps = {
 export default function Sidebar({ pathname, mobileOpen = false, onClose, mobilePanelId }: SidebarProps) {
   const router = useRouter();
   const prefetchedRoutesRef = useRef<Set<string>>(new Set());
-  const { user, loading, visibility } = usePermissionAccess();
+  const { user, loading, visibility, normalizedUser } = usePermissionAccess();
   const logoSrc = useMemo(() => {
     const dbLogo = typeof user?.companyLogoUrl === "string" ? user.companyLogoUrl.trim() : "";
     if (dbLogo) return dbLogo;
@@ -113,8 +113,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     const match = pathname.match(/^\/empresas\/([^/]+)/);
     if (match?.[1]) return match[1];
     if (isGlobalAdmin) return activeClientSlug ?? null;
-    return activeClientSlug ?? user?.clientSlug ?? null;
-  }, [pathname, activeClientSlug, user?.clientSlug, isGlobalAdmin]);
+    return activeClientSlug ?? normalizedUser.primaryCompanySlug ?? null;
+  }, [pathname, activeClientSlug, normalizedUser.primaryCompanySlug, isGlobalAdmin]);
 
   const companyRouteInput = useMemo(
     () => ({
@@ -128,9 +128,11 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
           : typeof (user as { user_origin?: string | null } | null)?.user_origin === "string"
             ? (user as { user_origin?: string | null }).user_origin
             : null,
-      clientSlug: typeof user?.clientSlug === "string" ? user.clientSlug : activeClientSlug ?? null,
+      clientSlug: normalizedUser.primaryCompanySlug ?? activeClientSlug ?? null,
+      defaultClientSlug: normalizedUser.defaultCompanySlug ?? null,
+      companyCount: normalizedUser.companyCount,
     }),
-    [activeClientSlug, isGlobalAdmin, user],
+    [activeClientSlug, isGlobalAdmin, normalizedUser, user],
   );
 
   const logoHref = useMemo(() => {

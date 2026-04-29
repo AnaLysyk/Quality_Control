@@ -3,6 +3,7 @@ import { rateLimit } from "@/lib/rateLimit";
 
 import { readKanbanStore } from "../store";
 import type { Status } from "../types";
+import { resolveNormalizedCompanySlugs, resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 
@@ -34,9 +35,7 @@ function isAdmin(user: AuthUser) {
 }
 
 function resolveAllowedSlugs(user: AuthUser): string[] {
-  if (Array.isArray(user.companySlugs) && user.companySlugs.length) return user.companySlugs;
-  if (user.companySlug) return [user.companySlug];
-  return [];
+  return resolveNormalizedCompanySlugs(user);
 }
 
 function asSlug(value: unknown): string | null {
@@ -112,6 +111,7 @@ export async function GET(request: NextRequest) {
   const user = await authenticateRequest(request);
   if (!user) return jsonError("Não autorizado", 401);
 
+  const preferredCompanySlug = resolvePrimaryCompanySlug(user);
   let effectiveSlug: string | null = null;
   if (isAdmin(user)) {
     effectiveSlug = requestedSlug;
@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
     const allowed = resolveAllowedSlugs(user);
     if (!allowed.length) return jsonError("Acesso proibido", 403);
     if (requestedSlug && !allowed.includes(requestedSlug)) return jsonError("Acesso proibido", 403);
-    effectiveSlug = requestedSlug ?? user.companySlug ?? allowed[0] ?? null;
+    effectiveSlug = requestedSlug ?? preferredCompanySlug ?? allowed[0] ?? null;
   }
 
   if (!effectiveSlug && !isAdmin(user)) {

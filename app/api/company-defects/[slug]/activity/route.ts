@@ -6,6 +6,7 @@ import { buildDefectComments, summarizeDefectActivity } from "@/lib/defectActivi
 import { getIntegratedDefectQaseHistory } from "@/lib/companyDefects";
 import {
   canAccessCompanyDefects,
+  resolveAccessibleCompanySlug,
   resolveAccessibleCompanyDefect,
 } from "@/lib/companyDefectsAccess";
 
@@ -34,7 +35,7 @@ async function enrichActorNames(items: Awaited<ReturnType<typeof listDefectHisto
 function resolveCompanySlug(url: URL, user: AuthUser) {
   const requested = normalizeString(url.searchParams.get("companySlug"));
   if (requested && canAccessCompanyDefects(user, requested)) return requested;
-  return user.companySlug ?? null;
+  return resolveAccessibleCompanySlug(user);
 }
 
 export async function GET(request: Request, context: { params: Promise<{ slug: string }> }) {

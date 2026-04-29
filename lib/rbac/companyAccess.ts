@@ -1,4 +1,5 @@
 import type { AuthUser } from "@/lib/jwtAuth";
+import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
 import { SYSTEM_ROLES } from "@/lib/auth/roles";
 
 export function isCompanyUser(user: AuthUser | null) {
@@ -9,7 +10,7 @@ export function isCompanyUser(user: AuthUser | null) {
   if (companyRole === SYSTEM_ROLES.EMPRESA) return true;
   if (role === SYSTEM_ROLES.COMPANY_USER || role === SYSTEM_ROLES.TESTING_COMPANY_USER) {
     if (user.companyId) return true;
-    if (Array.isArray(user.companySlugs) && user.companySlugs.length > 0) return true;
+    if (resolveNormalizedCompanySlugs(user).length > 0) return true;
   }
   return false;
 }

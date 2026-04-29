@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { slugifyRelease } from "@/lib/slugifyRelease";
+import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { canDeleteManualDefect, canEditManualDefect, getMockRole, resolveDefectRole } from "@/lib/rbac/defects";
 import type { Release, Stats, ReleaseStatus } from "@/types/release";
@@ -34,9 +35,7 @@ async function buildResponsiblePayload(release: Release) {
 }
 
 function resolveAllowedSlugs(user: AuthUser): string[] {
-  if (Array.isArray(user.companySlugs) && user.companySlugs.length) return user.companySlugs;
-  if (user.companySlug) return [user.companySlug];
-  return [];
+  return resolveNormalizedCompanySlugs(user);
 }
 
 function isFinalizeRequest(status?: string | null) {

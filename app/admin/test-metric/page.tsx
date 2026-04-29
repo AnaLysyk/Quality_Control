@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamicImport from "next/dynamic";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess, resolveCompanyRouteAccessInput } from "@/lib/companyRoutes";
 const CompanyMetricsCard = dynamicImport(
   () => import("@/components/CompanyMetricsCard").then((mod) => mod.CompanyMetricsCard),
   { ssr: false, loading: () => <div>Carregando métricas...</div> }
@@ -316,7 +316,7 @@ function GlobalTrendSparkline({ points }: { points: TrendPoint[] }) {
 
 export default function TestMetricPage() {
   const router = useRouter();
-  const { user } = useAuthUser();
+  const { user, normalizedUser } = useAuthUser();
   const [overview, setOverview] = useState<OverviewResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -337,16 +337,10 @@ export default function TestMetricPage() {
     { loaded: false, criticalOpen: null, error: null }
   );
   const carouselRef = useRef<HTMLDivElement | null>(null);
-  const companyRouteInput = {
-    isGlobalAdmin: user?.isGlobalAdmin === true || user?.is_global_admin === true,
-    permissionRole: user?.permissionRole ?? null,
-    role: user?.role ?? null,
-    companyRole: user?.companyRole ?? null,
-    userOrigin: user?.userOrigin ?? user?.user_origin ?? null,
-    companyCount: Array.isArray(user?.clientSlugs) ? user.clientSlugs.length : 0,
-    clientSlug: user?.clientSlug ?? null,
-    defaultClientSlug: user?.defaultClientSlug ?? null,
-  };
+  const companyRouteInput = resolveCompanyRouteAccessInput({
+    user,
+    normalizedUser,
+  });
 
   useEffect(() => {
     const load = async () => {

@@ -1,6 +1,10 @@
 import "server-only";
 
 import { getLocalUserById } from "@/lib/auth/localStore";
+import {
+  resolvePrimaryCompanySlug,
+  type AuthenticatedUserLike,
+} from "@/lib/auth/normalizeAuthenticatedUser";
 import type { AuthUser } from "@/lib/jwtAuth";
 import { compactMultiline } from "../helpers";
 import { buildPromptActions, displayName, displayRole, summarizePermissionMatrix, isEmpresaUser } from "../data";
@@ -87,7 +91,7 @@ function stripScreenLead(context: AssistantScreenContext) {
 }
 
 function buildScopeLabel(user: AuthUser, context: AssistantScreenContext) {
-  return context.companySlug ?? user.companySlug ?? "global";
+  return context.companySlug ?? resolvePrimaryCompanySlug(user as AuthenticatedUserLike) ?? "global";
 }
 
 function buildPermissionLine(user: AuthUser) {

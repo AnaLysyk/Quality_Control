@@ -18,7 +18,7 @@ import { useAppSettings } from "@/context/AppSettingsContext";
 import { useClientContext } from "@/context/ClientContext";
 import { resolveActiveIdentity } from "@/lib/activeIdentity";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess, resolveCompanyRouteAccessInput } from "@/lib/companyRoutes";
 import { useI18n } from "@/hooks/useI18n";
 
 type ToastState =
@@ -95,7 +95,7 @@ type ProfileButtonProps = {
 export default function ProfileButton({ defaultOpen = false }: ProfileButtonProps) {
   const router = useRouter();
   const pathname = usePathname() || "/";
-  const { user, loading, logout } = useAuthUser();
+  const { user, loading, logout, normalizedUser } = useAuthUser();
   const { resolvedTheme } = useAppSettings();
   const { activeClient, clients } = useClientContext();
   const { t } = useI18n();
@@ -167,27 +167,7 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
           ? activeIdentity.companyTagLabel
           : null;
 
-  const companySlug = (() => {
-    if (activeClient?.slug) return activeClient.slug;
-
-    const legacyCompany = legacyUser?.company;
-    if (legacyCompany && typeof legacyCompany === "object" && legacyCompany !== null) {
-      const slug = (legacyCompany as { slug?: unknown }).slug;
-      if (typeof slug === "string" && slug.trim()) return slug;
-    }
-
-    const userCompany =
-      (user ?? null) && typeof (user as Record<string, unknown>) === "object"
-        ? ((user as Record<string, unknown> & { company?: unknown }).company ?? null)
-        : null;
-
-    if (userCompany && typeof userCompany === "object") {
-      const slug = (userCompany as { slug?: unknown }).slug;
-      if (typeof slug === "string" && slug.trim()) return slug;
-    }
-
-    return undefined;
-  })();
+  const companySlug = activeClient?.slug ?? normalizedUser.primaryCompanySlug ?? normalizedUser.defaultCompanySlug ?? undefined;
 
   const companyResources = Array.isArray(legacyUser?.companyResources) ? legacyUser.companyResources : [];
   const companyCount =
@@ -197,19 +177,16 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
   const docsRoute = hasCompanies
     ? companyCount > 1 || !companySlug
       ? "/documentos"
-      : buildCompanyPathForAccess(companySlug, "documentos", {
-          isGlobalAdmin: user?.isGlobalAdmin === true,
-          permissionRole: user?.permissionRole ?? null,
-          role: user?.role ?? null,
-          companyRole: user?.companyRole ?? null,
-          userOrigin:
-            (user as { userOrigin?: string | null } | null)?.userOrigin ??
-            (user as { user_origin?: string | null } | null)?.user_origin ??
-            null,
-          companyCount,
-          clientSlug: companySlug,
-          defaultClientSlug: user?.defaultClientSlug ?? null,
-        })
+      : buildCompanyPathForAccess(
+          companySlug,
+          "documentos",
+          resolveCompanyRouteAccessInput({
+            user,
+            normalizedUser,
+            companyCount,
+            clientSlug: companySlug,
+          }),
+        )
     : "/docs";
   const docsLabel = hasCompanies
     ? companyCount > 1

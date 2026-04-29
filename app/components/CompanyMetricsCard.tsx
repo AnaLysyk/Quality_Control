@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { FiFileText } from "react-icons/fi";
 import StatusChart from "@/components/StatusChart";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess, resolveCompanyRouteAccessInput } from "@/lib/companyRoutes";
 import { formatRunTitle } from "@/lib/runPresentation";
 
 type Stats = { pass: number; fail: number; blocked: number; notRun: number };
@@ -323,7 +323,7 @@ export function CompanyMetricsCard(props: {
   focused?: boolean;
 }) {
   const { company, periodDays, activeApp, onSelectApp, defects, focused } = props;
-  const { user } = useAuthUser();
+  const { user, normalizedUser } = useAuthUser();
   const [exportingPdf, setExportingPdf] = useState(false);
 
   const isActiveApp = (value: string) => (activeApp ?? "").toLowerCase() === value.toLowerCase();
@@ -419,16 +419,11 @@ export function CompanyMetricsCard(props: {
 
   const tone = toneFromGate(company.gate.status);
   const companySlug = company.slug ?? null;
-  const routeInput = {
-    isGlobalAdmin: user?.isGlobalAdmin === true || user?.is_global_admin === true,
-    permissionRole: user?.permissionRole ?? null,
-    role: user?.role ?? null,
-    companyRole: user?.companyRole ?? null,
-    userOrigin: user?.userOrigin ?? user?.user_origin ?? null,
-    companyCount: Array.isArray(user?.clientSlugs) ? user.clientSlugs.length : 0,
-    clientSlug: user?.clientSlug ?? null,
-    defaultClientSlug: user?.defaultClientSlug ?? null,
-  };
+  const routeInput = resolveCompanyRouteAccessInput({
+    user,
+    normalizedUser,
+    clientSlug: companySlug,
+  });
   const companyHomeHref = companySlug ? buildCompanyPathForAccess(companySlug, "home", routeInput) : null;
   const companyRunsHref = companySlug ? buildCompanyPathForAccess(companySlug, "runs", routeInput) : null;
   const latestTitle = formatRunTitle(latest?.title ?? latest?.slug, latest?.slug ?? "--");

@@ -25,32 +25,41 @@ const cards = [
   },
 ];
 
-function resolveCompanySlug(user: AuthUser | null, clients: ClientAccess[], activeClientSlug: string | null) {
+function resolveCompanySlug(
+  user: AuthUser | null,
+  clients: ClientAccess[],
+  activeClientSlug: string | null,
+  normalizedUser: { primaryCompanySlug: string | null; defaultCompanySlug: string | null },
+) {
   if (activeClientSlug) return activeClientSlug;
   if (clients.length) return clients[0].slug;
-  if (typeof user?.clientSlug === "string" && user.clientSlug.trim()) return user.clientSlug;
-  if (typeof user?.defaultClientSlug === "string" && user.defaultClientSlug.trim())
-    return user.defaultClientSlug;
+  if (normalizedUser.primaryCompanySlug) return normalizedUser.primaryCompanySlug;
+  if (normalizedUser.defaultCompanySlug) return normalizedUser.defaultCompanySlug;
   return null;
 }
 
-function decideLandingRoute(user: AuthUser | null, clients: ClientAccess[], activeClientSlug: string | null) {
+function decideLandingRoute(
+  user: AuthUser | null,
+  clients: ClientAccess[],
+  activeClientSlug: string | null,
+  normalizedUser: { primaryCompanySlug: string | null; defaultCompanySlug: string | null; companyCount: number },
+) {
   if (!user) return null;
   const role = (user.role ?? "").toLowerCase();
   if (role === "admin") return "/admin";
   if (role === "company" || role === "user" || role === "viewer") {
-    const slug = resolveCompanySlug(user, clients, activeClientSlug);
+    const slug = resolveCompanySlug(user, clients, activeClientSlug, normalizedUser);
     return slug
       ? buildCompanyPathForAccess(slug, "home", {
-          isGlobalAdmin: user.isGlobalAdmin === true,
-          permissionRole: user.permissionRole ?? null,
-          role: user.role ?? null,
+        isGlobalAdmin: user.isGlobalAdmin === true,
+        permissionRole: user.permissionRole ?? null,
+        role: user.role ?? null,
           companyRole: user.companyRole ?? null,
           userOrigin:
-            (user as { userOrigin?: string | null }).userOrigin ??
-            (user as { user_origin?: string | null }).user_origin ??
-            null,
-          companyCount: clients.length,
+          (user as { userOrigin?: string | null }).userOrigin ??
+          (user as { user_origin?: string | null }).user_origin ??
+          null,
+          companyCount: normalizedUser.companyCount,
           clientSlug: slug,
         })
       : "/empresas";
@@ -61,7 +70,7 @@ function decideLandingRoute(user: AuthUser | null, clients: ClientAccess[], acti
 export default function HomeContent() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, normalizedUser } = useAuth();
   const { clients, activeClientSlug, loading: clientsLoading } = useClientContext();
   const isLoggedOut = !user;
 
@@ -72,7 +81,7 @@ export default function HomeContent() {
       router.replace("/empresas");
       return;
     }
-    const nextRoute = decideLandingRoute(user, clients, activeClientSlug);
+    const nextRoute = decideLandingRoute(user, clients, activeClientSlug, normalizedUser);
     if (!nextRoute) {
       router.replace("/empresas");
       return;
@@ -80,7 +89,7 @@ export default function HomeContent() {
     if (pathname !== nextRoute) {
       router.replace(nextRoute);
     }
-  }, [user, clients, activeClientSlug, authLoading, clientsLoading, router, pathname]);
+  }, [user, clients, activeClientSlug, normalizedUser, authLoading, clientsLoading, router, pathname]);
 
   if (authLoading || clientsLoading) {
     return (

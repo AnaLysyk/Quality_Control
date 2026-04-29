@@ -14,6 +14,7 @@
 import "server-only";
 
 import { appendAssistantAuditEntry } from "@/lib/assistantAuditLog";
+import { normalizeAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
 import type {
   AssistantAction,
@@ -218,12 +219,12 @@ function normalizeCompanySlug(value?: string | null) {
 function resolveAssistantRequestContext(user: AuthUser, request: AssistantClientRequest) {
   const baseContext = resolveAssistantScreenContext(sanitizeRoute(request.context?.route));
   const actor = request.actor ?? null;
+  const normalizedUser = normalizeAuthenticatedUser(user as Parameters<typeof normalizeAuthenticatedUser>[0]);
+  const normalizedActor = normalizeAuthenticatedUser(actor as Parameters<typeof normalizeAuthenticatedUser>[0]);
 
   const effectiveCompanySlug =
-    normalizeCompanySlug(user.companySlug) ??
-    normalizeCompanySlug(actor?.companySlug) ??
-    normalizeCompanySlug(Array.isArray(user.companySlugs) ? user.companySlugs[0] : null) ??
-    normalizeCompanySlug(Array.isArray(actor?.companySlugs) ? actor?.companySlugs?.[0] ?? null : null) ??
+    normalizeCompanySlug(normalizedUser.primaryCompanySlug) ??
+    normalizeCompanySlug(normalizedActor.primaryCompanySlug) ??
     normalizeCompanySlug(baseContext.companySlug);
 
   // Keep route-derived module/screen info, but enforce active user company scope when available.

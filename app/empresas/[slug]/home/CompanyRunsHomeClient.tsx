@@ -681,7 +681,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
           )}
           {hasMoreRunsThanCards ? (
             <p className="mt-4 text-xs font-medium text-(--tc-text-muted,#6b7280)">
-              Exibindo {runsForCards.length} de {runs.length} runs para leitura rápida. Use o botão "Abrir runs" para ver a lista completa.
+              Exibindo {runsForCards.length} de {runs.length} runs para leitura rápida. Use o botão &quot;Abrir runs&quot; para ver a lista completa.
             </p>
           ) : null}
         </section>
@@ -873,7 +873,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
               <p className="text-sm font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Run em foco</p>
               <h3 className="mt-3 text-xl font-extrabold text-(--tc-text,#0b1a3c)">Selecione uma run para carregar o resumo detalhado</h3>
               <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
-                Clique em "Ver resumo" em um card para abrir distribuição de casos, eventos e sinais de atenção.
+                Clique em &quot;Ver resumo&quot; em um card para abrir distribuição de casos, eventos e sinais de atenção.
               </p>
               <div className="mt-5">
                 <button
@@ -891,3 +891,4 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
     </div>
   );
 }
+

@@ -12,7 +12,7 @@ describe("normalizeAuthenticatedUser", () => {
         Reports: ["VIEW", "Edit"],
         profile: ["READ"],
       },
-    } as Parameters<typeof normalizeAuthenticatedUser>[0]);
+    } as unknown as Parameters<typeof normalizeAuthenticatedUser>[0]);
 
     expect(normalized.companySlugs).toEqual(["griaule", "acme"]);
     expect(normalized.primaryCompanySlug).toBe("griaule");
@@ -78,11 +78,44 @@ describe("normalizeAuthenticatedUser", () => {
     const normalized = normalizeAuthenticatedUser({
       id: "user-legacy-company-slug",
       companySlug: "Griaule",
-    } as Parameters<typeof normalizeAuthenticatedUser>[0]);
+    } as unknown as Parameters<typeof normalizeAuthenticatedUser>[0]);
 
     expect(normalized.companySlugs).toEqual(["griaule"]);
     expect(normalized.primaryCompanySlug).toBe("griaule");
     expect(normalized.defaultCompanySlug).toBeNull();
+  });
+
+  it("normaliza campos snake_case, primary/default e activeClientSlug", () => {
+    const normalized = normalizeAuthenticatedUser({
+      id: "user-company-variants",
+      company_slug: " Griaule ",
+      client_slug: "ACME",
+      primaryCompanySlug: "GRIAULE",
+      defaultCompanySlug: "Beta",
+      activeClientSlug: "Gamma",
+    } as Parameters<typeof normalizeAuthenticatedUser>[0]);
+
+    expect(normalized.companySlugs).toEqual(["acme", "griaule", "beta", "gamma"]);
+    expect(normalized.primaryCompanySlug).toBe("griaule");
+    expect(normalized.defaultCompanySlug).toBe("beta");
+  });
+
+  it("extrai empresas de permissoes quando o vinculo vem aninhado", () => {
+    const normalized = normalizeAuthenticatedUser({
+      id: "user-permission-company",
+      permissions: {
+        companies: [{ slug: "Griaule", name: "Griaule", role: "qa" }],
+      },
+    } as unknown as Parameters<typeof normalizeAuthenticatedUser>[0]);
+
+    expect(normalized.companySlugs).toContain("griaule");
+    expect(normalized.companies).toEqual([
+      {
+        slug: "griaule",
+        name: "Griaule",
+        role: "qa",
+      },
+    ]);
   });
 });
 
@@ -132,6 +165,42 @@ describe("resolveCompanyAccess", () => {
 
     expect(access.status).toBe("allowed");
     expect(access.normalizedUser?.companySlugs).toEqual(["griaule"]);
+  });
+
+  it("permite acesso com companies contendo griaule", () => {
+    const access = resolveCompanyAccess({
+      user: { id: "user-company-array", companies: [{ slug: "Griaule" }] } as Parameters<typeof normalizeAuthenticatedUser>[0],
+      companies: [],
+      slug: "griaule",
+      loading: false,
+      error: null,
+    });
+
+    expect(access.status).toBe("allowed");
+  });
+
+  it("permite acesso com clients contendo griaule", () => {
+    const access = resolveCompanyAccess({
+      user: { id: "user-client-array", clients: [{ slug: "Griaule" }] } as Parameters<typeof normalizeAuthenticatedUser>[0],
+      companies: [],
+      slug: "griaule",
+      loading: false,
+      error: null,
+    });
+
+    expect(access.status).toBe("allowed");
+  });
+
+  it("permite acesso quando companies vem vazio mas defaultCompanySlug esta preenchido", () => {
+    const access = resolveCompanyAccess({
+      user: { id: "user-default-company", companies: [], defaultCompanySlug: "Griaule" } as Parameters<typeof normalizeAuthenticatedUser>[0],
+      companies: [],
+      slug: "griaule",
+      loading: false,
+      error: null,
+    });
+
+    expect(access.status).toBe("allowed");
   });
 
   it("permite acesso para usuario privilegiado mesmo sem match direto", () => {

@@ -7,7 +7,13 @@ export type AuthenticatedUserLike = Partial<AuthUser> &
   UnknownRecord & {
     companySlug?: string | null;
     companySlugs?: string[] | null;
+    company_slug?: string | null;
+    client_slug?: string | null;
+    defaultClientSlug?: string | null;
     default_company_slug?: string | null;
+    defaultCompanySlug?: string | null;
+    primaryCompanySlug?: string | null;
+    activeClientSlug?: string | null;
     roleNames?: unknown;
     companies?: unknown;
     clients?: unknown;
@@ -25,6 +31,7 @@ export type NormalizedAuthenticatedCompany = {
   id?: string;
   slug: string;
   name?: string;
+  role?: string | null;
 };
 
 export type NormalizedAuthenticatedUser = {
@@ -76,9 +83,11 @@ function normalizeCompanyRecord(value: unknown): NormalizedAuthenticatedCompany 
   const normalized: NormalizedAuthenticatedCompany = { slug };
   const id = readString(value.id ?? value.clientId ?? value.companyId ?? value.client_id ?? value.company_id);
   const name = readString(value.name ?? value.company_name ?? value.companyName ?? value.label ?? value.title);
+  const role = readString(value.role ?? value.companyRole ?? value.permissionRole ?? value.accessRole);
 
   if (id) normalized.id = id;
   if (name) normalized.name = name;
+  if (role) normalized.role = role;
   return normalized;
 }
 
@@ -95,6 +104,7 @@ function collectCompanyCandidates(value: unknown): NormalizedAuthenticatedCompan
       ...(company.id ? { id: company.id } : {}),
       slug,
       ...(company.name ? { name: company.name } : {}),
+      ...(company.role ? { role: company.role } : {}),
     });
   };
 
@@ -112,7 +122,7 @@ function collectCompanyCandidates(value: unknown): NormalizedAuthenticatedCompan
 
     add(normalizeCompanyRecord(candidate));
 
-    for (const key of ["company", "client", "tenant", "organization"]) {
+    for (const key of ["company", "client", "companies", "clients", "tenant", "organization", "organizations"]) {
       if (key in candidate) visit(candidate[key]);
     }
   };
@@ -192,6 +202,7 @@ function mergeCompanyCollections(...collections: NormalizedAuthenticatedCompany[
         ...(company.id ? { id: company.id } : {}),
         slug,
         ...(company.name ? { name: company.name } : {}),
+        ...(company.role ? { role: company.role } : {}),
       });
     }
   }
@@ -214,9 +225,14 @@ export function normalizeAuthenticatedUser(
 
   const companiesFromUser = mergeCompanyCollections(
     collectCompanyCandidates(raw.companySlug),
+    collectCompanyCandidates(raw.company_slug),
     collectCompanyCandidates(raw.clientSlug),
+    collectCompanyCandidates(raw.client_slug),
     collectCompanyCandidates(raw.defaultClientSlug),
+    collectCompanyCandidates(raw.defaultCompanySlug),
     collectCompanyCandidates(raw.default_company_slug),
+    collectCompanyCandidates(raw.primaryCompanySlug),
+    collectCompanyCandidates(raw.activeClientSlug),
     collectCompanyCandidates(raw.companySlugs),
     collectCompanyCandidates(raw.clientSlugs),
     collectCompanyCandidates(raw.companies),
@@ -226,6 +242,9 @@ export function normalizeAuthenticatedUser(
     collectCompanyCandidates(raw.tenant),
     collectCompanyCandidates(raw.organization),
     collectCompanyCandidates(raw.organizations),
+    collectCompanyCandidates(raw.permissions),
+    collectCompanyCandidates(raw.permissionKeys),
+    collectCompanyCandidates(raw.capabilities),
   );
 
   const normalizedCompanies = mergeCompanyCollections(companiesFromResponse.filter((value): value is NormalizedAuthenticatedCompany => Boolean(value)), companiesFromUser);
@@ -233,9 +252,14 @@ export function normalizeAuthenticatedUser(
   const directCompanySlugs = uniqueStrings(
     [
       normalizeSlug(raw.clientSlug),
+      normalizeSlug(raw.client_slug),
       normalizeSlug(raw.companySlug),
+      normalizeSlug(raw.company_slug),
+      normalizeSlug(raw.primaryCompanySlug),
       normalizeSlug(raw.defaultClientSlug),
+      normalizeSlug(raw.defaultCompanySlug),
       normalizeSlug(raw.default_company_slug),
+      normalizeSlug(raw.activeClientSlug),
     ].filter((value): value is string => Boolean(value)),
   );
   const companySlugs = uniqueStrings([
@@ -259,8 +283,18 @@ export function normalizeAuthenticatedUser(
     ...collectPermissionCandidates(raw.permissionKeys),
   ]);
 
-  const defaultCompanySlug = normalizeSlug(raw.defaultClientSlug) ?? normalizeSlug(raw.default_company_slug) ?? null;
-  const primaryCompanySlug = companySlugs[0] ?? normalizedCompanies[0]?.slug ?? defaultCompanySlug ?? null;
+  const defaultCompanySlug =
+    normalizeSlug(raw.defaultCompanySlug) ??
+    normalizeSlug(raw.defaultClientSlug) ??
+    normalizeSlug(raw.default_company_slug) ??
+    normalizeSlug(raw.activeClientSlug) ??
+    null;
+  const primaryCompanySlug =
+    normalizeSlug(raw.primaryCompanySlug) ??
+    companySlugs[0] ??
+    normalizedCompanies[0]?.slug ??
+    defaultCompanySlug ??
+    null;
 
   return {
     companySlugs,

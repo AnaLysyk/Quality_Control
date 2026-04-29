@@ -2,7 +2,7 @@
 
 import "@testing-library/jest-dom";
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { RequireClient } from "@/components/RequireClient";
 
 const replaceMock = jest.fn();
@@ -36,6 +36,7 @@ jest.mock("@/hooks/useAuthUser", () => ({
 
 describe("RequireClient", () => {
   beforeEach(() => {
+    jest.useRealTimers();
     replaceMock.mockClear();
     refreshUserMock.mockClear();
     authState = {
@@ -151,6 +152,27 @@ describe("RequireClient", () => {
 
     expect(screen.getByText("Empresa nao encontrada")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Voltar para empresas" })).toHaveAttribute("href", "/empresas");
+  });
+
+  it("sai do loading infinito por timeout e permite tentar novamente", () => {
+    jest.useFakeTimers();
+    authState.loading = true;
+
+    render(
+      <RequireClient slug="griaule">
+        <div>conteudo protegido</div>
+      </RequireClient>,
+    );
+
+    expect(screen.getByText("Validando acesso da empresa")).toBeInTheDocument();
+    act(() => {
+      jest.advanceTimersByTime(10_000);
+    });
+
+    expect(screen.getByText("Validacao demorou demais")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
+    expect(refreshUserMock).toHaveBeenCalledWith(true);
+    jest.useRealTimers();
   });
 
   it("redireciona para login quando nao existe usuario autenticado", async () => {

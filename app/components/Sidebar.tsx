@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiAlertTriangle,
@@ -17,6 +17,9 @@ import {
   FiList,
   FiShield,
   FiCpu,
+  FiBookOpen,
+  FiMessageSquare,
+  FiStar,
   FiUserPlus,
   FiUsers,
   FiZap,
@@ -30,6 +33,7 @@ import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
 const debugSidebar = process.env.NEXT_PUBLIC_DEBUG_SIDEBAR === "true";
+const FAVORITES_STORAGE_KEY = "qc:sidebar:favorites:v1";
 
 type AppRole = "admin" | "client" | "user" | "technical_support";
 
@@ -50,6 +54,16 @@ type SidebarProps = {
 export default function Sidebar({ pathname, mobileOpen = false, onClose, mobilePanelId }: SidebarProps) {
   const router = useRouter();
   const prefetchedRoutesRef = useRef<Set<string>>(new Set());
+  const [favoriteHrefs, setFavoriteHrefs] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
+      const parsed = raw ? (JSON.parse(raw) as unknown) : null;
+      return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+    } catch {
+      return [];
+    }
+  });
   const { user, loading, visibility, normalizedUser } = usePermissionAccess();
   const logoSrc = useMemo(() => {
     const dbLogo = typeof user?.companyLogoUrl === "string" ? user.companyLogoUrl.trim() : "";
@@ -60,7 +74,13 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   const { activeClientSlug } = useClientContext();
   const { t } = useI18n();
 
-  
+  useEffect(() => {
+    try {
+      localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favoriteHrefs));
+    } catch {
+      /* ignore */
+    }
+  }, [favoriteHrefs]);
 
   const legacyUser = (user ?? null) as unknown as { is_global_admin?: boolean } | null;
 
@@ -161,6 +181,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     { label: t("nav.accessRequests"), icon: FiUserPlus, href: "/admin/access-requests" },
     { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
     { label: "Brain", icon: FiCpu, href: "/admin/brain" },
+    { label: "Documentacao", icon: FiBookOpen, href: "/documentacao" },
+    { label: "Conversas", icon: FiMessageSquare, href: "/conversas" },
   ], [t, adminRunsMenuLabel]);
 
   const supportNav: NavItem[] = useMemo(() => {
@@ -180,6 +202,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             { label: companyRunsMenuLabel, icon: FiList, href: buildCompanyPathForAccess(companySlug, "runs", companyRouteInput) },
             { label: t("nav.defects"), icon: FiAlertTriangle, href: buildCompanyPathForAccess(companySlug, "defeitos", companyRouteInput) },
             { label: t("nav.support"), icon: FiColumns, href: buildCompanyPathForAccess(companySlug, "chamados", companyRouteInput) },
+            { label: "Documentacao", icon: FiBookOpen, href: "/documentacao" },
+            { label: "Conversas", icon: FiMessageSquare, href: "/conversas" },
           ]
         : [],
     [companyRouteInput, companySlug, companyRunsMenuLabel, t]
@@ -255,19 +279,34 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     }
   }
 
-  const renderNavLinks = (isMobile = false) =>
-    visibleNavigation.map((item) => {
+  function toggleFavorite(href: string) {
+    setFavoriteHrefs((current) =>
+      current.includes(href) ? current.filter((item) => item !== href) : [...current, href],
+    );
+  }
+
+  const favoriteNavigation = useMemo(
+    () => favoriteHrefs
+      .map((href) => visibleNavigation.find((item) => item.href === href))
+      .filter((item): item is NavItem => Boolean(item)),
+    [favoriteHrefs, visibleNavigation],
+  );
+
+  const renderNavLinks = (isMobile = false, items = visibleNavigation) =>
+    items.map((item) => {
         const isActive =
           item.href === "/"
             ? pathname === "/"
             : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
+        const isFavorite = favoriteHrefs.includes(item.href);
+
         return (
-          <Link
-            key={item.href}
-            href={item.href}
-            prefetch={false}
-            className={`group/link relative flex items-center h-10 w-full rounded-xl text-sm font-semibold transition-all duration-200 overflow-hidden min-w-0 sidebar-link ${
+          <div key={item.href} className="group/item relative flex items-center">
+            <Link
+              href={item.href}
+              prefetch={false}
+              className={`group/link relative flex items-center h-10 w-full rounded-xl text-sm font-semibold transition-all duration-200 overflow-hidden min-w-0 sidebar-link ${
               isMobile
                 ? "px-3 justify-start gap-3"
                 : "px-3 justify-start gap-3"
@@ -276,29 +315,41 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                 ? "sidebar-link-state-active bg-white/12 ring-1 ring-white/16 shadow-[0_14px_30px_rgba(1,24,72,0.3)] text-white"
                 : "sidebar-link-state-idle text-white/74 hover:bg-white/8 hover:text-white"
             }`}
-            onMouseEnter={() => prefetchHref(item.href)}
-            onFocus={() => prefetchHref(item.href)}
-            onClick={isMobile && onClose ? onClose : undefined}
-          >
-            <span
-              aria-hidden
-              className={`absolute left-1 top-2 bottom-2 w-0.75 rounded-full bg-(--tc-accent,#ef0001) transition-all ${
-                isActive ? "opacity-100" : "opacity-0 group-hover/link:opacity-60"
-              }`}
-            />
-            <div
-              className={`flex items-center justify-center w-10 h-10 rounded-[14px] border transition-all duration-200 shrink-0 backdrop-blur-sm sidebar-icon ${
-                isActive
-                  ? "sidebar-icon-state-active border-white/16 bg-white/14 text-white shadow-[0_12px_26px_rgba(1,24,72,0.28)]"
-                  : "sidebar-icon-state-idle border-white/10 bg-white/6 text-white/84 group-hover/link:border-white/18 group-hover/link:bg-white/10 group-hover/link:text-white"
-              }`}
+              onMouseEnter={() => prefetchHref(item.href)}
+              onFocus={() => prefetchHref(item.href)}
+              onClick={isMobile && onClose ? onClose : undefined}
             >
-              <item.icon size={17} />
-            </div>
-            <span className="sidebar-label flex-1 overflow-hidden pl-3 text-left leading-snug truncate">
-              {item.label}
-            </span>
-          </Link>
+              <span
+                aria-hidden
+                className={`absolute left-1 top-2 bottom-2 w-0.75 rounded-full bg-(--tc-accent,#ef0001) transition-all ${
+                  isActive ? "opacity-100" : "opacity-0 group-hover/link:opacity-60"
+                }`}
+              />
+              <div
+                className={`flex items-center justify-center w-10 h-10 rounded-[14px] border transition-all duration-200 shrink-0 backdrop-blur-sm sidebar-icon ${
+                  isActive
+                    ? "sidebar-icon-state-active border-white/16 bg-white/14 text-white shadow-[0_12px_26px_rgba(1,24,72,0.28)]"
+                    : "sidebar-icon-state-idle border-white/10 bg-white/6 text-white/84 group-hover/link:border-white/18 group-hover/link:bg-white/10 group-hover/link:text-white"
+                }`}
+              >
+                <item.icon size={17} />
+              </div>
+              <span className="sidebar-label flex-1 overflow-hidden pl-3 pr-8 text-left leading-snug truncate">
+                {item.label}
+              </span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => toggleFavorite(item.href)}
+              className={`absolute right-2 inline-flex h-7 w-7 items-center justify-center rounded-full transition ${
+                isFavorite ? "text-yellow-300 opacity-100" : "text-white/40 opacity-0 group-hover/item:opacity-100 focus:opacity-100"
+              }`}
+              aria-label={isFavorite ? `Remover ${item.label} dos favoritos` : `Adicionar ${item.label} aos favoritos`}
+              title={isFavorite ? "Remover dos favoritos" : "Favoritar"}
+            >
+              <FiStar className={isFavorite ? "fill-current" : ""} size={14} />
+            </button>
+          </div>
         );
       });
 
@@ -358,6 +409,12 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
               </p>
               <span className="h-px flex-1 ml-3 bg-white/12 sidebar-divider-line" aria-hidden />
             </div>
+            {favoriteNavigation.length > 0 ? (
+              <div className="mb-3 space-y-2 rounded-2xl border border-white/8 bg-white/5 p-2">
+                <p className="px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50">Favoritos</p>
+                {renderNavLinks(false, favoriteNavigation)}
+              </div>
+            ) : null}
             <div className="space-y-2">{renderNavLinks()}</div>
           </div>
         </div>
@@ -424,6 +481,12 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             <div className="flex-1 px-3 py-3 space-y-3">
               <div className="space-y-2">
                 <p className="sidebar-nav-caption px-1 text-xs uppercase tracking-[0.18em] text-white/52">Navegacao</p>
+                {favoriteNavigation.length > 0 ? (
+                  <div className="mb-3 space-y-2 rounded-2xl border border-white/8 bg-white/5 p-2">
+                    <p className="px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50">Favoritos</p>
+                    {renderNavLinks(true, favoriteNavigation)}
+                  </div>
+                ) : null}
                 <div className="space-y-2">{renderNavLinks(true)}</div>
               </div>
             </div>

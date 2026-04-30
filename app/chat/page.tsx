@@ -1,7 +1,7 @@
-import Chat from "@/components/Chat";
+import ChatWorkspace from "@/components/ChatWorkspace";
 
 export const dynamic = "force-dynamic";
 
 export default function ChatPage() {
-  return <Chat />;
+  return <ChatWorkspace />;
 }

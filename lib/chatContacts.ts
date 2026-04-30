@@ -2,6 +2,7 @@ import "server-only";
 
 import type { AccessContext } from "@/lib/auth/session";
 import { listAdminUserItems, type AdminUserItem } from "@/lib/adminUsers";
+import { listLocalCompanies } from "@/lib/auth/localStore";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 export type ChatContact = {
@@ -27,6 +28,10 @@ function normalizeSearch(value: string) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+}
+
+function normalizeCompanyKey(value?: string | null) {
+  return (value ?? "").trim().toLowerCase();
 }
 
 function isPrivilegedAccess(access: Pick<AccessContext, "isGlobalAdmin" | "role" | "companyRole">) {
@@ -60,6 +65,56 @@ function mapContact(item: AdminUserItem): ChatContact {
   };
 }
 
+function collectContactCompanyIds(item: AdminUserItem) {
+  return new Set(
+    [
+      item.client_id,
+      ...(Array.isArray(item.companyIds) ? item.companyIds : []),
+      ...(Array.isArray(item.company_ids) ? item.company_ids : []),
+      ...(Array.isArray(item.companies) ? item.companies.map((company) => company.id) : []),
+    ]
+      .map((value) => (typeof value === "string" ? value.trim() : ""))
+      .filter((value): value is string => value.length > 0),
+  );
+}
+
+async function resolveVisibleCompanyIds(
+  access: Pick<AccessContext, "companyId" | "companySlug" | "companySlugs">,
+) {
+  const companies = await listLocalCompanies();
+  const visibleSlugs = new Set(
+    [
+      access.companySlug,
+      ...(Array.isArray(access.companySlugs) ? access.companySlugs : []),
+    ]
+      .map((value) => normalizeCompanyKey(value))
+      .filter((value): value is string => value.length > 0),
+  );
+
+  const visibleIds = companies
+    .filter((company) => visibleSlugs.has(normalizeCompanyKey(company.slug)))
+    .map((company) => company.id);
+
+  if (visibleIds.length > 0) {
+    return new Set(visibleIds);
+  }
+
+  return new Set(
+    typeof access.companyId === "string" && access.companyId.trim().length > 0
+      ? [access.companyId.trim()]
+      : [],
+  );
+}
+
+function itemIsVisibleForCompanies(item: AdminUserItem, allowedCompanyIds: Set<string>) {
+  if (!allowedCompanyIds.size) return false;
+  const contactCompanyIds = collectContactCompanyIds(item);
+  for (const companyId of contactCompanyIds) {
+    if (allowedCompanyIds.has(companyId)) return true;
+  }
+  return false;
+}
+
 function contactMatches(contact: ChatContact, search: string) {
   if (!search) return true;
   const haystack = normalizeSearch(
@@ -81,14 +136,21 @@ function contactMatches(contact: ChatContact, search: string) {
 }
 
 export async function listChatContacts(
-  access: Pick<AccessContext, "userId" | "companyId" | "isGlobalAdmin" | "role" | "companyRole">,
+  access: Pick<
+    AccessContext,
+    "userId" | "companyId" | "companySlug" | "companySlugs" | "isGlobalAdmin" | "role" | "companyRole"
+  >,
   search = "",
 ) {
   const visibleItems = isPrivilegedAccess(access)
     ? await listAdminUserItems()
-    : access.companyId
-      ? await listAdminUserItems({ companyId: access.companyId })
-      : [];
+    : await (async () => {
+        const allowedCompanyIds = await resolveVisibleCompanyIds(access);
+        if (!allowedCompanyIds.size) return [];
+
+        const items = await listAdminUserItems();
+        return items.filter((item) => itemIsVisibleForCompanies(item, allowedCompanyIds));
+      })();
 
   const normalizedSearch = normalizeSearch(search);
   return visibleItems

@@ -1,0 +1,254 @@
+import "server-only";
+
+import { randomUUID } from "crypto";
+
+import { getRedis } from "@/lib/redis";
+
+export type ChatPersonSnapshot = {
+  id: string;
+  name: string;
+  handle?: string | null;
+  avatarUrl?: string | null;
+};
+
+export type ChatMessage = {
+  id: string;
+  threadKey: string;
+  senderId: string;
+  senderName: string;
+  senderHandle: string | null;
+  senderAvatarUrl: string | null;
+  recipientId: string;
+  recipientName: string;
+  recipientHandle: string | null;
+  recipientAvatarUrl: string | null;
+  text: string;
+  createdAt: string;
+};
+
+type ChatThread = {
+  key: string;
+  participantIds: [string, string];
+  createdAt: string;
+  updatedAt: string;
+  messages: ChatMessage[];
+};
+
+type ChatStore = {
+  threads: Record<string, ChatThread>;
+};
+
+export type ChatThreadSummary = {
+  key: string;
+  peerId: string;
+  peerName: string;
+  peerHandle: string | null;
+  peerAvatarUrl: string | null;
+  lastMessage: string;
+  lastMessageAt: string;
+  lastSenderId: string;
+  lastSenderName: string;
+  messageCount: number;
+};
+
+const STORE_KEY = "qc:chat_threads:v1";
+const MAX_MESSAGES_PER_THREAD = 150;
+
+function emptyStore(): ChatStore {
+  return { threads: {} };
+}
+
+function sanitizeText(value: unknown, max = 4000) {
+  if (typeof value !== "string") return "";
+  return value.trim().slice(0, max);
+}
+
+function normalizeSnapshot(input: ChatPersonSnapshot | null | undefined): Required<ChatPersonSnapshot> {
+  return {
+    id: typeof input?.id === "string" ? input.id.trim() : "",
+    name: typeof input?.name === "string" && input.name.trim() ? input.name.trim() : "Usuário",
+    handle: typeof input?.handle === "string" && input.handle.trim() ? input.handle.trim() : null,
+    avatarUrl: typeof input?.avatarUrl === "string" && input.avatarUrl.trim() ? input.avatarUrl.trim() : null,
+  };
+}
+
+function threadKeyFor(a: string, b: string) {
+  return [a.trim(), b.trim()].filter(Boolean).sort((left, right) => left.localeCompare(right)).join("::");
+}
+
+function normalizeMessage(input: Partial<ChatMessage> | null | undefined): ChatMessage | null {
+  const senderId = typeof input?.senderId === "string" ? input.senderId.trim() : "";
+  const recipientId = typeof input?.recipientId === "string" ? input.recipientId.trim() : "";
+  const text = sanitizeText(input?.text, 4000);
+  if (!senderId || !recipientId || !text) return null;
+
+  return {
+    id: typeof input?.id === "string" && input.id.trim() ? input.id.trim() : randomUUID(),
+    threadKey: typeof input?.threadKey === "string" && input.threadKey.trim() ? input.threadKey.trim() : threadKeyFor(senderId, recipientId),
+    senderId,
+    senderName: typeof input?.senderName === "string" && input.senderName.trim() ? input.senderName.trim() : "Usuário",
+    senderHandle: typeof input?.senderHandle === "string" && input.senderHandle.trim() ? input.senderHandle.trim() : null,
+    senderAvatarUrl: typeof input?.senderAvatarUrl === "string" && input.senderAvatarUrl.trim() ? input.senderAvatarUrl.trim() : null,
+    recipientId,
+    recipientName: typeof input?.recipientName === "string" && input.recipientName.trim() ? input.recipientName.trim() : "Usuário",
+    recipientHandle: typeof input?.recipientHandle === "string" && input.recipientHandle.trim() ? input.recipientHandle.trim() : null,
+    recipientAvatarUrl: typeof input?.recipientAvatarUrl === "string" && input.recipientAvatarUrl.trim() ? input.recipientAvatarUrl.trim() : null,
+    text,
+    createdAt: typeof input?.createdAt === "string" && input.createdAt.trim() ? input.createdAt.trim() : new Date().toISOString(),
+  };
+}
+
+function normalizeThread(input: Partial<ChatThread> | null | undefined): ChatThread | null {
+  const key = typeof input?.key === "string" ? input.key.trim() : "";
+  const participantIds = Array.isArray(input?.participantIds)
+    ? input.participantIds
+        .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+        .map((value) => value.trim())
+        .slice(0, 2)
+    : [];
+  if (!key || participantIds.length !== 2) return null;
+
+  const messages = Array.isArray(input?.messages)
+    ? input.messages
+        .map((message) => normalizeMessage(message))
+        .filter((message): message is ChatMessage => Boolean(message))
+        .sort((left, right) => left.createdAt.localeCompare(right.createdAt))
+    : [];
+
+  const createdAt = typeof input?.createdAt === "string" && input.createdAt.trim() ? input.createdAt.trim() : messages[0]?.createdAt ?? new Date().toISOString();
+  const updatedAt = typeof input?.updatedAt === "string" && input.updatedAt.trim()
+    ? input.updatedAt.trim()
+    : messages[messages.length - 1]?.createdAt ?? createdAt;
+
+  return {
+    key,
+    participantIds: [participantIds[0], participantIds[1]],
+    createdAt,
+    updatedAt,
+    messages,
+  };
+}
+
+async function readStore(): Promise<ChatStore> {
+  try {
+    const redis = getRedis();
+    const raw = await redis.get<string>(STORE_KEY);
+    if (!raw) return emptyStore();
+    const parsed = JSON.parse(raw) as Partial<ChatStore> | null;
+    if (!parsed || typeof parsed !== "object") return emptyStore();
+
+    const threads: Record<string, ChatThread> = {};
+    const sourceThreads = parsed.threads && typeof parsed.threads === "object" ? parsed.threads : {};
+    for (const [key, value] of Object.entries(sourceThreads)) {
+      const thread = normalizeThread({ ...(value as Partial<ChatThread>), key });
+      if (thread) threads[key] = thread;
+    }
+    return { threads };
+  } catch {
+    return emptyStore();
+  }
+}
+
+async function writeStore(store: ChatStore) {
+  const redis = getRedis();
+  await redis.set(STORE_KEY, JSON.stringify(store));
+}
+
+function buildSummaryForUser(userId: string, thread: ChatThread): ChatThreadSummary | null {
+  if (!thread.participantIds.includes(userId)) return null;
+  const lastMessage = thread.messages[thread.messages.length - 1];
+  if (!lastMessage) return null;
+
+  const peerId = thread.participantIds.find((participantId) => participantId !== userId) ?? thread.participantIds[0] ?? userId;
+  const peerName =
+    lastMessage.senderId === peerId ? lastMessage.senderName : lastMessage.recipientName;
+  const peerHandle =
+    lastMessage.senderId === peerId ? lastMessage.senderHandle : lastMessage.recipientHandle;
+  const peerAvatarUrl =
+    lastMessage.senderId === peerId ? lastMessage.senderAvatarUrl : lastMessage.recipientAvatarUrl;
+
+  return {
+    key: thread.key,
+    peerId,
+    peerName,
+    peerHandle,
+    peerAvatarUrl,
+    lastMessage: lastMessage.text,
+    lastMessageAt: lastMessage.createdAt,
+    lastSenderId: lastMessage.senderId,
+    lastSenderName: lastMessage.senderName,
+    messageCount: thread.messages.length,
+  };
+}
+
+export function makeChatThreadKey(userAId: string, userBId: string) {
+  return threadKeyFor(userAId, userBId);
+}
+
+export async function listChatThreadMessages(userId: string, peerId: string) {
+  const store = await readStore();
+  const thread = store.threads[threadKeyFor(userId, peerId)] ?? null;
+  if (!thread) return [];
+  return [...thread.messages].sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+}
+
+export async function listChatInboxSummaries(userId: string) {
+  const store = await readStore();
+  return Object.values(store.threads)
+    .map((thread) => buildSummaryForUser(userId, thread))
+    .filter((thread): thread is ChatThreadSummary => Boolean(thread))
+    .sort((left, right) => (left.lastMessageAt < right.lastMessageAt ? 1 : -1));
+}
+
+export async function appendChatMessage(input: {
+  sender: ChatPersonSnapshot;
+  recipient: ChatPersonSnapshot;
+  text: string;
+}) {
+  const sender = normalizeSnapshot(input.sender);
+  const recipient = normalizeSnapshot(input.recipient);
+  const text = sanitizeText(input.text);
+  if (!sender.id || !recipient.id || !text) {
+    throw new Error("Mensagem invalida");
+  }
+
+  const now = new Date().toISOString();
+  const store = await readStore();
+  const key = threadKeyFor(sender.id, recipient.id);
+  const current = store.threads[key] ?? {
+    key,
+    participantIds: [sender.id, recipient.id],
+    createdAt: now,
+    updatedAt: now,
+    messages: [],
+  };
+
+  const message: ChatMessage = {
+    id: randomUUID(),
+    threadKey: key,
+    senderId: sender.id,
+    senderName: sender.name,
+    senderHandle: sender.handle,
+    senderAvatarUrl: sender.avatarUrl,
+    recipientId: recipient.id,
+    recipientName: recipient.name,
+    recipientHandle: recipient.handle,
+    recipientAvatarUrl: recipient.avatarUrl,
+    text,
+    createdAt: now,
+  };
+
+  current.messages.push(message);
+  if (current.messages.length > MAX_MESSAGES_PER_THREAD) {
+    current.messages = current.messages.slice(-MAX_MESSAGES_PER_THREAD);
+  }
+  current.updatedAt = now;
+  store.threads[key] = current;
+  await writeStore(store);
+  return message;
+}
+
+export async function clearChatStore() {
+  const redis = getRedis();
+  await redis.del(STORE_KEY);
+}

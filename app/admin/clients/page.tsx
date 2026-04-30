@@ -2,11 +2,12 @@
 
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CreateClientModal, type ClientFormValues } from "@/clients/components/CreateClientModal";
 import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 import { useAuth } from "@/context/AuthContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { hasAdminClientToolAccess } from "@/lib/adminClientAccess";
 import { fetchApi } from "@/lib/api";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, readApiError, unwrapEnvelopeData } from "@/lib/apiEnvelope";
@@ -112,6 +113,13 @@ function hasQaseTokenConfigured(client?: Partial<Client> | null) {
   return client.hasQaseToken === true;
 }
 
+function resolveClientTabParam(value: string | null) {
+  const normalized = (value ?? "").trim().toLowerCase();
+  if (normalized === "visao" || normalized === "visão" || normalized === "overview") return "visão" as const;
+  if (normalized === "pessoas" || normalized === "people" || normalized === "users") return "pessoas" as const;
+  return null;
+}
+
 function mapClient(row: Record<string, unknown>): Client {
   const name =
     typeof row.name === "string"
@@ -195,9 +203,10 @@ function mapClient(row: Record<string, unknown>): Client {
 
 function AdminClientsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { refreshUser } = useAuth();
   const { user } = useAuthUser();
-  const isGlobalAdmin = !!user?.isGlobalAdmin || (user as { is_global_admin?: boolean } | null)?.is_global_admin === true;
+  const canUseAdminClientTools = hasAdminClientToolAccess(user);
 
   const [items, setItems] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
@@ -217,11 +226,12 @@ function AdminClientsPage() {
   const [projectsOpen, setProjectsOpen] = useState(false);
   const projectsRef = useRef<HTMLDivElement | null>(null);
   const [validatingProjects, setValidatingProjects] = useState(false);
-  const [activeTab, setActiveTab] = useState<"visão" | "pessoas">("visão");
+  const [activeTab, setActiveTab] = useState<"visão" | "pessoas">(() => resolveClientTabParam(searchParams.get("tab")) ?? "visão");
   const [openCreate, setOpenCreate] = useState(false);
   const [companyAction, setCompanyAction] = useState<null | "activate" | "deactivate" | "delete">(null);
   const [logoUploading, setLogoUploading] = useState(false);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
+  const openCreateTokenRef = useRef<string | null>(null);
 
   async function handleLogoFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -664,6 +674,21 @@ function AdminClientsPage() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    const nextTab = resolveClientTabParam(searchParams.get("tab"));
+    if (nextTab && nextTab !== activeTab) {
+      setActiveTab(nextTab);
+    }
+
+    if (searchParams.get("create") === "1") {
+      const token = searchParams.toString();
+      if (openCreateTokenRef.current !== token) {
+        openCreateTokenRef.current = token;
+        setOpenCreate(true);
+      }
+    }
+  }, [activeTab, searchParams]);
+
   return (
     <div className="min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
       <div className="mx-auto w-full max-w-none px-2 py-4 sm:px-4 lg:px-6 xl:px-8 2xl:px-10 space-y-4">
@@ -681,7 +706,7 @@ function AdminClientsPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 lg:max-w-130 lg:justify-end">
-                {isGlobalAdmin && (
+                {canUseAdminClientTools && (
                   <button
                     type="button"
                     onClick={() => setOpenCreate(true)}
@@ -690,7 +715,7 @@ function AdminClientsPage() {
                     <FiPlus className="h-4 w-4" /> Cadastrar empresa
                   </button>
                 )}
-                {isGlobalAdmin && (
+                {canUseAdminClientTools && (
                   <a
                     href="/admin/users"
                     className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/18 bg-white/8 px-3.5 text-sm font-semibold text-white transition hover:bg-white/12"
@@ -870,7 +895,7 @@ function AdminClientsPage() {
           ))}
           {filteredItems.length === 0 && (
             <div className="col-span-full text-sm text-(--tc-text-muted,#6b7280)">
-              {isGlobalAdmin ? (
+              {canUseAdminClientTools ? (
                 <div className="mt-2 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-8 text-center">
                   <p className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">
                     {items.length === 0 ? "Nenhuma empresa cadastrada" : "Nenhuma empresa encontrada"}

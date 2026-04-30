@@ -76,6 +76,8 @@ const DICTIONARY: Record<Locale, Dictionary> = {
       automations: "Automações",
       brandIdentity: "Identidade visual",
       brain: "Brain",
+      users: "Usuários",
+      favorites: "Favoritos",
     },
     profileMenu: {
       loading: "Carregando...",
@@ -661,6 +663,8 @@ const DICTIONARY: Record<Locale, Dictionary> = {
       automations: "Automations",
       brandIdentity: "Brand identity",
       brain: "Brain",
+      users: "Users",
+      favorites: "Favorites",
     },
     profileMenu: {
       loading: "Loading...",

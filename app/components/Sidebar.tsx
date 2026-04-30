@@ -30,7 +30,7 @@ import {
 import { useI18n } from "@/hooks/useI18n";
 import { useClientContext } from "@/context/ClientContext";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
-import { buildCompanyPathForAccess, parseCompanyRoutePathname } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
 import { hasAdminClientToolAccess } from "@/lib/adminClientAccess";
@@ -73,6 +73,68 @@ type SidebarProps = {
   mobilePanelId?: string;
 };
 
+type ParsedSidebarCompanyRoute = {
+  kind: "internal" | "leader_tc" | "technical_support" | "empresa" | "company_user" | "testing_company_user";
+  targetSlug: string;
+  route: string;
+  prefixSlug: string | null;
+};
+
+const SIDEBAR_RESERVED_APP_ROOTS = new Set([
+  "500",
+  "admin",
+  "api",
+  "automacoes",
+  "login",
+  "settings",
+  "me",
+  "profile",
+  "home",
+  "empresas",
+  "dashboard",
+  "runs",
+  "release",
+  "requests",
+  "docs",
+  "documentos",
+  "chamados",
+  "meus-chamados",
+  "clients",
+  "clients-list",
+  "integrations",
+  "issues",
+  "metrics",
+  "brand-identity",
+  "applications-hub",
+  "applications-panel",
+  "painel-releases-manuais",
+  "painel-releases-manuais-autenticado",
+  "kanban-it",
+  "health",
+  "chat",
+  "suporte",
+  "lider-tc",
+  "user-tc",
+]);
+
+const SIDEBAR_COMPANY_SECTION_ROOTS = new Set([
+  "home",
+  "dashboard",
+  "metrics",
+  "aplicacoes",
+  "aplica\u00e7\u00f5es",
+  "planos-de-teste",
+  "runs",
+  "defeitos",
+  "chamados",
+  "docs",
+  "documentos",
+  "perfil",
+  "profile",
+  "admin",
+  "releases",
+]);
+
 function normalizeHref(href: string) {
   const trimmed = href.trim();
   const hashIndex = trimmed.indexOf("#");
@@ -88,6 +150,90 @@ function normalizeHref(href: string) {
   const path = trimmed.slice(0, pathEnd) || "/";
   const query = queryIndex === -1 ? "" : trimmed.slice(queryIndex + 1, hashIndex === -1 ? undefined : hashIndex);
   return { path, query };
+}
+
+function safeDecodeSegment(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function splitPathname(pathname: string) {
+  return pathname
+    .split("/")
+    .filter(Boolean)
+    .map((part) => safeDecodeSegment(part));
+}
+
+function isReservedAppRoot(segment?: string | null) {
+  return SIDEBAR_RESERVED_APP_ROOTS.has((segment ?? "").trim().toLowerCase());
+}
+
+function isCompanySectionRoot(segment?: string | null) {
+  return SIDEBAR_COMPANY_SECTION_ROOTS.has((segment ?? "").trim().toLowerCase());
+}
+
+function parseSidebarCompanyRoutePathname(pathname: string): ParsedSidebarCompanyRoute | null {
+  const parts = splitPathname(pathname);
+  if (parts.length === 0) return null;
+
+  if (parts[0]?.toLowerCase() === "empresas" && parts[1]) {
+    return {
+      kind: "internal",
+      targetSlug: parts[1],
+      route: parts.slice(2).join("/") || "home",
+      prefixSlug: null,
+    };
+  }
+
+  const prefix = (parts[0] ?? "").trim().toLowerCase();
+  if ((prefix === "lider-tc" || prefix === "suporte" || prefix === "user-tc") && parts[1]) {
+    const kind =
+      prefix === "lider-tc"
+        ? "leader_tc"
+        : prefix === "suporte"
+          ? "technical_support"
+          : "testing_company_user";
+    return {
+      kind,
+      targetSlug: parts[1],
+      route: parts.slice(2).join("/") || "home",
+      prefixSlug: parts[0],
+    };
+  }
+
+  if (isReservedAppRoot(parts[0])) return null;
+
+  if (parts.length === 1) {
+    return {
+      kind: "empresa",
+      targetSlug: parts[0],
+      route: "home",
+      prefixSlug: null,
+    };
+  }
+
+  if (isCompanySectionRoot(parts[1])) {
+    return {
+      kind: "empresa",
+      targetSlug: parts[0],
+      route: parts.slice(1).join("/") || "home",
+      prefixSlug: null,
+    };
+  }
+
+  if (!isReservedAppRoot(parts[1])) {
+    return {
+      kind: "company_user",
+      targetSlug: parts[1],
+      route: parts.slice(2).join("/") || "home",
+      prefixSlug: parts[0],
+    };
+  }
+
+  return null;
 }
 
 function isHrefActive(href: string, pathname: string, searchQuery: string) {
@@ -189,7 +335,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   }, [favoriteHrefs]);
 
   const legacyUser = (user ?? null) as unknown as { is_global_admin?: boolean } | null;
-  const parsedCompanyRoute = useMemo(() => parseCompanyRoutePathname(pathname), [pathname]);
+  const parsedCompanyRoute = useMemo(() => parseSidebarCompanyRoutePathname(pathname), [pathname]);
   const searchParams = useSearchParams();
   const searchQuery = searchParams.toString();
 
@@ -320,7 +466,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   const navigation = useMemo(() => {
     if (loading) return [];
     if (!user) return publicNav;
-    const isSupportScopedRoute =
+  const isSupportScopedRoute =
       parsedCompanyRoute?.kind === "technical_support" || parsedCompanyRoute?.kind === "leader_tc";
     const isCompanyScopedRoute =
       pathname.startsWith("/empresas/") ||
@@ -742,8 +888,10 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     );
   }
 
-  function renderFlatLinks(items: Array<Pick<NavItem, "label" | "href" | "icon">>, isMobile = false) {
-    return items.map((item) => {
+  function renderFlatLinks(items: SidebarMenuItem[], isMobile = false) {
+    return items
+      .filter((item): item is SidebarMenuItem & { href: string } => typeof item.href === "string" && item.href.trim().length > 0)
+      .map((item) => {
       const isActive = isHrefActive(item.href, pathname, searchQuery);
       const isFavorite = favoriteHrefs.includes(item.href);
 
@@ -793,7 +941,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
           </button>
         </div>
       );
-    });
+      });
   }
 
   const DesktopNav = (

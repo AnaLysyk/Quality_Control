@@ -113,7 +113,7 @@ function hasQaseTokenConfigured(client?: Partial<Client> | null) {
   return client.hasQaseToken === true;
 }
 
-function resolveClientTabParam(value: string | null) {
+function resolveClientTabQueryParam(value: string | null) {
   const normalized = (value ?? "").trim().toLowerCase();
   if (normalized === "visao" || normalized === "visão" || normalized === "overview") return "visão" as const;
   if (normalized === "pessoas" || normalized === "people" || normalized === "users") return "pessoas" as const;
@@ -226,7 +226,7 @@ function AdminClientsPage() {
   const [projectsOpen, setProjectsOpen] = useState(false);
   const projectsRef = useRef<HTMLDivElement | null>(null);
   const [validatingProjects, setValidatingProjects] = useState(false);
-  const [activeTab, setActiveTab] = useState<"visão" | "pessoas">(() => resolveClientTabParam(searchParams.get("tab")) ?? "visão");
+  const [activeTab, setActiveTab] = useState<"visão" | "pessoas">(() => resolveClientTabQueryParam(searchParams.get("tab")) ?? "visão");
   const [openCreate, setOpenCreate] = useState(false);
   const [companyAction, setCompanyAction] = useState<null | "activate" | "deactivate" | "delete">(null);
   const [logoUploading, setLogoUploading] = useState(false);
@@ -675,7 +675,7 @@ function AdminClientsPage() {
   }, [load]);
 
   useEffect(() => {
-    const nextTab = resolveClientTabParam(searchParams.get("tab"));
+    const nextTab = resolveClientTabQueryParam(searchParams.get("tab"));
     if (nextTab && nextTab !== activeTab) {
       setActiveTab(nextTab);
     }

@@ -521,6 +521,11 @@ export default function Chat() {
   const selectedThreadPreview = selectedThreadSummary
     ? `${selectedThreadSummary.lastSenderId === currentUserId ? "Você" : selectedThreadSummary.lastSenderName}: ${selectedThreadSummary.lastMessage}`
     : "";
+  const hasFullDirectoryAccess = activeIdentity.roleKind === "global" || activeIdentity.roleKind === "leader_tc";
+  const accessLabel = hasFullDirectoryAccess ? "Acesso total" : "Empresas vinculadas";
+  const accessNote = hasFullDirectoryAccess
+    ? "Suporte tecnico, lider TC e admin veem todos os usuarios."
+    : "Os demais perfis veem apenas os usuarios das empresas vinculadas.";
 
   if (loading && !user) {
     return (
@@ -566,8 +571,9 @@ export default function Chat() {
                 <div className="mt-1 text-xl font-bold">{threads.length}</div>
               </div>
               <div className="rounded-2xl border border-white/12 bg-white/10 px-4 py-3">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/58">Status</div>
-                <div className="mt-1 text-xl font-bold">{selectedPeerId ? "Em conversa" : "Escolha um usuario"}</div>
+                <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/58">Escopo</div>
+                <div className="mt-1 text-lg font-bold leading-tight">{accessLabel}</div>
+                <div className="mt-1 text-[11px] font-medium text-white/64">{selectedPeerId ? "Em conversa" : "Pronto para iniciar"}</div>
               </div>
             </div>
           </div>
@@ -606,6 +612,7 @@ export default function Chat() {
               <p className="mt-3 text-xs leading-5 text-white/52">
                 Digite um nome e pressione Enter para abrir a conversa mais relevante.
               </p>
+              <p className="mt-2 text-[11px] leading-5 text-white/44">{accessNote}</p>
 
               {error ? (
                 <div className="mt-3 rounded-[22px] border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">

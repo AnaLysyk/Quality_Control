@@ -34,15 +34,20 @@ function normalizeCompanyKey(value?: string | null) {
   return (value ?? "").trim().toLowerCase();
 }
 
-function isPrivilegedAccess(access: Pick<AccessContext, "isGlobalAdmin" | "role" | "companyRole">) {
+function isPrivilegedAccess(
+  access: Pick<AccessContext, "isGlobalAdmin" | "globalRole" | "role" | "companyRole">,
+) {
   const role = normalizeLegacyRole(access.role);
   const companyRole = normalizeLegacyRole(access.companyRole);
+  const globalRole = normalizeLegacyRole(access.globalRole);
   return (
     access.isGlobalAdmin === true ||
     role === SYSTEM_ROLES.LEADER_TC ||
     role === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
     companyRole === SYSTEM_ROLES.LEADER_TC ||
-    companyRole === SYSTEM_ROLES.TECHNICAL_SUPPORT
+    companyRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
+    globalRole === SYSTEM_ROLES.LEADER_TC ||
+    globalRole === SYSTEM_ROLES.TECHNICAL_SUPPORT
   );
 }
 
@@ -138,7 +143,7 @@ function contactMatches(contact: ChatContact, search: string) {
 export async function listChatContacts(
   access: Pick<
     AccessContext,
-    "userId" | "companyId" | "companySlug" | "companySlugs" | "isGlobalAdmin" | "role" | "companyRole"
+    "userId" | "companyId" | "companySlug" | "companySlugs" | "isGlobalAdmin" | "globalRole" | "role" | "companyRole"
   >,
   search = "",
 ) {

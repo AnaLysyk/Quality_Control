@@ -151,4 +151,22 @@ describe("chatContacts", () => {
 
     expect(visible.map((item) => item.id)).toEqual(["u-beta", "u-gamma", "u-multi"]);
   });
+
+  test("global admin via globalRole can see every contact except themselves", async () => {
+    const visible = await listChatContacts(
+      {
+        userId: "u-self",
+        companyId: null,
+        companySlug: null,
+        companySlugs: [],
+        isGlobalAdmin: false,
+        role: null,
+        companyRole: null,
+        globalRole: "global_admin",
+      },
+      "",
+    );
+
+    expect(visible.map((item) => item.id)).toEqual(["u-beta", "u-gamma", "u-multi"]);
+  });
 });

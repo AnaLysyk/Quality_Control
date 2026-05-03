@@ -24,7 +24,7 @@ import { fetchApi } from "@/lib/api";
 import { isCompanyProfileContext, isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
 import { buildCompanyPathForAccess, resolveCompanyRouteAccessInput } from "@/lib/companyRoutes";
 import { getFixedProfileLabel, resolveFixedProfileKind } from "@/lib/fixedProfilePresentation";
-import { hasPermissionAccess, normalizePermissionMatrix } from "@/lib/permissionMatrix";
+import { hasPermissionAccess, resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
 import {
   canCreateCompanyUsersByScope,
   canViewCompanyUsersByScope,
@@ -740,7 +740,9 @@ export default function SettingsProfilePage() {
   const roleValue =
     (typeof userRecord?.permissionRole === "string" ? userRecord.permissionRole : "") ||
     (typeof userRecord?.role === "string" ? userRecord.role : "") ||
-    (typeof userRecord?.companyRole === "string" ? String(userRecord.companyRole) : "");
+    (typeof userRecord?.companyRole === "string" ? String(userRecord.companyRole) : "") ||
+    (typeof userRecord?.globalRole === "string" ? userRecord.globalRole : "") ||
+    (userRecord?.isGlobalAdmin === true || userRecord?.is_global_admin === true ? "global_admin" : "");
   const companyContextRoleValue = (() => {
     const companyRole = typeof userRecord?.companyRole === "string" ? String(userRecord.companyRole) : "";
     if (normalizeUiRole(companyRole) === "empresa") return companyRole;
@@ -835,8 +837,8 @@ export default function SettingsProfilePage() {
     [user?.user, user?.username, username],
   );
   const userPermissions = useMemo(
-    () => normalizePermissionMatrix(user?.permissions),
-    [user?.permissions],
+    () => resolveEffectivePermissionMatrix(user),
+    [user],
   );
   const scopePolicy = useMemo(
     () => resolveUserScopePolicy(institutionalCompanyContext ? "company_admin" : companyContextRoleValue || roleValue),

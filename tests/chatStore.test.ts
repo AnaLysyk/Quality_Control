@@ -83,6 +83,44 @@ describe("chatStore", () => {
     ]);
   });
 
+  test("persists attachment-only messages and builds a preview from the attachment", async () => {
+    await appendChatMessage({
+      sender: {
+        id: "user-a",
+        name: "Ana Paula Lysyk",
+        handle: "ana.paula.lysyk",
+        avatarUrl: null,
+      },
+      recipient: {
+        id: "user-b",
+        name: "Bruno Santos",
+        handle: "bruno.santos",
+        avatarUrl: null,
+      },
+      text: "",
+      attachments: [
+        {
+          id: "attachment-1",
+          kind: "system",
+          label: "Tela atual /admin/users?tab=company",
+          url: "http://localhost:3000/admin/users?tab=company",
+          mimeType: null,
+          sizeLabel: null,
+          sourceLabel: "Atalho do sistema",
+        },
+      ],
+    });
+
+    const inbox = await listChatInboxSummaries("user-a");
+    expect(inbox).toHaveLength(1);
+    expect(inbox[0]?.lastMessage).toBe("Anexo: Tela atual /admin/users?tab=company");
+
+    const messages = await listChatThreadMessages("user-a", "user-b");
+    expect(messages).toHaveLength(1);
+    expect(messages[0]?.attachments).toHaveLength(1);
+    expect(messages[0]?.attachments?.[0]?.kind).toBe("system");
+  });
+
   test("clearChatStore removes persisted conversations", async () => {
     await appendChatMessage({
       sender: {

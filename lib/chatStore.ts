@@ -11,6 +11,16 @@ export type ChatPersonSnapshot = {
   avatarUrl?: string | null;
 };
 
+export type ChatAttachment = {
+  id: string;
+  kind: "file" | "link" | "note" | "system";
+  label: string;
+  url: string | null;
+  mimeType: string | null;
+  sizeLabel: string | null;
+  sourceLabel: string | null;
+};
+
 export type ChatMessage = {
   id: string;
   threadKey: string;
@@ -23,6 +33,7 @@ export type ChatMessage = {
   recipientHandle: string | null;
   recipientAvatarUrl: string | null;
   text: string;
+  attachments?: ChatAttachment[];
   createdAt: string;
 };
 
@@ -63,10 +74,37 @@ function sanitizeText(value: unknown, max = 4000) {
   return value.trim().slice(0, max);
 }
 
+function sanitizeAttachment(input: Partial<ChatAttachment> | null | undefined): ChatAttachment | null {
+  const kind =
+    input?.kind === "file" || input?.kind === "link" || input?.kind === "note" || input?.kind === "system"
+      ? input.kind
+      : null;
+  const label = typeof input?.label === "string" ? input.label.trim().slice(0, 180) : "";
+  if (!kind || !label) return null;
+
+  return {
+    id: typeof input?.id === "string" && input.id.trim() ? input.id.trim() : randomUUID(),
+    kind,
+    label,
+    url: typeof input?.url === "string" && input.url.trim() ? input.url.trim().slice(0, 1200) : null,
+    mimeType: typeof input?.mimeType === "string" && input.mimeType.trim() ? input.mimeType.trim().slice(0, 120) : null,
+    sizeLabel: typeof input?.sizeLabel === "string" && input.sizeLabel.trim() ? input.sizeLabel.trim().slice(0, 80) : null,
+    sourceLabel: typeof input?.sourceLabel === "string" && input.sourceLabel.trim() ? input.sourceLabel.trim().slice(0, 120) : null,
+  };
+}
+
+function sanitizeAttachments(input: unknown, max = 8) {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((attachment) => sanitizeAttachment(attachment))
+    .filter((attachment): attachment is ChatAttachment => Boolean(attachment))
+    .slice(0, max);
+}
+
 function normalizeSnapshot(input: ChatPersonSnapshot | null | undefined): Required<ChatPersonSnapshot> {
   return {
     id: typeof input?.id === "string" ? input.id.trim() : "",
-    name: typeof input?.name === "string" && input.name.trim() ? input.name.trim() : "Usuário",
+    name: typeof input?.name === "string" && input.name.trim() ? input.name.trim() : "Usuario",
     handle: typeof input?.handle === "string" && input.handle.trim() ? input.handle.trim() : null,
     avatarUrl: typeof input?.avatarUrl === "string" && input.avatarUrl.trim() ? input.avatarUrl.trim() : null,
   };
@@ -80,20 +118,28 @@ function normalizeMessage(input: Partial<ChatMessage> | null | undefined): ChatM
   const senderId = typeof input?.senderId === "string" ? input.senderId.trim() : "";
   const recipientId = typeof input?.recipientId === "string" ? input.recipientId.trim() : "";
   const text = sanitizeText(input?.text, 4000);
-  if (!senderId || !recipientId || !text) return null;
+  const attachments = sanitizeAttachments(input?.attachments);
+  if (!senderId || !recipientId || (!text && attachments.length === 0)) return null;
 
   return {
     id: typeof input?.id === "string" && input.id.trim() ? input.id.trim() : randomUUID(),
-    threadKey: typeof input?.threadKey === "string" && input.threadKey.trim() ? input.threadKey.trim() : threadKeyFor(senderId, recipientId),
+    threadKey:
+      typeof input?.threadKey === "string" && input.threadKey.trim()
+        ? input.threadKey.trim()
+        : threadKeyFor(senderId, recipientId),
     senderId,
-    senderName: typeof input?.senderName === "string" && input.senderName.trim() ? input.senderName.trim() : "Usuário",
+    senderName: typeof input?.senderName === "string" && input.senderName.trim() ? input.senderName.trim() : "Usuario",
     senderHandle: typeof input?.senderHandle === "string" && input.senderHandle.trim() ? input.senderHandle.trim() : null,
     senderAvatarUrl: typeof input?.senderAvatarUrl === "string" && input.senderAvatarUrl.trim() ? input.senderAvatarUrl.trim() : null,
     recipientId,
-    recipientName: typeof input?.recipientName === "string" && input.recipientName.trim() ? input.recipientName.trim() : "Usuário",
-    recipientHandle: typeof input?.recipientHandle === "string" && input.recipientHandle.trim() ? input.recipientHandle.trim() : null,
-    recipientAvatarUrl: typeof input?.recipientAvatarUrl === "string" && input.recipientAvatarUrl.trim() ? input.recipientAvatarUrl.trim() : null,
+    recipientName:
+      typeof input?.recipientName === "string" && input.recipientName.trim() ? input.recipientName.trim() : "Usuario",
+    recipientHandle:
+      typeof input?.recipientHandle === "string" && input.recipientHandle.trim() ? input.recipientHandle.trim() : null,
+    recipientAvatarUrl:
+      typeof input?.recipientAvatarUrl === "string" && input.recipientAvatarUrl.trim() ? input.recipientAvatarUrl.trim() : null,
     text,
+    attachments: attachments.length > 0 ? attachments : [],
     createdAt: typeof input?.createdAt === "string" && input.createdAt.trim() ? input.createdAt.trim() : new Date().toISOString(),
   };
 }
@@ -115,10 +161,14 @@ function normalizeThread(input: Partial<ChatThread> | null | undefined): ChatThr
         .sort((left, right) => left.createdAt.localeCompare(right.createdAt))
     : [];
 
-  const createdAt = typeof input?.createdAt === "string" && input.createdAt.trim() ? input.createdAt.trim() : messages[0]?.createdAt ?? new Date().toISOString();
-  const updatedAt = typeof input?.updatedAt === "string" && input.updatedAt.trim()
-    ? input.updatedAt.trim()
-    : messages[messages.length - 1]?.createdAt ?? createdAt;
+  const createdAt =
+    typeof input?.createdAt === "string" && input.createdAt.trim()
+      ? input.createdAt.trim()
+      : messages[0]?.createdAt ?? new Date().toISOString();
+  const updatedAt =
+    typeof input?.updatedAt === "string" && input.updatedAt.trim()
+      ? input.updatedAt.trim()
+      : messages[messages.length - 1]?.createdAt ?? createdAt;
 
   return {
     key,
@@ -154,18 +204,25 @@ async function writeStore(store: ChatStore) {
   await redis.set(STORE_KEY, JSON.stringify(store));
 }
 
+function buildMessagePreview(message: Pick<ChatMessage, "text" | "attachments">) {
+  const text = sanitizeText(message.text, 220);
+  if (text) return text;
+
+  const attachments = sanitizeAttachments(message.attachments);
+  if (attachments.length === 0) return "Nova mensagem";
+  if (attachments.length === 1) return `Anexo: ${attachments[0].label}`;
+  return `${attachments.length} anexos compartilhados`;
+}
+
 function buildSummaryForUser(userId: string, thread: ChatThread): ChatThreadSummary | null {
   if (!thread.participantIds.includes(userId)) return null;
   const lastMessage = thread.messages[thread.messages.length - 1];
   if (!lastMessage) return null;
 
   const peerId = thread.participantIds.find((participantId) => participantId !== userId) ?? thread.participantIds[0] ?? userId;
-  const peerName =
-    lastMessage.senderId === peerId ? lastMessage.senderName : lastMessage.recipientName;
-  const peerHandle =
-    lastMessage.senderId === peerId ? lastMessage.senderHandle : lastMessage.recipientHandle;
-  const peerAvatarUrl =
-    lastMessage.senderId === peerId ? lastMessage.senderAvatarUrl : lastMessage.recipientAvatarUrl;
+  const peerName = lastMessage.senderId === peerId ? lastMessage.senderName : lastMessage.recipientName;
+  const peerHandle = lastMessage.senderId === peerId ? lastMessage.senderHandle : lastMessage.recipientHandle;
+  const peerAvatarUrl = lastMessage.senderId === peerId ? lastMessage.senderAvatarUrl : lastMessage.recipientAvatarUrl;
 
   return {
     key: thread.key,
@@ -173,7 +230,7 @@ function buildSummaryForUser(userId: string, thread: ChatThread): ChatThreadSumm
     peerName,
     peerHandle,
     peerAvatarUrl,
-    lastMessage: lastMessage.text,
+    lastMessage: buildMessagePreview(lastMessage),
     lastMessageAt: lastMessage.createdAt,
     lastSenderId: lastMessage.senderId,
     lastSenderName: lastMessage.senderName,
@@ -204,11 +261,13 @@ export async function appendChatMessage(input: {
   sender: ChatPersonSnapshot;
   recipient: ChatPersonSnapshot;
   text: string;
+  attachments?: ChatAttachment[];
 }) {
   const sender = normalizeSnapshot(input.sender);
   const recipient = normalizeSnapshot(input.recipient);
   const text = sanitizeText(input.text);
-  if (!sender.id || !recipient.id || !text) {
+  const attachments = sanitizeAttachments(input.attachments);
+  if (!sender.id || !recipient.id || (!text && attachments.length === 0)) {
     throw new Error("Mensagem invalida");
   }
 
@@ -235,6 +294,7 @@ export async function appendChatMessage(input: {
     recipientHandle: recipient.handle,
     recipientAvatarUrl: recipient.avatarUrl,
     text,
+    attachments,
     createdAt: now,
   };
 

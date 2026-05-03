@@ -88,6 +88,8 @@ const RESERVED_APP_ROOTS = new Set([
   "kanban-it",
   "health",
   "chat",
+  "operacao",
+  "operacoes",
 ]);
 
 const COMPANY_SECTION_ROOTS = new Set([

@@ -92,4 +92,38 @@ describe('session.store', () => {
     expect(ctx?.isGlobalAdmin).toBe(false);
     expect(ctx?.companySlugs).toContain('slug1');
   });
+
+  test('getAccessContext preserves suporte tecnico mesmo com empresa ativa vinculada', async () => {
+    const payload = { userId: 'u4', companyId: 'c1', companySlug: 'slug1', companyRole: 'company_user' };
+    const fakeRedis = { get: jest.fn().mockResolvedValue(JSON.stringify(payload)) };
+    (getRedis as unknown as jest.Mock).mockReturnValue(fakeRedis);
+
+    const localUser = {
+      id: 'u4',
+      email: 'support@x.com',
+      active: true,
+      status: 'ok',
+      default_company_slug: 'slug1',
+      role: 'technical_support',
+      user_origin: 'testing_company',
+      is_global_admin: false,
+    };
+    (getLocalUserById as unknown as jest.Mock).mockResolvedValue(localUser);
+    (listLocalLinksForUser as unknown as jest.Mock).mockResolvedValue([{ companyId: 'c1', role: 'company_user', capabilities: ['a'] }]);
+    (listLocalCompanies as unknown as jest.Mock).mockResolvedValue([{ id: 'c1', slug: 'slug1' }]);
+
+    (normalizeGlobalRole as unknown as jest.Mock).mockReturnValue(null);
+    (normalizeLocalRole as unknown as jest.Mock).mockImplementation((value: unknown) => value);
+    (resolveCapabilities as unknown as jest.Mock).mockReturnValue(['a']);
+
+    const req = { headers: { get: (name: string) => (name === 'cookie' ? 'session_id=xyz' : null) } } as unknown as Request;
+    const ctx = await sessionStore.getAccessContext(req);
+
+    expect(ctx).not.toBeNull();
+    expect(ctx?.role).toBe('technical_support');
+    expect(ctx?.companyRole).toBe('company_user');
+    expect(ctx?.companyId).toBeNull();
+    expect(ctx?.companySlug).toBeNull();
+    expect(ctx?.companySlugs).toEqual(['slug1']);
+  });
 });

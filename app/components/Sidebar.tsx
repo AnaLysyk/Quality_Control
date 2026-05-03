@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   FiAlertTriangle,
@@ -66,6 +67,12 @@ type SidebarMenuSection = {
   items: SidebarMenuItem[];
 };
 
+type MobileMenuPanel =
+  | { kind: "root" }
+  | { kind: "section"; sectionId: string }
+  | { kind: "submenu"; sectionId: string; itemId: string }
+  | { kind: "favorites" };
+
 type SidebarProps = {
   pathname: string;
   mobileOpen?: boolean;
@@ -78,6 +85,28 @@ type ParsedSidebarCompanyRoute = {
   targetSlug: string;
   route: string;
   prefixSlug: string | null;
+};
+
+type FlyoutViewport = {
+  width: number;
+  height: number;
+};
+
+type FlyoutPlacement = {
+  top: number;
+  left: number;
+  width: number;
+  maxHeight: number;
+  side: "left" | "right";
+};
+
+type FlyoutAnchor = {
+  top: number;
+  left: number;
+  right: number;
+  bottom: number;
+  width: number;
+  height: number;
 };
 
 const SIDEBAR_RESERVED_APP_ROOTS = new Set([
@@ -112,6 +141,8 @@ const SIDEBAR_RESERVED_APP_ROOTS = new Set([
   "kanban-it",
   "health",
   "chat",
+  "operacao",
+  "operacoes",
   "suporte",
   "lider-tc",
   "user-tc",
@@ -134,6 +165,23 @@ const SIDEBAR_COMPANY_SECTION_ROOTS = new Set([
   "admin",
   "releases",
 ]);
+
+const SMART_FLYOUT_EDGE_MARGIN = 12;
+const SMART_FLYOUT_GAP = 10;
+const SMART_ROOT_FLYOUT_WIDTH_RATIO = 0.26;
+const SMART_ROOT_FLYOUT_MIN_WIDTH = 260;
+const SMART_ROOT_FLYOUT_MAX_WIDTH = 360;
+const SMART_ROOT_FLYOUT_HEIGHT_RATIO = 0.76;
+const SMART_ROOT_FLYOUT_MIN_HEIGHT = 300;
+const SMART_ROOT_FLYOUT_MAX_HEIGHT = 720;
+const SMART_SUB_FLYOUT_WIDTH_RATIO = 0.24;
+const SMART_SUB_FLYOUT_MIN_WIDTH = 240;
+const SMART_SUB_FLYOUT_MAX_WIDTH = 324;
+const SMART_SUB_FLYOUT_HEIGHT_RATIO = 0.68;
+const SMART_SUB_FLYOUT_MIN_HEIGHT = 240;
+const SMART_SUB_FLYOUT_MAX_HEIGHT = 620;
+const SMART_FLYOUT_CLOSE_DELAY = 260;
+const SMART_SIDEBAR_EXPANDED_WIDTH = 304;
 
 function normalizeHref(href: string) {
   const trimmed = href.trim();
@@ -303,19 +351,121 @@ function resolveSidebarModuleFromHref(href: string) {
   return legacyResolved;
 }
 
+function clampNumber(value: number, min: number, max: number) {
+  if (!Number.isFinite(value)) return min;
+  if (max < min) return min;
+  return Math.max(min, Math.min(max, value));
+}
+
+function readViewportSize(): FlyoutViewport {
+  if (typeof window === "undefined") return { width: 0, height: 0 };
+  return {
+    width: Math.round(window.visualViewport?.width ?? window.innerWidth ?? 0),
+    height: Math.round(window.visualViewport?.height ?? window.innerHeight ?? 0),
+  };
+}
+
+function computeFlyoutDimensions(
+  viewport: FlyoutViewport,
+  options: {
+    widthRatio: number;
+    minWidth: number;
+    maxWidth: number;
+    heightRatio: number;
+    minHeight: number;
+    maxHeight: number;
+  },
+) {
+  const widthLimit = Math.max(options.minWidth, viewport.width - SMART_FLYOUT_EDGE_MARGIN * 2);
+  const heightLimit = Math.max(options.minHeight, viewport.height - SMART_FLYOUT_EDGE_MARGIN * 2);
+  return {
+    width: clampNumber(Math.round(viewport.width * options.widthRatio), options.minWidth, Math.min(options.maxWidth, widthLimit)),
+    maxHeight: clampNumber(
+      Math.round(viewport.height * options.heightRatio),
+      options.minHeight,
+      Math.min(options.maxHeight, heightLimit),
+    ),
+  };
+}
+
+function computeRootFlyoutPlacement(anchor: FlyoutAnchor, viewport: FlyoutViewport): FlyoutPlacement {
+  const dimensions = computeFlyoutDimensions(viewport, {
+    widthRatio: SMART_ROOT_FLYOUT_WIDTH_RATIO,
+    minWidth: SMART_ROOT_FLYOUT_MIN_WIDTH,
+    maxWidth: SMART_ROOT_FLYOUT_MAX_WIDTH,
+    heightRatio: SMART_ROOT_FLYOUT_HEIGHT_RATIO,
+    minHeight: SMART_ROOT_FLYOUT_MIN_HEIGHT,
+    maxHeight: SMART_ROOT_FLYOUT_MAX_HEIGHT,
+  });
+
+  const preferredLeft = Math.max(anchor.right, SMART_SIDEBAR_EXPANDED_WIDTH) + SMART_FLYOUT_GAP;
+  const maxLeft = Math.max(SMART_FLYOUT_EDGE_MARGIN, viewport.width - SMART_FLYOUT_EDGE_MARGIN - dimensions.width);
+  const left = clampNumber(preferredLeft, SMART_FLYOUT_EDGE_MARGIN, maxLeft);
+  const side = left === preferredLeft ? "right" : "left";
+  const topLimit = Math.max(SMART_FLYOUT_EDGE_MARGIN, viewport.height - SMART_FLYOUT_EDGE_MARGIN - dimensions.maxHeight);
+  const top = clampNumber(anchor.top - 8, SMART_FLYOUT_EDGE_MARGIN, topLimit);
+
+  return {
+    left,
+    top,
+    width: dimensions.width,
+    maxHeight: dimensions.maxHeight,
+    side,
+  };
+}
+
+function computeSubFlyoutPlacement(anchor: FlyoutAnchor, viewport: FlyoutViewport, rootRect: FlyoutAnchor): FlyoutPlacement {
+  const dimensions = computeFlyoutDimensions(viewport, {
+    widthRatio: SMART_SUB_FLYOUT_WIDTH_RATIO,
+    minWidth: SMART_SUB_FLYOUT_MIN_WIDTH,
+    maxWidth: SMART_SUB_FLYOUT_MAX_WIDTH,
+    heightRatio: SMART_SUB_FLYOUT_HEIGHT_RATIO,
+    minHeight: SMART_SUB_FLYOUT_MIN_HEIGHT,
+    maxHeight: SMART_SUB_FLYOUT_MAX_HEIGHT,
+  });
+
+  const rightLeft = rootRect.right + SMART_FLYOUT_GAP;
+  const rightFits = rightLeft + dimensions.width <= viewport.width - SMART_FLYOUT_EDGE_MARGIN;
+  const leftLeft = rootRect.left - SMART_FLYOUT_GAP - dimensions.width;
+  const leftFits = leftLeft >= SMART_FLYOUT_EDGE_MARGIN;
+
+  let side: "left" | "right" = "right";
+  let left = rightLeft;
+  if (rightFits) {
+    side = "right";
+    left = rightLeft;
+  } else if (leftFits) {
+    side = "left";
+    left = leftLeft;
+  } else {
+    left = clampNumber(rightLeft, SMART_FLYOUT_EDGE_MARGIN, Math.max(SMART_FLYOUT_EDGE_MARGIN, viewport.width - SMART_FLYOUT_EDGE_MARGIN - dimensions.width));
+    side = left === rightLeft ? "right" : "left";
+  }
+
+  const topLimit = Math.max(SMART_FLYOUT_EDGE_MARGIN, viewport.height - SMART_FLYOUT_EDGE_MARGIN - dimensions.maxHeight);
+  const top = clampNumber(anchor.top - 8, SMART_FLYOUT_EDGE_MARGIN, topLimit);
+
+  return {
+    left,
+    top,
+    width: dimensions.width,
+    maxHeight: dimensions.maxHeight,
+    side,
+  };
+}
+
 export default function Sidebar({ pathname, mobileOpen = false, onClose, mobilePanelId }: SidebarProps) {
   const router = useRouter();
   const prefetchedRoutesRef = useRef<Set<string>>(new Set());
-  const [favoriteHrefs, setFavoriteHrefs] = useState<string[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
-      const parsed = raw ? (JSON.parse(raw) as unknown) : null;
-      return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
-    } catch {
-      return [];
-    }
-  });
+  const [viewport, setViewport] = useState<FlyoutViewport>({ width: 0, height: 0 });
+  const [activeFlyoutId, setActiveFlyoutId] = useState<string | null>(null);
+  const [activeSubmenuId, setActiveSubmenuId] = useState<string | null>(null);
+  const [rootFlyoutPlacement, setRootFlyoutPlacement] = useState<FlyoutPlacement | null>(null);
+  const [subFlyoutPlacement, setSubFlyoutPlacement] = useState<FlyoutPlacement | null>(null);
+  const [flyoutRevision, setFlyoutRevision] = useState(0);
+  const [mobileMenuPanel, setMobileMenuPanel] = useState<MobileMenuPanel>({ kind: "root" });
+  const [favoriteHrefs, setFavoriteHrefs] = useState<string[]>([]);
+  const favoritesHydratedRef = useRef(false);
   const { user, loading, visibility, normalizedUser } = usePermissionAccess();
   const logoSrc = useMemo(() => {
     const dbLogo = typeof user?.companyLogoUrl === "string" ? user.companyLogoUrl.trim() : "";
@@ -325,14 +475,149 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   }, [user?.companyLogoUrl]);
   const { activeClientSlug } = useClientContext();
   const { t } = useI18n();
+  const rootFlyoutRef = useRef<HTMLDivElement>(null);
+  const submenuFlyoutRef = useRef<HTMLDivElement>(null);
+  const rootTriggerRefs = useRef(new Map<string, HTMLAnchorElement>());
+  const favoritesTriggerRef = useRef<HTMLButtonElement>(null);
+  const closeFlyoutTimerRef = useRef<number | null>(null);
+
+  const clearFlyoutCloseTimer = useCallback(() => {
+    if (closeFlyoutTimerRef.current === null) return;
+    window.clearTimeout(closeFlyoutTimerRef.current);
+    closeFlyoutTimerRef.current = null;
+  }, []);
+
+  const closeSmartFlyouts = useCallback(() => {
+    clearFlyoutCloseTimer();
+    setActiveFlyoutId(null);
+    setActiveSubmenuId(null);
+    setRootFlyoutPlacement(null);
+    setSubFlyoutPlacement(null);
+  }, [clearFlyoutCloseTimer]);
+
+  const scheduleSmartFlyoutClose = useCallback(() => {
+    clearFlyoutCloseTimer();
+    closeFlyoutTimerRef.current = window.setTimeout(() => {
+      closeSmartFlyouts();
+    }, SMART_FLYOUT_CLOSE_DELAY);
+  }, [clearFlyoutCloseTimer, closeSmartFlyouts]);
+
+  const openSmartFlyout = useCallback(
+    (id: string) => {
+      clearFlyoutCloseTimer();
+      setActiveFlyoutId(id);
+      setActiveSubmenuId(null);
+      setRootFlyoutPlacement(null);
+      setSubFlyoutPlacement(null);
+    },
+    [clearFlyoutCloseTimer],
+  );
+
+  const openSmartSubmenu = useCallback(
+    (id: string | null) => {
+      clearFlyoutCloseTimer();
+      setActiveSubmenuId(id);
+      setSubFlyoutPlacement(null);
+    },
+    [clearFlyoutCloseTimer],
+  );
+
+  const bumpFlyoutRevision = useCallback(() => {
+    setFlyoutRevision((current) => current + 1);
+  }, []);
 
   useEffect(() => {
+    if (!favoritesHydratedRef.current) return;
     try {
       localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favoriteHrefs));
     } catch {
       /* ignore */
     }
   }, [favoriteHrefs]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
+      const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+      setFavoriteHrefs(Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : []);
+    } catch {
+      setFavoriteHrefs([]);
+    }
+    favoritesHydratedRef.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const updateViewport = () => {
+      setViewport(readViewportSize());
+    };
+
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
+    window.visualViewport?.addEventListener("resize", updateViewport);
+    window.visualViewport?.addEventListener("scroll", updateViewport);
+
+    return () => {
+      window.removeEventListener("resize", updateViewport);
+      window.visualViewport?.removeEventListener("resize", updateViewport);
+      window.visualViewport?.removeEventListener("scroll", updateViewport);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!activeFlyoutId || typeof window === "undefined") return undefined;
+    const resizeTimer = window.setTimeout(() => {
+      bumpFlyoutRevision();
+    }, 220);
+    return () => window.clearTimeout(resizeTimer);
+  }, [activeFlyoutId, bumpFlyoutRevision]);
+
+  useEffect(() => {
+    closeSmartFlyouts();
+  }, [pathname, closeSmartFlyouts]);
+
+  useEffect(() => {
+    setMobileMenuPanel({ kind: "root" });
+  }, [pathname, mobileOpen]);
+
+  useEffect(() => {
+    if (!activeFlyoutId) return undefined;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeSmartFlyouts();
+      }
+    };
+
+    const handleMouseDown = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+
+      if (rootFlyoutRef.current?.contains(target)) return;
+      if (submenuFlyoutRef.current?.contains(target)) return;
+      if (favoritesTriggerRef.current?.contains(target)) return;
+      for (const trigger of rootTriggerRefs.current.values()) {
+        if (trigger.contains(target)) return;
+      }
+
+      closeSmartFlyouts();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleMouseDown);
+    };
+  }, [activeFlyoutId, closeSmartFlyouts]);
+
+  useEffect(() => {
+    return () => {
+      if (closeFlyoutTimerRef.current === null) return;
+      window.clearTimeout(closeFlyoutTimerRef.current);
+    };
+  }, []);
 
   const legacyUser = (user ?? null) as unknown as { is_global_admin?: boolean } | null;
   const parsedCompanyRoute = useMemo(() => parseSidebarCompanyRoutePathname(pathname), [pathname]);
@@ -354,8 +639,10 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
     normalizedRole === SYSTEM_ROLES.LEADER_TC ||
     normalizedRole === SYSTEM_ROLES.TESTING_COMPANY_USER;
-  const canUseAdminClientTools = hasAdminClientToolAccess(user);
-  const adminRunsMenuLabel = isOperationalProfile ? t("nav.operations") : t("nav.runsManagement");
+  const canUseAdminClientTools = isGlobalAdmin || hasAdminClientToolAccess(user);
+  const useOperationsWorkspace = isOperationalProfile || isGlobalAdmin;
+  const adminRunsMenuLabel = useOperationsWorkspace ? t("nav.operations") : t("nav.runsManagement");
+  const adminRunsMenuHref = useOperationsWorkspace ? "/operacao" : "/admin/operacao";
   const companyRunsMenuLabel = isOperationalProfile ? t("nav.operations") : t("nav.runs");
 
   const appRole = useMemo<AppRole | null>(() => {
@@ -426,9 +713,10 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   );
 
   const adminNav: NavItem[] = useMemo(() => [
+    { label: t("nav.home"), icon: FiHome, href: "/admin/home" },
     { label: t("nav.dashboard"), icon: FiCompass, href: "/admin/dashboard" },
     { label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric" },
-    { label: adminRunsMenuLabel, icon: FiList, href: "/admin/operacao" },
+    { label: adminRunsMenuLabel, icon: FiList, href: adminRunsMenuHref },
     { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
     { label: t("nav.users"), icon: FiUsers, href: "/admin/users?tab=company" },
     { label: t("nav.automations"), icon: FiZap, href: "/automacoes" },
@@ -438,7 +726,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     { label: t("nav.auditLogs"), icon: FiBell, href: "/admin/audit-logs" },
     { label: "Brain", icon: FiCpu, href: "/admin/brain" },
     { label: "Conversas", icon: FiMessageSquare, href: "/chat" },
-  ], [t, adminRunsMenuLabel]);
+  ], [t, adminRunsMenuHref, adminRunsMenuLabel]);
 
   const supportNav: NavItem[] = useMemo(() => {
     return adminNav;
@@ -599,6 +887,14 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
       });
     }
 
+    for (const item of moduleNavigation.get("applications") ?? []) {
+      companiesItems.push(
+        toMenuItem(item, {
+          description: "Aplicações da empresa",
+        }),
+      );
+    }
+
     const usersBase = findVisibleNavItem("/admin/users") ?? findVisibleNavItem("/admin/users?tab=company");
     if (usersBase && canUseAdminClientTools) {
       companiesItems.push({
@@ -624,7 +920,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
           },
           {
             id: "users-admin",
-            label: "Lider TC",
+            label: "Líder TC",
             icon: FiShield,
             href: "/admin/users?tab=admin",
             description: "Perfis administrativos",
@@ -672,6 +968,9 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
       ...(moduleNavigation.get("metrics") ?? []).map((item) =>
         toMenuItem(item, { description: "Indicadores e leitura analítica" }),
       ),
+      ...(moduleNavigation.get("applications") ?? []).map((item) =>
+        toMenuItem(item, { description: "Aplicações da empresa" }),
+      ),
       ...(moduleNavigation.get("runs") ?? []).map((item) =>
         toMenuItem(item, { description: "Execuções e acompanhamento" }),
       ),
@@ -681,11 +980,11 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
       ...(moduleNavigation.get("defects") ?? []).map((item) =>
         toMenuItem(item, { description: "Triagem de defeitos" }),
       ),
-      ...(findVisibleNavItem("/operacao")
-        ? [toMenuItem(findVisibleNavItem("/operacao")!, { id: "operations-hub", description: "Atalho operacional" })]
-        : []),
       ...(findVisibleNavItem("/runs")
-        ? [toMenuItem(findVisibleNavItem("/runs")!, { id: "operations-legacy-hub", description: "Redirecionamento legado" })]
+        ? [toMenuItem(findVisibleNavItem("/runs")!, { id: "operations-hub", description: "Central operacional" })]
+        : []),
+      ...(findVisibleNavItem("/operacao")
+        ? [toMenuItem(findVisibleNavItem("/operacao")!, { id: "operations-legacy-hub", description: "Atalho legado" })]
         : []),
       ...(findVisibleNavItem("/automacoes")
         ? [toMenuItem(findVisibleNavItem("/automacoes")!, { id: "operations-automations", description: "Fluxos e automações" })]
@@ -785,15 +1084,49 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     t,
   ]);
 
+  const desktopNavigationItems = useMemo<SidebarMenuItem[]>(() => {
+    const isHomeNav = (item: NavItem) => {
+      const { path } = normalizeHref(item.href);
+      return path === "/" || path === "/admin/home" || /\/home$/.test(path);
+    };
+
+    const homeBase = visibleNavigation.find(isHomeNav) ?? null;
+    const homeItem = homeBase
+      ? toMenuItem(homeBase, {
+          id: "home",
+          description: "Entrada principal",
+          children: visibleNavigation
+            .filter((item) => !isHomeNav(item))
+            .map((item) =>
+              toMenuItem(item, {
+                id: `home:${item.href}`,
+                description: "Abrir tela",
+              }),
+            ),
+        })
+      : null;
+
+    const moduleItems = desktopSections.map<SidebarMenuItem>((section) => ({
+      id: section.id,
+      label: section.label,
+      icon: section.icon,
+      href: section.href,
+      description: section.description,
+      children: section.items,
+    }));
+
+    return [homeItem, ...moduleItems].filter((item): item is SidebarMenuItem => Boolean(item));
+  }, [desktopSections, visibleNavigation]);
+
   const actionLookup = useMemo(() => {
     const map = new Map<string, SidebarMenuItem>();
     const visit = (item: SidebarMenuItem) => {
       if (item.href) map.set(item.href, item);
       item.children?.forEach(visit);
     };
-    desktopSections.forEach((section) => section.items.forEach(visit));
+    desktopNavigationItems.forEach(visit);
     return map;
-  }, [desktopSections]);
+  }, [desktopNavigationItems]);
 
   const favoriteNavigation = useMemo<SidebarMenuItem[]>(
     () =>
@@ -803,113 +1136,360 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     [favoriteHrefs, actionLookup],
   );
 
+  const activeFlyoutItem = useMemo(() => {
+    if (!activeFlyoutId || activeFlyoutId === "favorites") return null;
+    return desktopNavigationItems.find((item) => item.id === activeFlyoutId) ?? null;
+  }, [activeFlyoutId, desktopNavigationItems]);
+
+  const activeFlyoutItems = useMemo(() => {
+    if (activeFlyoutId === "favorites") return favoriteNavigation;
+    return activeFlyoutItem?.children ?? [];
+  }, [activeFlyoutId, activeFlyoutItem, favoriteNavigation]);
+
+  const activeFlyoutTitle = activeFlyoutId === "favorites" ? t("nav.favorites") : activeFlyoutItem?.label ?? "";
+  const activeFlyoutDescription =
+    activeFlyoutId === "favorites"
+      ? "Atalhos salvos para abrir em poucos cliques."
+      : activeFlyoutItem?.description ?? "Ações rápidas desta tela.";
+  const activeSubmenuItem = useMemo(
+    () => activeFlyoutItems.find((item) => item.id === activeSubmenuId) ?? null,
+    [activeFlyoutItems, activeSubmenuId],
+  );
+  const activeSubmenuItems = activeSubmenuItem?.children ?? [];
+  const mobileCurrentSection =
+    mobileMenuPanel.kind === "section" || mobileMenuPanel.kind === "submenu"
+      ? desktopSections.find((section) => section.id === mobileMenuPanel.sectionId) ?? null
+      : null;
+  const mobileCurrentSectionItems = mobileCurrentSection?.items ?? [];
+  const mobileCurrentSubmenuItem =
+    mobileMenuPanel.kind === "submenu"
+      ? mobileCurrentSectionItems.find((item) => item.id === mobileMenuPanel.itemId) ?? null
+      : null;
+  const mobileCurrentItems =
+    mobileMenuPanel.kind === "root"
+      ? desktopSections
+      : mobileMenuPanel.kind === "favorites"
+        ? favoriteNavigation
+        : mobileMenuPanel.kind === "submenu"
+          ? mobileCurrentSubmenuItem?.children ?? []
+          : mobileCurrentSectionItems;
+  const mobilePanelTitle =
+    mobileMenuPanel.kind === "root"
+      ? "Menu inteligente"
+      : mobileMenuPanel.kind === "favorites"
+        ? t("nav.favorites")
+        : mobileMenuPanel.kind === "submenu"
+          ? mobileCurrentSubmenuItem?.label ?? mobileCurrentSection?.label ?? "Menu"
+          : mobileCurrentSection?.label ?? "Menu";
+  const mobilePanelDescription =
+    mobileMenuPanel.kind === "root"
+      ? "Escolha uma área para abrir as funções da plataforma."
+      : mobileMenuPanel.kind === "favorites"
+        ? "Atalhos salvos para abrir em poucos cliques."
+        : mobileMenuPanel.kind === "submenu"
+          ? mobileCurrentSubmenuItem?.description ?? "Opções disponíveis nesta área."
+          : mobileCurrentSection?.description ?? "Opções disponíveis nesta área.";
+  const mobileBackLabel =
+    mobileMenuPanel.kind === "submenu" && mobileCurrentSection
+      ? `Voltar para ${mobileCurrentSection.label}`
+      : "Voltar";
+
+  useLayoutEffect(() => {
+    if (!activeFlyoutId || viewport.width <= 0 || viewport.height <= 0) {
+      setRootFlyoutPlacement(null);
+      return;
+    }
+
+    const trigger =
+      activeFlyoutId === "favorites" ? favoritesTriggerRef.current : rootTriggerRefs.current.get(activeFlyoutId) ?? null;
+
+    if (!trigger) {
+      setRootFlyoutPlacement(null);
+      return;
+    }
+
+    setRootFlyoutPlacement(computeRootFlyoutPlacement(trigger.getBoundingClientRect(), viewport));
+  }, [activeFlyoutId, viewport, flyoutRevision]);
+
+  useLayoutEffect(() => {
+    if (!activeSubmenuId || !rootFlyoutPlacement || viewport.width <= 0 || viewport.height <= 0) {
+      setSubFlyoutPlacement(null);
+      return;
+    }
+
+    const rootRect = rootFlyoutRef.current?.getBoundingClientRect();
+    const submenuTrigger = rootFlyoutRef.current?.querySelector<HTMLElement>(`[data-submenu-id="${activeSubmenuId}"]`);
+
+    if (!rootRect || !submenuTrigger) {
+      setSubFlyoutPlacement(null);
+      return;
+    }
+
+    setSubFlyoutPlacement(
+      computeSubFlyoutPlacement(
+        submenuTrigger.getBoundingClientRect(),
+        viewport,
+        {
+          top: rootRect.top,
+          left: rootRect.left,
+          right: rootRect.right,
+          bottom: rootRect.bottom,
+          width: rootRect.width,
+          height: rootRect.height,
+        },
+      ),
+    );
+  }, [activeSubmenuId, rootFlyoutPlacement, viewport, flyoutRevision]);
+
   function renderMenuRow(item: SidebarMenuItem, depth = 0) {
     const isActive = item.href ? isHrefActive(item.href, pathname, searchQuery) : false;
     const rowActive = isActive || Boolean(item.children?.some((child) => isMenuItemActive(child)));
     const isFavorite = item.href ? favoriteHrefs.includes(item.href) : false;
     const hasChildren = Boolean(item.children?.length);
+    const canOpenSubmenu = depth === 0 && hasChildren;
+
+    const handleRowEnter = () => {
+      if (item.href) prefetchHref(item.href);
+      if (!item.children?.length) {
+        if (depth === 0) openSmartSubmenu(null);
+        return;
+      }
+      if (canOpenSubmenu) openSmartSubmenu(item.id);
+    };
+
+    const handleRowFocus = () => {
+      if (item.href) prefetchHref(item.href);
+      if (!item.children?.length) {
+        if (depth === 0) openSmartSubmenu(null);
+        return;
+      }
+      if (canOpenSubmenu) openSmartSubmenu(item.id);
+    };
 
     return (
-      <div key={item.id} className={`group/menu-item relative ${depth > 0 ? "pl-1" : ""}`}>
+      <div
+        key={item.id}
+        data-submenu-id={canOpenSubmenu ? item.id : undefined}
+        className={`group/menu-item relative ${depth > 0 ? "pl-1" : ""}`}
+        onMouseEnter={handleRowEnter}
+        onFocusCapture={handleRowFocus}
+      >
         <Link
           href={item.href ?? "#"}
           prefetch={false}
-          className={`relative flex items-start gap-3 rounded-2xl border px-3 py-3 pr-16 text-left transition ${
+          className={`group/link relative flex items-start gap-3 overflow-hidden rounded-2xl pr-16 text-left transition-all duration-200 ${
             rowActive
-              ? "border-white/20 bg-white/14 text-white shadow-[0_14px_30px_rgba(1,24,72,0.24)]"
-              : "border-white/10 bg-white/6 text-white/88 hover:border-white/18 hover:bg-white/10 hover:text-white"
+              ? "sidebar-link-state-active bg-white/12 text-white shadow-[0_14px_30px_rgba(1,24,72,0.24)]"
+              : "sidebar-link-state-idle text-white/86 hover:bg-white/8 hover:text-white"
           }`}
-          onMouseEnter={() => item.href && prefetchHref(item.href)}
-          onFocus={() => item.href && prefetchHref(item.href)}
-          onClick={() => onClose?.()}
+          onClick={() => {
+            closeSmartFlyouts();
+            onClose?.();
+          }}
         >
+          <span
+            aria-hidden
+            className={`absolute left-1 top-2 bottom-2 w-0.75 rounded-full bg-(--tc-accent,#ef0001) transition-all ${
+              isActive ? "opacity-100" : "opacity-0 group-hover/link:opacity-60"
+            }`}
+          />
           <div
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] border transition ${
+            className={`sidebar-icon-state-idle ml-1.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] border transition-all duration-200 ${
               rowActive
-                ? "border-white/16 bg-white/14 text-white"
-                : "border-white/10 bg-white/8 text-white/86 group-hover/menu-item:border-white/18 group-hover/menu-item:bg-white/12 group-hover/menu-item:text-white"
+                ? "sidebar-icon-state-active border-white/16 bg-white/14 text-white shadow-[0_12px_26px_rgba(1,24,72,0.22)]"
+                : "border-white/10 bg-white/6 text-white/84 group-hover/link:border-white/18 group-hover/link:bg-white/10 group-hover/link:text-white"
             }`}
           >
             <item.icon size={16} />
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold leading-5">{item.label}</div>
-            {item.description ? <div className="mt-0.5 line-clamp-2 text-xs leading-5 text-white/64">{item.description}</div> : null}
+          <div className="min-w-0 flex-1 px-3">
+            <div className="text-sm font-semibold leading-5">{item.label}</div>
+            {item.description ? <div className="mt-0.5 line-clamp-2 text-xs leading-5 opacity-70">{item.description}</div> : null}
           </div>
         </Link>
 
         {item.href ? (
           <button
             type="button"
-            onClick={() => toggleFavorite(item.href!)}
-            className={`absolute right-9 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full transition ${
-              isFavorite ? "text-amber-300 opacity-100" : "text-white/36 opacity-85 hover:text-white"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              toggleFavorite(item.href!);
+            }}
+            className={`absolute right-9 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border transition ${
+              isFavorite
+                ? "border-[rgba(239,0,1,0.72)] bg-(--tc-accent,#ef0001) text-white shadow-[0_8px_18px_rgba(239,0,1,0.2)]"
+                : "border-transparent text-current opacity-40 hover:border-white/10 hover:bg-white/8 hover:opacity-100"
             }`}
-            aria-label={isFavorite ? `Remover ${item.label} dos favoritos` : `Adicionar ${item.label} aos favoritos`}
-            title={isFavorite ? "Remover dos favoritos" : "Favoritar"}
+            aria-pressed={isFavorite}
+            aria-label={isFavorite ? `Desfixar ${item.label}` : `Fixar ${item.label}`}
+            title={isFavorite ? "Desfixar atalho" : "Fixar atalho"}
           >
             <FiBookmark className={isFavorite ? "fill-current" : ""} size={14} />
           </button>
         ) : null}
 
         {hasChildren ? (
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white/52">
+          <span className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 opacity-55 transition-transform ${canOpenSubmenu && activeSubmenuId === item.id ? "rotate-90 opacity-100" : ""}`}>
             <FiChevronRight size={14} />
           </span>
         ) : null}
-
-        {hasChildren ? (
-          <div className="pointer-events-none invisible absolute left-full top-0 z-50 ml-3 w-[18.5rem] opacity-0 transition duration-150 group-hover/menu-item:pointer-events-auto group-hover/menu-item:visible group-hover/menu-item:opacity-100 group-focus-within/menu-item:pointer-events-auto group-focus-within/menu-item:visible group-focus-within/menu-item:opacity-100">
-            <div className="sidebar-shell-theme rounded-[26px] border border-white/12 p-3 shadow-[0_24px_70px_rgba(1,24,72,0.32)] backdrop-blur-2xl">
-              <div className="border-b border-white/10 pb-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/56">Submenu</p>
-                <div className="mt-1 text-lg font-bold text-white">{item.label}</div>
-                {item.description ? <p className="mt-1 text-sm leading-6 text-white/68">{item.description}</p> : null}
-              </div>
-              <div className="mt-3 space-y-2">
-                {item.children?.map((child) => renderMenuRow(child, depth + 1))}
-              </div>
-            </div>
-          </div>
-        ) : null}
       </div>
     );
   }
 
-  function renderPanel(title: string, description: string, items: SidebarMenuItem[]) {
+  function renderFlyoutPanel(
+    title: string,
+    description: string,
+    items: SidebarMenuItem[],
+    options?: { emptyLabel?: string; panelRef?: RefObject<HTMLDivElement | null>; placement?: FlyoutPlacement | null },
+  ) {
+    const placement = options?.placement ?? null;
+    if (!placement) return null;
+
+    const style: CSSProperties = {
+      top: placement.top,
+      left: placement.left,
+      width: placement.width,
+      maxHeight: placement.maxHeight,
+      zIndex: 120,
+    };
+
     return (
-      <div className="sidebar-shell-theme w-[20rem] rounded-[28px] border border-white/12 p-3 text-white shadow-[0_26px_80px_rgba(1,24,72,0.34)] backdrop-blur-2xl">
-        <div className="border-b border-white/10 pb-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/58">{title}</p>
-          <p className="mt-1 text-sm leading-6 text-white/72">{description}</p>
+      <div
+        ref={options?.panelRef ?? undefined}
+        style={style}
+        className="sidebar-shell-theme fixed flex flex-col overflow-hidden rounded-[28px] border border-white/12 shadow-[0_26px_80px_rgba(1,24,72,0.34)] backdrop-blur-2xl"
+        onMouseEnter={clearFlyoutCloseTimer}
+        onMouseLeave={scheduleSmartFlyoutClose}
+        onFocusCapture={clearFlyoutCloseTimer}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            scheduleSmartFlyoutClose();
+          }
+        }}
+      >
+        <div className="border-b border-white/10 px-4 pb-3 pt-4">
+          <p className="text-sm font-semibold tracking-tight">{title}</p>
+          <p className="mt-1 text-xs leading-5 opacity-70">{description}</p>
         </div>
-        <div className="mt-3 space-y-2">{items.map((item) => renderMenuRow(item))}</div>
+        <div className="flex-1 min-h-0 space-y-2 overflow-y-auto px-3 py-3" onScroll={bumpFlyoutRevision}>
+          {items.length > 0 ? (
+            items.map((item) => renderMenuRow(item))
+          ) : (
+            <div className="rounded-2xl border border-dashed border-white/14 bg-white/6 px-3 py-4 text-sm opacity-70">
+              {options?.emptyLabel ?? "Nenhuma opção disponível."}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
-  function renderFlatLinks(items: SidebarMenuItem[], isMobile = false) {
-    return items
-      .filter((item): item is SidebarMenuItem & { href: string } => typeof item.href === "string" && item.href.trim().length > 0)
-      .map((item) => {
-      const isActive = isHrefActive(item.href, pathname, searchQuery);
-      const isFavorite = favoriteHrefs.includes(item.href);
+  function renderSmartFavoriteToggle(item: SidebarMenuItem, tone: "desktop" | "mobile" = "desktop") {
+    if (!item.href) return null;
+    const isFavorite = favoriteHrefs.includes(item.href);
 
-      return (
-        <div key={item.href} className="group/item relative flex items-center">
-          <Link
-            href={item.href}
-            prefetch={false}
-            className={`group/link relative flex h-10 w-full min-w-0 items-center overflow-hidden rounded-xl text-sm font-semibold transition-all duration-200 ${
-              isMobile ? "justify-start gap-3 px-3" : "justify-start gap-3 px-3"
-            } ${
+    return (
+      <button
+        type="button"
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          toggleFavorite(item.href!);
+        }}
+        className={`inline-flex ${tone === "mobile" ? "h-8 w-8" : "h-7 w-7"} items-center justify-center rounded-full border transition ${
+          tone === "mobile"
+            ? isFavorite
+              ? "border-[rgba(239,0,1,0.72)] bg-(--tc-accent,#ef0001) text-white shadow-[0_8px_18px_rgba(239,0,1,0.2)]"
+              : "border-transparent text-current opacity-50 hover:border-white/10 hover:bg-white/8 hover:opacity-100"
+            : isFavorite
+              ? "border-[rgba(239,0,1,0.72)] bg-(--tc-accent,#ef0001) text-white shadow-[0_8px_18px_rgba(239,0,1,0.2)]"
+              : "border-transparent text-current opacity-40 hover:border-white/10 hover:bg-white/8 hover:opacity-100"
+        }`}
+        aria-pressed={isFavorite}
+        aria-label={isFavorite ? `Desfixar ${item.label}` : `Fixar ${item.label}`}
+        title={isFavorite ? "Desfixar atalho" : "Fixar atalho"}
+      >
+        <FiBookmark className={isFavorite ? "fill-current" : ""} size={14} />
+      </button>
+    );
+  }
+
+  function renderMobileSectionRow(section: SidebarMenuSection) {
+    const isActive = Boolean(section.href && isHrefActive(section.href, pathname, searchQuery)) || section.items.some((item) => isMenuItemActive(item));
+
+    return (
+      <div key={section.id} className="group/mobile-item relative flex items-center">
+        <button
+          type="button"
+          className={`group/link relative flex h-12 w-full min-w-0 items-center overflow-hidden rounded-2xl pr-20 text-sm font-semibold transition-all duration-200 ${
+            isActive
+              ? "sidebar-link-state-active bg-white/12 ring-1 ring-white/16 text-white shadow-[0_14px_30px_rgba(1,24,72,0.3)]"
+              : "sidebar-link-state-idle text-white/76 hover:bg-white/8 hover:text-white"
+          }`}
+          onClick={() => setMobileMenuPanel({ kind: "section", sectionId: section.id })}
+        >
+          <span
+            aria-hidden
+            className={`absolute left-1 top-2 bottom-2 w-0.75 rounded-full bg-(--tc-accent,#ef0001) transition-all ${
+              isActive ? "opacity-100" : "opacity-0 group-hover/link:opacity-60"
+            }`}
+          />
+          <div
+            className={`ml-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border transition-all duration-200 backdrop-blur-sm ${
               isActive
+                ? "sidebar-icon-state-active border-white/16 bg-white/14 text-white shadow-[0_12px_26px_rgba(1,24,72,0.28)]"
+                : "sidebar-icon-state-idle border-white/10 bg-white/6 text-white/84 group-hover/link:border-white/18 group-hover/link:bg-white/10 group-hover/link:text-white"
+            }`}
+          >
+            <section.icon size={17} />
+          </div>
+          <span className="sidebar-label flex-1 overflow-hidden px-3 text-left leading-snug truncate">{section.label}</span>
+          <span className="pointer-events-none pr-3 text-white/52">
+            <FiChevronRight size={14} />
+          </span>
+        </button>
+        <div className="absolute right-9 top-1/2 -translate-y-1/2">
+          {renderSmartFavoriteToggle(
+            {
+              id: section.id,
+              label: section.label,
+              icon: section.icon,
+              href: section.href,
+              description: section.description,
+              children: section.items,
+            },
+            "mobile",
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  function renderMobileItemRow(
+    item: SidebarMenuItem,
+    options: { sectionId: string; allowDrilldown?: boolean },
+  ) {
+    const href = item.href ?? null;
+    const isActive = item.href ? isHrefActive(item.href, pathname, searchQuery) : false;
+    const rowActive = isActive || Boolean(item.children?.some((child) => isMenuItemActive(child)));
+    const canDrill = Boolean(options.allowDrilldown && item.children?.length);
+
+    return (
+      <div key={item.id} className="group/mobile-item relative flex items-center">
+        {href ? (
+          <Link
+            href={href}
+            prefetch={false}
+            className={`group/link relative flex h-12 w-full min-w-0 items-center overflow-hidden rounded-2xl pr-20 text-sm font-semibold transition-all duration-200 ${
+              rowActive
                 ? "sidebar-link-state-active bg-white/12 ring-1 ring-white/16 text-white shadow-[0_14px_30px_rgba(1,24,72,0.3)]"
                 : "sidebar-link-state-idle text-white/76 hover:bg-white/8 hover:text-white"
             }`}
-            onMouseEnter={() => prefetchHref(item.href)}
-            onFocus={() => prefetchHref(item.href)}
-            onClick={isMobile && onClose ? () => onClose() : undefined}
+            onMouseEnter={() => prefetchHref(href)}
+            onFocus={() => prefetchHref(href)}
+            onClick={onClose ? () => onClose() : undefined}
           >
             <span
               aria-hidden
@@ -918,7 +1498,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
               }`}
             />
             <div
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border transition-all duration-200 backdrop-blur-sm ${
+              className={`ml-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border transition-all duration-200 backdrop-blur-sm ${
                 isActive
                   ? "sidebar-icon-state-active border-white/16 bg-white/14 text-white shadow-[0_12px_26px_rgba(1,24,72,0.28)]"
                   : "sidebar-icon-state-idle border-white/10 bg-white/6 text-white/84 group-hover/link:border-white/18 group-hover/link:bg-white/10 group-hover/link:text-white"
@@ -926,35 +1506,150 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             >
               <item.icon size={17} />
             </div>
-            <span className="sidebar-label flex-1 overflow-hidden pr-8 text-left leading-snug truncate">{item.label}</span>
+            <span className="sidebar-label flex-1 overflow-hidden px-3 text-left leading-snug truncate">{item.label}</span>
           </Link>
+        ) : (
           <button
             type="button"
-            onClick={() => toggleFavorite(item.href)}
-            className={`absolute right-2 inline-flex h-7 w-7 items-center justify-center rounded-full transition ${
-              isFavorite ? "text-amber-300 opacity-100" : "text-white/40 opacity-85 hover:text-white"
+            className={`group/link relative flex h-12 w-full min-w-0 items-center overflow-hidden rounded-2xl pr-20 text-sm font-semibold transition-all duration-200 ${
+              rowActive
+                ? "sidebar-link-state-active bg-white/12 ring-1 ring-white/16 text-white shadow-[0_14px_30px_rgba(1,24,72,0.3)]"
+                : "sidebar-link-state-idle text-white/76 hover:bg-white/8 hover:text-white"
             }`}
-            aria-label={isFavorite ? `Remover ${item.label} dos favoritos` : `Adicionar ${item.label} aos favoritos`}
-            title={isFavorite ? "Remover dos favoritos" : "Favoritar"}
+            onClick={() => {
+              setMobileMenuPanel({ kind: "submenu", sectionId: options.sectionId, itemId: item.id });
+            }}
           >
-            <FiBookmark className={isFavorite ? "fill-current" : ""} size={14} />
+            <div
+              className={`ml-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border transition-all duration-200 backdrop-blur-sm ${
+                rowActive
+                  ? "sidebar-icon-state-active border-white/16 bg-white/14 text-white shadow-[0_12px_26px_rgba(1,24,72,0.28)]"
+                  : "sidebar-icon-state-idle border-white/10 bg-white/6 text-white/84 group-hover/link:border-white/18 group-hover/link:bg-white/10 group-hover/link:text-white"
+              }`}
+            >
+              <item.icon size={17} />
+            </div>
+            <span className="sidebar-label flex-1 overflow-hidden px-3 text-left leading-snug truncate">{item.label}</span>
+            <span className="pointer-events-none pr-3 text-white/52">
+              <FiChevronRight size={14} />
+            </span>
           </button>
-        </div>
-      );
-      });
+        )}
+
+        {href ? (
+          <div className="absolute right-9 top-1/2 -translate-y-1/2">
+            {renderSmartFavoriteToggle(item, "mobile")}
+          </div>
+        ) : null}
+
+        {canDrill && href ? (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setMobileMenuPanel({ kind: "submenu", sectionId: options.sectionId, itemId: item.id });
+            }}
+            className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/12 bg-white/6 text-white/72 transition hover:border-white/18 hover:bg-white/10 hover:text-white"
+            aria-label={`Abrir opções de ${item.label}`}
+            title="Abrir submenu"
+          >
+            <FiChevronRight size={14} />
+          </button>
+        ) : null}
+      </div>
+    );
   }
+
+  function renderDesktopNavigationItem(item: SidebarMenuItem) {
+    const isActive = isMenuItemActive(item);
+    const hasChildren = Boolean(item.children?.length);
+    const isOpen = activeFlyoutId === item.id;
+    const isHighlighted = activeFlyoutId ? isOpen : isActive;
+
+    return (
+      <div key={item.id} className="relative">
+        <Link
+          href={item.href ?? "#"}
+          prefetch={false}
+          ref={(node) => {
+            if (node) {
+              rootTriggerRefs.current.set(item.id, node);
+              return;
+            }
+            rootTriggerRefs.current.delete(item.id);
+          }}
+          className={`sidebar-link group/link relative flex min-w-0 items-center overflow-hidden rounded-[18px] transition-all duration-200 ${
+            isHighlighted
+              ? "sidebar-link-state-active bg-white/14 text-white shadow-[0_14px_28px_rgba(1,24,72,0.26)]"
+              : "sidebar-link-state-idle text-white/86 hover:bg-white/9 hover:text-white"
+          }`}
+          title={item.label}
+          aria-label={item.label}
+          aria-haspopup={hasChildren ? "menu" : undefined}
+          aria-expanded={hasChildren ? isOpen : undefined}
+          onMouseEnter={() => {
+            if (item.href) prefetchHref(item.href);
+            if (hasChildren) {
+              openSmartFlyout(item.id);
+            } else {
+              closeSmartFlyouts();
+            }
+          }}
+          onMouseLeave={hasChildren ? scheduleSmartFlyoutClose : undefined}
+          onFocus={() => {
+            if (item.href) prefetchHref(item.href);
+            if (hasChildren) {
+              openSmartFlyout(item.id);
+            } else {
+              closeSmartFlyouts();
+            }
+          }}
+          onBlur={hasChildren ? scheduleSmartFlyoutClose : undefined}
+          onClick={() => onClose?.()}
+        >
+          <span
+            aria-hidden
+            className={`absolute left-1 top-2 bottom-2 w-0.75 rounded-full bg-(--tc-accent,#ef0001) transition-all ${
+              isHighlighted ? "opacity-100" : "opacity-0"
+            }`}
+          />
+          <div
+            className={`sidebar-menu-icon ml-1.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] border transition-all duration-200 ${
+              isHighlighted
+                ? "sidebar-icon-state-active border-white/18 bg-white/16 text-white shadow-[0_12px_24px_rgba(1,24,72,0.22)]"
+                : "sidebar-icon-state-idle border-white/10 bg-white/6 text-white/84 group-hover/link:border-white/18 group-hover/link:bg-white/10 group-hover/link:text-white"
+            }`}
+          >
+            <item.icon size={17} />
+          </div>
+          <div className="sidebar-label min-w-0 flex-1 px-3 py-1.5">
+            <div className="text-sm font-semibold leading-5">{item.label}</div>
+          </div>
+          {hasChildren ? (
+            <div className="sidebar-label shrink-0 pr-2 opacity-52 transition group-hover/link:opacity-90">
+              <FiChevronRight size={15} />
+            </div>
+          ) : null}
+        </Link>
+      </div>
+    );
+  }
+
+  const isFavoritesOpen = activeFlyoutId === "favorites";
 
   const DesktopNav = (
     <aside
-      className="sidebar-shell sidebar-shell-theme hidden fixed left-0 top-0 z-40 h-screen overflow-visible border-r text-white backdrop-blur-2xl lg:flex"
+      className="sidebar-shell sidebar-shell-theme hidden fixed left-0 top-0 z-40 h-screen overflow-visible border-r backdrop-blur-2xl lg:flex"
       suppressHydrationWarning
       data-app-role={appRole ?? ""}
       data-active-client={activeClientSlug ?? ""}
       data-is-global-admin={isGlobalAdmin ? "1" : "0"}
+      data-flyout-open={activeFlyoutId ? "1" : "0"}
     >
-      <div className="flex h-full w-full flex-col px-3 py-4">
-        <div className="flex items-center justify-center pb-4">
-          <Link href={logoHref} className="sidebar-logo flex items-center justify-center">
+      <div className="flex h-full w-full flex-col px-3 py-3">
+        <div className="pb-3">
+          <Link href={logoHref} className="sidebar-logo flex items-center gap-3 rounded-[24px] px-2 py-2">
             <div className="sidebar-logo-mark sidebar-logo-mark-theme relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border backdrop-blur">
               <span
                 className="absolute inset-0 bg-[radial-gradient(circle_at_28%_26%,rgba(255,255,255,0.18),transparent_56%)]"
@@ -982,79 +1677,60 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                 <path d="M22 46h20" />
               </svg>
             </div>
-            <div className="sidebar-brand hidden">
+            <div className="sidebar-reveal sidebar-brand flex min-w-0 flex-col">
               <span className="sidebar-brand-kicker">Testing Company</span>
               <span className="sidebar-brand-title">Quality Control</span>
             </div>
           </Link>
         </div>
 
-        <div className="flex flex-1 flex-col justify-between gap-3">
-          <div className="space-y-3">
-            <div className="sidebar-nav-caption hidden px-1 text-xs uppercase tracking-[0.18em] text-white/55">
-              Navegacao
+        <div className="mb-2 space-y-2">
+          <button
+            type="button"
+            ref={favoritesTriggerRef}
+            className={`sidebar-link group/link relative flex w-full min-w-0 items-center overflow-hidden rounded-[18px] text-left transition-all duration-200 ${
+              isFavoritesOpen
+                ? "sidebar-link-state-active bg-white/14 text-white shadow-[0_14px_28px_rgba(1,24,72,0.26)]"
+                : "sidebar-link-state-idle text-white/86 hover:bg-white/8 hover:text-white"
+            }`}
+            title={t("nav.favorites")}
+            aria-label={t("nav.favorites")}
+            aria-haspopup="menu"
+            aria-expanded={isFavoritesOpen}
+            onMouseEnter={() => openSmartFlyout("favorites")}
+            onMouseLeave={scheduleSmartFlyoutClose}
+            onFocus={() => openSmartFlyout("favorites")}
+            onBlur={scheduleSmartFlyoutClose}
+          >
+            <div className="sidebar-menu-icon ml-1.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] border border-white/12 bg-(--tc-accent,#ef0001) text-white shadow-[0_10px_24px_rgba(239,0,1,0.18)]">
+              <FiBookmark className="fill-current" size={16} />
             </div>
-            <div className="space-y-2">
-              {desktopSections.map((section) => (
-                <div key={section.id} className="group/root relative">
-                  <Link
-                    href={section.href ?? "/"}
-                    prefetch={false}
-                    className={`flex h-12 w-12 items-center justify-center rounded-[18px] border transition ${
-                      section.items.some((item) => isMenuItemActive(item))
-                        ? "border-white/18 bg-white/16 text-white shadow-[0_14px_28px_rgba(1,24,72,0.3)]"
-                        : "border-white/10 bg-white/8 text-white/86 hover:border-white/20 hover:bg-white/12 hover:text-white"
-                    }`}
-                    title={section.label}
-                    aria-label={section.label}
-                    onMouseEnter={() => section.href && prefetchHref(section.href)}
-                    onFocus={() => section.href && prefetchHref(section.href)}
-                  >
-                    <section.icon size={17} />
-                  </Link>
-
-                  <div className="pointer-events-none invisible absolute left-full top-0 z-50 ml-3 w-[20rem] opacity-0 transition duration-150 group-hover/root:pointer-events-auto group-hover/root:visible group-hover/root:opacity-100 group-focus-within/root:pointer-events-auto group-focus-within/root:visible group-focus-within/root:opacity-100">
-                    {renderPanel(section.label, section.description, section.items)}
-                  </div>
-                </div>
-              ))}
+            <div className="sidebar-label min-w-0 flex-1 px-3 py-1.5">
+              <div className="text-sm font-semibold leading-5">Favoritos</div>
+              <div className="mt-0.5 text-xs leading-4 opacity-60">Atalhos fixados</div>
             </div>
-          </div>
+            <span className="sidebar-label mr-3 inline-flex h-7 min-w-7 items-center justify-center rounded-full border border-white/10 bg-white/8 px-2 text-[11px] font-semibold">
+              {favoriteNavigation.length}
+            </span>
+          </button>
+          <div className="sidebar-divider-line h-px w-full bg-white/10" aria-hidden />
+        </div>
 
-          <div className="space-y-2 pt-2">
-            <div className="group/root relative">
-              <button
-                type="button"
-                className="flex h-12 w-12 items-center justify-center rounded-[18px] border border-white/10 bg-white/8 text-white/86 transition hover:border-white/20 hover:bg-white/12 hover:text-white"
-                title={t("nav.favorites")}
-                aria-label={t("nav.favorites")}
-              >
-                <FiBookmark size={17} />
-              </button>
-
-              <div className="pointer-events-none invisible absolute bottom-0 left-full z-50 ml-3 max-h-[calc(100vh-2rem)] w-[20rem] overflow-y-auto opacity-0 transition duration-150 group-hover/root:pointer-events-auto group-hover/root:visible group-hover/root:opacity-100 group-focus-within/root:pointer-events-auto group-focus-within/root:visible group-focus-within/root:opacity-100">
-                <div className="sidebar-shell-theme rounded-[28px] border border-white/12 p-3 text-white shadow-[0_26px_80px_rgba(1,24,72,0.34)] backdrop-blur-2xl">
-                  <div className="border-b border-white/10 pb-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/58">{t("nav.favorites")}</p>
-                    <p className="mt-1 text-sm leading-6 text-white/72">Atalhos salvos para abrir em poucos cliques.</p>
-                  </div>
-                  <div className="mt-3 space-y-2">
-                    {favoriteNavigation.length > 0 ? (
-                      favoriteNavigation.map((item) => renderMenuRow(item))
-                    ) : (
-                      <div className="rounded-2xl border border-dashed border-white/14 bg-white/6 px-3 py-4 text-sm text-white/64">
-                        Nenhum favorito salvo ainda.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+        <div className="flex min-h-0 flex-1 flex-col gap-2">
+          <nav className="min-h-0 flex-1 overflow-visible pr-0">
+            <div className="sidebar-nav-caption sidebar-label px-2 text-xs uppercase tracking-[0.18em] opacity-55">
+              Navegação
             </div>
+            <div className="mt-1.5 space-y-1">
+              {desktopNavigationItems.map((item) => renderDesktopNavigationItem(item))}
+            </div>
+          </nav>
 
-            <div className="sidebar-footer hidden">
-              <div className="sidebar-footer-divider h-px w-full bg-white/10" aria-hidden />
-              <div className="sidebar-footer-note pt-2 text-[0.78rem] font-light italic tracking-[0.02em] text-white/46">
-                <a href="https://www.testingcompany.com.br/" target="_blank" rel="noopener noreferrer" className="hover:text-white/70 transition-colors">
+          <div className="mt-auto space-y-1 pt-1">
+            <div className="sidebar-divider-line h-px w-full bg-white/10" aria-hidden />
+            <div className="sidebar-footer pt-1">
+              <div className="sidebar-footer-note text-[0.78rem] font-light italic tracking-[0.02em]">
+                <a href="https://www.testingcompany.com.br/" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-white/70">
                   Testing Company Platform
                 </a>
               </div>
@@ -1065,17 +1741,50 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     </aside>
   );
 
+  const portalTarget = typeof document !== "undefined" ? document.body : null;
+  const DesktopFlyouts =
+    portalTarget && activeFlyoutId && rootFlyoutPlacement
+      ? createPortal(
+          <>
+            {renderFlyoutPanel(
+              activeFlyoutTitle,
+              activeFlyoutDescription,
+              activeFlyoutItems,
+              {
+                emptyLabel:
+                  activeFlyoutId === "favorites" ? "Nenhum favorito salvo ainda." : "Nenhuma opção disponível.",
+                panelRef: rootFlyoutRef,
+                placement: rootFlyoutPlacement,
+              },
+            )}
+            {activeSubmenuItem && activeSubmenuItems.length > 0 && subFlyoutPlacement
+              ? renderFlyoutPanel(
+                  activeSubmenuItem.label,
+                  activeSubmenuItem.description ?? "Opções disponíveis nesta área.",
+                  activeSubmenuItems,
+                  {
+                    emptyLabel: "Nenhuma opção disponível.",
+                    panelRef: submenuFlyoutRef,
+                    placement: subFlyoutPlacement,
+                  },
+                )
+              : null}
+          </>,
+          portalTarget,
+        )
+      : null;
+
   const MobileNav =
     mobileOpen &&
     onClose && (
       <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden dark:bg-black/60" onClick={onClose}>
-        <aside
-          id={mobilePanelId}
-          suppressHydrationWarning
-          data-app-role={appRole ?? ""}
-          data-active-client={activeClientSlug ?? ""}
-          data-is-global-admin={isGlobalAdmin ? "1" : "0"}
-          className="sidebar-mobile-theme flex h-full w-72 flex-col border-r text-white backdrop-blur-2xl"
+          <aside
+            id={mobilePanelId}
+            suppressHydrationWarning
+            data-app-role={appRole ?? ""}
+            data-active-client={activeClientSlug ?? ""}
+            data-is-global-admin={isGlobalAdmin ? "1" : "0"}
+          className="sidebar-mobile-theme flex h-full w-[min(18rem,calc(100vw-0.75rem))] max-w-[calc(100vw-0.75rem)] flex-col border-r text-white backdrop-blur-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center gap-3 border-b border-white/10 p-4 relative">
@@ -1112,13 +1821,99 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
           <nav className="flex-1 min-h-0 overflow-y-auto">
             <div className="space-y-4 p-3">
-              {favoriteNavigation.length > 0 ? (
-                <div className="space-y-2 rounded-2xl border border-white/8 bg-white/5 p-2">
-                  <p className="px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50">{t("nav.favorites")}</p>
-                  {renderFlatLinks(favoriteNavigation)}
+              <div className="rounded-[26px] border border-white/10 bg-white/6 p-4 shadow-[0_18px_40px_rgba(1,24,72,0.18)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/52">Menu inteligente</p>
+                    <h2 className="mt-1 text-lg font-bold leading-tight text-white">{mobilePanelTitle}</h2>
+                    <p className="mt-1 text-sm leading-6 text-white/68">{mobilePanelDescription}</p>
+                  </div>
+                  {mobileMenuPanel.kind !== "root" ? (
+                    <button
+                      type="button"
+                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/12 bg-white/8 text-white/82 transition hover:border-white/20 hover:bg-white/12 hover:text-white"
+                      onClick={() => {
+                        if (mobileMenuPanel.kind === "submenu") {
+                          setMobileMenuPanel({ kind: "section", sectionId: mobileMenuPanel.sectionId });
+                          return;
+                        }
+                        setMobileMenuPanel({ kind: "root" });
+                      }}
+                      aria-label={mobileBackLabel}
+                      title={mobileBackLabel}
+                    >
+                      <FiChevronRight size={16} className="rotate-180" />
+                    </button>
+                  ) : null}
                 </div>
-              ) : null}
-              <div className="space-y-2">{renderFlatLinks(visibleNavigation)}</div>
+              </div>
+
+              {mobileMenuPanel.kind === "root" ? (
+                <div className="space-y-2">
+                  {favoriteNavigation.length > 0 ? (
+                    <button
+                      type="button"
+                      className="group/mobile-item flex h-12 w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/6 px-3 text-left text-sm font-semibold text-white/82 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+                      onClick={() => setMobileMenuPanel({ kind: "favorites" })}
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-[14px] border border-white/10 bg-white/8 text-white/84">
+                        <FiBookmark size={17} />
+                      </span>
+                      <span className="flex-1">Favoritos</span>
+                      <span className="rounded-full border border-white/12 bg-white/6 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/62">
+                        {favoriteNavigation.length}
+                      </span>
+                      <FiChevronRight size={14} className="text-white/52" />
+                    </button>
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-white/14 bg-white/6 px-3 py-4 text-sm text-white/64">
+                      Nenhum favorito salvo ainda.
+                    </div>
+                  )}
+
+                  {desktopSections.map((section) => renderMobileSectionRow(section))}
+                </div>
+              ) : mobileMenuPanel.kind === "favorites" ? (
+                <div className="space-y-2 rounded-2xl border border-white/8 bg-white/5 p-2">
+                  {favoriteNavigation.length > 0 ? (
+                    favoriteNavigation.map((item) => renderMobileItemRow(item, { sectionId: "favorites", allowDrilldown: false }))
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-white/14 bg-white/6 px-3 py-4 text-sm text-white/64">
+                      Nenhum favorito salvo ainda.
+                    </div>
+                  )}
+                </div>
+              ) : mobileMenuPanel.kind === "section" ? (
+                <div className="space-y-2">
+                  {mobileCurrentItems.length > 0 ? (
+                    mobileCurrentItems.map((item) =>
+                      renderMobileItemRow(item, {
+                        sectionId: mobileCurrentSection?.id ?? "",
+                        allowDrilldown: true,
+                      }),
+                    )
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-white/14 bg-white/6 px-3 py-4 text-sm text-white/64">
+                      Nenhuma opção disponível.
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {mobileCurrentItems.length > 0 ? (
+                    mobileCurrentItems.map((item) =>
+                      renderMobileItemRow(item, {
+                        sectionId: mobileCurrentSection?.id ?? "",
+                        allowDrilldown: false,
+                      }),
+                    )
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-white/14 bg-white/6 px-3 py-4 text-sm text-white/64">
+                      Nenhuma opção disponível.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </nav>
 
@@ -1137,6 +1932,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   return (
     <>
       {DesktopNav}
+      {DesktopFlyouts}
       {MobileNav}
     </>
   );

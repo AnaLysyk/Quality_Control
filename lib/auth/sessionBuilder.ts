@@ -6,6 +6,7 @@ import {
   listLocalLinksForUser,
   normalizeLocalRole,
 } from "@/lib/auth/localStore";
+import { resolvePermissionRoleForUser } from "@/lib/adminUsers";
 import { resolveCapabilities } from "@/lib/permissions";
 import { resolveVisibleCompanies, resolveCompanyVisibilityMode } from "@/lib/companyVisibility";
 
@@ -57,9 +58,11 @@ export async function buildLocalSessionForUser(
   ]);
 
   const isGlobalAdmin = user.globalRole === "global_admin" || user.is_global_admin === true;
+  const permissionRole = resolvePermissionRoleForUser(user, links);
   const visibilityMode = resolveCompanyVisibilityMode(
     {
-      role: user.role ?? null,
+      permissionRole,
+      role: permissionRole,
       companyRole: user.role ?? null,
       userOrigin: user.user_origin ?? null,
       isGlobalAdmin,
@@ -70,7 +73,8 @@ export async function buildLocalSessionForUser(
   const shouldBindCompanyContext = visibilityMode !== "all";
   const allowedCompanies = resolveVisibleCompanies(companies, {
     user: {
-      role: user.role ?? null,
+      permissionRole,
+      role: permissionRole,
       companyRole: user.role ?? null,
       userOrigin: user.user_origin ?? null,
       isGlobalAdmin,
@@ -104,7 +108,7 @@ export async function buildLocalSessionForUser(
     membershipCapabilities: activeLink?.capabilities ?? null,
   });
 
-  const effectiveRole = isGlobalAdmin ? "leader_tc" : companyRole;
+  const effectiveRole = isGlobalAdmin ? "leader_tc" : permissionRole;
 
   const displayName =
     (typeof user.full_name === "string" ? user.full_name.trim() : "") ||

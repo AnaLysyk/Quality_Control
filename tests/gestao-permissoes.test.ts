@@ -147,18 +147,27 @@ describe("A) Perfil 'user' (viewer) — permissões bloqueadas", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// B) Perfil 'company' (company_admin) — permissões ausentes
+// B) Perfil 'company' (company_admin) — usuários da empresa liberados
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("B) Perfil 'company' (company_admin) — permissões bloqueadas", () => {
+describe("B) Perfil 'company' (company_admin) — usuários da empresa liberados", () => {
   const p = perm("empresa");
 
-  test("B1. users: view/create/edit/delete todos bloqueados", () => {
-    expect(hasPermissionAccess(p, "users", "view")).toBe(false);
-    expect(hasPermissionAccess(p, "users", "create")).toBe(false);
+  test("B1. users: view/create liberados; edit/delete bloqueados", () => {
+    expect(hasPermissionAccess(p, "users", "view")).toBe(true);
+    expect(hasPermissionAccess(p, "users", "create")).toBe(true);
     expect(hasPermissionAccess(p, "users", "edit")).toBe(false);
     expect(hasPermissionAccess(p, "users", "delete")).toBe(false);
-    console.log("✅ B1. company: users totalmente bloqueado");
+    console.log("✅ B1. company: users com view/create e sem edit/delete");
+  });
+
+  test("B1b. company_user também pode ver e criar usuários", () => {
+    const companyUser = perm("company_user");
+    expect(hasPermissionAccess(companyUser, "users", "view")).toBe(true);
+    expect(hasPermissionAccess(companyUser, "users", "create")).toBe(true);
+    expect(hasPermissionAccess(companyUser, "users", "edit")).toBe(false);
+    expect(hasPermissionAccess(companyUser, "users", "delete")).toBe(false);
+    console.log("✅ B1b. company_user: users com view/create e sem edit/delete");
   });
 
   test("B2. permissions: view/edit/reset/clone todos bloqueados", () => {
@@ -515,7 +524,7 @@ describe("F) Integração DB — resolvePermissionAccessForUser", () => {
     console.log(`✅ F1. viewer (DB) → roleKey=${access.roleKey} | releases=${hasPermissionAccess(access.permissions,"releases","view")} | dashboard=${hasPermissionAccess(access.permissions,"dashboard","view")}`);
   });
 
-  test("F2. Usuário company_admin → roleKey='company', users/permissions/audit bloqueados", async () => {
+  test("F2. Usuário company_admin → roleKey='company', users liberados e permissões/audit bloqueados", async () => {
     const tag = uid();
     const user = await makeUser(`cadmin-${tag}`);
     const company = await makeCompany(`ca-${tag}`);
@@ -524,7 +533,8 @@ describe("F) Integração DB — resolvePermissionAccessForUser", () => {
     const access = await resolvePermissionAccessForUser(user.id);
 
     expect(access.roleKey).toBe("empresa");
-    expect(hasPermissionAccess(access.permissions, "users", "view")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "users", "view")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "users", "create")).toBe(true);
     expect(hasPermissionAccess(access.permissions, "permissions", "edit")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "audit", "view")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "access_requests", "view")).toBe(false);

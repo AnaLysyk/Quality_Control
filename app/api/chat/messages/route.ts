@@ -7,6 +7,7 @@ import {
   appendChatMessage,
   listChatInboxSummaries,
   listChatThreadMessages,
+  type ChatAttachment,
 } from "@/lib/chatStore";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 
@@ -20,7 +21,7 @@ function readPeerId(url: URL) {
 export async function GET(req: NextRequest) {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
   const url = new URL(req.url);
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
   }
 
   if (peerId === access.userId) {
-    return NextResponse.json({ error: "Escolha outro usuário para conversar" }, { status: 400 });
+    return NextResponse.json({ error: "Escolha outro usuario para conversar" }, { status: 400 });
   }
 
   const [contacts, peerUser] = await Promise.all([
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
   ]);
   const peerContact = contacts.find((item) => item.id === peerId) ?? null;
   if (!peerUser || !peerContact) {
-    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
   }
 
   const messages = await listChatThreadMessages(access.userId, peerId);
@@ -56,21 +57,22 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
   const body = await req.json().catch(() => null);
   const peerId = typeof body?.peerId === "string" ? body.peerId.trim() : "";
   const text = typeof body?.text === "string" ? body.text.trim() : "";
+  const attachments = Array.isArray(body?.attachments) ? (body.attachments as ChatAttachment[]) : [];
 
   if (!peerId) {
-    return NextResponse.json({ error: "peerId obrigatório" }, { status: 400 });
+    return NextResponse.json({ error: "peerId obrigatorio" }, { status: 400 });
   }
-  if (!text) {
-    return NextResponse.json({ error: "Mensagem obrigatória" }, { status: 400 });
+  if (!text && attachments.length === 0) {
+    return NextResponse.json({ error: "Mensagem ou anexo obrigatorio" }, { status: 400 });
   }
   if (peerId === access.userId) {
-    return NextResponse.json({ error: "Escolha outro usuário para conversar" }, { status: 400 });
+    return NextResponse.json({ error: "Escolha outro usuario para conversar" }, { status: 400 });
   }
 
   const [sender, contacts, peerUser] = await Promise.all([
@@ -81,7 +83,7 @@ export async function POST(req: NextRequest) {
 
   const peerContact = contacts.find((item) => item.id === peerId) ?? null;
   if (!sender || !peerUser || !peerContact) {
-    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
   }
 
   const message = await appendChatMessage({
@@ -101,6 +103,7 @@ export async function POST(req: NextRequest) {
       avatarUrl: peerContact.avatar_url,
     },
     text,
+    attachments,
   });
 
   return NextResponse.json(

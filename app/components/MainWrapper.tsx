@@ -18,10 +18,15 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
   const isDocumentosRoute = pathname.startsWith("/documentos");
   const isDocsRoute = pathname.startsWith("/docs") || companySection === "docs";
   const isAutomacoesRoute = pathname.startsWith("/automacoes");
+  const isOperationsRoute =
+    pathname.startsWith("/operacao") ||
+    pathname.startsWith("/operacoes") ||
+    pathname.startsWith("/admin/operacao") ||
+    pathname.startsWith("/runs");
 
   // Left padding grows with viewport; right padding uses --content-pr to always
   // clear the fixed floating action strip regardless of breakpoint.
-  const leftPx = isDocumentosRoute || isDocsRoute || isAutomacoesRoute
+  const leftPx = isDocumentosRoute || isDocsRoute || isAutomacoesRoute || isOperationsRoute
     ? "px-0"
     : isUsersPermissionsRoute
     ? "px-2 sm:px-2.5 lg:px-3 xl:px-4 2xl:px-5"
@@ -31,7 +36,7 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
     ? "px-2 sm:px-3 lg:px-4 xl:px-5 2xl:px-6"
     : "px-2.5 sm:px-4 lg:px-5 xl:px-6 2xl:px-8";
 
-  const bottomPb = isDocumentosRoute || isDocsRoute || isAutomacoesRoute
+  const bottomPb = isDocumentosRoute || isDocsRoute || isAutomacoesRoute || isOperationsRoute
     ? "pb-0"
     : isUsersPermissionsRoute
     ? "pb-4 sm:pb-5"

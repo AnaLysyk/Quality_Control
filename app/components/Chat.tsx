@@ -1,13 +1,28 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import {
-  FiClock,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
+import {
+  FiArrowUpRight,
+  FiBookmark,
   FiChevronRight,
+  FiClock,
+  FiDownload,
+  FiFileText,
   FiInbox,
+  FiLink2,
   FiMessageSquare,
+  FiPaperclip,
   FiRefreshCw,
   FiSearch,
   FiSend,
@@ -16,10 +31,20 @@ import {
 } from "react-icons/fi";
 
 import UserAvatar from "@/components/UserAvatar";
-import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import { fetchApi } from "@/lib/api";
 import { resolveActiveIdentity } from "@/lib/activeIdentity";
+
+type ChatAttachment = {
+  id: string;
+  kind: "file" | "link" | "note" | "system";
+  label: string;
+  url: string | null;
+  mimeType: string | null;
+  sizeLabel: string | null;
+  sourceLabel: string | null;
+};
 
 type ChatContact = {
   id: string;
@@ -63,8 +88,20 @@ type ChatMessage = {
   recipientHandle: string | null;
   recipientAvatarUrl: string | null;
   text: string;
+  attachments?: ChatAttachment[];
   createdAt: string;
 };
+
+type TimelineEntry =
+  | { kind: "divider"; key: string; label: string }
+  | { kind: "message"; key: string; message: ChatMessage };
+
+function makeClientId(prefix: string) {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `${prefix}-${crypto.randomUUID()}`;
+  }
+  return `${prefix}-${Date.now()}-${Math.round(Math.random() * 1_000_000)}`;
+}
 
 function normalizeSearch(value: string) {
   return value
@@ -108,9 +145,26 @@ function formatRelative(value: string) {
   return formatCompactDate(value);
 }
 
+function formatDayLabel(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "short",
+  }).format(date);
+}
+
+function formatFileSize(bytes: number) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return null;
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function getContactRoleLabel(contact: ChatContact) {
   const value = (contact.profile_kind ?? contact.permission_role ?? "").toLowerCase();
-  if (value === "leader_tc") return "Lider TC";
+  if (value === "leader_tc") return "Líder TC";
   if (value === "technical_support") return "Suporte Tecnico";
   if (value === "empresa") return "Empresa";
   if (value === "company_user") return "Usuario da empresa";
@@ -134,7 +188,89 @@ function getCompanySummary(contact: ChatContact) {
   return `${names[0]} +${names.length - 1}`;
 }
 
-function ContactCard({
+function isFullDirectoryUser(user: unknown) {
+  const legacyUser = (user ?? null) as {
+    isGlobalAdmin?: boolean;
+    is_global_admin?: boolean;
+    globalRole?: string | null;
+    permissionRole?: string | null;
+    companyRole?: string | null;
+    role?: string | null;
+  } | null;
+
+  if (legacyUser?.isGlobalAdmin || legacyUser?.is_global_admin) return true;
+  const roles = [
+    legacyUser?.globalRole,
+    legacyUser?.permissionRole,
+    legacyUser?.companyRole,
+    legacyUser?.role,
+  ]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .map((value) => value.trim().toLowerCase());
+
+  return roles.some((value) =>
+    value === "global_admin" || value === "leader_tc" || value === "technical_support",
+  );
+}
+
+function buildFileAttachments(files: File[]) {
+  return files
+    .filter((file) => Boolean(file.name.trim()))
+    .map<ChatAttachment>((file) => ({
+      id: makeClientId("file"),
+      kind: "file",
+      label: file.name.trim(),
+      url: null,
+      mimeType: file.type || null,
+      sizeLabel: formatFileSize(file.size),
+      sourceLabel: "Arquivo local",
+    }));
+}
+
+function buildUrlAttachment(url: string, sourceLabel: string) {
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+
+  const isSystemUrl =
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("http://localhost") ||
+    trimmed.includes("/admin/") ||
+    trimmed.includes("/empresas/") ||
+    trimmed.includes("/chat");
+
+  return {
+    id: makeClientId(isSystemUrl ? "system" : "link"),
+    kind: isSystemUrl ? "system" : "link",
+    label: trimmed.replace(/^https?:\/\//i, "").slice(0, 96),
+    url: trimmed,
+    mimeType: null,
+    sizeLabel: null,
+    sourceLabel,
+  } satisfies ChatAttachment;
+}
+
+function buildNoteAttachment(text: string) {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  return {
+    id: makeClientId("note"),
+    kind: "note",
+    label: trimmed.slice(0, 120),
+    url: null,
+    mimeType: "text/plain",
+    sizeLabel: `${trimmed.length} caracteres`,
+    sourceLabel: "Nota arrastada",
+  } satisfies ChatAttachment;
+}
+
+function attachmentTone(attachment: ChatAttachment) {
+  if (attachment.kind === "system") return "border-sky-400/20 bg-sky-400/10 text-sky-100";
+  if (attachment.kind === "link") return "border-emerald-400/20 bg-emerald-400/10 text-emerald-100";
+  if (attachment.kind === "note") return "border-violet-400/20 bg-violet-400/10 text-violet-100";
+  return "border-black/10 bg-[var(--tc-surface-alt)] text-[var(--tc-text-primary)] dark:border-white/12 dark:bg-white/8 dark:text-white";
+}
+
+function ContactRow({
   contact,
   active,
   recent,
@@ -149,10 +285,10 @@ function ContactCard({
     <button
       type="button"
       onClick={() => onSelect(contact.id)}
-      className={`group flex w-full items-center gap-3 rounded-[22px] border px-3 py-3 text-left transition ${
+      className={`group flex w-full items-start gap-3 rounded-[20px] border px-3 py-3 text-left transition ${
         active
-          ? "border-white/20 bg-white/14 text-white shadow-[0_14px_30px_rgba(1,24,72,0.26)]"
-          : "border-white/10 bg-white/6 text-white/82 hover:border-white/18 hover:bg-white/10 hover:text-white"
+          ? "border-black/16 bg-[var(--tc-surface)] text-[var(--tc-text-primary)] shadow-[0_12px_26px_rgba(1,24,72,0.10)] dark:border-white/16 dark:bg-white/10 dark:text-white dark:shadow-[0_12px_26px_rgba(1,24,72,0.24)]"
+          : "border-transparent bg-transparent text-[var(--tc-text-primary)] hover:border-black/10 hover:bg-black/2 dark:text-white/82 dark:hover:border-white/10 dark:hover:bg-white/6 dark:hover:text-white"
       }`}
     >
       <UserAvatar
@@ -160,40 +296,43 @@ function ContactCard({
         name={contact.name}
         size="sm"
         className="shrink-0"
-        frameClassName={active ? "border border-white/18" : "border border-white/10"}
+        frameClassName={active ? "border border-black/16 dark:border-white/16" : "border border-black/10 dark:border-white/10"}
       />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="truncate text-sm font-semibold leading-5">{contact.name}</div>
-            <div className="truncate text-xs leading-5 text-white/62">{getContactSubtitle(contact)}</div>
+            <div className="truncate text-xs leading-5 opacity-65">{getContactSubtitle(contact)}</div>
           </div>
           {recent ? (
-            <span className="inline-flex rounded-full border border-white/12 bg-white/8 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/72">
+            <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)] dark:border-white/10 dark:bg-white/8 dark:text-white/68">
               Recente
             </span>
           ) : null}
         </div>
 
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span className="inline-flex rounded-full border border-white/10 bg-white/8 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/72">
+          <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)] dark:border-white/10 dark:bg-white/8 dark:text-white/72">
             {getContactRoleLabel(contact)}
           </span>
           {getCompanySummary(contact) ? (
-            <span className="inline-flex max-w-full rounded-full border border-white/10 bg-white/8 px-2.5 py-1 text-[10px] font-semibold text-white/72">
+            <span className="inline-flex max-w-full rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold text-[var(--tc-text-muted)] dark:border-white/10 dark:bg-white/8 dark:text-white/72">
               <span className="truncate">{getCompanySummary(contact)}</span>
             </span>
           ) : null}
         </div>
       </div>
 
-      <FiMessageSquare className="shrink-0 text-white/40 group-hover:text-white" size={16} />
+      <FiChevronRight
+        className="mt-1 shrink-0 text-[var(--tc-text-muted)] transition group-hover:text-[var(--tc-text-primary)] dark:text-white/38 dark:group-hover:text-white"
+        size={16}
+      />
     </button>
   );
 }
 
-function ThreadPreview({
+function ThreadRow({
   summary,
   contact,
   active,
@@ -212,10 +351,10 @@ function ThreadPreview({
     <button
       type="button"
       onClick={() => onSelect(summary.peerId)}
-      className={`group flex w-full items-center gap-3 rounded-[22px] border px-3 py-3 text-left transition ${
+      className={`group flex w-full items-start gap-3 rounded-[20px] border px-3 py-3 text-left transition ${
         active
-          ? "border-white/20 bg-white/14 text-white shadow-[0_14px_30px_rgba(1,24,72,0.26)]"
-          : "border-white/10 bg-white/6 text-white/82 hover:border-white/18 hover:bg-white/10 hover:text-white"
+          ? "border-black/16 bg-[var(--tc-surface)] text-[var(--tc-text-primary)] shadow-[0_12px_26px_rgba(1,24,72,0.10)] dark:border-white/16 dark:bg-white/10 dark:text-white dark:shadow-[0_12px_26px_rgba(1,24,72,0.24)]"
+          : "border-transparent bg-transparent text-[var(--tc-text-primary)] hover:border-black/10 hover:bg-black/2 dark:text-white/82 dark:hover:border-white/10 dark:hover:bg-white/6 dark:hover:text-white"
       }`}
     >
       <UserAvatar
@@ -223,29 +362,88 @@ function ThreadPreview({
         name={contact?.name ?? summary.peerName}
         size="sm"
         className="shrink-0"
-        frameClassName={active ? "border border-white/18" : "border border-white/10"}
+        frameClassName={active ? "border border-black/16 dark:border-white/16" : "border border-black/10 dark:border-white/10"}
       />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="truncate text-sm font-semibold leading-5">{contact?.name ?? summary.peerName}</div>
-            <div className="truncate text-xs leading-5 text-white/62">
+            <div className="truncate text-xs leading-5 opacity-65">
               {summary.messageCount} mensagem{summary.messageCount === 1 ? "" : "s"}
             </div>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-full border border-white/12 bg-white/8 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/72">
+          <span className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-black/4 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)] dark:border-white/10 dark:bg-white/8 dark:text-white/68">
             <FiClock size={10} />
             {formatRelative(summary.lastMessageAt)}
           </span>
         </div>
-        <div className="mt-2 truncate text-xs leading-5 text-white/72">
-          <span className="font-semibold text-white/88">{label}:</span> {summary.lastMessage}
+        <div className="mt-2 truncate text-xs leading-5 opacity-72">
+          <span className="font-semibold text-[var(--tc-text-primary)] dark:text-white/88">{label}:</span> {summary.lastMessage}
         </div>
       </div>
-
-      <FiChevronRight className="shrink-0 text-white/40 group-hover:text-white" size={16} />
     </button>
+  );
+}
+
+function AttachmentCard({
+  attachment,
+  compact = false,
+  removable = false,
+  onRemove,
+}: {
+  attachment: ChatAttachment;
+  compact?: boolean;
+  removable?: boolean;
+  onRemove?: (attachmentId: string) => void;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border px-3 py-2.5 ${attachmentTone(attachment)} ${compact ? "text-xs" : "text-sm"}`}
+    >
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 shrink-0">
+          {attachment.kind === "file" ? <FiPaperclip size={15} /> : null}
+          {attachment.kind === "link" ? <FiLink2 size={15} /> : null}
+          {attachment.kind === "system" ? <FiBookmark size={15} /> : null}
+          {attachment.kind === "note" ? <FiFileText size={15} /> : null}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-semibold">{attachment.label}</div>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] opacity-80">
+            {attachment.sourceLabel ? <span>{attachment.sourceLabel}</span> : null}
+            {attachment.sizeLabel ? <span>{attachment.sizeLabel}</span> : null}
+            {attachment.mimeType ? <span>{attachment.mimeType}</span> : null}
+          </div>
+        </div>
+
+        {attachment.url ? (
+          <a
+            href={attachment.url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-current/15 bg-black/10 transition hover:bg-black/20"
+            title="Abrir referencia"
+            aria-label={`Abrir ${attachment.label}`}
+          >
+            <FiArrowUpRight size={14} />
+          </a>
+        ) : null}
+
+        {removable && onRemove ? (
+          <button
+            type="button"
+            onClick={() => onRemove(attachment.id)}
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-current/15 bg-black/10 transition hover:bg-black/20"
+            aria-label={`Remover ${attachment.label}`}
+            title="Remover referencia"
+          >
+            <FiX size={14} />
+          </button>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -257,6 +455,7 @@ export default function Chat() {
   const activeIdentity = resolveActiveIdentity({ user, activeCompany: activeClient });
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const contactsAbortRef = useRef<AbortController | null>(null);
   const threadsAbortRef = useRef<AbortController | null>(null);
   const messagesAbortRef = useRef<AbortController | null>(null);
@@ -267,10 +466,12 @@ export default function Chat() {
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [draftAttachments, setDraftAttachments] = useState<ChatAttachment[]>([]);
   const [contactsLoading, setContactsLoading] = useState(false);
   const [threadsLoading, setThreadsLoading] = useState(false);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [draggingComposer, setDraggingComposer] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [threadError, setThreadError] = useState<string | null>(null);
 
@@ -329,7 +530,6 @@ export default function Chat() {
       }
       const payload = (await response.json().catch(() => ({ threads: [] }))) as {
         threads?: ChatThreadSummary[];
-        error?: string;
       };
       if (!response.ok) {
         setThreads([]);
@@ -412,6 +612,12 @@ export default function Chat() {
   const threadByPeerId = useMemo(() => new Map(threads.map((thread) => [thread.peerId, thread])), [threads]);
   const selectedContact = selectedPeerId ? contactsById.get(selectedPeerId) ?? null : null;
   const selectedThreadSummary = selectedPeerId ? threadByPeerId.get(selectedPeerId) ?? null : null;
+  const currentUserId = user?.id ?? "";
+  const hasFullDirectoryAccess = isFullDirectoryUser(user);
+  const accessLabel = hasFullDirectoryAccess ? "Visão global" : "Empresas vinculadas";
+  const accessNote = hasFullDirectoryAccess
+    ? "Suporte técnico, líder TC e administradores conseguem conversar com toda a plataforma."
+    : "Os demais perfis enxergam apenas usuários das empresas vinculadas, respeitando as permissões atuais.";
 
   const filteredContacts = useMemo(() => {
     const term = normalizeSearch(search);
@@ -436,16 +642,69 @@ export default function Chat() {
     });
   }, [contacts, search]);
 
-  const quickMatches = useMemo(() => filteredContacts.slice(0, 5), [filteredContacts]);
-
+  const quickMatches = useMemo(() => filteredContacts.slice(0, 6), [filteredContacts]);
   const recentContactIds = useMemo(() => new Set(threads.map((thread) => thread.peerId)), [threads]);
-  const recentThreads = useMemo(() => threads.slice(0, 6), [threads]);
-  const currentUserId = user?.id ?? "";
+  const recentThreads = useMemo(() => threads.slice(0, 8), [threads]);
+  const activePeerAvatar = selectedContact?.avatar_url ?? selectedThreadSummary?.peerAvatarUrl ?? null;
+  const activePeerName = selectedContact?.name ?? selectedThreadSummary?.peerName ?? "Selecione um usuário";
+  const activePeerHandle = selectedContact?.user
+    ? `@${selectedContact.user}`
+    : selectedThreadSummary?.peerHandle
+      ? `@${selectedThreadSummary.peerHandle}`
+      : null;
+  const activePeerCompany = selectedContact ? getCompanySummary(selectedContact) : null;
+  const selectedThreadPreview = selectedThreadSummary
+    ? `${selectedThreadSummary.lastSenderId === currentUserId ? "Voce" : selectedThreadSummary.lastSenderName}: ${selectedThreadSummary.lastMessage}`
+    : "";
+
+  const timeline = useMemo<TimelineEntry[]>(() => {
+    const items: TimelineEntry[] = [];
+    let lastDay = "";
+
+    messages.forEach((messageItem) => {
+      const day = new Date(messageItem.createdAt).toISOString().slice(0, 10);
+      if (day !== lastDay) {
+        lastDay = day;
+        items.push({
+          kind: "divider",
+          key: `divider-${day}`,
+          label: formatDayLabel(messageItem.createdAt),
+        });
+      }
+      items.push({
+        kind: "message",
+        key: messageItem.id,
+        message: messageItem,
+      });
+    });
+
+    return items;
+  }, [messages]);
+
+  const appendDraftAttachments = useCallback((incoming: ChatAttachment[]) => {
+    if (!incoming.length) return;
+    setDraftAttachments((current) => {
+      const next = [...current];
+      for (const attachment of incoming) {
+        const dedupeKey = `${attachment.kind}:${attachment.label}:${attachment.url ?? ""}`;
+        const exists = next.some(
+          (item) => `${item.kind}:${item.label}:${item.url ?? ""}` === dedupeKey,
+        );
+        if (!exists) next.push(attachment);
+      }
+      return next.slice(-8);
+    });
+  }, []);
+
+  const removeDraftAttachment = useCallback((attachmentId: string) => {
+    setDraftAttachments((current) => current.filter((attachment) => attachment.id !== attachmentId));
+  }, []);
 
   const openConversation = useCallback(
     (peerId: string) => {
       setSelectedPeerId(peerId);
       setMessage("");
+      setDraftAttachments([]);
       setThreadError(null);
       const params = new URLSearchParams(searchParams.toString());
       params.set("peer", peerId);
@@ -457,6 +716,7 @@ export default function Chat() {
   const clearConversation = useCallback(() => {
     setSelectedPeerId(null);
     setMessage("");
+    setDraftAttachments([]);
     setThreadError(null);
     const params = new URLSearchParams(searchParams.toString());
     params.delete("peer");
@@ -481,7 +741,8 @@ export default function Chat() {
   const sendMessage = useCallback(
     async (event?: FormEvent<HTMLFormElement>) => {
       event?.preventDefault();
-      if (!selectedPeerId || !message.trim() || sending) return;
+      const trimmedMessage = message.trim();
+      if (!selectedPeerId || (!trimmedMessage && draftAttachments.length === 0) || sending) return;
 
       setSending(true);
       setThreadError(null);
@@ -489,7 +750,11 @@ export default function Chat() {
         const response = await fetchApi("/api/chat/messages", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ peerId: selectedPeerId, text: message.trim() }),
+          body: JSON.stringify({
+            peerId: selectedPeerId,
+            text: trimmedMessage,
+            attachments: draftAttachments,
+          }),
         });
         if (response.status === 401) {
           router.replace("/login");
@@ -502,6 +767,7 @@ export default function Chat() {
         }
 
         setMessage("");
+        setDraftAttachments([]);
         await Promise.all([loadMessages(selectedPeerId), loadThreads()]);
       } catch (err) {
         setThreadError(err instanceof Error ? err.message : "Nao foi possivel enviar a mensagem.");
@@ -509,32 +775,104 @@ export default function Chat() {
         setSending(false);
       }
     },
-    [loadMessages, loadThreads, message, router, sending, selectedPeerId],
+    [draftAttachments, loadMessages, loadThreads, message, router, sending, selectedPeerId],
   );
 
-  const activePeerAvatar =
-    selectedContact?.avatar_url ?? selectedThreadSummary?.peerAvatarUrl ?? null;
-  const activePeerName =
-    selectedContact?.name ?? selectedThreadSummary?.peerName ?? "Selecione um usuario";
-  const activePeerHandle = selectedContact?.user ? `@${selectedContact.user}` : selectedThreadSummary?.peerHandle ? `@${selectedThreadSummary.peerHandle}` : null;
-  const activePeerCompany = selectedContact ? getCompanySummary(selectedContact) : null;
-  const selectedThreadPreview = selectedThreadSummary
-    ? `${selectedThreadSummary.lastSenderId === currentUserId ? "Você" : selectedThreadSummary.lastSenderName}: ${selectedThreadSummary.lastMessage}`
-    : "";
-  const hasFullDirectoryAccess = activeIdentity.roleKind === "global" || activeIdentity.roleKind === "leader_tc";
-  const accessLabel = hasFullDirectoryAccess ? "Acesso total" : "Empresas vinculadas";
-  const accessNote = hasFullDirectoryAccess
-    ? "Suporte tecnico, lider TC e admin veem todos os usuarios."
-    : "Os demais perfis veem apenas os usuarios das empresas vinculadas.";
+  const handleFileInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    if (!files.length) return;
+    appendDraftAttachments(buildFileAttachments(files));
+    event.target.value = "";
+  }, [appendDraftAttachments]);
+
+  const exportConversation = useCallback(() => {
+    if (!selectedPeerId || !selectedContact) return;
+
+    const lines = [
+      `Conversa com ${selectedContact.name}`,
+      activePeerHandle ? `Usuario: ${activePeerHandle}` : null,
+      activePeerCompany ? `Empresa: ${activePeerCompany}` : null,
+      "",
+      ...messages.flatMap((item) => {
+        const header = `[${formatCompactDate(item.createdAt)}] ${item.senderName}`;
+        const textLine = item.text ? item.text : "(sem texto)";
+        const attachmentsLines =
+          item.attachments?.map((attachment) => {
+            const details = [attachment.sourceLabel, attachment.sizeLabel, attachment.url].filter(Boolean).join(" | ");
+            return `  - ${attachment.label}${details ? ` (${details})` : ""}`;
+          }) ?? [];
+        return [header, textLine, ...(attachmentsLines.length > 0 ? ["Anexos:", ...attachmentsLines] : []), ""];
+      }),
+    ]
+      .filter((line): line is string => typeof line === "string")
+      .join("\n");
+
+    const blob = new Blob([lines], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    const safeName = selectedContact.name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .toLowerCase();
+    anchor.href = url;
+    anchor.download = `chat-${safeName || "conversa"}.txt`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }, [activePeerCompany, activePeerHandle, messages, selectedContact, selectedPeerId]);
+
+  const handleComposerDrop = useCallback((event: DragEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setDraggingComposer(false);
+
+    const attachments: ChatAttachment[] = [];
+    const files = Array.from(event.dataTransfer.files ?? []);
+    if (files.length > 0) {
+      attachments.push(...buildFileAttachments(files));
+    }
+
+    const uriList = event.dataTransfer.getData("text/uri-list");
+    if (uriList.trim()) {
+      const attachment = buildUrlAttachment(uriList.split("\n").find(Boolean) ?? uriList, "Link arrastado");
+      if (attachment) attachments.push(attachment);
+    }
+
+    const plainText = event.dataTransfer.getData("text/plain");
+    if (!uriList.trim() && plainText.trim()) {
+      const maybeUrl = plainText.trim();
+      const isUrl = /^https?:\/\//i.test(maybeUrl) || maybeUrl.startsWith("/");
+      const attachment = isUrl
+        ? buildUrlAttachment(maybeUrl, maybeUrl.startsWith("/") ? "Atalho do sistema" : "Link arrastado")
+        : buildNoteAttachment(maybeUrl);
+      if (attachment) attachments.push(attachment);
+    }
+
+    appendDraftAttachments(attachments);
+  }, [appendDraftAttachments]);
 
   if (loading && !user) {
     return (
-      <div className="min-h-screen bg-[#07101d] px-4 py-8 text-white">
-        <div className="mx-auto max-w-7xl">
-          <div className="rounded-[32px] border border-white/10 bg-white/8 p-6">
-            <div className="h-8 w-40 animate-pulse rounded-full bg-white/10" />
-            <div className="mt-4 h-12 w-72 animate-pulse rounded-2xl bg-white/10" />
-            <div className="mt-3 h-4 w-full max-w-2xl animate-pulse rounded-full bg-white/10" />
+      <div className="min-h-[calc(100vh-var(--topbar-h)-1rem)]">
+        <div className="h-full overflow-hidden rounded-[28px] border border-black/10 bg-[var(--tc-surface)] px-5 py-6 text-[var(--tc-text-primary)] shadow-[0_26px_80px_rgba(1,24,72,0.14)] dark:border-white/10 dark:bg-[#07111f] dark:text-white dark:shadow-[0_26px_80px_rgba(1,24,72,0.28)]">
+          <div className="grid h-full gap-5 lg:grid-cols-[22rem_minmax(0,1fr)]">
+            <div className="rounded-[24px] border border-black/10 bg-[var(--tc-surface-alt)] p-4 dark:border-white/10 dark:bg-white/6">
+              <div className="h-10 w-48 animate-pulse rounded-full bg-black/6 dark:bg-white/10" />
+              <div className="mt-4 h-11 animate-pulse rounded-2xl bg-black/6 dark:bg-white/10" />
+              <div className="mt-6 space-y-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div key={index} className="h-16 animate-pulse rounded-[20px] bg-black/4 dark:bg-white/8" />
+                ))}
+              </div>
+            </div>
+            <div className="rounded-[24px] border border-black/10 bg-[var(--tc-surface-alt)] p-4 dark:border-white/10 dark:bg-white/4">
+              <div className="h-14 w-72 animate-pulse rounded-[20px] bg-black/6 dark:bg-white/10" />
+              <div className="mt-6 space-y-4">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="h-20 animate-pulse rounded-[22px] bg-black/4 dark:bg-white/8" />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -544,403 +882,446 @@ export default function Chat() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(239,0,1,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(10,31,82,0.35),transparent_30%),linear-gradient(180deg,#07111f_0%,#081325_42%,#040b16_100%)] px-4 py-5 text-white sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-5">
-        <section className="overflow-hidden rounded-[34px] border border-white/10 bg-[linear-gradient(135deg,#011848_0%,#082457_34%,#4b0f2f_70%,#ef0001_100%)] px-5 py-5 shadow-[0_28px_80px_rgba(1,24,72,0.35)] sm:px-7 sm:py-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-[24px] border border-white/12 bg-white/10 shadow-[0_16px_30px_rgba(0,0,0,0.18)]">
-                <Image src="/images/tc.png" alt="Quality Control" width={56} height={56} className="h-12 w-12 object-contain" />
-              </div>
+    <div className="min-h-[calc(100vh-var(--topbar-h)-1rem)] bg-[var(--tc-surface)] text-[var(--page-text)] lg:h-[calc(100vh-var(--topbar-h)-1rem)]">
+      <div className="flex h-full min-h-[calc(100vh-var(--topbar-h)-1rem)] flex-col overflow-hidden bg-[var(--tc-surface)] text-[var(--tc-text-primary)] dark:bg-[#07111f] dark:text-white lg:flex-row">
+        <aside className="flex w-full shrink-0 flex-col border-b border-black/8 bg-[var(--tc-surface-alt)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(9,18,34,0.98)_0%,rgba(8,17,31,0.96)_100%)] lg:w-[22rem] lg:border-b-0 lg:border-r lg:border-black/8 lg:dark:border-white/8">
+          <div className="border-b border-black/8 px-4 py-4 sm:px-5 dark:border-white/8">
+            <div className="flex items-center gap-3">
+              <UserAvatar
+                src={activeIdentity.avatarUrl}
+                name={activeIdentity.displayName}
+                size="md"
+                className="shrink-0"
+                frameClassName="border border-black/10 dark:border-white/12"
+              />
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-white/72">Chatcode</p>
-                <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Conversas por usuario</h1>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-white/80">
-                  Busque uma pessoa pelo nome, abra a conversa certa e acompanhe o fluxo com fotos, identidade da plataforma e respostas por usuario.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[28rem]">
-              <div className="rounded-2xl border border-white/12 bg-white/10 px-4 py-3">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/58">Contatos</div>
-                <div className="mt-1 text-xl font-bold">{contacts.length}</div>
-              </div>
-              <div className="rounded-2xl border border-white/12 bg-white/10 px-4 py-3">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/58">Conversas</div>
-                <div className="mt-1 text-xl font-bold">{threads.length}</div>
-              </div>
-              <div className="rounded-2xl border border-white/12 bg-white/10 px-4 py-3">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/58">Escopo</div>
-                <div className="mt-1 text-lg font-bold leading-tight">{accessLabel}</div>
-                <div className="mt-1 text-[11px] font-medium text-white/64">{selectedPeerId ? "Em conversa" : "Pronto para iniciar"}</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="grid gap-5 lg:grid-cols-[21rem_minmax(0,1fr)]">
-          <aside className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(7,16,29,0.94)_0%,rgba(10,22,41,0.98)_100%)] p-4 shadow-[0_24px_70px_rgba(1,24,72,0.3)] backdrop-blur-2xl">
-            <div className="border-b border-white/10 pb-4">
-              <div className="flex items-center gap-3">
-                <UserAvatar
-                  src={activeIdentity.avatarUrl}
-                  name={activeIdentity.displayName}
-                  size="sm"
-                  className="shrink-0"
-                  frameClassName="border border-white/12"
-                />
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-semibold text-white">{activeIdentity.displayName}</div>
-                  <div className="truncate text-xs text-white/64">
-                    {activeIdentity.kind === "company" ? "Conta institucional" : activeIdentity.companyTagLabel ?? "Conta autenticada"}
-                  </div>
+                <div className="truncate text-sm font-semibold text-[var(--tc-text-primary)] dark:text-white">
+                  {activeIdentity.displayName}
+                </div>
+                <div className="truncate text-xs text-[var(--tc-text-muted)] dark:text-white/56">
+                  {activeIdentity.kind === "company" ? "Conta institucional" : activeIdentity.companyTagLabel ?? "Conta autenticada"}
                 </div>
               </div>
+            </div>
 
-              <label className="mt-4 flex items-center gap-3 rounded-[22px] border border-white/10 bg-white/6 px-4 py-3 text-sm text-white/76">
-                <FiSearch className="shrink-0 text-white/48" />
+            <div className="mt-4">
+              <label className="flex items-center gap-3 rounded-[20px] border border-black/10 bg-[var(--tc-surface)] px-4 py-3 text-sm text-[var(--tc-text-primary)] focus-within:border-black/18 focus-within:bg-[var(--tc-surface)] dark:border-white/10 dark:bg-white/6 dark:text-white/78 dark:focus-within:border-white/18 dark:focus-within:bg-white/8">
+                <FiSearch className="shrink-0 text-[var(--tc-text-muted)] dark:text-white/42" />
                 <input
                   ref={searchInputRef}
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   onKeyDown={handleSearchKeyDown}
-                  placeholder="Digite o nome do usuario"
-                  className="w-full bg-transparent outline-none placeholder:text-white/42"
+                  placeholder="Buscar usuário pelo nome"
+                  className="w-full bg-transparent outline-none placeholder:text-[color-mix(in_srgb,var(--tc-text-muted)_70%,transparent)] dark:placeholder:text-white/34"
                 />
               </label>
-              <p className="mt-3 text-xs leading-5 text-white/52">
-                Digite um nome e pressione Enter para abrir a conversa mais relevante.
-              </p>
-              <p className="mt-2 text-[11px] leading-5 text-white/44">{accessNote}</p>
-
-              {error ? (
-                <div className="mt-3 rounded-[22px] border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
-                  {error}
-                </div>
-              ) : null}
-
-              {search.trim() ? (
-                <div className="mt-3 rounded-[24px] border border-white/10 bg-white/6 p-3">
-                  <div className="flex items-center justify-between gap-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/52">
-                    <span>Atalhos da busca</span>
-                    <span>Enter abre o primeiro</span>
-                  </div>
-                  <div className="mt-3 space-y-2">
-                    {quickMatches.length > 0 ? (
-                      quickMatches.map((contact) => (
-                        <button
-                          key={contact.id}
-                          type="button"
-                          onClick={() => openConversation(contact.id)}
-                          className="flex w-full items-center gap-3 rounded-[20px] border border-white/10 bg-white/6 px-3 py-2.5 text-left transition hover:border-white/18 hover:bg-white/10"
-                        >
-                          <UserAvatar
-                            src={contact.avatar_url}
-                            name={contact.name}
-                            size="sm"
-                            className="shrink-0"
-                            frameClassName="border border-white/10"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-sm font-semibold text-white">{contact.name}</div>
-                            <div className="truncate text-xs text-white/58">
-                              {contact.user ? `@${contact.user}` : contact.email}
-                            </div>
-                          </div>
-                          <FiChevronRight size={14} className="shrink-0 text-white/38" />
-                        </button>
-                      ))
-                    ) : (
-                      <div className="rounded-[20px] border border-dashed border-white/12 bg-white/5 px-4 py-4 text-sm text-white/58">
-                        Nenhum resultado direto. Tente outro nome.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : null}
             </div>
 
-            <div className="mt-4 space-y-4">
-              <section>
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/54">
-                    <FiInbox size={14} />
-                    Recentes
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => void loadThreads()}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/72 transition hover:border-white/18 hover:bg-white/10 hover:text-white"
-                  >
-                    <FiRefreshCw size={12} />
-                    Atualizar
-                  </button>
-                </div>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)] dark:border-white/10 dark:bg-white/8 dark:text-white/76">
+                Chatcode
+              </span>
+              <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)] dark:border-white/10 dark:bg-white/8 dark:text-white/76">
+                {accessLabel}
+              </span>
+              <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold text-[var(--tc-text-muted)] dark:border-white/10 dark:bg-white/8 dark:text-white/72">
+                {contacts.length} contatos
+              </span>
+            </div>
 
+            <p className="mt-3 text-xs leading-5 text-[var(--tc-text-muted)] dark:text-white/54">{accessNote}</p>
+
+            {error ? (
+              <div className="mt-3 rounded-[18px] border border-amber-400/25 bg-amber-400/10 px-3 py-2 text-sm text-amber-100">
+                {error}
+              </div>
+            ) : null}
+
+            {search.trim() ? (
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)] dark:text-white/52">
+                  <span>Atalhos da busca</span>
+                  <span>Enter abre o primeiro</span>
+                </div>
                 <div className="space-y-2">
-                  {threadsLoading ? (
-                    <div className="rounded-[22px] border border-dashed border-white/12 bg-white/6 px-4 py-5 text-sm text-white/58">
-                      Carregando conversas...
-                    </div>
-                  ) : recentThreads.length > 0 ? (
-                    recentThreads.map((summary) => {
-                      const contact = contactsById.get(summary.peerId) ?? null;
-                      return (
-                        <ThreadPreview
-                          key={summary.key}
-                          summary={summary}
-                          contact={contact}
-                          active={summary.peerId === selectedPeerId}
-                          currentUserId={currentUserId}
-                          onSelect={openConversation}
-                        />
-                      );
-                    })
-                  ) : (
-                    <div className="rounded-[22px] border border-dashed border-white/12 bg-white/6 px-4 py-5 text-sm text-white/58">
-                      Ainda nao ha conversas recentes.
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              <section>
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/54">
-                    <FiUsers size={14} />
-                    Pessoas da plataforma
-                  </div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/46">
-                    {filteredContacts.length} visiveis
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  {contactsLoading ? (
-                    <div className="rounded-[22px] border border-dashed border-white/12 bg-white/6 px-4 py-5 text-sm text-white/58">
-                      Carregando contatos...
-                    </div>
-                  ) : filteredContacts.length > 0 ? (
-                    filteredContacts.map((contact) => (
-                      <ContactCard
+                  {quickMatches.length > 0 ? (
+                    quickMatches.map((contact) => (
+                      <button
                         key={contact.id}
-                        contact={contact}
-                        active={contact.id === selectedPeerId}
-                        recent={recentContactIds.has(contact.id)}
-                        onSelect={openConversation}
-                      />
+                        type="button"
+                        onClick={() => openConversation(contact.id)}
+                        className="flex w-full items-center gap-3 rounded-[18px] border border-black/10 bg-[var(--tc-surface)] px-3 py-2.5 text-left transition hover:border-black/16 hover:bg-black/2 dark:border-white/10 dark:bg-white/6 dark:hover:border-white/16 dark:hover:bg-white/9"
+                      >
+                        <UserAvatar
+                          src={contact.avatar_url}
+                          name={contact.name}
+                          size="sm"
+                          className="shrink-0"
+                          frameClassName="border border-black/10 dark:border-white/10"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-semibold text-[var(--tc-text-primary)] dark:text-white">{contact.name}</div>
+                          <div className="truncate text-xs text-[var(--tc-text-muted)] dark:text-white/58">{contact.user ? `@${contact.user}` : contact.email}</div>
+                        </div>
+                        <FiChevronRight size={14} className="shrink-0 text-[var(--tc-text-muted)] dark:text-white/38" />
+                      </button>
                     ))
-                  ) : search.trim() ? (
-                    <div className="rounded-[22px] border border-dashed border-white/12 bg-white/6 px-4 py-5 text-sm text-white/58">
-                      Nenhum usuario encontrado para {'"'}
-                      {search.trim()}
-                      {'"'}.
-                    </div>
                   ) : (
-                    <div className="rounded-[22px] border border-dashed border-white/12 bg-white/6 px-4 py-5 text-sm text-white/58">
-                      Digite um nome para iniciar uma conversa.
+                    <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-3 text-sm text-[var(--tc-text-muted)] dark:border-white/12 dark:bg-white/4 dark:text-white/58">
+                      Nenhum resultado direto. Tente outro nome.
                     </div>
                   )}
                 </div>
-              </section>
-            </div>
-          </aside>
+              </div>
+            ) : null}
+          </div>
 
-          <main className="flex min-w-0 flex-col gap-4 rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(6,12,24,0.96)_0%,rgba(9,19,37,0.98)_100%)] p-4 shadow-[0_24px_70px_rgba(1,24,72,0.32)] backdrop-blur-2xl">
-            <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(1,24,72,0.94)_0%,rgba(8,36,87,0.88)_48%,rgba(75,15,47,0.96)_100%)] px-5 py-5 text-white shadow-[0_18px_44px_rgba(1,24,72,0.28)]">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="chat-scroll min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4">
+            <section>
+              <div className="mb-3 flex items-center justify-between gap-3 px-1">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted)] dark:text-white/52">
+                  <FiInbox size={13} />
+                  Recentes
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void loadThreads()}
+                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[var(--tc-surface)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--tc-text-primary)] transition hover:border-black/16 hover:bg-black/2 dark:border-white/10 dark:bg-white/6 dark:text-white/72 dark:hover:border-white/16 dark:hover:bg-white/10 dark:hover:text-white"
+                >
+                  <FiRefreshCw size={11} />
+                  Atualizar
+                </button>
+              </div>
+
+              <div className="space-y-1.5">
+                {threadsLoading ? (
+                  <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-4 text-sm text-[var(--tc-text-muted)] dark:border-white/12 dark:bg-white/4 dark:text-white/56">
+                    Carregando conversas...
+                  </div>
+                ) : recentThreads.length > 0 ? (
+                  recentThreads.map((summary) => (
+                    <ThreadRow
+                      key={summary.key}
+                      summary={summary}
+                      contact={contactsById.get(summary.peerId) ?? null}
+                      active={summary.peerId === selectedPeerId}
+                      currentUserId={currentUserId}
+                      onSelect={openConversation}
+                    />
+                  ))
+                ) : (
+                  <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-4 text-sm text-[var(--tc-text-muted)] dark:border-white/12 dark:bg-white/4 dark:text-white/56">
+                    Ainda nao ha conversas recentes.
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <div className="my-4 h-px bg-black/8 dark:bg-white/8" />
+
+            <section>
+              <div className="mb-3 flex items-center justify-between gap-3 px-1">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted)] dark:text-white/52">
+                  <FiUsers size={13} />
+                  Usuarios visiveis
+                </div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--tc-text-muted)] dark:text-white/42">
+                  {filteredContacts.length}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                {contactsLoading ? (
+                  <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-4 text-sm text-[var(--tc-text-muted)] dark:border-white/12 dark:bg-white/4 dark:text-white/56">
+                    Carregando contatos...
+                  </div>
+                ) : filteredContacts.length > 0 ? (
+                  filteredContacts.map((contact) => (
+                    <ContactRow
+                      key={contact.id}
+                      contact={contact}
+                      active={contact.id === selectedPeerId}
+                      recent={recentContactIds.has(contact.id)}
+                      onSelect={openConversation}
+                    />
+                  ))
+                ) : search.trim() ? (
+                  <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-4 text-sm text-[var(--tc-text-muted)] dark:border-white/12 dark:bg-white/4 dark:text-white/56">
+                    Nenhum usuário encontrado para &quot;{search.trim()}&quot;.
+                  </div>
+                ) : (
+                  <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-4 text-sm text-[var(--tc-text-muted)] dark:border-white/12 dark:bg-white/4 dark:text-white/56">
+                    Digite um nome para iniciar uma conversa.
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+        </aside>
+
+        <section className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <header className="border-b border-black/8 bg-[var(--tc-surface-alt)] px-4 py-4 backdrop-blur dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(8,16,30,0.92)_0%,rgba(8,16,30,0.68)_100%)] xl:px-8">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+              <div className="min-w-0">
                 <div className="flex min-w-0 items-center gap-4">
                   <UserAvatar
                     src={activePeerAvatar}
                     name={activePeerName}
                     size="lg"
                     className="shrink-0"
-                    frameClassName="border border-white/14"
+                    frameClassName="border border-black/10 dark:border-white/12"
                   />
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/58">Conversa atual</p>
-                    <h2 className="mt-1 truncate text-2xl font-extrabold tracking-tight">{activePeerName}</h2>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-white/76">
-                      {activePeerHandle ? <span>{activePeerHandle}</span> : null}
-                      {activePeerCompany ? <span>| {activePeerCompany}</span> : null}
-                      {selectedThreadSummary ? <span>| {selectedThreadSummary.messageCount} mensagens</span> : null}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h1 className="truncate text-2xl font-semibold tracking-tight text-[var(--tc-text-primary)] dark:text-white">
+                        {selectedPeerId ? activePeerName : "Conversas"}
+                      </h1>
+                      <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)] dark:border-white/10 dark:bg-white/8 dark:text-white/74">
+                        {selectedPeerId ? "Thread ativa" : "Pronto para iniciar"}
+                      </span>
                     </div>
-                    <p className="mt-3 max-w-2xl text-xs leading-5 text-white/66">
-                      {selectedThreadPreview || "Sem mensagens nesta conversa ainda. Envie a primeira mensagem."}
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[var(--tc-text-muted)] dark:text-white/62">
+                      {activePeerHandle ? <span>{activePeerHandle}</span> : null}
+                      {activePeerCompany ? <span>{activePeerCompany}</span> : null}
+                      {selectedThreadSummary ? <span>{selectedThreadSummary.messageCount} mensagens</span> : null}
+                    </div>
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--tc-text-muted)] dark:text-white/54">
+                      {selectedPeerId
+                        ? selectedThreadPreview || "Conversa pronta para receber a primeira mensagem."
+                        : "Busque um usuário, arraste referências do sistema, adicione anexos e trabalhe a conversa em um fluxo contínuo."}
                     </p>
                   </div>
                 </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={clearConversation}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/14"
-                  >
-                    <FiX size={14} />
-                    Trocar usuario
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void loadMessages(selectedPeerId)}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/14"
-                    disabled={!selectedPeerId}
-                  >
-                    <FiRefreshCw size={14} />
-                    Atualizar conversa
-                  </button>
-                </div>
               </div>
-            </section>
 
-            <section className="flex min-h-[32rem] flex-1 flex-col rounded-[28px] border border-white/10 bg-white/5 p-4">
-              {threadError ? (
-                <div className="rounded-[22px] border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-                  {threadError}
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={exportConversation}
+                  disabled={!selectedPeerId}
+                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[var(--tc-surface)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary)] transition hover:border-black/16 hover:bg-black/2 disabled:cursor-not-allowed disabled:opacity-45 dark:border-white/10 dark:bg-white/8 dark:text-white/76 dark:hover:border-white/16 dark:hover:bg-white/12 dark:hover:text-white"
+                >
+                  <FiDownload size={14} />
+                  Exportar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void loadMessages(selectedPeerId)}
+                  disabled={!selectedPeerId}
+                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[var(--tc-surface)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary)] transition hover:border-black/16 hover:bg-black/2 disabled:cursor-not-allowed disabled:opacity-45 dark:border-white/10 dark:bg-white/8 dark:text-white/76 dark:hover:border-white/16 dark:hover:bg-white/12 dark:hover:text-white"
+                >
+                  <FiRefreshCw size={14} />
+                  Atualizar
+                </button>
+                <button
+                  type="button"
+                  onClick={clearConversation}
+                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[var(--tc-surface)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary)] transition hover:border-black/16 hover:bg-black/2 dark:border-white/10 dark:bg-white/8 dark:text-white/76 dark:hover:border-white/16 dark:hover:bg-white/12 dark:hover:text-white"
+                >
+                  <FiX size={14} />
+                  Trocar usuário
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {threadError ? (
+            <div className="border-b border-rose-400/18 bg-rose-500/10 px-4 py-3 text-sm text-rose-100 xl:px-8">
+              {threadError}
+            </div>
+          ) : null}
+
+          <div className="chat-scroll min-h-0 flex-1 overflow-y-auto px-4 py-4 xl:px-8 xl:py-6">
+            {selectedPeerId ? (
+              <div className="flex min-h-full w-full flex-col gap-4">
+                {messagesLoading && messages.length === 0 ? (
+                  <div className="space-y-4">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className={`flex items-end gap-3 ${index % 2 === 0 ? "justify-start" : "justify-end"}`}
+                      >
+                        <div className="h-10 w-10 animate-pulse rounded-full bg-white/10" />
+                        <div className="h-20 w-[min(32rem,80%)] animate-pulse rounded-[22px] bg-white/10" />
+                      </div>
+                    ))}
+                  </div>
+                ) : timeline.length > 0 ? (
+                  timeline.map((entry) => {
+                    if (entry.kind === "divider") {
+                      return (
+                        <div key={entry.key} className="flex items-center gap-3 py-2">
+                          <div className="h-px flex-1 bg-black/10 dark:bg-white/8" />
+                          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted)] dark:text-white/40">
+                            {entry.label}
+                          </div>
+                          <div className="h-px flex-1 bg-black/10 dark:bg-white/8" />
+                        </div>
+                      );
+                    }
+
+                    const item = entry.message;
+                    const isMine = item.senderId === currentUserId;
+                    const bubbleAvatar = isMine ? activeIdentity.avatarUrl : activePeerAvatar;
+                    const bubbleName = isMine ? activeIdentity.displayName : activePeerName;
+
+                    return (
+                      <div
+                        key={entry.key}
+                        className="group/message flex items-start gap-3 rounded-lg px-2 py-1.5 transition hover:bg-black/[0.03] dark:hover:bg-white/[0.05]"
+                      >
+                        <UserAvatar
+                          src={bubbleAvatar}
+                          name={bubbleName}
+                          size="sm"
+                          className="mt-0.5 shrink-0"
+                          frameClassName="border border-black/10 dark:border-white/10"
+                        />
+
+                        <div className="min-w-0 flex-1 text-[var(--tc-text-primary)] dark:text-white">
+                          <div className="flex flex-wrap items-baseline gap-2 text-xs text-[var(--tc-text-muted)] dark:text-white/56">
+                            <span className="text-sm font-semibold text-[var(--tc-text-primary)] dark:text-white">
+                              {isMine ? "Voce" : item.senderName}
+                            </span>
+                            <span>{formatClock(item.createdAt)}</span>
+                          </div>
+
+                          {item.text ? (
+                            <p className="mt-1 whitespace-pre-wrap text-sm leading-6">{item.text}</p>
+                          ) : null}
+
+                          {item.attachments?.length ? (
+                            <div className={`${item.text ? "mt-3" : "mt-2"} space-y-2`}>
+                              {item.attachments.map((attachment) => (
+                                <AttachmentCard key={attachment.id} attachment={attachment} compact />
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="flex min-h-[24rem] flex-col items-center justify-center rounded-[24px] border border-dashed border-black/12 bg-black/2 px-6 text-center dark:border-white/10 dark:bg-white/4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-[20px] border border-black/10 bg-black/4 dark:border-white/10 dark:bg-white/8">
+                      <FiMessageSquare size={22} className="text-[var(--tc-text-muted)] dark:text-white/72" />
+                    </div>
+                    <h2 className="mt-4 text-xl font-semibold text-[var(--tc-text-primary)] dark:text-white">
+                      Primeira mensagem pronta para sair
+                    </h2>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--tc-text-muted)] dark:text-white/56">
+                      Escreva, arraste um link ou anexe uma referencia. Essa thread foi limpa para funcionar como uma conversa continua, sem capas e sem blocos pesados.
+                    </p>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            ) : (
+              <div className="flex min-h-full w-full flex-col items-center justify-center rounded-[24px] border border-dashed border-black/12 bg-black/2 px-6 text-center dark:border-white/10 dark:bg-white/4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-[22px] border border-black/10 bg-black/4 dark:border-white/10 dark:bg-white/8">
+                  <FiUsers size={24} className="text-[var(--tc-text-muted)] dark:text-white/72" />
+                </div>
+                <h2 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--tc-text-primary)] dark:text-white">
+                  Digite o nome de um usuário
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--tc-text-muted)] dark:text-white/56">
+                  A conversa abre na hora com foto, escopo de acesso e histórico. Se quiser acelerar ainda mais, arraste uma tela do sistema para o composer e comece pelo contexto.
+                </p>
+                {filteredContacts.length > 0 ? (
+                  <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                    {filteredContacts.slice(0, 3).map((contact) => (
+                      <button
+                        key={contact.id}
+                        type="button"
+                        onClick={() => openConversation(contact.id)}
+                        className="inline-flex items-center gap-3 rounded-full border border-black/10 bg-[var(--tc-surface)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary)] transition hover:border-black/16 hover:bg-black/2 dark:border-white/10 dark:bg-white/8 dark:text-white dark:hover:border-white/16 dark:hover:bg-white/12"
+                      >
+                        <UserAvatar
+                          src={contact.avatar_url}
+                          name={contact.name}
+                          size="sm"
+                          className="shrink-0"
+                          frameClassName="border border-black/10 dark:border-white/10"
+                        />
+                        {contact.name}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-black/8 bg-[var(--tc-surface-alt)] px-4 py-4 backdrop-blur dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(8,16,30,0.86)_0%,rgba(6,12,24,0.98)_100%)] xl:px-8">
+            <div className="w-full">
+              {draftAttachments.length > 0 ? (
+                <div className="mb-3 grid gap-2 sm:grid-cols-2">
+                  {draftAttachments.map((attachment) => (
+                    <AttachmentCard
+                      key={attachment.id}
+                      attachment={attachment}
+                      compact
+                      removable
+                      onRemove={removeDraftAttachment}
+                    />
+                  ))}
                 </div>
               ) : null}
 
-              {selectedPeerId ? (
-                <div className="mt-2 flex-1 overflow-hidden">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/54">
-                      <FiMessageSquare size={14} />
-                      Mensagens
+              <form
+                onSubmit={sendMessage}
+                onDragEnter={(event) => {
+                  event.preventDefault();
+                  setDraggingComposer(true);
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  if (!draggingComposer) setDraggingComposer(true);
+                }}
+                onDragLeave={(event) => {
+                  event.preventDefault();
+                  if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                    setDraggingComposer(false);
+                  }
+                }}
+                onDrop={handleComposerDrop}
+                className="relative overflow-hidden rounded-xl border border-black/10 bg-[var(--tc-surface)] px-3 py-3 shadow-[0_10px_28px_rgba(1,24,72,0.08)] dark:border-white/10 dark:bg-white/5 dark:shadow-none"
+              >
+                {draggingComposer ? (
+                  <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-black/18 bg-[rgba(255,255,255,0.78)] text-center backdrop-blur dark:border-white/28 dark:bg-[#07111f]/84">
+                    <div>
+                      <div className="text-sm font-semibold text-[var(--tc-text-primary)] dark:text-white">Solte aqui para anexar</div>
+                      <div className="mt-2 text-xs text-[var(--tc-text-muted)] dark:text-white/60">
+                        Arquivos, links e referências do sistema entram na conversa como contexto.
+                      </div>
                     </div>
-                    {messagesLoading ? (
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/44">Carregando...</div>
-                    ) : (
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/44">
-                        {messages.length} mensagem{messages.length === 1 ? "" : "s"}
-                      </div>
-                    )}
                   </div>
+                ) : null}
 
-                  <div className="max-h-[30rem] space-y-4 overflow-y-auto pr-1">
-                    {messagesLoading && messages.length === 0 ? (
-                      <div className="space-y-3">
-                        {Array.from({ length: 3 }).map((_, index) => (
-                          <div
-                            key={index}
-                            className={`flex items-end gap-3 ${index % 2 === 0 ? "justify-start" : "justify-end"}`}
-                          >
-                            <div className="h-10 w-10 animate-pulse rounded-full bg-white/10" />
-                            <div className="h-20 w-[min(28rem,70%)] animate-pulse rounded-[26px] bg-white/10" />
-                          </div>
-                        ))}
-                      </div>
-                    ) : messages.length > 0 ? (
-                      messages.map((item) => {
-                        const isMine = item.senderId === currentUserId;
-                        const bubbleAvatar = isMine ? activeIdentity.avatarUrl : activePeerAvatar;
-                        const bubbleName = isMine ? activeIdentity.displayName : activePeerName;
-                        return (
-                          <div key={item.id} className={`flex items-end gap-3 ${isMine ? "justify-end" : "justify-start"}`}>
-                            {!isMine ? (
-                              <UserAvatar
-                                src={bubbleAvatar}
-                                name={bubbleName}
-                                size="sm"
-                                className="shrink-0"
-                                frameClassName="border border-white/12"
-                              />
-                            ) : null}
-
-                            <div
-                              className={`max-w-[min(38rem,82%)] rounded-[26px] border px-4 py-3 shadow-[0_16px_32px_rgba(1,24,72,0.16)] ${
-                                isMine
-                                  ? "border-white/14 bg-[linear-gradient(135deg,rgba(255,255,255,0.14),rgba(255,255,255,0.08))] text-white"
-                                  : "border-white/10 bg-white text-slate-900"
-                              }`}
-                            >
-                              <div className={`flex items-center justify-between gap-3 text-xs font-semibold ${isMine ? "text-white/72" : "text-slate-600"}`}>
-                                <span className="truncate">{isMine ? "Voce" : item.senderName}</span>
-                                <span className="shrink-0">{formatClock(item.createdAt)}</span>
-                              </div>
-                              <p className={`mt-2 whitespace-pre-wrap text-sm leading-6 ${isMine ? "text-white" : "text-slate-900"}`}>
-                                {item.text}
-                              </p>
-                            </div>
-
-                            {isMine ? (
-                              <UserAvatar
-                                src={bubbleAvatar}
-                                name={bubbleName}
-                                size="sm"
-                                className="shrink-0"
-                                frameClassName="border border-white/12"
-                              />
-                            ) : null}
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <div className="flex min-h-[24rem] flex-col items-center justify-center rounded-[26px] border border-dashed border-white/12 bg-white/5 px-6 text-center">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-[24px] border border-white/10 bg-white/8">
-                          <FiInbox size={24} className="text-white/72" />
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-3 rounded-xl border border-dashed border-black/12 bg-black/[0.025] px-3 py-3 text-[var(--tc-text-muted)] dark:border-white/12 dark:bg-white/[0.035] sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-black/10 bg-[var(--tc-surface)] text-[var(--tc-text-primary)] dark:border-white/10 dark:bg-white/8 dark:text-white">
+                        <FiPaperclip size={16} />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-[var(--tc-text-primary)] dark:text-white">
+                          Anexos e contexto da plataforma
                         </div>
-                        <h3 className="mt-4 text-xl font-bold text-white">Abra uma conversa</h3>
-                        <p className="mt-2 max-w-md text-sm leading-6 text-white/68">
-                          Busque um usuario na lateral, clique no nome e comece a escrever. A conversa fica organizada por pessoa.
-                        </p>
-                      </div>
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
-                </div>
-              ) : (
-                <div className="flex min-h-[30rem] flex-1 flex-col items-center justify-center rounded-[26px] border border-dashed border-white/12 bg-white/5 px-6 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-[24px] border border-white/10 bg-white/8">
-                    <FiUsers size={24} className="text-white/72" />
-                  </div>
-                  <h3 className="mt-4 text-2xl font-extrabold text-white">Digite o nome de um usuario</h3>
-                  <p className="mt-2 max-w-xl text-sm leading-6 text-white/68">
-                    Quando voce escolher um contato, a conversa abre na hora com foto, nome e a identidade da plataforma.
-                  </p>
-                  {filteredContacts.length > 0 ? (
-                    <button
-                      type="button"
-                      onClick={() => openConversation(filteredContacts[0].id)}
-                      className="mt-5 inline-flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95"
-                    >
-                      <FiSend size={14} />
-                      Abrir {filteredContacts[0].name}
-                    </button>
-                  ) : null}
-                </div>
-              )}
-            </section>
-
-            <form
-              onSubmit={sendMessage}
-              className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04))] p-4"
-            >
-              <div className="flex items-start gap-4">
-                <UserAvatar
-                  src={activeIdentity.avatarUrl}
-                  name={activeIdentity.displayName}
-                  size="md"
-                  className="shrink-0"
-                  frameClassName="border border-white/12"
-                />
-
-                <div className="min-w-0 flex-1">
-                  <div className="mb-2 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-white">{activeIdentity.displayName}</div>
-                      <div className="truncate text-xs text-white/56">
-                        {selectedPeerId ? `Escrevendo para ${activePeerName}` : "Selecione um usuario para enviar mensagem"}
+                        <div className="mt-0.5 text-xs leading-5">
+                          Anexe arquivos ou arraste links, textos e referências do sistema para esta conversa.
+                        </div>
                       </div>
                     </div>
                     <button
                       type="button"
-                      onClick={() => void loadMessages(selectedPeerId)}
-                      className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-2 text-xs font-semibold text-white/76 transition hover:border-white/18 hover:bg-white/12"
-                      disabled={!selectedPeerId}
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={!selectedPeerId || sending}
+                      className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-black/10 bg-[var(--tc-surface)] px-4 py-2.5 text-sm font-semibold text-[var(--tc-text-primary)] transition hover:border-black/16 hover:bg-black/3 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/8 dark:text-white dark:hover:border-white/16 dark:hover:bg-white/12"
                     >
-                      <FiRefreshCw size={12} />
-                      Recarregar
+                      <FiPaperclip size={14} />
+                      Anexar
                     </button>
                   </div>
 
@@ -953,33 +1334,49 @@ export default function Chat() {
                         void sendMessage();
                       }
                     }}
-                    placeholder={selectedPeerId ? `Escreva para ${activePeerName}...` : "Escolha um usuario para começar"}
+                    placeholder={
+                      selectedPeerId
+                        ? `Escreva para ${activePeerName}. Arraste um link, um arquivo ou uma tela do sistema se quiser contextualizar.`
+                        : "Escolha um usuário para começar"
+                    }
                     rows={3}
                     disabled={!selectedPeerId || sending}
-                    className="w-full resize-none rounded-[24px] border border-white/10 bg-white/6 px-4 py-4 text-sm leading-6 text-white outline-none placeholder:text-white/38 focus:border-white/20 focus:bg-white/8 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="w-full resize-none rounded-lg border-0 bg-transparent px-2 py-2 text-sm leading-6 text-[var(--tc-text-primary)] outline-none placeholder:text-[color-mix(in_srgb,var(--tc-text-muted)_70%,transparent)] disabled:cursor-not-allowed disabled:opacity-70 dark:text-white dark:placeholder:text-white/34"
                   />
-                </div>
-              </div>
 
-              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-xs leading-5 text-white/56">
-                  Dica: pressione Enter para enviar e Shift+Enter para quebrar linha.
+                  <div className="flex flex-col gap-3 border-t border-black/8 pt-3 dark:border-white/8 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-xs leading-5 text-[var(--tc-text-muted)] dark:text-white/54">
+                      Enter envia, Shift+Enter quebra linha. Arraste qualquer contexto da plataforma para dentro desta área.
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {sending ? (
+                        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)] dark:text-white/48">
+                          Enviando...
+                        </span>
+                      ) : null}
+                      <button
+                        type="submit"
+                        disabled={!selectedPeerId || (!message.trim() && draftAttachments.length === 0) || sending}
+                        className="inline-flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <FiSend size={14} />
+                        Enviar mensagem
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  {sending ? <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Enviando...</span> : null}
-                  <button
-                    type="submit"
-                    disabled={!selectedPeerId || !message.trim() || sending}
-                    className="inline-flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <FiSend size={14} />
-                    Enviar mensagem
-                  </button>
-                </div>
-              </div>
-            </form>
-          </main>
-        </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileInputChange}
+                />
+              </form>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

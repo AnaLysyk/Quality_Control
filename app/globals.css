@@ -9846,5 +9846,77 @@ video {
 
 
 
+.theme-light .operation-workspace {
+  color: var(--tc-text-primary);
+}
+
+.theme-light .operation-workspace.text-white,
+.theme-light .operation-workspace .text-white {
+  color: var(--tc-text-primary) !important;
+}
+
+.theme-light .operation-workspace [class*="text-white/"] {
+  color: rgba(15, 23, 42, 0.66) !important;
+}
+
+.theme-light .operation-workspace [class*="text-[#ffd2d2]"] {
+  color: #b91c1c !important;
+}
+
+.theme-light .operation-workspace [class*="border-white/"] {
+  border-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+.theme-light .operation-workspace [class*="bg-white/"] {
+  background-color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.theme-light .operation-workspace [class*="bg-[linear-gradient"] {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9)) !important;
+}
+
+.theme-light .operation-workspace .operation-section,
+.theme-light .operation-workspace .operation-metric-card,
+.theme-light .operation-workspace .operation-panel,
+.theme-light .operation-workspace .operation-run-card,
+.theme-light .operation-workspace .operation-empty-block,
+.theme-light .operation-workspace .operation-loading-block,
+.theme-light .operation-workspace .operation-empty-inline {
+  border-color: rgba(15, 23, 42, 0.1) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08) !important;
+}
+
+.theme-light .operation-workspace .operation-run-card {
+  background: rgba(255, 255, 255, 0.92) !important;
+}
+
+.theme-light .operation-workspace .bg-\[\#0f1b33\] {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.theme-light .operation-workspace select,
+.theme-light .operation-workspace option {
+  background-color: #ffffff !important;
+  color: var(--tc-text-primary) !important;
+}
+
+.theme-light .operation-workspace .text-sky-200 {
+  color: #0369a1 !important;
+}
+
+.theme-light .operation-workspace .text-emerald-200 {
+  color: #047857 !important;
+}
+
+.theme-light .operation-workspace .text-amber-100,
+.theme-light .operation-workspace .text-amber-200 {
+  color: #92400e !important;
+}
+
+.theme-light .operation-workspace .text-rose-200 {
+  color: #be123c !important;
+}
+
 /* Wiki sidebar invisible scrollbar */
 .wiki-nav-scroll::-webkit-scrollbar { display: none; }

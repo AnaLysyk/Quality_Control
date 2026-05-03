@@ -1095,6 +1095,18 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
       });
     };
 
+    const normalizeQueryString = (query: string) => new URLSearchParams(query).toString();
+
+    const isSameMenuHref = (leftHref?: string, rightHref?: string) => {
+      if (!leftHref || !rightHref) return false;
+      const left = normalizeHref(leftHref);
+      const right = normalizeHref(rightHref);
+      return left.path === right.path && normalizeQueryString(left.query) === normalizeQueryString(right.query);
+    };
+
+    const removeSelfLinks = (parentHref: string, items: SidebarMenuItem[]) =>
+      uniqueByHref(items).filter((child) => !isSameMenuHref(parentHref, child.href));
+
     const withQuery = (href: string, params: Record<string, string | number | boolean>) => {
       const [path, rawQuery = ""] = href.split("?");
       const search = new URLSearchParams(rawQuery);
@@ -1152,6 +1164,13 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
           { id: `${item.href}:open`, label: item.label, icon: item.icon, href: item.href, description: "Abrir tela inicial" },
           ...(companyDashboard ? [{ id: `${item.href}:dashboard`, label: t("nav.dashboard"), icon: FiGrid, href: companyDashboard, description: "Painel da empresa" }] : []),
           ...(companyApps ? [{ id: `${item.href}:apps`, label: t("nav.apps"), icon: FiBriefcase, href: companyApps, description: "Aplicações da empresa" }] : []),
+          ...(path === "/admin/home"
+            ? [
+                { id: `${item.href}:admin-dashboard`, label: t("nav.dashboard"), icon: FiCompass, href: "/admin/dashboard", description: "Painel executivo" },
+                { id: `${item.href}:admin-operation`, label: "Operação", icon: FiList, href: "/admin/operacao?module=dashboard", description: "Workspace operacional" },
+                { id: `${item.href}:admin-users`, label: t("nav.users"), icon: FiUsers, href: "/admin/users?tab=company", description: "Gestão de usuários" },
+              ]
+            : []),
         ]);
       }
 
@@ -1197,11 +1216,17 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         ]);
       }
 
-      if (/\/planos-de-teste$/.test(path)) {
+      if (path === "/admin/test-plans" || /\/planos-de-teste$/.test(path)) {
         return uniqueByHref([
           { id: `${item.href}:open`, label: item.label, icon: item.icon, href: item.href, description: "Abrir planos" },
           ...(companyApps ? [{ id: `${item.href}:apps`, label: t("nav.apps"), icon: FiBriefcase, href: companyApps, description: "Aplicações" }] : []),
           ...(companyRuns ? [{ id: `${item.href}:runs`, label: companyRunsMenuLabel, icon: FiList, href: companyRuns, description: "Runs" }] : []),
+          ...(path === "/admin/test-plans"
+            ? [
+                { id: `${item.href}:admin-apps`, label: t("nav.apps"), icon: FiBriefcase, href: "/admin/clients", description: "Aplicações e empresas" },
+                { id: `${item.href}:admin-runs`, label: companyRunsMenuLabel, icon: FiList, href: "/admin/operacao?module=runs", description: "Runs relacionadas" },
+              ]
+            : []),
         ]);
       }
 
@@ -1222,6 +1247,12 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
           { id: `${item.href}:open`, label: item.label, icon: item.icon, href: item.href, description: "Abrir defeitos" },
           ...(companyRuns ? [{ id: `${item.href}:runs`, label: companyRunsMenuLabel, icon: FiList, href: companyRuns, description: "Runs relacionadas" }] : []),
           ...(companyDefects ? [{ id: `${item.href}:kanban`, label: "Kanban de defeitos", icon: FiColumns, href: `${companyDefects}/kanban`, description: "Triagem visual" }] : []),
+          ...(path === "/admin/defeitos"
+            ? [
+                { id: `${item.href}:open-items`, label: "Abertos", icon: FiAlertTriangle, href: "/admin/defeitos?status=open", description: "Defeitos em aberto" },
+                { id: `${item.href}:risk`, label: "Em risco", icon: FiBell, href: "/admin/defeitos?status=risk", description: "Itens que pedem atenção" },
+              ]
+            : []),
         ]);
       }
 
@@ -1248,6 +1279,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         return [
           { id: "permissions-open", label: "Gestão de permissões", icon: FiShield, href: item.href, description: "Perfis e permissões" },
           { id: "permissions-users", label: "Usuários", icon: FiUsers, href: "/admin/users?tab=company", description: "Abrir gestão de usuários" },
+          { id: "permissions-admin", label: "Líder TC", icon: FiShield, href: "/admin/users?tab=admin", description: "Perfis administrativos" },
         ];
       }
 
@@ -1255,6 +1287,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         return [
           { id: "brain-panel", label: "Brain", icon: FiCpu, href: "/admin/brain", description: "Painel do Brain" },
           { id: "brain-chat", label: "Conversas", icon: FiMessageSquare, href: "/chat", description: "Abrir Chatcode" },
+          { id: "brain-search", label: "Buscar conversas", icon: FiCompass, href: "/chat?search=1", description: "Pesquisar histórico" },
         ];
       }
 
@@ -1262,11 +1295,23 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         return [
           { id: "chat-open", label: "Conversas", icon: FiMessageSquare, href: "/chat", description: "Abrir conversas" },
           { id: "chat-search", label: "Buscar", icon: FiCompass, href: "/chat?search=1", description: "Buscar histórico" },
+          { id: "chat-favorites", label: "Mensagens salvas", icon: FiBookmark, href: "/chat?view=favorites", description: "Abrir favoritos da conversa" },
         ];
       }
 
       if (path === "/admin/access-requests" || path === "/admin/audit-logs") {
-        return [{ id: `${item.href}:open`, label: item.label, icon: item.icon, href: item.href, description: "Abrir tela" }];
+        return [
+          { id: `${item.href}:open`, label: item.label, icon: item.icon, href: item.href, description: "Abrir tela" },
+          ...(path === "/admin/access-requests"
+            ? [
+                { id: `${item.href}:pending`, label: "Pendentes", icon: FiUserPlus, href: "/admin/access-requests?status=pending", description: "Solicitações aguardando análise" },
+                { id: `${item.href}:approved`, label: "Aprovadas", icon: FiShield, href: "/admin/access-requests?status=approved", description: "Solicitações aprovadas" },
+              ]
+            : [
+                { id: `${item.href}:changes`, label: "Alterações", icon: FiBell, href: "/admin/audit-logs?scope=changes", description: "Eventos recentes" },
+                { id: `${item.href}:access`, label: "Acessos", icon: FiUsers, href: "/admin/audit-logs?scope=access", description: "Entradas e permissões" },
+              ]),
+        ];
       }
 
       return [];
@@ -1276,7 +1321,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
       toMenuItem(item, {
         id: item.href,
         description: describeNavItem(item),
-        children: buildChildren(item),
+        children: removeSelfLinks(item.href, buildChildren(item)),
       }),
     );
   }, [canUseAdminClientTools, companyRunsMenuLabel, searchQuery, t, visibleNavigation]);
@@ -1840,8 +1885,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                 <path d="M22 46h20" />
               </svg>
             </div>
-            <div className="sidebar-reveal sidebar-brand flex min-w-0 flex-col">
-              <span className="sidebar-brand-kicker">Testing Company</span>
+            <div className="sidebar-reveal sidebar-brand flex min-w-0 flex-col justify-center">
               <span className="sidebar-brand-title">Quality Control</span>
             </div>
           </Link>
@@ -1896,7 +1940,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             <div className="sidebar-footer pt-1">
               <div className="sidebar-footer-note text-[0.78rem] font-light italic tracking-[0.02em]">
                 <a href="https://www.testingcompany.com.br/" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-white/70">
-                  Testing Company Platform
+                  Quality Control
                 </a>
               </div>
             </div>
@@ -1977,8 +2021,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                   <path d="M22 46h20" />
                 </svg>
               </div>
-              <div className="flex flex-col">
-                <span className="sidebar-brand-kicker text-[11px] uppercase tracking-[0.22em] text-white/58">Testing Company</span>
+              <div className="flex flex-col justify-center">
                 <span className="sidebar-brand-title text-sm font-semibold tracking-wide text-white">Quality Control</span>
               </div>
             </Link>
@@ -2086,7 +2129,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             <div className="sidebar-footer-divider h-px w-full bg-white/10" aria-hidden />
             <div className="sidebar-footer-note pt-2 text-[0.78rem] font-light italic tracking-[0.02em] text-white/46">
               <a href="https://www.testingcompany.com.br/" target="_blank" rel="noopener noreferrer" className="hover:text-white/70 transition-colors">
-                Testing Company Platform
+                Quality Control
               </a>
             </div>
           </div>

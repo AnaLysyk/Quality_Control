@@ -375,7 +375,7 @@ function MetricCard({
   hint: string;
 }) {
   return (
-    <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(13,25,46,0.94),rgba(9,18,33,0.92))] px-4 py-4 shadow-[0_18px_38px_rgba(1,12,28,0.22)]">
+    <div className="operation-metric-card rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(13,25,46,0.94),rgba(9,18,33,0.92))] px-4 py-4 shadow-[0_18px_38px_rgba(1,12,28,0.22)]">
       <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/46">{label}</p>
       <div className="mt-2 text-2xl font-black tracking-tight text-white">{value}</div>
       <p className="mt-1 text-sm text-white/58">{hint}</p>
@@ -391,7 +391,7 @@ function EmptyBlock({
   description: string;
 }) {
   return (
-    <div className="rounded-[26px] border border-dashed border-white/12 bg-white/4 px-5 py-10 text-center">
+    <div className="operation-empty-block rounded-[26px] border border-dashed border-white/12 bg-white/4 px-5 py-10 text-center">
       <div className="text-base font-semibold text-white/84">{title}</div>
       <p className="mt-2 text-sm leading-6 text-white/58">{description}</p>
     </div>
@@ -400,7 +400,7 @@ function EmptyBlock({
 
 function LoadingBlock({ label }: { label: string }) {
   return (
-    <div className="rounded-[26px] border border-white/10 bg-white/5 px-5 py-10 text-center text-sm text-white/62">
+    <div className="operation-loading-block rounded-[26px] border border-white/10 bg-white/5 px-5 py-10 text-center text-sm text-white/62">
       Carregando {label}...
     </div>
   );
@@ -418,7 +418,7 @@ function ModuleSection({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,20,38,0.94),rgba(8,15,28,0.94))] shadow-[0_24px_52px_rgba(1,12,28,0.24)]">
+    <section className="operation-section rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,20,38,0.94),rgba(8,15,28,0.94))] shadow-[0_24px_52px_rgba(1,12,28,0.24)]">
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/10 px-5 py-4">
         <div>
           <h2 className="text-lg font-semibold text-white">{title}</h2>
@@ -959,9 +959,21 @@ export default function RunsIndexPage() {
     }
 
     return (
-      <div className="space-y-5">
+      <div className="operation-runs-module space-y-5">
+        <div className="operation-panel flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-white/10 bg-white/4 px-4 py-4">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/46">Runs renderizadas</p>
+            <h3 className="mt-1 text-lg font-semibold text-white">{filteredRuns.length} execucoes no recorte atual</h3>
+            <p className="mt-1 text-sm leading-6 text-white/58">
+              Empresa {selectedCompany?.name ?? "sem empresa"} com aplicacao {selectedApplication?.name ?? "todas"}.
+            </p>
+          </div>
+          <span className="rounded-full border border-(--tc-accent,#ef0001)/35 bg-(--tc-accent,#ef0001)/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ffd2d2]">
+            {runsState.loading ? "sincronizando" : "dados carregados"}
+          </span>
+        </div>
         <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-          <div className="rounded-[24px] border border-white/10 bg-white/4 p-4">
+          <div className="operation-panel rounded-[24px] border border-white/10 bg-white/4 p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/46">Agora</p>
@@ -974,7 +986,7 @@ export default function RunsIndexPage() {
             <div className="mt-4 space-y-3">
               {liveRuns.length > 0 ? (
                 liveRuns.slice(0, 6).map((run) => (
-                  <div key={run.id} className="rounded-[20px] border border-white/10 bg-[#0f1b33] px-4 py-3">
+                  <div key={run.id} className="operation-run-card rounded-[20px] border border-white/10 bg-[#0f1b33] px-4 py-3">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <div className="text-sm font-semibold text-white">{run.title}</div>
@@ -994,14 +1006,14 @@ export default function RunsIndexPage() {
                   </div>
                 ))
               ) : (
-                <p className="rounded-[20px] border border-dashed border-white/10 bg-white/4 px-4 py-6 text-sm text-white/58">
+                <p className="operation-empty-inline rounded-[20px] border border-dashed border-white/10 bg-white/4 px-4 py-6 text-sm text-white/58">
                   Nenhuma run esta em andamento agora para este recorte.
                 </p>
               )}
             </div>
           </div>
 
-          <div className="rounded-[24px] border border-white/10 bg-white/4 p-4">
+          <div className="operation-panel rounded-[24px] border border-white/10 bg-white/4 p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/46">Historico</p>
@@ -1013,7 +1025,7 @@ export default function RunsIndexPage() {
             </div>
             <div className="mt-4 space-y-3">
               {filteredRuns.slice(0, 10).map((run) => (
-                <div key={`history-${run.id}`} className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-white/8 bg-white/4 px-4 py-3">
+                <div key={`history-${run.id}`} className="operation-run-card flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-white/8 bg-white/4 px-4 py-3">
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold text-white">{run.title}</div>
                     <div className="mt-1 truncate text-xs text-white/52">
@@ -1442,7 +1454,7 @@ export default function RunsIndexPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-var(--topbar-h))] w-full bg-transparent pb-5 pt-0 text-white">
+    <div className="operation-workspace min-h-[calc(100vh-var(--topbar-h))] w-full bg-transparent pb-5 pt-0 text-white">
       <div className="flex w-full max-w-none flex-col gap-4 px-3 sm:px-4 lg:px-5 xl:px-6">
         <section className="rounded-[30px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,17,32,0.96),rgba(13,27,49,0.95))] px-5 py-5 shadow-[0_28px_60px_rgba(1,12,28,0.28)] sm:px-6">
           <div className="flex flex-wrap items-start justify-between gap-4">

@@ -713,7 +713,6 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   );
 
   const adminNav: NavItem[] = useMemo(() => [
-    { label: t("nav.home"), icon: FiHome, href: "/admin/home" },
     { label: t("nav.dashboard"), icon: FiCompass, href: "/admin/dashboard" },
     { label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric" },
     { label: adminRunsMenuLabel, icon: FiList, href: adminRunsMenuHref },
@@ -754,24 +753,30 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   const navigation = useMemo(() => {
     if (loading) return [];
     if (!user) return publicNav;
-  const isSupportScopedRoute =
+    const isSupportScopedRoute =
       parsedCompanyRoute?.kind === "technical_support" || parsedCompanyRoute?.kind === "leader_tc";
     const isCompanyScopedRoute =
       pathname.startsWith("/empresas/") ||
       parsedCompanyRoute?.kind === "empresa" ||
       parsedCompanyRoute?.kind === "company_user" ||
       parsedCompanyRoute?.kind === "testing_company_user";
+    const privilegedCompanyNav = companyNav.filter((item) => {
+      const { path } = normalizeHref(item.href);
+      return !/\/home$/.test(path);
+    });
+    const scopedCompanyNav =
+      appRole === "admin" || appRole === "technical_support" ? privilegedCompanyNav : companyNav;
     if (isSupportScopedRoute && supportNav.length) return supportNav;
-    if (isCompanyScopedRoute && companyNav.length) return companyNav;
+    if (isCompanyScopedRoute && scopedCompanyNav.length) return scopedCompanyNav;
     if (appRole === "admin") return adminNav;
     if (appRole === "technical_support") return supportNav;
     // testing_company_user not in company context → runs goes to /operacao hub
-    if (appRole === "user" && companyNav.length && !isInstitutionalCompany) {
-      return companyNav.map((item) =>
+    if (appRole === "user" && scopedCompanyNav.length && !isInstitutionalCompany) {
+      return scopedCompanyNav.map((item) =>
         /\/runs$/.test(item.href) ? { ...item, href: "/operacao" } : item,
       );
     }
-    if (companyNav.length) return companyNav;
+    if (scopedCompanyNav.length) return scopedCompanyNav;
     return publicNav;
   }, [loading, user, appRole, adminNav, supportNav, companyNav, publicNav, pathname, isInstitutionalCompany, parsedCompanyRoute]);
 
@@ -780,6 +785,9 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
       navigation
         .filter((item) => !item.roles || (appRole ? item.roles.includes(appRole) : false))
         .filter((item) => {
+          if (item.href === "/admin/users/permissions" && (appRole === "admin" || appRole === "technical_support")) {
+            return true;
+          }
           const moduleId = resolveSidebarModuleFromHref(item.href);
           if (!moduleId) return true;
           const isCompanyScopedLink = /^\/empresas\/[^/]+\//.test(item.href);
@@ -1104,8 +1112,24 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
       return left.path === right.path && normalizeQueryString(left.query) === normalizeQueryString(right.query);
     };
 
+    const menuHrefKey = (href?: string) => {
+      if (!href) return "";
+      const { path, query } = normalizeHref(href);
+      return `${path}?${normalizeQueryString(query)}`;
+    };
+
+    const topLevelMenuHrefs = new Set(visibleNavigation.map((item) => menuHrefKey(item.href)));
+
+    const removeMainMenuLinks = (items: SidebarMenuItem[]): SidebarMenuItem[] =>
+      uniqueByHref(items)
+        .filter((child) => !child.href || !topLevelMenuHrefs.has(menuHrefKey(child.href)))
+        .map((child) => ({
+          ...child,
+          children: child.children ? removeMainMenuLinks(child.children) : child.children,
+        }));
+
     const removeSelfLinks = (parentHref: string, items: SidebarMenuItem[]) =>
-      uniqueByHref(items).filter((child) => !isSameMenuHref(parentHref, child.href));
+      removeMainMenuLinks(uniqueByHref(items).filter((child) => !isSameMenuHref(parentHref, child.href)));
 
     const withQuery = (href: string, params: Record<string, string | number | boolean>) => {
       const [path, rawQuery = ""] = href.split("?");
@@ -1940,7 +1964,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             <div className="sidebar-footer pt-1">
               <div className="sidebar-footer-note text-[0.78rem] font-light italic tracking-[0.02em]">
                 <a href="https://www.testingcompany.com.br/" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-white/70">
-                  Quality Control
+                  Testing Company
                 </a>
               </div>
             </div>
@@ -2129,7 +2153,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             <div className="sidebar-footer-divider h-px w-full bg-white/10" aria-hidden />
             <div className="sidebar-footer-note pt-2 text-[0.78rem] font-light italic tracking-[0.02em] text-white/46">
               <a href="https://www.testingcompany.com.br/" target="_blank" rel="noopener noreferrer" className="hover:text-white/70 transition-colors">
-                Quality Control
+                Testing Company
               </a>
             </div>
           </div>

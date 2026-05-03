@@ -5806,6 +5806,10 @@ video {
     overflow: hidden;
     transition: width 0.2s ease;
   }
+  .app-shell .sidebar-shell > div {
+    padding-top: clamp(0.5rem, 1.35vh, 0.75rem) !important;
+    padding-bottom: clamp(0.5rem, 1.35vh, 0.75rem) !important;
+  }
   .app-shell .sidebar-shell:hover,
   .app-shell .sidebar-shell[data-flyout-open="1"] {
     width: var(--sidebar-expanded);
@@ -5822,28 +5826,28 @@ video {
 
   .app-shell .sidebar-shell .sidebar-link {
     width: 100%;
-    min-height: 2.25rem;
+    min-height: clamp(2rem, 4.55vh, 2.5rem);
   }
 
   .app-shell .sidebar-shell .sidebar-logo-mark {
-    width: 3rem !important;
-    height: 3rem !important;
-    min-width: 3rem;
-    min-height: 3rem;
+    width: clamp(2.35rem, 5.6vh, 3rem) !important;
+    height: clamp(2.35rem, 5.6vh, 3rem) !important;
+    min-width: clamp(2.35rem, 5.6vh, 3rem);
+    min-height: clamp(2.35rem, 5.6vh, 3rem);
   }
 
   .app-shell .sidebar-shell .sidebar-logo-image {
-    width: 3rem !important;
-    height: 3rem !important;
+    width: clamp(2.35rem, 5.6vh, 3rem) !important;
+    height: clamp(2.35rem, 5.6vh, 3rem) !important;
     max-width: 3rem !important;
     max-height: 3rem !important;
   }
 
   .app-shell .sidebar-shell .sidebar-menu-icon {
-    width: 2.25rem !important;
-    height: 2.25rem !important;
-    min-width: 2.25rem;
-    min-height: 2.25rem;
+    width: clamp(1.95rem, 4vh, 2.25rem) !important;
+    height: clamp(1.95rem, 4vh, 2.25rem) !important;
+    min-width: clamp(1.95rem, 4vh, 2.25rem);
+    min-height: clamp(1.95rem, 4vh, 2.25rem);
   }
 
   .app-shell .sidebar-shell .sidebar-link svg:not(.sidebar-logo-icon),
@@ -5857,6 +5861,23 @@ video {
 
   .app-shell .sidebar-shell nav {
     overflow: visible;
+  }
+
+  .app-shell .sidebar-shell .sidebar-desktop-nav-list {
+    display: grid !important;
+    grid-template-rows: repeat(var(--sidebar-item-count, 1), minmax(0, 1fr));
+    height: min(
+      calc(100vh - clamp(8.8rem, 21vh, 11.75rem)),
+      calc(var(--sidebar-item-count, 1) * clamp(2.05rem, 4.65vh, 2.55rem))
+    );
+    gap: clamp(0.125rem, 0.45vh, 0.25rem);
+    align-content: start;
+  }
+
+  .app-shell .sidebar-shell .sidebar-desktop-nav-list > .relative,
+  .app-shell .sidebar-shell .sidebar-desktop-nav-list .sidebar-link {
+    min-height: 0;
+    height: 100%;
   }
 
   /* Collapsed-by-default: fade sidebar text in only on hover */
@@ -5942,6 +5963,55 @@ video {
   }
   .app-shell .sidebar-shell:not(:hover):not([data-flyout-open="1"]) [aria-label="Favoritos"] span {
     display: none;
+  }
+
+  @media (max-height: 760px) {
+    .app-shell .sidebar-shell .sidebar-logo {
+      padding-top: 0.25rem !important;
+      padding-bottom: 0.25rem !important;
+    }
+    .app-shell .sidebar-shell .sidebar-nav-caption {
+      display: none;
+    }
+    .app-shell .sidebar-shell .sidebar-desktop-nav-list {
+      margin-top: 0.25rem !important;
+      gap: 0.125rem;
+    }
+    .app-shell .sidebar-shell .sidebar-link {
+      border-radius: 0.85rem;
+    }
+    .app-shell .sidebar-shell .sidebar-label {
+      padding-top: 0.2rem !important;
+      padding-bottom: 0.2rem !important;
+    }
+    .app-shell .sidebar-shell .sidebar-footer-note {
+      font-size: 0.68rem;
+      line-height: 1rem;
+    }
+  }
+
+  @media (max-height: 640px) {
+    .app-shell .sidebar-shell > div {
+      padding-top: 0.35rem !important;
+      padding-bottom: 0.35rem !important;
+    }
+    .app-shell .sidebar-shell .sidebar-divider-line {
+      opacity: 0.45;
+    }
+    .app-shell .sidebar-shell .sidebar-footer-note {
+      font-size: 0.62rem;
+    }
+    .app-shell .sidebar-shell .sidebar-menu-icon {
+      width: 1.65rem !important;
+      height: 1.65rem !important;
+      min-width: 1.65rem;
+      min-height: 1.65rem;
+      border-radius: 0.65rem;
+    }
+    .app-shell .sidebar-shell .sidebar-link svg:not(.sidebar-logo-icon) {
+      width: 0.85rem !important;
+      height: 0.85rem !important;
+    }
   }
 
   /* Brain canvas stays collapsed even on hover */

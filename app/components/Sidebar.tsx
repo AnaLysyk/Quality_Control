@@ -1085,38 +1085,201 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   ]);
 
   const desktopNavigationItems = useMemo<SidebarMenuItem[]>(() => {
-    const isHomeNav = (item: NavItem) => {
-      const { path } = normalizeHref(item.href);
-      return path === "/" || path === "/admin/home" || /\/home$/.test(path);
+    const uniqueByHref = (items: SidebarMenuItem[]) => {
+      const seen = new Set<string>();
+      return items.filter((item) => {
+        const key = item.href ?? item.id;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
     };
 
-    const homeBase = visibleNavigation.find(isHomeNav) ?? null;
-    const homeItem = homeBase
-      ? toMenuItem(homeBase, {
-          id: "home",
-          description: "Entrada principal",
-          children: visibleNavigation
-            .filter((item) => !isHomeNav(item))
-            .map((item) =>
-              toMenuItem(item, {
-                id: `home:${item.href}`,
-                description: "Abrir tela",
-              }),
-            ),
-        })
-      : null;
+    const withQuery = (href: string, params: Record<string, string | number | boolean>) => {
+      const [path, rawQuery = ""] = href.split("?");
+      const search = new URLSearchParams(rawQuery);
+      Object.entries(params).forEach(([key, value]) => search.set(key, String(value)));
+      const query = search.toString();
+      return query ? `${path}?${query}` : path;
+    };
 
-    const moduleItems = desktopSections.map<SidebarMenuItem>((section) => ({
-      id: section.id,
-      label: section.label,
-      icon: section.icon,
-      href: section.href,
-      description: section.description,
-      children: section.items,
-    }));
+    const buildCompanySiblingHref = (href: string, section: string) => {
+      const { path } = normalizeHref(href);
+      const match = path.match(/^\/empresas\/([^/]+)/);
+      if (!match) return null;
+      return `/empresas/${match[1]}/${section}`;
+    };
 
-    return [homeItem, ...moduleItems].filter((item): item is SidebarMenuItem => Boolean(item));
-  }, [desktopSections, visibleNavigation]);
+    const buildOperationHref = (href: string, module: string) => {
+      const { path, query } = normalizeHref(href);
+      const params = new URLSearchParams(query || searchQuery);
+      params.set("module", module);
+      const basePath = path === "/admin/operacao" ? "/admin/operacao" : "/operacao";
+      const nextQuery = params.toString();
+      return nextQuery ? `${basePath}?${nextQuery}` : basePath;
+    };
+
+    const describeNavItem = (item: NavItem) => {
+      const { path } = normalizeHref(item.href);
+      if (path === "/" || path === "/admin/home" || /\/home$/.test(path)) return "Entrada principal";
+      if (path === "/admin/dashboard" || /\/dashboard$/.test(path)) return "Painel executivo";
+      if (path === "/admin/test-metric" || path === "/metrics" || /\/metrics$/.test(path)) return "Indicadores";
+      if (path === "/operacao" || path === "/admin/operacao" || /\/runs$/.test(path)) return "Execuções";
+      if (path === "/admin/clients" || path === "/empresas" || /\/aplicacoes$/.test(path)) return "Aplicações";
+      if (path === "/admin/users") return "Usuários";
+      if (/\/planos-de-teste$/.test(path)) return "Planos de teste";
+      if (path === "/automacoes") return "Automações";
+      if (path === "/admin/support" || path === "/meus-chamados" || /\/chamados$/.test(path)) return "Suporte";
+      if (path === "/admin/users/permissions") return "Permissões";
+      if (path === "/admin/access-requests") return "Solicitações";
+      if (path === "/admin/audit-logs") return "Auditoria";
+      if (path === "/admin/brain") return "Brain";
+      if (path === "/chat") return "Conversas";
+      return "Acesso rápido";
+    };
+
+    const buildChildren = (item: NavItem): SidebarMenuItem[] => {
+      const { path } = normalizeHref(item.href);
+      const companyDashboard = buildCompanySiblingHref(item.href, "dashboard");
+      const companyMetrics = buildCompanySiblingHref(item.href, "metrics");
+      const companyApps = buildCompanySiblingHref(item.href, "aplicacoes");
+      const companyTestPlans = buildCompanySiblingHref(item.href, "planos-de-teste");
+      const companyRuns = buildCompanySiblingHref(item.href, "runs");
+      const companyDefects = buildCompanySiblingHref(item.href, "defeitos");
+
+      if (path === "/" || path === "/admin/home" || /\/home$/.test(path)) {
+        return uniqueByHref([
+          { id: `${item.href}:open`, label: item.label, icon: item.icon, href: item.href, description: "Abrir tela inicial" },
+          ...(companyDashboard ? [{ id: `${item.href}:dashboard`, label: t("nav.dashboard"), icon: FiGrid, href: companyDashboard, description: "Painel da empresa" }] : []),
+          ...(companyApps ? [{ id: `${item.href}:apps`, label: t("nav.apps"), icon: FiBriefcase, href: companyApps, description: "Aplicações da empresa" }] : []),
+        ]);
+      }
+
+      if (path === "/admin/dashboard" || /\/dashboard$/.test(path)) {
+        return uniqueByHref([
+          { id: `${item.href}:open`, label: item.label, icon: item.icon, href: item.href, description: "Abrir dashboard" },
+          ...(companyMetrics ? [{ id: `${item.href}:metrics`, label: t("nav.metrics"), icon: FiBarChart2, href: companyMetrics, description: "Indicadores" }] : []),
+          ...(companyRuns ? [{ id: `${item.href}:runs`, label: companyRunsMenuLabel, icon: FiList, href: companyRuns, description: "Runs" }] : []),
+          ...(path === "/admin/dashboard" ? [{ id: `${item.href}:admin-metrics`, label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric", description: "Indicadores globais" }] : []),
+        ]);
+      }
+
+      if (path === "/admin/test-metric" || path === "/metrics" || /\/metrics$/.test(path)) {
+        return uniqueByHref([
+          { id: `${item.href}:open`, label: item.label, icon: item.icon, href: item.href, description: "Abrir indicadores" },
+          ...(companyDashboard ? [{ id: `${item.href}:dashboard`, label: t("nav.dashboard"), icon: FiGrid, href: companyDashboard, description: "Voltar ao dashboard" }] : []),
+          ...(path === "/admin/test-metric" ? [{ id: `${item.href}:admin-dashboard`, label: t("nav.dashboard"), icon: FiCompass, href: "/admin/dashboard", description: "Painel executivo" }] : []),
+        ]);
+      }
+
+      if (path === "/operacao" || path === "/admin/operacao" || /\/runs$/.test(path)) {
+        return uniqueByHref([
+          { id: `${item.href}:open`, label: item.label, icon: item.icon, href: item.href, description: "Abrir módulo" },
+          { id: `${item.href}:op-dashboard`, label: t("nav.dashboard"), icon: FiGrid, href: buildOperationHref(item.href, "dashboard"), description: "Resumo operacional" },
+          { id: `${item.href}:op-runs`, label: t("nav.operations"), icon: FiList, href: buildOperationHref(item.href, "runs"), description: "Runs e execuções" },
+          { id: `${item.href}:op-apps`, label: t("nav.apps"), icon: FiBriefcase, href: buildOperationHref(item.href, "applications"), description: "Aplicações" },
+          { id: `${item.href}:op-test-plans`, label: t("nav.testPlans"), icon: FiClipboard, href: buildOperationHref(item.href, "test-plans"), description: "Planos de teste" },
+          { id: `${item.href}:op-defects`, label: t("nav.defects"), icon: FiAlertTriangle, href: buildOperationHref(item.href, "defects"), description: "Defeitos" },
+          { id: `${item.href}:op-support`, label: t("nav.support"), icon: FiColumns, href: buildOperationHref(item.href, "support"), description: "Chamados" },
+          ...(companyApps ? [{ id: `${item.href}:company-apps`, label: t("nav.apps"), icon: FiBriefcase, href: companyApps, description: "Tela da empresa" }] : []),
+          ...(companyTestPlans ? [{ id: `${item.href}:company-plans`, label: t("nav.testPlans"), icon: FiClipboard, href: companyTestPlans, description: "Tela da empresa" }] : []),
+          ...(companyDefects ? [{ id: `${item.href}:company-defects`, label: t("nav.defects"), icon: FiAlertTriangle, href: companyDefects, description: "Tela da empresa" }] : []),
+        ]);
+      }
+
+      if (path === "/admin/clients" || path === "/empresas" || /\/aplicacoes$/.test(path)) {
+        return uniqueByHref([
+          { id: `${item.href}:open`, label: item.label, icon: item.icon, href: item.href, description: "Abrir aplicações" },
+          ...(companyDashboard ? [{ id: `${item.href}:dashboard`, label: t("nav.dashboard"), icon: FiGrid, href: companyDashboard, description: "Dashboard da empresa" }] : []),
+          ...(companyRuns ? [{ id: `${item.href}:runs`, label: companyRunsMenuLabel, icon: FiList, href: companyRuns, description: "Runs da empresa" }] : []),
+          ...(companyTestPlans ? [{ id: `${item.href}:plans`, label: t("nav.testPlans"), icon: FiClipboard, href: companyTestPlans, description: "Planos de teste" }] : []),
+          ...(canUseAdminClientTools ? [{ id: `${item.href}:create`, label: "Criar empresa", icon: FiPlus, href: "/admin/clients?create=1", description: "Abrir cadastro" }] : []),
+        ]);
+      }
+
+      if (/\/planos-de-teste$/.test(path)) {
+        return uniqueByHref([
+          { id: `${item.href}:open`, label: item.label, icon: item.icon, href: item.href, description: "Abrir planos" },
+          ...(companyApps ? [{ id: `${item.href}:apps`, label: t("nav.apps"), icon: FiBriefcase, href: companyApps, description: "Aplicações" }] : []),
+          ...(companyRuns ? [{ id: `${item.href}:runs`, label: companyRunsMenuLabel, icon: FiList, href: companyRuns, description: "Runs" }] : []),
+        ]);
+      }
+
+      if (path === "/automacoes") {
+        return [
+          { id: "automations-open", label: t("nav.automations"), icon: FiZap, href: "/automacoes", description: "Abrir automações" },
+          { id: "automations-flows", label: "Fluxos", icon: FiZap, href: "/automacoes/fluxos", description: "Fluxos e automações" },
+          { id: "automations-executions", label: "Execuções", icon: FiZap, href: "/automacoes/execucoes", description: "Runs técnicas" },
+          { id: "automations-scripts", label: "Scripts", icon: FiClipboard, href: "/automacoes/scripts", description: "Scripts e artefatos" },
+          { id: "automations-cases", label: "Casos", icon: FiList, href: "/automacoes/casos", description: "Casos automatizados" },
+          { id: "automations-files", label: "Arquivos", icon: FiBriefcase, href: "/automacoes/arquivos", description: "Arquivos e evidências" },
+          { id: "automations-logs", label: "Logs", icon: FiBell, href: "/automacoes/logs", description: "Logs técnicos" },
+        ];
+      }
+
+      if (/\/defeitos$/.test(path) || path === "/admin/defeitos") {
+        return uniqueByHref([
+          { id: `${item.href}:open`, label: item.label, icon: item.icon, href: item.href, description: "Abrir defeitos" },
+          ...(companyRuns ? [{ id: `${item.href}:runs`, label: companyRunsMenuLabel, icon: FiList, href: companyRuns, description: "Runs relacionadas" }] : []),
+          ...(companyDefects ? [{ id: `${item.href}:kanban`, label: "Kanban de defeitos", icon: FiColumns, href: `${companyDefects}/kanban`, description: "Triagem visual" }] : []),
+        ]);
+      }
+
+      if (path === "/admin/users") {
+        return [
+          { id: "users-company", label: "Empresa e usuários", icon: FiUsers, href: "/admin/users?tab=company", description: "Usuários vinculados" },
+          { id: "users-testing", label: "Usuários TC", icon: FiUser, href: "/admin/users?tab=testing", description: "Time Testing Company" },
+          { id: "users-admin", label: "Líder TC", icon: FiShield, href: "/admin/users?tab=admin", description: "Perfis administrativos" },
+          { id: "users-support", label: "Suporte técnico", icon: FiTool, href: "/admin/users?tab=support", description: "Equipe de suporte" },
+          ...(canUseAdminClientTools ? [{ id: "users-create", label: "Criar usuário", icon: FiUserPlus, href: "/admin/users?tab=company&create=1", description: "Novo usuário" }] : []),
+        ];
+      }
+
+      if (path === "/admin/support" || path === "/meus-chamados" || /\/chamados$/.test(path)) {
+        return uniqueByHref([
+          { id: `${item.href}:open`, label: item.label, icon: item.icon, href: item.href, description: "Abrir suporte" },
+          { id: `${item.href}:my`, label: "Meus chamados", icon: FiMessageSquare, href: "/meus-chamados", description: "Chamados do seu escopo" },
+          { id: `${item.href}:create`, label: "Criar chamado", icon: FiPlus, href: withQuery(item.href, { create: 1 }), description: "Abrir solicitação" },
+          ...(companyRuns ? [{ id: `${item.href}:runs`, label: companyRunsMenuLabel, icon: FiList, href: companyRuns, description: "Runs da empresa" }] : []),
+        ]);
+      }
+
+      if (path === "/admin/users/permissions") {
+        return [
+          { id: "permissions-open", label: "Gestão de permissões", icon: FiShield, href: item.href, description: "Perfis e permissões" },
+          { id: "permissions-users", label: "Usuários", icon: FiUsers, href: "/admin/users?tab=company", description: "Abrir gestão de usuários" },
+        ];
+      }
+
+      if (path === "/admin/brain") {
+        return [
+          { id: "brain-panel", label: "Brain", icon: FiCpu, href: "/admin/brain", description: "Painel do Brain" },
+          { id: "brain-chat", label: "Conversas", icon: FiMessageSquare, href: "/chat", description: "Abrir Chatcode" },
+        ];
+      }
+
+      if (path === "/chat") {
+        return [
+          { id: "chat-open", label: "Conversas", icon: FiMessageSquare, href: "/chat", description: "Abrir conversas" },
+          { id: "chat-search", label: "Buscar", icon: FiCompass, href: "/chat?search=1", description: "Buscar histórico" },
+        ];
+      }
+
+      if (path === "/admin/access-requests" || path === "/admin/audit-logs") {
+        return [{ id: `${item.href}:open`, label: item.label, icon: item.icon, href: item.href, description: "Abrir tela" }];
+      }
+
+      return [];
+    };
+
+    return visibleNavigation.map((item) =>
+      toMenuItem(item, {
+        id: item.href,
+        description: describeNavItem(item),
+        children: buildChildren(item),
+      }),
+    );
+  }, [canUseAdminClientTools, companyRunsMenuLabel, searchQuery, t, visibleNavigation]);
 
   const actionLookup = useMemo(() => {
     const map = new Map<string, SidebarMenuItem>();
@@ -1707,7 +1870,6 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             </div>
             <div className="sidebar-label min-w-0 flex-1 px-3 py-1.5">
               <div className="text-sm font-semibold leading-5">Favoritos</div>
-              <div className="mt-0.5 text-xs leading-4 opacity-60">Atalhos fixados</div>
             </div>
             <span className="sidebar-label mr-3 inline-flex h-7 min-w-7 items-center justify-center rounded-full border border-white/10 bg-white/8 px-2 text-[11px] font-semibold">
               {favoriteNavigation.length}
@@ -1721,7 +1883,10 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             <div className="sidebar-nav-caption sidebar-label px-2 text-xs uppercase tracking-[0.18em] opacity-55">
               Navegação
             </div>
-            <div className="mt-1.5 space-y-1">
+            <div
+              className="sidebar-desktop-nav-list mt-1.5 flex flex-col gap-1"
+              style={{ "--sidebar-item-count": desktopNavigationItems.length } as CSSProperties}
+            >
               {desktopNavigationItems.map((item) => renderDesktopNavigationItem(item))}
             </div>
           </nav>

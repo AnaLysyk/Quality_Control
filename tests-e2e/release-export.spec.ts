@@ -1,4 +1,4 @@
-﻿import { test, expect } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
 test("admin consegue exportar release", async ({ page, context }) => {
@@ -8,7 +8,7 @@ test("admin consegue exportar release", async ({ page, context }) => {
     clientSlug: "DEMO",
   });
 
-  await page.goto("/empresas/demo/releases/v1_8_0_reg", { waitUntil: "networkidle" });
+  await page.goto("/empresas/demo/releases/v1_8_0_reg", { waitUntil: "domcontentloaded" });
 
   const [download] = await Promise.all([
     page.waitForEvent("download"),

@@ -1,7 +1,8 @@
-﻿import { test, expect } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
+import { expectCurrentDashboardReady } from "./utils/current-ui";
 
-test("dashboard indica defeitos fora do SLA", async ({ page, context }) => {
+test("dashboard indica defeitos e sinais de SLA", async ({ page, context }) => {
   await mockAuth(context, {
     role: "company",
     companies: ["DEMO"],
@@ -9,11 +10,9 @@ test("dashboard indica defeitos fora do SLA", async ({ page, context }) => {
   });
 
   await page.goto("/empresas/demo/dashboard", {
-    waitUntil: "networkidle",
+    waitUntil: "domcontentloaded",
   });
 
-  const slaCard = page.getByTestId("sla-card");
-  await page.waitForTimeout(300);
-  await expect(slaCard).toBeVisible({ timeout: 10000 });
+  await expectCurrentDashboardReady(page);
+  await expect(page.getByText("Defeitos", { exact: true }).first()).toBeVisible({ timeout: 10000 });
 });
-

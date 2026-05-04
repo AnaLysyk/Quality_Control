@@ -9,6 +9,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type WheelEvent as ReactWheelEvent,
 } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   useBrainGraph,
   useBrainNodeContext,
@@ -628,6 +629,7 @@ function buildNeuralMeshEdges(
 }
 
 export default function BrainGraphView() {
+  const searchParams = useSearchParams();
   const { t, locale } = useTranslation();
   const { isDark } = useTheme();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -647,6 +649,12 @@ export default function BrainGraphView() {
   const [showPalette, setShowPalette] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState("");
   const paletteInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const handledMenuActionRef = useRef("");
+  const menuShortcutActionsRef = useRef<{ clear: () => void; sync: () => Promise<void> }>({
+    clear: () => undefined,
+    sync: async () => undefined,
+  });
 
   // Create node form state
   const [createNodeLabel, setCreateNodeLabel] = useState("");
@@ -1518,6 +1526,42 @@ export default function BrainGraphView() {
     }
   }
 
+  menuShortcutActionsRef.current.clear = clearBrainFilters;
+  menuShortcutActionsRef.current.sync = handleSync;
+
+  useEffect(() => {
+    const signature = searchParams.toString();
+    const focus = searchParams.get("focus");
+    const tab = searchParams.get("tab");
+    const action = searchParams.get("action");
+    const view = searchParams.get("view");
+
+    if (tab === "create-node") {
+      setPanelOpen(true);
+      setActiveTab("create");
+    }
+
+    if ((action === "sync" || view === "graph") && handledMenuActionRef.current !== signature) {
+      handledMenuActionRef.current = signature;
+
+      if (view === "graph") {
+        menuShortcutActionsRef.current.clear();
+      }
+
+      if (action === "sync") {
+        void menuShortcutActionsRef.current.sync();
+      }
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      if (focus === "search") {
+        searchInputRef.current?.focus();
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [searchParams]);
+
   function findNodeAtPoint(clientX: number, clientY: number) {
     const canvas = canvasRef.current;
     if (!canvas) return null;
@@ -1712,6 +1756,7 @@ export default function BrainGraphView() {
           <div className={styles.controlCluster}>
             <div className={styles.searchShell}>
               <input
+                ref={searchInputRef}
                 className={styles.searchInput}
                 placeholder={t.brain.searchPlaceholder}
                 value={searchText}

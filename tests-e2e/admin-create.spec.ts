@@ -17,7 +17,7 @@ test("admin cria empresa e usuario", async ({ page }) => {
   await page.getByRole("button", { name: /Cadastrar.*empresa/i }).first().click();
   await expect(page.getByRole("heading", { name: /Cadastrar.*empresa/i })).toBeVisible();
 
-  await page.getByLabel(/Nome\s*\/\s*razao social/i).fill(companyName);
+  await page.getByLabel(/Nome\s*\/\s*raz[aã]o social/i).fill(companyName);
   const createResponsePromise = page.waitForResponse(
     (response) => response.url().includes("/api/clients") && response.request().method() === "POST"
   );
@@ -30,28 +30,24 @@ test("admin cria empresa e usuario", async ({ page }) => {
       `Falha ao criar empresa: ${createResponse.status()} ${JSON.stringify(body)} payload=${JSON.stringify(sentPayload)}`
     );
   }
-  await expect(page.getByRole("heading", { name: /Cadastrar.*empresa/i })).toHaveCount(0);
+  await page.goto("/admin/clients", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("button", { name: new RegExp(companyName) }).first()).toBeVisible({
     timeout: 20000,
   });
 
   await page.goto("/admin/users", { waitUntil: "domcontentloaded" });
-  const filterSelect = page.getByLabel(/Empresa:/i);
-  await filterSelect.selectOption("");
-
-  await page.getByRole("button", { name: /\+ Criar usu/i }).click();
+  await page.getByRole("button", { name: /Criar usu[aá]rio da empresa/i }).click();
   await expect(page.getByRole("heading", { name: /Criar usu/i })).toBeVisible();
 
-  await page.getByLabel(/Empresa vinculada/i).selectOption({ label: companyName });
+  const companySelect = page.locator('select[aria-label*="Empresa vinculada"]').first();
+  await expect(companySelect).toContainText(companyName, { timeout: 20000 });
+  await companySelect.selectOption({ label: companyName });
+  await expect(companySelect).toHaveValue(/.+/);
   await page.getByLabel(/Nome completo/i).fill(userName);
   await page.getByLabel(/^Email$/i).fill(userEmail);
-  await page.getByLabel(/Senha inicial/i).fill("admin123");
   const userForm = page.locator("form").filter({ hasText: /Criar usu/i });
   await userForm.getByRole("button", { name: /Criar usu/i }).click();
 
   await expect(page.getByRole("heading", { name: /Criar usu/i })).toHaveCount(0);
-  await filterSelect.selectOption("");
-  await expect(page.getByText(userEmail)).toBeVisible({ timeout: 20000 });
+  await expect(page.locator("main").getByText(userEmail, { exact: true }).first()).toBeVisible({ timeout: 20000 });
 });
-
-

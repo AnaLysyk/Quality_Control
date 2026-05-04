@@ -70,15 +70,17 @@ test("admin compara metricas entre empresas", async ({ page, context }) => {
   await page.goto("/admin/dashboard", { waitUntil: "domcontentloaded" });
   await waitForAuth(page);
 
-  const griauleRow = page.getByTestId("benchmark-row-griaule");
-  const testingRow = page.getByTestId("benchmark-row-testing-company");
+  const ranking = page.getByText(/Ranking de qualidade por empresa/i);
+  await expect(ranking).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/Atualizando\.\.\./).first()).toBeHidden({ timeout: 30000 });
+  await expect(page.getByText(/Carregando ranking/i)).toHaveCount(0, { timeout: 30000 });
 
-  await expect(griauleRow).toBeVisible({ timeout: 15000 });
-  await expect(testingRow).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/Seleção rápida de empresa/i)).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/Compare empresas/i).first()).toBeVisible({ timeout: 15000 });
 
-  const griauleRuns = parseRunsCount(await griauleRow.getByTestId("benchmark-runs-total").textContent());
-  const testingRuns = parseRunsCount(await testingRow.getByTestId("benchmark-runs-total").textContent());
+  const totalCompanies = parseRunsCount(await page.getByText(/empresas no escopo global/i).first().textContent());
+  const totalRuns = parseRunsCount(await page.getByText(/Execuções consolidadas/i).locator("..").textContent());
 
-  expect(griauleRuns).toBeGreaterThanOrEqual(1);
-  expect(testingRuns).toBeGreaterThanOrEqual(1);
+  expect(totalCompanies).toBeGreaterThanOrEqual(1);
+  expect(totalRuns).toBeGreaterThanOrEqual(1);
 });

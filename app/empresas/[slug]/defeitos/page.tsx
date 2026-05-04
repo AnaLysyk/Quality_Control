@@ -2497,6 +2497,7 @@ export default function CompanyDefectsPage() {
               {permissions.canCreate && (
                 <button
                   type="button"
+                  data-testid="defect-open-create"
                   onClick={openCreateModal}
                   className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-white backdrop-blur"
                 >
@@ -2769,6 +2770,7 @@ export default function CompanyDefectsPage() {
                 {permissions.canCreate && (
                   <button
                     type="button"
+                    data-testid="defect-open-create"
                     onClick={openCreateModal}
                     className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-primary,#0b1a3c)"
                   >
@@ -3528,6 +3530,7 @@ export default function CompanyDefectsPage() {
                   {activeDefect.sourceType === "manual" && activeDefect.canDelete && (
                     <button
                       type="button"
+                      data-testid="defect-delete"
                       onClick={handleDelete}
                       className="rounded-2xl border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-600"
                     >

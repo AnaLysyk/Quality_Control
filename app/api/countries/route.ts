@@ -23,6 +23,14 @@ function canCreateCountry(user: Awaited<ReturnType<typeof authenticateRequest>>)
   return role === "leader_tc" || role === "technical_support" || role === "empresa";
 }
 
+function canAccessCompanyScope(user: Awaited<ReturnType<typeof authenticateRequest>>, companyId: string) {
+  if (!user) return false;
+  if (user.isGlobalAdmin) return true;
+  const role = normalizeRole(user.role);
+  if (role === "leader_tc" || role === "technical_support") return true;
+  return Boolean(user.companyId && user.companyId === companyId);
+}
+
 export async function POST(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
@@ -37,6 +45,10 @@ export async function POST(req: Request) {
 
   if (!canCreateCountry(user)) {
     return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
+  }
+
+  if (!canAccessCompanyScope(user, companyId)) {
+    return NextResponse.json({ message: "Acesso proibido para esta empresa" }, { status: 403 });
   }
 
   const body = await req.json().catch(() => ({}));

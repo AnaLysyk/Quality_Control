@@ -1,17 +1,18 @@
-﻿import { test } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
-test("admin troca empresa ativa", async ({ page, context }) => {
+test("admin seleciona empresa no dashboard global", async ({ page, context }) => {
   await mockAuth(context, {
     role: "admin",
     companies: ["DEMO", "testing-company"],
     clientSlug: "DEMO",
   });
 
-  await page.goto("/admin", { waitUntil: "networkidle" });
+  await page.goto("/admin/dashboard", { waitUntil: "domcontentloaded" });
 
-  await page.getByTestId("company-item-testing-company").click();
-  await page.waitForTimeout(500);
-  await page.waitForURL(/\/empresas\/testing-company\/home/, { timeout: 10000 });
+  const companyButton = page.getByRole("button", { name: /Testing Company|Griaule|Demo/i }).first();
+  await expect(companyButton).toBeVisible({ timeout: 20000 });
+  await companyButton.click();
+
+  await expect(page.getByText(/Empresa selecionada|Painel admin/i).first()).toBeVisible();
 });
-

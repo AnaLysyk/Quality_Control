@@ -1,8 +1,9 @@
-﻿import { test, expect } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
 function slugify(value: string) {
   return value
+    .replace(/^run\s+/i, "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
@@ -21,7 +22,7 @@ test("quality gate falho bloqueia aprovacao de run manual", async ({ page, conte
   const runTitle = "Run Bloqueada";
   const runSlug = slugify(runTitle);
 
-  await page.goto("/empresas/demo/runs", { waitUntil: "networkidle" });
+  await page.goto("/empresas/demo/runs", { waitUntil: "domcontentloaded" });
 
   await page.getByTestId("run-create").click();
   await page.getByTestId("run-title").fill(runTitle);
@@ -49,4 +50,3 @@ test("quality gate falho bloqueia aprovacao de run manual", async ({ page, conte
 
   expect(status).toBe(403);
 });
-

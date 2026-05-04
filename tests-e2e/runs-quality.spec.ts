@@ -1,5 +1,6 @@
-﻿import { test, expect } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { mockAuth } from "./utils/mockAuth";
+import { expectCurrentDashboardReady } from "./utils/current-ui";
 
 test("dashboard mostra qualidade por run", async ({ page, context }) => {
   await mockAuth(context, {
@@ -9,10 +10,10 @@ test("dashboard mostra qualidade por run", async ({ page, context }) => {
   });
 
   await page.goto("/empresas/demo/dashboard", {
-    waitUntil: "networkidle",
+    waitUntil: "domcontentloaded",
   });
 
-  await page.waitForTimeout(300);
-  await expect(page.getByTestId("runs-quality-table")).toBeVisible({ timeout: 10000 });
+  await expectCurrentDashboardReady(page);
+  await page.getByRole("button", { name: /Comparativos/i }).click();
+  await expect(page.getByText(/Runs com mais impacto|Sem comparativos para exibir/i)).toBeVisible({ timeout: 10000 });
 });
-

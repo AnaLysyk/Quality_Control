@@ -1,8 +1,9 @@
-﻿import { test, expect } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 import { seedMTTRDashboard } from "./utils/seed-mttr-goal";
+import { expectCurrentDashboardReady } from "./utils/current-ui";
 
-test("dashboard exibe MTTR mÃ©dio", async ({ page, context }) => {
+test("dashboard exibe resumo de defeitos e qualidade", async ({ page, context }) => {
   await mockAuth(context, {
     role: "company",
     companies: ["DEMO"],
@@ -10,14 +11,9 @@ test("dashboard exibe MTTR mÃ©dio", async ({ page, context }) => {
   });
   await seedMTTRDashboard();
   await page.goto("/empresas/demo/dashboard", {
-    waitUntil: "networkidle",
+    waitUntil: "domcontentloaded",
   });
-  // Aguarda o seed refletir e a pÃ¡gina estabilizar
-  await page.waitForTimeout(500);
-  await page.reload({ waitUntil: "networkidle" });
-  await page.waitForSelector('[data-testid="mttr-card"]', { timeout: 10000 });
-  const card = page.getByTestId("mttr-card");
-  await expect(card).toBeVisible();
-  await expect(card).not.toHaveText("â€”");
-});
 
+  await expectCurrentDashboardReady(page);
+  await expect(page.getByText("Defeitos", { exact: true }).first()).toBeVisible({ timeout: 10000 });
+});

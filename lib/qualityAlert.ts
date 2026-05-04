@@ -6,7 +6,10 @@ import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } fr
 
 const USE_MEMORY_ALERTS =
   process.env.QUALITY_ALERTS_IN_MEMORY === "true" ||
-  process.env.NODE_ENV === "test";
+  (process.env.NODE_ENV === "test" &&
+    process.env.E2E_USE_JSON !== "1" &&
+    process.env.E2E_USE_JSON !== "true" &&
+    process.env.PLAYWRIGHT_MOCK !== "true");
 
 const ALERTS_STORE = path.join(process.cwd(), "data", "quality_alerts.json");
 const ALERTS_KEY = "qc:quality_alerts:v1";

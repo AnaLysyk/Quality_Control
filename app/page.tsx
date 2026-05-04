@@ -39,6 +39,11 @@ export default async function Page() {
   };
   const normalizedUser = normalizeAuthenticatedUser(routeUser);
 
+  const isAdmin = access.isGlobalAdmin || access.role === "leader_tc" || access.role === "technical_support";
+  if (isAdmin) {
+    redirect("/admin/dashboard");
+  }
+
   const requestedCompany =
     activeCompanyCookie && access.companySlugs.includes(activeCompanyCookie) ? activeCompanyCookie : null;
   const companySlug =
@@ -60,11 +65,6 @@ export default async function Page() {
         }),
       ),
     );
-  }
-
-  const isAdmin = access.isGlobalAdmin || access.role === "leader_tc" || access.role === "technical_support";
-  if (isAdmin) {
-    redirect("/admin");
   }
 
   return <HomeContent />;

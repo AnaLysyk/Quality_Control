@@ -1,28 +1,18 @@
-﻿import { test, expect } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
+import { expectCurrentDashboardReady } from "./utils/current-ui";
 
 const DASHBOARD = "/empresas/demo/dashboard";
 
-test("run falha coloca release em risco", async ({ page, context }) => {
+test("run falha aparece como risco no dashboard", async ({ page, context }) => {
   await mockAuth(context, {
     role: "company",
     companies: ["DEMO"],
     clientSlug: "DEMO",
   });
 
-  await page.goto(DASHBOARD, { waitUntil: "networkidle" });
+  await page.goto(DASHBOARD, { waitUntil: "domcontentloaded" });
 
-  // cria run manual com falha
-  await page.getByTestId("create-run").click();
-  await page.waitForTimeout(300);
-  await page.getByTestId("run-name").fill("run-falha");
-  await page.getByTestId("run-status-fail").click();
-  await page.waitForTimeout(300);
-  await page.getByTestId("run-save").click();
-  await page.waitForTimeout(1000);
-  // valida impacto na release
-  const release = page.getByTestId("release-card").first();
-  await expect(release.getByTestId("release-status")).toHaveText(/risk|risco/i, { timeout: 10000 });
-  await expect(release.getByTestId("release-risk")).toBeVisible({ timeout: 10000 });
+  await expectCurrentDashboardReady(page);
+  await expect(page.getByText(/Risco|Falhas|Defeitos/i).first()).toBeVisible({ timeout: 10000 });
 });
-

@@ -660,7 +660,7 @@ export default function CompanyRunsPageClient() {
           <div className="flex flex-wrap items-center gap-2">
             <CreateManualReleaseButton
               companySlug={companySlug}
-              redirectToRun={false}
+              redirectToRun
               onCreated={() => setReloadNonce((current) => current + 1)}
             />
             <input
@@ -738,7 +738,7 @@ export default function CompanyRunsPageClient() {
                       <div className="mt-5">
                         <CreateManualReleaseButton
                           companySlug={companySlug}
-                          redirectToRun={false}
+                          redirectToRun
                           onCreated={() => setReloadNonce((current) => current + 1)}
                         />
                       </div>

@@ -1301,17 +1301,19 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
       if (path === "/admin/users/permissions") {
         return [
-          { id: "permissions-open", label: "Gestão de permissões", icon: FiShield, href: item.href, description: "Perfis e permissões" },
-          { id: "permissions-users", label: "Usuários", icon: FiUsers, href: "/admin/users?tab=company", description: "Abrir gestão de usuários" },
-          { id: "permissions-admin", label: "Líder TC", icon: FiShield, href: "/admin/users?tab=admin", description: "Perfis administrativos" },
+          { id: "permissions-search-user", label: "Selecionar usuário", icon: FiCompass, href: "/admin/users/permissions?focus=users", description: "Buscar usuário para revisar permissões" },
+          { id: "permissions-active", label: "Permissões ativas", icon: FiShield, href: "/admin/users/permissions?panel=active", description: "Ver permissões efetivas do perfil" },
+          { id: "permissions-modules", label: "Módulos e ações", icon: FiGrid, href: "/admin/users/permissions?section=modules", description: "Editar acessos por módulo" },
+          ...(canUseAdminClientTools ? [{ id: "permissions-create-user", label: "Criar usuário global", icon: FiUserPlus, href: "/admin/users/permissions?action=create-user", description: "Cadastrar usuário administrativo" }] : []),
         ];
       }
 
       if (path === "/admin/brain") {
         return [
-          { id: "brain-panel", label: "Brain", icon: FiCpu, href: "/admin/brain", description: "Painel do Brain" },
-          { id: "brain-chat", label: "Conversas", icon: FiMessageSquare, href: "/chat", description: "Abrir Chatcode" },
-          { id: "brain-search", label: "Buscar conversas", icon: FiCompass, href: "/chat?search=1", description: "Pesquisar histórico" },
+          { id: "brain-search-nodes", label: "Buscar nós", icon: FiCompass, href: "/admin/brain?focus=search", description: "Encontrar conhecimento no grafo" },
+          { id: "brain-create-node", label: "Criar nó", icon: FiPlus, href: "/admin/brain?tab=create-node", description: "Adicionar conhecimento manualmente" },
+          { id: "brain-sync", label: "Sincronizar grafo", icon: FiZap, href: "/admin/brain?action=sync", description: "Atualizar nós e relações" },
+          { id: "brain-overview", label: "Visão global", icon: FiGrid, href: "/admin/brain?view=graph", description: "Voltar ao mapa principal" },
         ];
       }
 

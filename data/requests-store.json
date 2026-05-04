@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "id": "req_sample_email",
+      "userId": "usr_001",
+      "userName": "Usuario",
+      "userEmail": "user@example.com",
+      "companyId": "cmp_001",
+      "companyName": "Testing Company",
+      "type": "EMAIL_CHANGE",
+      "payload": {
+        "newEmail": "novo.email@example.com"
+      },
+      "status": "PENDING",
+      "createdAt": "2026-05-04T02:28:10.935Z"
+    }
+  ]
+}
